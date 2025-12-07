@@ -1,0 +1,28 @@
+* An example middle\"end                                           :noexport:
+:PROPERTIES:
+:LATEX_LABEL: middle-end
+:ID: middle-end
+:END:
+
+** A middle\"end for managing collections of articles
+
+This middle\"end is a set of functions that add triples into the
+backend.  At this stage we basically ignore details of storage, and
+rely on the convenience functions defined above as the backend's API.
+In principle it would be possible to swap out the backend for another
+storage mechanism.  We will give an example later on that uses more of
+the LISP-specific aspects of the backend implementation.\todo{Let's
+  try to be a bit more concrete about this, especially in Section
+#  [[id:farm-demo]].
+}  In this example, rather than talking about nemas
+and networks, we will talk about \emph{articles} and \emph{scholia}.
+These objects are things that user will want to access, create, and
+manipulate.  However, we will deal with functions for user interaction
+(input, display, and editing) in Section
+# [[id:frontend]],
+not here.
+Like the backend, the middle\"end could also be swapped out in
+applications where a different kind of data is modelled.  And in fact,
+we come to some examples of other mid-level interfaces in Section
+# [[id:applications]].
+

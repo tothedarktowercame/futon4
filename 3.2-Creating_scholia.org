@@ -1,0 +1,694 @@
+** Creating scholia
+:PROPERTIES:
+:LATEX_LABEL: scholium-function
+:ID: scholium-function
+:END:
+
+*** Component pieces of scholia                                    :noexport:
+:PROPERTIES:
+:LATEX_LABEL: definition-of-scholium
+:ID: definition-of-scholium
+:END:
+
+The `scholium' function maintains a catalog of articles, indexed by
+name (Section [[id:digital-library]]).  Each article contains
+\inp{text}, an indication of what the article is \inp{about}, its
+\inp{type}, and \inp{bookkeeping} information which gives the
+article's edit history and ownership information.  Articles must
+always follow this pattern.
+
+
+*** Format of `name' field                                         :noexport:
+
+Any LISP object can be the \inp{name} of a scholium.  Scholia are
+indexed by name: names are unique within namespaces (see section
+[[id:subcollections]]), and the combination of name and namespace is
+how an article is looked up.  (At present, names are typically
+rendered as strings without any newlines, but this is a front-end
+matter and essentially arbitrary from the point of view of internal
+format.)
+
+
+*** Format of `text' field                                         :noexport:
+
+Just about anything can go into the \inp{text} field, but anything
+``weird'' needs to be backed up by appropriate \inp{type} metadata
+and appropriate handlers (see Section [[id:rendering]]).
+
+
+*** Format of `about' field                                        :noexport:
+:PROPERTIES:
+:LATEX_LABEL: format-of-about-field
+:ID: format-of-about-field
+:END:
+
+The \inp{about} field is a list of \emph{links} (in the sense of Note
+[[id:generalized-links]]).  See Note [[id:links]] for details.
+
+We could at some point investigate making \inp{about} data (and
+perhaps other sorts of data) \emph{typed} so that we can more easily
+the genesis of a given datum.
+
+
+*** Links
+:PROPERTIES:
+:LATEX_LABEL: links
+:ID: links
+:END:
+
+Each link is associated with precisely one article.  Links can have
+additional link-type information stored about them.  The general
+format of a link is:
+#+BEGIN_SRC elisp :tangle no
+(<target article's name> &rest <link-types>)
+#+END_SRC
+The design here maintains partial symmetry between the treatment of
+article types and link types; the cdr of a link can be processed
+by the same typedata processing functions as the \inp{type}
+data from articles.
+
+For example, the link
+#+BEGIN_EXAMPLE
+'(foo (passage 10 15) mistaken)
+#+END_EXAMPLE
+indicates that the region from character position 10 to 15 in the
+article named ``foo'' is ``mistaken'', whereas the link
+#+BEGIN_EXAMPLE
+'(foo mistaken)
+#+END_EXAMPLE
+indicates simply that the article \emph{foo} is mistaken.
+
+
+*** Links indicate at most one passage                             :noexport:
+:PROPERTIES:
+:LATEX_LABEL: links-indicating-passages
+:ID: links-indicating-passages
+:END:
+
+It seems reasonable to me to assert that each link will indicate at
+most \emph{one} passage.  This is indeed an assumption made in the
+code, see the function `typedata-includes-passage' (Note
+[[id:typedata-includes-passage]])).
+
+
+*** Format of `type' field                                         :noexport:
+
+The \inp{type} field is supposed to be a symbol or list of symbols.
+If it is nil, the article is assumed to be normal text.
+
+
+*** Format of `bookkeeping' field
+
+The \inp{bookkeeping} field has a special format, very similar
+to the format of metadata articles
+# (see Section  [[id:metadata-articles]]);
+one might expect to see something like
+#+BEGIN_SRC elisp :tangle no
+((owner <owner>)
+ (ACL <ACL>)
+ ...)
+#+END_SRC
+Remember that the \inp{bookkeeping} is \emph{owned}, so we probably
+shouldn't put anything there that can't be edited by the user, and so
+in particular, things that are needed for system consistency should go
+into metadata articles instead.
+
+Do notice that various schemes for access and ownership can be
+considered.  (E.g. maybe anyone on the \emph{access control list}
+(ACL) can edit the text of the article, but only the owner is allowed
+to edit the ACL itself.)
+
+It would be worth looking at existing strategies (e.g. as found on
+PlanetMath) for handling complicated ownership and access
+arrangements.  Actual implementation of useful bookkeeping features
+will have to come later (for a sort of silly placeholder for the
+meantime, see Note [[id:sch-book]]).
+
+
+*** Relationship of bookkeeping data and metadata article          :noexport:
+
+Bookkeeping data is \emph{user editable}, but metadata article
+generally isn't, or, when it is, it is typically treated as common
+property.  This is important!  See Note
+[[id:metadata-article-overview]].
+
+
+*** Access functions
+:PROPERTIES:
+:LATEX_LABEL: access-functions
+:ID: access-functions
+:END:
+
+A few simple functions to get pieces of (just aliases to help with
+coding; see Note [[id:principle-of-transparency]]).  Note
+[[id:link-accessors]] talks about something similar for links.
+
+
+#+BEGIN_SRC elisp
+(defalias 'scholium-name 'first)
+(defalias 'scholium-text 'second)
+(defalias 'scholium-about 'third)
+(defalias 'scholium-type 'fourth)
+(defalias 'scholium-bookkeeping 'fifth)
+#+END_SRC
+
+*** Order and interpretation of `about' field                      :noexport:
+:PROPERTIES:
+:LATEX_LABEL: order-of-about
+:ID: order-of-about
+:END:
+
+The order of links in the \inp{about} field is not arbitrary.
+
+The order of links determines link-ids, which are used for
+both  backlinks (Section [[id:backlinks-section]]) and markup
+(Section [[id:marking-things-up]]).
+
+
+*** Link accessors
+:PROPERTIES:
+:LATEX_LABEL: link-accessors
+:ID: link-accessors
+:END:
+
+Links have exactly one linked-to-article together with any number of
+different link-types.
+
+
+#+BEGIN_SRC elisp
+(defalias 'linked-to-article 'first)
+(defalias 'link-type 'cdr)
+#+END_SRC
+
+*** Special link accessors
+
+First we need a function that will give us the type-element associated
+with a given type.  Then, we have some important examples.
+
+The function `link-type-accessor' will produce the (first) specific
+type-element from \inp{link} that matches the given \inp{type}, if one
+exists.
+
+Note that the format of \emph{version} access should follow the
+`link-version' function given here.  (Passages don't have versions, so
+it doesn't make sense to put a version number as an additional element
+of a ``passage'' element.)
+
+
+#+BEGIN_SRC elisp
+(defun link-type-accessor (link type)
+  (car (member-if (lambda (type-elt)
+                    (or (eq type-elt type)
+                        (and (listp type-elt)
+                             (eq (car type-elt) type))))
+                  (cdr link))))
+
+(defun link-beginning (link)
+  (second (link-type-accessor link 'passage)))
+
+(defun link-end (link)
+  (third (link-type-accessor link 'passage)))
+
+(defun link-version (link)
+  (second (link-type-accessor link 'version)))
+#+END_SRC
+
+*** Link creators                                                  :noexport:
+:PROPERTIES:
+:LATEX_LABEL: link-creators
+:ID: link-creators
+:END:
+
+It might be nice to have a function that is in charge
+of link creation, so we can quickly identify the places
+where links are being created.
+
+
+*** Link clusters                                                  :noexport:
+:PROPERTIES:
+:LATEX_LABEL: link-clusters
+:ID: link-clusters
+:END:
+
+In previous versions of this work, I grouped links into ``segments''
+by default.  I subsequently realized that adding this extra default
+layer was ugly, and that it would limit the attractiveness of the
+system.  Nevertheless, the initial intention was, I think, good.  The
+idea with segments was to group certain links together semantically.
+For example, if the region that a reference was attached to got split
+in two after editing, one might want to maintain that one reference as
+being \inp{about} two regions ``in the first place'' while continuing
+to be about only the one target article ``in the second place''.
+(On references, see Note [[id:references]].)  
+
+In the case of references, we can get away with making making the
+``link text'' correspond to all of the links besides the \emph{last}
+one.  And in many other cases, similarly, we will be able to specify
+semantics for \inp{about} data in the \inp{type} data.  However, in
+some cases, we may need to put together link clusters that are
+separate from the article entirely -- in other words, we need to be
+able to attach scholia to \inp{about} data (as well as, e.g., to
+\inp{text} data).
+
+This flexibility assures us that there can be as many different kinds
+of clusters as we can come up with.  By contrast, if we were using
+segments, the actual semantics would either have to be more limited,
+or would end up building extremely complex \inp{about} fields.
+
+More work on the subject of link clusters will follow in due course.
+Right now, I think they are just conceptually useful.  (Which is
+another reason for getting rid of segments... thank goodness
+\emph{they} never had a chance to become useful!)
+
+
+*** Uses for `type' field                                          :noexport:
+
+One use of types is to maintain subcollections; see Note
+[[id:on-modified-type-labeler-etc]].  Articles of different types can
+be rendered or otherwise interpreted differently.
+
+
+*** Hooks for new and modified scholia
+:PROPERTIES:
+:LATEX_LABEL: hooks-for-new-and-modified-scholia
+:ID: hooks-for-new-and-modified-scholia
+:END:
+
+If the scholium is new, run `new-scholium-hook', otherwise, run
+individual hooks depending on which pieces of the scholium were
+modified (if any).  We use separate hooks in part because we need to
+be careful about what sorts of changes we make.  If we adjusted the
+value of some scholium every time the value of a scholium was
+adjusted, we would expect to encounter infinite loops pretty quickly!
+
+The standard settings for these hooks will be given in the section
+[[id:subcollections]]; these settings facilitate e.g. the automatic
+creation of backlinks (Note [[id:backlinks]]).
+
+
+#+BEGIN_SRC elisp
+(defvar new-scholium-hook nil)
+(defvar scholium-modified-text-hook nil)
+(defvar scholium-modified-about-hook nil)
+(defvar scholium-modified-type-hook nil)
+(defvar scholium-modified-book-hook nil)
+#+END_SRC
+
+*** The `scholium' function
+:PROPERTIES:
+:LATEX_LABEL: the-scholium-function
+:ID: the-scholium-function
+:END:
+
+This function is foundational for the system.  Lots of other functions
+will use it, but because it is destructive, users should typically not
+access it directly.  Several interactive interfaces to this function
+appear in Section [[id:creation]].  Note that the conditional structure
+here shouldn't be a `cond'; we really mean to run several hooks if
+several parts of the scholium have been modified.
+
+
+#+BEGIN_SRC elisp
+(defun scholium (name text &optional about type book)
+  (let* ((old-version (get-article name))
+         (old-about (and old-version (scholium-about old-version)))
+         (maybe-path (and (stringp text)
+                          (fboundp 'typedata-includes)
+                          (typedata-includes type 'file)
+                          (fboundp 'futon4--canonical-path)
+                          (futon4--canonical-path text)))
+         (article-id (and (fboundp 'futon4--article-id-for)
+                          (futon4--article-id-for name maybe-path))))
+    (put-article name (list text about type book))
+    (when (and article-id
+               (not (bufferp text))
+               (or (not (fboundp 'typedata-includes))
+                   (not (typedata-includes type 'file)))
+               (fboundp 'futon4-ensure-article-entity))
+      (futon4-ensure-article-entity article-id name maybe-path))
+    (let ((meta-override (metadata-override)))
+      (when (and (not meta-override)
+                 (fboundp 'futon4--sync-about-links)
+                 (not (equal old-about about)))
+        (futon4--sync-about-links name about))
+      (when (not meta-override)
+        (if (not old-version)
+            (run-hooks 'new-scholium-hook)
+          (when (not (equal (scholium-text old-version) text))
+            (run-hooks 'scholium-modified-text-hook))
+          (when (not (equal (scholium-about old-version) about))
+            (run-hooks 'scholium-modified-about-hook))
+          (when (not (equal (scholium-type old-version) type))
+            (run-hooks 'scholium-modified-type-hook))
+          (when (not (equal (scholium-bookkeeping old-version) book))
+            (run-hooks 'scholium-modified-book-hook)))))))
+#+END_SRC
+
+*** On `metadata-override'
+:PROPERTIES:
+:LATEX_LABEL: metadata-override
+:ID: metadata-override
+:END:
+
+We don't want to run the usual hooks when the article being processed
+is a metadata article or a ``fake'' article.  Fake articles appear
+when we create fake references that they don't show up in the scholia
+display and that aren't permanently attached to anything.  See Note
+[[id:add-visible-back-temporal-link]].
+
+(At least at one point I had some misgivings about this override, but
+it seems to get the job done.  I don't see why we would want to have
+weird automatic thing happen after creating a metadata article or a
+``fake'' article, so it may be that the design here is perfectly
+fine.)
+
+
+#+BEGIN_SRC elisp
+(defun metadata-override ()
+  (when (or (typedata-includes type 'meta)
+            (typedata-includes type 'fake))
+    t))
+#+END_SRC
+
+\subsubsection{Simple scholium derivatives}
+
+*** On `article-names-from-about-data'
+
+The idea here is to build a list with just the names of the articles
+that the \inp{about} data features.  Names are uniquified.
+
+
+#+BEGIN_SRC elisp
+(defun article-names-from-about-data (about)
+  (delete-dups (mapcar (lambda (elt) (car elt)) about)))
+#+END_SRC
+
+*** On `typedata-includes'
+:PROPERTIES:
+:LATEX_LABEL: typedata-includes
+:ID: typedata-includes
+:END:
+
+Read \inp{typedata} in the format used in scholia,
+and say whether it matches a \inp{specific-type}.
+Notice that when \inp{typedata} and \inp{specific-type} are
+both is `nil', we return a positive match.
+
+
+#+BEGIN_SRC elisp
+(defun typedata-includes (typedata specific-type)
+  (cond ((eq typedata specific-type) t)
+        ((and (listp typedata)
+              (member specific-type typedata)) t)
+        (t nil)))
+#+END_SRC
+
+*** On `typedata-includes-element-of-list'
+
+ 
+Like
+`typedata-includes' (Note [[id:typedata-includes]]), but only
+requires one type out of those listed to match in order to return
+`t'.
+
+
+#+BEGIN_SRC elisp
+(defun typedata-includes-element-of-list (typedata list-of-types)
+  (let (ret)
+    (while (and list-of-types
+                (not ret))
+      (when (typedata-includes typedata (car list-of-types))
+        (setq ret t))
+      (setq list-of-types (cdr list-of-types)))
+    ret))
+#+END_SRC
+
+*** On `typedata-includes-passage'
+:PROPERTIES:
+:LATEX_LABEL: typedata-includes-passage
+:ID: typedata-includes-passage
+:END:
+
+A specific test to see if typedata includes type ``passage'' (noting
+that the list element that indicates this type should come together
+with some suffix that tells you which passage is being indicated).
+
+As far as I can tell, this function will always apply to typedata
+coming from links (but who knows).
+
+
+#+BEGIN_SRC elisp
+(defun typedata-includes-passage (typedata)
+  (let (ret)
+    (when (listp typedata)
+      (while (and typedata
+                  (not ret))
+        (when (eq (car (car typedata)) 'passage)
+          (setq ret (car typedata)))))
+    ret))
+#+END_SRC
+
+\subsubsection{Examples} \label{examples}
+
+*** Examples of the `scholium' function in use
+
+As an example of how the `scholium' function might be applied, here is
+a scholium about the article I'm writing now.
+#+BEGIN_SRC elisp :tangle no
+(scholium "Remark On Scholium Definition"
+          "This is an Emacs Lisp function."
+          '(((passage "sbdm4cbpp.tex" 49078 49738))))
+#+END_SRC
+Actually, the article that I'm writing right now won't be in the
+article list unless we explicitly put it there.  So the scholium
+that we added here is actually attached to a \emph{fictitious}
+article with the name ``sbdm4cbpp.tex''.  That's OK, but for
+completeness, I'll add the current buffer as a scholium with the
+appropriate name:
+#+BEGIN_SRC elisp :tangle no
+(scholium "sbdm4cbpp.tex"
+          (current-buffer))
+#+END_SRC
+Notice that we've supplied a buffer instead of a string for the
+\inp{text} field.  We now add another scholium, attached to the
+previous two, communicating to the user a fact that the system already
+knows:
+#+BEGIN_SRC elisp :tangle no
+(scholium "This is a scholium about part of the SBDM document"
+          "This scholium is attached to this region."
+          '(((article "Remark On Scholium Definition"))
+            ((passage "sbdm4cbpp.tex" 31091 31744))))
+#+END_SRC
+By setting the \inp{type} data appropriately, we might make this last
+example display when ``Remark On Scholium Definition'' is displayed,
+but not when ``sbdm4cbpp.tex'' is displayed.  It might make sense to
+mark up the words ``this region'' with a reference to
+``sbdm4cbpp.tex''.  Tricky things like this will be coming in later
+sections.
+
+
+*** Mixed scholia                                                  :noexport:
+:PROPERTIES:
+:LATEX_LABEL: mixed-scholia
+:ID: mixed-scholia
+:END:
+
+Designing functions to build increasingly complicated \inp{about}
+structures easily seems to become increasingly challenging.
+
+
+*** Types of text                                                  :noexport:
+:PROPERTIES:
+:LATEX_LABEL: types-of-text
+:ID: types-of-text
+:END:
+
+There could be other kinds of ``text'' that one might want to be able
+to use -- symbols, processes, web pages, etc.; basically, any sort of
+information-containing thing could be something that one would wish to
+add to the scholium system.  In addition, plain-text scholia can be
+miniature database entries (in some label) if they are given a
+specific \inp{type}.  For example, a function object might have a
+\emph{descriptive note}, a \emph{doc string}, and a \emph{definition}.
+Lists are another example of a special plain-text article
+(see Note [[id:semantics-of-lists]]).
+
+
+\subsubsection{Further notes on creating scholia}
+
+*** The division of scholia into pieces                            :noexport:
+
+The division is somewhat arbitrary.  Ownership could certainly be
+maintained separately from edit history; however, it makes some sense
+to set access controls when the article is first saved.  Things can
+get complicated if different persons or groups have different
+permissions; e.g. some may be able to change the access control list
+and some may not.
+
+
+*** Completeness of the scholium function's arguments              :noexport:
+
+I think I've basically covered everything I'd be interested in with
+these freeform types.  The idea is that you can put whatever you want
+into these fields, and then write whatever sort of accessor functions
+you like to use that information!  However, if someone wanted to add
+some new fields, this would be easy; they would only have to change
+the scholium function and the add-props function.
+
+
+*** How to assert that a relationship exists                       :noexport:
+
+The \emph{relationship between} different articles presumably has to
+be added with scholia that point to both articles and say something
+special about them in the ``type'' field. On the other hand, it would
+be useful to have that particular \inp{type} be read both ways, so
+that scholia about both the high-level document and lower-level
+document explain the relationship of the two documents to one another.
+(I think backlink registries would help with this.)  We'll talk more
+about how to actually assert relationships between articles in Section
+[[id:editing]].
+
+
+*** Freedom to create derivative versions                          :noexport:
+
+In general, this can be specified in the bookkeeping information -
+i.e., the licensing terms (or royalty terms or whatever).  For just
+about any article, it is important to be able to track derivatives!
+The insistance on tracking makes our system not so different from
+``regular'' version management.
+
+
+*** Types and modes                                                :noexport:
+
+Oftentimes, articles are not so different from buffers.  Type data is
+a way of specifying things like filetype or editing mode.  (Maybe a
+bit more general, because articles need not be very buffer-like.)
+
+
+*** Extended access                                                :noexport:
+
+It might be a good idea to let \inp{about} be filled by a
+\emph{function} that will select a sequence of character positions?
+Well, I suppose that even if the capability isn't explicitly coded
+into the system, people can write their own code that does the job
+(expands such functions before calling `scholium')?
+
+Alternatively, if we had sub-libraries in this library, such
+a function might be more complicated.  It would be worth thinking
+about examples of how this sort of thing might be used, exactly.
+
+Of course, if the library contains heterogeneous materials, like the
+case that is being discussed in the ``superimposed information''
+articles; there, selecting a region may mean different things for
+different articles.  It seems like the case of Word docs and PDFs is
+simpler than the case of whole libraries (e.g. filesets?) but I'd need
+to think more about the issues here to come up with good examples.  In
+which case would one rather add a library than all of the documents?
+(Probably there are some cases.)  Well, I guess the GCIDE example that
+I talked about could be relevant here, although the idea of this GCIDE
+thing isn't quite the same as the usual web-like ``scholium thing''
+we're considering elsewhere in this work.  Also, one might think of
+Google or whatever as being a ``library'' that you have to interact
+with in a special way to get at the documents -- the reasons for not
+adding them are that they aren't free (for one thing) and there are
+just too many of them (for another!).
+
+Of course, scholia for really ``weirdly'' formatted documents --
+including very rich things, like pictures or videos -- may have very
+different sorts of semantics.  Its nice of the people who are working
+on this ``superimposed information'' stuff to invest time and energy
+into this sort of thing, but my own feeling is that its important to
+get some good, working, deployments for text-based document
+collections going asap!
+
+
+*** Type creation                                                  :noexport:
+:PROPERTIES:
+:LATEX_LABEL: type-creation
+:ID: type-creation
+:END:
+
+The AI issue relates to the issue of type creation.  We should be
+talking about the relationship of semantic net ideas (an up-to-date
+reference on semantic nets would be helpful; maybe SNePs).
+
+
+*** Formulaic scholia                                              :noexport:
+:PROPERTIES:
+:LATEX_LABEL: formulaic
+:ID: formulaic
+:END:
+
+One obvious sort of type is the \emph{form}, i.e., an object with
+certain fields to be filled in.  Compare
+HyperCard\footnote{http://en.wikipedia.org/wiki/Hypercard}; more
+interesting ideas can be gotten there too, I think.
+
+
+*** Transformative scholia                                         :noexport:
+:PROPERTIES:
+:LATEX_LABEL: transformative
+:ID: transformative
+:END:
+
+It is interesting to think of transformative scholia; attachments that
+change the way a given source looks.  This is a topic that has
+recently been getting some play in the web browser community.  Simply
+being able to annotate web pages would be swell, because then you
+could search through them as if they were part of your own local web,
+which, in fact, they probably would be.
+
+
+*** Functional scholia                                             :noexport:
+:PROPERTIES:
+:LATEX_LABEL: functional
+:ID: functional
+:END:
+
+Functional scholia are similar to (and generalize) the transformative
+scholia of Note [[id:transformative]].  Reimplementing LISP inside the
+scholium system would be an example of this sort of thing; functions
+and variables as nodes in a web, programs as clusters of nodes that
+have been linked together in certain ways.  One way this might be done
+would be to use the ordered \inp{about} list as an argument list for a
+function and put the function itself on either the \inp{type} field
+or, more likely, the \inp{text} field (a specification of the expected
+arguments would go on the \inp{type} field).  Perhaps something like
+this could be used to build documentation for LISP functions
+automatically; needless to say, anything we can do scholia-wise can be
+done LISP-wise (reasoning by set-inclusion, if nothing else), however
+there may be some advantages to thinking about code scholiumifically.
+(Functions and their subroutines can easily be regarded as forming a
+network, and so, code can easily be thought of as a scholium-based
+document under this arrangement.)
+
+
+*** Interactive and actionable scholia                             :noexport:
+:PROPERTIES:
+:LATEX_LABEL: interactive-and-actionable-scholia
+:ID: interactive-and-actionable-scholia
+:END:
+
+One of the big goals for the system is to be able to write MUD-like
+programs and text-based games; to do this we need, \emph{interactive}
+scholia.  More generally, scholia that do something e.g. when browsed
+or when encountered by a given process; we call elements of this
+broader category \emph{actionable} scholia.
+
+
+*** Simulating features from single-buffer editing                 :noexport:
+
+In Note [[id:functional]], we mentioned a certain feature that should be
+replicated in the scholium system to make it more useful
+(`get-function'); however, some systematic study of the features that
+are useful from single-buffer editing should be made, and those
+features re-implemented for the scholium system.
+
+
+*** Handling functions                                             :noexport:
+
+A simple feature request somewhat related Note [[id:functional]] is
+that we should be able to jump to the scholium associated with a
+certain function's name; the analogue of my `get-function' command.
+The text that documents a certain function should also show up as a
+docstring when one runs `describe-function' in Emacs.

@@ -1,0 +1,941 @@
+** Marking things up
+:PROPERTIES:
+:LATEX_LABEL: marking-things-up
+:ID: marking-things-up
+:END:
+
+*** Introduction to marking things up                              :noexport:
+
+As mentioned in the introduction (Note
+[[id:text-properties-and-overlays]]): \emph{when articles are
+  displayed, both overlays and text properties are used for markup}.
+Overlays make it possible to put visible markup into font locked
+buffers.  However, when text is cut and pasted or whatever, overlays
+disappear, so we use text properties too, to add a needed degree of
+permanence to the markup.
+
+
+\subsubsection{Faces for overlays}
+
+*** A more abstract face function                                  :noexport:
+
+Perhaps `new-simple-scholium-face' could take an argument -- say the
+scholium -- and provide a different face for each user, or a different
+face for each type, or whatever.  Probably there should be a variable
+called `scholium-face-function' that points you to the \emph{actual}
+function that is going to be in use.  Using this sort of abstraction
+throughout would certainly facilitate user customization, and so,
+would be a good thing.
+
+
+*** On `new-simple-scholium-face'
+
+Adapted from ttn's \kw{ricette-mode.el}. \emph{Nota bene}: new faces
+are automatically customizable, so if you don't like the way they
+look, you can change them.
+
+
+#+BEGIN_SRC elisp
+(defmacro new-simple-scholium-face (num color doc)
+  (let ((prop (intern (concat "sch-face-" (int-to-string num)))))
+    `(progn
+       (defvar  ,prop ',prop)
+       (defface ,prop
+         '((t (:foreground ,(symbol-name color)
+               :underline ,(symbol-name color)))) ,doc))))
+#+END_SRC
+
+*** Underlining versus foreground
+:PROPERTIES:
+:LATEX_LABEL: underlining-versus-foreground
+:ID: underlining-versus-foreground
+:END:
+
+It is worth considering using the underline attribute instead or in
+addition to the foreground attribute: underlining would be less
+obtrusive in documents that already use faces.  We could have two
+variants; one with underlining for the main article, one foreground
+for the scholia display.  We could also give users some
+immediately-customizable options.  (Do the default colors I picked out
+work well?)
+
+
+#+BEGIN_SRC elisp
+(new-simple-scholium-face 1 maroon1 "First scholium face.")
+(new-simple-scholium-face 2 aquamarine1 "Second scholium face.")
+(new-simple-scholium-face 3 IndianRed1 "Third scholium face.")
+(new-simple-scholium-face 4 yellow1 "Fourth scholium face.")
+(new-simple-scholium-face 5 firebrick1 "Fifth scholium face.")
+(new-simple-scholium-face 6 plum1 "Sixth scholium face.")
+#+END_SRC
+
+*** Reference face
+:PROPERTIES:
+:LATEX_LABEL: reference-face
+:ID: reference-face
+:END:
+
+A special face for references.  We don't currently have a special face
+for \emph{visited} references, but this can be added if/when we start
+keeping track of which references have been visited (see Note
+[[id:visited-references]]).  We might also want to record and display
+information about visited articles in general.
+
+
+#+BEGIN_SRC elisp
+(defface sch-reference-face
+  '((t (:foreground "red" :underline "red")))
+  "Face for references in the scholium system.")
+#+END_SRC
+
+*** Special face for scholia about whole article?                  :noexport:
+
+It might be good to have a special face (and perhaps other
+special treatment, like a special section of the scholia display
+buffer) for scholia that apply to the whole of the main article.
+
+
+*** Special face for transclusions that have been collapsed        :noexport:
+:PROPERTIES:
+:LATEX_LABEL: collapsed-face
+:ID: collapsed-face
+:END:
+
+We're going to have to have a special face for transclusions that
+have been collapsed (see Note [[id:transcluding-and-outlines]]).
+
+
+\subsubsection{Masks and miscellaneous markup mechanics}
+
+*** Color by number
+:PROPERTIES:
+:LATEX_LABEL: color-by-number
+:ID: color-by-number
+:END:
+
+The `scholia-count' variable keeps track of how many scholia have been
+ displayed.  The `scholium-face' function selects a face to use when
+ displaying the next scholium according to this count.  This simple
+ display mechanism seems sort of lame (hence, it is turned on with the
+ `use-crazy-font-lock' variable); better things may come later, see,
+ e.g. Note [[id:color-and-style]].
+
+Note that turning off ``crazy font lock'' makes it so that no text
+properties are added to the buffer, but of course it would be best if
+text properties were added and overlays omitted.  On the other hand,
+we need to do some thinking to sort out the use of text properties
+versus the use of overlays.  Cutting and pasting multiple copies of
+some markup in the same buffer may cause some trouble at commit time.
+See Section [[id:transclusion]]; also, compare Note
+[[id:aggressive-dop]].
+
+
+#+BEGIN_SRC elisp
+(defvar scholia-count 0 "Number of scholia about the article found.")
+
+(defun scholium-face ()
+  (let ((short-count (mod scholia-count 6)))
+    (cond ((eq short-count 0)
+           'sch-face-1)
+          ((eq short-count 1)
+           'sch-face-2)
+          ((eq short-count 2)
+           'sch-face-3)
+          ((eq short-count 3)
+           'sch-face-4)
+          ((eq short-count 4)
+           'sch-face-5)
+          ((eq short-count 5)
+           'sch-face-6))))
+
+(defvar use-crazy-font-lock t)
+(defvar main-article-overlays nil)
+(defvar scholia-overlays nil)
+#+END_SRC
+
+*** Overlays and text properties adjust when editing               :noexport:
+
+By default, overlays and text properties will move appropriately when
+text is added to the buffer.  This is important!
+
+
+*** Access to rendering target buffer
+:PROPERTIES:
+:LATEX_LABEL: access-to-rendering-target-buffer
+:ID: access-to-rendering-target-buffer
+:END:
+
+The rendering target buffer is either ``Main Article Display'' if the
+current article isn't buffered, or whatever buffer the article lives
+in if it is buffered.  (Well, actually, we can always redirect
+rendering to any buffer of our choice; but the preceding statement
+accurately describes the default operation.)  We use
+`get-rendering-target-buffer' as a shorthand when we grab the
+rendering target buffer, and `set-buffer-to-rendering-target-buffer'
+to make that buffer current for editing.  (Note that we \emph{could}
+go about this in a slightly different way, namely set the
+`rendering-target-buffer' variable to ``Main Article Display'' instead
+of `nil' when there is nothing to override the default -- but what
+would be the point?)
+
+
+#+BEGIN_SRC elisp
+(defun get-rendering-target-buffer ()
+  (get-buffer (or rendering-target-buffer
+                  (get-buffer "Main Article Display"))))
+
+(defun set-buffer-to-rendering-target-buffer ()
+  (set-buffer (get-rendering-target-buffer)))
+#+END_SRC
+
+*** The `scholia' property                                         :noexport:
+:PROPERTIES:
+:LATEX_LABEL: the-scholia-property
+:ID: the-scholia-property
+:END:
+
+At render time, we use a text property (which we call
+\emph{`scholia'}) to associate regions with the scholia that are
+attached to them.  A region can be associated with more than one
+scholium, \emph{so the `scholia' text property stores a list}.
+Specifically, a list identifying the \emph{links} that associate
+various scholia with this region (see Note [[id:link-ids]]).
+
+This information helps us restore order to shifted markup when
+committing edits (see Section [[id:parsing]]).
+
+
+*** Link-id's                                                      :noexport:
+:PROPERTIES:
+:LATEX_LABEL: link-ids
+:ID: link-ids
+:END:
+
+The elements of stored in the `scholia' text property's list are
+ordered pairs (two-element lists), each containing information of the
+following form: (1) the \emph{name} of a scholium associated with this
+buffer position; paired with, (2), the link number corresponding to
+(one of) the link(s) through which said scholium came to be associated
+with the particular region being marked up.  
+
+Lists of this form are a fairly common idiom in this work, and they
+get a special name, the \emph{link-id}.
+
+
+*** Experiment with many `scholium' properties
+:PROPERTIES:
+:LATEX_LABEL: many-scholium-properties
+:ID: many-scholium-properties
+:END:
+
+All else equal, it might be advantageous to use independent `scholia'
+properties instead of just one `scholium' property (see Note
+[[id:inserting-text-in-middle-of-marked-up-region]]).
+
+Accordingly, I tried switching over to using one `scholium' property
+for each marked-up region.  These properties were given somewhat
+complicated names -- namely, the link-ids that are currently stored as
+elements of the `scholia' property (Note [[id:the-scholia-property]]).
+However, this doesn't work, as suggested by the following example.
+#+BEGIN_SRC elisp :tangle no
+(progn (put-text-property (point) (1+ (point)) '(foo 1) t)
+       (put-text-property (point) (1+ (point)) '(foo 1) nil)
+       (text-properties-at (point)))
+#+END_SRC
+This is because\footnote{Thanks Andreas Schwab, help-gnu-emacs,
+2005/12/12. \label{so-called-text-property-bug}}
+#+BEGIN_SRC elisp :tangle no
+(eq '(foo 1) '(foo 1)) ;=> nil
+#+END_SRC
+
+The Emacs text property engine is uniformly `eq'-based instead of
+`equal'-based.  (So, if we happened to have an association between
+link-id's and integers, this would have worked, but that seems like a
+silly kludge.)
+
+Indeed, this `eq' preference is pretty much fatal to the utility of
+non-symbol text properties (unless we managed to hang directly onto
+the actual link-ids that would be used for the names of the text
+properties, which seems infeasible; or alternatively used some other
+sort of weird work-around, as above).  A further difficulty is
+associated with the fact that these various `scholium' text properties
+would be indiscriminately mixed in with any other text properties that
+happened to be stored at point, requiring filtering for any useful en
+masse processing. 
+
+I have some ideas that could possibly improve the prospects for doing
+away with the `scholia' property and replacing it with several
+`scholium' properties, but it seems like anything realistic would
+hacking Emacs C.  But since it seems that there are no immediate
+problems associated with using just one `scholia' property, we plunge
+ahead that way.
+
+
+*** On `add-to-scholia-property-within-region'
+:PROPERTIES:
+:LATEX_LABEL: add-to-scholia-property-within-region
+:ID: add-to-scholia-property-within-region
+:END:
+
+For each character in the region between \inp{beg} and \inp{end}, this
+function grabs the `scholia' property and replaces it with a version
+that has been modified to include the input \inp{value} (a link-id;
+see Note [[id:the-scholia-property]]).
+
+The same property is used in the Scholia Display buffer, although that
+may be a bit of an abuse (cf. Note
+[[id:using-scholia-property-for-everything]]); something simpler would
+work for our needs there -- but the current way is expedient.  Also,
+it seems to be suggestive -- perhaps in the future we'll be able to
+treat the Scholia Display buffer as a proper scholium-based article
+itself, presumably by using transclusion and identification, as
+appropriate (see Section [[id:derivative]]).
+
+
+#+BEGIN_SRC elisp
+(defun add-to-scholia-property-within-region (start end value)
+  (while (< start end)
+    (put-text-property start (1+ start) 'scholia
+                       (add-to-or-start-list
+                        (get-text-property start 'scholia)
+                        value))
+    (setq start (1+ start))))
+#+END_SRC
+
+*** On `current-markup'
+:PROPERTIES:
+:LATEX_LABEL: current-markup
+:ID: current-markup
+:END:
+
+This variable will be used to record the regions of the article being
+displayed which have scholia attached to them and are, consequently,
+marked up.  This information will be stored at markup time by
+`mark-up-region' (Note [[id:mark-up-region]]).  It is important to have
+this information on record so that we have something to compare to
+after editing takes place (see Section [[id:committing]]).
+
+Its format is a list of elements of the form
+#+BEGIN_SRC elisp :tangle no
+((<name> <link number>) <beg> <end>)
+#+END_SRC
+where `beg' and `end' denote the beginning and end of the region
+marked up via the specified link (but see Note 
+[[id:investigating-current-markup]]!).
+
+
+#+BEGIN_SRC elisp
+(defvar current-markup nil)
+#+END_SRC
+
+*** Investigating `current-markup' in the context of masks
+:PROPERTIES:
+:LATEX_LABEL: investigating-current-markup
+:ID: investigating-current-markup
+:END:
+
+If the link in question is being masked, then the format of
+`current-markup' changes from the form described in Note
+[[id:current-markup]] to the following:
+#+BEGIN_SRC elisp :tangle no
+((mask (<name> <link number>)) <beg> <end>)
+#+END_SRC
+where `beg' and `end' denote the beginning and ending of
+one particular region coming from the mask for the indicated
+link.
+
+I'm not sure this is really sufficient information.  Should we know
+\emph{which part} of the mask we're dealing with?  I.e., use something
+like a link-id, but for mask components?
+
+
+*** On `mark-up-region'
+:PROPERTIES:
+:LATEX_LABEL: mark-up-region
+:ID: mark-up-region
+:END:
+
+Like `add-to-scholia-property-within-region', but also adds to
+`current-markup' (see Note [[id:current-markup]]).
+
+
+#+BEGIN_SRC elisp
+(defun mark-up-region (start end value)
+  (add-to-scholia-property-within-region start end value)
+  (setq current-markup
+        (add-to-or-start-list current-markup
+                              (list value start end))))
+#+END_SRC
+
+*** On `non-printing-types'
+
+This variable will record a list of the types of scholia that we
+typically don't want to print when displaying an article.  The
+`derives-from' type is an example of a scholium that we typically
+don't want to print; see Note [[id:include-article]].
+
+User should temporarily set `non-printing-types' to `nil' before
+`mark-things-up' runs whenever they wish to display all scholia.
+
+
+#+BEGIN_SRC elisp
+(defvar non-printing-types nil)
+#+END_SRC
+
+*** Masking links                                                  :noexport:
+:PROPERTIES:
+:LATEX_LABEL: masking-links
+:ID: masking-links
+:END:
+
+It is sometimes necessary to use links that point at something other
+than the thing that they were pointed at originally -- or more
+typically, the same thing, but found in a different place (Note
+[[id:updating-link-extent]]).
+
+For example, consider the common case of a link pointing at some
+region of text found in a given article.  If the linked-to article
+gets edited, the link under consideration may have to be adjusted if
+it is going to continue to point at the ``correct'' region.
+
+Thus, when a linked-to article changes, it will typically have to
+communicate changes to back to the linking article; or rather, to the
+metadata article associated with the linking article (Note
+[[id:metadata-article-overview]]).  These changes take the form of
+\emph{masks}, which cover and re-route links.  
+
+A given mask may continue to change as the linked-to article changes.
+The strategy for keeping masks up-to-date is as follows.  When we
+discover (at commit time) that a link needs to be redirected, an entry
+in the ``masks'' metadata field of the article containing the link is
+created or adjusted.  Specifically, the new link(s) designed to
+replace the old link are stored as an entry on the ``masks'' list, as
+an ordered pair consisting of: (1) old link-id; followed by, (2) the
+new link(s) replacing the old one.  Subsequent changes in the
+linked-to article cause old masks to be deleted and new masks to be
+swapped in; we never do ``recursive masking''.
+
+Mask-bearing links are clearly distinguished as such (at markup time),
+so that we can easily identify them later (when parsing markup).  The
+function that generates the mask-identifying tags is
+`compute-usable-about-data' (Note [[id:compute-usable-about-data]]),
+and the function that picks these tags out from among the others at
+commit time is `store-link-masks' (Note [[id:store-link-masks]]).
+Indeed, `store-link-masks' is responsible for creating new masks as
+well.
+
+At the other end of the process, the function
+`compute-usable-about-data' examines each link from the \inp{about}
+data of the linking article together with any corresponding masks, and
+replaces any link that is masked with the data coming from that mask
+(Note [[id:compute-usable-about-data]]).
+
+(Changes to the linking article's \inp{about} data can change
+link-id's, or do away with the requirement for a particular mask
+altogether -- this will have to be dealt with when we have mechanisms
+for changing \inp{about} data!)
+
+
+*** Masks
+:PROPERTIES:
+:LATEX_LABEL: masks
+:ID: masks
+:END:
+
+In light of the comments in Note [[id:masking-links]], it is possible
+to think of a mask as a map that takes a given link to to a region,
+and replaces it with a list of several regions.
+
+The format of a mask, then, is
+#+BEGIN_SRC elisp :tangle no
+((<name> <link number>) &rest regions)
+#+END_SRC
+where the regions are pairs (two-element lists), each giving the
+beginning and end of a region that the link is being redirected to.
+
+This format lacks generality!  Certainly a link that is pointing to
+something other than a region may need to be redirected, for example,
+a link pointing at a page, when the page gets deleted.  For the time
+being, these interesting cases can be dealt with through \emph{ad hoc}
+measures.  Eventually we'll want to make a study of all of the
+different redirection cases; but getting the platform working
+reasonably well takes priority.  (See also Note
+[[id:generality-of-masks]].)
+
+Finally, observe that the format used here is related to the format of
+the `current-markup' variable (Note [[id:current-markup]]).
+
+For an interesting meditation on masking perceptions, see
+Lem\footnote{Stanislaw Lem, The Futurological Congress}.
+
+
+*** Generality of masks                                            :noexport:
+:PROPERTIES:
+:LATEX_LABEL: generality-of-masks
+:ID: generality-of-masks
+:END:
+
+Once we have more general sorts of masks (Note [[id:masks]]), we'll
+have a host of new and interesting conditions to consider.  Different
+types of links will presumably have to be masked in different ways,
+and under different conditions.  
+
+Furthermore, we will eventually be masking \inp{text} data as well as
+\inp{about} data.
+
+
+*** On `compute-usable-about-data'
+:PROPERTIES:
+:LATEX_LABEL: compute-usable-about-data
+:ID: compute-usable-about-data
+:END:
+
+This function runs within the scope of `mark-things-up' (Note
+[[id:mark-things-up]]).  Its role is to identify the regions to be
+marked up, based on the \inp{about} data expressed by attached
+scholia, and augmented by any masks associated with this data.  In
+short, this is the mask-applying part of the algorithm described in
+Note [[id:masking-links]].
+
+The way it works is as follows.  We look through all of the links
+(\emph{although we really don't need to do this anymore, given that we
+  have specifically identified the relevant links by using link-id'ed
+  backlinks in the article being displayed; the change would have to
+  come in at the level of `mark-things-up' or higher}) -- and if the
+link is relevant, then it will be reflected in the value returned by
+`compute-usable-about-data'.  However, if the link is masked, it will
+be the mask that is reflected, instead of the link itself.
+
+Recall that we can't `assoc' the link across the masks; we need
+to `assoc' the link-id instead.
+
+The format of the return value is kind of ugly; we could almost
+certainly do without the extra `list' layer.
+
+Note that in the return value, the name of the \emph{scholium} is
+supplied, not the name of the linked-to article -- we'll subsequently
+know (when applying markup) that all of the links apply to the
+linked-to article, whereas we won't know where these links are coming
+from unless we record that specially.
+
+
+#+BEGIN_SRC elisp
+(defun compute-usable-about-data ()
+  (let (usable-data
+        (about (scholium-about scholium))
+        (masks (get-metadata-field 'masks
+                                   (scholium-name
+                                    scholium)))
+        (link-number 0))
+    (dolist (link about)
+      (setq link-number (1+ link-number))
+      (when (link-about-article-p link name-of-current-article)
+        (let* ((link-id (list (scholium-name scholium) link-number))
+               (mask (assoc link-id masks)))
+          (if mask
+              (dolist (reg (cdr mask))
+                (setq usable-data
+                      (add-to-or-start-list
+                       usable-data
+                       `((mask ,(car mask)) ,@reg))))
+            (setq usable-data
+                  (add-to-or-start-list
+                   usable-data
+                   (append (list (list (scholium-name scholium)
+                                       link-number))
+                           (let ((beg (link-beginning link)))
+                             (if beg 
+                                 (list beg (link-end link))
+                               (list nil))))))))))
+    usable-data))
+#+END_SRC
+
+*** On `mark-things-up-customizations'
+:PROPERTIES:
+:LATEX_LABEL: mark-things-up-customizations
+:ID: mark-things-up-customizations
+:END:
+
+This may not have to be used.
+
+
+#+BEGIN_SRC elisp
+(defvar mark-things-up-customizations nil)
+#+END_SRC
+
+*** On `scholia-display-pre-update-hook'
+:PROPERTIES:
+:LATEX_LABEL: scholia-display-pre-update-hook
+:ID: scholia-display-pre-update-hook
+:END:
+
+This gives us a chance to do various customizations to the environment
+before the main part of `mark-things-up' runs.
+
+I imagine that the role that it will play will be similar to the one
+played by the functions that run right in `pre-mark-up', namely to zap
+variables and settings that we don't want to have around anymore.
+
+
+#+BEGIN_SRC elisp
+(defvar scholia-display-pre-update-hook nil)
+#+END_SRC
+
+*** On `pre-mark-up'
+
+This function generally zaps things, to prepare for markup.
+
+
+#+BEGIN_SRC elisp
+(defun pre-mark-up ()
+  (setq current-markup nil)
+  (save-excursion
+    (set-buffer-to-rendering-target-buffer)
+    (remove-list-of-text-properties (point-min)
+                                    (point-max)
+                                    '(scholia)))
+  (mapcar #'delete-overlay main-article-overlays)
+  (setq main-article-overlays nil)
+  (setq scholia-count 0))
+#+END_SRC
+
+*** On `mark-things-up-hook'
+:PROPERTIES:
+:LATEX_LABEL: mark-things-up-hook
+:ID: mark-things-up-hook
+:END:
+
+For unconditional customizations to `mark-things-up'.
+The functions added to this hook run after everything
+else `mark-things-up' does is done.
+
+
+#+BEGIN_SRC elisp
+(defvar mark-things-up-hook nil)
+#+END_SRC
+
+*** On `mark-things-up'
+:PROPERTIES:
+:LATEX_LABEL: mark-things-up
+:ID: mark-things-up
+:END:
+
+This function assembles text, text properties, and overlays: it is the
+main rendering engine, called by `display-article' to get
+scholia and appropriate markup onto the screen.  It is important
+that `raw-scholia' be defined (and be a list of scholia)
+for this function to work properly.
+
+The first part of the plot is to delete the old markup; we call
+`pre-mark-up' to take care of this.
+
+A list of ``raw scholia'' is expected to be present in the context in
+which this function runs; typically this data is provided by
+`display-article' (see Note [[id:display-article]]), but it can be
+supplied by any stand-in (e.g. `display-scholia-about-current-buffer'
+of Note [[id:display-scholia-about-current-buffer]]).
+
+The raw scholia are first sorted using `sort-scholia-by-beg-position'
+(Note [[id:sort-scholia-by-beg-position]]) and then translated into a
+usable form by `compute-usable-about-data' (Note
+[[id:compute-usable-about-data]]).
+
+The function `mark-things-up' can handle different sorts of scholia
+differently (e.g., references are marked up in the conventional way);
+see Note [[id:ancillary-mark-things-up]].
+
+In order to \emph{selectively} display scholia, the `raw-scholia'
+variable should be modified before this function runs.
+
+
+#+BEGIN_SRC elisp
+(defun mark-things-up ()
+  (pre-mark-up)
+  (let ((scholia (sort-scholia-by-beg-position
+                  raw-scholia
+                  name-of-current-article)))
+    (dolist (scholium scholia)
+      (unless (typedata-includes-element-of-list
+               (scholium-type scholium)
+               non-printing-types)
+        (let ((usable-about-data (compute-usable-about-data))
+              (current-position-in-scholia-display (point)))
+          (cond
+           ((and
+             (typedata-includes (scholium-type scholium) 'reference)
+             (equal (reference-from-article scholium)
+                    name-of-current-article))
+            (mark-up-reference))
+           (t
+            (mark-up-scholium)))))))
+  (run-hooks 'mark-things-up-hook))
+#+END_SRC
+
+*** Ancillary functions for `mark-things-up'                       :noexport:
+:PROPERTIES:
+:LATEX_LABEL: ancillary-mark-things-up
+:ID: ancillary-mark-things-up
+:END:
+
+The functions that assemble and apply the markup, and in particular
+ the value stored on the `scholia' property, run within the scope of
+ `mark-things-up'.  The `scholia' property is built according to
+the description from Note [[id:the-scholia-property]].
+
+References are rendered by `mark-up-reference'; regular
+scholia are rendered by `mark-up-scholium'.  \emph{Note that there are
+  only two different nontrivial kinds of markup at present.}
+
+Some \emph{very} ancillary functions are described in Note
+[[id:functions-for-adding-overlays]].
+
+
+*** Functions for adding overlays
+:PROPERTIES:
+:LATEX_LABEL: functions-for-adding-overlays
+:ID: functions-for-adding-overlays
+:END:
+
+These function run within the scope of `mark-up-scholium' to
+add overlays to the display.
+
+
+#+BEGIN_SRC elisp
+(defun add-overlays-in-scholia-display-buffer ()
+  (setq scholia-overlays
+        (cons
+         (make-overlay current-position-in-scholia-display
+                       (point)
+                       (get-buffer "Scholia Display")
+                       t)
+         scholia-overlays))
+  (overlay-put (car scholia-overlays)
+               'face (scholium-face)))
+
+(defun add-overlays-in-rendering-target-buffer ()
+  (setq main-article-overlays
+        (cons
+         (make-overlay (second elt)
+                       (third elt)
+                       (get-rendering-target-buffer)
+                       t)
+         main-article-overlays))
+  (overlay-put (car main-article-overlays)
+               'face (scholium-face)))
+#+END_SRC
+
+*** On `mark-up-reference'
+:PROPERTIES:
+:LATEX_LABEL: mark-up-reference
+:ID: mark-up-reference
+:END:
+
+We call this function from `mark-things-up' (Note
+[[id:mark-things-up]]) to render a scholium if it has reference type
+and its \inp{about} data indicates that that the reference originates
+from (i.e., appears in) the current article.  See Note
+[[id:reference-access-functions]] for a description of the format of
+the return value of the function `reference-source-link' used here.
+
+References should perhaps be rendered differently depending on their
+sub-type (in particular, a different face could be used for references
+with different sub-types).
+
+(Do we really want to loop through all of the elements of
+`usable-about-data'?  Mightn't there be something there corresponding
+to the linked-to article?)
+
+
+#+BEGIN_SRC elisp
+(defun mark-up-reference ()
+  (save-excursion
+    (set-buffer-to-rendering-target-buffer)
+    (dolist (elt usable-about-data)
+      (mark-up-region (second elt)
+                      (third elt)
+                      (first elt))
+      (when use-crazy-font-lock
+        (setq main-article-overlays
+              (cons
+               (make-overlay (second elt)
+                             (third elt)
+                             (get-rendering-target-buffer)
+                             t)
+               main-article-overlays))
+        (overlay-put (car main-article-overlays)
+                     'face 'sch-reference-face)))))
+#+END_SRC
+
+*** Using the `scholia' property for everything!                   :noexport:
+:PROPERTIES:
+:LATEX_LABEL: using-scholia-property-for-everything
+:ID: using-scholia-property-for-everything
+:END:
+
+Notice that we use the same `scholia' property for references, and not
+some special property.  This seems to make reparsing easier (see
+Section [[id:parsing]]) -- but we can also easily filter the
+references out of the collection of all scholia when needed (Note
+[[id:follow-reference]]).
+
+
+*** Alternate reference display                                    :noexport:
+
+In Note [[id:references]] we asserted that references will be displayed
+as markup.  However, we could certainly set things up so that we could
+switch between the normal view and a view where references are
+displayed as ``proper scholia''.
+
+
+*** On `mark-up-scholium'
+
+This inserts scholia and marks them up, together with the marked up
+regions (when these exist; the function does both whole-article
+scholia and region-specific scholia).
+
+The `scholia-count' variable is set for purposes of face selection;
+see Note [[id:color-by-number]].
+
+
+#+BEGIN_SRC elisp
+(defun mark-up-scholium ()
+  ;; this part takes place in the scholia display buffer
+  (insert (sch-plain-text (scholium-name scholium)))
+  (add-to-scholia-property-within-region
+   current-position-in-scholia-display
+   (point)
+   ;; add a list to make it possible to reuse the scholium property
+   (list (scholium-name scholium)))
+  (when use-crazy-font-lock
+    (add-overlays-in-scholia-display-buffer))
+  (insert "\n\n")
+  ;; this part is relevant to the buffer containing the main article
+  (dolist (elt usable-about-data)
+    (when (second elt)
+      (save-excursion
+        (set-buffer-to-rendering-target-buffer)
+        (mark-up-region (second elt)
+                        (third elt)
+                        (first elt))
+        (when use-crazy-font-lock
+          (add-overlays-in-rendering-target-buffer)))))
+  ;; adjust count once everything else is done here, so same count
+  ;; applies in both buffers (useful for coloration purposes)
+  (setq scholia-count (1+ scholia-count)))
+#+END_SRC
+
+*** Markup in the Scholia Display buffer                           :noexport:
+:PROPERTIES:
+:LATEX_LABEL: markup-in-scholia-buffer
+:ID: markup-in-scholia-buffer
+:END:
+
+There is no technical reason to use overlays here, because we assume
+that this buffer is not subject to font-lock (i.e. we could use text
+properties for everything).  But, for the sake of uniformity, we
+always use overlays for fontification.  Also, there's no particular
+reason to maintain the `scholia' property as a list in this buffer, but
+we do that too.
+
+
+*** Make ``Scholia Display'' read-only?                            :noexport:
+
+Maybe `mark-things-up' should set and unset read-only status for the
+Scholia Display buffer.  Some of the functions we've written so far do
+toggle read-only status.  We should make a firm decision one way or
+the other!
+
+At present, it seems to me that it is best to have it be editable and
+have code ready to propagate changes back to their sources.  Indeed,
+this would make a good example of the power of this system.  See Note
+[[id:precedent-for-identification]].
+
+
+\subsubsection{Further notes on marking things up}
+
+*** Highlighting the current scholium                              :noexport:
+
+Note that it may prove to be useful to highlight the \emph{current}
+scholium in some way, or current \emph{scholia} with some kind of
+color-coded depth showing how many scholia are about the current piece
+of text.  (``Current'' here comes from where the point is in the main
+article display, but I suppose it might be reasonable to do something
+similar with the scholia display buffer.)
+
+
+*** Semantics of color                                             :noexport:
+
+The actual markup behavior should depend on the semantics that are
+currently \emph{en vogue}, see Note [[id:color-and-style]] and Note
+[[id:user-crafted-semantics]].  Maybe we should be using a hook or a
+redefinable function to handle the ``when use-crazy-font-lock'' case.
+
+
+*** Lots of different overlay styles possible                      :noexport:
+:PROPERTIES:
+:LATEX_LABEL: overlay-styles
+:ID: overlay-styles
+:END:
+
+In theory we could have a lot of different overlay styles.
+Implementing these styles seems a little tricky, but isn't too
+impossible.  Note that some of the different overlay setups may
+benefit from having more information than just the name stored locally
+(assuming that it takes a lot of time to look things up by name to
+find more properties, which isn't necessarily a fair assumption in the
+case of hash tables).
+
+One example of something that would be nice would be to have nested
+scholia display well.  (I'm sure they would even work consistently at
+present.)  It may be that delimiters would be a more effective way of
+illustrating such relationships.
+
+
+*** Sometimes we don't want overlays at all                        :noexport:
+
+Another point is that sometimes we don't want overlays to show up at
+all -- they could be very distracting when attached to code, for
+example.  Whether or not an overlay is shown in a given instance may
+depend on global state variables, properties of the article that is
+being marked up, or specific data that has been stored as part of a
+scholium.  (We'll have to add more code to handle these sorts of
+criteria.)
+
+
+*** Emacs task: blinking?                                          :noexport:
+:PROPERTIES:
+:LATEX_LABEL: blinking
+:ID: blinking
+:END:
+
+This is a pretty minor issue, but it would be cool to hack a
+\emph{display independent} blink property into emacs.  Blinking
+already works for cursors.  So, how to do it for text?  The point is
+that if there was a ``blink'' feature in Emacs, the ``move to region''
+things could make the text they find blink (this would work for
+monochrome displays of Note [[id:monochrome]] just as well as any
+other).
+
+
+*** Displaying nearby scholia                                      :noexport:
+:PROPERTIES:
+:LATEX_LABEL: displaying-nearby-scholia
+:ID: displaying-nearby-scholia
+:END:
+
+A nice display system will put some of the scholia nearby the current
+document onscreen.  The default operation of `mark-things-up'
+(performed through the offices of `sort-scholia-by-beg-position') is
+to show an article together with \emph{its} scholia in order; Note
+[[id:ancestors]] talks about going the other way.  But we can do still
+more complicated things.
+
+People like having nearby things to look at.  This is one reason that
+print dictionaries, for example, are kind of fun.  You look at the
+dictionary, and you can see words that are nearby lexicographically;
+sometimes they are related and sometimes they aren't.
+
+In different contexts, different sorts of ``closeness'' may be
+relevant, and different sorts semantics would help make the contextual
+display useful.
+

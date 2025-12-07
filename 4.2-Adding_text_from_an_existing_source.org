@@ -1,0 +1,98 @@
+** Adding text from an existing source
+:PROPERTIES:
+:LATEX_LABEL: adding-text
+:ID: adding-text
+:END:
+
+# \subsubsection{Adding text from buffers} \label{adding-buffers}
+
+*** On `make-current-buffer-into-article'
+
+We store the object representing the buffer in the \inp{text} field.
+There is no particular reason to set the \inp{type} (at least, one has
+yet to appear).
+
+An alternative approach would be to make an article's \inp{text}
+reflect the current contents of the buffer (i.e., save the buffer as a
+string) -- but we currently don't do this.  However, it would probably
+be nice to have that option, or even just the option to make a certain
+selection into an article.
+
+
+#+BEGIN_SRC elisp
+(defun make-buffer-into-article (&optional buffer name)
+  (let* ((buffer (or buffer
+                     (get-buffer (read-buffer
+                                  "Buffer: "
+                                  (buffer-name
+                                   (current-buffer))
+                                  t))))
+         (name (or name
+                   (read-string "Name: "
+                                nil
+                                nil
+                                (buffer-name buffer))))
+         (sync-context (and (fboundp 'futon4--article-context-for-buffer)
+                            (futon4--article-context-for-buffer buffer))))
+    (scholium name buffer nil nil (sch-book))
+    (when sync-context
+      (let* ((article-path (plist-get sync-context :path))
+             (article-id (and (fboundp 'futon4--article-id-for)
+                              (futon4--article-id-for name article-path))))
+        (when (and article-id (fboundp 'futon4-ensure-article-entity))
+          (futon4-ensure-article-entity article-id name article-path))))))
+
+(defun make-current-buffer-into-article (name)
+  (interactive (list (read-string
+                      (concat "Name (default "
+                              (buffer-name (current-buffer)) "): ")
+                      nil
+                      nil
+                      (buffer-name (current-buffer)))))
+  (make-buffer-into-article (current-buffer) name))
+#+END_SRC
+
+*** Arbitrary buffer over current buffer?                          :noexport:
+
+We could write `make-buffer-into-article' and
+`make-current-buffer-into-article' in such a way that the former
+calls the latter and uses `save-excursion'.  Both approaches
+seem to have the same end result.
+
+
+\subsubsection{Adding text from files} \label{adding-files}
+
+*** On `make-file-into-article'
+
+This function adds a file to the article list.  Again, the \inp{text}
+field is not filled in with a string representing the text directly,
+but rather, with the name of the file that holds the text.  A token is
+added to the \inp{type} field explaining that this is a file.
+
+
+#+BEGIN_SRC elisp
+(defun make-file-into-article (path name)
+  (interactive
+   (let* ((bufn (buffer-file-name))
+          (pth (read-file-name
+                (if bufn
+                    (concat "File (default: " bufn "): ")
+                  (concat "File: "))
+                nil
+                (if bufn
+                    bufn
+                  (default-directory))))
+          (dnme (file-name-nondirectory pth))
+          (nme (read-string (concat "Name (default: " dnme "): ")
+                            nil
+                            nil
+                            dnme)))
+     (list pth nme)))
+  (scholium name path nil '(file) (sch-book))
+  (let* ((canonical (and (fboundp 'futon4--canonical-path)
+                         (futon4--canonical-path path)))
+         (article-id (and (fboundp 'futon4--article-id-for)
+                          (futon4--article-id-for name canonical))))
+    (when (and article-id (fboundp 'futon4-ensure-article-entity))
+      (futon4-ensure-article-entity article-id name canonical))))
+#+END_SRC

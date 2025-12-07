@@ -1,0 +1,24 @@
+** Editing `about' data                                            :noexport:
+:PROPERTIES:
+:LATEX_LABEL: editing-about-data
+:ID: editing-about-data
+:END:
+
+*** The joys and sorrows of editing `about' data
+
+As noted in [[id:consistency-editing]], changes to \inp{about} data can
+have broad ramifications.  In addition to masking any explicit links
+that point at this data, we will have to change everything that uses
+link-id's. 
+
+In particular, backlinks corresponding to the set of edited links will
+have to change.  I think that this part at least can be accomplished
+by running `scholium-modified-about-hook' (cf. Note
+[[id:hooks-for-new-and-modified-scholia]] and Note
+[[id:put-backlinks]]).
+
+We'll have to decide whether it is worth our trouble to change markup
+(it would seem to be inavoidable; however, as a quick work-around,
+perhaps other renderings can simply be blanked out when \inp{about}
+data is being edited).
+

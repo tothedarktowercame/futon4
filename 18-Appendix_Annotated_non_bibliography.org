@@ -1,0 +1,32 @@
+* Appendix: Annotated non-bibliography
+:PROPERTIES:
+:LATEX_LABEL: appendix-bib
+:ID: appendix-bib
+:END:
+
+** Outside references
+
+For now, references are contained in footnotes.  To view a compilation
+of the Notes that contain footnotes, evaluate this form:
+#+BEGIN_SRC elisp :tangle no
+(progn (article-menu-list-articles-matching-regexp "\\footnote")
+  (listing-to-compilation nil))
+#+END_SRC
+Eventually we may have a nicer way of presenting this data.  Also,
+there are a number of references made in the text for which there are
+no footnotes, and the footnotes that do exist don't necessarily take a
+proper or in any way standard form.  This can be fixed up eventually.
+
+
+# %%%%%%%%%%%%%%%%%%% Back matter %%%%%%%%%%%%%%%%%%%%%%
+
+# \clearpage
+
+# % \addcontentsline{toc}{section}{\numberline {}References}
+# % \bibliography{sbdm4cbpp}
+
+# \printindex
+
+# \end{document}
+
+# %%% sbdm4cbpp.tex ends here

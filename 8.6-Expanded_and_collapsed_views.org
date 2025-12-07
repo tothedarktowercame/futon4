@@ -1,0 +1,61 @@
+** Expanded and collapsed views                                    :noexport:
+:PROPERTIES:
+:LATEX_LABEL: expanded-and-collapsed
+:ID: expanded-and-collapsed
+:END:
+
+*** Expanded and collapsed views of derivative articles
+
+There should probably be at least two different views into an article
+that makes use of any of the derivative-making tools we've discussed
+in this section: one that shows all of the rendered text, and another
+which just shows \emph{tokens} standing in for the rendered text.  See
+Note [[id:transcluding-and-outlines]], as well as Note
+[[id:rendered-and-source-views]].  Collapsed views are essentially
+``graphical'' representations of formats like the one listed in
+Note [[id:format-of-text-with-derivatives]].  In order to make these views
+available to the user, we'll want to provide `expand-derivatives'
+and `collapse-derivatives' commands, as well as, probably, individual
+commands for individual derivative items and each of the three
+derivative types.
+
+
+*** View is initially expanded
+
+New derivative pieces are inserted in their expanded
+form (see, e.g., Note [[id:insert-identification-at-point]]).
+
+
+*** Collapsing and expanding individual derivative items
+
+We could set things up to render everything as collapsed or
+expanded all at once, but another option is to have a function
+that collapses or expands individual items.
+
+
+*** Identification through nontrivial maps
+:PROPERTIES:
+:LATEX_LABEL: identification-through-nontrivial-maps
+:ID: identification-through-nontrivial-maps
+:END:
+
+In some cases it would be useful to have identifications
+go through non-trivial maps, for example, to transform
+a rendered piece of \LaTeX\ text into the standard source
+form.  In addition, it might be nice to store metadata about
+Notes in some other place than the note's immediate neighborhood.
+
+
+*** Alternative to identification for simple literate programming applications
+:PROPERTIES:
+:LATEX_LABEL: alternative-to-identification
+:ID: alternative-to-identification
+:END:
+
+It may also be the case that we don't really need to do
+identifications to get the ability to import and export
+code from the scholium system.   As long as everything
+is appearing in Notes, we should be able to edit things
+in an outline fashion and then export that to the \LaTeX\
+document.
+

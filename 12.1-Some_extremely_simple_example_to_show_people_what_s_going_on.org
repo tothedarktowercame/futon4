@@ -1,0 +1,19 @@
+** Some extremely simple example to show people what's going on    :noexport:
+
+*** Simplest example
+
+It would be handy to create a very simple example of a buffer
+together with scholia.
+
+
+*** Next-simplest example
+
+After that, it would be handy to make an example of a properly
+scholia-based document (showing some richer graph structure).
+
+
+*** Various other simple examples?
+
+And while we're at it, maybe later a simple example of transclusion or
+identification or whatever.
+

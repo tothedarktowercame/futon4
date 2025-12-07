@@ -1,0 +1,20 @@
+** Responding to incoming metadata                                 :noexport:
+:PROPERTIES:
+:LATEX_LABEL: responding-to-incoming-metadata
+:ID: responding-to-incoming-metadata
+:END:
+
+*** How to deal with metadata
+
+This section gives support for article owners dealing with incoming
+metadata coming from editing events.  An important example: scholia
+may see suggested changes to their \inp{about} data when the
+article(s) that they are about change).  Authors might want to
+incorporate such incoming changes into their document, or obliterate
+them, or revise them.  Perhaps a scholium author will want their
+comments to apply to the version of the article it commented on, but
+not to the revised version.  Or perhaps a scholium author would like
+to drop their content all together (to the extent that this is
+possible).  We'll do what we can to accomodate these various actions
+in this section.
+

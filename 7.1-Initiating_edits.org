@@ -1,0 +1,65 @@
+** Initiating edits
+:PROPERTIES:
+:LATEX_LABEL: initiating-edits
+:ID: initiating-edits
+:END:
+
+*** How to initiate edits                                          :noexport:
+
+Buffers are frequently non-read-only; if these buffers have been
+marked up with scholia, then they can be edited directly.  The Main
+Article Display buffer (for scholia with no other or better home) may
+as well be non-read-only as well.  The point being that to start
+editing the \inp{text} of an article, one just needs to begin.  (In
+the current implementation, articles in the Scholia Display buffer
+need to be made current with `follow-scholium', or by some other
+means, but that is easy enough.)
+
+However, the other parts of an article (Note
+[[id:definition-of-scholium]]) are not immediately editable without
+some intermediate step to call them up and expose them to the user.
+Since \inp{bookkeeping} data is maintained by the system itself, the
+only parts of articles that need special initial steps to edit are the
+\inp{name}, \inp{about}, and \inp{type} fields.
+
+
+*** Inserting text in the middle of a marked up region
+:PROPERTIES:
+:LATEX_LABEL: inserting-text-in-middle-of-marked-up-region
+:ID: inserting-text-in-middle-of-marked-up-region
+:END:
+
+When someone inserts text into the middle of a marked up region, does
+the new text take on the markup properties of the surrounding text, or
+does it not, or can we make it an option, to possibly be exercised in
+different ways in different places?  I assume we will want different
+behavior at different times.  (Cf. Note
+[[id:splitting-text-properties]]).  The reference to consider is the
+``Sticky Properties'' node from the Elisp manual\footnote{(info
+  "(elisp)Sticky Properties")}.
+
+There they tell us that
+\begin{quotation}
+By default, a text property is rear-sticky but not front-sticky; thus,
+the default is to inherit all the properties of the preceding
+character, and nothing from the following character.
+\end{quotation}
+Furthermore,
+\begin{quotation}
+If a character's `rear-nonsticky' property is `t', then none of its
+properties are rear-sticky.  If the `rear-nonsticky' property is a
+list, properties are rear-sticky \emph{unless} their names are in the
+list.
+\end{quotation}
+Thus, we have nothing to worry about in terms of front-stickiness, but
+we must maintain an appropriate rear-nonsticky list throughout the
+regions in which we want some of the properties to be non-sticky.
+
+Something like this (enhanced, of course) will work:
+#+BEGIN_SRC elisp :tangle no
+(progn (put-text-property (line-beginning-position) (line-end-position)
+       'face 'italic)
+       (put-text-property (line-beginning-position) (line-end-position)
+       'rear-nonsticky '(face)))
+#+END_SRC
+

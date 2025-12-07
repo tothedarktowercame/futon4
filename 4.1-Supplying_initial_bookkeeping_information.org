@@ -1,0 +1,25 @@
+** Supplying initial bookkeeping information
+:PROPERTIES:
+:LATEX_LABEL: bookkeeping
+:ID: bookkeeping
+:END:
+
+*** On `sch-book'
+:PROPERTIES:
+:LATEX_LABEL: sch-book
+:ID: sch-book
+:END:
+
+Interactive functions that call `scholium' should always provide
+\inp{bookkeeping} information.
+
+The following definition can be extended to add any sort of initial
+bookkeeping information we might like to maintain.  The
+\inp{bookkeeping} field will be revised when the article is edited
+(see Section [[id:editing]]).
+
+
+#+BEGIN_SRC elisp
+(defun sch-book ()
+  `((created ,user-login-name ,(current-time-string))))
+#+END_SRC

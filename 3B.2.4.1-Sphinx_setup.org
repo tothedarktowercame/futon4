@@ -1,0 +1,109 @@
+* Sphinx setup                                                     :noexport:
+
+** Building Sphinx
+
+#+BEGIN_SRC sh :tangle no
+# Fedora/Postgresql flavor
+yum install postgresql-devel
+./configure --without-mysql \
+  --with-pgsql \
+  --with-pgsql-libs=/usr/lib/pgsql/ \
+  --with-pgsql-includes=/usr/include/pgsql
+
+# Fink/MySQL flavor
+./configure --with-mysql \
+  --with-mysql-includes=/sw/include/mysql \
+  --with-mysql-libs=/sw/lib/mysql
+#+END_SRC
+
+** Getting Sphinx set up
+:PROPERTIES:
+:LATEX_LABEL: sphinx-setup
+:ID: sphinx-setup
+:END:
+
+Here are some instructions I've used to get Sphinx set up.
+
+*** Create a sphinx.conf
+
+I want a very minimal sphinx.conf; this one has worked. (We should
+probably automate writing this file during setup.)
+
+#+BEGIN_EXAMPLE
+## Copy this to /usr/local/etc/sphinx.conf when you want
+## to use it.
+
+source strings
+{
+ type            = mysql
+ sql_host        = localhost
+ sql_user        = joe
+ sql_pass        = joe
+ sql_db          = joe
+ sql_query       = SELECT id, text FROM strings
+}
+
+## index definition
+
+index strings
+{
+ source          = strings
+ path            = /Users/planetmath/sphinx/search-testing
+ morphology      = none
+}
+
+## indexer settings
+
+indexer
+{
+ mem_limit       = 32M
+}
+
+## searchd settings
+
+searchd
+{
+ listen          = 3312
+ listen          = localhost:3307:mysql41
+ log             = /Users/planetmath/sphinx/searchd.log
+ query_log       = /Users/planetmath/sphinx/searchd_query.log
+ read_timeout    = 5
+ max_children    = 30
+ pid_file        = /Users/planetmath/sphinx/searchd.pid
+ max_matches     = 1000
+}
+#+END_EXAMPLE
+
+*** Working from the command line
+
+#+BEGIN_SRC sh :tangle no
+/usr/local/bin/indexer strings
+/usr/local/bin/search "but, then"
+
+mysql -h 127.0.0.1 -P 3307 <<'SQL'
+SELECT * FROM strings WHERE MATCH('but, then');
+SQL
+#+END_SRC
+
+*** Integrating this with Lisp
+
+Since Sphinx speaks the MySQL protocol, CLSQL can talk to it directly
+with the right connection parameters.
+
+#+BEGIN_SRC lisp :tangle no
+(connect '("127.0.0.1" "" "" "" "3307") :database-type :mysql)
+(mapcar (lambda (elt) (floor (car elt)))
+        (query "select * from strings where match('text')"))
+#+END_SRC
+
+*** Some added difficulty with PostgreSQL
+
+On the server I hit the following error, which suggests Postgres
+wasn't accepting TCP/IP connections locally.
+
+#+BEGIN_EXAMPLE
+ERROR: index 'strings': sql_connect: could not connect to server:
+Connection refused
+Is the server running on host "localhost" and accepting
+TCP/IP connections on port 5432?
+#+END_EXAMPLE

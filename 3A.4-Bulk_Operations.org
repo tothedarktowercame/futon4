@@ -1,0 +1,83 @@
+** Bulk Operations
+
+*** On `download-en-masse'
+
+Unpack triplets, obtain labels if they exist.
+Write data in the network to a list, and return.
+
+
+#+BEGIN_SRC elisp
+(defun download-en-masse ()
+  "Produce a representation of the database as quintuples."
+  (let ((plex nil))
+    (maphash (lambda (uid tplt)
+               ;; Unpack triplet.
+               (let ((src (car tplt))
+                     (snk (nth 1 tplt))
+                     (txt (nthcdr 2 tplt)))
+                 ;; Obtain label if exists.
+                 (setq lbl (gethash uid
+                                    (nth 5 current-plexus)
+                                    nil))
+                 ;; Write data to list.
+                 (setq plex (cons `(,uid ,lbl ,src ,snk . ,txt)
+                                 plex))))
+             (nth 2 current-plexus))
+    ;; Return list of data.
+    (reverse plex)))
+#+END_SRC
+
+*** On `upload-en-masse'
+
+Unpack quintuplets.  Plug into tables.
+Bump up article counter as needed.
+
+
+#+BEGIN_SRC elisp
+(defun upload-en-masse (plex)
+  "Load a representation of a database as quintuples into memory."
+  (dolist (qplt plex t)
+    ; unpack quintuplet
+    (let ((uid (car qplt))
+            (lbl (nth 1 qplt))
+              (src (nth 2 qplt))
+                (snk (nth 3 qplt))
+                  (txt (nthcdr 4 qplt)))
+      ; plug into tables
+      (puthash uid
+                      `(,src ,snk . ,txt)
+                             (nth 2 current-plexus))
+      (puthash src
+                      (cons `(,uid . ,snk)
+                                 (gethash src (nth 3 current-plexus) nil))
+                             (nth 3 current-plexus))
+      (puthash snk
+                      (cons
+                       `(,uid . ,src)
+                       (gethash snk (nth 4 current-plexus) nil))
+                             (nth 4 current-plexus))
+      (when lbl
+          (progn
+                (puthash uid lbl (nth 5 current-plexus))
+                    (puthash lbl uid (nth 6 current-plexus))))
+      ; Bump up nema counter if needed.
+      (when (> uid (cadr current-plexus))
+             (setcar (cdr current-plexus) uid)))))
+#+END_SRC
+
+*** On `add-en-masse'
+
+Given several articles, add all of them at once.
+
+
+#+BEGIN_SRC elisp
+(defun add-en-masse (plex)
+  "Add multiple nemata given as list of quartuplets."
+  (mapcar (lambda (qplt)
+            (let ((uid (next-unique-id)))
+              (add-nema (nth 1 plex)
+                        (nthcar 2 plex)
+                        (nth 2 plex))
+              (label-nema uid (car qplt))))
+          plex))
+#+END_SRC

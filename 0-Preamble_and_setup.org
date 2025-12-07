@@ -1,0 +1,186 @@
+* Preamble and setup
+
+%%% sbdm4cbpp.tex -- An advanced hypertext system for Emacs
+
+%% Copyright (C) 2005 Joe Corneli <jcorneli@planetmath.org>
+
+%% Time-stamp: <2006-06-08 14:29:13 jcorneli>
+
+%% This program is free software: you can redistribute it and/or modify
+%% it under the terms of the GNU Affero General Public License as published by
+%% the Free Software Foundation, either version 3 of the License, or
+%% (at your option) any later version.
+
+%% This program is distributed in the hope that it will be useful,
+%% but WITHOUT ANY WARRANTY; without even the implied warranty of
+%% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%% GNU Affero General Public License for more details.
+
+%% You should have received a copy of the GNU Affero General Public License
+%% along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+%%% Commentary:
+
+%%% Code:
+
+\documentclass[12pt]{article}
+
+\usepackage{beton}
+\usepackage{concmath}
+\usepackage{graphicx}
+%\usepackage{hyperref}
+\usepackage{makeidx}
+\makeindex
+
+%% Reformatting the index to be single column
+
+\makeatletter
+\renewcommand{\theindex}{
+    \@restonecoltrue\if@twocolumn\@restonecolfalse\fi
+    \clearpage
+    \section*{Index of Functions}
+    \parindent\z@
+    \parskip\z@ plus .3pt\relax\let\item\@idxitem
+    \addcontentsline{toc}{section}{\numberline {}Index of Functions}
+}
+\makeatother
+
+%% Run this code to put all of the function definitions into the
+%% index.  (I'm not sure yet how to build an index of terms as well as
+%% an index of functions.)
+
+%% (while (re-search-forward "\\\#+BEGIN_SRC elisp\n(defun \\([^ ]+\\)")
+%%   (goto-char (match-beginning 0))
+%%   (insert (concat "\\index{" (match-string 1) "}\n"))
+%%   (search-forward "end{lisp}"))
+
+% Use ``makeindex sbdm4cbpp'' to build the index & run latex multiple
+% times to get everything settled.
+
+\usepackage{url}
+\usepackage{graphicx}
+\usepackage[round,authoryear,sort&compress]{natbib}
+\bibliographystyle{plainnat}
+
+%% Does this mess up the ``works on a wholly free software system''
+%% property?
+%%% \usepackage{simplemargins}
+%% copying the below from simplemargins.sty, hopefully under fair use:
+%% (this will save users from a dependency, whether free or non-free)
+ \newlength{\smpagewidth}
+ \newlength{\smpageheight}
+
+ \setlength{\smpagewidth}{8.5in}
+ \setlength{\smpageheight}{11in}
+
+ \addtolength{\textwidth}{\oddsidemargin}
+ \addtolength{\textwidth}{1in}
+ \addtolength{\textwidth}{-1in}
+ \setlength{\oddsidemargin}{-1in}
+ \addtolength{\oddsidemargin}{1in}
+ \setlength{\evensidemargin}{\oddsidemargin}
+
+ \setlength{\textwidth}{\smpagewidth}
+ \addtolength{\textwidth}{-\oddsidemargin}
+ \addtolength{\textwidth}{-1in}
+ \addtolength{\textwidth}{-1in}
+
+ \addtolength{\textheight}{\topmargin}
+ \addtolength{\textheight}{1in}
+ \addtolength{\textheight}{\headheight}
+ \addtolength{\textheight}{\headsep}
+ \addtolength{\textheight}{-1.5in}
+ \setlength{\topmargin}{-1in}
+ \addtolength{\topmargin}{-\headheight}
+ \addtolength{\topmargin}{-\headsep}
+ \addtolength{\topmargin}{1.5in}
+
+ \setlength{\textheight}{\smpageheight}
+ \addtolength{\textheight}{-\topmargin}
+ \addtolength{\textheight}{-1in}
+ \addtolength{\textheight}{-\footskip}
+ \addtolength{\textheight}{-.5in}
+%% end copied portion.  
+
+%% (And this is what it replaces.)
+% \setleftmargin{1in}
+% \setrightmargin{1in}
+% \settopmargin{1.5in}
+% \setbottommargin{.5in}
+
+\usepackage[normalem]{ulem}
+\usepackage{amssymb}
+\usepackage[mathscr]{euscript}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amsopn}
+\usepackage{amstext}
+\usepackage{amsthm}
+
+\parindent = 1.2em
+
+\theoremstyle{definition}
+\newtheorem{prop}{Proposition}
+\newtheorem{nota}{Note}[section]
+\newtheorem{rem}{Editorial Remark}[section]
+\newtheorem{lem}{Lemma}
+\newtheorem{thm}{Theorem}
+\newtheorem{cor}{Corollary}
+\newtheorem{con}{Conjecture}
+
+\usepackage{verbatim}
+\makeatletter
+\newenvironment{lisp}
+  {\let\ORGverbatim@font\verbatim@font
+   \def\verbatim@font{\ttfamily\scshape}%
+   \verbatim}
+  {\endverbatim
+  \let\verbatim@font\ORGverbatim@font}
+\makeatother
+
+\makeatletter
+\newenvironment{idea}
+  {\let\ORGverbatim@font\verbatim@font
+
+   \def\verbatim@font{\ttfamily\slshape}%
+   \verbatim}
+  {\endverbatim
+  \let\verbatim@font\ORGverbatim@font}
+\makeatother
+
+\newenvironment{notate}[1]
+  {\begin{nota}[{\bf {\em #1}}]}%
+  {\end{nota}}
+
+\newenvironment{note}[1]
+  {\begin{nota}[{\bf {\em #1}}]}%
+  {\end{nota}}
+
+\newenvironment{edit}[1]
+  {\begin{rem}[{\bf {\em #1}}]\sl}%
+  {\normalfont\end{rem}}
+
+\newcommand{\comm}[1]{
+\sf \fbox{\begin{minipage}{.75\textwidth}#1\end{minipage}} \normalfont}
+
+\newcommand{\inp}[1]{\sl#1\normalfont}
+
+\newcommand{\xref}[1]{[[id:#1]]}
+
+%% Geh! $\chi$ with a subscript is typeset badly if you
+%% don't put in a fake superscript, what's up with that?
+%% Of course, if you use a function with a fake superscript,
+%% you can't very well add another superscipt to it, can you!
+%% Grr.
+%%
+%% But, maybe I could make one required argument and
+%% a second optional argument and solve the problem that
+%% way? -- Well, LaTeX lets you have one optional argument
+%% alright, but it wants the optional argument to be the first
+%% argument, and I don't see any easy way around that.  I
+%% guess I could ask an expert sometime, but it doesn't quite
+%% seem worth it.  OTOH, this issue of typesetting chi's is
+%% a bit of a bug, I think, so maybe it should be reported.
+\newcommand{\indicator}[1]{\chi_{#1}^{}}
+
+\begin{document}

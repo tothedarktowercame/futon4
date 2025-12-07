@@ -1,0 +1,78 @@
+#+TITLE: Arxana Reanimation Plan
+#+AUTHOR: Futon4 / Arxana team
+#+OPTIONS: toc:nil num:t
+
+* Purpose
+
+This living specification tracks the work required to bring the classic
+Arxana Emacs client back into a fully functional state while targeting the
+Futon1 EAV backend.  Each milestone links source material (Org chapters,
+Elisp modules, docs) to concrete validation steps so we can prove round-trip
+behavior at every stage.
+
+* Workflow loop
+
+1. Regenerate `arxana/arxana-tangled.el` from the spine (see Source & Build).
+2. Run the ERT smoke suite to verify the harness still loads.
+3. Exercise the feature under development inside Emacs and via Futon curl
+   checks, capturing the commands we expect contributors to run.
+4. Update this file with new tasks, status, and references.
+
+* Milestone tracker
+
+** M0 — Harness & Spec [3/3]
+- [X] Record the reanimation scope and workflow in this document.
+- [X] Provide a repeatable tangling/bootstrap harness (interactive + batch).
+- [X] Seed a minimal ERT suite that gatekeeps the harness.
+
+** M1 — Storage Bridge Hardening [5/5]
+- [X] Audit Futon sync funcs (`futon4-*`) and document supported ops (`docs/storage-bridge.org`).
+- [X] Wrap backend calls with user-facing commands (`arxana-store-*`).
+- [X] Capture curl verification steps per endpoint (see storage bridge doc + README).
+- [X] Add ERT/Elisp fakes for entity + relation flow (`arxana/test/arxana-store-test.el`).
+- [X] Ensure Emacs gracefully handles Futon downtime (error plists + log messages).
+
+** M2 — Article Lifecycle [5/5]
+- [X] Restore buffer/file → article flows with canonical ids (bootstrap + path cache).
+- [X] Rebuild metadata scholium syncing for labels/backlinks (hooks feed Futon props).
+- [X] Confirm deletes/updates propagate to Futon history (`status` updates + history docs).
+- [X] Provide regression fixtures for article round trips (ERT store/article tests).
+- [X] Document workflows in `README.md` (editing, syncing, verifying).
+
+** M3 — Scholia & Relations [4/4]
+- [X] Reinstate scholium authoring minor mode + Futon relation mirroring.
+- [X] Surface `/ego`, `/cooccur`, `/tail` data inside Emacs buffers.
+- [X] Add automated checks for scholium adjacency.
+- [X] Expand docs with relation troubleshooting steps.
+
+** M4 — Browsing & Rendering [5/5]
+- [X] Re-enable Part VI browsing modes (local, catalog, temporal, linear).
+- [X] Tie rendering buffers to Futon ids for refresh + provenance.
+- [X] Build UI affordances for inclusion/derivation previews.
+- [X] Validate expanded/collapsed views with backend data.
+- [X] Add narrative examples demonstrating the flows.
+
+** M5 — Workflow plumbing [3/4]
+- [X] Map inclusion/derivation/provenance events to multi-end Futon edges.
+- [X] Connect save/restore to XTDB snapshots instead of legacy stores.
+- [X] Create import/export shims for modern doc formats.
+- [ ] Produce migration notes for historical datasets.
+
+** M5A — Inclusion/Transclusion UX [0/3]
+- [ ] Visually differentiate included vs. transcluded regions in the main article buffer.
+- [ ] Provide toggle commands to highlight each derivative type independently.
+- [ ] Document the visual affordances and add a regression test covering both styles.
+
+** M6 — QA & Release Prep [0/4]
+- [ ] Grow the ERT suite (unit, integration, CLI smoke).
+- [ ] Document test instructions + CI hooks.
+- [ ] Provide contributor guide (coding style, tangling, testing).
+- [ ] Tag a “revived” release with reproducible steps.
+
+* Artifacts
+
+- Harness + bootstrap: `arxana/dev/bootstrap.el`
+- Tests: `arxana/test/`
+- Docs: `arxana/README.md`, this plan, and future how-tos.
+
+Update this plan whenever a milestone progresses; keep the checklist honest.

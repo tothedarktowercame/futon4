@@ -1,0 +1,13 @@
+** Using the scholium system to do AI stuff                        :noexport:
+:PROPERTIES:
+:LATEX_LABEL: AI-stuff
+:ID: AI-stuff
+:END:
+
+*** Take an example from a known system
+
+It would be a good idea to find at least one example from a ``standard
+AI'' system (KM's chemistry-problem solving, for example) and import
+and otherwise emulate it in the system here.  We'll have to look
+around for a good example.
+

@@ -1,0 +1,198 @@
+* SQL tables                                                       :noexport:
+:PROPERTIES:
+:LATEX_LABEL: sql-code
+:ID: sql-code
+:END:
+
+** Objects and codes
+:PROPERTIES:
+:LATEX_LABEL: objects-and-codes
+:ID: objects-and-codes
+:END:
+
+Every object in the system is identified by an ordered
+pair: a \emph{code} and a \emph{reference}.  The codes say
+which table contains the indicated object, and references
+provide that object's id.  To a specific element of a list
+or n-tuple, a third number, that element's \emph{offset},
+is required.  The codes are as follows:
+
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+0 & list \\ \hline
+1 & string \\ \hline
+2 & pair \\ \hline
+3 & triple \\ \hline
+\end{tabular}
+\end{center}
+
+
+#+BEGIN_SRC sql :tangle no
+CREATE TABLE strings (
+   id SERIAL PRIMARY KEY,
+   text TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE pairs (
+   id SERIAL PRIMARY KEY,
+   code1 INT NOT NULL,
+   ref1 INT NOT NULL,
+   code2 INT NOT NULL,
+   ref2 INT NOT NULL,
+   UNIQUE (code1, ref1,
+           code2, ref2)
+);
+
+CREATE TABLE triples (
+   id SERIAL PRIMARY KEY,
+   code1 INT NOT NULL,
+   ref1 INT NOT NULL,
+   code2 INT NOT NULL,
+   ref2 INT NOT NULL,
+   code3 INT NOT NULL,
+   ref3 INT NOT NULL,
+   UNIQUE (code1, ref1,
+           code2, ref2,
+           code3, ref3)
+);
+#+END_SRC
+
+** A list of lists
+:PROPERTIES:
+:LATEX_LABEL: models-of-theories
+:ID: models-of-theories
+:END:
+
+As a central place to manage our collections, we first
+create a list of lists.  The `heading' is the list's name,
+and its `header' is metadata.
+
+
+#+BEGIN_SRC sql :tangle no
+CREATE TABLE lists (
+  id SERIAL PRIMARY KEY,
+  heading REFERENCES strings(id) UNIQUE,
+  header REFERENCES strings(id) 
+);
+#+END_SRC
+
+** Lists on demand
+:PROPERTIES:
+:LATEX_LABEL: models-of-theories
+:ID: models-of-theories
+:END:
+
+Whenever we want to create a new list, we first add to the
+`lists' table, and then create a new table ``listk''
+(where k is equal to the new maximum id on `lists').
+
+
+#+BEGIN_SRC sql :tangle no
+CREATE TABLE listk (
+   offset SERIAL PRIMARY KEY,
+   code INT NOT NULL,
+   ref INT NOT NULL
+);
+#+END_SRC
+
+** Side-note on containers via triples
+:PROPERTIES:
+:LATEX_LABEL: containers-using-triples
+:ID: containers-using-triples
+:END:
+
+To model a basic container, we can just use triples like
+``(A in B)''.  This is useful, but the elements of B are
+of course unordered.  In Section
+# [[id:importing]],
+we make
+extensive use of triples like (B 1 $\alpha$), (B 2
+$\beta$), etc., to indicate that B's first component is
+$\alpha$, second component is $\beta$, and so on; so we
+can make ordered list-like containers as well.
+
+This is an example of the difference in expressive power
+of tags (which only provide a sense of unordered
+containment in ``virtual baskets'') and triples (which
+here are seen to at least provide the additional sense of
+ordered containment in ``virtual filing cabinets'',
+although they have much more in store for us); cf. Note
+# [[id:prog-lit-review]].
+
+As useful as models based on these two principles are in
+principle, the user could easily be overloaded by looking
+at lots of different containers encoded in raw triples,
+all at once.
+
+
+** Sense of containment
+
+Note that every element of a list is in the list in the
+same ``sense'' -- for example, we can't instantly
+distinguish elements that are ``halfway in'' from those
+that are ``all the way in'', the same way we could with
+pure triples.
+
+
+%% ** References into theories
+
+%% Since at the moment we have less than 10 basic codes, we
+%% can uniquely reference contents of theory $k$ with ordered
+%% pairs $10k+\mathit{basic\ code}$ and $\mathit{reference}$.
+%%
+
+
+** Uniqueness of strings and triples
+:PROPERTIES:
+:LATEX_LABEL: unique-things
+:ID: unique-things
+:END:
+
+An attempt to create a duplicate contents in a string or
+triple generates a warning.  This saves storage, given
+possible repetitive use -- and avoids confusion.  We can,
+however, reference duplicate ``copies'' on the lists.
+
+
+** Change
+:PROPERTIES:
+:LATEX_LABEL: change
+:ID: change
+:END:
+
+Notice also that since neither strings nor triples
+``change'', we have to account for change in other ways.
+In particular, the contents of lists can change.  (We may
+subsequently add some metadata to certain lists are
+``locked'', or indicate that they can only be changed by
+adding, etc., so that their contents can be cited stably
+and reliably.)
+
+
+%% ** Each place contains one object
+
+ \label{places}
+%% It is obvious from the table definition that I want each
+%% place to contain precisely one thing; perhaps it is less
+%% obvious why I want to use a database table to maintain
+%% this relationship between ``places'' and ``things''.  This
+%% is largely a matter of convenience, but in particular it
+%% makes it easy for places to change.
+%%
+
+
+** Provenance and other metadata
+:PROPERTIES:
+:LATEX_LABEL: provenance
+:ID: provenance
+:END:
+
+We could of course add much more structure to the
+database, starting with simple adjustments like adding
+provenance metadata or versioning into the records for
+each stored thing.  For the time being, I assume that such
+metadata will appear in the application or content layer,
+as triples.  (The exception are the ``headings'' and
+``headers'' associated with lists.)
+

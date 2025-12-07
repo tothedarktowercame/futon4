@@ -1,0 +1,68 @@
+** Editing labels
+:PROPERTIES:
+:LATEX_LABEL: editing-labels
+:ID: editing-labels
+:END:
+
+*** To edit labels                                                 :noexport:
+
+If you're going to edit a label, you'd like to do things like insert
+new articles, delete old articles, rearrange the order of entries, and
+so on.  Preliminary support for this sort of thing is given in this
+section.
+
+
+*** On `article-menu-insert-new-article'
+
+This function lets you add new articles to a recently browsed label.
+
+For now, we assume that we really are adding a \emph{new} article
+(and not some existing one); and that this new article will
+take the quotidian form offered by `make-scholium' (Note 
+[[id:make-scholium]]).  These assumptions may be relaxed later.
+ 
+The function one of `label-article' and `label-article-insert-before'
+to add the label to the new article (Note [[id:label-article]], Note
+[[id:label-article-insert-before]]).
+
+(When creating this new article, I hope that enough ancillary metadata
+, \inp{type} and so on, is added to allow it to be recognized as part
+of the relevant hierarchy later.)
+
+
+#+BEGIN_SRC elisp
+(defun article-menu-insert-new-article ()
+  (interactive)
+  (if currently-displayed-label
+      (let ((new-entry (read-string "New entry: "))
+            (old-entry (save-excursion
+                         (goto-char (line-beginning-position))
+                         (search-forward-regexp "[. >] ." nil t)
+                         (setq name-of-current-article
+                               (get-text-property (point) 'name)))))
+        (setq new-scholium-name new-entry)
+        (let ((line (line-number-at-pos)))
+          (if old-entry
+              (label-article-insert-before
+               new-entry old-entry currently-displayed-label)
+            (label-article new-entry currently-displayed-label))
+          (display-label currently-displayed-label)
+          (goto-line line))
+        (make-scholium))
+    (message "Listing doesn't represent a label.")))
+
+(define-key article-menu-map "i" 'article-menu-insert-new-article)
+#+END_SRC
+
+*** Committing edits to labels                                     :noexport:
+:PROPERTIES:
+:LATEX_LABEL: commit-label
+:ID: commit-label
+:END:
+
+So far, the editing steps we do with labels are automatically
+entered into the backend, so, at this point, we don't need a 
+`commit-label'.  If it turns out that we want one, then these
+routines will have to be rewritten somewhat, and `commit-edits'
+will have to have `commit-label' hooked into it.
+

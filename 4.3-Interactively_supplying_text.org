@@ -1,0 +1,696 @@
+** Interactively supplying text
+:PROPERTIES:
+:LATEX_LABEL: interactive
+:ID: interactive
+:END:
+
+*** Global varibles describing new scholia
+
+The variables `new-scholium-name' and `new-scholium-about' are used to
+build new articles interactively.  For now, \inp{type} is ignored by
+these functions.  Also, we don't have a `new-scholium-text' field,
+since we get the text another way.  It could be that an approach with
+a `new-scholium-text' variable would allow us to unify the treatment
+here with the one used in previous subsections.
+
+
+#+BEGIN_SRC elisp
+(defvar new-scholium-name nil "Name of our new scholium.")
+(defvar new-scholium-about nil "What the new scholium is about.")
+#+END_SRC
+
+*** On `new-scholium-mode'
+
+This mode is invoked by `make-scholium' in the buffer in which the new
+scholium's \inp{text} is to be supplied.
+
+
+#+BEGIN_SRC elisp
+(define-minor-mode new-scholium-mode
+  "Mode for composing a new scholium.
+\\{new-scholium-mode-map}"
+  :init-value nil
+  :keymap '(("\C-c\C-c" . escape-scholium-creation)))
+#+END_SRC
+
+*** On `escape-scholium-creation'
+
+Once the new scholium's \inp{text} has been supplied, this function
+creates a scholium from that text and other data the user has
+supplied.  It then restores the window configuration that was active
+before `make-scholium' ran.  It also nullifies `new-scholium-name'
+and `new-scholium-about', since we're done with these things.
+
+
+#+BEGIN_SRC elisp
+(defun escape-scholium-creation ()
+  (interactive)
+  (scholium new-scholium-name
+            (buffer-substring-no-properties (point-min) (point-max))
+            new-scholium-about
+            nil
+            (sch-book))
+  (kill-buffer (concat "Editing scholium: " new-scholium-name))
+  (set-window-configuration sch-win-config)
+  (setq new-scholium-name nil
+        new-scholium-about nil))
+#+END_SRC
+
+*** On `make-scholium'
+:PROPERTIES:
+:LATEX_LABEL: make-scholium
+:ID: make-scholium
+:END:
+
+This function is called every time the user makes a scholium with new
+text (i.e. text that is typed in on the fly).  Functions for making
+scholia about articles, parts of articles, buffers, etc., are given in
+this document and all use this function.
+
+
+#+BEGIN_SRC elisp
+(defun make-scholium ()
+  (setq sch-win-config (current-window-configuration))
+  ;; we allow this to be set elsewhere
+  (unless new-scholium-name
+    (setq new-scholium-name (read-string "Scholium name: ")))
+  (set-buffer (get-buffer-create "Scholia Display"))
+  (other-window -1)
+  (split-window-vertically)
+  (other-window 1)
+  (switch-to-buffer (get-buffer-create (concat "Editing scholium: "
+                                               new-scholium-name)))
+  (new-scholium-mode))
+#+END_SRC
+
+*** Redisplay after running `make-scholium'                        :noexport:
+:PROPERTIES:
+:LATEX_LABEL: redisplay-after-running-make-scholium
+:ID: redisplay-after-running-make-scholium
+:END:
+
+It would probably be fairly convenient to redisplay whatever object
+was being displayed after `make-scholium' has run.  (It would be nice
+to have the configuration of windows be 100\% consistent!)  In order
+to make this be efficient, we would probably want to a system for
+incremental markup, as described in Note [[id:incremental-markup]].  Presumably this just means
+adding `redisplay-article' to an appropriate hook.
+
+
+*** Add a `make-scholium-hook'?                                    :noexport:
+
+We could add a hook here if we wanted to make it easy to do
+interesting things after a scholium is added, like update the display.
+(We might want to make a section on default settings -- and we might
+want to make more hooks throughout the scholium system code.)
+
+
+\subsubsection{Scholia attached to the current article} \label{attached-main}
+
+*** On `make-scholium-about-current-article'
+
+This function makes a scholium about the article as a whole.
+
+
+#+BEGIN_SRC elisp
+(defun make-scholium-about-current-article ()
+  (interactive)
+  (when name-of-current-article
+    (setq new-scholium-about `(((,name-of-current-article))))
+    (make-scholium)))
+#+END_SRC
+
+*** On `make-scholium-about-part-of-current-article'
+:PROPERTIES:
+:LATEX_LABEL: make-scholium-about-part-of-current-article
+:ID: make-scholium-about-part-of-current-article
+:END:
+
+This function makes a scholium about one specific portion of the
+article.
+
+This function makes the (somewhat unrealistic seeming) assumption that
+the current article and the current buffer are the same thing.  This
+situation should be resolved.
+
+However, if no article is current yet, then perhaps we should
+offer to make a scholium about the current buffer?
+
+
+#+BEGIN_SRC elisp
+(defun make-scholium-about-part-of-current-article (beg end)
+  (interactive "r")
+  (if name-of-current-article
+      (progn
+        (setq new-scholium-about
+              `((,name-of-current-article
+                  (passage 
+                   ,beg
+                   ,end))))
+        (make-scholium)
+        (deactivate-mark)
+        (message (concat (format "%s--%s" beg end) " added.")))
+    (message "Make some article current first.")))
+#+END_SRC
+
+*** The use of `deactivate-mark' in this code                      :noexport:
+
+Since regions are being selected interactively, unless
+we `deactivate-mark', we will be left with a highlighted
+region after some of the scholium-creating function have
+run.  This doesn't seem clean to me.
+
+
+*** On `make-scholium-about-current-line'
+
+Here is a little convenience wrapper for working with lists.
+
+
+#+BEGIN_SRC elisp
+(defun make-scholium-about-current-line ()
+  (interactive)
+  (make-scholium-about-part-of-current-article (line-beginning-position)
+                                               (line-end-position)))
+
+(defun make-scholium-about-current-line-quickly ()
+  (interactive)
+  (setq new-scholium-name (buffer-substring-no-properties
+                           (line-beginning-position)
+                           (line-end-position)))
+  (make-scholium-about-part-of-current-article (line-beginning-position)
+                                               (line-end-position)))
+
+(defun make-scholium-about-current-line-quickly-and-completely ()
+  (interactive)
+  (scholium (buffer-substring-no-properties
+                           (line-beginning-position)
+                           (line-end-position))
+            (buffer-substring-no-properties
+                           (line-beginning-position)
+                           (line-end-position))
+            `((,name-of-current-article 
+               (passage
+                ,(line-beginning-position)
+                ,(line-end-position))))
+            nil
+            (sch-book)))
+
+(defun make-scholium-about-current-sentence ()
+  (interactive)
+  (make-scholium-about-part-of-current-article (line-beginning-position)
+                                               (line-end-position)))
+#+END_SRC
+
+*** Semantics of lists                                             :noexport:
+:PROPERTIES:
+:LATEX_LABEL: semantics-of-lists
+:ID: semantics-of-lists
+:END:
+
+Lists may benefit some special semantics.  In particular, it might be
+useful to only display the scholia that are attached to \emph{the
+  current line} (or item more generally).  Also, an indicator to show
+the existence of scholia attached to other lines (when such scholia do
+in fact exist).
+
+
+*** Scoring                                                        :noexport:
+
+Maybe the way to go with scoring would be to make a change to the
+\inp{type} field to indicate that the thing has type ``score 10'' or
+whatever.  Or perhaps we would want to attach a scholium?
+
+
+*** Locally-stored data versus indexed data                        :noexport:
+:PROPERTIES:
+:LATEX_LABEL: locally-stored-vs-indexed
+:ID: locally-stored-vs-indexed
+:END:
+
+This reminds me of the different models of data storage.  We could
+keep everything local (a score field for each scholium) or store
+things in an index (look-up each scholium to see if it has a score).
+The magic of hash tables says that lookup is ``linear'' but is the
+factor lower if the data is kept locally?  Maybe on average.
+
+Of course, if you have to search a collection to find the extent of
+some predicate, that will take \emph{some} time; if everything
+matching a certain description has been stored on a certain list, then
+you already have the predicate's extent without search.
+
+There's really no reason not to store some things locally if we know
+that search is going to always be local (e.g.  the score of a certain
+article is probably fine to store locally) \emph{and} we have
+permission to store that data locally.  See Note
+[[id:holographic-data]] for more on this general topic -- the issues
+here have been pretty much resolved with in the design of metadata
+articles (Note [[id:metadata-article-overview]]).
+
+
+*** Local list of scholia                                          :noexport:
+
+One example of how local lists could come in handy (like we were
+talking about in Note [[id:locally-stored-vs-indexed]]) would be to
+keep a local list of all the scholia that are attached to the current
+article.  Then, if changes have to be propagated, we just look at the
+things on this list, rather than having to search through all of the
+articles again to figure out which scholia are attached to the current
+article.  Of course, the local list could be kept updated as the set
+of scholia attached to the current article changes.  This would (I
+think) be an optimization, and isn't essential for building a working
+system.
+
+
+\subsubsection{Creating a scholium that applies to several regions}
+
+*** On `reading-regions-mode'
+
+This mode is invoked by
+`make-scholium-about-several-parts-of-current-article', and
+adds an editing mode in the buffer containing the current
+article that enables the user to select regions that the
+scholium will be \inp{about}.
+
+
+#+BEGIN_SRC elisp
+(define-minor-mode reading-regions-mode
+  "Mode for reading in regions.
+\\{new-scholium-mode-map}"
+  :init-value nil
+  :keymap '(("\C-c\C-c" . add-region)
+            ("\C-c\C-g" . escape-reading-regions-mode))
+  (message "C-c C-c to add regions; C-c C-g to make scholium."))
+#+END_SRC
+
+*** On `add-region'
+
+This function adds regions to `new-scholium-about'.
+
+
+#+BEGIN_SRC elisp
+(defun add-region (beg end)
+  (interactive "r")
+  (setq new-scholium-about
+        (cons `(,name-of-current-article
+                 (passage 
+                  ,(region-beginning)
+                  ,(region-end)))
+              new-scholium-about))
+  (deactivate-mark)
+  (message (concat (format "%s--%s" beg end) " added.")))
+#+END_SRC
+
+*** On `escape-reading-regions-mode'
+
+When all of the regions desired have been selected, this function
+calls `make-scholium' to finish things off.
+
+
+#+BEGIN_SRC elisp
+(defun escape-reading-regions-mode ()
+  (interactive)
+  (reading-regions-mode -1)
+  (make-scholium))
+#+END_SRC
+
+*** On `make-scholium-about-several-parts-of-current-article'
+:PROPERTIES:
+:LATEX_LABEL: on-make-scholium-about-several-parts-of-current-article
+:ID: on-make-scholium-about-several-parts-of-current-article
+:END:
+
+This function makes a scholium that applies to several portions of the
+article, using the mode and so on featured in this section.
+
+(Note, it doesn't seem that this is displayed quite right; I'm
+getting two copies of the scholium's text in the Scholia
+Display buffer.)
+
+
+#+BEGIN_SRC elisp
+(defun make-scholium-about-several-parts-of-current-article ()
+  (interactive)
+  (let ((article (get-article name-of-current-article)))
+    (if (article-buffered article)
+        (switch-to-buffer (get-buffer (scholium-text article)))
+      (switch-to-buffer "Main Article Display"))
+    (setq new-scholium-about nil)
+    (reading-regions-mode 1)))
+#+END_SRC
+
+\subsubsection{Scholia about the current buffer} \label{about-buffer}
+
+*** Making scholia about the current buffer                        :noexport:
+
+We present facilities for making new scholia about the current buffer
+or file that this buffer is visiting.  Corresponding functions for
+displaying scholia that are attached to the current buffer appear in
+section [[id:rendering]].  This function ensures that the buffer is
+associated with on article on the article list; otherwise, we can't
+make a scholium about it.
+
+
+*** On `call-if-user-adds-current-buffer-to-article-list'
+
+This is used by functions that require the current buffer to
+be an article; typically they recall themselves after the
+buffer has been added.  It is used by
+`make-scholium-about-current-buffer' and
+`display-scholia-about-current-buffer'.
+
+
+#+BEGIN_SRC elisp
+(defun call-if-user-adds-current-buffer-to-article-list (fct)
+  (when (y-or-n-p "Buffer not an article, add to list? ")
+        (make-current-buffer-into-article
+         (read-string (concat "Name (default: "
+                              (buffer-name
+                               (current-buffer)) "): ")
+                      nil
+                      nil
+                      (buffer-name (current-buffer))))
+        (funcall fct)))
+#+END_SRC
+
+*** On `make-scholium-about-current-buffer'
+
+This function makes a scholium about the current buffer,
+requiring that it be an article.  (Maybe we should
+just add the current buffer to the article list
+transparently, rather than giving the prompt in
+`call-if-user-adds-current-buffer-to-article-list'.)
+
+
+#+BEGIN_SRC elisp
+(defun make-scholium-about-current-buffer ()
+  (interactive)
+  (let ((article (get-article (buffer-name (current-buffer)))))
+    (if (not article)
+        (call-if-user-adds-current-buffer-to-article-list
+         'make-scholium-about-current-buffer)
+      (setq new-scholium-about
+            `(((,(buffer-name (current-buffer))))))
+      (make-scholium))))
+#+END_SRC
+
+*** Scholium creation modalities                                   :noexport:
+:PROPERTIES:
+:LATEX_LABEL: scholium-creation-modalities
+:ID: scholium-creation-modalities
+:END:
+
+We developed all sorts of creation facilities for generic articles,
+shouldn't we have them all over again for buffers?  It seems only fair
+that there would be some symmetry between the way articles and buffers
+are handled.  Maybe there is some way to reuse the work.
+
+On the other hand, maybe we don't need a lot of complex functions for
+specially handling buffers, since once the buffer has been made into
+an article, all of the functions for working with articles apply.
+(Contrast Note [[id:bias-towards-buffers]]!)
+
+
+*** Making a scholium about a file.                                :noexport:
+
+Doing something like what `make-scholium-about-current-buffer' does
+that makes a scholium about the current buffer \emph{as} a file
+shouldn't be very different at all.  I'll want to think a little more
+about the relevance of doing things this way: it may not really matter
+if we run the exporting and importing routines just right.  (We could
+also write a function to make scholia about a file without displaying
+the file.)
+
+
+\subsubsection{Creating references} \label{creating-references}
+
+*** Fancy references                                               :noexport:
+:PROPERTIES:
+:LATEX_LABEL: fancy-references
+:ID: fancy-references
+:END:
+
+In Note [[id:references]] it isn't made completely clear what the set
+of reference targets is comprised of.  One might be led to assume that
+it is only possible to reference to an \emph{article}.  In the current
+implementation, that assumption is correct; `follow-reference' calls
+`display-article', which in turn only knows how to display
+\emph{articles}.  However, in theory we could just as well reference
+any object that the system knows how to display; so, if
+`display-article' was overloaded to work with regions as well as
+articles, for example, there would be no problem with referencing
+regions (although the code for `make-reference-in-current-article'
+would have to be adjusted slightly).  It would be nice to add this
+feature, since HTML already has targets that are approximately this
+general (well, more like ``go to a specific point within the given
+document'').  It shouldn't be too much to ask to enable following a
+reference and then performing a given action (e.g. ``find the first
+occurance of \emph{foo} in the referenced document'').
+
+Another relevant thing to point out is that we can have different
+kinds of references appear in different colors (Note
+[[id:color-and-style]]); this is true of other sorts of linking as
+well (Note [[id:generalized-links]]).  Compare Note
+[[id:thought-processes]].
+
+
+*** Abstract connections                                           :noexport:
+
+References have two \inp{about} fields, one comprising the reference's
+target, and the other, the region from which the reference originates.
+This shows how an abstract connection between two documents can be
+formed by a third element, rather than such connections being the
+exclusive domain of \inp{about} data itself.  This is an important
+feature for semantic networks; larger-scale structures can be
+expressed using basic pieces.
+
+
+*** On `genref'
+:PROPERTIES:
+:LATEX_LABEL: genref
+:ID: genref
+:END:
+
+Instead of using `gensym' (which causes problems) we do something
+similar to generate references with unique ids.  Note that this might
+cause some problems when we go to the distributed way of doing things
+(or even just save and restore articles with references in them after
+making some intervening edits), since references with the same names
+might mean different things.  But of course, this is true of all
+scholia with the same names, so I propose not to worry about it too
+much right now.
+
+It may turn out to be advantageous to use a reference counter that is
+local to each article.
+
+Actually, the scheme proposed here seems pretty weak; saving files and
+then reading them back in after Emacs has been shut down could cause
+problems.  It might be much better to have a reference counter in each
+metadata article, so that the collection of references associated with
+a given article is always unique.  Furthermore, references associated
+with a given article should possibly be recorded on that article's
+metadata explicitly \emph{as references}.
+
+
+#+BEGIN_SRC elisp
+(defvar *reference-counter* 0)
+
+(defun genref ()
+  (setq *reference-counter* (1+ *reference-counter*)))
+#+END_SRC
+
+*** On `make-reference-in-current-article'
+:PROPERTIES:
+:LATEX_LABEL: make-reference-in-current-article
+:ID: make-reference-in-current-article
+:END:
+
+This function is similar to
+`make-scholium-about-part-of-current-article' (Note
+[[id:make-scholium-about-part-of-current-article]]) except that the
+\inp{type} is set to ``reference''.  References currently don't have any
+\inp{text}, but we could later set things up to let them have a
+docstring or something like that.
+
+(Are backlinks working properly in an article that has several
+references associated with it?)
+
+
+#+BEGIN_SRC elisp
+(defun make-reference-in-current-article (beg end &optional target)
+  (interactive "r")
+  (let ((target (or target
+                    (read-article-name))))
+    (if name-of-current-article
+        (when target
+          (scholium `(reference ,name-of-current-article ,(genref))
+                    nil
+                    `((,name-of-current-article
+                       (passage 
+                        ,beg
+                        ,end))
+                      (,target))
+                    'reference)
+          (deactivate-mark))
+      ;; Maybe the message should instead be an offer to make
+      ;; a scholium about the current buffer?
+      (message "Make some article current first."))))
+#+END_SRC
+
+*** Speedy reference creation
+
+It would be handy to be able to make a reference to an article and
+automatically create and follow the reference, all at the same time.
+(Maybe also subsets of these actions, like create but don't follow.)
+Probably we could do something similar for generalized references.
+
+
+#+BEGIN_SRC elisp
+(defun create-follow-reference ()
+  (interactive)
+  (let ((name (buffer-substring (point) (mark))))
+    (unless (get-article name)
+      (save-excursion
+        (set-buffer (get-buffer-create name))
+        (make-current-buffer-into-article name)))
+    (make-reference-in-current-article (min (point) (mark))
+                                       (max (point) (mark))
+                                       name)
+    (display-article name)))
+#+END_SRC
+
+*** Come-from references                                           :noexport:
+:PROPERTIES:
+:LATEX_LABEL: come-from-references
+:ID: come-from-references
+:END:
+
+As weird as it might sound, it could be handy to have a function for
+adding references to the current article from some other article (or class
+of articles).  See Note [[id:backlinks]] for further comments.  (It
+seems possible, though maybe not too likely, that we would be able to
+use the outline of `make-reference-in-current-article' to create a generic
+function for both ``come-from'' and ``goto'' references.)
+
+
+*** Inspecting or changing reference target, deleting reference, changing ``alt text'' :noexport:
+
+Various operations that you might like to do with a reference need should
+to be supported.  changing the ``alt text'' should be supported
+automatically -- just edit the text -- but there is the chance that
+the user could screw things up and accidentally delete the whole
+scholium if they do the wrong thing, so we may want to provide some
+assistance.
+
+
+*** Reference component access
+:PROPERTIES:
+:LATEX_LABEL: reference-access-functions
+:ID: reference-access-functions
+:END:
+
+These functions give easy access to information specifying the
+referenced article (the target), the region the reference applies to,
+and the name of the article the reference lies in.  These functions
+rely on the formulaic nature of the \inp{type} data of references,
+namely, a link to the passage wherein the reference is made is given,
+followed by a link to the referenced article.
+
+Notice that these functions would have to change if we later
+allow multiple sources (presumably, regions) to be part of the
+same reference.
+
+
+#+BEGIN_SRC elisp
+(defun reference-source-link (reference)
+  (first (scholium-about reference)))
+
+(defun reference-from-article (reference)
+  (car (reference-source-link reference)))
+
+(defun reference-to-article (reference)
+ (car (second (scholium-about reference))))
+#+END_SRC
+
+*** Justification of the representation of references              :noexport:
+
+It might seem excessive to have backlinks to a reference on the
+reference target and the reference source, but remember that we want
+to be able to display references as scholia.  Now, one thing that
+might be the case is that instead of storing a standard backlink on
+the reference target, we might want to store a special
+``referenceed-by'' backlink.  But \emph{that} is probably excessive,
+at least, given our rendering scheme (see Note [[id:mark-things-up]]).
+
+
+\subsubsection{New undirected articles} \label{new-undirected}
+
+*** On `make-new-undirected-article'
+
+Although one could simply create a new buffer and add that buffer to
+the article list (as in Section
+# [[id:adding-buffers]]
+), sometimes it
+may be more intuitive to simply add a new undirected article directly
+to the article list.
+
+
+#+BEGIN_SRC elisp
+(defun make-new-undirected-article ()
+  (interactive)
+  (setq new-scholium-about nil)
+  (make-scholium))
+#+END_SRC
+
+\subsubsection{Followups} \label{followups}
+
+*** Introduction to followups                                      :noexport:
+
+This section is about making scholia about other already-existing
+scholia.  It relies on markup features from Section [[id:rendering]],
+and its presence here is a bit ugly (Note [[id:principle-of-order]]).
+Perhaps it will be moved somewhere else later.
+
+
+*** Complex ``about'' features for scholia                         :noexport:
+
+More complicated features like creating scholia directly about several
+regions of a given scholium or like creating a scholium that relates
+to several regions of several different scholia can be coded up soon,
+following the style of Section
+# [[id:attached-main]].
+
+
+*** On `name-of-current-scholium'
+
+The function can be called from anywhere; ``current'' is defined
+relative to the position of `point' in the Scholia Display buffer.
+(It is natural to assume that there is only one current scholium,
+given the way the contents of this buffer have been put together.)
+
+Note that \emph{scholia} appear once in the Scholia Display buffer, so
+there is only one ``current scholium'' (with one name) when we look at
+things this way.  If we were going to do something like this for the
+main article buffer, then we'd need to do a bit more.  (In fact,
+various functions to associate marked regions with scholia need just
+this sort of special touch.)
+
+
+#+BEGIN_SRC elisp
+(defun name-of-current-scholium ()
+  (interactive)
+  (save-excursion
+    (set-buffer (get-buffer-create "Scholia Display"))
+    (let ((ret (car (scholia-named-at-point))))
+      (if ret
+          (message (format "%s" ret))
+        (message "Position cursor on a scholium in Scholia Display."))
+      ret)))
+
+(defun make-scholium-about-current-scholium ()
+  (interactive)
+  (when (equal (buffer-name (current-buffer)) "Scholia Display")
+    (let ((cur (name-of-current-scholium)))
+      (when cur
+        (progn (setq new-scholium-about `(((,cur))))
+               (make-scholium))))))
+#+END_SRC

@@ -1,0 +1,142 @@
+** Core definitions
+
+*** HONEY set up
+
+These variables are needed for a coherent set-up.\todo{Explain
+what they will do.}
+
+
+#+BEGIN_SRC elisp
+(defvar plexus-registry '(0 nil))
+(defvar current-plexus nil)
+#+END_SRC
+
+*** The `add-plexus' function
+:PROPERTIES:
+:LATEX_LABEL: the-new-net-function
+:ID: the-new-net-function
+:END:
+
+We use this create a new plexus for storage.  It defines a
+counter (beginning at 1), together with several hash tables that allow
+efficient access to the plexus' contents: an article table, forward
+links, backward links, forward labels, and backward labels.
+Additionally, it defines a ``ground'' and
+``type'' nodes.\todo{Explain these things in more detail.}\todo{NB. it could be useful
+to maintain a registry available networks, by analogy with
+Emacs's `buffer-list', which
+I think could be done if we use `cl-defstruct' below
+instead of `list', and set up the constructor suitably
+(info \textquotedbl(cl) Structures\textquotedbl).}
+
+
+#+BEGIN_SRC elisp
+(defun add-plexus ()
+  "Create a new plexus."
+  (let ((newbie (list '*plexus*
+                      1                               ; nema counter
+                      (make-hash-table :test 'equal)  ; nema table
+                      (make-hash-table :test 'equal)  ; forward links
+                      (make-hash-table :test 'equal)  ; backward links
+                      (make-hash-table :test 'equal)  ; forward labels
+                      (make-hash-table :test 'equal)  ; backward labels
+                      (car plexus-registry))))
+    ;; Define ground and type nodes.
+    (puthash 0 '(0 0) (nth 2 newbie))
+    (puthash 1 '(0 0) (nth 2 newbie))
+    (puthash 0 '((0 . 0) (1 . 0)) (nth 3 newbie))
+    (puthash 0 '((0 . 0) (1 . 0)) (nth 4 newbie))
+    (puthash 0 '"ground" (nth 5 newbie))
+    (puthash '"ground" 0 (nth 6 newbie))
+    (puthash 1 '"type" (nth 5 newbie))
+    (puthash '"type" 1 (nth 6 newbie))
+    ;; Register the new object and return it.
+    (setq plexus-registry
+	  (append
+	   `(,(+ (car plexus-registry) 1)
+	     ,newbie)
+	   (cdr plexus-registry)))
+    newbie))
+#+END_SRC
+
+*** The ``remove-plexus'' function
+
+When we're done with our plexus, we should tidy up after ourselves.
+
+
+#+BEGIN_SRC elisp
+(defun remove-plexus (plex)
+  "Remove a plexus."
+  ;; Wipe out the hash tables
+  (dotimes (i 5)
+    (clrhash (nth (+ i 2) plex)))
+  ;; Remove the entry from the registry.
+  (setq plexus-registry
+        (cons
+         (car plexus-registry)
+         (delete
+          (assoc (nth 7 plex)
+                 (cdr plexus-registry))
+          (cdr plexus-registry)))))
+#+END_SRC
+
+#+BEGIN_SRC elisp
+(defun show-plexus-registry ()
+  plexus-registry)
+#+END_SRC
+
+*** Network selection
+
+We can work with several networks, only one of
+which is ``current'' at any given time.
+
+
+#+BEGIN_SRC elisp
+(defun set-current-plexus (plex)
+  "Examine a different plexus instead."
+  (setq current-plexus plex))
+
+(defmacro with-current-plexus (plex &rest expr)
+  (declare (debug (&rest form)))
+  (append `(let ((current-plexus ,plex))) expr))
+
+(defun show-current-plexus ()
+  "Return the plexus currently being examined."
+  current-plexus)
+#+END_SRC
+
+*** On `next-unique-id'
+
+Increment the identifier that tells us how many nemas are in our network.
+
+
+#+BEGIN_SRC elisp
+(defun next-unique-id ()
+  "Produce a yet unused unique identifier."
+  (1+ (cadr current-plexus)))
+#+END_SRC
+
+*** On `reset-plexus'
+
+Reset article counter and hash tables.  Redefine ``ground'' and
+``article-type''.
+
+
+#+BEGIN_SRC elisp
+(defun reset-plexus ()
+  "Reset the database to its initial configuration."
+  ; Reset nema counter and hash tables.
+  (setcar (cdr current-plexus) 1)
+  (dotimes (n 5)
+    (clrhash (nth (+ n 2) current-plexus)))
+  ;; Define ground and nema-type.
+  (puthash 0 '(0 0) (nth 2 current-plexus))
+  (puthash 1 '(0 0) (nth 2 current-plexus))
+  (puthash 0 '((0 . 0) (1 . 0)) (nth 3 current-plexus))
+  (puthash 0 '((0 . 0) (1 . 0)) (nth 4 current-plexus))
+  (puthash 0 '"ground" (nth 5 current-plexus))
+  (puthash '"ground" 0 (nth 6 current-plexus))
+  (puthash 1 '"type" (nth 5 current-plexus))
+  (puthash '"type" 1 (nth 6 current-plexus))
+  nil)
+#+END_SRC

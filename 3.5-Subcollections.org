@@ -1,0 +1,338 @@
+** Subcollections
+:PROPERTIES:
+:LATEX_LABEL: subcollections
+:ID: subcollections
+:END:
+
+# \subsubsection{Labels} \label{labels}
+
+*** Cost of maintaining labels                                     :noexport:
+:PROPERTIES:
+:LATEX_LABEL: cost-of-maintaining-labels
+:ID: cost-of-maintaining-labels
+:END:
+
+To maintain a label, we have to do predicate testing as we go along.
+This is a way of amortizing the cost of lookup.  (An example would be
+nice, I'm sure.)  The thought is that some overall savings can be
+obtained this way -- but in general they don't come automatically; we
+have to be intelligent about limiting the tests we run (at least, I
+don't think we get savings for free by doing things this way).  For
+example, we don't add backlinks to metadata articles -- but there
+should be other intelligent things to do too.  Another idea in a
+similar theme is to have several functions for creating different
+kinds of articles; these functions can instructions for applying
+certain labels hard-coded into them.
+
+
+*** Labels as made up of trivial clusions                          :noexport:
+
+Given that the design of labels stores a list of link-like elements in
+the \inp{text} field of a article, and the fact that we would like to
+have backlinks from the labeled articles to the label itself (Note
+[[id:autobacklink-to-label]]), it would appear to me that labels are
+somewhat like trivial clusions (Note [[id:clusions]]).  Assuming that
+we are going to go ahead with the backlinking from labeled articles
+(which seems to be useful when we think about exploring or exporting a
+hierarchy), then we may want to treat labels in the same way we treat
+clusions, or alternatively, switch to putting their contents onto the
+\inp{about} field instead.
+
+
+*** Comparison with labels in other systems                        :noexport:
+:PROPERTIES:
+:LATEX_LABEL: comparison-with-other-label-systems
+:ID: comparison-with-other-label-systems
+:END:
+
+Various folksonomy-oriented environments allow people to use labels.
+The usage in these systems is certainly similar to usage in Arxana,
+however, I'm not completely sure that the ideas are the same.  This
+would bear further investigation.
+
+
+*** Label terminology                                              :noexport:
+
+Following on Note [[id:comparison-with-other-label-systems]], it seems
+possible that the term ``label'' would be somewhat confusing if the
+label was thought of as a set, and not a list.  So to be clear, what
+we really are doing is keeping track of various things on separate
+lists.  (This is relevant e.g. for `label-article-insert-before', Note
+[[id:label-article-insert-before]]).
+
+
+*** On `modified-type-labels'
+:PROPERTIES:
+:LATEX_LABEL: on-modified-type-labeler-etc
+:ID: on-modified-type-labeler-etc
+:END:
+
+An alist of types to look for paired with the corresponding label to
+apply.  Each new or modified article is tested to see if it matches
+any of the given types; if so, then the corresponding label(s) will be
+applied.  (Note that the ``label'' label is not treated specially.)
+
+
+#+BEGIN_SRC elisp
+(defvar modified-type-labels '((nil . plain)
+                               (label . label)
+                               (meta . metadata)
+                               (list . list)
+                               (reference . reference)
+                               (section . section)))
+#+END_SRC
+
+*** On `label-article'
+:PROPERTIES:
+:LATEX_LABEL: label-article
+:ID: label-article
+:END:
+
+This function is responsible for the mechanics of editing labels, and
+creates them as needed.
+
+
+#+BEGIN_SRC elisp
+(defun label-article (name article-label)
+  (scholium article-label
+            (add-to-or-start-list (scholium-text
+                                   (get-article article-label))
+                                  name)
+            nil
+            'label))
+#+END_SRC
+
+*** On `label-article-insert-before'
+:PROPERTIES:
+:LATEX_LABEL: label-article-insert-before
+:ID: label-article-insert-before
+:END:
+
+Like `label-article' (Note [[id:label-article]]), but takes an
+additional argument \inp{before-this} to say which entry the new name
+should be inserted just before.
+
+
+#+BEGIN_SRC elisp
+(defun label-article-insert-before (name before-this article-label)
+  (let* ((contents (scholium-text (get-article article-label)))
+         (before-this-headed (member before-this contents)))
+    (when before-this-headed
+      (let ((len (- (length contents)
+                    (length before-this-headed)
+                    1)))
+        (if (> len -1)
+            (setcdr (nthcdr len contents)
+                    (cons name before-this-headed))
+          (setq contents (cons name before-this-headed))))
+      (scholium article-label
+                contents
+                nil
+                'label))))
+#+END_SRC
+
+*** On `put-type-labels'
+
+This function runs within the scope of `scholium'.  It might make more
+sense to be able to add lots of different labels for a new article;
+the `cond' function doesn't work that way however.
+
+
+#+BEGIN_SRC elisp
+(defun put-type-labels ()
+  (unless (typedata-includes type 'label)
+    (dolist (type-label modified-type-labels)
+      (when (typedata-includes type (car type-label))
+        (label-article name (cdr type-label))))))
+
+(add-hook 'new-scholium-hook 'put-type-labels)
+(add-hook 'scholium-modified-type-hook 'put-type-labels)
+#+END_SRC
+
+*** Generalizations of the autolabeler                             :noexport:
+
+At the basic level, what we want is a way to maintain a list of
+predicates, such that any scholium that satisfies a given predicate
+gets the corresponding label.  We could maintain several such lists,
+but it is (theoretically) important to be general, and the design
+should be evaluated to determine how easy it is to add new predicates
+and labels.
+
+
+*** Could take subcollection as optional argument                  :noexport:
+
+In general, the functions that operate on all articles should probably
+take a subcollection as an optional argument.  This might be a
+namespace, or a label, or a list that has been assembled by some novel
+means.  Some of our functions already have something like this
+working, but it hasn't really been standardized in any way.
+
+
+\subsubsection{Namespaces} \label{namespaces}
+
+*** Namespace implementation                                       :noexport:
+
+Namespaces have to be implemented in a nicely self-similar way.
+Whereas an article can bear any number of labels, it can be only in
+one namespace at a time.  (Since namespaces can be nested, we might
+have $A\sqsupset B \ni a$, so that the article $a$ isn't a member of
+$A$, but \emph{limiting} a recursive search to $A$ would still help
+one to find $a$.)  
+
+Actually, namespaces are a lot like the filesystem, so I can imagine
+that we might provide the ability to symlink elements from one
+namespace into another (similar to textual \emph{identification}, see
+Section [[id:identification]]).  So maybe best to take what I said
+about only being in one namespace at a time with a grain of salt.
+What is probably the case is that the object \emph{will} only be in
+one namespace at a time, but that it can have ``virtual copies'' in
+other namespaces.
+
+If we go this route then we have two things to implement, roughly
+self-similar namespaces themselves, and a method for doing
+identification between them.  I hope we can follow (in one direction
+or another) the implementation of \emph{labels}; we'll check that out
+now.
+
+The first step will probably be to make a namespace article-type, with
+a specially formatted text field (a list or table), which is to be
+displayed in a special way.  We'll most likely want a variant on
+`read-article-name' that recurs if the name that is read in names a
+namespace.  
+
+Display and deletion will both have to have some work done on them to
+make them namespace-compatible.
+
+
+*** Why namespaces                                                 :noexport:
+:PROPERTIES:
+:LATEX_LABEL: why-namespaces
+:ID: why-namespaces
+:END:
+
+Frequently one will be working with a data structure which has some
+symmetries that you don't want to collapse.  For example, you might
+have a \emph{Note} and a \emph{Section} with the same name in a given
+article.  Or you might have several sections with the same name in
+several different articles.  Or you might be working with a database
+like structure in which every item has a \emph{foo}-type attachment,
+and you want these to be represented as different scholia, not
+\emph{one} scholium with type \emph{foo}.  Furthermore even in cases
+where you aren't expecting overlap, it might be handy to keep
+different collections strongly separated from each other.  (E.g. if
+you have a bunch of articles coming from one resource and a bunch of
+very different articles coming from another resource.)  In this case,
+it is probably often just as good to use labels and keep the different
+collections only weakly separated -- indeed, when there isn't overlap
+in names, a sufficiently well-developed system for working with labels
+will probably give you everything that you would have wanted from a
+system with namespaces.  Be that as it may, overlap is prevalent
+enough to make namespaces useful.  (Another approach to overlap is
+\emph{disambiguation}, which is what Wikipedia uses; but having to use
+different names all the time when disambiguating could get very
+tedious.)
+
+
+*** Using namespaces for importing                                 :noexport:
+
+ 
+In Note [[id:why-namespaces]], we mentioned that namespaces could be
+useful when working with several articles with similar structure.
+Underscoring that point, it seems we may typically want to use
+namespaces when importing any secondary documents into the scholium
+system (e.g. the HDM Manifesto or Noosphere's documentation).  They
+may also be useful for articles that are stored remotely (e.g. we
+might maintain one or more ``web'' namespaces).
+3z  
+z
+
+
+*** Maintain the `label' article as a namespace?                   :noexport:
+
+As one example, it might be advantageous to maintain the `label'
+article as a namespace!
+
+
+*** On `generalized-put-article'
+:PROPERTIES:
+:LATEX_LABEL: generalized-put-article
+:ID: generalized-put-article
+:END:
+
+Like `put-article' (Note [[id:put-article]]), but you specify
+a \inp{path} as well as a \inp{name}.  The \inp{path}
+should specify the path to the namespace wherein 
+the \inp{name}, \inp{value} pair is to be stored.
+
+
+#+BEGIN_SRC elisp
+(defun generalized-put-article (path name value)
+  (puthash name value (generalized-get-article path)))
+#+END_SRC
+
+*** On `generalized-get-article'
+:PROPERTIES:
+:LATEX_LABEL: generalized-get-article
+:ID: generalized-get-article
+:END:
+
+Like `get-article' but takes a \inp{path}.  The path specifies a list
+of nested namespaces, and possibly, a final non-namespace item to be
+found in the last namespace.  Optional argument \inp{current} keeps
+track of the ``current'' namespace as the path is digested.  If only
+one item appears in the path and \inp{namespace} isn't given, the path
+points to an item in the main article table, and we return the
+corresponding item.
+
+Be advised that there is a little bit of potentially destructive
+ambiguity here.  But to make up for it, notice the doubly-clever use
+of `and' and `cond' (to deal with the case that we're generalizing).
+
+
+#+BEGIN_SRC elisp
+(defun generalized-get-article (path &optional current)
+  (let ((first-step (get-article path)))
+    (cond 
+     ((and (not current) first-step)
+      first-step)
+     ((cdr path)
+      (if (typedata-includes (get-article (car path)) 'namespace)
+          (generalized-get-article (cdr path) (car path))
+        (error "Path element not a namespace")))
+     ((and (car path) current)
+      (gethash current (car path)))
+     ((car path) (get-article (car path))))))
+#+END_SRC
+
+*** Self-symmetry                                                  :noexport:
+
+If we're going to have a set-up where things look roughly the same on
+every level, for one thing, we may going to want to have a ``current
+path'' variable, so we can move from level to level and populate that
+level properly.  
+
+We may want to have a different class of labels at every level in the
+hierarchy.  Whether we could also have labels that reach across levels
+is another question.  And as for metadata articles, should they be
+stored in the top level or should they be stored in the same namespace
+as the article that they apply to?  Storing them in the same namespace
+\emph{sounds} good (it seems ``more distributed''), however remember
+that it may not always be possible to access a given namespace to
+store metadata.  Perhaps the best option is to mirror whatever
+distributed resources one draws upon in the local implementation; then
+storing metadata in the namespace local to the article being treated
+would make some sense.  Or we could have one single namespace for
+metadata articles (I've considered this option before) which would
+take data coming from all other namespaces.  Seems like an interesting
+approach, too.  These matters will require more thought.
+
+Notice that with namespaces we're pretty likely to end up repeating
+some of the work people have done with file systems.  On the other
+hand, it is probably possible to use a simplified approach, with a
+function to accomplish ``add article to namespace at the end of this
+path''; like working with the file system but always from the root
+directory.  Eventually we can add the convenience functions (really
+not that complicated) to prepend a default path to the root.  (We seem
+to already have the non-interactive elements of this arrangement with
+`generalized-put-article' (Note [[id:generalized-put-article]]) and
+`generalized-get-article' (Note [[id:generalized-get-article]]).)

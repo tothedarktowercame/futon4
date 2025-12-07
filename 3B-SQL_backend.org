@@ -1,0 +1,8 @@
+* SQL backend                                                      :noexport:
+
+This branch captures the alternative storage design from
+=arxana-reboot=, where scholia live in SQL tables while Common Lisp
+(via SLIME) acts as the application server that Emacs calls through
+`Defun'.  Subsections 3B.1+ summarize the schema and Lisp-side
+utilities so we can compare or mix and match pieces with the HONEY
+backend (Section 3A) and the original hash-store (Section 3).

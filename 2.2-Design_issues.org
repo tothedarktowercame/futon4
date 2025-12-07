@@ -1,0 +1,763 @@
+** Design issues                                                   :noexport:
+:PROPERTIES:
+:LATEX_LABEL: design
+:ID: design
+:END:
+
+
+*** Introduction to design issues
+
+Some of the key \emph{development issues} have been sketched in the
+previous section.  Here we discuss the issues that come in at the
+level of \emph{design}.
+
+*** Principle of minimality
+:PROPERTIES:
+:LATEX_LABEL: principle-of-minimality
+:ID: principle-of-minimality
+:END:
+
+This system could be infinitely complex.  At each turn, we try to
+stick to minimal implementations first and then work out from there.
+
+
+*** Principle of order
+:PROPERTIES:
+:LATEX_LABEL: principle-of-order
+:ID: principle-of-order
+:END:
+
+Functions and variables should not be used before they are defined.
+(There is a related principle of context that is harder to express:
+the idea there is that things should be defined in places that make
+sense.)  Any exceptions to this rule should be carefully considered.
+
+
+*** Principle of transparency
+:PROPERTIES:
+:LATEX_LABEL: principle-of-transparency
+:ID: principle-of-transparency
+:END:
+
+It would be nice not to have features that disrupt the easy and
+completely general flow of the code, but this seems very hard
+to accomplish.  We can at least try to be aware of the places where such
+losses of generality appear, and make some assessment of the
+consequences (and possible future remedies), and certainly try
+to avoid losses of generality whenever possible.
+
+
+*** Principle of orthogonality
+:PROPERTIES:
+:LATEX_LABEL: principle-of-orthogonality
+:ID: principle-of-orthogonality
+:END:
+
+In order to make this system work well with the rest of Emacs, it
+should be roughly orthogonal to the rest of Emacs.  It should not
+require you to go off into your own little world, nor should it
+require redefining basic functions, or otherwise change what people
+are used to in terribly significant ways.
+
+
+\subsubsection{System architecture}
+
+*** The principles of the architecture
+
+The system is built on the principle of a \emph{semantic network}.
+Articles correspond roughly to the \emph{nodes} of a graph, and
+link-backlink pairs to the \emph{edges}.  Both of these types of
+objects can bear labels with certain structured information on them.
+(Actually, labels on links are sub-frames of the labels on articles;
+and labels on backlinks are derived from data about the linking
+article (I guess you could call that an ``induced subframe'' or
+``derivative subframe'' -- the issues having to do with where the
+knowledge is stored, e.g., where you might store the query that tells
+you which thing is a derivative, or one particular sort of derivative,
+are in my opinion a philosophical issue beyond the scope of what we
+wish to get involved with in this paragraph) and anyway, all
+information \emph{in} the system is stored on articles.  But we don't
+really need to go there now either.)  We could just say ``frame'' and
+``subframe'' and keep it simple.  But note that these are the
+\emph{internal} frameworks of the system, not the content frameworks
+or whatever you want to call that.  That really just about sums up the
+architecture of the system itself.
+
+
+*** Metaprinciples of the architecture
+
+Eventually we want to get things like code that defines the system to
+be ``understood'' by the system in some way.  These are semantic
+networks, so saying that they can understand something is moderately
+appropriate.  Right now, the code is just imported into the system in
+a bulk fashion.  But eventually the functions could go into the
+article table.  Really, the fact of the matter is that later we want
+to put the fundamental object arrays for Emacs into the article table
+too, so that the whole computation that is Emacs becomes a massive and
+somewhat complicated scholium based document evolving in time.  So,
+now we get a sense of what it means to be self-documenting to the
+extreme.  (Now, per usual, we just modeling something that is already
+there, and is already documented to a certain extent by itself, maybe
+to a richer extent then you might think.)  Getting Emacs embedded in
+the scholium system is the next step after getting the system somewhat
+roughly embedded in itself.  (So, this might be an interesting thing
+for the LISP crowd to think about; and indeed, it provides a sort of
+metaphor for the structure of the HDM itself.)  
+
+To sum that up, and to conclude! We want to make the system
+increasingly cognisant of itself.  If it doesn't make sense to look at
+all of the processes going on inside of Emacs, for example, then we
+don't look at all of these processes.  But to the extent that it is
+useful to look at the details of a given process, it would be helpful
+to track that process in the scholium system.  (One question we might
+ask ourselves is when exactly is it useful to track a given process,
+noting that we are often tracking the process through time, if it is a
+computation, and then most likely examining the trace later.  However,
+you could also set things up so that you could look at the trace from
+different parts of it that are evolving.  Of course, you can't look
+into the future, you can only look at nodes that have already been
+computed.  But you could get a look-ahead effect going within your
+computation that would know where to look ahead of time, so that its
+journey to retrieve the answer begins before the answer has actually
+been recieved, and the query process meets up with the answer just in
+time.  And that would be fairly tricky!
+
+
+*** Architectural implementation
+
+The system is currently implemented as a hash table of articles; the
+format for these is explained later on in this document, mainly in
+Section [[id:definition-of-scholium]].
+
+
+\subsubsection{Stylistic considerations} \label{stylistic-considerations}
+
+*** Backend and frontend
+
+To the extent that it is possible, we should distinguish between the
+backend and the frontend of the system.  We could rewrite the backend
+in scheme, for example, and rewrite the frontend in various
+web-programming languages to make a system that is easy to use over
+the internet.
+
+
+*** Abstracting access
+:PROPERTIES:
+:LATEX_LABEL: abstract-access
+:ID: abstract-access
+:END:
+
+Since we may eventually support both lists and hash tables (and
+perhaps other things), we presumably should have an abstract means of
+accessing articles.  (Unless we were to decide to just do things with
+hash tables; however, it seems likely to me that even if we use a hash
+table as the main library, people may want to use lists for
+sublibraries; if the same functions for access are supposed to be used
+in both full and sub library scenarios, we'll want the abstract access
+regardless of how the full library is set up.)  A theoretical
+discussion of the benefits of hash tables can be found on
+PlanetMath\footnote{http://planetmath.org/encyclopedia/Hashing.html}.
+
+
+*** The Emacs Way
+:PROPERTIES:
+:LATEX_LABEL: the-emacs-way
+:ID: the-emacs-way
+:END:
+
+Scholia about files and about buffers are probably most of what would
+make this system useful to people who are collaborating on papers or
+coding projects.  See Note [[id:bias-towards-buffers]], Note,
+[[id:back-to-base]].
+
+
+*** Intuitive interface
+
+The bread and butter of the system's user interface is a set-up with
+side by side buffers (see Note [[id:side-by-side-buffers]]).  Other
+display styles (e.g. as described in Note [[id:references]], or
+threading, as in Note [[id:threading]], or a display spread across
+several frames, etc.) should be straightforward to add.
+
+
+*** Text properties and overlays
+:PROPERTIES:
+:LATEX_LABEL: text-properties-and-overlays
+:ID: text-properties-and-overlays
+:END:
+
+We essentially need to have scholia encoded locally as text
+properties, because we need to be able to cut and paste the elements
+and have the metadata transfered along.  However, at least one aspect
+of text properties is already ``owned'' by fontlock, namely faces.  To
+use faces in the scholium system, we have to hack an override in --
+namely, we mark the buffer up using text properties and then mark them
+up again with overlays.  In general, text properties are used to track
+text, and overlays are just used as a visual aide.  See section
+[[id:marking-things-up]], also Note [[id:reparsing-after-editing]].
+
+
+*** Managing text properties in buffers
+:PROPERTIES:
+:LATEX_LABEL: managing-properties-in-buffers
+:ID: managing-properties-in-buffers
+:END:
+
+We store information about \emph{all} attached scholia on text
+property lists.  We should also be storing the name of the article on
+all of the text throughout the buffer, so that if the contents of that
+buffer are cut and pasted, the text can be tracked.  This requires a
+somewhat complex data structure, and makes markup with overlays (as
+well as some other details, e.g. text marked up with references which
+is subsequently cut in half) tricky either in practice or
+conceptually.  See Note [[id:reparsing-after-editing]].
+# (These issues are rather different from the topic of managing
+# properties associated with articles \emph{themselves}, which is
+# discussed in Section [[id:managing-properties]].)
+
+
+*** Selection methods
+:PROPERTIES:
+:LATEX_LABEL: selection-methods
+:ID: selection-methods
+:END:
+
+Various selection facilities need to be implemented.  A little
+predicate matching thing would make things extensible!  (See also Note
+[[id:selective-displays]] and Note
+[[id:predicate-support-for-listing]].)
+
+
+*** Local navigation
+
+It is important to have convenient ways to move around from scholium
+to marked region and back, from marked region to marked region, and so
+on.  See Section [[id:local]].
+
+
+*** Color and style of display
+:PROPERTIES:
+:LATEX_LABEL: color-and-style
+:ID: color-and-style
+:END:
+
+We could offer the user a choice between \inp{type}-based coloration
+(indicating what sort of scholium is being marked up),
+owner-coloration (who created the scholium) and connected-coloration
+(which what I've initially coded up).  We could use some combination
+of color and other visual indicators (see Note [[id:monochrome]]) to
+provide more information.
+
+Similarly, text written by a given author in a shared file could have
+a special color.  Another type of display would indicate how many
+scholia had been created about a given region (like a rainfall chart).
+Different styles can be generated essentially indefinitely.  Another
+user-friendly feature would be to be able to easily change the color
+associated with some particular set of data (rather than changing the
+overall scheme whereby colors are associated with data).
+
+
+*** The monochrome lifestyle
+:PROPERTIES:
+:LATEX_LABEL: monochrome
+:ID: monochrome
+:END:
+
+For the benefit of people working with and without fontlock, three
+display modes to point to attached scholia from Window $A$ will be
+available: one that uses font lock; one that uses intangible tokens
+\kw{[N:]} and \kw{[:N]} where \kw{N} is a number to demarcate the
+beginning and end of the $N$th scholium (or some other customizable
+pattern, e.g. based on the bookkeeping information); and a third
+``relaxed'' mode uses no markup at all.  A number of intuitive ideas
+for inserting indicators (e.g. in the fringe) could be tried.  See
+[[id:blinking]] for another monochrome-friendly approach.  Another
+simple idea, similar to the one described above, would be to use
+% Thanks /sw/share/texmf-dist/source/plain/impatient/
+symbols (e.g. $*$, $\#$, \S) to associate scholia with the
+beginning(s) of the passage(s) they are attached to, and use narrowing
+to screen out other material.
+
+
+*** User-crafted semantics
+:PROPERTIES:
+:LATEX_LABEL: user-crafted-semantics
+:ID: user-crafted-semantics
+:END:
+
+As a generalization of Note [[id:color-and-style]], we will eventually
+want some essentially completely different styles of rendering.  In
+every case we should also move to support \emph{user-crafted
+  semantics}.  See also Note [[id:types-of-text]].
+
+
+*** Contextual display
+:PROPERTIES:
+:LATEX_LABEL: contextual-display
+:ID: contextual-display
+:END:
+
+An interesting feature would be to restrict to showing only the
+scholia that are attached to the current portion of the main article
+that is currently displayed, or only those associated with the
+character position of point.  In order to pull this off, we will need
+to look some into page and cursor motion in Emacs\footnote{Thanks to Stephen Monnier and Eli Zaretskii for
+telling me what to look for, on the emacs-devel list, 2006-04-04.  The relevant tips were to look at:
+`window-scroll-functions' (when a window's starting pos changes);
+`fontification-functions' (when a piece of text needs to be displayed);
+`before-' and `after-change-functions' (when a piece of text is modified);
+`window-start' and `window-end';
+`pre-' and `post-command-hook' (to run before/after each command, so you can
+detect cursor motion).}.
+
+Alternatively, we could write a new motion function, something like
+`move-to-next-region-with-scholium' (cf. Note
+[[id:move-to-next-or-previous-region-with-scholium]]), and combine this
+with a selective scholia display that will show whatever scholia are
+found at the new point.  The closest thing I could find in Emacs is
+`calendar-move-hook'.
+
+Yet another thought along these lines would be to have scholia appear
+in the same buffer as the rendered main article, but, for example, in
+columns beyond column 72 (or whatever the rightmost character in the
+display of the main article is).
+
+Compare Note [[id:displaying-nearby-scholia]] for thoughts on automatic
+\emph{contextualization} of an article at display time.
+
+
+*** References
+:PROPERTIES:
+:LATEX_LABEL: references
+:ID: references
+:END:
+
+Traditional hypertext links are a useful specialization of the general
+sort of links we're developing here (Note [[id:generalized-links]]).
+In an effort to reduce confusion, when we wish to be precise, we will
+refer to the scholia that are used to make a piece of text point at
+other piece of text as \emph{references}.  This usage is consonant
+with use in other hypertext systems, in which ``links'' are pieces of
+text that are marked up with references to other texts.
+
+Despite the time it may take to get used to the name, the familiar
+\emph{feel} of references should make it easy for people familiar with
+other hypertext systems to transition to this system.
+
+References are an example of a type of scholium that appears as markup
+instead of appearing ``alongside'' the article they are attached to
+(which is what will typically happen with other scholia).  References
+may have special semantics associated with them, see Note
+[[id:special-reference-types]] and Note [[id:fancy-references]].
+
+It may be convenient to offer allow switching between our overlayed
+references and the more familiar inline, wiki-like, references, or at
+the very least, some other way to easily edit reference targets (and
+similarly for other sorts of links).  See Section [[id:wiki]] for
+various information on simulating a wiki with the scholium system.
+
+
+*** Threading
+:PROPERTIES:
+:LATEX_LABEL: threading
+:ID: threading
+:END:
+
+We can also provide facilities for showing all attached scholia
+together with \emph{their} attachments, and so on, within some fixed
+graph distance, beyond which we just include links to lower levels (as
+yet \emph{unimplemented} - but a good idea).  This is essentially
+what's done on Slashdot, and we would want to use a similar indenting
+(and, ergo, threading) mechanism.  (We could be even more
+Slashdot-like and do scoring and the whole bit.)  The thing to bear in
+mind is that we dont' have to be constrained to follow threads along
+one ``follow-up-to'' axis; we can choose arbitrary conditions to
+constrain the way we view a local hierarchy (cf. Note
+[[id:hierarchy]]).  The simplest one to state is the one already
+mentioned, namely, viewing all attached scholia to some depth.
+
+
+*** Ancestors
+:PROPERTIES:
+:LATEX_LABEL: ancestors
+:ID: ancestors
+:END:
+
+We typically think about showing a article together with articles that
+are about it (its scholia) but we can just as well show it together
+with articles that it is about (its referents).  Indeed, views that
+take into consideration the article's parents and grandparents have
+obvious applications, e.g., when attempting to follow a conversation.
+Particularly if an article has no children itself, it may be handiest
+to display it together with its parent (multiple parents could
+potentially complicate the matter).  These issues have been taken up
+to some degree in various places in this document, including
+Note [[id:more-than-one-parent]] and Note 
+[[id:add-visible-parent-and-sibling-links]].
+
+
+*** Expand and collapse backlink context
+
+We typically show an article together with the text of its scholia,
+but we could optionally simply say that such-and-such an article links
+here.  Compare Note [[id:contextual-display]] and Note [[id:ancestors]].
+
+We may also want to provide a hierarchy of additional scholia, mapping
+along the links-to and the linked-to directions, see Note
+[[id:threading]].
+
+
+*** Labels and namespaces
+:PROPERTIES:
+:LATEX_LABEL: labels-and-namespaces
+:ID: labels-and-namespaces
+:END:
+
+A \emph{label} is a predicate extent that has (typically) been
+maintained on the fly (or otherwise made concrete).  A
+\emph{namespace} is a place to put articles; articles in different
+namespaces can have the same names but not be the same.  An object can
+have many labels but can only live in one namespace.  (See Section
+[[id:subcollections]], and Note [[id:cost-of-maintaining-labels]] in
+particular.)
+
+
+*** Filtering
+:PROPERTIES:
+:LATEX_LABEL: filtering
+:ID: filtering
+:END:
+
+Filtering is closely related to the topic of subcollections mentioned
+in Note [[id:labels-and-namespaces]] (and it also relates to the issue
+of predicate mapping; see Note [[id:mapping-across-a-subcollection]]
+and Note [[id:search-engine-interface]]).  The point to keep in mind
+is that different people are going to want to see different things
+when looking at a document.
+
+
+*** Transcluding and outline views
+:PROPERTIES:
+:LATEX_LABEL: transcluding-and-outlines
+:ID: transcluding-and-outlines
+:END:
+
+Note that instead of text stating where the URL is, we could have an
+``transclude'' scholium; this would cause the latest, current, version
+of the target document to appear in the current document when the
+latter is rendered.  One should be able to look at the current
+document as an outline (hierarchy) showing these ``transclusion''
+relationships explicitly.  Similarly, one should be able to collapse
+and expand different parts of the document (i.e., in the collapsed
+view, only the title of the transcluded document would appear, but in
+the expanded view all of the content would appear).  These sorts of
+ideas are handy whenever thinking about container documents (Note
+[[id:container]]; oppose Note [[id:thread]]).  When examining an
+outline, one should be able to jump to the article in its place inside
+of the document that is being outlined, or as a stand-alone item.
+
+
+*** Rendered and source views
+:PROPERTIES:
+:LATEX_LABEL: rendered-and-source-views
+:ID: rendered-and-source-views
+:END:
+
+A more mainstream example than the expanded and collapsed views from
+Note [[id:transcluding-and-outlines]] are rendered and source views.
+These could be relevant when working with \LaTeX\ or HTML (e.g., when
+browsing this document, it would be nice to have things detexed).
+Presumably edits would take place in the source view (though not
+necessarily; compare the Emacs Muse\footnote{http://www.mwolson.org/projects/MuseMode.html}).  Switching in
+and out of rendered views would be an extra step when initiating edits
+(see Section [[id:initiating-edits]]).
+
+One simple feature that would be a nice part of a reasonable rendering
+would be to keep the text within a certain width by filling at render
+time (this would be both for articles and for the scholia display).
+Presumably exported text would also have to be filled if it is to
+look good.  
+
+Much more generally, it would be nice to have a full-fledged
+\LaTeX\ renderer (along the lines of \LaTeX-to-HTML).  A renderer is
+in many ways similar to a parser, so a simple parser is a reasonable
+first step.  Some of the work related to 
+Emacspeak\footnote{http://emacspeak.sourceforge.net/} is,
+I think, relevant to this problem.
+
+
+*** Page numbers
+
+If we could figure out how to do some \emph{truly} device-independent
+rendering of \LaTeX\ documents, one particular thing we'd presumably
+have come up with be a correspondence between \emph{page numbers} in
+the printed version of a document and in the electronic version.  In
+the mean time, maybe we can come up with some easy way to solve this
+using some specially logging when \LaTeX\ processes ``notate''
+environments?  (E.g., it wouldn't be hard to use special commands to
+make an index of the notate environments in the document; and
+presumably Emacs could read the source of that index.)
+
+
+*** Alternate names for buffers
+
+Should buffers have special names stored in buffer-local variables, or
+should we search the library for buffers and check to see if they are
+the same (regardless of what name they go by)?  Or some other approach
+to deal with named buffers?  See section [[id:display-interface]].
+
+
+*** Saving and reading
+
+The user can save and read back a given collection of scholia.  As an
+example, arbitrary files can be opened in `scholia-mode' so that all
+scholia stored in the same directory as the file will appear
+automatically as annotations.
+
+
+*** Versioning
+:PROPERTIES:
+:LATEX_LABEL: versioning
+:ID: versioning
+:END:
+
+In order to edit and stay kosher, we should provide support for
+versioning.  This version information will be stored on the
+\inp{bookkeeping} slot (or, alternatively, we should store sufficient
+information to recover the versions; if such information isn't already
+available elsewhere in the system).  Note that we could just go ahead
+and make functions for editing the text and then add functions for
+saving the previous version later, in a hook.  (This relates to the
+slightly more general problem of making editing work in general, see
+Section [[id:editing]].)
+
+In order to deal with \inp{about} data that terminates on a given
+article version instead of on the latest version, we will want to have
+an additional optional column available in links that is reserved for
+the version number.
+
+(Note that some objects may not need to have versions stored about
+them.)
+
+
+*** CVS/Arch/filesytem support
+:PROPERTIES:
+:LATEX_LABEL: vc-and-filesystem-support
+:ID: vc-and-filesystem-support
+:END:
+
+We need to figure out how to integrate external information resources
+into the system.  One issue with CVS and Arch is that we (sometimes)
+will want to only look at files that are new or have changed upon
+reloading.  This means that the version management software will
+probably have to be integrated fairly closely into the system.
+Another option would be to keep a record of the files in any directory
+that is being used, and check this record against that file's listing
+whenever the user wants to reload the content from that file.  This
+may be the only option we really have for using the filesystem
+directly, but for the case of CVS, proper integration would probably
+be better.
+
+Note that Arch has its own way of doing version management (as do
+all version control systems, of course).  It might be best if
+we could swap different methods for version control in and out.
+Fundamentally, we need to know where to look for articles --
+they don't necessarily have to be in the filesystem (perhaps
+they could be assembled in real time in some buffer, for example;
+similarly, I think Arch builds various patched versions in real
+time).
+
+
+*** Responsiveness to editing
+:PROPERTIES:
+:LATEX_LABEL: responsiveness-to-editing
+:ID: responsiveness-to-editing
+:END:
+
+As editing takes place, the information in the system needs to be kept
+up-to-date and coherent with itself.  The main developments in this
+section are presented in Section [[id:committing]].
+
+
+*** Unique identifiers for individual pieces of markup
+
+When committing edits, we reparse the buffer to find the places where
+the scholia are attached (Section [[id:parsing]]).  For things to
+work properly, each piece of markup should have a unique identifier
+(the article name and link number should suffice, see Note
+[[id:format-of-about-field]]).  This will make it possible tell whether
+a piece of markup has been completely deleted, or swapped with another
+piece, or split into several pieces, or whatever (in theory, a region
+can even be moved between buffers, which would require an additional
+level of reparsing, we won't worry about that here for now; see Note
+[[id:aggressive-dop]]).
+
+
+*** Manipulation of windows
+
+The somewhat aggressive manipulation of windows used in this program
+could get annoying, especially in the case of editing multiple
+articles at once.  (Which is one possible reason for editing things
+inside one buffer, see Note [[id:identification-use-case]].)
+
+
+*** Sorting scholia
+
+We want scholia to appear in some reasonable order relative to the
+order of marked regions.  Section [[id:sorting]] is supposed to do
+this.  Note also that sorting should not be destructive; see Note
+[[id:order-of-about]].
+
+
+*** Complexity issues
+
+Some features simply would take too long to run when there are lots of
+scholia or articles involved.  We need to be aware of these sorts of
+complexity issues.  (It usually doesn't take much more than a simple
+test to make one fully aware of the problem, when dealing with
+terrible complexity scenarios!)  Section [[id:subcollections]] contains
+a few thoughts on how to limit complexity.
+
+
+*** Ease of use
+
+In addition to being more featureful than the wiki medium, I hope that
+this system will be easier to use -- wikis as I know them are fairly
+laborious; lots of steps are needed to edit and save.  The system
+should be designed in a way that requires few if any ``extra'' steps
+from authors.
+
+
+*** Return to base representation
+:PROPERTIES:
+:LATEX_LABEL: back-to-base
+:ID: back-to-base
+:END:
+
+It might be nice to have a way to return from a scholium to its
+``actual'' base representation, i.e., if it is associated with a
+buffer, we should find that buffer, or if it is associated with a file
+we switch to a buffer visiting that file.  Indeed, I think we have
+thing set up now so that an article stored in a buffer will always be
+attached to that buffer.  We might want to be more flexible, allowing
+various different ways to attach and reattach (compare Note
+[[id:movable-scholia]]).
+
+
+*** Code transparency
+
+It is good to have easy-to-understand names for functions that will
+appear over and over again; for example, we provide functions to
+access the bits and pieces of scholia (see Note
+[[id:access-functions]]).  But we should try to do this all the time,
+for all of the data structures we build.
+
+See also Note [[id:assimilating-data]] for further thoughts on why it
+is a good idea to do things this way.
+
+
+*** Creating a scholium about several articles
+
+I'm not sure we have sufficiently strong mechanism for making scholia
+that apply to several other articles.  That would be one potential use
+of the list browser from the previous section; we could mark articles
+and make a scholium about marked articles quickly, or mark articles
+and then make scholia about sections from other articles.  Also, it
+would be good to have a way to break out of the region selection
+routine and start selecting regions from some article fluidly when
+working on making scholia \emph{that} way.
+
+This is useful as long as we are able to gather all of the articles we
+want to make a scholium about into one listing, or if we can find a
+way to use several listings together intelligently.
+
+
+*** Space versus time tradeoffs
+
+We value time over space tradeoffs.  If the data set becomes very
+large, this judgement may have to change (e.g. if the system gets
+popular, we won't be able to hold all of the available articles
+in memory, or on disk, and we'll have to get clever about
+swapping things around).
+
+
+*** Support for systems in which passages have special meanings
+:PROPERTIES:
+:LATEX_LABEL: systems-with-special-passages
+:ID: systems-with-special-passages
+:END:
+
+RMAIL, info, and EDB are just a few examples of Emacs subsystems whose
+most ``meaningful'' objects are smaller than the files in which these
+objects live.  Support for these objects would be good to add to the
+scholium system, so that we can e.g. record mail messages or info
+pages that match some particular property.
+
+
+*** Undoable editing
+
+It would be nice to be able to undo the editing actions that
+we support.
+
+
+*** Support for narrowing
+
+Frequently the function `point' is used here; I'm assuming that
+documents will be widened properly.  But it would be good to be able
+to support narrowing (see Note [[id:systems-with-special-passages]]).
+
+
+*** Hooks and `cond' forms
+:PROPERTIES:
+:LATEX_LABEL: transforming-cond
+:ID: transforming-cond
+:END:
+
+At some earlier point, it seemed useful to think about transforming a
+`cond' form with an unquoted variable that contains extra cases (that
+are to be defined as needed).  This seemed like a good opportunity to
+use LISP self-modifiability, and furthemore, it seemed like a good way
+write things in order (see Note [[id:principle-of-order]]).  However,
+typically the same thing can be achieved with hooks.  The function
+`sch-plain-text' is a good example of this (Note
+[[id:sch-plain-text]]).
+
+
+*** Multidimensional visual browsing
+:PROPERTIES:
+:LATEX_LABEL: multidimensional-visual-browsing
+:ID: multidimensional-visual-browsing
+:END:
+
+It might be handy to have a small control pannel at the bottom of the
+main article display that could be used to go backwards and forwards
+according to the layout of the document \emph{and also} according to
+the order in which things had been browsed so far (and anything else
+that the user might dream up to put there).
+
+
+*** Using datatypes
+:PROPERTIES:
+:LATEX_LABEL: datatypes
+:ID: datatypes
+:END:
+
+In order to be able to pass different kinds of objects around and have
+them interpreted correctly, it might be advantageous to have our data
+structures typed; I'm not quite sure how types work in Emacs -- but I
+can say that datatypes are obviously scholia.  For example, we might
+want there to be an article datatype (right now, there are only types
+\emph{of} articles, like ``references'' for example).  Another entity
+that could have a special datatype is the link.
+
+The question of datatypes for \emph{forms} seems interesting; it
+basically boils down to the question as to whether we add scholia to
+arbitrary lisp structures (see Note [[id:functional]]).
+
+
+*** Hooks as scholia
+
+Hooks are an easy-to-see example of scholia in the Lisp paradigm
+(compare Note [[id:functional]],
+[[id:including-transcluding-and-lisp]]).
+

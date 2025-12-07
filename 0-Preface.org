@@ -1,0 +1,61 @@
+* Preface                                                          :noexport:
+
+\title{\emph{Arxana}}
+
+\author{Joseph Corneli\thanks{The content of this file is available
+    under your choice of the GNU Free Documentation License (FDL) and
+    the GNU General Public License (GPL). If the FDL is selected, be
+    advised that this document has no Invariant Sections, no
+    Front-Cover Texts, and and no Back-Cover Texts.}}
+
+\date{\today\ (draft)}
+
+\maketitle
+
+# %% The system's design draws on ideas from Ted Nelson's ``Project
+# %% Xanadu'', combining them with the ``semantic network'' strategy
+# %% from artificial intelligence.
+
+# \abstract{A scholia-based document model for commons-based peer
+#   production informs an advanced Emacs-based hypertext system.}
+
+# %% 1. Revise links and backlinks.
+
+# %% 2. Put together an appendix with simple specs.  (Done for the
+# %% basic objects; not necessarily with all of the operations that
+# %% effect these objects.)
+
+# %% 3. After that, there are many user-friendly features that one could
+# %% tackle.  Additional history lists for multi-dimensional browsing,
+# %% various useful consistency-maintaining features (not unlike
+# %% mascons!), versioning support, and so on.  Presumably many of these
+# %% items can be left for other people to work on after the release.
+
+# %% 4. I still haven't completely worked out the theory of
+# %% "transclusion" (live-updating quotes) to my satisfaction, and this
+# %% (and its bi-directional variant, "identification") is the "killer
+# %% ap" I'd like to get into the software before I release it.
+
+# \tableofcontents
+
+# \newpage
+
+This document may look like a paper, but it is also runable code.
+The code implements a hypertext system.  You can use this
+hypertext system to browse and edit the code and documentation
+that describes the system itself.
+
+To do that, when viewing the document's source code with Emacs,
+evaluate this form (in place). *To restore*
+
+# #+BEGIN_SRC lisp :tangle no
+# (progn 
+# (require 'cl)
+# (save-excursion
+#   (let ((beg (search-forward "\\begin{verbatim}"))
+#         (end (progn (search-forward "\\end{verbatim}")
+#                     (match-beginning 0))))
+#     (eval-region beg end)
+#     (lit-eval)
+#   (browse-scholium-system))))
+# #+END_SRC

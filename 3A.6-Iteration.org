@@ -1,0 +1,528 @@
+** Iteration
+
+*** Iterating over a plexus
+
+  These functions allow users to run loops over a plexus without
+  having to delve into its internal structure.\todo{I forget whether the
+ use of `apply' here is good form.}
+
+
+#+BEGIN_SRC elisp
+(defmacro do-plexus (var res body)
+  `((maphash (lambda (,var val) ,body)
+             (nth 2 current-plexus))
+    ,res))
+
+;; This maps over the keys; func should be
+;; defined appropriately.
+(defun map-plexus (func)
+  (let ((ans nil))
+    (maphash
+     (lambda (key val)
+       (push (apply func (list key)) ans))
+     (nth 2 current-plexus))
+    ans))
+
+(defun filter-plexus (pred)
+  (let ((ans nil))
+    (maphash
+     (lambda (key val)
+       (when (apply pred (list key))
+         (push key ans)))
+       (nth 2 current-plexus))
+     ans))
+#+END_SRC
+
+*** Filtering convenience functions
+
+Several convenience functions for filtering the plexus can be
+defined.  They give lists of uids, which can be expanded
+using get-triple.
+
+
+#+BEGIN_SRC elisp
+(defun nemas-given-beginning (node)
+  "Get triples outbound from the given NODE."
+  (filter-plexus
+   (lambda (x) (when (equal (get-source x)
+                            node)
+                 (list node
+                       (get-content x)
+                       (get-sink x))))))
+
+(defun nemas-given-end (node)
+  "Get triples inbound into NODE."
+  (filter-plexus
+   (lambda (x) (when (equal (get-sink x)
+                            node)
+                 (list (get-source x)
+                       (get-content x)
+                       node)))))
+
+(defun nemas-given-middle (edge)
+  "Get the triples that run along EDGE."
+  (filter-plexus
+   (lambda (x) (when (equal (get-content x)
+                            edge)
+                 (list (get-source x)
+                       edge
+                       (get-sink x))))))
+
+(defun nemas-given-middle-and-end (edge node)
+  "Get the triples that run along EDGE into NODE."
+  (filter-plexus
+   (lambda (x) (when (and
+                      (equal (get-content x)
+                             edge)
+                      (equal (get-sink x)
+                             node))
+                 (list (get-source x)
+                       edge
+                       node)))))
+
+(defun nemas-given-beginning-and-middle (node edge)
+  "Get the triples that run from NODE along EDGE."
+  (filter-plexus
+   (lambda (x) (when (and
+                      (equal (get-source x)
+                             node)
+                      (equal (get-content x)
+                             edge))
+                 (list node
+                       edge
+                       (get-sink x))))))
+
+(defun nemas-given-beginning-and-end (node1 node2)
+  "Get the triples that run from NODE1 to NODE2."
+  (filter-plexus
+   (lambda (x) (when (and
+                      (equal (get-source x)
+                             node1)
+                      (equal (get-sink x)
+                             node2))
+                 (list node1
+                       (get-content x)
+                       node2)))))
+
+(defun nemas-exact-match (node1 edge node2)
+  "Get the triples that run from NODE1 along EDGE to
+NODE2."
+  (filter-plexus
+   (lambda (x) (when (and
+                      (equal (get-source x)
+                             node1)
+                      (equal (get-content x)
+                             edge)
+                      (equal (get-sink x)
+                             node2))
+                 (list node1
+                       edge
+                       node2)))))
+#+END_SRC
+
+*** Additional elementary functions for node access
+
+These functions give access to the various parts of a node.\todo{Note:
+ since `article-list' is not defined, should these functions be deleted?
+Or should they be rewritten to access `current-plexus'?}
+
+
+#+BEGIN_SRC elisp
+(defun get-src (n)
+  (car (nth 0 (cdr (assoc n (cdr article-list))))))
+
+(defun get-flk (n)
+  (cdr (nth 0 (cdr (assoc n (cdr article-list))))))
+
+(defun get-txt (n)
+  (nth 1 (cdr (assoc n (cdr article-list)))))
+
+(defun get-snk (n)
+  (car (nth 2 (cdr (assoc n (cdr article-list))))))
+
+(defun get-blk (n)
+  (cdr (nth 2 (cdr (assoc n (cdr article-list))))))
+
+(defun get-ids nil
+  (mapcar (quote car) (cdr article-list)))
+
+(defun get-gnd nil 0)
+#+END_SRC
+
+*** On `search-cond'
+:PROPERTIES:
+:LATEX_LABEL: search-cond
+:ID: search-cond
+:END:
+
+Surround the search within dolist loops on free variables.
+Wrap no further when finished.\todo{Upgrade this to concatenate the results together.
+Also maybe allow options to add headers or to
+only loop over unique tuplets.}\todo{Explain; how does this differ from
+the function defined at Note [[id:search]]?}
+
+
+#+BEGIN_SRC elisp
+(defmacro search-cond (vars prop)
+  "Find all n-tuplets satisfying a condition"
+  (let ((foo '(lambda (vars cmnd)
+                (if vars
+                    Wrap in a loop.
+                    `(dolist (,(car vars) uids)
+                       ,(funcall foo (cdr vars) cmnd))
+                    cmnd))))
+    (funcall foo vars prop)))
+#+END_SRC
+
+*** Overview of the search pipeline
+
+We will implement the search as a pipeline which gradually
+transforms the query into a series of expressions which produce
+the sought-after result, then evaluate those expressions.
+
+A search query designates predicates apply to the nodes
+and the network relationships that apply to them.  The network relationships
+function as wildcards.
+
+The basic model of the data is triplets that point to other triplets.
+The following query asks for a \emph{funny} link from a
+\emph{big blue object} to a \emph{small green link} pointing outwards
+from the big blue object.
+#+BEGIN_SRC elisp :tangle no
+(((a blue big) (b funny) (c green small)
+  ((b src a) (b snk c) (c src a))
+#+END_SRC
+The first step of processing is to put the quaerenda in some
+order so that each item links up with at least one previous item:
+#+BEGIN_SRC elisp :tangle no
+(scheduler
+ '((b funny)
+   (c green small))
+ '((b src a)
+   (b snk c)
+   (c src a))
+ '((a blue big)))
+=>
+((c (green small) ((b snk c) (c src a)))
+ (b (funny) ((b src a)))
+ (a blue big))
+#+END_SRC
+Note that the order is reversed due to technicalities of
+implementing `scheduler' --- that is to say, a is first and does
+not link to any other variable, b is next and links to only a,
+whilst c is last and links to both a and b.
+At the same time, we have also rearranged things so that the
+links to previous items to which a given object are listed
+alongside that object. The next step is to replace the links with the commands which
+generate a list of such objects:
+#+BEGIN_SRC elisp :tangle no
+((c (green small) ((b snk c) (c src a)))
+ (b (funny) ((b src a)))
+ (a blue big))
+=>
+((c (green small)
+    (intersection (list (get-snk b)) (get-forward-links a)))
+ (b (funny)
+    (intersection (get-backward-links a)))
+ (a blue big))
+#+END_SRC
+This is done using the function `tplts2cmd', e.g.
+#+BEGIN_SRC elisp :tangle no
+(tplts2cmd 'c  '((b snk c) (c src a)))
+=>
+(intersection (list (get-snk b)) (get-forward-links a))
+#+END_SRC
+Subsequently, we filter over the predicates:
+#+BEGIN_SRC elisp :tangle no
+((c (filter '(lambda (c) (and (green c) (small c)))
+    (intersection (list (get-snk b))
+  (get-forward-links))))
+ (b (filter '(lambda (b) (and (funny b)))
+    (intersection (get-backward-links a)))))
+#+END_SRC
+This is done with the command `add-filt':
+#+BEGIN_SRC elisp :tangle no
+(add-filt 'c
+  '(green small)
+  '((b snk c) (c src a)))
+=>
+(c (filter (quote (lambda (c) (and (green c) (small c))))
+   (intersection (list (get-snk b))
+ (get-forward-links a))))
+#+END_SRC
+This routine calls up the previously described routine `tplts2cmd'
+to take care of the third argument. The last entry, \kw{(a blue big)}
+gets processed a little differently because we don't as yet have
+anything to filter over; instead, we generate the initial list by
+looping over the current network:
+#+BEGIN_SRC elisp :tangle no
+(a (let ((ans nil))
+     (donet 'node
+    (when (and (blue (get-content node))
+       (big (get-content node)))
+      (setq ans (cons node ans))))
+     ans))
+#+END_SRC
+This is done by invoking `first2cmd':
+#+BEGIN_SRC elisp :tangle no
+(first2cmd '(blue big))
+=>
+(let ((ans nil))
+  (donet (quote node)
+ (when (and (blue (get-content node))
+    (big (get-content node)))
+ (setq ans (cons node ans))))
+ ans)
+#+END_SRC
+And putting this all together:
+#+BEGIN_SRC elisp :tangle no
+(query2cmd
+ '((c (green small) ((b snk c) (c src a)))
+   (b (funny) ((b src a)))
+   (a blue big)))
+=>
+((c (filter (quote (lambda (c) (and (green c) (small c))))
+    (intersection (list (get-snk b))
+  (get-forward-links a))))
+ (b (filter (quote (lambda (b) (and (funny b))))
+    (intersection (get-forward-links a))))
+ (a (let ((ans nil))
+      (donet (quote node)
+     (when (and (blue (get-content node))
+(big (get-content node)))
+       (setq ans (cons node ans))))
+      ans)))
+#+END_SRC
+To carry out these instructions in the correct order and generate
+a set of variable assignments, we employ the `matcher' function.
+Combining this last layer, we have the complete pipeline:
+#+BEGIN_SRC elisp :tangle no
+(matcher nil
+ (query2cmd
+  (scheduler
+   '((b funny)
+     (c green small))
+   '((b src a)
+     (b snk c)
+     (c src a))
+   '((a blue big)))))
+#+END_SRC
+This combination of operations is combined into the `search'
+function, which can be called as follows:
+#+BEGIN_SRC elisp :tangle no
+(search
+ '(((a blue big)
+    (b funny)
+    (c green small))
+   ((b src a)
+    (b snk c)
+    (c src a))))
+#+END_SRC
+
+Having described what the functions are supposed to do and how
+they work together, we now proceed to implement them.
+
+
+*** On `scheduler'
+
+The scheduler function takes a list search query and rearranges it
+into an order suitable for computing the answer to that query.
+Specifically, a search query is a pair of lists --- the first list
+consists of lists whose heads are names of variables and whose
+tails are predicates which the values of the variables should
+satisfy and the second list consists of triples indicating the
+relations between the values of the variables.
+Its arguments are:
+\begin{itemize}
+\item new-nodes, a list of items of the form \verbal|(node &rest property)|;
+\item \verbal|links|, a list of triplets;
+\item \verbal|sched| is a list whose items consist of triplets of the
+form\newline \verbal|(node (&rest property) (&rest link))|.
+\end{itemize}
+
+A recursive function to find linked nodes.
+If done, return answer.
+New nodes yet to be examined.
+Element of remaining-nodes currently under consideration.
+List of links between candidate and old-nodes.
+List of nodes already scheduled.
+Loop through new nodes until find one linked to an old node.
+Look at the next possible node.
+Find the old nodes linking to the candidate node and record the answer in ``ties''.
+Pick out the triplets whose first element is the node under consideration and whose third element is already on the list or vice-versa.
+Recursively add the rest of the nodes.
+
+
+#+BEGIN_SRC elisp
+(defun scheduler (new-nodes links sched)
+  (if (null new-nodes)
+      sched
+    (let ((remaining-nodes new-nodes)
+          (candidate nil)
+          (ties nil)
+          (old-nodes (mapcar 'car sched)))
+      (while (null ties)
+        (setq candidate (car remaining-nodes))
+        (setq remaining-nodes (cdr remaining-nodes))
+        (setq ties
+              (filter '(lambda (x)
+                         (or
+                          (and (eq (first x) (car candidate))
+                               (member (third x) old-nodes))
+                          (and (member (first x) old-nodes)
+                               (eq (third x) (car candidate)))))
+                      links)))
+      (scheduler (remove candidate new-nodes)
+                 links
+                 (cons (list (car candidate)
+                             (cdr candidate)
+                             ties)
+                       sched)))))
+#+END_SRC
+
+*** On `tplts2cmd'
+
+\ldots\todo{Explain.}
+
+
+#+BEGIN_SRC elisp
+(defun tplts2cmd (var tplts)
+  (cons 'intersection
+        (mapcar
+         #'(lambda (tplt)
+             (cond ((and (eq (third tplt) var)
+                         (eq (second tplt) 'src))
+                    `(get-flk ,(first tplt)))
+                   ((and (eq (third tplt) var)
+                         (eq (second tplt) 'snk))
+                    `(get-blk ,(first tplt)))
+                   ((and (eq (first tplt) var)
+                         (eq (second tplt) 'src))
+                    `(list (get-src ,(third tplt))))
+                   ((and (eq (first tplt) var)
+                         (eq (second tplt) 'snk))
+                    `(list (get-snk ,(third tplt))))
+                   (t nil)))
+         tplts)))
+#+END_SRC
+
+*** On `add-filt'
+
+\ldots\todo{Explain.}
+
+
+#+BEGIN_SRC elisp
+(defun add-filt (var preds tplts)
+  `(,var
+    (filter
+     #'(lambda (,var)
+         ,(cons 'and
+                (mapcar
+                 #'(lambda (pred)
+                     (list pred
+                           (list 'get-txt var)))
+                 preds)))
+     ,(tplts2cmd var tplts))))
+#+END_SRC
+
+*** On `first2cmd'
+
+\ldots\todo{Explain.}
+
+
+#+BEGIN_SRC elisp
+(defun first2cmd (preds)
+  `(let ((ans nil))
+     (dolist (node (get-ids) ans)
+       (when
+           ,(cons 'and
+                  (mapcar
+                   #'(lambda (pred)
+                       (cons pred '((get-txt node))))
+                   preds))
+         (setq ans (cons node ans))))))
+#+END_SRC
+
+*** On `query2cmd'
+
+\ldots\todo{Explain.}
+
+
+#+BEGIN_SRC elisp
+(defun query2cmd (query)
+  (let ((backwards (reverse query)))
+    (reverse
+     (cons
+      (list (caar backwards)
+            (first2cmd (cdar backwards)))
+      (mapcar
+       #'(lambda (x)
+           (add-filt (first x) (second x) (third x)))
+       (cdr backwards))))))
+#+END_SRC
+
+*** On `matcher'
+
+\ldots\todo{Explain.}
+
+
+#+BEGIN_SRC elisp
+(defun matcher (assgmt reqmts)
+  (if (null reqmts) (list assgmt)
+    (apply 'append
+           (mapcar
+            #'(lambda (x)
+                (matcher (cons (list (caar reqmts) x)
+                               assgmt)
+                         (cdr reqmts)))
+            (apply 'intersection
+                   (eval `(let ,assgmt
+                            (mapcar 'eval
+                                    (cdar reqmts)))))))))
+#+END_SRC
+
+*** How matcher works
+
+Here are some examples unrelated to what comes up in searching
+triplets which illustrate how matcher works:
+
+
+#+BEGIN_SRC elisp :tangle no
+(matcher '((x 1)) '((y (list 1 3))
+                    (z (list (+ x y) (- y x)))))
+=>
+(((z 2) (y 1) (x 1))
+ ((z 0) (y 1) (x 1))
+ ((z 4) (y 3) (x 1))
+ ((z 2) (y 3) (x 1)))
+
+(matcher nil '((x (list 1))
+               (y (list 1 3))
+               (z (list (+ x y) (- y x)))))
+=>
+(((z 2) (y 1) (x 1))
+ ((z 0) (y 1) (x 1))
+ ((z 4) (y 3) (x 1))
+ ((z 2) (y 3) (x 1)))
+#+END_SRC
+
+*** On `search'
+:PROPERTIES:
+:LATEX_LABEL: search
+:ID: search
+:END:
+
+\ldots\todo{Explain; how does this differ from
+the macro defined at Note [[id:search-cond]]?}
+
+
+#+BEGIN_SRC elisp
+(defun search (query)
+  (matcher nil
+           (reverse
+            (query2cmd
+             (scheduler
+              (cdar query)
+              (cadr query)
+              (list (caar query)))))))
+#+END_SRC

@@ -1,0 +1,242 @@
+** Temporal browsing
+:PROPERTIES:
+:LATEX_LABEL: temporal
+:ID: temporal
+:END:
+
+*** History models                                                 :noexport:
+
+I had the idea to make a generic browser that could be used as
+the backend for both the scholium system's temporal browser and
+for my lynx-based browser nero.  (It may prove to be most
+convenient to simply embed a new nero in the scholium system,
+indeed, this seems fairly likely to happen.)  But I think it makes
+more sense at this point just to write a working scholia browser.
+That sort of abstractification can come later; the design will
+feature some effort in this direction, but perhaps largely in the
+form of notes about how to make things fully general and
+abstract.
+
+What is a temporal browser?  Typically, a list of history elements
+that can be added to when new pages are encountered, and from which
+elements are deleted as new paths through the network get trod.
+
+For example, if the user browser pages $A$, $B$, and $C$ in order,
+there will be a history list $H=(A\ B\ C)$.  Upon going \emph{back},
+the history list becomes $H=(A\ B)$, and a future list is created,
+$F=(C)$.  If the user then visits a new page $D$, the history list
+becomes $H=(A\ B\ D)$ and $F=()$.
+
+In order to make access \emph{quick}, one obvious design strategy is
+to store pages that have been browsed locally (i.e., rather than
+re-downloading them each time they are browsed).  Of course, if the
+pages are already stored locally, this issue is moot.  And in this
+case, to save storage space (at a small time cost), we should be
+recording \emph{metadata} (names or pointers) on the history list, not
+the pages themselves.
+
+There are a couple of other models to consider.
+
+First, we can store our history data in a \emph{tree}.  In this
+``\emph{istree}'' model, what we would see in the above scenario is:
+\begin{align*}
+& T=(A) \\
+& T=(A\ B) \\
+& T=(A\ (B\ C))) \\
+& T=(A\ (B\ C\ D))
+\end{align*}
+
+I.e., each level of the tree stores the parent node as the car, and a
+list of children as the cdr (children are stored as atoms if they
+themselves are childless, or as the head of lists if they have
+children).  To keep track of where we are in the tree, we need a list
+of directions (cars and cdrs).  In the current case, the list would be
+(in the order of application): \emph{cdr, car, cdr, cdr}.  (For
+purposes of maintaining a symmetry which will be seen momentarily, we
+always return a \emph{list} in which the current node is the car.)  If
+the user moves \emph{back} from $D$ to its parent $B$, the
+supplementary list becomes \emph{cdr, car}, in other words, we find
+the most recent parent (car) in the list.  If the user moves back
+again from $B$, the supplementary list becomes \emph{nil}, which means
+we are at the first node.
+
+The data structure is simple, but confessedly, the explanation is a
+bit complicated!  Another simple model keeps track of the \emph{full
+  history}.  In this case, the model evolves as follows:
+\begin{align*}
+& T=(A) \\
+& T=(A\ B) \\
+& T=(A\ B\ C\ B\ D)
+\end{align*}
+
+This model has the benefit of retaining data about \emph{loops}
+(e.g. the short loop $B$, $C$, $B$).  Loops can be lopped off by the
+following algorithm: starting at the end of the list (i.e. the current
+node), make a list of nodes that have been encountered, and trace
+backward.  If the previous node hasn't been encountered, put it at the
+beginning of our growing loop-free list.  If it has been encountered,
+search backward for the earliest appearance of the last novel node,
+and add the element preceding that one to the loop-free list.  Moving
+``back'' in the sense of the truncated history list of traditional
+browsers can be accomplished by finding antecedent of the earliest
+appearance of the current node.  E.g., if the user wants to move
+\emph{back}, we add the antecedent $B$ to the list, to obtain
+$T=(A\ B\ C\ B\ D\ B)$.  If the user wants to move \emph{back} again, we obtain
+$T=(A\ B\ C\ B\ D\ B\ A)$, since $A$ is the earliest immediate
+prequel to $B$.
+Similarly, to move \emph{forward} at this point, we find the
+latest immediate sequel to the current node; in this case, $B$ again,
+and put $T=(A\ B\ C\ B\ D\ B\ A\ B)$.
+
+We can also recover the data stored in the istree model. This is left
+as an easy exercise to the reader, but the algorithm is given in the
+code; for reasons of generality (and simplicity!), \emph{we are
+  adopting the full history model as the basis of this browser}.
+
+A variety of interesting novel browser actions can be performed
+using this information, e.g., finding all the pages you looked at
+before or after this one.
+
+
+*** Science (fiction) tie-in                                       :noexport:
+
+Users can tap into the lived experience of a time lord (assuming we
+retain the ``temporal'' metaphor), or the experience of a Wolframian
+particle (compare NKS) if we consider a spatial metaphor instead.
+We'll let you sort out the paradoxes.  (\emph{Hint:} you never
+step in the same river twice.)
+
+
+*** Tabbed browsing                                                :noexport:
+
+Users of the full history model may be in less immediate need of
+``tabs'' (in the form of multiple histories) than users of the truncated
+history model.  Alternate browsing paths are (close to) natively
+available.  Futhermore, a page can be marked as a divider between
+one ``tab'' and another.  Indeed, this gives us an analogy to the
+``tabs'' than stick out of file folders in a physical filing cabinet.
+(The only difference is that pages can be in multiple files at the
+same time, which is as it should be.) This means that
+multiple histories can be used (in a read-only mode) as virtual
+\emph{cabinets} for organizing information.  The actual system of
+cabinetry need not be maintained here; implementing extra browsing
+features is a good activity for some rainy day.
+
+On the other hand, see Note [[id:thematic-histories]].
+
+
+*** Thematic histories
+:PROPERTIES:
+:LATEX_LABEL: thematic-histories
+:ID: thematic-histories
+:END:
+
+It might be useful to keep a record of several different sorts of
+histories, e.g. of editing events or ``catalog pages'' (Note
+[[id:history-for-listing]]).  These
+alternate histories wouldn't have much to do with the temporal
+browser per se.  Emacs does this in some cases (e.g. recording the
+input history for various interactive functions separately).
+
+If we're going to do this, probably the code in this section
+should be written in a somewhat more generic way.
+
+
+#+BEGIN_SRC elisp
+(defvar sb-history nil)
+
+(add-hook 'display-article-hook
+          (lambda ()
+            (sb-add-article-to-history name-of-current-article)))
+#+END_SRC
+
+*** Instead of adding the name                                     :noexport:
+:PROPERTIES:
+:LATEX_LABEL: instead-of-names
+:ID: instead-of-names
+:END:
+
+Maybe we should be adding directions on how to get the article.
+The name might not be sufficient if we end up working with
+nested structures.
+
+
+*** Complexities could be handled by `display-article'
+
+Of course, additional sorts of access instructions (like those alluded
+to in Note [[id:instead-of-names]]) could be handled by
+`display-article'.  \emph{This section} does not depend on article
+names being stored as strings.
+
+
+#+BEGIN_SRC elisp
+(defun sb-add-article-to-history (article)
+  (setq sb-history (nconc sb-history (list article))))
+
+(defun sb-back ()
+  (interactive)
+  (let ((current (car (last sb-history)))
+        (n 0)
+        found)
+    (while (not found)
+      (if (equal (nth n sb-history) current)
+          (progn (setq found t)
+                 (if (> n 0)
+                     (display-article (nth (1- n) sb-history))
+                   (message "Already at beginning of history.")))
+        (setq n (1+ n))))))
+
+(defun sb-forward ()
+  (interactive)
+  (let* ((current (car (last sb-history)))
+         (max (1- (length sb-history)))
+         (n (1- max))
+         found)
+    (while (not found)
+      (if (equal (nth n sb-history) current)
+          (progn (setq found t)
+                 (if (< n (1- max))
+                     (display-article (nth (1+ n) sb-history))
+                   (message "Already at end of future")))
+        (setq n (1- n))))))
+#+END_SRC
+
+*** Keeping track of visited references                            :noexport:
+:PROPERTIES:
+:LATEX_LABEL: visited-references
+:ID: visited-references
+:END:
+
+It seems like we might want to keep track of information about visited
+references in some data structures maintained by the temporal browser.
+Alternatively, we could put this information into the metadata
+articles attached to the articles that have been visited (which would
+make it easy to report the number of visits to the article owners).
+See Note [[id:reference-face]].
+
+
+*** Function to go all the way back                                :noexport:
+
+Should be able to go all the way back to the beginning
+of the history list in one go.
+
+
+*** On `sb-previous'
+
+This gives the most recently browsed article besides the current
+one.
+
+
+#+BEGIN_SRC elisp
+(defun sb-previous ()
+  (car (last sb-history 2)))
+#+END_SRC
+
+*** Be careful to avoid cycles                                     :noexport:
+
+I'm not sure that the formulation of temporal browsing given in this
+section actually works!  It needs a critical review to make sure that
+the future actually has an end, for example.  I seem to be discovering
+problems by using display-only text (see Note
+[[id:display-purposes-only]]).
+

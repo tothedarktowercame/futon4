@@ -1,0 +1,51 @@
+** Editing en masse
+:PROPERTIES:
+:LATEX_LABEL: masse
+:ID: masse
+:END:
+
+*** Enhanced control panel                                         :noexport:
+
+It might be good to add another column to the article listing control
+panel.  Any changes to the article listing that take place in this
+section should be done somewhat delicately and artistically.
+Presumably this implies that the list of column-fields should be
+stored as a variable, so that it can be easily modified.  Note that
+functions for mapping over lists of articles forms the theoretical
+basis of this section (see Note
+[[id:mapping-across-a-subcollection]]).
+
+
+*** Adding metadata en masse                                       :noexport:
+
+It isn't quite ``editing'', but equally important would
+be a way to apply a given scholium to a set of articles
+(both severally and not severally), or add type data to
+a set of articles that you own, or whatever.
+
+
+*** On `label-marked-articles'
+
+Apply the specified \inp{label} to each marked article.
+New labels can be applied no problem.
+
+
+#+BEGIN_SRC elisp
+(defun label-marked-articles (label)
+  (interactive (list
+                (intern (let ((completion-ignore-case t))
+                          (completing-read
+                           "Label: "
+                           (label-to-list 'label))))))
+  (let (article-names)
+    (save-excursion
+      (goto-line 2)
+      (goto-char (line-beginning-position))
+      (while (re-search-forward "^> ." nil t)
+        (setq article-names
+              (append article-names
+                      (list
+                       (get-text-property (point) 'name))))))
+    (dolist (name article-names)
+      (label-article name label))))
+#+END_SRC

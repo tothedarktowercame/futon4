@@ -1,0 +1,107 @@
+#+TITLE: Storage bridge reference (Milestone 1)
+#+OPTIONS: toc:t num:t
+
+* Overview
+
+The classic Arxana client now talks to Futon1 through a small set of
+Elisp helpers.  This document captures the supported operations, the
+Elisp entry points you should call, and the matching HTTP routes + curl
+snippets you can run to verify what Emacs just did.
+
+All commands assume the Futon API is reachable at `futon4-base-url`
+(default `http://localhost:8080/api/alpha`).  Set `X-Profile` headers if you
+work inside multiple plexus profiles.
+
+* Entry points
+
+| Elisp helper | Description | Futon route | Verification |
+|--------------+-------------+-------------+--------------|
+| `arxana-store-ensure-article` | Ensure an entity exists for an article name/path. | `POST /entity` | `curl -s -X POST "$BASE/entity" -H 'Content-Type: application/json' -d '{"id":"...","name":"...","type":"arxana/article"}'` |
+| `arxana-store-upsert-scholium` | Mirror a scholium-style relation between two articles. | `POST /relation` | `curl -s -X POST "$BASE/relation" -H 'Content-Type: application/json' -d '{"type":"arxana/scholium","src":"...","dst":"..."}'` |
+| `arxana-store-post-hyperedge` | Publish multi-end inclusion / derivation hyperedges with spans + provenance. | `POST /hyperedge` | `curl -s -X POST "$BASE/hyperedge" -H 'Content-Type: application/json' -d '{"type":"arxana/transclusion","hx/type":":hx/transclusion","hx/endpoints":[{"role":":role/source","entity":"..."},{"role":":role/target","entity":"..."},{"role":":role/passage","data":{"article":"...","begin":0,"end":42}}],"props":{"label":"(passage ...)","scholium/type":"derives-from"}}'` |
+| `arxana-store-save-snapshot` | Request an XTDB snapshot (`all` history vs `latest` revisions). | `POST /snapshot` | `curl -s -X POST "$BASE/snapshot" -H 'Content-Type: application/json' -d '{"scope":"all","label":"nightly"}'` |
+| `arxana-store-restore-snapshot` | Rehydrate Futon/XTDB from a recorded snapshot id. | `POST /snapshot/restore` | `curl -s -X POST "$BASE/snapshot/restore" -H 'Content-Type: application/json' -d '{"action":"restore","scope":"all","snapshot/id":"xtdb:snapshot/2024-11-14"}'` |
+| `arxana-export-org-directory` | Export the current article table as `.org` files + manifest. | (local) | `M-x arxana-export-org-directory` → pick destination & scope. |
+| `arxana-patterns-open` | Fetch Futon pattern library entries (and edit them) inside Emacs. | (local) | `M-x arxana-patterns-open` → enter pattern slug, edit headings, `C-c C-s` to sync. |
+
+`MANIFEST.org` now captures a sortable article table, per-article hyperedge
+summaries (inclusion/transclusion passages), and a label index so the
+iPod-style browser can jump through categories offline.  Those sections live
+alongside the snapshot metadata, so bundles carry both provenance and enough
+navigation hints to explore the export without Emacs.
+| `arxana-store-fetch-entity` | Fetch the latest copy of a Futon entity. | `GET /entity/:id` | `curl -s "$BASE/entity/<url-encoded-id>" | jq '.'` |
+| `arxana-store-entity-history` | Inspect prior versions of an entity. | `GET /entities/history/:id?limit=n` | `curl -s "$BASE/entities/history/<id>?limit=5" | jq '.versions'` |
+| `arxana-store-ego` | List relations touching a given article (wrapper around Futon's `/ego`). | `GET /ego/:name` | `curl -s "$BASE/ego/Demo%20Article" | jq '.ego.links'` |
+| `arxana-store-cooccur` | Fetch entities that co-occur with the named article. | `GET /cooccur/:name` | `curl -s "$BASE/cooccur/Demo%20Article" | jq '.rows'` |
+| `arxana-store-tail` | Show the latest Futon relations (recent tail). | `GET /tail?limit=n` | `curl -s "$BASE/tail?limit=5" | jq '.relations'` |
+| `arxana-store-sync-current-article` | Force-sync the current buffer's metadata and status. | `POST /entity` | `curl -s "$BASE/entity/<id>" | jq '.entity.props'` to confirm the new `metadata` / `status` values. |
+
+Replace `$BASE` with `http://localhost:8080/api/alpha` (or your chosen host).
+
+* Workflow notes
+
+1. Regenerate / load with `M-x arxana-build`.
+2. Ensure your article buffer has been turned into an article (`M-x
+   make-current-buffer-into-article`).
+3. Run the relevant `arxana-store-*` helper from Emacs; if it reports an
+   error check `arxana-store-last-error` for the diagnostic.
+4. Run the matching curl command to confirm the Futon server contains the
+   expected data.
+
+* Relation browsing inside Emacs
+
+- `M-x arxana-relations-show-ego` renders the `/ego/:name` response in the
+  `*Arxana Relations*` buffer, splitting outgoing vs incoming links.
+- `M-x arxana-relations-show-cooccur` formats `/cooccur/:name` so you can spot
+  frequently paired entities without leaving Emacs.
+- `M-x arxana-relations-show-tail` displays the `/tail` feed (most recent
+  relations) with confidence + timestamp notes.
+
+Each of these commands relies on the `arxana-store-*` helpers above, so they
+honour the same failure handling and record diagnostics in
+`arxana-store-last-error` when Futon is unreachable.
+
+The hyperedge helper is exercised via the scholium adjacency tests
+(`arxana/test/arxana-adjacency-test.el`), which stub the HTTP layer and verify
+that inclusion / transclusion scholia emit source, target, passage, and
+provenance endpoints before hitting `/hyperedge`.  Snapshot save/restore flows
+are covered by `arxana/test/arxana-saving-test.el`, ensuring the Emacs commands
+call `/snapshot` and `/snapshot/restore` with the selected scope.  The
+Org importer/exporter are covered by `arxana/test/arxana-import-test.el` and
+`arxana/test/arxana-export-test.el`, guaranteeing that `.org` bundles can round-trip
+through XTDB snapshots.
+
+* Downtime handling
+
+- When `futon4-enable-sync` is nil or Futon is unreachable, the helpers
+  refuse to send traffic and stash a diagnostic plist in
+  `arxana-store-last-error`.  Inspect it with `(message "%S" arxana-store-last-error)`.
+- Calls never signal errors back to users; they log with `message` and
+  return `nil` so interactive commands can degrade gracefully.
+
+* Troubleshooting relations
+
+1. Verify `futon4-enable-sync` is non-nil and rerun the command that failed.
+2. Inspect `arxana-store-last-error` to see the HTTP method, reason, and any
+   context when a request returns `nil`.
+3. Use the relation browser commands above to confirm Futon is returning the
+   data you expect; the buffer will show “No data returned from Futon” when the
+   server was unreachable.
+4. Run the adjacency unit tests to prove scholium links are mirrored correctly:
+
+   ```bash
+   HOME=$PWD/.home-tmp EMACS_NATIVE_COMPILATION=0 emacs --batch \
+     -l arxana/dev/bootstrap.el \
+     -l arxana/test/arxana-adjacency-test.el \
+     -f ert-run-tests-batch-and-exit
+   ```
+
+   These tests stub the network layer and assert that `futon4--sync-about-links`
+   calls the new store helpers with derived ids, so failures often indicate an
+   unexpected change in the hook wiring.
+
+* Testing hooks
+
+The ERT suite in `arxana/test/arxana-store-test.el` provides fake
+responses for `/entity` and `/ego`, so we can validate the glue without a
+running Futon server.  Extend those tests whenever you add a new helper.

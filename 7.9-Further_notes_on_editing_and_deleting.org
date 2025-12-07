@@ -1,0 +1,120 @@
+** Further notes on editing and deleting                           :noexport:
+
+*** Reparsing and propagating after editing
+:PROPERTIES:
+:LATEX_LABEL: reparsing-after-editing
+:ID: reparsing-after-editing
+:END:
+
+Editing an article is one of the main reasons we'd ever need to do
+reparsing.  When text moves around, scholia are likely to be attached
+to different regions.  This means we need to change the \inp{about}
+elements of attached articles for the collection to stay coherent.
+Proper reparsing behavior is necessary for various functions to behave
+properly; see for example Note [[id:moving-with-reparsing]].  We
+probably will want to add the appropriate reparsing function to the
+corresponding after-editing/before-saving-changes hook.
+
+
+*** Changing names
+
+One simple ``edit'' would be changing the name of an article; doing
+this of course requires the new name to replace the old name in every
+reference to the article.
+
+
+*** Changes to an article affect attached articles
+
+However, changes to the \emph{text} of a given article may affect any
+scholia that are \emph{about} that article.  (To say nothing of how
+the semantic contents of the change might affect these attached
+scholia, the regions may be wrong.)  One approach to take would be to
+attempt to propagate the changed buffer positions to all attached
+scholia.  Of course, we can't necessarily assume that the owner of the
+attached scholia will accept these propagated changes.
+
+
+*** We shall adopt a versioned model
+:PROPERTIES:
+:LATEX_LABEL: we-adopt-a-versioned-model
+:ID: we-adopt-a-versioned-model
+:END:
+
+These considerations suggest that we should go with the ``versioned''
+diachronic model.  According to this model, changes can be propagated,
+but on a tentative basis.  If another user doesn't accept your
+changes, they will still have a perfectly good scholium attached to a
+previous version of your article.
+
+
+*** Moving between versions
+
+It would probably be handy to have this use existing browser code,
+e.g. from the local browsing section (Section [[id:local]]).
+
+
+*** Different ownership models can do different things
+
+When permissions aren't a concern, we can set the system up so that
+propagated changes are automatically accepted.  In addition, we can
+set up versioning to resolve at different levels of detail depending
+on the application.
+
+
+*** Changes outside the system
+
+One further consideration is the fact that articles may change outside
+of the scholium system (e.g. a file may be edited, a remotely-hosted
+web page may change, or a process may be killed).  We assume that when
+a change like this is noticed, the scholium system will create a new
+version of the article \emph{automatically} and propagate appropriate
+changes to other documents.
+
+
+*** How to do automatic updates
+
+Noticing changes to files is a bit of a challenge; not insurmountable,
+but it does mean that we'll need an internal representation of the
+file's contents (i.e. one that we assume is not subject to change in
+the same way that the file is!).  As it stands, the system doesn't
+include this sort of version management apparatus.  In order to mend
+things, whenever an article is created (or edited), a backup copy
+should be stored that can serve as a reference.  At least, I guess
+this is how version management software works.  Presumably it isn't
+hard to add this sort of feature, but before plunging ahead, I think
+it would be worth looking into the algorithms and protocols used by
+extant version management tools.
+
+
+*** When should auto-accept work?
+
+Although auto-accept is a nice-sounding thing, it may be best to
+always have changes approved by a person, since changes to the text
+could completely change its meaning -- and threaten to make attached
+scholia ridiculous.  Maybe auto-accept is most useful when \emph{one}
+person is editing the document, but even then, there may be times when
+content changes so much that the attached scholium would become
+ridiculous or meaningless.  In this case, maybe auto-accept is good,
+but the user should be able to roll back propagated changes easily?
+
+Keeping track of the genesis of a given scholium is important.  Maybe
+this procedural info will be marked up itself sometimes?  Certainly
+there can be extra user-supplied info, outside of the bookkeeping
+info, that describes relationships between documents.
+
+
+*** Changes to metadata in a semantically programmed environment
+
+We assume that changing \inp{type} and \inp{about} data also require
+changing the article version.
+
+
+*** Using bookkeeping information to track versions
+
+As if it wasn't obvious, the \inp{bookkeeping} information will be used to
+keep track of different article versions.  (Presumably including diffs
+between versions or what have you: it would be good to hook the GNU
+diff tools into this system.  See also the comment about storing the
+``current'' version of articles in full, to check against changes from
+the outside.)
+

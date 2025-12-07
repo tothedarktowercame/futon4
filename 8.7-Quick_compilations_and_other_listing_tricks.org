@@ -1,0 +1,184 @@
+** Quick compilations and other listing tricks
+:PROPERTIES:
+:LATEX_LABEL: quick-compilations
+:ID: quick-compilations
+:END:
+
+*** Uses for compilations                                          :noexport:
+
+What is presented in this section likely to just be a stop-gap measure
+until more general and powerful mechanisms for managing derivatives
+are available.  But nevertheless, the basic ideas seem useful.  For
+example, when viewing a certain article that is a member of a certain
+label, it might be handy to view everything in the label all at once
+in a compilation.  And so on and so forth for various compiled views
+into a document.
+
+
+*** On `find-names-in-listing'
+
+This can be used to find the names of listed articles.
+
+
+#+BEGIN_SRC elisp
+(defun find-names-in-listing (just-marked)
+  (let ((names (list t)))
+    (save-excursion
+      (set-buffer (get-buffer-create "*Generic List*"))
+      (goto-char (point-min))
+      (while (and (not (eobp))
+                  (if just-marked
+                      (search-forward-regexp "^>" nil t)
+                    t))
+        (let* ((next-change (next-single-property-change 
+                             (point) 'name))
+               (prop (when next-change
+                       (get-text-property next-change 'name))))
+          (if (not next-change)
+              (goto-char (point-max))
+            (goto-char next-change)
+            (when prop 
+              (nconc names (list prop)))))))
+    (cdr names)))
+#+END_SRC
+
+*** Making a compilation from a listing of articles
+:PROPERTIES:
+:LATEX_LABEL: making-a-compilation
+:ID: making-a-compilation
+:END:
+
+In Note [[id:bits-and-pieces]], we talk about making all the articles
+that match a given criterion into a new article.  A quick way to
+get this functionality to the user is to turn an article listing
+into a compilation.  
+
+The version here is very preliminary; eventually we'll be putting in
+identifications or something like that to make the various pieces of
+the compilation ``hot''.
+
+It be nice to have various display options, either features that
+screen certain kinds of content in or out at render time
+(e.g. printing of attached code snippets could be optionally be made
+automatic), or that add actionable features to the display (e.g. to
+enable the user to expand and collapse cluded articles, or to select from a cluded label).
+
+We present a couple of variants here.
+
+
+#+BEGIN_SRC elisp
+(defun listing-to-compilation (just-marked-items)
+  (interactive "P")
+  (let ((names (find-names-in-listing just-marked-items)))
+    (pop-to-buffer (get-buffer-create "*Compilation*"))
+    (erase-buffer)
+    (dolist (name names)
+      (let ((article (get-article name)))
+        (insert (upcase 
+                 (propertize (format "%s" (scholium-name article))
+                             'face 'italic))
+                 "\n"
+                 (format "%s" (scholium-text article))
+                 "\n")))
+    (goto-char (point-min))))
+
+(defun listing-to-compilation-1 (just-marked-items)
+  (interactive "P")
+  (let ((names (find-names-in-listing just-marked-items)))
+    (pop-to-buffer (get-buffer-create "*Compilation*"))
+    (erase-buffer)
+    (dolist (name names)
+      (let ((article (get-article name)))
+        (insert  "\*** "
+                 (propertize (format "%s" (scholium-name article))
+                             'face 'italic)
+                 "
+
+"
+                 "\n"
+                 (format "%s" (scholium-text article))
+                 "\
+"
+                 "\n\n")
+        (dolist (scholium (mapcar (lambda (backlink)
+                                    (get-article (car backlink)))
+                                  (get-backlinks name)))
+          (when (typedata-includes (scholium-type scholium) 'code)
+            (insert "\\b" "egin{lisp}\n"
+                    (scholium-text scholium)
+                    "\\e" "nd{lisp}\n\n")))))
+    (goto-char (point-min))))
+#+END_SRC
+
+*** Finding code continuations with backlinks                      :noexport:
+:PROPERTIES:
+:LATEX_LABEL: finding-code-continuations
+:ID: finding-code-continuations
+:END:
+
+Establishing the existence of attached code snippets in
+`listing-to-compilation-1' (Note [[id:making-a-compilation]]) is
+currently done in a way that doesn't take full advantage of the
+backlink-to-link correspondence we've put together.  This sort of
+thing was one reason I thought we might want to use typed backlinks;
+but eventually I decided that simply putting backlinks in direct
+correspondence with links would be enough, see Note
+[[id:implementation-of-backlinks]].
+
+
+*** Additional compilation tricks                                  :noexport:
+
+Code snippets aren't the only ``bonus features'' we might like to have
+appear in a compilation (cf. Note [[id:making-a-compilation]]); for
+example, we might want to make an article appear together with the
+articles that immediately precede and follow it in some linear order.
+(This makes the compilation a bit more like browsing a printed
+document.)
+
+It would also be handy to have an option for exporting a fully
+\LaTeX -ready version of a compilation (compare Note
+[[id:selectively-populate-existing-outline]]).
+
+Another fun trick that would be fairly cute, when this is all working
+quite a bit better, would be to have links that run internally within
+the compilation show up in a different color from links that point
+outside of the compilation.  (We'll want to develop some code for
+making the display jump to just the right point when following an
+internal link, or any link that points to a specific portion of a
+given article.)  One might want to view one of these intra-linked
+articles in place in the compilation, or perhaps instead on its own,
+using the normal single-article display.
+
+The sequence of things displayed in the compilation buffer is the sort
+of thing that might benefit from having its own history list; see Note
+[[id:thematic-histories]].
+
+
+*** Selectively populate existing outline                          :noexport:
+:PROPERTIES:
+:LATEX_LABEL: selectively-populate-existing-outline
+:ID: selectively-populate-existing-outline
+:END:
+
+It would be kind of interesting to combine `listing-to-compilation'
+with `export-scholium-system' (Note [[id:export-scholium-system]])
+in such a way as to add some particular subset of the
+Notes into the section hierarchy.
+
+
+*** On `listing-to-label'
+
+It can be handy to turn an arbitrary listing into
+a more permanent label.
+
+
+#+BEGIN_SRC elisp
+(defun listing-to-label (label-name)
+  (interactive "MLabel: ")
+  (let ((names (find-names-in-listing)))
+    (scholium label-name
+              (cdr names)
+              nil
+              'label
+              (sch-book))))
+#+END_SRC

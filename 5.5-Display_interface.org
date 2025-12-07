@@ -1,0 +1,848 @@
+** Display interface
+:PROPERTIES:
+:LATEX_LABEL: display-interface
+:ID: display-interface
+:END:
+
+*** Selective Displays                                             :noexport:
+:PROPERTIES:
+:LATEX_LABEL: selective-displays
+:ID: selective-displays
+:END:
+
+More selective displays could be offered.  For example, we might
+display only the articles that are ``about'' the current article
+\emph{and} that are of some specified ``type''.  We could also take
+bookkeeping information into account, or ``meta-level'' information
+like what subcollection (or namespace?) of the digital library the
+article is located in.  Metalevel information (maybe by definition)
+comes from outside of the system itself, for example, we might display
+only scholia from a certain directory.  These sorts of deployments are
+where the real power of this system lies.  (See Note
+[[id:selection-methods]] for general comments along these lines, and
+Note [[id:ancestors]] for somewhat similar thoughts along a diverging
+line.)
+
+
+\subsubsection{Different treatment for buffered and non-buffered articles}
+
+*** On `rendering-target-buffer'
+:PROPERTIES:
+:LATEX_LABEL: rendering-target-buffer
+:ID: rendering-target-buffer
+:END:
+
+If a given \inp{name} is associated with a buffered article, then that
+buffer will be where the article is displayed.  If the article to be
+displayed is in a buffer, this variable will be set that buffer
+object.  Otherwise it will be set to nil.
+
+
+#+BEGIN_SRC elisp
+(defvar rendering-target-buffer nil)
+#+END_SRC
+
+*** Dealing with killed buffers                                    :noexport:
+:PROPERTIES:
+:LATEX_LABEL: killed-buffers
+:ID: killed-buffers
+:END:
+
+For some reason, `rendering-target-buffer' gets set to the ``killed
+buffer'' object when the buffer containing the main article is killed.
+That isn't nice; presumably we'll need to add a function to the
+`kill-buffer-hook' that will ensure that if this buffer is killed,
+this variable will be set back to nil (or whatever it should in fact
+be set to).  We will presumably also have to remove this function from
+the hook when the main article changes.
+
+
+*** Better way to name (or access) buffered articles               :noexport:
+:PROPERTIES:
+:LATEX_LABEL: name-or-access-buffered-articles
+:ID: name-or-access-buffered-articles
+:END:
+
+Either we should search on the \inp{text} field for the current
+buffer, and ignore the name, or we should store the ``official'' name
+of the buffer as a buffer-local variable.  (E.g. this buffer
+\emph{should} be called ``SBDM for CBPP'' but
+`display-scholia-about-current-buffer' can, at present, only access
+the buffer by its `buffer-name'.  I think that adding a buffer-local
+variable at creation time would probably be very straightforward, then
+we just need to look-up that variable instead of using `buffer-name'.
+(Of course, we could make `buffer-name' be the default for the
+``buffer article name''.)  Note that unless the article is created by
+the approved means, we won't have a chance to store the variable; this
+suggests that the display section should come after the creation
+section (which makes plenty of sense).  Note that \emph{everywhere}
+`buffer-name' appears in this paper things will have to be modified if
+we make this sort of switch.
+
+
+\subsubsection{Display mechanics}
+
+*** What just happened to the screen?                              :noexport:
+
+The simple display mechanism we use here will overwhelm your whole
+display (see Note [[id:scholia-overwhelm-display]]); use \kw{M-x back-to-normal} to return to the pre-display window configuration.
+
+
+*** Making `sch-plain-text' work with weird types                  :noexport:
+
+We should either make sure that `sch-plain-text' can handle all
+articles with many different \inp{type}s.
+
+
+*** On `scholia-display-post-update-hook'
+
+This provides a way to customize the article (and
+scholia) being displayed.
+
+
+#+BEGIN_SRC elisp
+(defvar scholia-display-post-update-hook nil)
+
+(add-to-list 'non-printing-types 'fake)
+#+END_SRC
+
+*** On `scholia-display-extras-hook'                               :noexport:
+:PROPERTIES:
+:LATEX_LABEL: scholia-display-extras-hook
+:ID: scholia-display-extras-hook
+:END:
+
+This hook is run at the end of `scholia-display-extras'
+(Note [[id:scholia-display-extras]]) and allows for easy
+tweaking of the scholia display (for example, displaying
+special sorts of scholia for articles with certain types).
+
+Some basic additions to this hook appear in Section
+[[id:linear-browsing]].
+
+
+*** On `scholia-display-extras'
+:PROPERTIES:
+:LATEX_LABEL: scholia-display-extras
+:ID: scholia-display-extras
+:END:
+
+This is used to add some extra stuff to the Scholia Display for
+purposes of navigation and establishing context.  It is called by
+`display-article' (Note [[id:display-article]]) and
+`display-scholia-about-current-buffer' (Note
+[[id:display-scholia-about-current-buffer]]).
+
+It might be nice to have this in the main article window, but that
+could also be confusing, especialy if the main article is associated
+with some buffer; so I'm taking the route of caution here.  Also note
+that according to the principle of order [[id:principle-of-order]] this
+stuff should probably appear much later on in the document, perhaps in
+Section [[id:linear-browsing]].
+
+It might be more appropriate to have some of these extra features
+display in or above the main article buffer; the info system has a
+nice un-editable bar for display of various navigational data.
+
+
+#+BEGIN_SRC elisp
+(defun scholia-display-extras ()
+  ;; this setting is useful for presentations.
+  (goto-char (point-min))
+  ;; Be careful that this is ignored when the article is saved or
+  ;; otherwise processed internally.
+  (insert
+   "Title: "
+   (propertize (format "%s" name-of-current-article) 'face 'italic)
+   "\n\n")
+  (goto-char (point-max))
+  (run-hooks 'scholia-display-extras-hook)
+  (goto-char (point-min)))
+#+END_SRC
+
+*** More than one parent                                           :noexport:
+:PROPERTIES:
+:LATEX_LABEL: more-than-one-parent
+:ID: more-than-one-parent
+:END:
+
+We'll want to allow \emph{more than one} parent eventually; compare
+what happens when following a scholium/reference in a region that has
+more than one of these things written about it.  For the purposes of
+markup, ``parent'' may become a variable (so add `(reference-to-parent
+foo)' for the foo parent) and maybe, if the various reference scholium
+objects created here are actually helpful, make them include lists of
+references?  Multi-references haven't been done anywhere in this code
+so far, but they seem like a reasonable idea.  See also Note
+[[id:forward-in-parent]], Note [[id:backward-in-parent]].
+
+
+*** Text for display purposes only                                 :noexport:
+:PROPERTIES:
+:LATEX_LABEL: display-purposes-only
+:ID: display-purposes-only
+:END:
+
+I think the setup will work so that individual sections that bear
+identification markup will all have their changes propagated properly,
+i.e., independently.  However, I think we may have to do a little more
+work to make sure that the name of the article (currently shown in
+italics whenever an article is displayed, though it would probably be
+nicer to emulate the style used by \kw{info}) and any other
+after-the-fact textual additions are ignored whenever the article is
+saved.
+
+
+
+\subsubsection{Display styles}
+
+*** On `display-style'
+:PROPERTIES:
+:LATEX_LABEL: display-style
+:ID: display-style
+:END:
+
+As discussed in Section
+# [[id:stylistic-considerations]],
+there are a
+number of different styles we'd like to offer users to choose between
+when they go to display an article.  For now, the relevant settings
+for the display style variable are `plain' (the default, displaying
+all scholia) and `contextual' (which causes only those scholia
+associated with the region being displayed to appear; see Note
+[[id:contextual-display]]).
+
+There are a few problems here: if we go with the contextual display,
+what about scholia that apply to the article as a whole?  That's a
+little tricky.  I guess for now we just leave them out?
+
+Set this variable with `set-display-style', not manually.
+
+
+#+BEGIN_SRC elisp
+(defvar display-style 'plain)
+#+END_SRC
+
+*** On `window-displayed-substring'
+
+This variable will hold the string that is being shown
+through a given window at a given point in time.
+
+
+#+BEGIN_SRC elisp
+(defvar window-displayed-substring nil)
+#+END_SRC
+
+*** On `set-display-style'
+:PROPERTIES:
+:LATEX_LABEL: set-display-style
+:ID: set-display-style
+:END:
+
+Use this function to control the setting of `display-style' (Note
+[[id:display-style]]).  Relevant arguments are `plain', or
+`contextual'.
+
+(Actually, anything but `contextual' will set `display-style' to
+its default setting.  Eventually, we might want to be able to
+have contextual display together with some other non-default features,
+at which point we'll have to adjust this function appropriately.)
+
+
+#+BEGIN_SRC elisp
+(defun set-display-style (style)
+  (cond ((eq style 'contextual)
+         ;; we may need a "double hook" here, so we get the local
+         ;; hooks set up in the correct window
+         (add-hook 'display-article-hook
+                   'initiate-contextual-updating)
+         (setq display-style 'contextual))
+        (t
+         (remove-hook 'display-article-hook
+                      'initiate-contextual-updating)
+         (setq display-style 'plain))))
+#+END_SRC
+
+*** On `initiate-contextual-updating'
+
+This function gets the rendering target buffer set up
+to do live-updating of scholia.
+
+For now, this function doesn't do anything for labels -- since
+for now, labels typically don't have scholia on their \inp{text}.
+However, this can be undone later, if necessary.
+
+In addition, we don't yet have any code for getting rid of contextual
+updating in an individual buffer OTF.
+#+BEGIN_SRC elisp :tangle no
+(remove-hook 'window-scroll-functions
+             'set-window-displayed-substring t)
+#+END_SRC
+
+
+#+BEGIN_SRC elisp
+(defun initiate-contextual-updating ()
+  (unless (typedata-includes (scholium-type article) 'label)
+    (save-excursion (set-buffer rendering-target-buffer)
+                    (add-hook 'window-scroll-functions 
+                              'maybe-update-scholia-display nil t))))
+#+END_SRC
+
+*** On `maybe-update-scholia-display'
+:PROPERTIES:
+:LATEX_LABEL: maybe-update-scholia-display
+:ID: maybe-update-scholia-display
+:END:
+
+In order for this to work optimally, we'd might to keep track of
+a list of the current scholia that are being displayed.  But
+for now, I suppose (contrary to this function's name) we can just
+redisplay all the scholia we encounter every time.
+
+
+#+BEGIN_SRC elisp
+(defun maybe-update-scholia-display ()
+  (set-window-displayed-substring)
+  ;; this is just a ridiculous thing to run -- for testing purposes
+  ;; only.  Eventually, we'll actually want to analyse the text, 
+  ;; figure out which scholia are relevant, and update the scholia
+  ;; display.
+  (save-excursion (set-buffer (get-buffer-create "*scratch*"))
+                  (erase-buffer)
+                  (insert window-displayed-substring)))
+#+END_SRC
+
+*** On `set-window-displayed-substring'
+
+This function will be an element of the `window-scroll-functions'
+hook when the display mode is set to `contextual'.
+
+
+#+BEGIN_SRC elisp
+(defun set-window-displayed-substring ()
+  (setq window-displayed-substring
+        (buffer-substring (window-start)
+                          (window-end))))
+#+END_SRC
+
+\subsubsection{Displaying articles}
+
+*** On `display-article-hook'
+
+We will later do some ``interesting'' things with this function, so we
+add a hook.  For example, one use for this hook is to maintain a
+history of articles that have been displayed; see Section
+[[id:temporal]].
+
+
+#+BEGIN_SRC elisp
+(defvar display-article-hook nil)
+#+END_SRC
+
+*** On `raw-scholia-selector'
+
+ 
+This function is here both to select raw scholia for display when
+`display-article' runs, and to provide for a choice between different
+ways of selecting raw scholia.  It returns a list of scholia.
+
+This function is set up to run within the scope of `display-article' 
+(Note [[id:display-article]]).
+
+We select slightly different scholia when the article that is being
+displayed is a label; in particular, we don't want to display scholia
+that indicate the current article as a `parent', since these scholia
+will already be listed in the label's \inp{text} itself.
+
+If we're trying to display scholia contextually, then this function
+should probably be doctored with some, to make it so that the initial
+set of scholia that are displayed are contextually appropriate, i.e.,
+are just those associated with the on-screen portion of the buffer
+that is being displayed.
+
+
+#+BEGIN_SRC elisp
+(defun raw-scholia-selector (&optional what-is-displayed)
+  (cond ((eq what-is-displayed 'label)
+         (remove-if                
+          (lambda (scholium)
+            (member-if (lambda (link)
+                         (member 'parent (cdr link)))
+                       (scholium-about scholium)))
+          (mapcar (lambda (backlink)
+                    (get-article (car backlink)))
+                  (get-backlinks name-of-current-article))))
+        (t (mapcar (lambda (backlink)
+                     (get-article (car backlink)))
+                   (get-backlinks name-of-current-article)))))
+
+;; (eq display-style 'contextual)
+;;          (save-excursion (set-buffer (get-buffer-create "*scratch*"))
+;;                          (erase-buffer)
+;;                          (insert window-displayed-substring))
+;;          nil
+#+END_SRC
+
+*** On `display-article'
+:PROPERTIES:
+:LATEX_LABEL: display-article
+:ID: display-article
+:END:
+
+Display article found via \inp{path} (which can just be the name of an
+article in the main article tabel), if said article exists.  If the
+article lives in a buffer, that buffer will be where the article is
+displayed; otherwise the article is displayed in the ``Main Article
+Display'' buffer.  Note that this function can also be used to display
+labels (it calls `display-label'; but see Note
+[[id:display-scholia-about-labels]], since some other approach might be
+valuable sometimes).
+
+I don't want to have all of the children appear as scholia when a
+label is browsed, at least not by default; but it is kind of neat to
+know that they can be made to appear; if we don't do the `remove-if'
+then the scholia display will be the OTF-assembled compilation
+mentioned in Note [[id:bits-and-pieces]].
+
+It makes more sense to always run `display-article-hook' after the
+`cond', and to put things that are conditional upon being in this
+specific branch into `scholia-display-post-update-hook' or, barring
+that, some additional branch-specific hook.  This of course means that
+the parent will be added to the history list if that is where we
+browse from; this is intended.
+
+If it turns out to be needed here, we could reuse the trick of running
+a hook and then making a test before the `cond', which we're familiar
+with from e.g. `sch-plain-text' (Note [[id:sch-plain-text]]).
+
+It would be good to make the buffer disposition (left? right?)
+is consistent when we use this function to display labels;  I
+think we have it sorted out properly for the display of 
+``normal'' articles.
+
+We may want to treat namespaces and labels together in the same
+`cond' branch (currently namespaces aren't handled specially by
+this function). 
+
+Since we are now reading in paths, these paths have to be parsed.
+This is the job of `generalized-get-article' (see Note
+[[id:generalized-get-article]]).
+
+
+#+BEGIN_SRC elisp
+(defun display-article (path)
+  (interactive (list (read-article-path)))
+  (let* ((article (generalized-get-article path))
+         (name (scholium-name article)))
+    (if (not article)
+        (error "No article by that name found")
+      (setq name-of-current-article name)
+      (cond
+       ((typedata-includes (scholium-type article) 'label)
+        (display-label name)
+        (setq rendering-target-buffer "*Generic List*")
+        (switch-to-buffer (get-buffer "*Generic List*"))
+        (setq buffer-read-only nil)
+        (switch-to-buffer (get-buffer-create "Scholia Display") t)
+        (erase-buffer)
+        (let ((raw-scholia (raw-scholia-selector 'label)))
+          (mark-things-up))
+        (scholia-display-extras)
+        (switch-to-buffer (get-buffer "*Generic List*"))
+        (setq buffer-read-only t)
+        (pop-to-buffer "Scholia Display")
+        (other-window -1))
+       (t
+        (if (article-buffered article)
+            (setq rendering-target-buffer (scholium-text article))
+          (setq rendering-target-buffer nil))
+        (run-hooks 'scholia-display-pre-update-hook)
+        (scholia-overwhelm-display (sch-plain-text article))
+        (let ((raw-scholia (raw-scholia-selector)))
+          (mark-things-up))
+        (scholia-display-extras)
+        (pop-to-buffer (get-rendering-target-buffer))
+        (run-hooks 'scholia-display-post-update-hook)))
+      (run-hooks 'display-article-hook))))
+#+END_SRC
+
+*** Argument of `display-article' is typically a string            :noexport:
+
+Note that for typical interactive use, a string is expected, which
+means a string is produced, which means that when `get-article' is
+called in the next line, bad things will happen for articles whose
+names are not strings -- unless we do something about it.
+
+
+*** Would have liked to associate a type with paths                :noexport:
+:PROPERTIES:
+:LATEX_LABEL: associate-a-type-with-paths
+:ID: associate-a-type-with-paths
+:END:
+
+It would be nice to use a special type of object to distinguish
+between paths and names.  (I.e., if `read-article-path' returns an
+object of type path when it actually builds a path and
+`generalized-get-article' looks for this type before deciding what to
+do, we could be OK just passing in an article name to the generalized
+function.)  But I'm not sure how to assert that a given form has a
+given type (or even whether this is possible).  Maybe by working with
+structs one could do it, but I don't understand structs (their
+documentation seems to be lacking).
+
+Note, the idea of associating a type with a form seems very
+scholiumific.  But I've forgotten whether Lisp has anything for doing
+this.
+
+
+*** On `redisplay-article'
+
+This accomplishes a simple task.
+
+It would be nice if we could get the point restored to
+its original position after this thing runs.
+
+Also, it would be good to have the function run automatically
+after scholia have been added about the document.
+
+
+#+BEGIN_SRC elisp
+(defun redisplay-article ()
+  (interactive)
+  (display-article name-of-current-article))
+#+END_SRC
+
+\subsubsection{Displaying scholia about a given buffer}
+
+*** On `display-scholia-about-current-buffer'
+:PROPERTIES:
+:LATEX_LABEL: display-scholia-about-current-buffer
+:ID: display-scholia-about-current-buffer
+:END:
+
+This function is similar to `display-article' ([[id:display-article]]),
+but it works directly on the buffer level.  (Stylistically this
+function should probably just be a thin wrapper, but we're running
+with it for now.)
+
+This function should perhaps check to see whether the
+current buffer has been \emph{edited} since the last time
+this function (or similar, through other means) was executed.
+If the buffer has been edited, the user should probably
+be prompted, and asked whether to reparse (Section [[id:parsing]])
+before redisplaying.
+
+
+#+BEGIN_SRC elisp
+(defun display-scholia-about-current-buffer ()
+  (interactive)
+  (let ((article (get-article (buffer-name (current-buffer)))))
+    (if article
+        (progn
+          (setq rendering-target-buffer (current-buffer))
+          (run-hooks 'scholia-display-pre-update-hook)
+          (scholia-overwhelm-display (sch-plain-text article))
+          (let ((raw-scholia
+                 (mapcar (lambda (backlink)
+                          (get-article (car backlink)))
+                         (get-backlinks name-of-current-article))))
+            (mark-things-up))
+          (scholia-display-extras)
+          (pop-to-buffer (get-rendering-target-buffer))
+          (run-hooks 'scholia-display-post-update-hook)
+          ;; weird!
+          (run-hooks 'display-article-hook))
+      (call-if-user-adds-current-buffer-to-article-list
+       'display-scholia-about-current-buffer))))
+#+END_SRC
+
+*** Running `display-article-hook' from `display-scholia-about-current-buffer'? :noexport:
+
+It seems a bit little weird to have to run this hook here.
+
+
+*** Automatically display scholia about any found buffer           :noexport:
+
+It might be handy to integrate the scholium system into
+day-to-day Emacs operation by adding
+`display-scholia-about-current-buffer' to the `find-file-hook'.
+
+
+*** Displaying a generic buffer together with scholia              :noexport:
+
+You should be able to simply call
+`display-scholia-about-current-buffer' after loading the buffer
+(\emph{untested}).  To turn it on all the time, add it to the
+appropriate hook.  Note that this won't add any new scholia to the
+system.  (To add new scholia at \emph{file} load time, we'll need some
+additional code.)
+
+
+\subsubsection{Displaying labels} \label{displaying-labels}
+
+*** On `display-label-hook'
+
+This provides a way to customize the behavior of
+`display-label'.
+
+
+#+BEGIN_SRC elisp
+(defvar display-label-hook nil)
+#+END_SRC
+
+*** On `currently-displayed-label'
+
+This gives us a handle on the most recently displayed
+label.  This facilitates only the simplest 
+improvement to reverting behavior.
+
+
+#+BEGIN_SRC elisp
+(defvar currently-displayed-label nil)
+#+END_SRC
+
+*** On `display-label'
+:PROPERTIES:
+:LATEX_LABEL: display-label
+:ID: display-label
+:END:
+
+The function `display-label' uses the catalog browsing feature of
+Section [[id:catalog]].  If we want to do other interesting rendering
+things with articles that have special types, we can follow the usage
+of `display-label' in `display-article'.  It might be good for this
+function to run its own hook, e.g., for maintaining a special history
+(see [[id:history-for-listing]]).
+
+
+#+BEGIN_SRC elisp
+(defun display-label (name)
+  (interactive 
+   (list
+    (let* ((completion-ignore-case t)
+           (label-names
+            (scholium-text (get-article 'label)))
+           (label-strings (mapcar (lambda (name) 
+                                    (format "%s" name))
+                                  label-names))
+           (string-found (completing-read
+                          "Label: "
+                          label-strings))
+           (place (- (length label-strings)
+                     (length (member string-found label-strings)))))
+      (nth place label-names))))
+  (article-menu-listing (label-to-propertized-list name))
+  (run-hooks 'display-label-hook))
+
+(add-hook 'display-label-hook (lambda ()
+                                (setq currently-displayed-label name)))
+
+(defalias 'list-label 'display-label)
+#+END_SRC
+
+*** On `display-intersection-of-labels'
+:PROPERTIES:
+:LATEX_LABEL: display-intersection-of-labels
+:ID: display-intersection-of-labels
+:END:
+
+For displaying everything bearing every one of the
+input \inp{labels}.
+
+
+#+BEGIN_SRC elisp
+(defun display-intersection-of-labels (&rest labels)
+  (let ((intersection (label-to-list (car labels)))
+        (ctn (cdr labels)))
+    (while ctn
+      (setq intersection (intersection intersection
+                                       (label-to-list (car ctn))
+                                       :test 'equal))
+      (setq ctn (cdr ctn)))
+    (article-menu-listing (turn-list-into-propertized-list
+                           intersection))))
+#+END_SRC
+
+*** On `display-difference-of-labels'
+:PROPERTIES:
+:LATEX_LABEL: display-difference-of-labels
+:ID: display-difference-of-labels
+:END:
+
+For purposes of simplicity, this is set up to work with two labels
+only, for the time being.
+
+
+#+BEGIN_SRC elisp
+(defun display-difference-of-labels (label-A label-B)
+  (article-menu-listing (turn-list-into-propertized-list
+                         (set-difference (label-to-list label-A)
+                                         (label-to-list label-B)))))
+#+END_SRC
+
+*** Label derivatives                                              :noexport:
+:PROPERTIES:
+:LATEX_LABEL: label-derivatives
+:ID: label-derivatives
+:END:
+
+It might be the case that someone
+would want to add a new label to the elements of an intersection
+or difference (as would be found by internal routines of
+`display-intersection-of-labels' and `display-difference-of-labels').
+
+
+*** Display type in another column                                 :noexport:
+
+Probably it would be good to have another accessor that would
+show the article's type in a second column.  This could be
+especially useful in a context in which a section can contain
+both notes and subsections (just for example).
+
+
+*** Display scholia about labels too, at least sometimes           :noexport:
+:PROPERTIES:
+:LATEX_LABEL: display-scholia-about-labels
+:ID: display-scholia-about-labels
+:END:
+
+It would probably be good to be able to be able to compose and
+display scholia about labels, since they are, after all,
+also articles.  Probably this should be optional, since there are
+times when we just want to see the list and not think of it as
+an article.  And in addition, if we do plan to display scholia
+about labels only sometimes, we'll have to decide what to do with
+the contents of the scholia display buffer at times when we just
+want to display the list and not its scholia.  One trick might be to
+make the listing prefer to appear in the window wherein the scholia
+are displayed in such a case, if it exists; this way both windows
+wouldn't confusingly appear at the same time.  (Compare Note
+[[id:redisplay-after-running-make-scholium]].)
+
+
+\subsubsection{Finding marked regions} \label{finding-marked-regions}
+
+*** On `find-marked-regions'
+
+This function is used in the subsequent section (Section
+# [[id:overlays-on-off]])
+to locate the parts of the buffer
+that have scholia written about them.  Note that
+this scheme might have been outmoded by stuff in Section
+[[id:parsing]].
+
+
+#+BEGIN_SRC elisp
+(defun find-marked-regions ()
+  (let (names-and-positions
+        (next-change-point (point-min)))
+    (while next-change-point
+      (let ((next-region (find-next-marked-region)))
+        (when next-region
+          (setq names-and-positions
+                (cons next-region
+                      names-and-positions)))))
+    names-and-positions))
+#+END_SRC
+
+*** On `find-next-marked-region'
+
+This function is within the scope of `find-marked-regions'.  Should be
+able to find all the regions associated with any scholium.  Right now,
+this function is working in a simplified universe in which scholia and
+regions are mapped to each other in 1-1 way!
+
+
+#+BEGIN_SRC elisp
+(defun find-next-marked-region ()
+  (let* ((beg (next-single-property-change next-change-point
+                                           'scholia))
+         (end (when beg
+                (next-single-property-change beg
+                                             'scholia))))
+    (setq next-change-point end)
+    (when end
+      (list
+       (get-text-property beg 'scholia)
+       (list (cons beg end))))))
+#+END_SRC
+
+\subsubsection{Turning overlays off and on} \label{overlays-on-off}
+
+*** Overlays exercises                                             :noexport:
+
+As an exercise with text properties and overlays, here is some code
+for turning the overlays on and off in the Scholium Display and main
+article buffers.
+
+
+*** Turning overlays off
+
+It is easy enough to turn overlays off; this is accomplished for the
+main article buffer and the Scholia Display buffer by
+`sch-turn-main-article-overlays-off' and
+`sch-turn-scholia-overlays-off', respectively.
+
+
+#+BEGIN_SRC elisp
+(defun sch-turn-main-article-overlays-off ()
+  (interactive)
+  (mapcar #'delete-overlay main-article-overlays)
+  (setq main-article-overlays nil))
+
+(defun sch-turn-scholia-overlays-off ()
+  (interactive)
+  (mapcar #'delete-overlay scholia-overlays)
+  (setq scholia-overlays nil))
+#+END_SRC
+
+*** Turning overlays on
+
+Turning overlays on is a bit trickier.  In order to be able to turn
+scholia on, we need to be able to find all the regions that have
+scholia attached to them.  This is accomplished (for the main article
+buffer only, I think) by `find-marked-regions'.
+
+
+#+BEGIN_SRC elisp
+(defun sch-turn-main-article-overlays-on ()
+  (interactive)
+  ;; to save from potential overlap weirdness
+  (sch-turn-main-article-overlays-off)
+  (save-excursion
+    (let ((names-and-positions (find-marked-regions)))
+        (dolist (info names-and-positions)
+    (let* ((name (car info))
+           (marked-regions (cadr info))
+           (scholium (get-article name))
+           (beg (point)))
+      (save-excursion
+        (set-buffer-to-rendering-target-buffer)
+        (dolist (reg marked-regions)
+          ;; add "transient" overlay
+          (when use-crazy-font-lock
+            (setq main-article-overlays
+                  (cons
+                   (make-overlay (car reg)
+                                 (cdr reg)
+                                 (get-rendering-target-buffer)
+                                 t)
+                   main-article-overlays))
+            ;; using `scholium-face' here is a bit weird
+            (overlay-put (car main-article-overlays)
+                         'face (scholium-face))))))))))
+
+(defun sch-turn-scholia-overlays-on ()
+  (interactive)
+  )
+#+END_SRC
+
+*** Using these functions as a subroutine for initial markup?      :noexport:
+
+It doesn't make a whole lot of sense to use these functions for
+initial markup, because they involve a bit of search that would be
+unneeded at that stage.  However, it would be good to take another
+look at `mark-things-up' and see if we can get any further insights
+into how to write this function from there.  (Presumably this function
+was initially based on that one already...)
+

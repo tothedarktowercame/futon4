@@ -1,0 +1,64 @@
+** Main table definitions                                          :noexport:
+
+*** Defining tables from within Lisp
+
+This is Lisp code to define the permanent SQL tables
+described in Section [[id:sql-code]].
+
+
+#+BEGIN_SRC lisp
+;; tabledefs.lisp
+;; (execute-command "CREATE TABLE strings (
+;;    id SERIAL PRIMARY KEY,
+;;    text TEXT NOT NULL UNIQUE
+;; );")
+
+(execute-command "CREATE TABLE strings (
+   id SERIAL PRIMARY KEY,
+   text TEXT,
+   UNIQUE INDEX (text(255))
+);")
+
+(execute-command "CREATE TABLE places (
+   id SERIAL PRIMARY KEY,
+   code INT NOT NULL,
+   ref INT NOT NULL
+);")
+
+(execute-command "CREATE TABLE triples (
+   id SERIAL PRIMARY KEY,
+   code1 INT NOT NULL,
+   ref1 INT NOT NULL,
+   code2 INT NOT NULL,
+   ref2 INT NOT NULL,
+   code3 INT NOT NULL,
+   ref3 INT NOT NULL,
+   UNIQUE (code1, ref1,
+           code2, ref2,
+           code3, ref3)
+);")
+
+(execute-command "CREATE TABLE theories (
+  id SERIAL PRIMARY KEY,
+  name INT UNIQUE REFERENCES strings(id)
+);")
+#+END_SRC
+
+*** Eliminating and tables
+
+In case you ever need to redefine these tables, you can
+run code like this first, to delete the existing copies.
+(Additional tables are added whenever a theory is created;
+code for deleting theories or their contents will appear
+in Section
+# [[id:processing-theories]].
+)
+
+
+#+BEGIN_SRC lisp :tangle no
+(dolist (view (list-views)) (drop-view view))
+(execute-command "DROP TABLE strings")
+(execute-command "DROP TABLE triples")
+(execute-command "DROP TABLE places")
+(execute-command "DROP TABLE theories")
+#+END_SRC

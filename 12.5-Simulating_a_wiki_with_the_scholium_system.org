@@ -1,0 +1,96 @@
+** Simulating a wiki with the scholium system
+:PROPERTIES:
+:LATEX_LABEL: wiki
+:ID: wiki
+:END:
+
+*** Build scholia by first adding markup and then parsing          :noexport:
+
+The idea in this section is to assemble a collection of scholia that
+simulate the page-reference markup found in a wiki.  The strategy we
+use is to read the wiki page and add \emph{text properties} to the
+``alt text'' indicating the link targets.  We then parse the buffer
+and create scholia about the regions that bear text properties.  The
+reason for going through this two-step process is that the position of
+text in the buffer will be shifting around as we get rid of wiki
+markup, so it is convenient to add scholium system markup in a format
+that in invariant under such shifting.  To the extent that we need to
+specify \inp{type} data, we overload the \inp{name} data that we use
+for initial markup.  For example, ``(external-page <page-name>
+<URL>)'' is the format we'd choose as the \inp{name} of scholia
+representing references to external pages.
+
+
+*** On `mark-up-wiki-with-reference-scholia'
+
+Find things in double brackets, possibly with an intervening ``|'',
+making sure to find the minimal double bracket pair.  What
+\emph{should} happen (though the current draft is a bit different) is:
+a reference scholium should be created for each reference, and stuck into the
+article list in some appropriate place (presumably the namespace
+associated with the article in question, more specifically, on some
+specific reference subspace of that space).  \emph{Then} when someone goes
+to render the document in question, we grab the references out of their
+storage facility and mark up the document with text properties.
+(The current implementation is really just a regexp check...)
+
+
+#+BEGIN_SRC elisp
+(defun mark-up-wiki-with-reference-scholia ()
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward
+            ;; we could probably get all types of reference in
+            ;; one regexp.  I'm not sure why the old
+            ;; version for grabbing external references was deleted,
+            ;; but it is featured in the Sept 4 printout.
+            "\\[\\[\\([^]|\n]+\\)\\(|\\)?\\([^]]+?\\)?]]" nil t)
+      (replace-match (propertize (or (match-string 3)
+                                     (match-string 1))
+                                 'scholia
+                                 "Reference")))))
+#+END_SRC
+
+*** Recent changes and recent referents                            :noexport:
+:PROPERTIES:
+:LATEX_LABEL: recent-referents
+:ID: recent-referents
+:END:
+
+It would be handy to have some code that would list the articles that
+have had new scholia written about them.  This would help a user (e.g.
+the author of the articles under discussion) see what people are
+talking about.  Some additional semantics could be provided, to list
+recent modified versions, which are similar to document changes, but
+arguably more relevant in a system with object ownership.  Actual
+changes should be listed too.
+
+
+*** Handling references                                            :noexport:
+
+(1) Do special markup;
+(2) What is the format of a reference precisely?;
+(3) Do they have backlinks?;
+(4) Notice that they will probably need to have a special markup
+property associated with them (instead of the typical `scholia'
+property);
+(5) Note that we might want to record all the references associated with
+a given buffer on its metadata article, as well as on the full list
+of articles and a `reference' label (unless we were to just make a reference
+namespace).
+
+
+*** Strikethrough                                                  :noexport:
+
+One of the most important things you can do with a wiki
+is to delete things that other people have written.
+Showing ``deletion'' as a sort of scholium would be
+a handy feature for a wiki modeling experiment.
+
+
+*** Delete/insert patches                                          :noexport:
+
+Note that patches that delete or insert changes are something like
+``quoted'' changes to files; i.e., as opposed to the ``direct''
+changes that occur when editing.
+

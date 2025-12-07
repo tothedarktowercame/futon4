@@ -1,0 +1,704 @@
+* Philosophy of the scholium system                                :noexport:
+:PROPERTIES:
+:LATEX_LABEL: philosophy
+:ID: philosophy
+:END:
+
+** Code
+:PROPERTIES:
+:LATEX_LABEL: code
+:ID: code
+:END:
+
+The concerns mentioned in Note [[id:the-philosophy]] are closely
+related to the questions and ideas of ``Code and Other Laws of
+Cyberspace''\footnote{http://codebook.jot.com/WikiHome}.
+Cf. Note [[id:consistency-why]].
+
+I'd be interested to know whether pass-by-reference as a basis for
+document exchange doesn't provide a final solution to the copyright
+problem.  OK, almost final; you still need some high-tech system for
+managing the references and finally retrieving and operating on
+content.
+
+
+** An observation
+:PROPERTIES:
+:LATEX_LABEL: observation-on-cyberspace
+:ID: observation-on-cyberspace
+:END:
+
+There is a lot of room in cyberspace.
+
+
+** Definitions of freedom
+
+In Note [[id:inspirations]], I talk about the importance of user
+freedom.  I should go into this more.  For now, I'll just say that for
+me ``user freedom'' in some sense includes the notion of ``user
+convenience.''  Why?  Because what is \emph{freedom to do} if it
+doesn't go along with actual \emph{ability to do}?  \emph{Empty!}  I
+call the basic notion at work here the ``liberties model of freedom.''
+(With all due apologies to The Dead Kennedys.)
+
+(Note that the guaranteed freedom to do something that one might
+potentially be able to do at some point but can't do just now isn't
+empty, it's more like ``half full''.)
+
+
+** ``Free culture'' is ambiguous
+:PROPERTIES:
+:LATEX_LABEL: free-culture
+:ID: free-culture
+:END:
+
+We should be careful when using this term to make sure it is really
+defined properly, something I don't think anyone really has done yet.
+I'm not really cool with using terms that aren't defined.  But then I
+get caught up using the term.  So, I'm not sure.  I'm guessing that
+there is a false dichotomy here similar to the dichotomy between
+``text'' and ``hypertext'' -- in other words, something that could
+perhaps be formalized, but which as yet hasn't been (see Note
+[[id:hyperstuff]]).  My sense is that ``free culture'' may be as
+ambiguously overloaded a term as ``intellectual property'' (just for
+example).  And yet, freedom seems to be an important part of a useful
+system.  We proceed with caution.
+
+
+** ``All information is superimposed.''
+
+Statements are superimposed on an author's perceptions and inner life.
+Perceptions are superimposed on the base data of experience (and are a
+part of this data).  Everything we identify as ``information'' is
+superimposed.
+
+
+** What, then is at the bottom?
+
+Is there a bottom, a ``real'' reality, even if it is an
+extra-informational one?  Or is reality as we know it a mutually
+agreed-upon set of mutually-referential superimposed bits?  (And for
+that matter, is there a top, and what would \emph{that} look like?)
+
+
+** A possible interpretation of physical scholium systems
+
+The physical systems of Section [[id:more-physical-scholia]] and
+elsewhere show that physical systems can ``do'' simulation.  Compare
+also Alan Moore's ``Supreme'', a fictional character who is somewhat
+aware of the effects of being as such, although not \emph{quite} to
+the point of being fully cognizant of the fact that he is fictional.
+Physical scholium systems are only partially aware of their
+computational possibilities (and, mutatis mutandi, computational
+systems don't always fully take into account their physical
+manifestations, whether concrete or only barely imaginable).
+
+
+** Making things easier to learn
+
+If subject matter to be learned is embedded in a scholium system,
+questions and answers that people have asked already would tend to be
+easily accessible and clearly organized.  It would also be easy to ask
+new questions in the context in which the right people will take
+notice.
+
+
+** The extensions of man
+
+What are the things you can do in a given medium?  What can you point
+at (indicate)?  What sorts of gestures can you make?  See Note
+[[id:human-and-artificial-intelligence]].
+
+
+** Designing a free code market
+
+A ``consortium'' of free software supporting companies would be
+similar to the scholium model of business and relates to FSB.  It is
+important to know what is in demand and what the supply and costs are.
+
+
+** Scholia in ``The star's my destination''
+
+The modifications to the main character's teeth are an example of
+actionable scholia.  The tattoos are another obvious example, adding
+art on top of skin.  This makes me think that perhaps the issue of
+scholia also comes up in the book by Dumas that this one draws so
+heavily upon.  The SF book might also be considered to be a sort of
+scholium attached to Dumas's ``The Count of Monty Cristo'' (cf. Note
+[[id:barkovs-hamlet]]).
+
+
+** Anthropogenic change
+
+Changes effected by humans upon the world might be considered to be
+scholia.  Changes effected upon ourselves (whether skin-deep or
+destiny-changing) could be as well.  But this vision of anthropogenic
+change is also somewhat \emph{anthrocentric}.  Humans are just part of
+a much broader world.  Our ``will'' and ``agency'' are brought into
+question in the context in which ``everything is connected.''
+(Compare ``Les Enfants Terrible'' on that one.)
+
+
+** Document closure
+:PROPERTIES:
+:LATEX_LABEL: closure
+:ID: closure
+:END:
+
+Wittgenstein said that the world is all that is the case.  Baudrillard
+said that the world is that which can't be exchanged for anything
+else.  A document that contains references to things outside of itself
+is really an article in a larger document.
+
+
+** When is a document finished?
+
+The question as to what needs to go into a document before the
+document is finished has probably been thought about by many authors
+and editors in the past.  Some things are bound to be off topic,
+whereas other things are bound to be completely critical.  Some things
+are of only peripheral importance.
+
+
+** Different kinds of documents
+
+Different kinds of documents correspond to different sorts of context
+-- spatial, temporal, ideational, etc. (see Note [[id:context]]).
+Note [[id:container]], Note [[id:thread]], Note [[id:process]], and
+Note [[id:collection]] talk about several different kinds of
+documents.  See also Note [[id:displaying-nearby-scholia]] for some
+further words about different kinds of context.
+
+
+** Document as container
+:PROPERTIES:
+:LATEX_LABEL: container
+:ID: container
+:END:
+
+Each document or article contains statements.  Sometimes these
+statements can be bonafide objects, for example, each section in this
+document contains Notes and certain other objects.  ``Frames'' and
+``ontologies'' fall into this category (and presumably so does the
+notion of ``category'').  This model seems particularly well-adapted
+to the notion of transclusion (and vice versa), and to the idea of a
+document as the expansion of an outline.  Comments about the document
+as a whole should apply to the containing object (so that in some
+cases, comments about the document as a whole come from within, i.e.,
+comments need to be contained somewhere; see Note [[id:closure]]).  If
+we set the current document up in the scholium system on public
+display (and for public comment), we would probably want to have a
+special place for general comments about the article.  This relates to
+the issue of namespaces and labels (Note
+[[id:labels-and-namespaces]]).
+
+
+** Document as thread
+:PROPERTIES:
+:LATEX_LABEL: thread
+:ID: thread
+:END:
+
+Sometimes a document takes you along a linear path through a more
+complicated space (see Note
+[[id:transclusion-induces-linear-structure]] for a description of one
+way this can work).  Frequently authors don't know where their writing
+is going when they start.  Franz Kafka and Stephen King are notable
+proponents of this style of writing, which is almost the antithesis of
+writing from an outline.  Whether stitching a specific pattern or
+exploring a strange labyrinth, the writer's experience has several
+threadlike qualities.  When there are many authors, then the metaphor
+is more obviously one of weaving many threads.  Of course, individual
+threads and an overall threadlike quality writing only appear under
+certain circumstances.  (I wonder what Dijkstra said about writing.
+One thing I know is that his thought about writing proofs was that
+each step should be made clear; the reader shouldn't be left
+guessing.)
+
+
+** Document as process
+:PROPERTIES:
+:LATEX_LABEL: process
+:ID: process
+:END:
+
+The view advanced in Note [[id:thread]] admits, but does not
+necessarily imply, the view of the document as a \emph{process}.  A
+thread or body of woven threads could exist outside of the process
+proper; in this model, the author might follow the thread along to its
+conclusion (like a detective ``unraveling'' a mystery).  It seems
+apparent that a document, whether it is written by one or many authors
+is a process, at least until it is ``finished''.  Even then, though
+the central text becomes fixed, the body of peripheral texts continues
+to grow, as the central text is reinterpreted in new contexts.
+
+In order to evolve, documents typically need to interact with the
+world somehow.  The schedule of interactions could be arbitrary, but
+when humans are involved some sort of phasic structure is often
+involved too.  Laying down the law with some sort of schedule for work
+on this document might be something I could make myself do (whether or
+not keeping the schedule is also is not yet decided, and could be
+interesting to document either way).  Personal schedules and
+organizational schedules are related.  I really don't know what to do
+(when things grind to a halt, but I assume it would be a good idea to
+do something.
+
+
+** Document as collection
+:PROPERTIES:
+:LATEX_LABEL: collection
+:ID: collection
+:END:
+
+Maybe the evolution of the desktop that we hear so much about (or the
+evolution of email, a la Gmail) is going to carry over to documents as
+well.  Instead of being organized into sections, documents could just
+be miscellaneous collections of notes, which then take on certain
+organization through search (or maybe some fancy self-organizing
+phenomena) as needed.
+
+
+** Document as ontology
+:PROPERTIES:
+:LATEX_LABEL: ontology
+:ID: ontology
+:END:
+
+Documents typically come in an outline-oriented fashion.  The idea of
+``document as ontology'' just expands on the idea of ``document as
+container'' and posits some nested containers.  I'm not actually sure
+what the difference between an ``ontology'' and a set of nested sets
+is; my sense is that ontologies will typically also specify
+interrelationships beyond just ``is-a''.  It would be worth looking
+into this more.
+
+
+** Document as simulasm
+:PROPERTIES:
+:LATEX_LABEL: simulasm
+:ID: simulasm
+:END:
+
+Eventually when one has abstracted out the author a document takes on
+the appearance of an agentless simulation.
+
+
+** Unlimited refactoring
+
+The system seems to go one level beyond ``refactoring'' to something
+more like ``multiple on-the-fly as-needed refactoring.''  Code will
+take whatever shape you put it in temporarily; however, these shapes
+can also be saved.  Maybe this is what refactoring is already about in
+sophisticated systems (on a wiki it means something much weaker).
+This would be worth investigating.
+
+
+** Assimilating data
+:PROPERTIES:
+:LATEX_LABEL: assimilating-data
+:ID: assimilating-data
+:END:
+
+We learn to map data ``up'' (local) hierarchies.  For example, when we
+make lists of things to do, we map observations up from a perceptual
+space to a potential action space.  It is valuable when living and
+writing to have good heuristics for figuring out the best level for
+observations.  (Some should be simple data, some should be containers
+for other sorts of data.)  This also relates to the issue of text and
+code from Note [[id:text-and-code]].
+
+If the document is a process (Note [[id:process]]), then it may
+sometimes be a ``process of understanding'', or a trace thereof.  When
+we think about something, we may be thinking in terms of an internal
+``scholia-based document''.
+
+As I've been working on \emph{this} document, various ideas have
+occured to me, and they make their way in as marginalia, then as
+Notes, and perhaps more expanded or refined.
+
+It would be nice to have a specific reference to something from
+``psychology'' here -- the \emph{On Intelligence} book would work,
+even though it could be a better book.  Note that the Minsky book
+contains similar (but more theoretical) notions.
+
+The idea of ``hooking'' from Note [[id:thought-processes]] seems
+related -- both with regard to expressing assimilated knowledge by
+supplying suitable hooks, and with regard to figuring things out by
+hooking them together or hooking them to things that we already know.
+
+
+** Text and code
+:PROPERTIES:
+:LATEX_LABEL: text-and-code
+:ID: text-and-code
+:END:
+
+What items should be coded up and what should be written about?  This
+question seems particularly on-topic for a literate program.  (See
+Note [[id:motto]].)  Historically, many thinkers were not able to
+write (useful) programs, because there weren't computers to run the
+programs on.  But algorithms have been being designed for a long time.
+If Newton had kept calculus on a completely abstract and philosophical
+level, it wouldn't have been useful for computation.  On the other
+hand, I have very little idea how the phenomenologists could have gone
+about coding up their ideas.  Even though now, work in knowledge
+representation apparently follows in their footsteps.  Part of the
+issue is that there are different languages for different things.
+People frequently work on the ``conceptual'' level, and they need
+things to be narrated to them.  Programs typically only ``work'', if
+they come with some suitable narration, either intrinsic or extrinsic.
+The actionable-nonactionable dichotomy may not be so useful (compare
+Minsky on dumbbell theories).  The notion that things ``evolve'' from
+nonactionable to actionable is probably a somewhat misleading, as
+appealing as it might be.  Sometimes we need to ask: what programs
+must be written to understand this question?  To paraphrase a
+correspondent of mine (Ray Puzio), text and code are like yin and yang
+(cf. ``chaos
+linguistics''\footnote{http://www.thing.de/projekte/7:9\%23/chuang\_tzu\_linguistics.html}?).
+Understanding how they relate to one another in more detail would
+presumably be quite fruitful.
+
+
+** Hyperstuff
+:PROPERTIES:
+:LATEX_LABEL: hyperstuff
+:ID: hyperstuff
+:END:
+
+Text is (or can be) hypertext; mathematics is just as ``hyperreal'' as
+the HDM.  But I suppose that with some work towards \emph{formalizing}
+a definition the ``hyper'' prefix might give us more than just hype
+about a quote-un-quote new technology.  (As an example of how these
+categories run together, Note
+[[id:derivative-works-in-the-scholium-system]] contrasts hypertext-like
+indices with more text-like compilations.)
+
+Accordingly, you can build an AI out of all sorts of miscellaneous
+components.  Mathematics is already very AI-like, even though many of
+its agents are human beings.  It isn't completely clear what the
+differences there are between working with systems with more
+electronic components and systems with less.  Is, or, how is, one set
+inherently more powerful, or more risky, or just better for different
+things?
+
+Compare Note [[id:physical-scholium-system]].
+
+
+** Not-so-holistic mathematics
+
+The QA section is typically split into two or three parts, each found
+in a separate library.  Here in Minnesota, there is the math library,
+the math philosophy section in the humanities library, and the
+engineering library.  It can be somewhat inconvenient and a bit
+offputting for people who want to look at math from all of these
+perspectives.  On the other hand, it frequently makes sense to divide
+when resources can't be copied.  Note that digital libraries don't
+need to be divided in a permanent way; cf. Aaron's Emory paper -- in
+both positive and negative senses -- in particular, think about
+Google, today's great integrator.  Compare Leibnitz on the university
+and Minsky on the mind.
+
+
+** Philosophy of intelligent documents
+
+The main thing to look at here is the Dreyfus and Dreyfus article in
+\emph{The Artifical Intelligence Debate}.  The ideas in the current
+document (e.g. in Note [[id:human-and-artificial-intelligence]])
+should give some ideas about why there is hope for AI, and why we can
+make something that people like to use as we make progress towards
+this goal.
+
+
+** Usefulness of bidirectional linking
+
+When a note contains a link to a section that contains more
+information on the topic of that note, this gives the author a way to
+have some of this topic spread into different contexts, but also to
+have a compressed treatment that reflects all the different ideas
+about the given topic in the document as a whole.  Bidirectional links
+can be used to facilitate this bifurcated style of writing.
+
+
+** Being ``meta''
+
+One way to be ``meta'' is to loop through some dimension that was
+previously held static.  Just for example, we might switch from
+single-article rendering to multi-article rendering at some point.
+
+
+** Thought processes
+:PROPERTIES:
+:LATEX_LABEL: thought-processes
+:ID: thought-processes
+:END:
+
+It is interesting how different pieces of information will attach
+themselves to a train of thought -- like so many carriages.  Or like
+the miscellaneous stops on a messenger race.
+
+In such races, there is actually no ``message'' to deliver; rather,
+the racers must simply visit several predesignated stops, and
+sometimes perform a certain task at each -- like drink a beer, for
+instance.  Typically these stops can be visited in any order.
+
+Like \emph{post facto} routes, thought process seems to be exploring a
+large web-like space -- and only finally getting pulled together into
+one narrative thread.  Perhaps one unwinds an \emph{Ariadne's thread}
+as one explores; and perhaps at each important stop a hook is added,
+so that when we get to the ``end'' of the path, we pull the Ariadne's
+thread, and the hooked-in items from hither and yon are present before
+us, ready in salute.
+
+This business with the Ariadne's thread is pretty amazing, but the
+hooks, by contrast, seem pointedly quotidian.  They include such drole
+things as word-association, metaphor, alliteration, and various other
+tropes.
+
+Some thoughts are fleeting and remain between the lines forever (``you
+should have seen the one that got away!'').  Is this a problem?
+Perhaps less so when you are focused (Note [[id:staying-focused]]).
+
+
+** Mnemonics
+
+The fact that humans can often improve their ability to remember
+things maybe means that we shouldn't trivialize memory-hooks
+too much.  Ultimately, however, it seems like we do run into
+``wetware limitations''.
+
+
+** Search
+
+Being able to search is a very nice feature of the computer
+interface.  But of course, it is also possible to use
+thought processes (Note [[id:thought-processes]]) to search.
+(If it wasn't, we'd almost surely be utterly screwed.)
+
+
+** Experience
+
+Experiences give you things to point at or hook to.  They are sort of
+like pre-computed cases -- you can save time and be secure by knowing
+what to do in a given situation in advance.  However, our experiences
+are almost always (or maybe ``always'') only heuristically applicable.
+
+Scholia, too, are sort of like pre-computed cases; i.e., they document
+the experiences of persons who have interacted with a given subject.
+
+
+** Establishing setting
+
+In filmmaking (and fiction writing), there is a tradition of images
+that are only secondarily part of the story per se, but which, rather,
+tend to say \emph{where} the story takes place, and to lend it some
+realism (or similar quality of substance).
+
+These images are sort of like attached scholia; they could be cut and
+the plot would remain.  However, we often see films that have been
+``ruined'' by overzealous cutting.
+
+
+** This document as an example of CBPP
+
+This document will hopefully be CBPP (``for real'', and not just via
+the Swift-Minsky societies of my mind).  The transition from solo work
+to group work is probably almost always rocky, and sometimes even too
+off-putting for it to happen at all.  However, there are certainly
+some steps that can be taken to ease the process along -- it is
+possible that having a ``cool'' product helps (some would argue
+vehemently that the cool factor is unimportant to the extreme).
+
+Hopefully by trying to make the code and documentation as accessible,
+starting with some discussions about the system, moving to discussions
+within the system, and from there soliciting code, etc., things will
+work out for the current current project.
+
+
+** Freedom, bookmaking, and book-buying
+
+In my view, part of the idea of paying for copies \emph{should} be
+that the copy itself is a work of art.  If the copy is simply
+something you could run off yourself on your laser printer, it might
+not really be worth buying.  If it is a limited edition artwork -- and
+if the price is right -- then it could be very much worth buying.  On
+the other hand, if the salient features can be simulated cheaply, then
+even the ``unique'' artwork may not be very valuable.
+
+This relates to Section [[id:more-physical-scholia]].  The value of
+print versions of a document is an interesting psychological question.
+Writing marginal notes into a printed document seems to be a perfectly
+viable way of building meaning clusters, but it isn't clear whether it
+has any specific psychological benefits over writing marginal notes
+into a sufficiently robust electronic system.
+
+
+** Staying focused
+:PROPERTIES:
+:LATEX_LABEL: staying-focused
+:ID: staying-focused
+:END:
+
+In a scholia-based document, it should be somewhat obvious when you
+drift off subject or off task.  Sometimes the connection between the
+``off subject'' elements of the document and the ``on subject''
+elements comes through a ``meta'' sort of connection.  For example, I
+initially worte this Note as a reminder to myself to stay focused on
+the code I'm looking at today, and not to get distracted by too many
+peripheral or minor concerns.  Even though this Note is peripheral
+with regard to the semantic content of the code, hopefully it will have
+a salutory ``meta-level'' effect on the coding process.
+
+
+** Hetrarchy
+:PROPERTIES:
+:LATEX_LABEL: hetrarchy
+:ID: hetrarchy
+:END:
+
+If it isn't obvious, a hetrarchy is an example of a scholium-based
+document in which the articles are people and the attachment
+relationships are given by who is working on whose project.  It
+shouldn't be too hard to map out these sorts of relationships in a
+given CBPP system (like PlanetMath, for example).
+
+
+** Hierarchy
+:PROPERTIES:
+:LATEX_LABEL: hierarchy
+:ID: hierarchy
+:END:
+
+Of course, a hetrarchy (Note [[id:hetrarchy]]) can be viewed as the
+joining-together of several hierarchies.  It seems helpful to be able
+to look at the local hierarchies associated with certain articles.
+Who cites who, and who do \emph{they} cite? -- and so on.
+
+
+** Scholia-based digital libraries
+
+Some of the relationships to Digital Libraries are as follows.
+
+In a physical library, marginalia are considered to be graffiti.  In a
+digital library, they can easily be ignored, if that is desired.  They
+are more like sticky notes than they are like true marginalia, but
+even more potentiallly-ignorable than these handy-dandy things.
+
+Still, the fact of the matter is that adding scholia to a document
+will always change the document's meaning in some sense.  However, in
+the case of \emph{private} scholia, other people will be in the dark
+as to the nature of the change.  There is a gradient here; some
+scholia. may be ``so public'' that everyone sees them, no matter how
+their filters are set. (E.g., the user interface to monolithic
+operating systems.)
+
+In a physical library, loud conversation is considered to be
+disruptive.  In a scholia-based document, it should be possible to
+mark conversations with metadata that will make them more or less
+private.  (Conversations are an example of processes-as-scholia.)  In
+a typical feedback-forum situation, user feedback isn't actionable.
+But of course scholia can be made actionable -- and they need not be
+favorable.  For example, scholia can be used to vote such-and-such an
+item out of the collection.
+
+
+** The system
+:PROPERTIES:
+:LATEX_LABEL: the-system
+:ID: the-system
+:END:
+
+``The system'' is comprised exactly of the most-public articles.
+Every user ``sees'' the system (as filtered through their own
+customizations).  Freedom of users to make (not-publically-visible)
+customizations \emph{ad infinitum} is certainly important.  But 
+questions as to who can change the system itself and
+\emph{how} it can be changed seem to be at least as important.
+
+
+** Ontology versus pre-ontology
+
+Most of the work done so far in this document has been at the 
+level of pre-ontology; work on the associate ontology or
+ontologies can begin before long.
+
+
+** Various free and nonfree cultures
+
+I still don't know what to say about the license-defined
+common versus a managed public domain common commons.
+
+
+** Teamwork
+
+Building a good team relates to the platform's usability (in both
+directions).  Is the whole just as good as the sum of its parts?
+What's good/bad/indifferent about \emph{informal} teams?
+
+
+** Places to store thoughts
+
+Places, or spaces, for thoughts can be helpful to have around.  File
+$X$ under ``experiments'', $Y$ under ``community spirit'' and so on.
+As to whether the metaphor of ``file'' works, that's a good question;
+labels may be uniformly better to use.  Furthermore, just about any
+sort of attachment relationship can be used to categorize things;
+compare Note [[id:hyperstuff]].
+
+
+** Work ethic
+
+The achievement of a workable work ethic was supposed to be the big
+event in Penmaster's Apprentice issue 2.  With regard to this work, it
+is interesting to consider the interplay of different work styles:
+small and large, physical and computational.  We can get very
+different sorts of meaning clusters simply by adjusting our
+scholia-creation patterns (at least in theory).  The (judicious) use
+of summaries, critiques, new-found relationships, and so forth, give
+an overall feeling to the evolution of a document.
+
+
+** Interpretation
+
+What is meaningful?  In relationships, in activities, and so forth?
+In literature, you want to figure out e.g. how to do character
+development in a ``meaningful'' way, to create something that people
+will want to read (and which they will find meaningful).
+
+
+** Vanity publishing
+
+One's vanity can at least have the effect of encouraging one to write
+and perhaps to do research as well.
+
+
+** Role of philosophy in this document
+
+Some people have told me that they don't see the point of writing so
+much.  But code is allegedly supposed to come after design, and design
+is supposed to come after you understand the problem.  I think on
+paper, and code things up as I understand them.  By this token,
+perhaps eventually we'll see a version of the document in which most
+of the philosophy has code associated with it.
+
+One thing to realize (might as well do so at some point) is that this
+is more than just a program; it is a philosophy of documents, whence,
+maybe even a tentative metaphysics, since what can't be regarded as a
+document, after all!, and as making some addition to the philosophy of
+(the society of) mind.
+
+
+** Philosophy of dictionaries
+
+Someone or other said something about defining via every \emph{use}.
+Which implies that each definition is a more-than-octopodal sort of
+thing, reaching all over the place.  Uses can often be partitioned,
+and showing this partition only can massively simplify things.  It is
+interesting to think about the scholium nature of partitions and
+representatives of the partitional classes.
+
+
+** Control
+
+One tends to imagine that the things that one can control are
+relatively safe.
+

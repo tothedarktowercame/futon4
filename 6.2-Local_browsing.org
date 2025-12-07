@@ -1,0 +1,154 @@
+** Local browsing
+:PROPERTIES:
+:LATEX_LABEL: local
+:ID: local
+:END:
+
+*** Introduction to local browsing                                 :noexport:
+
+This section will describe purely local navigation commands that
+require little in the way of additional data structures.  The main
+idea for the functions in this section is to make it so that focus can
+move from the current article to adjacent articles (either articles
+that are about the current article or articles that the current
+article is about), or more generally, to articles within some
+neighborhood of the current article (articles that we can reach by
+stepping from adjacent article to its adjacent articles, etc.).  We
+re-use the listing mechanism from the previous section as needed.
+
+
+*** On `read-scholia-property-at-point'
+
+Suppose we simply want to make the current scholium into the new
+current article.  That's what the next function is for.
+
+
+#+BEGIN_SRC elisp
+(defun read-scholia-property-at-point ()
+  (get-text-property (point) 'scholia))
+#+END_SRC
+
+*** On `scholia-named-at-point'
+
+I think that this should strip out the ``mask'' tags
+from the link-ids, but leave the name parts.  Since it
+is only used by interactive functions, this seems fine,
+and appropriate.
+
+
+#+BEGIN_SRC elisp
+(defun scholia-named-at-point ()
+  (mapcar (lambda (id)
+            (if (eq (car id) 'mask)
+                (car (second id))
+              (car id)))
+          (read-scholia-property-at-point)))
+#+END_SRC
+
+*** On `follow-scholium'
+:PROPERTIES:
+:LATEX_LABEL: follow-scholium
+:ID: follow-scholium
+:END:
+
+This causes the current scholium to become the current article.
+
+Eventually we'll want to be able to run this command with a
+mouse-click.
+
+
+#+BEGIN_SRC elisp
+(defun follow-scholium ()
+  (interactive)
+  (let ((current (name-of-current-scholium)))
+    (when current
+      (display-article current))))
+#+END_SRC
+
+*** On `follow-reference'
+:PROPERTIES:
+:LATEX_LABEL: follow-reference
+:ID: follow-reference
+:END:
+
+This reads the `scholia' property at point and either follows the
+reference at point (if there is only one) or allows the user to choose
+between references (if there are several).
+
+We might want to provide an additional function for following links
+\emph{in general}; basically the strategy for that is, just don't do
+the `remove-if' filtering.
+
+
+#+BEGIN_SRC elisp
+(defun follow-reference ()
+  (interactive)
+  (let ((references
+         (remove-if (lambda (name)
+                      (not (typedata-includes
+                            (scholium-type (get-article name))
+                            'reference)))
+                    (scholia-named-at-point))))
+    (cond
+     ((equal (length references) 1)
+      (let* ((ref (get-article (car references)))
+             (to-article (reference-to-article ref)))
+        (if (equal to-article name-of-current-article)
+            (display-article (reference-from-article ref))
+          (display-article to-article)))
+      ;; maybe `display-article' should be returning
+      ;; some non-`nil' value so that we don't have to do this.
+      t)
+     (references
+      ;; this sort of disambiguation is really only needed if the
+      ;; references have different targets.  Two distinct references
+      ;; to the same thing overlaying each other could be treated as
+      ;; one for simple following purposes.
+      (list-articles references))
+     (t
+      (message "No reference at point.")
+      nil))))
+
+(defun follow-reference-or-scholium ()
+  (interactive)
+  (unless (follow-reference)
+    (follow-scholium)))
+
+(defun display-an-article-that-current-article-is-about ()
+  (interactive)
+  (let ((abouts (scholium-about
+                 (get-article name-of-current-article))))
+    (cond
+     ((equal (length abouts) 1)
+      (display-article (car abouts)))
+     (abouts
+      (list-articles abouts))
+     (t
+      (message "Article isn't about any other articles.")))))
+#+END_SRC
+
+*** On `current-scholium-is-about'
+
+This function is similar to the previous one, but it applies to
+scholia.  Since one presumably knows that the current scholium is
+about the current article, this is most useful when a scholium is
+about several different articles, as it allows the user to move
+``down'' to any of them.
+
+
+#+BEGIN_SRC elisp
+(defun current-scholium-is-about ()
+  (scholium-about (get-article (name-of-current-scholium))))
+
+(defun display-an-article-that-current-scholium-is-about ()
+  (interactive)
+  (let ((abouts (current-scholium-is-about)))
+    (cond
+     ((equal (length abouts) 1)
+      (display-article (car abouts))
+      (message "Note: scholium is only about current article."))
+     (abouts
+      (list-articles abouts))
+     (t
+      (message "Article isn't about any other articles.")))))
+#+END_SRC

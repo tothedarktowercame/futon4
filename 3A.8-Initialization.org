@@ -1,0 +1,12 @@
+** Initialization
+
+*** Initialize with a new network
+
+For now, we just create one network to import things into.  Additional
+networks can be added later.
+# (see Section [[id:applications]]).
+
+
+#+BEGIN_SRC elisp
+(set-current-plexus (add-plexus))
+#+END_SRC

@@ -1,0 +1,67 @@
+** Query
+
+*** Overview of search and query functionality                     :noexport:
+
+We first describe several elementary functions for
+accessing elements of the network.  We then describe a
+robust search pipeline and show how it is implemented.
+
+
+*** Various lookup functions
+
+These functions allow testing and lookup of various elements
+of a net.
+
+
+#+BEGIN_SRC elisp
+(defun uid-p (uid)
+  "Is this a valid uid?"
+  (let ((z '(())))
+    (not (eq z (gethash uid (nth 2 current-plexus) z)))))
+
+(defun uid-list ()
+  "List of all valid uid's."
+  (maphash (lambda (key val) key)
+           (nth 2 current-plexus)))
+
+(defun ground-p (uid)
+  "Is this nema the ground?"
+  (= uid 0))
+
+(defun source-p (x y)
+  "Is the former nema the sink of the latter?"
+  (equal x (get-source y)))
+
+(defun sink-p (x y)
+  "Is the former nema the sink of the latter?"
+  (equal x (get-sink y)))
+
+(defun links-from (x y)
+  "Return all links from nema x to nema y."
+  (filter '(lambda (z) (source-p x z))
+            (get-backward-links y)))
+
+(defun links-p (x y)
+  "Does nema x link to nema y?"
+  (when (member x (mapcar
+                      'get-source
+                      (get-backward-links y)))
+    t))
+
+(defun triple-p (x y z)
+  "Do the three items form a triplet?"
+  (and (source-p y x)
+       (sink-p y z)))
+
+(defun plexus-p (x)
+  "Is this object a plexus?"
+  (let ((ans t))
+    (setq ans (and ans
+                      (equal (car x) "*plexus*")))
+    (setq ans (and ans
+                      (integrp (cadr x))))
+    (dotimes (n 5)
+          (setq ans (and ans (hash-table-p
+                                    (nth (+ n 2) x)))))
+    ans))
+#+END_SRC

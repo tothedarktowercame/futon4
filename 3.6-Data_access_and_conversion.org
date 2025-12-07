@@ -1,0 +1,139 @@
+** Data access and conversion
+
+*** Introduction to data access and conversion
+
+The functions in this section give easy access to things we're often
+interested in later on.  The functions here are simple, but it is
+useful to have names for them anyway (Note
+[[id:principle-of-transparency]]).
+
+
+#+BEGIN_SRC elisp
+(defun label-to-list (label)
+  (mapcar (lambda (name)
+            (format "%s" name))
+          (scholium-text (get-article label))))
+
+(defun label-to-propertized-list (label)
+  (mapcar (lambda (name)
+            (propertize (format "%s" name) 'name name))
+          (scholium-text (get-article label))))
+#+END_SRC
+
+*** On `get-backlinks'
+:PROPERTIES:
+:LATEX_LABEL: get-backlinks
+:ID: get-backlinks
+:END:
+
+This code produces the backlinks associated with \inp{name}.  See Note
+[[id:implementation-of-backlinks]] for details.  Notice that throughout
+the code I have been applying this idiom
+#+BEGIN_SRC elisp :tangle no
+(lambda (backlink)
+  (get-article (car backlink)))
+#+END_SRC
+to the element of the returned list in order to come up with the names
+of the backlinked articles.  However, I recently converted the
+backlink format to be richer than it was before so that we knew
+\emph{which link} was doing the linking, not just which article.  So
+presumably we should be using this additional data at least some of
+the time.
+
+
+#+BEGIN_SRC elisp
+(defun get-backlinks (name)
+  (get-metadata-field 'backlinks name))
+
+(defun get-links (name)
+  (cdr (assoc 'links (scholium-text (metadata-article name)))))
+#+END_SRC
+
+*** On `read-article-name'
+
+We frequently have to read the name of an article from a list.  We may
+be able to do this in several different more intelligent ways than the
+one we have here!  For one thing, we could use
+`turn-article-table-into-names' (which see).  Another thing to do
+would be to allow some other source of input, for example, some
+particular namespace could be specified (this might be best handled
+with another function, `read-article-name-from-namespace', say).  We
+could offer some recursion if a namespace is selected.
+
+
+#+BEGIN_SRC elisp
+(defun read-article-name ()
+  (let* ((completion-ignore-case t)
+         (strings (turn-article-table-into-list))
+         (string-found (completing-read
+                        "Article: "
+                        strings))
+         (place (- (length strings)
+                   (length (member string-found strings)))))
+    (nth place (turn-article-table-into-names))))
+#+END_SRC
+
+*** On `read-article-path'
+
+Like `read-article-name' but reads a path to an article through
+namespaces (cf. `generalized-get-article', Note 
+[[id:generalized-get-article]]).
+
+
+#+BEGIN_SRC elisp
+(defun read-article-path (&optional namespace path)
+  (let* ((completion-ignore-case t)
+         (strings (if namespace
+                      (turn-namespace-into-list namespace)
+                    (turn-article-table-into-list)))
+         (string-found (completing-read
+                        "Article: "
+                        strings))
+         (place (- (length strings)
+                   (length (member string-found strings))))
+         (ret (nth place (if namespace
+                             (turn-namespace-into-names namespace)
+                           (turn-article-table-into-names)))))
+    (setq path (append path (list ret)))
+    (if (and (typedata-includes ret 'namespace)
+             (y-or-n-p "Read further? "))
+        (read-article-path namespace path))
+    path))
+#+END_SRC
+
+*** Reading from non-default namespaces                            :noexport:
+:PROPERTIES:
+:LATEX_LABEL: read-from-non-default-namespace
+:ID: read-from-non-default-namespace
+:END:
+
+Perhaps there should be a ``read from this namespace'' variable that
+can be swapped for the default in `read-article-name'.  This sort of
+overload system should probably be used whenever we are reading from a
+list of articles (just for example, see Note
+[[id:make-reference-in-current-article]]).
+
+An alternative perspective on this matter is that it depends on the
+behavior of `get-article'.  That function is responsible for finding
+the article with the given name, regardless of where it resides.  So,
+`get-article' needs to know where to look.  Perhaps `name' will
+contain some instructions, or, more likely, perhaps this function
+should take an optional argument that would help it to limit the
+search.
+
+
+*** On `link-about-article-p'
+:PROPERTIES:
+:LATEX_LABEL: link-about-article-p
+:ID: link-about-article-p
+:END:
+
+This provides a quick way to tell whether one of the elements of an
+\inp{about} list is actually about the article named
+\inp{article-name}.
+
+
+#+BEGIN_SRC elisp
+(defun link-about-article-p (link article-name)
+  (equal (linked-to-article link) article-name))
+#+END_SRC

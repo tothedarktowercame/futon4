@@ -1,0 +1,97 @@
+* Appendix: A simple literate programming system                   :noexport:
+:PROPERTIES:
+:LATEX_LABEL: appendix-lit
+:ID: appendix-lit
+:END:
+
+** The literate programming system used in this paper
+
+The point of this code is to grab all the Lisp sections
+of this document and evaluate them.  It requires that
+the \LaTeX\ be written in a certain consistent way, with
+all of the code in a certain kind of environment.  That
+is all it does and all it requires.
+
+\begin{verbatim}
+(defvar lit-code-beginning-regexp "^\\\#+BEGIN_SRC elisp")
+(defvar lit-code-end-regexp "^\\\#+END_SRC")
+(defvar lit-count 0)
+
+(defun lit-eval ()
+  (interactive)
+  (lit-process 'eval))
+
+(defun lit-process (&optional code)
+  (interactive)
+  (setq lit-count (1+ lit-count))
+  (save-excursion
+    (let ((to-buffer (concat "*Lit Code " (int-to-string
+                                            lit-count)"*"))
+          (from-buffer (buffer-name (current-buffer))))
+      (set-buffer (get-buffer-create to-buffer))
+      (erase-buffer)
+      (set-buffer (get-buffer-create from-buffer))
+      (goto-char (point-min))
+      (while (re-search-forward
+              lit-code-beginning-regexp nil t)
+        (let* ((beg (match-end 0))
+               (end (save-excursion
+                      (search-forward-regexp
+                       lit-code-end-regexp nil t)
+                      (match-beginning 0)))
+               (match (buffer-substring beg end)))
+          (save-excursion
+            (set-buffer to-buffer)
+            (insert match))))
+      (case code
+       ('eval
+        (set-buffer to-buffer)
+        (eval-buffer)
+        (kill-buffer (current-buffer)))
+       (t
+        (switch-to-buffer to-buffer))))))
+
+(defun lit-require (feature)
+  (let* ((basename (symbol-name 'scholium-preliminaries))
+         (name (concat basename ".tex"))
+         (livep (buffer-live-p name)))
+    (save-excursion
+      (if livep
+          (set-buffer name)
+        (find-file name))
+      (lit-eval)
+      (unless livep
+        (kill-buffer (current-buffer))))))
+\end{verbatim}
+
+
+** Another way
+
+This code could go into a stand-alone file.  This would
+make it somewhat more reuseable, at the cost of making
+the current document somewhat less self-contained.
+Since I seem to like writing literate programs, making
+the code reusable probably wins out.
+
+
+** Adding docstrings at deliteration time
+
+It might be adventageous to have some way to add docstrings to
+functions that have been literately documented when the literate
+documentation is stripped out, before the functions are evalled.
+
+
+** Split into sections
+
+It might be handy to have the code that evaluates
+this file split it into several separate files, or
+to provide an option for doing this in the ancillary
+elisp file.
+
+
+** LaTeX verbatim environments
+
+The only thing you can't put into a verbatim environment is the text
+``\verb|\end{verbatim}|'' $\ddot{\smile}$.  See Note
+[[id:principle-of-transparency]].
+

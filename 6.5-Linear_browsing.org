@@ -1,0 +1,206 @@
+** Linear browsing
+:PROPERTIES:
+:LATEX_LABEL: linear-browsing
+:ID: linear-browsing
+:END:
+
+*** Browsing through the contents of a label                       :noexport:
+:PROPERTIES:
+:LATEX_LABEL: browsing-through-the-contents-of-a-label
+:ID: browsing-through-the-contents-of-a-label
+:END:
+
+In Note [[id:multidimensional-visual-browsing]], the idea of being able
+to move forward through the document's natural structure was
+discussed.  One of the easiest ways to define this sort of structure
+is relative to the contents of some label. A more advanced mode would
+stitch together several labels, e.g., the sections and subsections of
+a document, with some simple logic for moving from label to label.  In
+addition, a given article might appear as part of several labels, in
+which case, the user could be presented with possible directions to
+travel in.  This is in some sense an extension of Section [[id:local]],
+since it gives more local directions to go in.  It is also similar to
+the idea of following through a set of slides (and presumably would
+make it easy to implement such an arrangement).
+
+The key thing seems to be identification of the ``parent'' label(s)
+to use for this purpose.  Maybe this info is already available in
+the form of backlinks?  Although, note that we might not always
+want to turn on this sort of label browsing for all labels all the
+time.
+
+
+*** Disposition of code for linear browsing                        :noexport:
+
+Some code for additional graphical features has been added
+to the scholia display by `scholia-display-extras'.  It would
+be good to add some commands to do a semantically similar
+sort of navigation non-graphically, here.  When the multi-parent
+browsing ideas from Note [[id:more-than-one-parent]] have
+become fixed, they should of course be available here too.
+
+
+*** On `add-visible-back-temporal-link'
+:PROPERTIES:
+:LATEX_LABEL: add-visible-back-temporal-link
+:ID: add-visible-back-temporal-link
+:END:
+
+This makes a link to the previous-browsed page appear in the Scholia
+Display.  It runs within the scope of `scholia-display-extras' (Note
+[[id:scholia-display-extras]]).
+
+It like we should potentially be able to change the strategy here, so
+as to add more information to the text properties and not actually
+create any corresponding article.  I think this would require some
+adjustments to the way text properties are handled.
+
+
+#+BEGIN_SRC elisp
+(defun add-visible-back-temporal-link ()
+  ;; this should be marked up to become a fake link (one that isn't
+  ;; displayed in the main buffer)
+  (when (sb-previous)
+    (insert "\n\n"
+            "Back (temporal): ")
+    (let ((beg (point)))
+      (insert (propertize 
+               (format "%s" (sb-previous)) 'face 'sch-reference-face))
+      (scholium 'reference-to-previous-article
+                nil
+                `((,name-of-current-article
+                    (passage 
+                     ,beg
+                     ,(point)))
+                  (,(sb-previous)))
+                '(reference fake))
+      (add-to-scholia-property-within-region
+       beg
+       (point)
+       '(reference-to-previous-article 1 1)))))
+#+END_SRC
+
+*** On `add-visible-parent-and-sibling-links'
+:PROPERTIES:
+:LATEX_LABEL: add-visible-parent-and-sibling-links
+:ID: add-visible-parent-and-sibling-links
+:END:
+
+This adds links to the parent and nearest siblings in the Scholia
+Display buffer.  It runs within the scope of `scholia-display-extras'
+(Note [[id:scholia-display-extras]]).
+
+
+#+BEGIN_SRC elisp
+(defun add-visible-parent-and-sibling-links ()
+  ;; identify the link to the parent, if it exists.
+  ;; (this assumes that there is only one parent)
+  (let ((link-to-parent (car (member-if (lambda (link)
+                                          (member 'parent (cdr link)))
+                                         (scholium-about article)))))
+    (when link-to-parent
+      (let* ((parent (get-article (first link-to-parent)))
+             (parent-data
+              (scholium-text parent))
+             (this-name-headed (member name-of-current-article
+                                       parent-data))
+             (next (cadr this-name-headed))
+             (prev (car (last (butlast parent-data
+                                       (length this-name-headed))))))
+        (when parent
+          (insert "\n\n"
+                  "Parent: ")
+          (let ((beg (point)))
+            (insert (propertize (format "%s" (scholium-name parent))
+                                'face 'sch-reference-face))
+            (scholium 'reference-to-parent
+                      nil
+                      `((,name-of-current-article
+                          (passage 
+                           ,beg
+                           ,(point)))
+                        (,(scholium-name parent)))
+                      '(reference fake))
+            (add-to-scholia-property-within-region
+             beg
+             (point)
+             '(reference-to-parent 1 1))))
+        (when prev
+          (insert "\n\n"
+                  "Back (in parent): ")
+          (let ((beg (point)))
+            (insert (propertize (format "%s" prev) 'face 'sch-reference-face))
+            (scholium 'reference-to-previous-article-in-parent
+                      nil
+                      `((,name-of-current-article
+                          (passage 
+                           ,beg
+                           ,(point)))
+                        (,prev))
+                      '(reference fake))
+            (add-to-scholia-property-within-region
+             beg
+             (point)
+             '(reference-to-previous-article-in-parent 1 1))))
+        (when next
+          (insert "\n\n"
+                  "Forward (in parent): ")
+          (let ((beg (point)))
+            (insert (propertize (format "%s" next)
+                                'face 
+                                'sch-reference-face))
+            (scholium 'reference-to-next-article-in-parent
+                      nil
+                      `((,name-of-current-article
+                          (passage 
+                           ,beg
+                           ,(point)))
+                        (,next))
+                      '(reference fake))
+            (add-to-scholia-property-within-region
+             beg
+             (point)
+             '(reference-to-next-article-in-parent 1 1))))))))
+
+(add-hook 'scholia-display-extras-hook
+          'add-visible-back-temporal-link)
+(add-hook 'scholia-display-extras-hook
+          'add-visible-parent-and-sibling-links)
+#+END_SRC
+
+*** On `forward-in-parent'
+:PROPERTIES:
+:LATEX_LABEL: forward-in-parent
+:ID: forward-in-parent
+:END:
+
+A quick command to get the label identified as this object's parent,
+and move to the next mentioned after this one in this label.  (It
+would also be possible to follow the next reference in a page, i.e.,
+use a page like a label; but this function doesn't do that.)
+
+It would be nice to have this function select the ``next cousin'' (or
+other suitable relative) if we are out of siblings.
+
+We'll also want a quick command to hop \emph{to} an article's parent.
+
+
+#+BEGIN_SRC elisp
+(defun forward-in-parent ()
+  (interactive))
+#+END_SRC
+
+*** On `backward-in-parent'
+:PROPERTIES:
+:LATEX_LABEL: backward-in-parent
+:ID: backward-in-parent
+:END:
+
+Like `forward-in-parent' (Note [[id:forward-in-parent]]) but moves
+backward instead.
+
+
+#+BEGIN_SRC elisp
+(defun backward-in-parent ()
+  (interactive))
+#+END_SRC

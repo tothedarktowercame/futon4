@@ -1,0 +1,42 @@
+** Bidirectional updates                                           :noexport:
+:PROPERTIES:
+:LATEX_LABEL: bidi
+:ID: bidi
+:END:
+
+*** Setup for bidirectional updating
+
+We'll assume that one of the authors is using the scholium system, and
+the other isn't.  (The other possible cases have either been covered
+or are not part of our mandate.)
+
+In order to make bidirectional updating work when some of the editing
+is going on outside of the scholium-based system, we would need to be
+able to read a stream of diffs coming from the other system and decide
+how to incorporate the modifications.  And we also need to be able to
+provide them with a stream of diffs that they can use however they see
+fit.  We'll certainly have to think more about how to do this!
+
+
+*** Using simulation to do bidirectional updating
+:PROPERTIES:
+:LATEX_LABEL: simulation-for-bidi
+:ID: simulation-for-bidi
+:END:
+
+It seems to me that the most useful approach for someone working
+within the scholium system and trying to do bidi updates with a
+non-scholium system would be to run a simulated version of the
+non-scholium system inside the scholium system.
+
+
+*** The simplest case
+
+The simplest case of bidirectional updating is \emph{identification},
+which is treated in Section [[id:identification]].  Even this case has
+some complexity to it in the distributed case; updates coming from
+multiple authors presumably need to be formatted into branching
+derivative versions.  (Actually, this is an $n$-directional updating
+problem; Arch has had some things to say about this, but we can
+probably say more.)
+

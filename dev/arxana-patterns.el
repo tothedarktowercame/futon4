@@ -1,0 +1,671 @@
+;;; arxana-patterns.el --- Futon pattern importer/editor -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Fetch pattern-library entries from Futon1 (patterns ingested from Futon3) and
+;; render them as editable Org buffers.  Each buffer exposes the pattern summary
+;; and component passages so Emacs users can review and update pattern text
+;; without dropping into the Futon CLI.
+
+;;; Code:
+
+(require 'cl-lib)
+(require 'seq)
+(require 'subr-x)
+(require 'org)
+
+(require 'arxana-store)
+
+(defgroup arxana-patterns nil
+  "Utilities for browsing Futon pattern entities in Emacs."
+  :group 'arxana)
+
+(defcustom arxana-patterns-ego-limit 64
+  "Number of neighbor links to request when fetching Futon pattern data."
+  :type 'integer
+  :group 'arxana-patterns)
+
+(defvar-local arxana-patterns--pattern nil
+  "Buffer-local plist describing the currently loaded pattern.")
+
+(defconst arxana-patterns--summary-begin "#+BEGIN_SUMMARY")
+(defconst arxana-patterns--summary-end "#+END_SUMMARY")
+
+(defvar arxana-patterns-view-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-s") #'arxana-patterns-save)
+    (define-key map (kbd "g") #'arxana-patterns-refresh-buffer)
+    map)
+  "Keymap for `arxana-patterns-view-mode'.")
+
+(define-minor-mode arxana-patterns-view-mode
+  "Minor mode for pattern editing buffers."
+  :lighter " Pattern"
+  :keymap arxana-patterns-view-mode-map
+  (when arxana-patterns-view-mode
+    (setq header-line-format "C-c C-s to sync changes; g to refetch from Futon")))
+
+(defun arxana-patterns--ensure-sync ()
+  (unless (arxana-store-sync-enabled-p)
+    (user-error "Futon sync is disabled; enable futon4-enable-sync first")))
+
+(defun arxana-patterns--alist (key alist)
+  (alist-get key alist))
+
+(defun arxana-patterns--alist-like-p (value)
+  (and (listp value)
+       (let ((first (car-safe value)))
+         (and first (consp first)))))
+
+(defun arxana-patterns--entity-value (entity &rest keys)
+  "Return the first matching value in ENTITY for the provided :entity/* KEYS."
+  (when (arxana-patterns--alist-like-p entity)
+    (seq-some (lambda (key)
+                (let ((cell (assoc key entity)))
+                  (when cell (cdr cell))))
+              keys)))
+
+(defun arxana-patterns--entity-from-version (entity)
+  "Return the entity payload stored inside ENTITY's version data, if any."
+  (when (arxana-patterns--alist-like-p entity)
+    (let* ((version (arxana-patterns--alist :version entity))
+           (data (and (arxana-patterns--alist-like-p version)
+                      (arxana-patterns--alist :data version)))
+           (payload (and (arxana-patterns--alist-like-p data)
+                         (arxana-patterns--alist :entity data))))
+      (and (arxana-patterns--alist-like-p payload) payload))))
+
+(defun arxana-patterns--find-entity (tree target-id)
+  "Locate the entity with TARGET-ID inside TREE (direct or linked payloads)."
+  (let ((match nil))
+    (cl-labels ((entity-matches-p (entity)
+                  (let ((id (arxana-patterns--entity-value entity :id :entity/id)))
+                    (and id target-id (equal id target-id))))
+                (walk (node)
+                  (when (and node (not match))
+                    (cond
+                     ((arxana-patterns--alist-like-p node)
+                      (when (entity-matches-p node)
+                        (setq match node))
+                      (dolist (pair node)
+                        (when (and (consp pair) (not match))
+                          (walk (cdr pair)))))
+                     ((listp node)
+                      (dolist (item node)
+                        (walk item)))))))
+      (walk tree)
+      match)))
+
+(defun arxana-patterns--pattern-entity (ego)
+  (arxana-patterns--alist :entity ego))
+
+(defun arxana-patterns--resolve-entity-by-name (name)
+  "Return the Futon entity alist for NAME via `/ego`."
+  (let* ((ego-response (arxana-store-ego name 1))
+         (ego (and ego-response (arxana-patterns--alist :ego ego-response))))
+    (and ego (arxana-patterns--alist :entity ego))))
+
+(defun arxana-patterns--relation-text (value)
+  "Return VALUE as a normalized relation string without the leading colon."
+  (let ((text (cond
+               ((keywordp value) (symbol-name value))
+               ((symbolp value) (symbol-name value))
+               ((stringp value) value)
+               (t nil))))
+    (when text
+      (if (and (> (length text) 0)
+               (eq (aref text 0) ?:))
+          (substring text 1)
+        text))))
+
+(defun arxana-patterns--relation-match-p (value target)
+  "Return non-nil when VALUE (keyword/string) matches TARGET (string/keyword)."
+  (let ((lhs (arxana-patterns--relation-text value))
+        (rhs (arxana-patterns--relation-text target)))
+    (and lhs rhs (string= lhs rhs))))
+
+(defun arxana-patterns--component-links (ego)
+  (when (arxana-patterns--alist-like-p ego)
+    (let* ((links (arxana-patterns--alist :links ego))
+           (link-outgoing (and (arxana-patterns--alist-like-p links)
+                               (arxana-patterns--alist :outgoing links)))
+           (outgoing (or (arxana-patterns--alist :outgoing ego) link-outgoing)))
+      (seq-filter (lambda (entry)
+                    (arxana-patterns--relation-match-p
+                     (arxana-patterns--alist :relation entry)
+                     ":pattern/includes"))
+                  outgoing))))
+
+(defun arxana-patterns--component-slug-base (name)
+  (when (and name (string-match "\\`\\(.+\\)/[0-9]+-[^/]+\\'" name))
+    (match-string 1 name)))
+
+(defun arxana-patterns--component-link-name (link)
+  (let ((entity (arxana-patterns--alist :entity link)))
+    (or (arxana-patterns--entity-value entity :name :entity/name)
+        (arxana-patterns--entity-value entity :ident :entity/ident))))
+
+(defun arxana-patterns--lookup-component-by-name (component-name)
+  (let ((base (arxana-patterns--component-slug-base component-name)))
+    (when base
+      (let* ((ego-response (arxana-store-ego base arxana-patterns-ego-limit))
+             (ego (and ego-response (arxana-patterns--alist :ego ego-response)))
+             (links (and (arxana-patterns--alist-like-p ego)
+                         (arxana-patterns--component-links ego)))
+             (matching (and links
+                            (cl-find-if (lambda (link)
+                                          (string= (arxana-patterns--component-link-name link)
+                                                   component-name))
+                                        links))))
+        (when matching
+          (arxana-patterns--fetch-component matching))))))
+
+(defun arxana-patterns--lookup-component-by-prefix (component-name)
+  (let ((base (arxana-patterns--component-slug-base component-name)))
+    (when base
+      (let* ((ego-response (arxana-store-ego base arxana-patterns-ego-limit))
+             (ego (and ego-response (arxana-patterns--alist :ego ego-response)))
+             (links (and (arxana-patterns--alist-like-p ego)
+                        (arxana-patterns--component-links ego)))
+             (matching (and links
+                            (cl-find-if (lambda (link)
+                                          (let ((name (arxana-patterns--component-link-name link)))
+                                            (and name (string-prefix-p name component-name))))
+                                        links))))
+        (when matching
+          (arxana-patterns--fetch-component matching))))))
+
+(defun arxana-patterns--extract-summary ()
+  (save-excursion
+    (goto-char (point-min))
+    (let ((case-fold-search t))
+      (if (re-search-forward (concat "^" (regexp-quote arxana-patterns--summary-begin) "\\s-*$") nil t)
+          (let ((start (progn (forward-line 1) (point))))
+            (if (re-search-forward (concat "^" (regexp-quote arxana-patterns--summary-end) "\\s-*$") nil t)
+                (string-trim (buffer-substring-no-properties start (match-beginning 0)))
+              ""))
+        ""))))
+
+(defun arxana-patterns--read-header-field (label)
+  (save-excursion
+    (goto-char (point-min))
+    (let ((case-fold-search t)
+          (rx (format "^#\\+%s: \\(.*\\)$" (regexp-quote label))))
+      (when (re-search-forward rx nil t)
+        (string-trim (match-string 1))))))
+
+(defun arxana-patterns--component-name-info (name)
+  (if (and name (string-match "/\\([0-9]+\\)-\\([^/]+\\)$" name))
+      (list :order (string-to-number (match-string 1 name))
+            :kind (match-string 2 name))
+    (list :order 0 :kind (or name "component"))))
+
+(defun arxana-patterns--component-parent-id (component-name)
+  (when component-name
+    (let* ((ego-response (ignore-errors (arxana-store-ego component-name arxana-patterns-ego-limit)))
+           (ego (and ego-response (arxana-patterns--alist :ego ego-response)))
+           (incoming (and ego (arxana-patterns--alist :incoming ego)))
+           (parent-link (and incoming
+                             (cl-find-if (lambda (entry)
+                                           (arxana-patterns--relation-match-p
+                                            (arxana-patterns--alist :relation entry)
+                                            ":pattern/component-parent"))
+                                         incoming))))
+      (when parent-link
+        (let* ((entity (arxana-patterns--alist :entity parent-link)))
+          (or (arxana-patterns--alist :entity/id entity)
+              (arxana-patterns--alist :id entity)))))))
+
+(defun arxana-patterns--fetch-entity-source (entity-id)
+  (when entity-id
+    (let* ((response (ignore-errors (arxana-store-fetch-entity entity-id)))
+           (entity (and response (arxana-patterns--alist :entity response)))
+           (linked (and response (arxana-patterns--find-entity response entity-id)))
+           (version-entity (or (arxana-patterns--entity-from-version entity)
+                               (arxana-patterns--entity-from-version linked)))
+           (candidates (delq nil (list entity version-entity linked))))
+      (cl-labels ((value (&rest keys)
+                    (seq-some (lambda (candidate)
+                                (apply #'arxana-patterns--entity-value candidate keys))
+                              candidates)))
+        (when (or candidates (plist-get (car candidates) :id))
+          (list :source (or (value :source :entity/source) "")
+                :external-id (value :external-id :entity/external-id)
+                :name (value :name :entity/name)
+                :id (or (value :id :entity/id) entity-id)))))))
+
+(defun arxana-patterns--fetch-component (link)
+  (let* ((entity (arxana-patterns--alist :entity link))
+         (component-id (or (arxana-patterns--alist :entity/id entity)
+                           (arxana-patterns--alist :id entity)))
+         (component-name (or (arxana-patterns--alist :entity/name entity)
+                             (arxana-patterns--alist :name entity)))
+         (details (arxana-patterns--fetch-entity-source component-id))
+         (order-info (arxana-patterns--component-name-info component-name))
+         (parent-id (arxana-patterns--component-parent-id component-name)))
+    (when component-id
+      (list :id component-id
+            :name (or component-name (plist-get details :name) "component")
+            :text (or (plist-get details :source) "")
+            :order (plist-get order-info :order)
+            :kind (plist-get order-info :kind)
+            :parent-id parent-id))))
+
+(defun arxana-patterns--compute-levels (components)
+  (let ((table (make-hash-table :test 'equal)))
+    (dolist (component components)
+      (puthash (plist-get component :id)
+               (copy-sequence component)
+               table))
+    (cl-labels ((level-of (component-id)
+                  (let ((entry (gethash component-id table)))
+                    (if (not entry)
+                        0
+                      (let ((existing (plist-get entry :level)))
+                        (if existing
+                            existing
+                          (let* ((parent-id (plist-get entry :parent-id))
+                                 (computed (if parent-id
+                                               (1+ (level-of parent-id))
+                                             0))
+                                 (updated (plist-put entry :level computed)))
+                            (puthash component-id updated table)
+                            computed)))))))
+      (mapcar (lambda (component)
+                (let ((id (plist-get component :id)))
+                  (level-of id)
+                  (gethash id table)))
+              components))))
+
+(defun arxana-patterns--fetch-pattern-data (name)
+  (arxana-patterns--ensure-sync)
+  (let* ((ego-response (arxana-store-ego name arxana-patterns-ego-limit))
+         (ego (and ego-response (arxana-patterns--alist :ego ego-response)))
+         (entity (and ego (arxana-patterns--pattern-entity ego)))
+         (pattern-id (or (and entity (arxana-patterns--alist :id entity))
+                         (arxana-patterns--alist :entity/id entity)))
+         (pattern-details (arxana-patterns--fetch-entity-source pattern-id))
+         (summary (or (plist-get pattern-details :source) ""))
+         (title (or (plist-get pattern-details :external-id) name))
+         (component-links (arxana-patterns--component-links ego))
+         (component-entries (delq nil (mapcar #'arxana-patterns--fetch-component
+                                              component-links)))
+         (leveled-components (arxana-patterns--compute-levels component-entries))
+         (components (cl-sort (copy-sequence leveled-components)
+                              #'< :key (lambda (comp)
+                                         (or (plist-get comp :order) 0)))))
+    (unless pattern-id
+      (user-error "Pattern %s was not found in Futon" name))
+    (list :id pattern-id
+          :name name
+          :title title
+          :summary summary
+          :components components)))
+
+(defun arxana-patterns--insert-summary (summary)
+  (insert arxana-patterns--summary-begin "\n")
+  (insert (string-trim (or summary "")) "\n")
+  (insert arxana-patterns--summary-end "\n\n"))
+
+(defun arxana-patterns--insert-component (component)
+  (let* ((level (max 0 (or (plist-get component :level) 0)))
+         (stars (make-string (max 1 (1+ level)) ?*))
+         (label (capitalize (or (plist-get component :kind) "component")))
+         (name (plist-get component :name))
+         (component-id (plist-get component :id))
+         (text (string-trim (or (plist-get component :text) ""))))
+    (insert (format "%s %s\n" stars label))
+    (insert ":PROPERTIES:\n")
+    (insert (format ":COMPONENT-ID: %s\n" component-id))
+    (insert (format ":COMPONENT-NAME: %s\n" name))
+    (insert (format ":COMPONENT-KIND: %s\n" (plist-get component :kind)))
+    (insert (format ":COMPONENT-ORDER: %s\n" (or (plist-get component :order) 0)))
+    (insert (format ":COMPONENT-PARENT: %s\n"
+                    (or (plist-get component :parent-id) "")))
+    (insert ":END:\n\n")
+    (insert text "\n\n")))
+
+(defun arxana-patterns--render-pattern (pattern)
+  (let* ((name (plist-get pattern :name))
+         (buffer (get-buffer-create (format "*Arxana Pattern: %s*" name))))
+    (with-current-buffer buffer
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert (format "#+TITLE: Pattern %s\n" name))
+        (insert (format "#+PATTERN: %s\n" name))
+        (insert (format "#+PATTERN-ID: %s\n" (plist-get pattern :id)))
+        (insert (format "#+PATTERN-TITLE: %s\n\n" (plist-get pattern :title)))
+        (arxana-patterns--insert-summary (plist-get pattern :summary))
+        (dolist (component (plist-get pattern :components))
+          (arxana-patterns--insert-component component))
+        (goto-char (point-min))
+        (org-mode)
+        (arxana-patterns-view-mode 1)
+        (setq-local arxana-patterns--pattern pattern)))
+    (pop-to-buffer buffer)))
+
+;;;###autoload
+(defun arxana-patterns-open (name)
+  "Fetch the Futon pattern NAME and render it in an Org buffer."
+  (interactive (list (read-string "Pattern name: " (thing-at-point 'symbol t))))
+  (let ((pattern (arxana-patterns--fetch-pattern-data name)))
+    (arxana-patterns--render-pattern pattern)))
+
+;;;###autoload
+(defun arxana-patterns-inspect-entity (name)
+  "Show the Futon source text for entity NAME (pattern or component)."
+  (interactive (list (read-string "Entity name: " (thing-at-point 'symbol t))))
+  (arxana-patterns--ensure-sync)
+  (let* ((entity (arxana-patterns--resolve-entity-by-name name))
+         (component (and (not entity)
+                          (or (arxana-patterns--lookup-component-by-name name)
+                              (arxana-patterns--lookup-component-by-prefix name))))
+         (direct-id (and (not (or entity component))
+                         (arxana-patterns--fetch-entity-source name)))
+         (details (cond
+                    (entity
+                     (let ((entity-id (or (arxana-patterns--entity-value entity :id :entity/id)
+                                          (arxana-patterns--entity-value entity :ident :entity/ident))))
+                       (unless entity-id
+                         (user-error "Entity %s not found" name))
+                       (arxana-patterns--fetch-entity-source entity-id)))
+                    (component component)
+                    (direct-id direct-id)
+                    (t nil))))
+    (unless details
+      (user-error "Entity %s was not found" name))
+    (let* ((text (string-trim (or (plist-get details :text)
+                                  (plist-get details :summary)
+                                  (plist-get details :source)
+                                  "")))
+           (buffer (get-buffer-create "*Arxana Pattern Snippet*")))
+      (with-current-buffer buffer
+        (let ((inhibit-read-only t))
+          (erase-buffer)
+          (insert (format "Name: %s\n" (or (plist-get details :name) name)))
+          (insert (format "Id: %s\n" (or (plist-get details :id) "?")))
+          (when-let ((title (plist-get details :external-id)))
+            (insert (format "Title: %s\n" title)))
+          (when-let ((order (plist-get details :order)))
+            (insert (format "Order: %s\n" order)))
+          (when-let ((kind (plist-get details :kind)))
+            (insert (format "Kind: %s\n" kind)))
+          (insert "\n")
+          (insert text)
+          (goto-char (point-min))
+          (view-mode 1)))
+      (pop-to-buffer buffer))))
+
+(defun arxana-patterns-refresh-buffer ()
+  "Re-fetch the current pattern from Futon and replace the buffer contents."
+  (interactive)
+  (unless (and (boundp 'arxana-patterns--pattern)
+               arxana-patterns--pattern)
+    (user-error "No pattern is loaded in this buffer"))
+  (arxana-patterns-open (plist-get arxana-patterns--pattern :name)))
+
+(defun arxana-patterns--collect-components ()
+  (let (results)
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "^\*+ " nil t)
+        (let ((component-id (org-entry-get (point) "COMPONENT-ID")))
+          (when component-id
+            (let* ((component-name (org-entry-get (point) "COMPONENT-NAME"))
+                   (begin (save-excursion
+                            (org-back-to-heading t)
+                            (forward-line)
+                            (while (looking-at "^[ \\t]*$\|^[ \\t]*:\\|^[ \\t]*#")
+                              (forward-line))
+                            (point)))
+                   (end (save-excursion
+                          (org-end-of-subtree t t)
+                          (point)))
+                   (text (if (and begin end)
+                             (string-trim (buffer-substring-no-properties begin end))
+                           "")))
+              (push (list :id component-id
+                          :name component-name
+                          :text text)
+                    results))))))
+    (nreverse results)))
+
+(defun arxana-patterns-save ()
+  "Sync the current pattern buffer back to Futon.
+Only existing components are updated; new headings without component ids
+are ignored for now."
+  (interactive)
+  (arxana-patterns--ensure-sync)
+  (unless (and (boundp 'arxana-patterns--pattern)
+               arxana-patterns--pattern)
+    (user-error "No pattern metadata found in this buffer"))
+  (save-excursion
+    (widen)
+    (let* ((pattern-id (plist-get arxana-patterns--pattern :id))
+           (pattern-name (or (plist-get arxana-patterns--pattern :name)
+                             (arxana-patterns--read-header-field "PATTERN")))
+           (pattern-title (arxana-patterns--read-header-field "PATTERN-TITLE"))
+           (summary (arxana-patterns--extract-summary))
+           (components (arxana-patterns--collect-components)))
+      (arxana-store-ensure-entity :id pattern-id
+                                  :name pattern-name
+                                  :type "pattern/library"
+                                  :source summary
+                                  :external-id pattern-title)
+      (dolist (component components)
+        (let ((cid (plist-get component :id))
+              (cname (plist-get component :name))
+              (ctext (plist-get component :text)))
+          (when (and cid cname)
+            (arxana-store-ensure-entity :id cid
+                                        :name cname
+                                        :type "pattern/component"
+                                        :source ctext))))
+      (message "Synced %s (%d components)" pattern-name (length components)))))
+
+(provide 'arxana-patterns)
+
+;;; arxana-patterns.el ends here
+(defcustom arxana-patterns-library-root nil
+  "Path to the Futon3 pattern library checkout.
+When nil the browser attempts to locate a \"futon3/library\" directory
+relative to the current buffer or this file."
+  :type '(choice (const :tag "Auto-detect" nil)
+                 directory)
+  :group 'arxana-patterns)
+
+(defvar arxana-patterns--browser-buffer "*Arxana Pattern Browser*")
+(defvar-local arxana-patterns--browser-stack nil)
+(defvar-local arxana-patterns--browser-items nil)
+(defconst arxana-patterns--browser-header-lines 2)
+
+(defun arxana-patterns--locate-library-root ()
+  (let ((explicit arxana-patterns-library-root))
+    (cond
+     ((and explicit (file-directory-p explicit)) (expand-file-name explicit))
+     (t
+      (let* ((current (or load-file-name buffer-file-name default-directory))
+             (root (locate-dominating-file current "futon3")))
+        (when root
+          (let ((candidate (expand-file-name "futon3/library" root)))
+            (and (file-directory-p candidate) candidate))))))))
+
+(defun arxana-patterns--library-directories ()
+  (when-let ((root (arxana-patterns--locate-library-root)))
+    (seq-sort #'string<
+              (seq-filter
+               (lambda (entry)
+                 (let ((full (expand-file-name entry root)))
+                   (and (file-directory-p full)
+                        (not (member entry '("." ".."))))))
+               (directory-files root)))))
+
+(defun arxana-patterns--flexiarg-file-for (library)
+  (when-let ((root (arxana-patterns--locate-library-root)))
+    (let ((file (expand-file-name (format "%s/%s.flexiarg" library library) root)))
+      (when (file-regular-p file)
+        file))))
+
+(defun arxana-patterns--parse-flexiarg (file)
+  (let ((lines (split-string (with-temp-buffer
+                               (insert-file-contents file)
+                               (buffer-string))
+                             "\n" t))
+        (current nil)
+        (results nil))
+    (dolist (line lines)
+      (cond
+       ((string-match "^@arg\\s-+\\(.+\\)$" line)
+        (when current
+          (push current results))
+        (setq current (list :name (match-string 1 line))))
+       ((and current (string-match "^@title\\s-+\\(.+\\)$" line))
+        (setq current (plist-put current :title (match-string 1 line))))))
+    (when current
+      (push current results))
+    (nreverse results)))
+
+(defun arxana-patterns--browser-root-items ()
+  (mapcar (lambda (dir)
+            (list :type 'library
+                  :label dir))
+          (or (arxana-patterns--library-directories) '())))
+
+(defun arxana-patterns--browser-pattern-items (library)
+  (when-let ((file (arxana-patterns--flexiarg-file-for library)))
+    (mapcar (lambda (entry)
+              (list :type 'pattern
+                    :label (plist-get entry :name)
+                    :title (plist-get entry :title)))
+            (arxana-patterns--parse-flexiarg file))))
+
+(defun arxana-patterns--browser-current-items ()
+  (if (not arxana-patterns--browser-stack)
+      (arxana-patterns--browser-root-items)
+    (arxana-patterns--browser-pattern-items (car arxana-patterns--browser-stack))))
+
+(defun arxana-patterns--browser-render ()
+  (let ((buffer (get-buffer-create arxana-patterns--browser-buffer)))
+    (with-current-buffer buffer
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert (propertize (if arxana-patterns--browser-stack
+                                (format "Library: %s" (car arxana-patterns--browser-stack))
+                              "Pattern Libraries")
+                            'face 'bold)
+                "\n\n")
+        (setq arxana-patterns--browser-items (arxana-patterns--browser-current-items))
+        (if (seq-empty-p arxana-patterns--browser-items)
+            (insert "(no entries)\n")
+          (dolist (item arxana-patterns--browser-items)
+            (let ((label (plist-get item :label))
+                  (title (plist-get item :title))
+                  (type (plist-get item :type)))
+              (insert (format "%-12s %s%s\n"
+                              (if (eq type 'library) "Library" "Pattern")
+                              label
+                              (if (and title (not (string-empty-p title)))
+                                  (format " — %s" title)
+                                ""))))))
+        (goto-char (point-min))
+        (forward-line arxana-patterns--browser-header-lines)
+        (arxana-patterns-browser-mode)
+        (hl-line-mode 1))
+      (display-buffer buffer))))
+
+(defun arxana-patterns--browser-item-at-point ()
+  (let ((line (line-number-at-pos))
+        (min-line (1+ arxana-patterns--browser-header-lines)))
+    (when (>= line min-line)
+      (nth (- line min-line) arxana-patterns--browser-items))))
+
+(defun arxana-patterns--browser--move (delta)
+  (let* ((line (line-number-at-pos))
+         (count (length arxana-patterns--browser-items))
+         (min-line (1+ arxana-patterns--browser-header-lines))
+         (max-line (+ arxana-patterns--browser-header-lines count))
+         (target (min max-line (max min-line (+ line delta)))))
+    (goto-char (point-min))
+    (forward-line (1- target))
+    (hl-line-highlight)
+    (when (> (count-lines (window-start) (point)) 0)
+      (set-window-start (selected-window) (save-excursion
+                                           (forward-line (- (window-height) 3))
+                                           (point))))
+    (when (>= (line-number-at-pos (window-end)) target)
+      (set-window-start (selected-window) (save-excursion
+                                           (goto-char (point-min))
+                                           (forward-line (- target arxana-patterns--browser-header-lines 2))
+                                           (point))))))
+
+(defun arxana-patterns--browser-scroll-up (_event)
+  (interactive "e")
+  (arxana-patterns--browser--move -1))
+
+(defun arxana-patterns--browser-scroll-down (_event)
+  (interactive "e")
+  (arxana-patterns--browser--move 1))
+
+(defun arxana-patterns--browser-visit ()
+  (interactive)
+  (let ((item (arxana-patterns--browser-item-at-point)))
+    (unless item
+      (user-error "No entry on this line"))
+    (pcase (plist-get item :type)
+      ('library
+       (setq arxana-patterns--browser-stack (list (plist-get item :label)))
+       (arxana-patterns--browser-render))
+      ('pattern
+       (arxana-patterns-open (plist-get item :label))))))
+
+(defun arxana-patterns--browser-up ()
+  (interactive)
+  (if (not arxana-patterns--browser-stack)
+      (user-error "Already at top level")
+    (setq arxana-patterns--browser-stack nil)
+    (arxana-patterns--browser-render)))
+
+(defun arxana-patterns--browser-refresh ()
+  (interactive)
+  (arxana-patterns--browser-render))
+
+(defvar arxana-patterns-browser-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "RET") #'arxana-patterns--browser-visit)
+    (define-key map (kbd "n") (lambda () (interactive) (arxana-patterns--browser--move 1)))
+    (define-key map (kbd "p") (lambda () (interactive) (arxana-patterns--browser--move -1)))
+    (define-key map (kbd "<down>") (lambda () (interactive) (arxana-patterns--browser--move 1)))
+    (define-key map (kbd "<up>") (lambda () (interactive) (arxana-patterns--browser--move -1)))
+    (define-key map [wheel-down] #'arxana-patterns--browser-scroll-down)
+    (define-key map [wheel-up] #'arxana-patterns--browser-scroll-up)
+    (define-key map [double-wheel-down] #'arxana-patterns--browser-scroll-down)
+    (define-key map [double-wheel-up] #'arxana-patterns--browser-scroll-up)
+    (define-key map [triple-wheel-down] #'arxana-patterns--browser-scroll-down)
+    (define-key map [triple-wheel-up] #'arxana-patterns--browser-scroll-up)
+    (define-key map [mouse-5] #'arxana-patterns--browser-scroll-down)
+    (define-key map [mouse-4] #'arxana-patterns--browser-scroll-up)
+    (define-key map [wheel-left] #'arxana-patterns--browser-up)
+    (define-key map [wheel-right] #'arxana-patterns--browser-visit)
+    (define-key map (kbd "b") #'arxana-patterns--browser-up)
+    (define-key map (kbd "g") #'arxana-patterns--browser-refresh)
+    (define-key map (kbd "q") #'quit-window)
+    map))
+
+(define-derived-mode arxana-patterns-browser-mode special-mode "Pattern-Browse"
+  "Mode for browsing Futon pattern libraries."
+  (local-set-key (kbd "<wheel-up>") #'previous-line)
+  (local-set-key (kbd "<wheel-down>") #'next-line)
+  (local-set-key (kbd "<mouse-4>") #'previous-line)
+  (local-set-key (kbd "<mouse-5>") #'next-line)
+  (local-set-key (kbd "<double-wheel-up>") #'previous-line)
+  (local-set-key (kbd "<double-wheel-down>") #'next-line)
+  (local-set-key (kbd "<triple-wheel-up>") #'previous-line)
+  (local-set-key (kbd "<triple-wheel-down>") #'next-line)
+  (local-set-key (kbd "<wheel-left>") #'arxana-patterns--browser-up)
+  (local-set-key (kbd "<wheel-right>") #'arxana-patterns--browser-visit))
+
+;;;###autoload
+(defun arxana-patterns-browse ()
+  "Open the pattern library browser buffer."
+  (interactive)
+  (setq arxana-patterns--browser-stack nil)
+  (arxana-patterns--browser-render))

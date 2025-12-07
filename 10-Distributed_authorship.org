@@ -1,0 +1,155 @@
+* Distributed authorship                                           :noexport:
+:PROPERTIES:
+:LATEX_LABEL: distributed
+:ID: distributed
+:END:
+
+** Introducing distributed authoriship
+
+Thus far, there has only been one author.  But on a multi-user system,
+several different authors would be adding text to the system.  It is
+fairly trivial to set up a system-wide list of directories to browse
+for articles, enabling users of a shared filesystem to co-author a
+digital library together.  We can do something very similar when the
+authors are not physically co-located, by using CVS or GNU Arch to
+collect the contributions of the various authors.
+
+
+** Masters
+
+Do we need to have one ``master'' copy of each article in the system,
+or can downstream users consider the version that they downloaded to
+be the de-facto master copy?  Probably the Arch documentation has
+something to say about this.
+
+
+** Differences between the system here and the typical diff-based model
+
+I'm not completely sure what the advantages of the system here will be
+over the typical diff- and email-based system for maintaining code.
+One difference is that information will be relayed using a ``pull''
+rather than a ``push'' model (see Note [[id:draw]]).  Other aspects of
+the system may simply be more convenient ways of doing things that
+people already do; for example, loading and unloading sets of patches.
+(I'm sure there is already plenty of software for doing this
+conveniently.)  On this note, compare
+filesets\footnote{http://www.nongnu.org/qualta/FilesetsDoc.html};
+contributed data coming from any given source would likely be loaded
+into a special subcollection.
+
+
+** Relationship of namespaces to distributed authorship
+
+One might consider reading articles from each distinct article source
+into its own namespace.  On the other hand, it would be possible
+to simply tag the articles with some \inp{bookkeeping} information
+to show where they had come from.  The same complexity issues arise
+here as in other (possible) applications of the namespace principle.
+
+
+** Merging articles with name conflicts
+
+From time to time, authors will create scholia about similar things
+(e.g. Emacs functions) and someone will want to merge the results.  We
+should make it straightforward to do this.  (It may be that the best
+way to merge is to just use namespaces and always display the articles
+together.)
+
+
+** Scalability of search
+
+In general, some work will have to be done to keep search spaces
+fairly small, but an opt-in model for spaces to search will help with
+that (compare RSS).  The algorithms associated with a \emph{global}
+version of this system (like Xanadu) would be pretty intensive.  We'll
+have to think more about this if a deployed system ever gets big.
+
+
+** Draw
+:PROPERTIES:
+:LATEX_LABEL: draw
+:ID: draw
+:END:
+
+People should subscribe or not depending on their preferences.  Free
+software, if nothing else, teaches us to \emph{look at the demand
+  side!}
+
+In distributed implementations, we typically won't \emph{send} updates
+as much as make them available for pickup.  We certainly could send
+some sort of notification saying that new content is available.  On
+the other hand, there's no particular reason \emph{not} to send
+content directly in some implementations.  (For more on the topic of
+making updates available, see Note
+[[id:send-messages-to-redirected-scholia]].)
+
+
+** FAIF not FAIB, and DRM
+
+To think about this another way: the Xanadu system is FAIF but not
+FAIB.  The idea was to charge people on a pay-per-view (or
+pay-per-use) basis, with some fraction of royalties going back to each
+of the authors whose work made up part of the delivered text.  (It
+would be interesting to try to connect -- or to dissociate -- this
+model from current DRM ideas.)
+
+
+** The p2p connection
+
+Assembling a document from various disparate sources in the database,
+reminds me of something that comes up in p2p filesharing, namely the
+way in which documents can be assembled from partial data drawn from
+various nodes.  How should one go about the process of assembling the
+document from the sources available?  We will need to think and learn
+more about the algorithms that would need to be employed in a system
+like the one described here, including its potential uses in
+distributed content systems.
+
+
+** Increasingly expensive local operations
+
+Assembling massive amounts of information, e.g., sorting the scholia
+about a given document, is going to be somewhat computationally
+intense ($n \log n$, right?).  If we ever got into situations in which
+there were thousands of scholia about any given article, we might want
+to avoid doing sorting (perhaps by storing the scholia in sorted order
+some place or other).  Also, by default, we should avoid sorting any
+scholia we don't need to display (e.g. frequently, actionable
+scholia), because sorting them is just a waste of time.
+
+
+** Reasons things might not bubble up too bad
+
+My \emph{guess} is that even a very popular article won't have a whole
+lot of printing scholia attached to it.  A number of people will want
+to make comments, sure, but others will prefer to make derived
+versions, or comments on the 1st generation of comments.
+
+
+** Are names always available?
+
+I'm not sure whether an article would ever appear that had been marked
+up with names or namespaces that we don't have access to.  Maybe.
+This seems more likely to be an issue in
+real life when we're dealing with distributed documents, but it could
+potentially be an issue whenever there are multiple namespaces
+(or even one poorly maintained namespace; compare Note [[id:rendering-deleted-objects]] --
+sometimes articles will be deleted).
+
+
+** Accepting updated `about' information
+:PROPERTIES:
+:LATEX_LABEL: accepting-updated-about-info
+:ID: accepting-updated-about-info
+:END:
+
+Why would an author want to incorporate updated \inp{about}
+information into the original article?  One reason is simply to check
+that this information is accurate.  By allowing users to set updated
+\inp{about} data automatically when editing a scholium's target, a
+degree of flexibility is built into the system that would be
+impossible (and, indeed, probably wouldn't make sense) otherwise.
+But when one's work is being interpreted in a new way, and, indeed,
+in a new context, it may be worthwhile to check that you agree with
+this interpretation.
+
