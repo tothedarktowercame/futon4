@@ -69,7 +69,7 @@
     results))
 
 (defun arxana-import--org-files-in-directory (directory recursive)
-  "Return Org files under DIRECTORY; RECUSRIVE when non-nil."
+  "Return Org files under DIRECTORY; RECURSIVE when non-nil."
   (let ((dir (file-name-as-directory (expand-file-name directory))))
     (if recursive
         (arxana-import--org-files-recursively dir)
