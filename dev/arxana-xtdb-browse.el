@@ -23,7 +23,6 @@
   :group 'arxana-xtdb-browse)
 
 (defvar arxana-xtdb-browse-buffer "*Arxana XTDB Browser*")
-
 (defvar-local arxana-xtdb--current-limit arxana-xtdb-browse-default-limit)
 (defvar-local arxana-xtdb--tail-response nil)
 
@@ -102,41 +101,6 @@
           (view-mode 1))
         (display-buffer (current-buffer))))))
 
-(defun arxana-xtdb--entry-at-point ()
-  (or (get-text-property (point) 'tabulated-list-entry)
-      (user-error "No XTDB relation on this line")))
-
-(defun arxana-xtdb--entity-at-point (slot)
-  (let* ((entry (arxana-xtdb--entry-at-point))
-         (relation (nth 2 entry)))
-    (alist-get slot relation)))
-
-(defun arxana-xtdb-browse-open-source ()
-  "Open the entity detail buffer for the source at point."
-  (interactive)
-  (arxana-xtdb--describe-entity (arxana-xtdb--entity-at-point :src)))
-
-(defun arxana-xtdb-browse-open-target ()
-  "Open the entity detail buffer for the target at point."
-  (interactive)
-  (arxana-xtdb--describe-entity (arxana-xtdb--entity-at-point :dst)))
-
-(defun arxana-xtdb-browse-show-ego ()
-  "Display `/ego` view for the entity at point."
-  (interactive)
-  (let* ((entity (or (arxana-xtdb--entity-at-point :src)
-                     (arxana-xtdb--entity-at-point :dst)))
-         (name (arxana-xtdb--entity-name entity)))
-    (arxana-relations-show-ego name arxana-xtdb--current-limit)))
-
-(defun arxana-xtdb-browse-balances ()
-  (interactive)
-  (message "Not yet implemented"))
-
-(defun arxana-xtdb--populate (rows)
-  (setq tabulated-list-entries (arxana-xtdb--rows->entries rows))
-  (tabulated-list-print t))
-
 (defun arxana-xtdb-refresh (&optional limit)
   "Refresh the XTDB browser contents with LIMIT rows."
   (interactive)
@@ -147,7 +111,8 @@
     (let ((rows (arxana-xtdb--tail-rows (or body '()))))
       (if rows
           (progn
-            (arxana-xtdb--populate rows)
+            (setq tabulated-list-entries (arxana-xtdb--rows->entries rows))
+            (tabulated-list-print t)
             (message "Fetched %d relations" (length rows)))
         (setq tabulated-list-entries nil)
         (tabulated-list-print t)
@@ -198,13 +163,11 @@
 When LIMIT is provided (or via prefix), request that many rows."
   (interactive (list (when current-prefix-arg
                        (read-number "Tail limit: " arxana-xtdb-browse-default-limit))))
-  (unless (arxana-store-sync-enabled-p)
-    (user-error "Futon sync is disabled; enable it to browse XTDB"))
   (let ((buffer (get-buffer-create arxana-xtdb-browse-buffer)))
     (with-current-buffer buffer
       (arxana-xtdb-browse-mode)
-      (arxana-xtdb-refresh (or limit arxana-xtdb-browse-default-limit)))
-    (display-buffer buffer)))
+      (arxana-xtdb-refresh limit))
+    (pop-to-buffer buffer)))
 
 (provide 'arxana-xtdb-browse)
 
