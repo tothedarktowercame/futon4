@@ -1,11 +1,7 @@
 ;;; arxana-compat.el --- Modern helpers for legacy accessors -*- lexical-binding: t; -*-
 
 ;;; Commentary:
-;; Some parts of the tumbled code still redefine `get-article' to walk the
-;; historical "nema" structures, effectively ignoring the hash table that
-;; `make-current-buffer-into-article' populates.  This shim keeps the modern
-;; article-table path working by interposing a `get-article' that first checks
-;; the in-memory hash before falling back to the legacy implementation.
+;; Interposes `get-article` so the modern hash table is consulted before falling back to the legacy implementation.
 
 ;;; Code:
 
