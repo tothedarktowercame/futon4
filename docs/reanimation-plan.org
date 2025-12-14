@@ -69,6 +69,21 @@ behavior at every stage.
 - [ ] Provide contributor guide (coding style, tangling, testing).
 - [ ] Tag a “revived” release with reproducible steps.
 
+** Literate conversion tracker [2/6]
+- [X] Storage + snapshots (`arxana-store`, `arxana-saving`).
+- [X] Browsing & relations (`arxana-browse`, `arxana-relations`, `arxana-xtdb-browse`).
+- [ ] Import/export helpers (`arxana-import`, `arxana-export`).
+- [ ] Pattern workflows (`arxana-patterns` + ingest shims).
+- [ ] Article/scholium/inclusion stack (`arxana-article`, `arxana-scholium`, `arxana-inclusion`).
+- [ ] QA/compat/test support modules.
+
+   Each check means the module is now edited via `spine2.org` using Org Babel blocks
+   (with prose ahead of each block) and tangles back into `dev/*.el` via
+   `org-babel-tangle-file`. The matching section in `spine2.org` should include a
+   short narrative explanation plus the `:tangle` code block so contributors edit
+   the Org surface, regenerate the `.el`, and see the prose/code mirrored in
+   `spine2.pdf`.
+
 * Artifacts
 
 - Harness + bootstrap: `arxana/dev/bootstrap.el`
