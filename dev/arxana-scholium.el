@@ -17,6 +17,7 @@
 
 (defvar new-scholium-name nil)
 (defvar new-scholium-mode nil)
+(defvar new-scholium-about nil)
 
 (defun arxana-scholium--compose-about (target)
   "Helper that normalizes TARGET into the expected scholium about format."
@@ -170,15 +171,15 @@ Provide NAME with a prefix argument to prefill the scholium title."
           #'arxana-scholium--make-about-current-scholium))
 
   (when (fboundp 'escape-scholium-creation)
-    (defun arxana-scholium--escape-and-display (orig-fn &rest args)
-      "Wrap ORIG-FN to redisplay the scholium target after saving."
-      (let ((about new-scholium-about))
-        (prog1 (apply orig-fn args)
-          (when about
-            (arxana-scholium--display-about-target about)))))
     (advice-add 'escape-scholium-creation :around
                 #'arxana-scholium--escape-and-display)))
 
 (provide 'arxana-scholium)
 
 ;;; arxana-scholium.el ends here
+(defun arxana-scholium--escape-and-display (orig-fn &rest args)
+  "Wrap ORIG-FN to redisplay the scholium target after saving."
+  (let ((about new-scholium-about))
+    (prog1 (apply orig-fn args)
+      (when about
+        (arxana-scholium--display-about-target about)))))

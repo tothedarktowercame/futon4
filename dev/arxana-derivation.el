@@ -381,6 +381,43 @@
   (message "Identification highlighting %s"
            (if arxana-derivation-highlight-identifications "enabled" "disabled")))
 
+(defun arxana-derivation--highlight-only (kind)
+  "Enable highlights for KIND and disable the other derivative modes."
+  (pcase kind
+    (:inclusion
+     (setq arxana-derivation-highlight-inclusions t
+           arxana-derivation-highlight-transclusions nil
+           arxana-derivation-highlight-identifications nil)
+     (arxana-derivation-refresh-highlights)
+     (message "Showing inclusion highlights only"))
+    (:transclusion
+     (setq arxana-derivation-highlight-inclusions nil
+           arxana-derivation-highlight-transclusions t
+           arxana-derivation-highlight-identifications nil)
+     (arxana-derivation-refresh-highlights)
+     (message "Showing transclusion highlights only"))
+    (:identification
+     (setq arxana-derivation-highlight-inclusions nil
+           arxana-derivation-highlight-transclusions nil
+           arxana-derivation-highlight-identifications t)
+     (arxana-derivation-refresh-highlights)
+     (message "Showing identification highlights only"))))
+
+(defun arxana-derivation-highlight-only-inclusions ()
+  "Disable other derivative highlights and focus on inclusions."
+  (interactive)
+  (arxana-derivation--highlight-only :inclusion))
+
+(defun arxana-derivation-highlight-only-transclusions ()
+  "Disable other derivative highlights and focus on transclusions."
+  (interactive)
+  (arxana-derivation--highlight-only :transclusion))
+
+(defun arxana-derivation-highlight-only-identifications ()
+  "Disable other derivative highlights and focus on identifications."
+  (interactive)
+  (arxana-derivation--highlight-only :identification))
+
 (defun arxana-derivation--render-hook ()
   "Hook entry point for `scholia-display-extras-hook'."
   (arxana-derivation--render-previews))

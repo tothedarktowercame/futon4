@@ -58,14 +58,14 @@ behavior at every stage.
 - [X] Create import/export shims for modern doc formats.
 - [ ] Produce migration notes for historical datasets.
 
-** M5A — Inclusion/Transclusion UX [0/3]
-- [ ] Visually differentiate included vs. transcluded regions in the main article buffer.
-- [ ] Provide toggle commands to highlight each derivative type independently.
-- [ ] Document the visual affordances and add a regression test covering both styles.
+** M5A — Inclusion/Transclusion UX [3/3]
+- [X] Visually differentiate included vs. transcluded regions in the main article buffer.
+- [X] Provide toggle commands to highlight each derivative type independently.
+- [X] Document the visual affordances and add a regression test covering both styles.
 
-** M6 — QA & Release Prep [0/4]
-- [ ] Grow the ERT suite (unit, integration, CLI smoke).
-- [ ] Document test instructions + CI hooks.
+** M6 — QA & Release Prep [2/4]
+- [X] Grow the ERT suite (unit, integration, CLI smoke).
+- [X] Document test instructions + CI hooks.
 - [ ] Provide contributor guide (coding style, tangling, testing).
 - [ ] Tag a “revived” release with reproducible steps.
 

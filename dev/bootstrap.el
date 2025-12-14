@@ -87,6 +87,7 @@ With FORCE-TANGLE (or a \[universal-argument]), always regenerate the file."
     (ignore-errors (require 'arxana-relations))
     (ignore-errors (require 'arxana-browse))
     (ignore-errors (require 'arxana-derivation))
+    (ignore-errors (require 'arxana-saving))
     (ignore-errors (require 'arxana-inclusion))
     (ignore-errors (require 'arxana-import))
     (ignore-errors (require 'arxana-export))

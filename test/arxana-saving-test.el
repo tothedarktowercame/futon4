@@ -2,14 +2,13 @@
 
 (require 'ert)
 (require 'cl-lib)
+(require 'arxana-test-support)
 
 (add-to-list 'load-path (expand-file-name "arxana/dev" default-directory))
 
 (require 'arxana-store)
 
-(let ((tangled (expand-file-name "arxana/arxana-tangled.el" default-directory)))
-  (unless (featurep 'arxana-tangled)
-    (load-file tangled)))
+(arxana-test--ensure-tangled-loaded)
 
 (ert-deftest arxana-saving-prefers-snapshot-when-synced ()
   (let ((futon4-enable-sync t)

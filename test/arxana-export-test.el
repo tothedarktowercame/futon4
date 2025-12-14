@@ -2,12 +2,11 @@
 
 (require 'ert)
 (require 'cl-lib)
+(require 'arxana-test-support)
 
 (add-to-list 'load-path (expand-file-name "arxana/dev" default-directory))
 
-(let ((tangled (expand-file-name "arxana/arxana-tangled.el" default-directory)))
-  (unless (featurep 'arxana-tangled)
-    (load-file tangled)))
+(arxana-test--ensure-tangled-loaded)
 
 (require 'arxana-export)
 
