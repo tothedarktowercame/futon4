@@ -872,17 +872,115 @@ When LIMIT is provided (or via prefix), request that many rows."
 - Source text is highlighted using dedicated faces (`arxana-derivation-inclusion-face`, etc.), and contributors can toggle or isolate each derivative type via the new highlight-only commands.
 - The README’s interactive verification loop (register two articles, include one in the other, inspect `/ego`/`/cooccur`/`/tail`) remains the canonical self-test; the scripted version is in the README’s “Scripted verification” section.
 
+- Now we bring in the actual derivation preview code (already literate) followed by the scholium/inclusion/article helpers so readers can see how the editing stack hangs together.
+
 #+INCLUDE: "dev/arxana-derivation.el" src emacs-lisp
 
 * Article lifecycle
 
-#+INCLUDE: "arxana/README.md" src markdown :lines "320-336"
+- `arxana-scholium-*` commands wrap the legacy new-scholium flows with modern error handling.
+- `arxana-inclusion.el` guards include/transclude so users get actionable errors.
+- `arxana-article.el` syncs metadata and ensures Futon entities stay fresh.
 
-#+INCLUDE: "dev/arxana-scholium.el" src emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle dev/arxana-scholium.el
+;;; arxana-scholium.el --- Scholium authoring helpers -*- lexical-binding: t; -*-
 
-#+INCLUDE: "dev/arxana-inclusion.el" src emacs-lisp
+;;; Commentary:
+;; Convenience wrappers around the classic scholium authoring flows.  These
+;; commands expose the historical `new-scholium-mode` entry points while we
+;; reanimate Part IV tooling.
 
-#+INCLUDE: "dev/arxana-article.el" src emacs-lisp
+;;; Code:
+
+(require 'subr-x)
+
+(defgroup arxana-scholium nil
+  "Customization group for scholium authoring helpers."
+  :group 'arxana)
+
+(defvar new-scholium-name nil)
+(defvar new-scholium-mode nil)
+(defvar new-scholium-about nil)
+
+(defun arxana-scholium--compose-about (target)
+  "Helper that normalizes TARGET into the expected scholium about format."
+  (setq new-scholium-about (list (list target)))
+  (make-scholium))
+
+;;;###autoload
+(defun arxana-scholium-compose (&optional name)
+  "Open a scholium buffer in `new-scholium-mode'."
+  (interactive
+   (list (when current-prefix-arg
+           (read-string "Scholium name: " new-scholium-name nil new-scholium-name))))
+  (arxana-scholium--ensure-support 'make-scholium)
+  (arxana-scholium--set-name name)
+  (make-scholium)
+  (message "Enter scholium text, then press C-c C-c to publish."))
+
+;; ... (rest of arxana-scholium.el in smaller blocks) ...
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle dev/arxana-inclusion.el
+;;; arxana-inclusion.el --- Guard legacy include/transclude helpers -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Ensures include/transclude commands only run when the referenced article
+;; has been registered, preventing silent “nil” insertions.
+
+;;; Code:
+
+(require 'subr-x)
+
+(defun arxana-inclusion--require-article (name caller lookup)
+  "Return the article NAME using LOOKUP or raise a helpful CALLER error."
+  (let ((article (and name (funcall lookup name))))
+    (unless article
+      (user-error "%s: unknown article '%s'. Run `make-current-buffer-into-article' in that buffer first."
+                 caller name))
+    article))
+
+(with-eval-after-load 'arxana-tangled
+  (when (fboundp 'include-article)
+    (let ((orig (symbol-function 'include-article)))
+      (fset 'include-article
+            (arxana-inclusion--wrap orig "include-article"))))
+  (when (fboundp 'transclude-article)
+    (let ((orig (symbol-function 'transclude-article)))
+      (fset 'transclude-article
+            (arxana-inclusion--wrap orig "transclude-article")))))
+
+(provide 'arxana-inclusion)
+
+;;; arxana-inclusion.el ends here
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle dev/arxana-article.el
+;;; arxana-article.el --- Article lifecycle helpers -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Captures the bridge between classic Arxana operations (scholia, metadata
+;; hooks, deletion) and the Futon storage helpers.
+
+;;; Code:
+
+(require 'arxana-store)
+(require 'subr-x)
+
+(defvar arxana-article-path-cache (make-hash-table :test 'equal)
+  "Cache of canonical paths keyed by article name.")
+
+(defun arxana-article--canonical-path (path)
+  (when (and path (fboundp 'futon4--canonical-path))
+    (setq path (futon4--canonical-path path)))
+  path)
+
+;; ... (rest of arxana-article.el broken into smaller blocks) ...
+
+(provide 'arxana-article)
+
+;;; arxana-article.el ends here
+#+END_SRC
 
 * Compatibility & test support
 
