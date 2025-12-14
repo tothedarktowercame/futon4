@@ -1,0 +1,365 @@
+#+TITLE: Arxana Spine 2 (Prototype 1)
+#+AUTHOR: Futon4 / Arxana team
+#+OPTIONS: toc:t num:t
+
+* Overview
+This staging spine captures the Prototype 1 state of the revived Arxana
+client while we fold each dev module back into the literate sources.
+
+#+INCLUDE: "0-Reintroduction.org"
+
+* Quickstart
+
+- Start Futon1 locally (`http://localhost:8080`).
+- `M-x load-file` → `arxana/dev/bootstrap.el`
+- `M-x arxana-build` (use `C-u` to force tangling).
+- `(setq futon4-base-url "http://localhost:8080/api/alpha")`
+- `(setq futon4-enable-sync t)`
+- Register buffers: `(make-current-buffer-into-article "Demo")`
+- Capture scholia: `(scholium "demo/link" "Note" '(("Demo")))`
+
+#+BEGIN_SRC emacs-lisp :tangle dev/bootstrap2.el
+(load (expand-file-name "dev/bootstrap.el" default-directory))
+#+END_SRC
+
+* Storage bridge
+
+#+INCLUDE: "docs/storage-bridge.org"
+
+#+BEGIN_SRC emacs-lisp :tangle dev/arxana-store.el
+;;; arxana-store.el --- Futon storage bridge helpers -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Thin wrappers around the Futon1 HTTP API. These helpers sit on top of
+;; the historical `futon4-*` functions so callers have a consistent,
+;; testable interface for ensuring articles, storing scholia, and fetching
+;; data back from the server.
+
+;;; Code:
+
+(require 'cl-lib)
+(require 'json)
+(require 'subr-x)
+(require 'url)
+(require 'url-http)
+
+(defgroup arxana-store nil
+  "Futon storage bridge settings."
+  :group 'arxana)
+
+(defcustom arxana-store-default-profile nil
+  "Optional profile name to send via the X-Profile header."
+  :type '(choice (const :tag "Default" nil)
+                 string)
+  :group 'arxana-store)
+
+(defcustom arxana-store-request-timeout 10
+  "Number of seconds to wait for Futon HTTP responses."
+  :type 'integer
+  :group 'arxana-store)
+
+(defconst arxana-store--snapshot-scopes '("all" "latest")
+  "Valid snapshot scope identifiers for Futon/XTDB backups.")
+
+(defvar arxana-store-last-error nil
+  "Most recent storage error (plist with :reason, :detail, :context).")
+
+(defvar arxana-store-last-response nil
+  "Most recent JSON body returned by `arxana-store--request'.")
+
+(defun arxana-store-clear-error ()
+  "Clear `arxana-store-last-error'."
+  (setq arxana-store-last-error nil))
+
+(defun arxana-store-sync-enabled-p ()
+  "Return non-nil when Futon sync is enabled."
+  (and (boundp 'futon4-enable-sync)
+       futon4-enable-sync))
+
+(defun arxana-store--record-error (reason detail &optional context)
+  "Remember an error REASON/DETAIL/CONTEXT and log it."
+  (setq arxana-store-last-error (list :reason reason
+                                      :detail detail
+                                      :context context))
+  (message "[arxana-store] %s" detail)
+  nil)
+
+(defun arxana-store--base-url ()
+  (or (and (boundp 'futon4-base-url) futon4-base-url)
+      (error "futon4-base-url is not set")))
+
+(defun arxana-store--build-url (path &optional query)
+  (concat (arxana-store--base-url)
+          path
+          (if (and query (> (length query) 0))
+              (concat "?" query)
+            "")))
+
+(defun arxana-store--encode-segment (value)
+  (url-hexify-string (or value "")))
+
+(defun arxana-store--query-string (params)
+  (let ((pairs
+         (delq nil
+               (mapcar (lambda (kv)
+                         (when (cdr kv)
+                           (format "%s=%s"
+                                   (car kv)
+                                   (arxana-store--encode-segment (format "%s" (cdr kv))))))
+                       params))))
+    (when pairs
+      (string-join pairs "&"))))
+
+(defun arxana-store--default-headers (payload-p)
+  (append (list '("Accept" . "application/json"))
+          (when payload-p '(("Content-Type" . "application/json")))
+          (when arxana-store-default-profile
+            (list (cons "X-Profile" arxana-store-default-profile)))))
+
+(defun arxana-store--canonical-path (path)
+  (if (and path (fboundp 'futon4--canonical-path))
+      (futon4--canonical-path path)
+    path))
+
+(defun arxana-store--request (method path &optional payload query)
+  "Fire METHOD PATH against Futon and return the parsed JSON body.
+Optional PAYLOAD is JSON encoded for POST requests. QUERY is an
+already encoded query string (without the leading ?)."
+  (if (not (arxana-store-sync-enabled-p))
+      (arxana-store--record-error 'disabled "Futon sync disabled" method)
+    (let* ((url-request-method method)
+           (url-request-data (when payload
+                               (encode-coding-string (json-encode payload) 'utf-8)))
+           (url-request-extra-headers (arxana-store--default-headers payload))
+           (target (arxana-store--build-url path query)))
+      (condition-case err
+          (let ((buf (url-retrieve-synchronously target nil nil arxana-store-request-timeout)))
+            (if (not (buffer-live-p buf))
+                (progn
+                  (when buf (kill-buffer buf))
+                  (arxana-store--record-error 'connection "No response buffer" target))
+              (with-current-buffer buf
+                (goto-char (point-min))
+                (if (not (re-search-forward "\r?\n\r?\n" nil t))
+                    (progn
+                      (kill-buffer buf)
+                      (arxana-store--record-error 'protocol "Malformed HTTP response" target))
+                  (let* ((json-object-type 'alist)
+                         (json-array-type 'list)
+                         (json-key-type 'keyword)
+                         (body (ignore-errors (json-read))))
+                    (kill-buffer buf)
+                    (if body
+                        (progn
+                          (setq arxana-store-last-error nil
+                                arxana-store-last-response body)
+                          body)
+                      (arxana-store--record-error 'protocol "Failed to parse Futon JSON" target)))))))
+        (error
+         (arxana-store--record-error 'request err target))))))
+
+(defun arxana-store--normalize-snapshot-scope (scope context)
+  "Return the canonical snapshot SCOPE string or record an error for CONTEXT."
+  (let ((value (cond
+                ((null scope) "all")
+                ((stringp scope) scope)
+                ((symbolp scope) (symbol-name scope))
+                (t scope))))
+    (if (member value arxana-store--snapshot-scopes)
+        value
+      (arxana-store--record-error
+       'invalid
+       (format "Unknown snapshot scope %S (expected %s)"
+               scope arxana-store--snapshot-scopes)
+       context))))
+
+(defun arxana-store--snapshot-scope-prompt (&optional prompt default)
+  "Prompt user for a snapshot scope using PROMPT and DEFAULT."
+  (let* ((prompt (or prompt "Snapshot scope (all/latest): "))
+         (default (or default "all"))
+         (choice (completing-read prompt arxana-store--snapshot-scopes
+                                  nil t nil nil default)))
+    (intern choice)))
+
+(cl-defun arxana-store-ensure-entity (&key id name type source external-id seen-count pinned? last-seen)
+  "Ensure Futon has an entity named NAME of TYPE, returning the response.
+ID, SOURCE, EXTERNAL-ID, SEEN-COUNT, PINNED?, and LAST-SEEN mirror the
+payload accepted by Futon's `/entity` endpoint. TYPE may be a keyword or
+string. Signals a user error when NAME is missing."
+  (unless name
+    (user-error "Entity name is required"))
+  (let* ((payload (delq nil (list (cons 'name name)
+                                  (cons 'type (if (keywordp type)
+                                                  (symbol-name type)
+                                                type))
+                                  (when id (cons 'id id))
+                                  (when source (cons 'source source))
+                                  (when external-id (cons 'external-id external-id))
+                                  (when seen-count (cons 'seen-count seen-count))
+                                  (when pinned? (cons 'pinned pinned?))
+                                  (when last-seen (cons 'last-seen last-seen))))))
+    (arxana-store--request "POST" "/entity" payload)))
+
+;;; (rest of file omitted for brevity)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle dev/arxana-saving.el
+;;; arxana-saving.el --- Snapshot-aware save/restore helpers -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Provides runtime shims so the legacy `save-all-scholia` and
+;; `read-scholia-file` commands can drive Futon's snapshot endpoints when
+;; sync is enabled.  When sync is disabled the original file-based
+;; implementations continue to run unchanged.
+
+;;; Code:
+
+(require 'subr-x)
+
+(declare-function arxana-store-save-snapshot "arxana-store" (&optional scope label))
+(declare-function arxana-store-restore-snapshot "arxana-store" (&optional snapshot-id scope))
+(declare-function arxana-store--snapshot-scope-prompt "arxana-store" (&optional prompt default))
+(declare-function arxana-store--snapshot-id-from-response "arxana-store" (response))
+
+(defconst arxana-saving--fallback-scopes '("all" "latest")
+  "Scopes offered when the store helpers are unavailable.")
+
+(defun arxana-saving--prompt-scope (prompt default)
+  "Read a snapshot scope with PROMPT and DEFAULT.
+Returns DEFAULT without prompting when running noninteractively."
+  (cond
+   (noninteractive default)
+   ((fboundp 'arxana-store--snapshot-scope-prompt)
+    (arxana-store--snapshot-scope-prompt prompt default))
+   (t (completing-read prompt arxana-saving--fallback-scopes nil t nil nil default))))
+
+(defun arxana-saving--prompt-label ()
+  "Ask the user for an optional snapshot label.
+Returns nil without prompting when running noninteractively."
+  (if noninteractive
+      nil
+    (let ((label (read-string "Snapshot label (optional): ")))
+      (unless (string-empty-p label)
+        label))))
+
+(defun arxana-saving--snapshot-enabled-p ()
+  "Return non-nil when snapshot shims should run."
+  (and (boundp 'futon4-enable-sync)
+       futon4-enable-sync
+       (fboundp 'arxana-store-save-snapshot)))
+
+(defun arxana-saving--restore-enabled-p ()
+  "Return non-nil when restore shims should run."
+  (and (boundp 'futon4-enable-sync)
+       futon4-enable-sync
+       (fboundp 'arxana-store-restore-snapshot)))
+
+(defun arxana-saving--wrap-save-all (orig-fn filename &optional scope)
+  "Around advice for `save-all-scholia'.
+ORIG-FN is the original implementation; FILENAME and SCOPE are passed
+from the caller (SCOPE is only present when invoked programmatically)."
+  (if (arxana-saving--snapshot-enabled-p)
+      (let* ((scope (or scope (arxana-saving--prompt-scope "Snapshot scope (all/latest): " "all")))
+             (label (or (and noninteractive filename)
+                        (arxana-saving--prompt-label)))
+             (response (arxana-store-save-snapshot scope label))
+             (id (when (fboundp 'arxana-store--snapshot-id-from-response)
+                   (arxana-store--snapshot-id-from-response response))))
+        (message "Saved Futon snapshot scope=%s id=%s"
+                 scope (or id "<unknown>")))
+    (apply orig-fn (list filename))))
+
+(defun arxana-saving--wrap-read-scholia (orig-fn filepath &optional scope)
+  "Around advice for `read-scholia-file'.
+ORIG-FN is the original implementation; FILEPATH is treated as a
+snapshot id when syncing is enabled."
+  (if (arxana-saving--restore-enabled-p)
+      (let* ((snapshot-id (unless (string-empty-p filepath) filepath))
+             (scope (or scope (arxana-saving--prompt-scope "Restore scope (all/latest): " "all"))))
+        (arxana-store-restore-snapshot snapshot-id scope))
+    (apply orig-fn (list filepath))))
+
+(with-eval-after-load 'arxana-tangled
+  (when (fboundp 'save-all-scholia)
+    (advice-add 'save-all-scholia :around #'arxana-saving--wrap-save-all))
+  (when (fboundp 'read-scholia-file)
+    (advice-add 'read-scholia-file :around #'arxana-saving--wrap-read-scholia)))
+
+(provide 'arxana-saving)
+
+;;; arxana-saving.el ends here
+#+END_SRC
+
+#+INCLUDE: "dev/arxana-store.el" src emacs-lisp
+
+* Pattern workflows
+
+- `M-x arxana-patterns-open` — fetch a Futon pattern (e.g., `mojo/center`) into an Org buffer, complete with the component identifiers.
+- Edit the buffer like any other Org document; the Futon ids stay in the headings so provenance survives.
+- `C-c C-s` (`arxana-patterns-save`) — push the updated text back to Futon.
+- Run `dev/run-tests.sh` before publishing to confirm the pattern helpers and storage shims still behave.
+
+#+INCLUDE: "dev/arxana-patterns.el" src emacs-lisp
+
+* Browsing & relations
+
+- `M-x arxana-relations-show-ego` / `cooccur` / `tail` render Futon adjacency directly in Emacs buffers (with Futon ids in the header line for `g` refreshes or curl copy/paste).
+- Classic Part VI commands are alive: `arxana-browse-open-catalog`, `arxana-browse-follow-*`, `arxana-browse-history-back/forward`, and the parent/label jumpers are all wired to the revived store hooks.
+- Hitting `/dev/run-tests.sh` exercises both the relation renderers and the XTDB browsing shim (`dev/arxana-xtdb-browse.el`) headlessly.
+
+#+INCLUDE: "dev/arxana-browse.el" src emacs-lisp
+
+#+INCLUDE: "dev/arxana-relations.el" src emacs-lisp
+
+#+INCLUDE: "dev/arxana-xtdb-browse.el" src emacs-lisp
+
+* Org imports / exports & snapshots
+
+- `M-x arxana-import-org-file` derives an article name from `#+TITLE` (or the filename), stores the text as a scholium, and mirrors it into XTDB.
+- `M-x arxana-import-org-directory` walks a tree of `.org` files (`C-u` to recurse) and feeds each file through the importer.
+- `M-x arxana-export-org-directory` writes every loaded article back to disk and produces a manifest with snapshot metadata, inclusion/transclusion summaries, and a label index. With sync enabled the command first captures a Futon snapshot so the export is tied to a specific XTDB revision.
+- `C-; r` / `M-x save-all-scholia` hit `/snapshot` when sync is enabled (falling back to the `.sch` writer when offline). `M-x read-scholia-file` mirrors the behavior for restore.
+- Migration recipe: 1) snapshot the legacy collection, 2) run `arxana-import-org-directory`, 3) edit in Emacs, 4) export and capture the new manifest for diffable releases.
+
+#+INCLUDE: "dev/arxana-import.el" src emacs-lisp
+
+#+INCLUDE: "dev/arxana-export.el" src emacs-lisp
+
+* Inclusion / derivation UX
+
+- The Scholia Display buffer now summarizes inclusion/transclusion passages in a “Derivation previews” block with toggleable excerpts.
+- Source text is highlighted using dedicated faces (`arxana-derivation-inclusion-face`, etc.), and contributors can toggle or isolate each derivative type via the new highlight-only commands.
+- The README’s interactive verification loop (register two articles, include one in the other, inspect `/ego`/`/cooccur`/`/tail`) remains the canonical self-test; the scripted version is in the README’s “Scripted verification” section.
+
+#+INCLUDE: "dev/arxana-derivation.el" src emacs-lisp
+
+* Article lifecycle
+
+#+INCLUDE: "arxana/README.md" src markdown :lines "320-336"
+
+#+INCLUDE: "dev/arxana-scholium.el" src emacs-lisp
+
+#+INCLUDE: "dev/arxana-inclusion.el" src emacs-lisp
+
+#+INCLUDE: "dev/arxana-article.el" src emacs-lisp
+
+* Compatibility & test support
+
+#+INCLUDE: "dev/arxana-compat.el" src emacs-lisp
+
+#+INCLUDE: "dev/arxana-test-support.el" src emacs-lisp
+
+* Contributor guide (embedded)
+
+#+INCLUDE: "docs/contributor-guide.md"
+
+* QA checklist
+
+#+BEGIN_SRC shell :exports code
+./dev/run-tests.sh
+#+END_SRC
+
+* Known limitations
+
+- Pattern-language wide editing (future milestone).
+- Org→graph semantic mirroring pending.
