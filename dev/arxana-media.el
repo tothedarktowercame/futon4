@@ -13,6 +13,7 @@
 (require 'seq)
 (require 'subr-x)
 (require 'json)
+(require 'browse-url)
 
 (defvar arxana-patterns--browser-context)
 (defvar arxana-patterns--browser-stack)
@@ -100,10 +101,38 @@
   :group 'arxana-media)
 
 (defvar arxana-media--marked (make-hash-table :test 'equal))
+(defcustom arxana-media-publication-metadata-file "publication.json"
+  "Filename used to store per-publication metadata inside an EP directory."
+  :type 'string
+  :group 'arxana-media)
 
 (defun arxana-media--publication-audio-file-p (path)
   (and (stringp path)
        (string-match-p "\\.\\(mp3\\|wav\\|flac\\|ogg\\|m4a\\)\\'" (downcase path))))
+
+(defun arxana-media--publication-metadata-path (directory)
+  (expand-file-name arxana-media-publication-metadata-file
+                    (file-name-as-directory directory)))
+
+(defun arxana-media--read-publication-metadata (directory)
+  (let ((path (arxana-media--publication-metadata-path directory)))
+    (when (file-readable-p path)
+      (condition-case _err
+          (let ((json-object-type 'plist)
+                (json-array-type 'list)
+                (json-key-type 'keyword))
+            (json-read-file path))
+        (error nil)))))
+
+(defun arxana-media--write-publication-metadata (directory name url)
+  (let* ((path (arxana-media--publication-metadata-path directory))
+         (payload (list :name name
+                        :url url
+                        :updated_at (float-time (current-time)))))
+    (make-directory (file-name-directory path) t)
+    (with-temp-file path
+      (insert (json-encode payload))
+      (insert "\n"))))
 
 (defun arxana-media--publication-directories ()
   (let ((root (file-name-as-directory (expand-file-name arxana-media-publications-root))))
@@ -133,12 +162,19 @@
                     :message "Use P in the track list to publish marked tracks."))
       (mapcar (lambda (dir)
                 (let* ((name (file-name-nondirectory (directory-file-name dir)))
-                       (count (length (arxana-media--publication-audio-files dir))))
+                       (count (length (arxana-media--publication-audio-files dir)))
+                       (meta (arxana-media--read-publication-metadata dir))
+                       (url (and (listp meta) (plist-get meta :url))))
                   (list :type 'media-publication
                         :label name
                         :path dir
+                        :url url
                         :count count
-                        :description (format "%d track%s" count (if (= count 1) "" "s")))))
+                        :description (format "%d track%s%s"
+                                             count (if (= count 1) "" "s")
+                                             (if (and url (stringp url) (not (string-empty-p url)))
+                                                 (format " — %s" url)
+                                               "")))))
               dirs))))
 
 (defun arxana-media--publication-track-items (directory)
@@ -648,9 +684,13 @@
       (unless (equal exit-code 0)
         (user-error "zoom_sync.py failed (see *arxana-media* buffer)")))))
 
-(defun arxana-media-publish-marked (name)
-  "Tag marked tracks for publication NAME and copy audio into the holding root."
-  (interactive (list (read-string "Publication name: ")))
+(defun arxana-media-publish-marked (name &optional url)
+  "Tag marked tracks for publication NAME and copy audio into the holding root.
+When URL is provided, write it to the publication metadata."
+  (interactive
+   (let* ((pub-name (read-string "Publication name: "))
+          (pub-url (read-string "Publication URL (optional): ")))
+     (list pub-name pub-url)))
   (let* ((entries (arxana-media--marked-tracks)))
     (unless entries
       (user-error "No marked tracks"))
@@ -667,11 +707,45 @@
           (unless path
             (user-error "No readable media file found for %s" title))
           (copy-file path dest t)))
+      (when (and url (stringp url) (not (string-empty-p url)))
+        (arxana-media--write-publication-metadata dest-dir name url))
       (arxana-media--tag-entries entries tag)
       (setq arxana-media--catalog nil
             arxana-media--catalog-mtime nil)
       (message "Published %d track(s) to %s (tag %s)" (length entries) dest-dir tag)
       (arxana-patterns--browser-render))))
+
+(defun arxana-media--publication-at-point ()
+  (let ((item (arxana-patterns--browser-item-at-point)))
+    (unless (and item (eq (plist-get item :type) 'media-publication))
+      (user-error "No publication at point"))
+    item))
+
+(defun arxana-media-set-publication-url ()
+  "Set or update the URL metadata for the publication at point."
+  (interactive)
+  (let* ((item (arxana-media--publication-at-point))
+         (dir (plist-get item :path))
+         (meta (and dir (arxana-media--read-publication-metadata dir)))
+         (current (and meta (plist-get meta :url)))
+         (label (plist-get item :label))
+         (url (string-trim (read-string "Publication URL: " current))))
+    (when (string-empty-p url)
+      (user-error "URL cannot be empty"))
+    (arxana-media--write-publication-metadata dir (or label "") url)
+    (message "Updated URL for %s" label)
+    (arxana-patterns--browser-render)))
+
+(defun arxana-media-open-publication-url ()
+  "Open the publication URL at point, if present."
+  (interactive)
+  (let* ((item (arxana-media--publication-at-point))
+         (dir (plist-get item :path))
+         (meta (and dir (arxana-media--read-publication-metadata dir)))
+         (url (and meta (plist-get meta :url))))
+    (if (and url (not (string-empty-p url)))
+        (browse-url url)
+      (user-error "No URL recorded for this publication"))))
 
 (defun arxana-media-retitle-at-point ()
   "Retitle the current media track and sync hold titles back to the Zoom."

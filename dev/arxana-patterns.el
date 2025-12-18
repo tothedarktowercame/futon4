@@ -2022,6 +2022,8 @@ returning to the top-level list."
     (define-key map (kbd "m") #'arxana-media-toggle-mark-at-point)
     (define-key map (kbd "U") #'arxana-media-unmark-all)
     (define-key map (kbd "P") #'arxana-media-publish-marked)
+    (define-key map (kbd "u") #'arxana-media-set-publication-url)
+    (define-key map (kbd "w") #'arxana-media-open-publication-url)
     (define-key map (kbd "q") #'quit-window)
     map))
 
