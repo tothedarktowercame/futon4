@@ -1291,7 +1291,7 @@ are ignored for now."
                                         :source ctext))))
       (message "Synced %s (%d components)" pattern-name (length components)))))
 
-(defvar arxana-patterns--browser-buffer "*Arxana Pattern Browser*")
+(defvar arxana-patterns--browser-buffer "*Arxana Browser*")
 (defvar-local arxana-patterns--browser-stack nil)
 (put 'arxana-patterns--browser-stack 'permanent-local t)
 (defvar-local arxana-patterns--browser-context nil)
@@ -1344,8 +1344,56 @@ are ignored for now."
    ("Path" 0 nil)])
 
 (defun arxana-patterns--docbook-contents-format ()
-  [("Heading" 64 t)
-   ("Path" 0 nil)])
+  [("Heading" 60 t)
+   ("Path" 0 nil)
+   ("Id" 6 t)
+   ("Src" 4 t)
+   ("C/D" 10 t)])
+
+(defun arxana-patterns--docbook-lines-in-string (text)
+  (length (split-string (string-trim (or text "")) "\n" t)))
+
+(defun arxana-patterns--docbook-file-line-count (path)
+  (when (and path (file-readable-p path))
+    (with-temp-buffer
+      (insert-file-contents path)
+      (count-lines (point-min) (point-max)))))
+
+(defun arxana-patterns--docbook-ratio-format (loc lod)
+  (cond
+   ((or (null loc) (null lod)) "")
+   ((<= lod 0) (if (> loc 0) "inf" "0"))
+   (t
+    (let ((ratio (/ (float loc) (float lod))))
+      (cond
+       ((>= ratio 10000) (format "%.2e" ratio))
+       ((>= ratio 1000) (format "%.1e" ratio))
+       ((>= ratio 100) (format "%.0f" ratio))
+       ((>= ratio 10) (format "%.1f" ratio))
+       (t (format "%.2f" ratio)))))))
+
+(defun arxana-patterns--docbook-entry-source-path (entry)
+  (when entry
+    (arxana-docbook--entry-source-path entry)))
+
+(defun arxana-patterns--docbook-entry-doc-lines (entry)
+  (when entry
+    (arxana-patterns--docbook-lines-in-string
+     (arxana-docbook--entry-content entry))))
+
+(defun arxana-patterns--docbook-entry-loc (entry)
+  (let* ((source (arxana-patterns--docbook-entry-source-path entry))
+         (root (arxana-docbook--repo-root))
+         (path (and source (expand-file-name source root))))
+    (arxana-patterns--docbook-file-line-count path)))
+
+(defun arxana-patterns--docbook-entry-coverage (entry)
+  (if (arxana-patterns--docbook-entry-source-path entry) "Y" ""))
+
+(defun arxana-patterns--docbook-entry-ratio (entry)
+  (let ((loc (arxana-patterns--docbook-entry-loc entry))
+        (lod (arxana-patterns--docbook-entry-doc-lines entry)))
+    (arxana-patterns--docbook-ratio-format loc lod)))
 
 (defun arxana-patterns--browser-root-row (item)
   (let* ((type (capitalize (symbol-name (or (plist-get item :type) 'unknown))))
@@ -1376,10 +1424,24 @@ are ignored for now."
   (vector (or (plist-get item :label) "")
           (or (plist-get item :description) "")))
 
+(defun arxana-patterns--docbook-short-id (doc-id)
+  (let* ((suffix (and doc-id (car (last (split-string doc-id "-" t))))))
+    (and suffix (substring suffix 0 (min 5 (length suffix))))))
+
+(defun arxana-patterns--docbook-row-label (item)
+  (let* ((doc-id (plist-get item :doc-id))
+         (title (or (plist-get item :label) ""))
+         (short-id (arxana-patterns--docbook-short-id doc-id)))
+    (cond
+     ((and short-id (not (string-empty-p title)))
+      (format "[%s] %s" short-id title))
+     (short-id (format "[%s]" short-id))
+     ((not (string-empty-p title)) title)
+     (doc-id doc-id)
+     (t ""))))
+
 (defun arxana-patterns--docbook-row (item)
-  (let ((label (or (plist-get item :doc-id)
-                   (plist-get item :label)
-                   "")))
+  (let ((label (arxana-patterns--docbook-row-label item)))
     (vector label
             (or (plist-get item :version) "")
             (or (plist-get item :timestamp) "")
@@ -1391,6 +1453,11 @@ are ignored for now."
 (defun arxana-patterns--docbook-contents-row (item)
   (let* ((level (or (plist-get item :level) 1))
          (title (or (plist-get item :title) ""))
+         (doc-id (plist-get item :doc-id))
+         (short-id (arxana-patterns--docbook-short-id doc-id))
+         (short-col (if short-id (format "%5s" short-id) ""))
+         (coverage (or (plist-get item :coverage) ""))
+         (ratio (or (plist-get item :ratio) ""))
          ;; ASCII markers only; non-ASCII char literals can break load in some Emacs builds.
          (indent (make-string (max 0 (1- level)) ?.))
          (latest (plist-get item :latest))
@@ -1399,12 +1466,16 @@ are ignored for now."
                   (virtual (propertize "!" 'face 'arxana-patterns-docbook-unindexed-face))
                   (latest (propertize "*" 'face 'arxana-patterns-docbook-latest-face))
                   (t (propertize "." 'face 'arxana-patterns-docbook-empty-face)))))
-    (vector (format "%s %s"
+    (vector (format "%s %s%s"
                     marker
                     (if (string-empty-p indent)
-                        title
-                      (format "%s %s" indent title)))
-            (or (plist-get item :path_string) ""))))
+                        ""
+                      (format "%s " indent))
+                    title)
+            (or (plist-get item :path_string) "")
+            short-col
+            coverage
+            ratio)))
 
 (defun arxana-patterns--lab-row (item)
   (let* ((session (or (plist-get item :session-id) ""))
@@ -1516,7 +1587,7 @@ are ignored for now."
               :view 'media)
         (list :type 'menu
               :label "Docs"
-              :description "Doc books (filesystem pilot, futon4)."
+              :description "Doc books (XTDB-backed, futon4)."
               :view 'docbook)
         (list :type 'menu
               :label "Lab"
@@ -1574,21 +1645,37 @@ are ignored for now."
         items)))))
 
 (defun arxana-patterns--docbook-books ()
-  (mapcar (lambda (book)
-            (list :type 'docbook-book
-                  :label (capitalize book)
-                  :book book
-                  :description "Doc book backed by filesystem logs/stubs."))
-          (or (arxana-docbook--available-books) '("futon4"))))
+  (let ((books (or (arxana-docbook--available-books) '("futon4"))))
+    (mapcar (lambda (book)
+              (list :type 'docbook-book
+                    :label (capitalize book)
+                    :book book
+                    :description (format "Doc book (%s)."
+                                         (arxana-docbook--source-brief book))))
+            books)))
+
+(defun arxana-patterns--docbook-unavailable-message (&optional book)
+  (let* ((book (or book "futon4"))
+         (probe (arxana-docbook--probe-summary book)))
+    (format "Doc book %s unavailable. %s" book probe)))
+
+(defun arxana-patterns--docbook-entry-label (entry)
+  (or (plist-get entry :title)
+      (when-let* ((heading (plist-get entry :heading)))
+        (or (plist-get heading :doc/title)
+            (plist-get heading :doc/path_string)))
+      (plist-get entry :doc-id)))
 
 (defun arxana-patterns--docbook-items (&optional book)
-  (let* ((entries (or (when (arxana-docbook--remote-available-p)
-                        (ignore-errors (arxana-docbook--remote-recent (or book "futon4"))))
-                      (ignore-errors (arxana-docbook-entries (or book "futon4"))))))
+  (let* ((book (or book "futon4"))
+         (entries (or (when (arxana-docbook--remote-available-p book)
+                        (ignore-errors (arxana-docbook--remote-recent book)))
+                      (ignore-errors (arxana-docbook-entries book)))))
     (if (and entries (listp entries))
         (mapcar (lambda (entry)
                   (list :type 'docbook-entry
                         :doc-id (plist-get entry :doc-id)
+                        :label (arxana-patterns--docbook-entry-label entry)
                         :version (plist-get entry :version)
                         :timestamp (plist-get entry :timestamp)
                         :files (plist-get entry :files)
@@ -1597,7 +1684,7 @@ are ignored for now."
                 entries)
       (list (list :type 'info
                   :label "No doc book entries detected"
-                  :description "Populate dev/logs/books/<book>/raw/*.json to browse docs.")))))
+                  :description (arxana-patterns--docbook-unavailable-message book))))))
 
 (defun arxana-patterns--docbook-book-items (book)
   (list (list :type 'docbook-contents-root
@@ -1610,14 +1697,25 @@ are ignored for now."
               :book book)))
 
 (defun arxana-patterns--docbook-contents-items (book)
-  (let* ((remote (when (arxana-docbook--remote-available-p)
+  (let* ((remote (when (arxana-docbook--remote-available-p book)
                    (ignore-errors (arxana-docbook--remote-contents book))))
          (local-toc (or (arxana-docbook--toc book) '()))
          (toc (or remote local-toc '()))
          (local-entries (when (and (not remote) (arxana-docbook--filesystem-available-p book))
                           (ignore-errors (arxana-docbook-entries book))))
-         (recent-entries (when (and remote (arxana-docbook--remote-available-p))
+         (recent-entries (when (and remote (arxana-docbook--remote-available-p book))
                            (ignore-errors (arxana-docbook--remote-recent book))))
+         (entries-for-metrics (or recent-entries local-entries '()))
+         (entry-map (let ((table (make-hash-table :test 'equal)))
+                      (dolist (entry entries-for-metrics)
+                        (when-let* ((doc-id (plist-get entry :doc-id)))
+                          (let* ((existing (gethash doc-id table))
+                                 (current-ts (plist-get entry :timestamp))
+                                 (existing-ts (plist-get existing :timestamp)))
+                            (when (or (null existing)
+                                      (string> (or current-ts "") (or existing-ts "")))
+                              (puthash doc-id entry table)))))
+                      table))
          (latest-docs (when (and local-entries (listp local-entries))
                         (let ((table (make-hash-table :test 'equal)))
                           (dolist (entry local-entries)
@@ -1642,7 +1740,10 @@ are ignored for now."
                                 (path-string (or (plist-get h :path_string) (plist-get h :path-string)))
                                 (latest (or (and remote-h (plist-get remote-h :latest))
                                             (plist-get h :latest)
-                                            (and latest-docs (gethash doc-id latest-docs)))))
+                                            (and latest-docs (gethash doc-id latest-docs))))
+                                (entry (and doc-id (gethash doc-id entry-map)))
+                                (coverage (and entry (arxana-patterns--docbook-entry-coverage entry)))
+                                (ratio (and entry (arxana-patterns--docbook-entry-ratio entry))))
                            (list :type 'docbook-heading
                                  :doc-id doc-id
                                  :title (or (plist-get h :title) doc-id)
@@ -1651,6 +1752,8 @@ are ignored for now."
                                  :level (plist-get h :level)
                                  :latest latest
                                  :book book
+                                 :coverage coverage
+                                 :ratio ratio
                                  :toc-index idx))))
             '()))
          (toc-docs (let ((table (make-hash-table :test 'equal)))
@@ -1707,18 +1810,24 @@ are ignored for now."
                                       :level (or (plist-get h :level) 1)
                                       :latest t
                                       :virtual t
-                                      :book book)))))
+                                      :book book
+                                      :coverage (and (gethash doc-id entry-map)
+                                                     (arxana-patterns--docbook-entry-coverage
+                                                      (gethash doc-id entry-map)))
+                                      :ratio (and (gethash doc-id entry-map)
+                                                  (arxana-patterns--docbook-entry-ratio
+                                                   (gethash doc-id entry-map)))))))
                         entry-headings))))
     (cond
      ((or toc-items virtual-items) (append toc-items virtual-items))
      (t (list (list :type 'info
                     :label "No TOC found"
-                    :description "Generate dev/logs/books/<book>/toc.json or enable API sync."))))))
+                    :description (arxana-patterns--docbook-unavailable-message book)))))))
 
 (defun arxana-patterns--docbook-section-items (book heading)
   (let* ((outline (plist-get heading :outline))
          (doc-id (plist-get heading :doc-id))
-         (entries (or (when (arxana-docbook--remote-available-p)
+         (entries (or (when (arxana-docbook--remote-available-p book)
                         (ignore-errors (arxana-docbook--remote-heading book doc-id)))
                       (ignore-errors (arxana-docbook-entries book)))))
     (if (and entries (listp entries))
@@ -1732,6 +1841,7 @@ are ignored for now."
               (mapcar (lambda (entry)
                         (list :type 'docbook-entry
                               :doc-id (plist-get entry :doc-id)
+                              :label (arxana-patterns--docbook-entry-label entry)
                               :version (plist-get entry :version)
                               :timestamp (plist-get entry :timestamp)
                               :files (plist-get entry :files)
@@ -1744,8 +1854,8 @@ are ignored for now."
                         :description "Add a stub/raw entry for this heading to browse it here."))))
       (list (list :type 'info
                   :label "No doc book entries detected"
-                  :summary "Populate dev/logs/books/futon4/raw/*.json to browse docs."
-                  :description "Populate dev/logs/books/futon4/raw/*.json to browse docs.")))))
+                  :summary (arxana-patterns--docbook-unavailable-message book)
+                  :description (arxana-patterns--docbook-unavailable-message book))))))
 
 (defun arxana-patterns--lab-items ()
   (let ((entries (or (arxana-lab-entries) '())))
@@ -2363,6 +2473,29 @@ are ignored for now."
                                          (plist-get heading :doc-id)
                                          (plist-get heading :toc-index))))
 
+(defun arxana-patterns--docbook-location (item)
+  (let* ((book (or (plist-get item :book) "futon4"))
+         (doc-id (plist-get item :doc-id))
+         (entry (plist-get item :entry))
+         (entry-id (and entry (plist-get entry :entry-id))))
+    (cond
+     ((and book doc-id entry-id) (format "docbook://%s/%s/%s" book doc-id entry-id))
+     ((and book doc-id) (format "docbook://%s/%s" book doc-id))
+     (t nil))))
+
+(defun arxana-patterns--browser-copy-location ()
+  "Copy a location identifier for the current browser item."
+  (interactive)
+  (let* ((item (arxana-patterns--browser-item-at-point))
+         (location (cond
+                    ((and item (memq (plist-get item :type) '(docbook-entry docbook-heading)))
+                     (arxana-patterns--docbook-location item))
+                    (t nil))))
+    (unless location
+      (user-error "No location available for this item"))
+    (kill-new location)
+    (message "Copied %s" location)))
+
 (defun arxana-patterns--browser-up ()
   (interactive)
   (arxana-patterns--browser-ensure-context)
@@ -2480,10 +2613,11 @@ returning to the top-level list."
     (define-key map (kbd "P") #'arxana-media-publish-marked)
     (define-key map (kbd "u") #'arxana-media-set-publication-url)
     (define-key map (kbd "w") #'arxana-media-open-publication-url)
+    (define-key map (kbd "y") #'arxana-patterns--browser-copy-location)
     (define-key map (kbd "q") #'quit-window)
     map))
 
-(define-derived-mode arxana-patterns-browser-mode tabulated-list-mode "Pattern-Browse"
+(define-derived-mode arxana-patterns-browser-mode tabulated-list-mode "Arxana-Browse"
   "Mode for browsing Futon pattern libraries."
   (setq tabulated-list-padding 2)
   (setq tabulated-list-sort-key nil)
@@ -2498,6 +2632,8 @@ returning to the top-level list."
     (setq arxana-patterns--browser-stack nil
           arxana-patterns--browser-context nil))
   (arxana-patterns--browser-render))
+
+(defalias 'arxana-browse #'arxana-patterns-browse)
 
 (provide 'arxana-patterns)
 ;;; arxana-patterns.el ends here
