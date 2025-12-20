@@ -22,6 +22,8 @@
 (require 'arxana-lab)
 (require 'arxana-media)
 
+(defvar flexiarg-mode-map nil)
+
 (defgroup arxana-patterns nil
   "Utilities for browsing Futon pattern entities in Emacs."
   :group 'arxana)
@@ -105,6 +107,24 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
   :type 'integer
   :group 'arxana-patterns)
 
+(defcustom arxana-patterns-docbook-top-order
+  '("Overview"
+    "Quickstart"
+    "Recent changes (futon4, pilot)"
+    "Storage bridge"
+    "Pattern workflows"
+    "Browsing & relations"
+    "Org imports / exports & snapshots"
+    "Inclusion / derivation UX"
+    "Article lifecycle"
+    "Compatibility & test support"
+    "Contributor guide (embedded)"
+    "QA checklist"
+    "Known limitations")
+  "Preferred ordering for top-level docbook headings in the contents view."
+  :type '(repeat string)
+  :group 'arxana-patterns)
+
 (defun arxana-patterns--browser-click-path ()
   (let ((path arxana-patterns-browser-click-sound))
     (when (and path (file-readable-p path))
@@ -123,6 +143,37 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
     (add-to-list 'org-src-lang-modes '("flexiarg" . flexiarg) t)
   (with-eval-after-load 'org
     (add-to-list 'org-src-lang-modes '("flexiarg" . flexiarg) t)))
+
+(defun arxana-flexiarg--find-contrib-path ()
+  "Return a plausible futon3 contrib path containing flexiarg.el, or nil."
+  (let* ((root (if (boundp 'arxana-root-directory)
+                   arxana-root-directory
+                 (file-name-directory (or load-file-name buffer-file-name default-directory))))
+         (candidate (expand-file-name "../futon3/contrib" root)))
+    (when (file-directory-p candidate)
+      candidate)))
+
+(defun arxana-flexiarg--ensure-parent-map ()
+  (when (and (boundp 'arxana-flexiarg-collection-mode-map)
+             (keymapp arxana-flexiarg-collection-mode-map)
+             (keymapp flexiarg-mode-map))
+    (set-keymap-parent arxana-flexiarg-collection-mode-map flexiarg-mode-map)))
+
+(defun arxana-flexiarg--ensure-flexiarg ()
+  "Ensure flexiarg is available and wired into the collection mode."
+  (unless (featurep 'flexiarg)
+    (let ((loaded (require 'flexiarg nil t)))
+      (unless loaded
+        (let ((candidate (arxana-flexiarg--find-contrib-path)))
+          (when (and candidate (not (member candidate load-path)))
+            (add-to-list 'load-path candidate)
+            (setq loaded (require 'flexiarg nil t)))))
+      (unless loaded
+        (user-error "flexiarg.el not found; add futon3/contrib to load-path"))))
+  (arxana-flexiarg--ensure-parent-map))
+
+(with-eval-after-load 'flexiarg
+  (arxana-flexiarg--ensure-parent-map))
 
 (defun arxana-patterns--locate-library-root ()
   (let ((explicit arxana-patterns-library-root))
@@ -606,7 +657,8 @@ When ROOT itself has flexiarg files, include it as `\".\"`."
 
 (defvar arxana-flexiarg-collection-mode-map
   (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map flexiarg-mode-map)
+    (when (keymapp flexiarg-mode-map)
+      (set-keymap-parent map flexiarg-mode-map))
     (define-key map (kbd "C-c C-s") #'arxana-flexiarg--save)
     (define-key map (kbd "C-c C-k") #'arxana-flexiarg--revert)
     (define-key map (kbd "C-c C-m") #'arxana-flexiarg-toggle-metadata)
@@ -828,7 +880,7 @@ use that entry; otherwise prompt for a directory."
                  (plist-get collection :files))))
     (unless files
       (user-error "No `.flexiarg` files found for %s" (plist-get collection :label)))
-    (require 'flexiarg nil t)
+    (arxana-flexiarg--ensure-flexiarg)
     (let* ((label (plist-get collection :label))
            (buffer (get-buffer-create (format "*Flexiarg Collection: %s*" label))))
       (with-current-buffer buffer
@@ -1350,6 +1402,7 @@ are ignored for now."
    ("Src" 4 t)
    ("C/D" 10 t)])
 
+
 (defun arxana-patterns--docbook-lines-in-string (text)
   (length (split-string (string-trim (or text "")) "\n" t)))
 
@@ -1394,6 +1447,43 @@ are ignored for now."
   (let ((loc (arxana-patterns--docbook-entry-loc entry))
         (lod (arxana-patterns--docbook-entry-doc-lines entry)))
     (arxana-patterns--docbook-ratio-format loc lod)))
+
+(defun arxana-patterns--docbook-top-key (item)
+  (or (car (plist-get item :outline))
+      (car (split-string (or (plist-get item :path_string) "") " / " t))
+      (plist-get item :title)
+      ""))
+
+(defun arxana-patterns--docbook-group-order (items)
+  (let ((order '()))
+    (dolist (item items)
+      (let ((key (arxana-patterns--docbook-top-key item)))
+        (when (and key (not (member key order)))
+          (setq order (append order (list key))))))
+    order))
+
+(defun arxana-patterns--docbook-group-items (items)
+  (let* ((order (arxana-patterns--docbook-group-order items))
+         (preferred (seq-filter (lambda (key) (member key order))
+                                arxana-patterns-docbook-top-order))
+         (order (append preferred (seq-filter (lambda (key) (not (member key preferred)))
+                                              order))))
+    (sort (copy-sequence items)
+          (lambda (a b)
+            (let* ((ga (cl-position (arxana-patterns--docbook-top-key a)
+                                    order
+                                    :test #'equal))
+                   (gb (cl-position (arxana-patterns--docbook-top-key b)
+                                    order
+                                    :test #'equal))
+                   (la (or (plist-get a :level) 99))
+                   (lb (or (plist-get b :level) 99))
+                   (ia (or (plist-get a :toc-index) 0))
+                   (ib (or (plist-get b :toc-index) 0)))
+              (cond
+               ((and ga gb (/= ga gb)) (< ga gb))
+               ((/= la lb) (< la lb))
+               (t (< ia ib))))))))
 
 (defun arxana-patterns--browser-root-row (item)
   (let* ((type (capitalize (symbol-name (or (plist-get item :type) 'unknown))))
@@ -1476,6 +1566,7 @@ are ignored for now."
             short-col
             coverage
             ratio)))
+
 
 (defun arxana-patterns--lab-row (item)
   (let* ((session (or (plist-get item :session-id) ""))
@@ -1666,6 +1757,7 @@ are ignored for now."
             (plist-get heading :doc/path_string)))
       (plist-get entry :doc-id)))
 
+
 (defun arxana-patterns--docbook-items (&optional book)
   (let* ((book (or book "futon4"))
          (entries (or (when (arxana-docbook--remote-available-p book)
@@ -1731,8 +1823,7 @@ are ignored for now."
                          table)))
          (toc-items
           (if toc
-              (let ((source-toc (if (and remote (consp local-toc)) local-toc toc)))
-                (cl-loop for h in source-toc
+              (cl-loop for h in toc
                          for idx from 0
                          collect
                          (let* ((doc-id (or (plist-get h :doc-id) (plist-get h :doc_id)))
@@ -1750,12 +1841,13 @@ are ignored for now."
                                  :outline (or (plist-get h :outline) (plist-get h :outline_path))
                                  :path_string path-string
                                  :level (plist-get h :level)
-                                 :latest latest
-                                 :book book
-                                 :coverage coverage
-                                 :ratio ratio
-                                 :toc-index idx))))
+                                  :latest latest
+                                  :book book
+                                  :coverage coverage
+                                  :ratio ratio
+                                  :toc-index idx)))
             '()))
+         (toc-items (arxana-patterns--docbook-group-items toc-items))
          (toc-docs (let ((table (make-hash-table :test 'equal)))
                      (dolist (item toc-items)
                        (when-let* ((doc-id (plist-get item :doc-id)))
@@ -1794,35 +1886,38 @@ are ignored for now."
            (t '())))
          (virtual-items
           (delq nil
-                (mapcar (lambda (h)
-                          (let ((doc-id (plist-get h :doc-id)))
-                            (when (and doc-id (not (gethash doc-id toc-docs)))
-                              (let* ((title (or (plist-get h :title) doc-id))
-                                     (outline (or (plist-get h :outline)
-                                                  (list "Lab additions" title)))
-                                     (path-str (or (plist-get h :path_string)
-                                                   (string-join outline " / "))))
-                                (list :type 'docbook-heading
-                                      :doc-id doc-id
-                                      :title (format "%s (unindexed)" title)
-                                      :outline outline
-                                      :path_string path-str
-                                      :level (or (plist-get h :level) 1)
-                                      :latest t
-                                      :virtual t
-                                      :book book
-                                      :coverage (and (gethash doc-id entry-map)
-                                                     (arxana-patterns--docbook-entry-coverage
-                                                      (gethash doc-id entry-map)))
-                                      :ratio (and (gethash doc-id entry-map)
-                                                  (arxana-patterns--docbook-entry-ratio
-                                                   (gethash doc-id entry-map)))))))
-                        entry-headings))))
+                (mapcar
+                 (lambda (h)
+                   (let ((doc-id (plist-get h :doc-id)))
+                     (when (and doc-id (not (gethash doc-id toc-docs)))
+                       (let* ((title (or (plist-get h :title) doc-id))
+                              (outline (or (plist-get h :outline)
+                                           (list "Lab additions" title)))
+                              (path-str (or (plist-get h :path_string)
+                                            (string-join outline " / "))))
+                         (list :type 'docbook-heading
+                               :doc-id doc-id
+                               :title (format "%s (unindexed)" title)
+                               :outline outline
+                               :path_string path-str
+                               :level (or (plist-get h :level) 1)
+                               :latest t
+                               :virtual t
+                               :book book
+                               :coverage (and (gethash doc-id entry-map)
+                                              (arxana-patterns--docbook-entry-coverage
+                                               (gethash doc-id entry-map)))
+                               :ratio (and (gethash doc-id entry-map)
+                                           (arxana-patterns--docbook-entry-ratio
+                                            (gethash doc-id entry-map))))))))
+                 entry-headings))))
     (cond
      ((or toc-items virtual-items) (append toc-items virtual-items))
      (t (list (list :type 'info
                     :label "No TOC found"
-                    :description (arxana-patterns--docbook-unavailable-message book)))))))
+                    :description (arxana-patterns--docbook-unavailable-message book))))
+  )))
+  
 
 (defun arxana-patterns--docbook-section-items (book heading)
   (let* ((outline (plist-get heading :outline))
@@ -2224,6 +2319,21 @@ are ignored for now."
       (beginning-of-line)
       (when (and (> count 0) (/= old new-row))
         (arxana-patterns--play-click)))))
+
+(defun arxana-patterns--browser-goto-doc-id (doc-id)
+  "Move point to the first browser row matching DOC-ID."
+  (when (and doc-id (derived-mode-p 'arxana-patterns-browser-mode))
+    (let ((row 0)
+          (found nil))
+      (dolist (entry (or tabulated-list-entries '()))
+        (when (and (not found)
+                   (equal doc-id (plist-get (car entry) :doc-id)))
+          (setq found row))
+        (setq row (1+ row)))
+      (when found
+        (setq arxana-patterns--browser--last-row found)
+        (arxana-patterns--browser--goto-row found)
+        t))))
 
 (defun arxana-patterns--browser-move-selection (delta)
   (let* ((count (arxana-patterns--browser--row-count))

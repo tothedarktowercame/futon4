@@ -79,6 +79,16 @@
 (defvar-local arxana-docbook--entry-toc nil
   "Cached TOC list for the current docbook entry buffer.")
 
+(defvar-local arxana-docbook--return-buffer nil
+  "Buffer to return to when exiting a docbook entry view.")
+
+(defvar-local arxana-docbook--return-doc-id nil
+  "Doc id to select when returning to the browser.")
+
+(defvar-local arxana-docbook--return-entry-id nil
+  "Entry id to select when returning to the browser.")
+
+
 (defconst arxana-docbook--entry-buffer "*Arxana Docbook*"
   "Buffer name for the main docbook entry view.")
 
@@ -142,9 +152,15 @@
        (arxana-docbook--remote-base-url)))
 
 (defun arxana-docbook--remote-available-p (&optional book)
-  (let ((probe (or arxana-docbook--storage-probe
-                   (arxana-docbook--probe-storage book))))
-    (memq (plist-get probe :status) '(:ok :empty))))
+  (let* ((probe (or arxana-docbook--storage-probe
+                    (arxana-docbook--probe-storage book)))
+         (status (plist-get probe :status)))
+    (when (and (eq status :empty)
+               (arxana-docbook--remote-enabled-p))
+      (setq probe (arxana-docbook--probe-storage book))
+      (setq arxana-docbook--storage-probe probe)
+      (setq status (plist-get probe :status)))
+    (memq status '(:ok :empty))))
 
 (defun arxana-docbook--filesystem-available-p (&optional book)
   (let* ((root (arxana-docbook--locate-books-root))
@@ -168,6 +184,7 @@
                   (goto-char (point-min))
                   (if (not (re-search-forward "\n\n" nil t))
                       (list :status status :error "No HTTP body")
+                    (decode-coding-region (point) (point-max) 'utf-8-unix t)
                     (let ((json-object-type 'plist)
                           (json-array-type 'list)
                           (json-key-type 'keyword))
@@ -327,6 +344,10 @@
             :summary-raw raw-summary
             :status (plist-get entry :doc/status)
             :heading (plist-get entry :doc/heading)
+            :function-name (or (plist-get entry :doc/function-name)
+                               (plist-get entry :doc/function_name))
+            :source-path (or (plist-get entry :doc/source-path)
+                             (plist-get entry :doc/source_path))
             :entry entry))))
 
 (defun arxana-docbook--remote-contents (book)
@@ -489,15 +510,39 @@
       (plist-get entry :summary)
       ""))
 
+(defun arxana-docbook--entry-function-name (entry)
+  (or (plist-get entry :function-name)
+      (plist-get entry :doc/function-name)
+      (when-let* ((raw (plist-get entry :entry)))
+        (or (plist-get raw :doc/function-name)
+            (plist-get raw :doc/function_name)))))
+
 (defun arxana-docbook--entry-source-path (entry)
   "Return a source file path hinted by ENTRY content, if any."
-  (let ((text (arxana-docbook--entry-raw-text entry)))
-    (or (when (string-match ":tangle[[:space:]]+\\([^[:space:]]+\\)" text)
-          (match-string 1 text))
-        (when (string-match "^#\\+INCLUDE:[[:space:]]+\"\\([^\"]+\\)\"" text)
-          (match-string 1 text))
-        (when (string-match "code>[[:space:]]+\\([^[:space:]]+\\)" text)
-          (match-string 1 text)))))
+  (let* ((raw (plist-get entry :entry))
+         (source (or (plist-get entry :source-path)
+                     (plist-get entry :doc/source-path)
+                     (and raw (or (plist-get raw :doc/source-path)
+                                  (plist-get raw :doc/source_path))))))
+    (or source
+        (let ((text (arxana-docbook--entry-raw-text entry)))
+          (or (when (string-match ":tangle[[:space:]]+\\([^[:space:]]+\\)" text)
+                (match-string 1 text))
+              (when (string-match "^#\\+INCLUDE:[[:space:]]+\"\\([^\"]+\\)\"" text)
+                (match-string 1 text))
+              (when (string-match "code>[[:space:]]+\\([^[:space:]]+\\)" text)
+                (match-string 1 text)))))))
+
+;; TODO(org-sync): Track docbook function browsing/jump UI in spine2.org (see org-sync-tracker).
+(defun arxana-docbook--jump-to-function (buffer name)
+  (when (and buffer name)
+    (with-current-buffer buffer
+      (goto-char (point-min))
+      (let* ((pattern (format "^(\\(cl-\\)?def\\(un\\|macro\\|subst\\|alias\\|generic\\|method\\)\\s-+%s\\_>"
+                              (regexp-quote name)))
+             (found (re-search-forward pattern nil t)))
+        (when found
+          (beginning-of-line))))))
 
 (defun arxana-docbook--source-link-line (entry)
   (when-let* ((path (arxana-docbook--entry-source-path entry)))
@@ -645,6 +690,7 @@
                                                      entries))))
         (goto-char (point-min))
         (org-show-all)
+        (visual-line-mode 1)
         (view-mode 1)))
     (pop-to-buffer buf)))
 
@@ -687,6 +733,7 @@
             (arxana-docbook--render-merged-heading book heading entries)))
         (goto-char (point-min))
         (org-show-all)
+        (visual-line-mode 1)
         (view-mode 1)))
     (pop-to-buffer buf)))
 
@@ -743,6 +790,22 @@
     (tabulated-list-print t)
     (force-mode-line-update)))
 
+(defun arxana-docbook--goto-entry (doc-id &optional entry-id)
+  "Move point to DOC-ID (or ENTRY-ID) in the current docbook browser buffer."
+  (when (and (or doc-id entry-id) (derived-mode-p 'arxana-docbook-mode))
+    (goto-char (point-min))
+    (forward-line 1)
+    (let ((found nil))
+      (while (and (not found) (not (eobp)))
+        (let ((entry (tabulated-list-get-id)))
+          (when (and entry
+                     (or (and entry-id (equal entry-id (plist-get entry :entry-id)))
+                         (and doc-id (equal doc-id (plist-get entry :doc-id)))))
+            (setq found t))
+          (unless found
+            (forward-line 1))))
+      found)))
+
 (defun arxana-docbook--toc-path (book)
   (let* ((root (arxana-docbook--locate-books-root))
          (dir (and root (expand-file-name book root))))
@@ -791,15 +854,19 @@
        (delq nil (mapcar (lambda (entry) (plist-get entry :doc-id))
                          (arxana-docbook--entries-for book)))))))
 
-(defun arxana-docbook--render-entry (entry)
+(defun arxana-docbook--render-entry (entry &optional return-buffer return-entry-id)
   (let* ((book (plist-get entry :book))
          (doc-id (plist-get entry :doc-id))
          (buf (get-buffer-create arxana-docbook--entry-buffer))
          (entries (arxana-docbook--entries-for-doc book doc-id))
          (heading (arxana-docbook--heading-for-doc-id book doc-id))
-         (title (or (plist-get entry :title)
-                    (and heading (arxana-docbook--heading-title heading))
-                    doc-id)))
+         (base-title (or (plist-get entry :title)
+                         (and heading (arxana-docbook--heading-title heading))
+                         doc-id))
+         (function-name (arxana-docbook--entry-function-name entry))
+         (title (if function-name
+                    (format "%s — %s" function-name base-title)
+                  base-title)))
     (with-current-buffer buf
       (let ((inhibit-read-only t))
         (erase-buffer)
@@ -810,13 +877,17 @@
           (setq arxana-docbook--entry-book book
                 arxana-docbook--entry-doc-id doc-id
                 arxana-docbook--entry-entry-id (plist-get entry :entry-id)
-                arxana-docbook--entry-toc doc-ids))
+                arxana-docbook--entry-toc doc-ids
+                arxana-docbook--return-buffer return-buffer
+                arxana-docbook--return-doc-id doc-id
+                arxana-docbook--return-entry-id return-entry-id))
         (insert (format "#+TITLE: %s\n\n" (or title doc-id "")))
         (arxana-docbook--render-merged-heading book
-                                               (list :doc-id doc-id :title title)
+                                               (list :doc-id doc-id :title base-title)
                                                entries)
         (goto-char (point-min))
         (org-show-all)
+        (visual-line-mode 1)
         (view-mode 1)
         (arxana-docbook-entry-mode 1)
         (setq-local minor-mode-overriding-map-alist
@@ -825,7 +896,9 @@
            (source-path (and source (expand-file-name source (arxana-docbook--repo-root))))
            (source-buf (when (and source-path (file-readable-p source-path))
                          (find-file-noselect source-path))))
-      (arxana-docbook--ensure-two-up buf source-buf))))
+      (arxana-docbook--ensure-two-up buf source-buf)
+      (when (and function-name source-buf)
+        (arxana-docbook--jump-to-function source-buf function-name)))))
 
 (defun arxana-docbook--entry-next-doc-id ()
   (let* ((doc-id arxana-docbook--entry-doc-id)
@@ -907,7 +980,7 @@
   (let ((entry (tabulated-list-get-id)))
     (unless entry
       (user-error "No entry at point"))
-    (arxana-docbook--render-entry entry)))
+    (arxana-docbook--render-entry entry (current-buffer) (plist-get entry :entry-id))))
 
 (defun arxana-docbook-open-raw ()
   "Open the raw JSON log for the entry at point."
@@ -925,7 +998,7 @@
 ;;;###autoload
 (defun arxana-docbook-open-entry-object (entry)
   "Open ENTRY (plist) in a read-only buffer."
-  (arxana-docbook--render-entry entry))
+  (arxana-docbook--render-entry entry (current-buffer) (plist-get entry :entry-id)))
 
 ;;;###autoload
 (defun arxana-docbook-open-entry-raw (entry)
@@ -959,6 +1032,7 @@
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "n") #'arxana-docbook-next-entry)
     (define-key map (kbd "p") #'arxana-docbook-prev-entry)
+    (define-key map (kbd "b") #'arxana-docbook-return-to-browser)
     (define-key map (kbd "y") #'arxana-docbook-copy-location)
     map)
   "Keymap for `arxana-docbook-entry-mode'.")
@@ -996,6 +1070,35 @@
         (setq arxana-docbook--book book)
         (arxana-docbook--refresh))
       (pop-to-buffer buf))))
+
+(defun arxana-docbook-return-to-browser ()
+  "Return to the docbook browser and highlight the current entry."
+  (interactive)
+  (let* ((book arxana-docbook--entry-book)
+         (doc-id arxana-docbook--return-doc-id)
+         (entry-id arxana-docbook--return-entry-id)
+         (return-buffer arxana-docbook--return-buffer))
+    (unless (and book doc-id)
+      (user-error "No current docbook entry to return from"))
+    (cond
+     ((and (buffer-live-p return-buffer)
+           (with-current-buffer return-buffer
+             (derived-mode-p 'arxana-patterns-browser-mode)))
+      (with-current-buffer return-buffer
+        (when (fboundp 'arxana-patterns--browser-render)
+          (arxana-patterns--browser-render))
+        (when (fboundp 'arxana-patterns--browser-goto-doc-id)
+          (arxana-patterns--browser-goto-doc-id doc-id))))
+     (t
+      (let ((buf (get-buffer-create (format "*DocBook:%s*" book))))
+        (with-current-buffer buf
+          (arxana-docbook-mode)
+          (setq arxana-docbook--book book)
+          (arxana-docbook--refresh)
+          (arxana-docbook--goto-entry doc-id entry-id))
+        (setq return-buffer buf))))
+    (when (buffer-live-p return-buffer)
+      (pop-to-buffer return-buffer))))
 
 ;;;###autoload
 (defun arxana-docbook-browse-futon4 ()

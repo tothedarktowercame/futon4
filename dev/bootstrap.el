@@ -1,9 +1,8 @@
 ;;; bootstrap.el --- Build / load harness for Arxana  -*- lexical-binding: t; -*-
 
 ;;; Commentary:
-;; Provides repeatable entry points for tangling and loading the literate
-;; Arxana sources from `spine2.org`.  Use `arxana-build` interactively or invoke
-;; `arxana-batch-build` via `emacs --batch` for CI / scripting.
+;; Provides entry points for loading the Arxana sources from `dev/`.
+;; Tangling is no longer part of the default workflow.
 
 ;;; Code:
 
@@ -26,6 +25,12 @@
 
 (add-to-list 'load-path (expand-file-name "dev" arxana-root-directory))
 
+;; TODO(org-sync): Tangling disabled by default; update bootstrap guidance in spine2.org.
+(defcustom arxana-allow-tangle nil
+  "Legacy toggle; tangling is no longer supported in the default workflow."
+  :type 'boolean
+  :group 'arxana)
+
 (defun arxana--ensure-version ()
   "Throw an error unless the running Emacs meets the minimum version."
   (when (version< emacs-version arxana-minimum-emacs-version)
@@ -41,75 +46,45 @@
   (ignore-errors (require 'align))
   t)
 
-(defun arxana--spine-file ()
-  "Return the absolute path to `spine2.org` within the repo."
-  (expand-file-name "spine2.org" arxana-root-directory))
-
-(defun arxana--tangle-output ()
-  "Return the absolute path to `arxana-tangled.el`."
-  (expand-file-name "arxana-tangled.el" arxana-root-directory))
-
-(defun arxana-load-spine ()
-  "Load `spine2.org` so helper functions such as `arxana-tangle-spine-concat` exist."
-  (let ((spine (arxana--spine-file)))
-    (unless (file-exists-p spine)
-      (error "Cannot find spine file at %s" spine))
-    (arxana--ensure-dependencies)
-    (let ((org-confirm-babel-evaluate nil))
-      (org-babel-load-file spine))))
-
-(defun arxana-build (&optional force-tangle)
-  "Ensure the tangled Elisp exists and is loaded.
-With FORCE-TANGLE (or a \[universal-argument]), always regenerate the file."
-  (interactive "P")
+(defun arxana-load-dev ()
+  "Load the current `dev/` modules for interactive work."
   (arxana--ensure-version)
-  (arxana-load-spine)
-  (let* ((spine (arxana--spine-file))
-         (output (arxana--tangle-output))
-         (sources (cons spine
-                        (when (fboundp 'arxana-spine-files)
-                          (arxana-spine-files spine))))
-         (needs-tangle (or force-tangle
-                           (not (file-exists-p output))
-                           (seq-some (lambda (src)
-                                       (or (not (file-exists-p src))
-                                           (file-newer-than-file-p src output)))
-                                     sources))))
-    (when needs-tangle
-      (message "Tangling Arxana sources from %s" spine)
-      (arxana-tangle-spine-concat spine))
-    (load-file output)
-    (unless (featurep 'arxana-tangled)
-      (provide 'arxana-tangled))
-    ;; Prefer dev/staging implementations for interactive work during Phase 1.
-    (dolist (dev-file '("dev/arxana-docbook.el"
-                        "dev/arxana-lab.el"
-                        "dev/arxana-patterns.el"))
-      (let ((path (expand-file-name dev-file arxana-root-directory)))
-        (when (file-readable-p path)
-          (load path nil t))))
-    (ignore-errors (require 'arxana-store))
-    (ignore-errors (require 'arxana-article))
-    (ignore-errors (require 'arxana-scholium))
-    (ignore-errors (require 'arxana-relations))
-    (ignore-errors (require 'arxana-browse))
-    (ignore-errors (require 'arxana-derivation))
-    (ignore-errors (require 'arxana-saving))
-    (ignore-errors (require 'arxana-inclusion))
-    (ignore-errors (require 'arxana-import))
-    (ignore-errors (require 'arxana-export))
-    (ignore-errors (require 'arxana-compat))
-    (ignore-errors (require 'arxana-xtdb-browse))
-    (ignore-errors (require 'arxana-patterns))
-    (ignore-errors (require 'arxana-docbook))
-    (ignore-errors (require 'arxana-lab))
-    (message "Loaded %s" output)
-    output))
+  (arxana--ensure-dependencies)
+  ;; Prefer dev/staging implementations for interactive work during Phase 1.
+  (dolist (dev-file '("dev/arxana-docbook.el"
+                      "dev/arxana-lab.el"
+                      "dev/arxana-patterns.el"))
+    (let ((path (expand-file-name dev-file arxana-root-directory)))
+      (when (file-readable-p path)
+        (load path nil t))))
+  (ignore-errors (require 'arxana-store))
+  (ignore-errors (require 'arxana-article))
+  (ignore-errors (require 'arxana-scholium))
+  (ignore-errors (require 'arxana-relations))
+  (ignore-errors (require 'arxana-browse))
+  (ignore-errors (require 'arxana-derivation))
+  (ignore-errors (require 'arxana-saving))
+  (ignore-errors (require 'arxana-inclusion))
+  (ignore-errors (require 'arxana-import))
+  (ignore-errors (require 'arxana-export))
+  (ignore-errors (require 'arxana-compat))
+  (ignore-errors (require 'arxana-xtdb-browse))
+  (ignore-errors (require 'arxana-patterns))
+  (ignore-errors (require 'arxana-docbook))
+  (ignore-errors (require 'arxana-lab))
+  (message "Loaded dev/ modules")
+  t)
+
+(defun arxana-build (&optional _force-tangle)
+  "Legacy entry point; now loads `dev/` modules."
+  (interactive "P")
+  (when arxana-allow-tangle
+    (message "arxana-allow-tangle is set, but tangling is no longer supported"))
+  (arxana-load-dev))
 
 (defun arxana-batch-build ()
-  "Batch entry point: regenerate and load the tangled sources, then exit."
-  (let ((output (arxana-build t)))
-    (message "Regenerated %s" output)))
+  "Batch entry point: load `dev/` sources, then exit."
+  (arxana-build))
 
 (provide 'arxana-bootstrap)
 
