@@ -59,6 +59,52 @@
   :type 'string
   :group 'arxana-patterns-ingest)
 
+(defcustom arxana-patterns-ingest-log-entities nil
+  "When non-nil, log every entity payload sent to Futon."
+  :type 'boolean
+  :group 'arxana-patterns-ingest)
+
+(defun arxana-patterns-ingest--edn-escape (text)
+  (replace-regexp-in-string
+   "\\\\" "\\\\\\\\"
+   (replace-regexp-in-string "\"" "\\\"" text t t) t t))
+
+(defun arxana-patterns-ingest--edn-value (value)
+  (cond
+   ((stringp value) (format "\"%s\"" (arxana-patterns-ingest--edn-escape value)))
+   ((keywordp value) (format ":%s" (substring (symbol-name value) 0)))
+   ((symbolp value) (symbol-name value))
+   ((eq value t) "true")
+   ((null value) "nil")
+   ((numberp value) (format "%s" value))
+   (t (format "%S" value))))
+
+(defun arxana-patterns-ingest--plist->edn (plist)
+  (let (pairs)
+    (while plist
+      (let ((key (pop plist))
+            (val (pop plist)))
+        (when key
+          (push (format ":%s %s"
+                        (substring (symbol-name key) 1)
+                        (arxana-patterns-ingest--edn-value val))
+                pairs))))
+    (format "{%s}" (mapconcat #'identity (nreverse pairs) ", "))))
+
+(defun arxana-patterns-ingest--log-entity (kind spec)
+  (when arxana-patterns-ingest-log-entities
+    (message "[arxana-ingest] %s %s" kind
+             (arxana-patterns-ingest--plist->edn spec))))
+
+(defun arxana-patterns-ingest--build-spec (&rest pairs)
+  (let (result)
+    (while pairs
+      (let ((key (pop pairs))
+            (val (pop pairs)))
+        (when (and key (not (null val)))
+          (setq result (append result (list key val))))))
+    result))
+
 (defun arxana-patterns-ingest--flexiarg-files (directory)
   "Return absolute `.flexiarg` paths under DIRECTORY sorted by mtime (desc)."
   (let* ((dir (file-name-as-directory (expand-file-name directory)))
@@ -212,6 +258,14 @@ When EXPLICIT is non-nil, return it; otherwise derive from DIRECTORY."
   (let* ((response (ignore-errors (arxana-store-ego language-name arxana-patterns-ingest-ego-limit)))
          (ego (and response (alist-get :ego response)))
          (entity (and ego (alist-get :entity ego)))
+         (summary (and entity
+                       (or (alist-get :source entity)
+                           (alist-get :entity/source entity))))
+         (id (or (alist-get :id entity)
+                 (alist-get :entity/id entity)))
+         (import-path (and summary
+                           (string-match "^Imported from \\(.*\\)$" summary)
+                           (match-string 1 summary)))
          (title (or (alist-get :external-id entity)
                     (alist-get :entity/external-id entity)
                     language-name))
@@ -232,9 +286,30 @@ When EXPLICIT is non-nil, return it; otherwise derive from DIRECTORY."
           (setq status (arxana-patterns-ingest--link-target-name link))))))
     (list :name language-name
           :title title
+          :id id
           :source source
           :status status
-          :count count)))
+          :count count
+          :import-path import-path)))
+
+(defun arxana-patterns-ingest--catalog-language-names ()
+  "Return names of every language registered in the catalog."
+  (let* ((catalog arxana-patterns-ingest-language-catalog-name)
+         (response (ignore-errors (arxana-store-ego catalog arxana-patterns-ingest-ego-limit)))
+         (ego (and response (alist-get :ego response)))
+         (outgoing (and ego (arxana-patterns-ingest--ego-outgoing ego))))
+    (delq nil
+          (mapcar (lambda (link)
+                    (when (arxana-patterns-ingest--relation-match-p
+                           (alist-get :relation link)
+                           arxana-patterns-ingest-language-catalog-relation)
+                      (arxana-patterns-ingest--link-target-name link)))
+                  outgoing))))
+
+(defun arxana-patterns-ingest-language-rows ()
+  "Return language metadata rows suitable for display or browsing."
+  (let ((names (arxana-patterns-ingest--catalog-language-names)))
+    (mapcar #'arxana-patterns-ingest--language-metadata names)))
 
 ;;;###autoload
 (defun arxana-patterns-list-languages ()
@@ -242,21 +317,10 @@ When EXPLICIT is non-nil, return it; otherwise derive from DIRECTORY."
   (interactive)
   (unless (arxana-store-sync-enabled-p)
     (user-error "Futon sync is disabled; enable futon4-enable-sync first"))
-  (let* ((catalog arxana-patterns-ingest-language-catalog-name)
-         (response (ignore-errors (arxana-store-ego catalog arxana-patterns-ingest-ego-limit)))
-         (ego (and response (alist-get :ego response)))
-         (outgoing (and ego (arxana-patterns-ingest--ego-outgoing ego)))
-         (language-names (delq nil
-                               (mapcar (lambda (link)
-                                         (when (arxana-patterns-ingest--relation-match-p
-                                                (alist-get :relation link)
-                                                arxana-patterns-ingest-language-catalog-relation)
-                                           (arxana-patterns-ingest--link-target-name link)))
-                                       outgoing))))
-    (if (seq-empty-p language-names)
+  (let ((rows (arxana-patterns-ingest-language-rows)))
+    (if (seq-empty-p rows)
         (message "No pattern languages are registered yet")
-      (let* ((rows (mapcar #'arxana-patterns-ingest--language-metadata language-names))
-             (buffer (get-buffer-create "*Arxana Pattern Languages*")))
+      (let ((buffer (get-buffer-create "*Arxana Pattern Languages*")))
         (with-current-buffer buffer
           (let ((inhibit-read-only t))
             (erase-buffer)
@@ -279,6 +343,24 @@ When EXPLICIT is non-nil, return it; otherwise derive from DIRECTORY."
     (list :label label
           :slug (arxana-patterns-ingest--slugify label)
           :text text)))
+
+(defun arxana-patterns-ingest--derive-name-from-path (path)
+  "Best-effort fallback identifier derived from PATH."
+  (let* ((stripped (file-name-sans-extension path))
+         (relative (when (string-match "/library/\\(.*\\)$" stripped)
+                     (match-string 1 stripped)))
+         (base (file-name-nondirectory stripped)))
+    (or relative
+        (let* ((dir (file-name-directory stripped))
+               (parent-dir (and dir (directory-file-name dir)))
+               (parent (and parent-dir
+                            (not (string-empty-p parent-dir))
+                            (not (string= parent-dir "/"))
+                            (file-name-nondirectory parent-dir))))
+          (if (and parent (not (string-empty-p parent)))
+              (format "%s/%s" parent base)
+            base))
+        base)))
 
 (defun arxana-patterns-ingest--parse-flexiarg (path)
   "Parse PATH and return a plist describing the pattern contents."
@@ -311,9 +393,12 @@ When EXPLICIT is non-nil, return it; otherwise derive from DIRECTORY."
         (push (arxana-patterns-ingest--section (plist-get current :label)
                                                (plist-get current :lines))
               sections))
-      (let ((name (plist-get meta :arg)))
+      (let ((name (or (plist-get meta :arg)
+                      (plist-get meta :flexiarg)
+                      (plist-get meta :name)
+                      (arxana-patterns-ingest--derive-name-from-path path))))
         (unless (and name (not (string-empty-p name)))
-          (user-error "Missing @arg in %s" path))
+          (user-error "Missing @arg/@flexiarg in %s" path))
         (let* ((title (plist-get meta :title))
                (ordered (nreverse sections))
                (first (car ordered)))
@@ -327,20 +412,26 @@ When EXPLICIT is non-nil, return it; otherwise derive from DIRECTORY."
   (format "%s/%02d-%s" pattern index (plist-get component :slug)))
 
 (defun arxana-patterns-ingest--ensure-pattern (pattern)
-  (let* ((response (arxana-store-ensure-entity :name (plist-get pattern :name)
-                                               :type "pattern/library"
-                                               :source (plist-get pattern :summary)
-                                               :external-id (plist-get pattern :title)))
+  (let* ((spec (arxana-patterns-ingest--build-spec
+                :name (plist-get pattern :name)
+                :type "pattern/library"
+                :source (plist-get pattern :summary)
+                :external-id (plist-get pattern :title)))
+         (_ (arxana-patterns-ingest--log-entity "ensure-pattern" spec))
+         (response (apply #'arxana-store-ensure-entity spec))
          (id (or (arxana-patterns-ingest--extract-id response)
                  (arxana-patterns-ingest--lookup-id (plist-get pattern :name)))))
     id))
 
 (defun arxana-patterns-ingest--ensure-component (pattern-id pattern-name component index existing)
   (let* ((component-name (arxana-patterns-ingest--component-name pattern-name index component))
-         (response (arxana-store-ensure-entity :name component-name
-                                               :type "pattern/component"
-                                               :source (plist-get component :text)
-                                               :external-id (plist-get component :label)))
+         (spec (arxana-patterns-ingest--build-spec
+                :name component-name
+                :type "pattern/component"
+                :source (plist-get component :text)
+                :external-id (plist-get component :label)))
+         (_ (arxana-patterns-ingest--log-entity "ensure-component" spec))
+         (response (apply #'arxana-store-ensure-entity spec))
          (component-id (or (arxana-patterns-ingest--extract-id response)
                            (arxana-patterns-ingest--lookup-id component-name))))
     (when (and pattern-id component-id
@@ -369,10 +460,13 @@ When EXPLICIT is non-nil, return it; otherwise derive from DIRECTORY."
 (defun arxana-patterns-ingest--ensure-language (language-name language-title patterns directory language-status)
   "Ensure LANGUAGE-NAME exists and links to PATTERNS in order."
   (let* ((summary (format "Imported from %s" directory))
-         (response (arxana-store-ensure-entity :name language-name
-                                              :type "pattern/language"
-                                              :source summary
-               :external-id (or language-title language-name)))
+         (spec (arxana-patterns-ingest--build-spec
+                :name language-name
+                :type "pattern/language"
+                :source summary
+                :external-id (or language-title language-name)))
+         (_ (arxana-patterns-ingest--log-entity "ensure-language" spec))
+         (response (apply #'arxana-store-ensure-entity spec))
          (language-id (or (arxana-patterns-ingest--extract-id response)
                           (arxana-patterns-ingest--lookup-id language-name)))
          (existing (when language-id
@@ -398,7 +492,8 @@ When EXPLICIT is non-nil, return it; otherwise derive from DIRECTORY."
       (arxana-patterns-ingest--ensure-tag language-name language-id
                                           arxana-patterns-ingest-language-status-relation
                                           status-name "pattern/language-status")
-      (arxana-patterns-ingest--ensure-catalog-link language-name language-id)))
+      (arxana-patterns-ingest--ensure-catalog-link language-name language-id)
+      language-id))
 
 ;;;###autoload
 (defun arxana-patterns-ingest-directory (directory &optional language-name language-title language-status)
@@ -426,19 +521,18 @@ auto-detected status classification."
          (files (arxana-patterns-ingest--flexiarg-files dir)))
     (unless files
       (user-error "No .flexiarg files found in %s" dir))
-    (let ((results nil))
+    (let ((results nil)
+          (language-id nil))
       (dolist (file files)
         (push (arxana-patterns-ingest--ingest-file file) results))
       (setq results (nreverse results))
       (when language-name
-        (arxana-patterns-ingest--ensure-language language-name language-title
-                                                 results dir language-status))
+        (setq language-id
+              (arxana-patterns-ingest--ensure-language language-name language-title
+                                                       results dir language-status)))
       (message "Ingested %d patterns from %s" (length results) dir)
       (when language-name
-        (message "Language %s id %s" language-name
-                 (or (arxana-patterns-ingest--extract-id
-                      (arxana-store-ensure-entity :name language-name))
-                     (arxana-patterns-ingest--lookup-id language-name))))
+        (message "Language %s id %s" language-name (or language-id "?")))
       results)))
 
 (provide 'arxana-patterns-ingest)

@@ -1,15 +1,31 @@
-Current work in progress is in arxana/latex/org/ directory you can
-IGNORE other directories.
+Source of truth is `spine2.org`. Edit the literate source and re-tangle into
+`dev/` + `test/`. Do not edit generated Elisp directly unless explicitly
+requested for an emergency patch.
+
+This project is primarily Lisp. Run `dev/check-parens.sh` (wraps `dev/check-parens.el`)
+to quickly detect paren/quote mismatches before or after edits. Example:
+`bash dev/check-parens.sh dev/arxana-patterns.el`.
 
 ## Development Cycle Notes
 
-- Phase 1 (current): revive the Emacs client pragmatically. New store, scholium,
-  and relation code lives in `arxana/dev/` + `arxana/test/` so we can iterate
-  quickly without reworking the entire spine.
-- Phase 2 (after the reanimation milestones): fold the production-ready modules
-  back into the literate Org sources so the tangled output remains the single
-  source of truth. That refactor will happen once the plan is complete and the
-  docs/tests are stable.
+- The literate spine (`spine2.org`) is authoritative. Tangled output in `dev/`
+  is generated and should not be edited by hand.
+- Experimental work must still start in `spine2.org`; mark it clearly so it is
+  easy to prune or promote later.
+
+## Literate Emacs Lisp workflow
+
+- Always edit `spine2.org` and re-tangle. Treat `dev/` + `test/` as generated.
+- Any new namespace, public function, or data shape should be documented in the
+  same literate section that defines it.
+- Code meant for experiments only should be clearly marked in `spine2.org`.
+- Emacs Lisp should avoid `seq` helpers unless you explicitly `(require 'seq)`
+  (prefer plain list functions to prevent `void-function seq` errors).
+
+## Tracking the literate backlog
+
+- `dev/org-sync-tracker.org` is still used to flag any legacy/manual drift that
+  needs reconciliation, but new work should already live in `spine2.org`.
 
 * Logical model
 

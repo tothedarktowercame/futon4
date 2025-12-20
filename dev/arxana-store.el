@@ -160,15 +160,155 @@ string. Signals a user error when NAME is missing."
   (unless name
     (user-error "Entity name is required"))
   (let* ((payload (delq nil (list (cons 'name name)
-                                  (cons 'type (if (keywordp type)
-                                                  (symbol-name type)
-                                                type))
+                                  (when type
+                                    (cons 'type (if (keywordp type)
+                                                    (symbol-name type)
+                                                  type)))
                                   (when id (cons 'id id))
                                   (when source (cons 'source source))
                                   (when external-id (cons 'external-id external-id))
                                   (when seen-count (cons 'seen-count seen-count))
-                                  (when pinned? (cons 'pinned pinned?))
+                                  (when (not (null pinned?))
+                                    (cons 'pinned? (and pinned? t)))
                                   (when last-seen (cons 'last-seen last-seen))))))
     (arxana-store--request "POST" "/entity" payload)))
 
-;;; (rest of file omitted for brevity)
+(defun arxana-store--relation-payload (src-id dst-id label extra-props)
+  (let ((props (cons (cons 'label (or label "")) (or extra-props '()))))
+    (delq nil
+          (list (cons 'type "arxana/scholium")
+                (cons 'src src-id)
+                (cons 'dst dst-id)
+                (when props (cons 'props props))))))
+
+(defun arxana-store--post-relation (src-id dst-id &optional label extra-props)
+  (cond
+   ((not (arxana-store-sync-enabled-p))
+    (arxana-store--record-error 'disabled "Futon sync disabled" 'relation))
+   ((or (null src-id) (null dst-id))
+    (arxana-store--record-error 'invalid "Provide source and target ids" 'relation))
+   (t
+    (let ((payload (arxana-store--relation-payload src-id dst-id label extra-props)))
+      (arxana-store--request "POST" "/relation" payload)))))
+
+(cl-defun arxana-store-create-relation (&key src dst label props)
+  (unless (and src dst)
+    (user-error "Provide both :src and :dst ids"))
+  (arxana-store--post-relation src dst label props))
+
+(defun arxana-store--stringify (value)
+  (cond
+   ((null value) nil)
+   ((stringp value) value)
+   ((symbolp value) (symbol-name value))
+   (t (format "%s" value))))
+
+(defun arxana-store--hyperedge-payload (type hx-type endpoints props)
+  (let ((clean (delq nil endpoints)))
+    (delq nil
+          (list (when type (cons 'type (arxana-store--stringify type)))
+                (when hx-type (cons 'hx/type (arxana-store--stringify hx-type)))
+                (cons 'hx/endpoints clean)
+                (when props (cons 'props props))))))
+
+(defun arxana-store--post-hyperedge (type hx-type endpoints &optional props)
+  (cond
+   ((not (arxana-store-sync-enabled-p))
+    (arxana-store--record-error 'disabled "Futon sync disabled" 'hyperedge))
+   ((or (not hx-type) (not endpoints))
+    (arxana-store--record-error 'invalid "Provide hx/type and endpoints" 'hyperedge))
+   (t
+    (let ((payload (arxana-store--hyperedge-payload type hx-type endpoints props)))
+      (arxana-store--request "POST" "/hyperedge" payload)))))
+
+(defun arxana-store-upsert-scholium (source target &optional label)
+  (interactive
+   (list (read-string "Source article: " (or (and (boundp 'name-of-current-article)
+                                                  name-of-current-article)
+                                              (buffer-name)))
+         (read-string "Target article: ")
+         (read-string "Label (optional): " nil nil "")))
+  (cond
+   ((not (arxana-store-sync-enabled-p))
+    (arxana-store--record-error 'disabled "Futon sync disabled" 'upsert-scholium))
+   ((or (null source) (null target))
+    (arxana-store--record-error 'invalid "Provide both source and target names" 'upsert-scholium))
+   (t
+    (let* ((src-id (and (fboundp 'futon4--article-id-for)
+                        (futon4--article-id-for source)))
+           (dst-id (and (fboundp 'futon4--article-id-for)
+                        (futon4--article-id-for target))))
+      (unless (and src-id dst-id)
+        (cl-return-from arxana-store-upsert-scholium
+          (arxana-store--record-error 'invalid "Could not derive scholium ids" 'upsert-scholium)))
+      (let ((response (arxana-store--post-relation src-id dst-id label)))
+        (when response
+          (when (called-interactively-p 'interactive)
+            (message "Stored scholium %s → %s" src-id dst-id))
+          (list :src src-id :dst dst-id :label label)))))))
+
+(defun arxana-store-fetch-entity (id &optional version as-of)
+  (interactive
+   (list (read-string "Entity id: " "")
+         (read-string "Version (uuid or blank): ")
+         (let ((val (read-string "As-of (ms since epoch, blank for latest): ")))
+           (when (and val (> (length val) 0)) val))))
+  (unless id
+    (cl-return-from arxana-store-fetch-entity
+      (arxana-store--record-error 'invalid "Missing entity id" 'fetch-entity)))
+  (let ((query (arxana-store--query-string
+                (delq nil (list (when version (cons "version" version))
+                                (when as-of (cons "as-of" as-of)))))))
+    (arxana-store--request "GET"
+                           (format "/entity/%s" (arxana-store--encode-segment id))
+                           nil query)))
+
+(defun arxana-store-entity-history (id &optional limit)
+  (interactive (list (read-string "Entity id: " "") (read-number "Limit: " 10)))
+  (unless id
+    (cl-return-from arxana-store-entity-history
+      (arxana-store--record-error 'invalid "Missing entity id" 'entity-history)))
+  (let ((query (arxana-store--query-string (list (cons "limit" (or limit 10))))))
+    (arxana-store--request "GET"
+                           (format "/entities/history/%s" (arxana-store--encode-segment id))
+                           nil query)))
+
+(defun arxana-store-ego (name &optional limit)
+  (interactive
+   (list (read-string "Ego name: " (or (and (boundp 'name-of-current-article)
+                                             name-of-current-article)
+                                        (buffer-name)))
+         (read-number "Limit: " 15)))
+  (let ((target-name (or name (and (boundp 'name-of-current-article)
+                                   name-of-current-article))))
+    (unless target-name
+      (cl-return-from arxana-store-ego
+        (arxana-store--record-error 'invalid "Missing ego name" 'ego)))
+    (let ((query (arxana-store--query-string (when limit (list (cons "limit" limit)))))
+          (encoded (arxana-store--encode-segment target-name)))
+      (arxana-store--request "GET" (format "/ego/%s" encoded) nil query))))
+
+(defun arxana-store-cooccur (name &optional limit)
+  (interactive (list (read-string "Cooccur entity: " (or (and (boundp 'name-of-current-article)
+                                                        name-of-current-article)
+                                                   (buffer-name)))
+                     (read-number "Limit: " 10)))
+  (let ((target-name name))
+    (if (not (and target-name (> (length target-name) 0)))
+        (arxana-store--record-error 'invalid "Missing cooccur name" 'cooccur)
+      (let* ((query (arxana-store--query-string (when limit (list (cons "limit" limit)))))
+             (encoded (arxana-store--encode-segment target-name)))
+        (arxana-store--request "GET" (format "/cooccur/%s" encoded) nil query)))))
+
+(defun arxana-store-tail (&optional limit)
+  (interactive (list (read-number "Tail limit: " 5)))
+  (let* ((limit (or limit 5))
+         (query (arxana-store--query-string (when limit (list (cons "limit" limit)))))
+         (body (arxana-store--request "GET" "/tail" nil query)))
+    (when (and body (called-interactively-p 'interactive))
+      (message "Fetched /tail (%d relations)" limit))
+    body))
+
+(provide 'arxana-store)
+
+;;; arxana-store.el ends here

@@ -2,7 +2,7 @@
 
 ;;; Commentary:
 ;; Provides repeatable entry points for tangling and loading the literate
-;; Arxana sources from `spine.org`.  Use `arxana-build` interactively or invoke
+;; Arxana sources from `spine2.org`.  Use `arxana-build` interactively or invoke
 ;; `arxana-batch-build` via `emacs --batch` for CI / scripting.
 
 ;;; Code:
@@ -22,7 +22,7 @@
                  (expand-file-name "arxana" default-directory))
                 (t default-directory))))
     (file-name-as-directory base))
-  "Root directory containing `spine.org` and the Org sources.")
+  "Root directory containing `spine2.org` and the Org sources.")
 
 (add-to-list 'load-path (expand-file-name "dev" arxana-root-directory))
 
@@ -42,15 +42,15 @@
   t)
 
 (defun arxana--spine-file ()
-  "Return the absolute path to `spine.org` within the repo."
-  (expand-file-name "spine.org" arxana-root-directory))
+  "Return the absolute path to `spine2.org` within the repo."
+  (expand-file-name "spine2.org" arxana-root-directory))
 
 (defun arxana--tangle-output ()
   "Return the absolute path to `arxana-tangled.el`."
   (expand-file-name "arxana-tangled.el" arxana-root-directory))
 
 (defun arxana-load-spine ()
-  "Load `spine.org` so helper functions such as `arxana-tangle-spine-concat` exist."
+  "Load `spine2.org` so helper functions such as `arxana-tangle-spine-concat` exist."
   (let ((spine (arxana--spine-file)))
     (unless (file-exists-p spine)
       (error "Cannot find spine file at %s" spine))
@@ -81,6 +81,13 @@ With FORCE-TANGLE (or a \[universal-argument]), always regenerate the file."
     (load-file output)
     (unless (featurep 'arxana-tangled)
       (provide 'arxana-tangled))
+    ;; Prefer dev/staging implementations for interactive work during Phase 1.
+    (dolist (dev-file '("dev/arxana-docbook.el"
+                        "dev/arxana-lab.el"
+                        "dev/arxana-patterns.el"))
+      (let ((path (expand-file-name dev-file arxana-root-directory)))
+        (when (file-readable-p path)
+          (load path nil t))))
     (ignore-errors (require 'arxana-store))
     (ignore-errors (require 'arxana-article))
     (ignore-errors (require 'arxana-scholium))
@@ -94,6 +101,8 @@ With FORCE-TANGLE (or a \[universal-argument]), always regenerate the file."
     (ignore-errors (require 'arxana-compat))
     (ignore-errors (require 'arxana-xtdb-browse))
     (ignore-errors (require 'arxana-patterns))
+    (ignore-errors (require 'arxana-docbook))
+    (ignore-errors (require 'arxana-lab))
     (message "Loaded %s" output)
     output))
 

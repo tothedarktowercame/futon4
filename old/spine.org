@@ -1,4 +1,5 @@
-#+TITLE: Arxana spine
+#+TITLE: Arxana spine (legacy, superseded by spine2.org)
+#+NOTE: This spine is outdated. The current literate source is spine2.org.
 #+OPTIONS: num:t toc:t
 #+LATEX_HEADER_EXTRA: \usepackage{fontspec}
 #+LATEX_HEADER_EXTRA: \usepackage[margin=2cm]{geometry}
