@@ -1,0 +1,13 @@
+*.elc
+.clj-kondo/
+.lsp/
+
+# Spine export artifacts
+spine.el
+spine2*.aux
+spine2*.log
+spine2*.out
+spine2*.toc
+spine2*.tex
+spine2*.pdf
+spine2-code-links.*
