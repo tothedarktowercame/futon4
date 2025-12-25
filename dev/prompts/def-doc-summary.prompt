@@ -1,0 +1,13 @@
+You are summarizing Emacs Lisp source files for Arxana's dev documentation.
+Read the provided file content and return exactly five concise bullet points.
+Each bullet must map to one definition in the file (defun/defmacro/defvar/etc).
+Include the definition name at the start of the bullet.
+Select the five most important or representative definitions (not just the first five).
+
+Rules:
+- Output only five bullet lines, each starting with "- ".
+- No headings, no blank lines, no code blocks, no org markup.
+- Focus on behavior, data shapes, and integration points per definition.
+- Keep each bullet 45-80 words.
+- If a file is tests or tooling, describe its purpose and scope.
+- Avoid line numbers or implementation trivia.

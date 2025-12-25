@@ -226,37 +226,37 @@
                      base-dir (io/file "dev" "logs" "books" book)
                      raw-dir (ensure-dir (str (io/file base-dir "raw")))
                      stub-dir (ensure-dir (str (io/file base-dir "stubs")))]
-                (doseq [[file changes] files->changes]
-                  (let [outline (or (match-outline-path entry-map file)
-                                    ["Recent changes (futon4, pilot)"])
-                        path-str (str/join " / " outline)
-                        heading (get toc-map path-str)
-                        doc-id (or (:doc-id heading) (str "futon4-" (hash path-str)))
-                        run-id (str session-id "-" (str/replace doc-id "/" "_"))
-                       delta (bullet-text (map #(str file " — " %) changes))
-                       context (bullet-text [(str "Lab session " session-id)])
-                       verification (bullet-text ["(unverified)"])
-                        entry (docbook-entry {:book book
-                                              :doc-id doc-id
-                                              :outline-path outline
-                                              :run-id run-id
-                                              :timestamp timestamp
-                                              :version version
-                                              :files [file]
-                                              :context context
-                                              :delta delta
-                                              :verification verification})
-                        stub (docbook-stub {:doc-id doc-id
-                                            :version version
-                                            :title (str (last outline) " — " session-id)
-                                            :context context
-                                            :delta delta
-                                            :verification verification})
-                        raw-path (io/file raw-dir (str run-id ".json"))
-                        stub-path (io/file stub-dir (str run-id ".org"))]
-                    (spit raw-path (json/write-str entry {:pretty true}))
-                    (spit stub-path stub)))
-                (println (format "[lab-summarize] docbook=%s entries=%d"
-                                 book (count files->changes)))))))))))
+                    (doseq [[file changes] files->changes]
+                      (let [outline (or (match-outline-path entry-map file)
+                                        ["Recent changes (futon4, pilot)"])
+                            path-str (str/join " / " outline)
+                            heading (get toc-map path-str)
+                            doc-id (or (:doc-id heading) (str "futon4-" (hash path-str)))
+                            run-id (str session-id "-" (str/replace doc-id "/" "_"))
+                            delta (bullet-text (map #(str file " — " %) changes))
+                            context (bullet-text [(str "Lab session " session-id)])
+                            verification (bullet-text ["(unverified)"])
+                            entry (docbook-entry {:book book
+                                                  :doc-id doc-id
+                                                  :outline-path outline
+                                                  :run-id run-id
+                                                  :timestamp timestamp
+                                                  :version version
+                                                  :files [file]
+                                                  :context context
+                                                  :delta delta
+                                                  :verification verification})
+                            stub (docbook-stub {:doc-id doc-id
+                                                :version version
+                                                :title (str (last outline) " — " session-id)
+                                                :context context
+                                                :delta delta
+                                                :verification verification})
+                            raw-path (io/file raw-dir (str run-id ".json"))
+                            stub-path (io/file stub-dir (str run-id ".org"))]
+                        (spit raw-path (json/write-str entry {:pretty true}))
+                        (spit stub-path stub)))
+                    (println (format "[lab-summarize] docbook=%s entries=%d"
+                                     book (count files->changes)))))))))))
 
 (apply -main *command-line-args*)
