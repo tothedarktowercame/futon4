@@ -3,8 +3,8 @@
 #+OPTIONS: toc:nil num:nil
 #+TODO: TODO(t) WIP(w!) READY(r!) | DONE(d!)
 
-This file records every `.el` change that still needs to be mirrored into
-`arxana/latex/org/`.  Keep it close to reality: as soon as a change feels
+This file records every `.el` change that still needs to be mirrored into the
+XTDB-backed docs. Keep it close to reality: as soon as a change feels
 production-bound (not a throwaway experiment), add an entry.
 
 * Usage
@@ -31,7 +31,7 @@ production-bound (not a throwaway experiment), add an entry.
 
 ** TODO Example entry (replace me)
    :FILES: dev/arxana-store.el
-   :TARGET: arxana/latex/org/3B.2.2-Main_table_definitions.org
+   :TARGET: XTDB doc id (or temporary snapshot path)
    :NOTES: Commit <hash>; store transactions + new attributes
 
 This placeholder shows the preferred structure.  Replace it with real entries as
@@ -39,5 +39,20 @@ soon as new work lands.
 
 ** TODO futon4 doc book (pilot)
    :FILES: dev/logs/README.md dev/logs/books/futon4/index.org dev/logs/books/futon4/stubs/futon4-demo-001.org dev/logs/books/futon4/raw/futon4-demo-001.json dev/logs/books/futon4/stubs/futon4-quickstart-20240606.org dev/logs/books/futon4/raw/futon4-quickstart-20240606.json dev/logs/books/futon4/stubs/futon4-storage-bridge-20240606.org dev/logs/books/futon4/raw/futon4-storage-bridge-20240606.json dev/logs/books/futon4/toc.json dev/arxana-docbook.el dev/arxana-patterns.el dev/docbook-toc-export.el
-   :TARGET: spine2.org -> Recent changes (futon4, pilot)
+   :TARGET: XTDB doc id (or filesystem snapshot)
    :NOTES: uncommitted; filesystem-backed doc book skeleton; update once XTDB ingest path exists
+
+** TODO docbook function browsing
+   :FILES: dev/arxana-docbook.el dev/arxana-patterns.el
+   :TARGET: XTDB doc id
+   :NOTES: Function-level doc browsing + source jump driven by XTDB-ingested headings (no local parsing).
+
+** TODO remove legacy arxana-allow-tangle toggle
+   :FILES: dev/bootstrap.el dev/arxana-browse.el dev/arxana-test-support.el dev/run-tests.sh test/arxana-bootstrap-test.el
+   :TARGET: XTDB doc id
+   :NOTES: align bootstrap/testing guidance with dev/ as the canonical source.
+
+** TODO def-doc summarizer pipeline
+   :FILES: dev/def-doc-summarize.clj dev/def-doc-backfill.clj dev/prompts/def-doc-summary.prompt
+   :TARGET: XTDB doc id (new section for XTDB-native def-doc ingestion)
+   :NOTES: ChatGPT-driven per-file summaries for dev/*.el into docbook JSON + toc.json.

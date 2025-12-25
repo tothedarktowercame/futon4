@@ -2,6 +2,9 @@
 .clj-kondo/
 .lsp/
 
+# Docbook/log artifacts
+dev/logs/
+
 # Spine export artifacts
 spine.el
 spine2*.aux

@@ -12,24 +12,25 @@ behavior at every stage.
 
 * Workflow loop
 
-1. Regenerate `arxana/arxana-tangled.el` from the spine (see Source & Build).
+1. Load the dev harness (`M-x arxana-build` or `dev/run-tests.sh`).
 2. Run the ERT smoke suite to verify the harness still loads.
 3. Exercise the feature under development inside Emacs and via Futon curl
    checks, capturing the commands we expect contributors to run.
-4. Update this file with new tasks, status, and references.
+4. Update this file and the corresponding XTDB doc entry with new tasks,
+   status, and references.
 
 * Milestone tracker
 
 ** M0 — Harness & Spec [3/3]
 - [X] Record the reanimation scope and workflow in this document.
-- [X] Provide a repeatable tangling/bootstrap harness (interactive + batch).
+- [X] Provide a repeatable bootstrap harness (interactive + batch).
 - [X] Seed a minimal ERT suite that gatekeeps the harness.
 
 ** M1 — Storage Bridge Hardening [5/5]
 - [X] Audit Futon sync funcs (`futon4-*`) and document supported ops (`docs/storage-bridge.org`).
 - [X] Wrap backend calls with user-facing commands (`arxana-store-*`).
 - [X] Capture curl verification steps per endpoint (see storage bridge doc + README).
-- [X] Add ERT/Elisp fakes for entity + relation flow (`arxana/test/arxana-store-test.el`).
+- [X] Add ERT/Elisp fakes for entity + relation flow (`test/arxana-store-test.el`).
 - [X] Ensure Emacs gracefully handles Futon downtime (error plists + log messages).
 
 ** M2 — Article Lifecycle [5/5]
@@ -66,10 +67,10 @@ behavior at every stage.
 ** M6 — QA & Release Prep [2/4]
 - [X] Grow the ERT suite (unit, integration, CLI smoke).
 - [X] Document test instructions + CI hooks.
-- [ ] Provide contributor guide (coding style, tangling, testing).
+- [ ] Provide contributor guide (coding style, doc sync, testing).
 - [ ] Tag a “revived” release with reproducible steps.
 
-** Literate conversion tracker [2/6]
+** Doc sync tracker [2/6]
 - [X] Storage + snapshots (`arxana-store`, `arxana-saving`).
 - [X] Browsing & relations (`arxana-browse`, `arxana-relations`, `arxana-xtdb-browse`).
 - [ ] Import/export helpers (`arxana-import`, `arxana-export`).
@@ -77,17 +78,14 @@ behavior at every stage.
 - [ ] Article/scholium/inclusion stack (`arxana-article`, `arxana-scholium`, `arxana-inclusion`).
 - [ ] QA/compat/test support modules.
 
-   Each check means the module is now edited via `spine2.org` using Org Babel blocks
-   (with prose ahead of each block) and tangles back into `dev/*.el` via
-   `org-babel-tangle-file`. The matching section in `spine2.org` should include a
-   short narrative explanation plus the `:tangle` code block so contributors edit
-   the Org surface, regenerate the `.el`, and see the prose/code mirrored in
-   `spine2.pdf`.
+   Each check means the module has a matching XTDB doc entry and any optional
+   filesystem snapshot is aligned with the current `dev/` behavior. If a snapshot
+   exists, record the doc id and snapshot location in `dev/org-sync-tracker.org`.
 
 * Artifacts
 
-- Harness + bootstrap: `arxana/dev/bootstrap.el`
-- Tests: `arxana/test/`
-- Docs: `arxana/README.md`, this plan, and future how-tos.
+- Harness + bootstrap: `dev/bootstrap.el`
+- Tests: `test/`
+- Docs: this plan and future how-tos.
 
 Update this plan whenever a milestone progresses; keep the checklist honest.

@@ -1,6 +1,7 @@
-Source of truth is `spine2.org`. Edit the literate source and re-tangle into
-`dev/` + `test/`. Do not edit generated Elisp directly unless explicitly
-requested for an emergency patch.
+Sources of truth are split: code lives in `dev/` + `test/`, while docs live in
+XTDB. Filesystem doc snapshots may be created for editing or LLM inspection,
+but treat them as disposable unless called out otherwise. Avoid editing
+`arxana-tangled.el` directly unless explicitly requested for an emergency fix.
 
 This project is primarily Lisp. Run `dev/check-parens.sh` (wraps `dev/check-parens.el`)
 to quickly detect paren/quote mismatches before or after edits. Example:
@@ -8,24 +9,19 @@ to quickly detect paren/quote mismatches before or after edits. Example:
 
 ## Development Cycle Notes
 
-- The literate spine (`spine2.org`) is authoritative. Tangled output in `dev/`
-  is generated and should not be edited by hand.
-- Experimental work must still start in `spine2.org`; mark it clearly so it is
-  easy to prune or promote later.
-
-## Literate Emacs Lisp workflow
-
-- Always edit `spine2.org` and re-tangle. Treat `dev/` + `test/` as generated.
+- `dev/` + `test/` are canonical for code. Keep docs in XTDB aligned with the
+  current behavior and public API surface.
+- If you create a filesystem doc snapshot, mark it as temporary or archival so
+  it is easy to prune or promote later.
 - Any new namespace, public function, or data shape should be documented in the
-  same literate section that defines it.
-- Code meant for experiments only should be clearly marked in `spine2.org`.
+  matching XTDB doc entry for that subsystem.
 - Emacs Lisp should avoid `seq` helpers unless you explicitly `(require 'seq)`
   (prefer plain list functions to prevent `void-function seq` errors).
 
-## Tracking the literate backlog
+## Tracking doc/code alignment
 
-- `dev/org-sync-tracker.org` is still used to flag any legacy/manual drift that
-  needs reconciliation, but new work should already live in `spine2.org`.
+- `dev/org-sync-tracker.org` flags drift between `dev/` code and XTDB-backed
+  docs, plus any temporary filesystem snapshots that still need ingesting.
 
 * Logical model
 

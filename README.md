@@ -1,22 +1,16 @@
 # Futon4 / Arxana reanimation
 
 This repository hosts the active rewrite of the classic Arxana Emacs client.
-The literate Org sources have been put on ice in `old/`, and active work now
-targets the XTDB-backed storage stack. The surrounding docs define the
-reanimation milestones and current storage workflows.
+Code lives in `dev/`, while documentation now lives in XTDB; filesystem docs
+are treated as snapshots for editing or inspection. The surrounding docs
+define the reanimation milestones and current storage workflows.
 
 ## Repository map
 
-- `old/` – archived Org sources, including `old/spine.org` and `old/spine2.org`.
-  These are kept for reference only and are not part of the active workflow.
 - `dev/` – Emacs Lisp for the Prototype 1 client plus the `run-tests.sh` helper.
-  These files are edited directly (no tangling step).
 - `test/` – ERT suites that gate the harness (`dev/run-tests.sh` runs them all).
 - `docs/` – prose references including `docs/reanimation-plan.org` (living spec)
   and `docs/storage-bridge.org` (storage notes).
-- `arxana/` – historical material from the classic distribution (kept for
-  reference only).
-- Numbered `*.org` files – archived manual chapters (now stored in `old/`).
 
 ## Quickstart
 
@@ -51,8 +45,8 @@ reanimation milestones and current storage workflows.
 - `docs/reanimation-plan.org` – canonical description of milestones, workflows,
   and contributor expectations.
 - `docs/storage-bridge.org` – Futon API coverage plus manual verification steps.
-- Legacy manual chapters (the numbered `.org` files in `old/`) – background on
-  scholia, derivative works, and the original system design.
+- XTDB-backed docs are the canonical narrative source; use filesystem snapshots
+  only when you need an editable or inspectable surface.
 
 With this layout in place the repo stays focused on the XTDB-era client, while
-the archived Org spine remains available for historical reference.
+historical material remains available for reference.

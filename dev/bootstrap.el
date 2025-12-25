@@ -2,7 +2,7 @@
 
 ;;; Commentary:
 ;; Provides entry points for loading the Arxana sources from `dev/`.
-;; Tangling is no longer part of the default workflow.
+;; The current workflow loads the dev modules directly.
 
 ;;; Code:
 
@@ -21,13 +21,13 @@
                  (expand-file-name "arxana" default-directory))
                 (t default-directory))))
     (file-name-as-directory base))
-  "Root directory containing `spine2.org` and the Org sources.")
+  "Root directory containing the Arxana repository.")
 
 (add-to-list 'load-path (expand-file-name "dev" arxana-root-directory))
 
-;; TODO(org-sync): Tangling disabled by default; update bootstrap guidance in spine2.org.
+;; TODO(org-sync): Remove legacy arxana-allow-tangle toggle once no callers remain.
 (defcustom arxana-allow-tangle nil
-  "Legacy toggle; tangling is no longer supported in the default workflow."
+  "Legacy toggle; ignored in the current workflow."
   :type 'boolean
   :group 'arxana)
 
@@ -39,8 +39,8 @@
   t)
 
 (defun arxana--ensure-dependencies ()
-  "Require runtime packages needed for tangling and networking."
-  (dolist (feature '(org ob-tangle ob-core ob-exp org-macs json url url-http cl-lib seq))
+  "Require runtime packages needed for Org parsing and networking."
+  (dolist (feature '(org org-macs json url url-http cl-lib seq))
     (require feature))
   ;; Align is nice-to-have; tolerate absence (e.g., minimal builds).
   (ignore-errors (require 'align))
@@ -75,11 +75,11 @@
   (message "Loaded dev/ modules")
   t)
 
-(defun arxana-build (&optional _force-tangle)
+(defun arxana-build (&optional _unused)
   "Legacy entry point; now loads `dev/` modules."
   (interactive "P")
   (when arxana-allow-tangle
-    (message "arxana-allow-tangle is set, but tangling is no longer supported"))
+    (message "arxana-allow-tangle is set, but this toggle is ignored"))
   (arxana-load-dev))
 
 (defun arxana-batch-build ()

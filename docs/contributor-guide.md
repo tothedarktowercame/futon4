@@ -2,39 +2,28 @@
 
 ## Phase-aware workflow
 
-Prototype 1 keeps the fast-moving enhancements inside `dev/` while the
-Org sources (`arxana/*.org`) remain the long-term canonical docs.  Until
-Milestone 2 completes, contributors should:
+Prototype 1 keeps the fast-moving enhancements inside `dev/`, while
+canonical docs live in XTDB.  Filesystem doc snapshots are optional and
+should be treated as temporary unless explicitly promoted.
 
-1. Load the harness (`M-x arxana-build` or `./dev/run-tests.sh`) so the
-tangled history and the dev modules share the same Emacs session.
-2. Make iterative changes inside `dev/*.el` or `test/*.el`.  Every helper
-still uses the same logical names that appear in the Org chapters, so the
-future retangle remains straightforward.
+1. Load the harness (`M-x arxana-build` or `./dev/run-tests.sh`) so the dev
+modules share the same Emacs session as your edits.
+2. Make iterative changes inside `dev/*.el` or `test/*.el`.
 3. Record the change in the living plan (`docs/reanimation-plan.org`) and
-`arxana/README.md` whenever a milestone flips state.  If you touch a Part
-VIII feature, add a short note referencing the Org chapter it originated
-from.
-4. Once a feature stabilizes, mirror it back into the matching Org file
-and retangle (run `M-x arxana-build` with `C-u`).  The Org version stays
-the source of truth when Phase 2 begins, so leave breadcrumbs (comments or
-plan updates) that explain where the code should land.
+the relevant XTDB doc entry whenever a milestone flips state.
+4. If you create a filesystem doc snapshot, tag it as temporary or
+archival and note the XTDB doc id it mirrors.
 
-## Generated code ↔ literate docs
+## Dev code ↔ XTDB docs
 
-The dev modules are effectively the “generated” code today.  To keep them
-aligned with the literate Org chapters:
+To keep code and docs aligned:
 
-- Mention the originating chapter at the top of each helper you extend.
-For example, `arxana-derivation.el` came from Part VIII; keep the header
-comment accurate so future merges are trivial.
-- When adding a new entry point, drop a short paragraph into the relevant
-README/Org section explaining how it fits the plan.  The goal is to make
-retangling a documentation exercise rather than archaeology.
-- If you refactor a tangled function directly (`arxana-tangled.el`), move
-that definition into `dev/` as soon as possible and note the change in
-`docs/reanimation-plan.org` so we do not lose track of what needs to be
-retangled.
+- Keep module header comments accurate and point to the XTDB doc id (or
+the temporary snapshot) that describes the behavior.
+- When adding a new entry point, add a short paragraph to the relevant
+XTDB doc entry explaining how it fits the plan.
+- Track drift in `dev/org-sync-tracker.org` so missing doc updates are
+easy to spot.
 
 ## Pattern library contributions
 
@@ -53,8 +42,8 @@ can diff both the Org edits and the corresponding graph changes.
 
 ## QA / regression expectations
 
-- Always run `dev/run-tests.sh`.  It tangles the sources, loads
-`arxana-tangled.el`, and executes every suite in `test/`.
+- Always run `dev/run-tests.sh`.  It loads the dev modules and executes
+every suite in `test/`.
 - If you change inclusion/integration flows, also run the scripted Org
 walkthrough (see README “Scripted verification”) so the Scholia display and
 relation buffers stay consistent with Futon.

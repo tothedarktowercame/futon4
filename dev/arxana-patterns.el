@@ -1349,6 +1349,12 @@ are ignored for now."
 (defvar-local arxana-patterns--browser-context nil)
 (put 'arxana-patterns--browser-context 'permanent-local t)
 (defvar-local arxana-patterns--browser--last-row 1)
+(defvar-local arxana-patterns--docbook-contents-order nil
+  "Alist of docbook order overrides keyed by book.")
+(defvar-local arxana-patterns--docbook-contents-cache nil
+  "Cached docbook contents items for the current browser view.")
+(defvar-local arxana-patterns--docbook-contents-book nil
+  "Book id for the cached docbook contents items.")
 
 (defun arxana-patterns--browser-ensure-context ()
   (unless arxana-patterns--browser-stack
@@ -1484,6 +1490,70 @@ are ignored for now."
                ((and ga gb (/= ga gb)) (< ga gb))
                ((/= la lb) (< la lb))
                (t (< ia ib))))))))
+
+(defun arxana-patterns--docbook-contents-order-get (book)
+  (cdr (assoc book arxana-patterns--docbook-contents-order)))
+
+(defun arxana-patterns--docbook-contents-order-set (book order)
+  (setf (alist-get book arxana-patterns--docbook-contents-order nil nil #'equal)
+        order))
+
+(defun arxana-patterns--docbook-contents-order-items (items order)
+  (let ((by-id (make-hash-table :test 'equal))
+        (seen (make-hash-table :test 'equal))
+        (ordered '()))
+    (dolist (item (arxana-patterns--docbook-contents-unique-items items))
+      (let ((doc-id (plist-get item :doc-id)))
+        (when doc-id
+          (puthash doc-id item by-id))))
+    (dolist (doc-id order)
+      (let ((item (gethash doc-id by-id)))
+        (when item
+          (puthash doc-id t seen)
+          (push item ordered))))
+    (setq ordered (nreverse ordered))
+    (dolist (item (arxana-patterns--docbook-contents-unique-items items))
+      (let ((doc-id (plist-get item :doc-id)))
+        (when (and doc-id (not (gethash doc-id seen)))
+          (push item ordered))))
+    (nreverse ordered)))
+
+(defun arxana-patterns--docbook-contents-normalize-order (order items)
+  "Return ORDER filtered to ITEMS, appending any missing ids."
+  (let ((present (make-hash-table :test 'equal))
+        (seen (make-hash-table :test 'equal))
+        (normalized '())
+        (missing '()))
+    (dolist (item items)
+      (when-let* ((doc-id (plist-get item :doc-id)))
+        (puthash doc-id t present)))
+    (dolist (doc-id order)
+      (when (and doc-id (gethash doc-id present))
+        (puthash doc-id t seen)
+        (push doc-id normalized)))
+    (setq normalized (nreverse normalized))
+    (dolist (item items)
+      (when-let* ((doc-id (plist-get item :doc-id)))
+        (unless (gethash doc-id seen)
+          (push doc-id missing))))
+    (append normalized (nreverse missing))))
+
+(defun arxana-patterns--docbook-contents-ensure-order (book items)
+  (let* ((order (arxana-patterns--docbook-contents-order-get book))
+         (default-order (mapcar (lambda (item) (plist-get item :doc-id))
+                                (arxana-patterns--docbook-contents-unique-items items)))
+         (default-order (delq nil default-order)))
+    (unless order
+      (setq order default-order)
+      (arxana-patterns--docbook-contents-order-set book order))
+    order))
+
+(defun arxana-patterns--docbook-contents-item-map (items)
+  (let ((table (make-hash-table :test 'equal)))
+    (dolist (item (arxana-patterns--docbook-contents-unique-items items))
+      (when-let* ((doc-id (plist-get item :doc-id)))
+        (puthash doc-id item table)))
+    table))
 
 (defun arxana-patterns--browser-root-row (item)
   (let* ((type (capitalize (symbol-name (or (plist-get item :type) 'unknown))))
@@ -1841,13 +1911,15 @@ are ignored for now."
                                  :outline (or (plist-get h :outline) (plist-get h :outline_path))
                                  :path_string path-string
                                  :level (plist-get h :level)
-                                  :latest latest
-                                  :book book
-                                  :coverage coverage
-                                  :ratio ratio
-                                  :toc-index idx)))
+                                 :latest latest
+                                 :book book
+                                 :coverage coverage
+                                 :ratio ratio
+                                 :toc-index idx)))
             '()))
          (toc-items (arxana-patterns--docbook-group-items toc-items))
+         (order (arxana-patterns--docbook-contents-ensure-order book toc-items))
+         (toc-items (arxana-patterns--docbook-contents-order-items toc-items order))
          (toc-docs (let ((table (make-hash-table :test 'equal)))
                      (dolist (item toc-items)
                        (when-let* ((doc-id (plist-get item :doc-id)))
@@ -1911,12 +1983,181 @@ are ignored for now."
                                            (arxana-patterns--docbook-entry-ratio
                                             (gethash doc-id entry-map))))))))
                  entry-headings))))
+    (setq arxana-patterns--docbook-contents-cache toc-items)
+    (setq arxana-patterns--docbook-contents-book book)
     (cond
      ((or toc-items virtual-items) (append toc-items virtual-items))
      (t (list (list :type 'info
                     :label "No TOC found"
                     :description (arxana-patterns--docbook-unavailable-message book))))
   )))
+
+(defun arxana-patterns--docbook-contents-context ()
+  (let ((context (car arxana-patterns--browser-stack)))
+    (when (and context (eq (plist-get context :view) 'docbook-contents))
+      context)))
+
+(defun arxana-patterns--docbook-contents-assert ()
+  (unless (arxana-patterns--docbook-contents-context)
+    (user-error "Not in a docbook contents view")))
+
+(defun arxana-patterns--docbook-contents-current-item ()
+  (arxana-patterns--docbook-contents-assert)
+  (let ((item (tabulated-list-get-id)))
+    (unless (and item (plist-get item :doc-id))
+      (user-error "No docbook heading at point"))
+    item))
+
+(defun arxana-patterns--docbook-contents-items-live ()
+  "Return the current docbook contents items."
+  (or arxana-patterns--docbook-contents-cache
+      (delq nil
+            (mapcar (lambda (entry)
+                      (let ((item (car-safe entry)))
+                        (when (and item (plist-get item :doc-id))
+                          item)))
+                    (or tabulated-list-entries '())))))
+
+(defun arxana-patterns--docbook-contents-unique-items (items)
+  "Return ITEMS de-duplicated by :doc-id, preserving first occurrence."
+  (let ((seen (make-hash-table :test 'equal))
+        (unique '()))
+    (dolist (item items)
+      (let ((doc-id (plist-get item :doc-id)))
+        (when (and doc-id (not (gethash doc-id seen)))
+          (puthash doc-id t seen)
+          (push item unique))))
+    (nreverse unique)))
+
+(defun arxana-patterns--docbook-contents-current-order (items)
+  (delq nil (mapcar (lambda (item) (plist-get item :doc-id))
+                    (arxana-patterns--docbook-contents-unique-items items))))
+
+(defun arxana-patterns--docbook-contents-item-swap (order idx-a idx-b)
+  (let ((copy (copy-sequence order)))
+    (let ((val-a (nth idx-a copy))
+          (val-b (nth idx-b copy)))
+      (setf (nth idx-a copy) val-b)
+      (setf (nth idx-b copy) val-a))
+    copy))
+
+(defun arxana-patterns--docbook-contents-reorder (new-order doc-id)
+  (let* ((context (arxana-patterns--docbook-contents-context))
+         (book (plist-get context :book)))
+    (arxana-patterns--docbook-contents-order-set book new-order)
+    (arxana-patterns--browser-render)
+    (when (fboundp 'arxana-patterns--browser-goto-doc-id)
+      (arxana-patterns--browser-goto-doc-id doc-id))))
+
+(defun arxana-patterns-docbook-move-item-up ()
+  "Move the current docbook heading up one row."
+  (interactive)
+  (let* ((item (arxana-patterns--docbook-contents-current-item))
+         (doc-id (plist-get item :doc-id))
+         (context (arxana-patterns--docbook-contents-context))
+         (book (plist-get context :book))
+         (items (arxana-patterns--docbook-contents-items-live))
+         (order (arxana-patterns--docbook-contents-current-order items)))
+    (unless order
+      (user-error "No ordering information available"))
+    (let* ((idx (cl-position doc-id order :test #'equal))
+           (prev-idx (and idx (> idx 0) (1- idx))))
+      (unless idx
+        (user-error "No ordering entry for this heading"))
+      (unless prev-idx
+        (user-error "Already at top"))
+      (arxana-patterns--docbook-contents-reorder
+       (arxana-patterns--docbook-contents-item-swap order idx prev-idx)
+       doc-id))))
+
+(defun arxana-patterns-docbook-move-item-down ()
+  "Move the current docbook heading down one row."
+  (interactive)
+  (let* ((item (arxana-patterns--docbook-contents-current-item))
+         (doc-id (plist-get item :doc-id))
+         (context (arxana-patterns--docbook-contents-context))
+         (book (plist-get context :book))
+         (items (arxana-patterns--docbook-contents-items-live))
+         (order (arxana-patterns--docbook-contents-current-order items)))
+    (unless order
+      (user-error "No ordering information available"))
+    (let* ((idx (cl-position doc-id order :test #'equal))
+           (next-idx (and idx (< idx (1- (length order))) (1+ idx))))
+      (unless idx
+        (user-error "No ordering entry for this heading"))
+      (unless next-idx
+        (user-error "Already at bottom"))
+      (arxana-patterns--docbook-contents-reorder
+       (arxana-patterns--docbook-contents-item-swap order idx next-idx)
+       doc-id))))
+
+(defun arxana-patterns--docbook-contents-section-blocks (items)
+  "Return section blocks based on display order in ITEMS."
+  (let ((blocks '())
+        (current-key nil)
+        (current-block '()))
+    (dolist (item (arxana-patterns--docbook-contents-unique-items items))
+      (let* ((doc-id (plist-get item :doc-id))
+             (key (arxana-patterns--docbook-top-key item)))
+        (if (and current-key (equal key current-key))
+            (push doc-id current-block)
+          (when current-block
+            (push (cons current-key (nreverse current-block)) blocks))
+          (setq current-key key)
+          (setq current-block (list doc-id)))))
+    (when current-block
+      (push (cons current-key (nreverse current-block)) blocks))
+    (nreverse blocks)))
+
+(defun arxana-patterns-docbook-move-section-up ()
+  "Move the current docbook section up by one section."
+  (interactive)
+  (let* ((item (arxana-patterns--docbook-contents-current-item))
+         (doc-id (plist-get item :doc-id))
+         (context (arxana-patterns--docbook-contents-context))
+         (book (plist-get context :book))
+         (items (arxana-patterns--docbook-contents-items-live))
+         (order (arxana-patterns--docbook-contents-current-order items))
+         (blocks (arxana-patterns--docbook-contents-section-blocks items))
+         (key (arxana-patterns--docbook-top-key item))
+         (idx (cl-position key (mapcar #'car blocks) :test #'equal)))
+    (unless idx
+      (user-error "No section ordering entry for this heading"))
+    (unless (and idx (> idx 0))
+      (user-error "Already at top"))
+    (let* ((copy (copy-sequence blocks))
+           (prev (nth (1- idx) copy))
+           (cur (nth idx copy)))
+      (setf (nth (1- idx) copy) cur)
+      (setf (nth idx copy) prev)
+      (arxana-patterns--docbook-contents-reorder
+       (apply #'append (mapcar #'cdr copy))
+       doc-id))))
+
+(defun arxana-patterns-docbook-move-section-down ()
+  "Move the current docbook section down by one section."
+  (interactive)
+  (let* ((item (arxana-patterns--docbook-contents-current-item))
+         (doc-id (plist-get item :doc-id))
+         (context (arxana-patterns--docbook-contents-context))
+         (book (plist-get context :book))
+         (items (arxana-patterns--docbook-contents-items-live))
+         (order (arxana-patterns--docbook-contents-current-order items))
+         (blocks (arxana-patterns--docbook-contents-section-blocks items))
+         (key (arxana-patterns--docbook-top-key item))
+         (idx (cl-position key (mapcar #'car blocks) :test #'equal)))
+    (unless idx
+      (user-error "No section ordering entry for this heading"))
+    (unless (and idx (< idx (1- (length blocks))))
+      (user-error "Already at bottom"))
+    (let* ((copy (copy-sequence blocks))
+           (next (nth (1+ idx) copy))
+           (cur (nth idx copy)))
+      (setf (nth (1+ idx) copy) cur)
+      (setf (nth idx copy) next)
+      (arxana-patterns--docbook-contents-reorder
+       (apply #'append (mapcar #'cdr copy))
+       doc-id))))
   
 
 (defun arxana-patterns--docbook-section-items (book heading)
@@ -2718,6 +2959,10 @@ returning to the top-level list."
     (define-key map (kbd "d") #'arxana-patterns--lab-open-draft)
     (define-key map (kbd "O") #'arxana-patterns-docbook-open-book)
     (define-key map (kbd "C") #'arxana-patterns-docbook-open-section-context)
+    (define-key map (kbd "M-<up>") #'arxana-patterns-docbook-move-item-up)
+    (define-key map (kbd "M-<down>") #'arxana-patterns-docbook-move-item-down)
+    (define-key map (kbd "C-M-<up>") #'arxana-patterns-docbook-move-section-up)
+    (define-key map (kbd "C-M-<down>") #'arxana-patterns-docbook-move-section-down)
     (define-key map (kbd "m") #'arxana-media-toggle-mark-at-point)
     (define-key map (kbd "U") #'arxana-media-unmark-all)
     (define-key map (kbd "P") #'arxana-media-publish-marked)

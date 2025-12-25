@@ -62,13 +62,13 @@ honour the same failure handling and record diagnostics in
 `arxana-store-last-error` when Futon is unreachable.
 
 The hyperedge helper is exercised via the scholium adjacency tests
-(`arxana/test/arxana-adjacency-test.el`), which stub the HTTP layer and verify
+(`test/arxana-adjacency-test.el`), which stub the HTTP layer and verify
 that inclusion / transclusion scholia emit source, target, passage, and
 provenance endpoints before hitting `/hyperedge`.  Snapshot save/restore flows
-are covered by `arxana/test/arxana-saving-test.el`, ensuring the Emacs commands
+are covered by `test/arxana-saving-test.el`, ensuring the Emacs commands
 call `/snapshot` and `/snapshot/restore` with the selected scope.  The
-Org importer/exporter are covered by `arxana/test/arxana-import-test.el` and
-`arxana/test/arxana-export-test.el`, guaranteeing that `.org` bundles can round-trip
+Org importer/exporter are covered by `test/arxana-import-test.el` and
+`test/arxana-export-test.el`, guaranteeing that `.org` bundles can round-trip
 through XTDB snapshots.
 
 * Downtime handling
@@ -91,8 +91,8 @@ through XTDB snapshots.
 
    ```bash
    HOME=$PWD/.home-tmp EMACS_NATIVE_COMPILATION=0 emacs --batch \
-     -l arxana/dev/bootstrap.el \
-     -l arxana/test/arxana-adjacency-test.el \
+     -l dev/bootstrap.el \
+     -l test/arxana-adjacency-test.el \
      -f ert-run-tests-batch-and-exit
    ```
 
@@ -102,6 +102,6 @@ through XTDB snapshots.
 
 * Testing hooks
 
-The ERT suite in `arxana/test/arxana-store-test.el` provides fake
+The ERT suite in `test/arxana-store-test.el` provides fake
 responses for `/entity` and `/ego`, so we can validate the glue without a
 running Futon server.  Extend those tests whenever you add a new helper.

@@ -7,7 +7,7 @@
 ;; reading buffer and the source files (a “yad”/hand separation), but still lets
 ;; you jump to the underlying artifacts when needed.
 ;;
-;; TODO(org-sync): Mirror doc book browser into spine2.org once the UI/fields
+;; TODO(org-sync): Mirror doc book browser into XTDB docs once the UI/fields
 ;; stabilize.
 
 ;;; Code:
@@ -134,7 +134,7 @@
           (expand-file-name "dev/logs/books" root)))))
 
 (defun arxana-docbook--repo-root ()
-  (or (locate-dominating-file default-directory "spine2.org")
+  (or (locate-dominating-file default-directory "dev/logs/books")
       (locate-dominating-file default-directory "dev")
       default-directory))
 
@@ -533,7 +533,7 @@
               (when (string-match "code>[[:space:]]+\\([^[:space:]]+\\)" text)
                 (match-string 1 text)))))))
 
-;; TODO(org-sync): Track docbook function browsing/jump UI in spine2.org (see org-sync-tracker).
+;; TODO(org-sync): Track docbook function browsing/jump UI in XTDB docs (see org-sync-tracker).
 (defun arxana-docbook--jump-to-function (buffer name)
   (when (and buffer name)
     (with-current-buffer buffer

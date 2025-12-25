@@ -4,7 +4,7 @@
 (require 'arxana-store)
 (require 'arxana-test-support)
 
-(add-to-list 'load-path (expand-file-name "arxana/dev" default-directory))
+(add-to-list 'load-path (expand-file-name "dev" default-directory))
 
 (arxana-test--ensure-tangled-loaded)
 

@@ -1,5 +1,0 @@
-* Scholia-based documents                                          :noexport:
-:PROPERTIES:
-:LATEX_LABEL: sbdm
-:ID: sbdm
-:END:

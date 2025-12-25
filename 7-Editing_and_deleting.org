@@ -1,5 +1,0 @@
-* Editing and deleting                                             :noexport:
-:PROPERTIES:
-:LATEX_LABEL: editing
-:ID: editing
-:END:

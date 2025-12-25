@@ -1,7 +1,0 @@
-*** Package definition                                             :noexport:
-
-#+BEGIN_SRC lisp
-;; packages.lisp
-(defpackage :arxana
-  (:use #:cl #:clsql #:clsql-sys))
-#+END_SRC

@@ -1,5 +1,0 @@
-* Derivative works                                                 :noexport:
-:PROPERTIES:
-:LATEX_LABEL: derivative
-:ID: derivative
-:END:

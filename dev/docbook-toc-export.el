@@ -1,12 +1,13 @@
-;;; docbook-toc-export.el --- Export spine2.org TOC for doc book browsing  -*- lexical-binding: t; -*-
+;;; docbook-toc-export.el --- Export docbook TOC for browsing  -*- lexical-binding: t; -*-
 
 ;;; Commentary:
-;; Batch-friendly helper to emit a JSON table of contents for spine2.org. The
-;; output lives under dev/logs/books/<book>/toc.json and is consumed by the
-;; doc book browser to mirror the outline.
+;; Batch-friendly helper to emit a JSON table of contents for a filesystem
+;; docbook snapshot. The output lives under dev/logs/books/<book>/toc.json and
+;; is consumed by the doc book browser to mirror the outline.
 ;;
 ;; Usage:
-;;   emacs --batch -l dev/docbook-toc-export.el --eval "(arxana-docbook-export-toc)"
+;;   emacs --batch -l dev/docbook-toc-export.el \
+;;     --eval "(arxana-docbook-export-toc \"futon4\" \"dev/logs/books/futon4/index.org\")"
 
 ;;; Code:
 
@@ -35,18 +36,30 @@
       (setq node (org-element-property :parent node)))
     (nreverse titles)))
 
+(defun arxana-docbook--repo-root ()
+  "Return the repository root for docbook exports."
+  (or (and (boundp 'arxana-root-directory) arxana-root-directory)
+      (locate-dominating-file default-directory "dev")
+      default-directory))
+
+(defun arxana-docbook--default-org-file (book root)
+  (let ((candidate (expand-file-name (format "dev/logs/books/%s/index.org" book)
+                                     root)))
+    (when (file-readable-p candidate)
+      candidate)))
+
 (defun arxana-docbook-export-toc (&optional book org-file output-file)
-  "Export a TOC JSON for BOOK (default: futon4) from ORG-FILE (default: spine2.org).
+  "Export a TOC JSON for BOOK (default: futon4) from ORG-FILE.
 Write to OUTPUT-FILE (default: dev/logs/books/BOOK/toc.json)."
   (let* ((book (or book "futon4"))
-         (root (or (locate-dominating-file default-directory "spine2.org")
-                   (error "Cannot locate spine2.org from %s" default-directory)))
-         (org-file (expand-file-name (or org-file "spine2.org") root))
+         (root (arxana-docbook--repo-root))
+         (org-file (or org-file (arxana-docbook--default-org-file book root)))
+         (org-file (and org-file (expand-file-name org-file root)))
          (books-root (expand-file-name "dev/logs/books" root))
          (output-dir (expand-file-name book books-root))
          (output-file (expand-file-name (or output-file "toc.json") output-dir)))
-    (unless (file-readable-p org-file)
-      (error "Org file not readable: %s" org-file))
+    (unless (and org-file (file-readable-p org-file))
+      (error "Org file not readable; pass ORG-FILE explicitly"))
     (with-temp-buffer
       (insert-file-contents org-file)
       (org-mode)
@@ -70,7 +83,10 @@ Write to OUTPUT-FILE (default: dev/logs/books/BOOK/toc.json)."
                  (length headings) output-file)))))
 
 (when noninteractive
-  (arxana-docbook-export-toc))
+  (let* ((root (arxana-docbook--repo-root))
+         (default-org (arxana-docbook--default-org-file "futon4" root)))
+    (when default-org
+      (arxana-docbook-export-toc "futon4" default-org))))
 
 (provide 'docbook-toc-export)
 

@@ -21,7 +21,7 @@
 (defun arxana-browse--ensure (fn)
   "Signal a user error unless FN is bound."
   (unless (fboundp fn)
-    (user-error "Browsing helpers are unavailable; run `arxana-build' first"))
+    (user-error "Browsing helpers are unavailable; load the dev/ modules first"))
   fn)
 
 ;;;###autoload

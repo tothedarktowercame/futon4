@@ -3,20 +3,17 @@
 (require 'ert)
 (require 'arxana-bootstrap)
 
-(ert-deftest arxana-bootstrap-locates-spine ()
-  "Spine file should exist inside the repo."
-  (should (file-exists-p (arxana--spine-file))))
+(ert-deftest arxana-bootstrap-root-exists ()
+  "Repo root should resolve to a directory."
+  (should (file-directory-p arxana-root-directory)))
 
-(ert-deftest arxana-bootstrap-loads-spine ()
-  "Loading the spine should define helper functions for tangling."
-  (arxana-load-spine)
-  (should (fboundp 'arxana-tangle-spine-concat)))
+(ert-deftest arxana-bootstrap-loads-dev ()
+  "Loading dev modules should succeed."
+  (should (arxana-build)))
 
-(ert-deftest arxana-bootstrap-builds-tangled ()
-  "Full build regenerates the tangled sources without error."
-  (let ((output (arxana-build t)))
-    (should (and (stringp output)
-                 (file-exists-p output)))))
+(ert-deftest arxana-bootstrap-build-ignores-legacy-arg ()
+  "Legacy prefix arguments should not change dev loading."
+  (should (arxana-build t)))
 
 (provide 'arxana-bootstrap-test)
 ;;; arxana-bootstrap-test.el ends here
