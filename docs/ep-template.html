@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>[Artist] - [EP Title]</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="[Short EP description]." />
+  <meta name="author" content="[Artist]" />
+
+  <meta name="theme-color" content="#14110f" />
+
+  <meta property="og:title" content="[Artist] - [EP Title]" />
+  <meta property="og:description" content="[Short EP description]." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="[Public URL]" />
+  <meta property="og:image" content="[Cover Image URL]" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="[Artist] - [EP Title]" />
+  <meta name="twitter:description" content="[Short EP description]." />
+  <meta name="twitter:image" content="[Cover Image URL]" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --ink: #14110f;
+      --ink-soft: #1e1a17;
+      --sand: #f7f1e6;
+      --sand-soft: #d8cdbc;
+      --ember: #f97316;
+      --moss: #14b8a6;
+      --shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+      --radius-lg: 20px;
+      --radius-pill: 999px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Space Grotesk", system-ui, sans-serif;
+      color: var(--sand);
+      background: radial-gradient(circle at 20% 10%, rgba(249, 115, 22, 0.15), transparent 45%),
+                  radial-gradient(circle at 80% 0%, rgba(20, 184, 166, 0.15), transparent 40%),
+                  linear-gradient(180deg, #0f0c0a 0%, #15110e 40%, #0b0908 100%);
+      min-height: 100vh;
+      padding: 32px 18px 48px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .page {
+      width: min(960px, 100%);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    header {
+      display: grid;
+      gap: 14px;
+      text-align: left;
+    }
+
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.26em;
+      font-size: 0.68rem;
+      color: var(--moss);
+      font-weight: 600;
+    }
+
+    h1 {
+      font-family: "DM Serif Display", serif;
+      font-size: clamp(2.2rem, 5vw, 3.6rem);
+      margin: 0;
+      letter-spacing: 0.02em;
+    }
+
+    header p {
+      margin: 0;
+      color: var(--sand-soft);
+      max-width: 560px;
+      line-height: 1.6;
+    }
+
+    .hero-card {
+      background: linear-gradient(140deg, rgba(30, 26, 23, 0.85), rgba(12, 10, 9, 0.95));
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(247, 241, 230, 0.1);
+      display: grid;
+      gap: 18px;
+    }
+
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .pill {
+      border: 1px solid rgba(247, 241, 230, 0.2);
+      border-radius: var(--radius-pill);
+      padding: 6px 12px;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--sand-soft);
+    }
+
+    .now-playing {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(20, 15, 13, 0.8);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      border: 1px solid rgba(247, 241, 230, 0.08);
+    }
+
+    .now-playing .label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--ember);
+      font-weight: 600;
+    }
+
+    .now-playing .title {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .now-playing .sub {
+      color: var(--sand-soft);
+      font-size: 0.85rem;
+    }
+
+    .tracklist {
+      display: grid;
+      gap: 12px;
+    }
+
+    .track {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 16px;
+      align-items: center;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: rgba(20, 15, 13, 0.75);
+      border: 1px solid rgba(247, 241, 230, 0.08);
+    }
+
+    .track button {
+      background: var(--ember);
+      color: #1b120b;
+      border: none;
+      padding: 8px 14px;
+      border-radius: var(--radius-pill);
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+    }
+
+    .track button.secondary {
+      background: transparent;
+      color: var(--sand);
+      border: 1px solid rgba(247, 241, 230, 0.3);
+    }
+
+    .track-title {
+      font-weight: 600;
+    }
+
+    .track-note {
+      color: var(--sand-soft);
+      font-size: 0.85rem;
+    }
+
+    .track audio {
+      display: none;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .panel {
+      background: rgba(20, 15, 13, 0.75);
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid rgba(247, 241, 230, 0.08);
+    }
+
+    .panel h3 {
+      margin: 0 0 8px;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--moss);
+    }
+
+    .panel ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 6px;
+      color: var(--sand-soft);
+      font-size: 0.9rem;
+    }
+
+    .lyrics {
+      white-space: pre-wrap;
+      line-height: 1.6;
+      color: var(--sand-soft);
+      font-size: 0.92rem;
+      min-height: 120px;
+    }
+
+    .links a {
+      color: var(--sand);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(247, 241, 230, 0.2);
+    }
+
+    .fade-up {
+      opacity: 0;
+      transform: translateY(12px);
+      animation: fadeUp 0.7s ease forwards;
+    }
+
+    .fade-delay-1 { animation-delay: 0.1s; }
+    .fade-delay-2 { animation-delay: 0.2s; }
+    .fade-delay-3 { animation-delay: 0.3s; }
+
+    @keyframes fadeUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 700px) {
+      .track {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        align-items: flex-start;
+      }
+
+      .track button {
+        width: fit-content;
+      }
+
+      .now-playing {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="fade-up">
+      <div class="eyebrow">[Label / Series]</div>
+      <h1>[EP Title]</h1>
+      <p>[Short description of the EP, the setting, and why this release matters. Keep it to 1-2 lines.]</p>
+    </header>
+
+    <section class="hero-card fade-up fade-delay-1">
+      <div class="meta-row">
+        <div class="pill">[Artist Name]</div>
+        <div class="pill">[Release Date]</div>
+        <div class="pill">[Location / Session]</div>
+      </div>
+
+      <div class="now-playing" id="now-playing">
+        <div>
+          <div class="label">Now Playing</div>
+          <div class="title" id="now-playing-title">Pick a track to start</div>
+          <div class="sub" id="now-playing-sub">[EP subtitle or session note]</div>
+        </div>
+        <button class="secondary" id="stop-all" type="button">Stop</button>
+      </div>
+
+      <div class="tracklist" id="tracklist">
+        <!-- Duplicate this block per track. Fill in data-track-title and data-track-note. -->
+        <div class="track" data-track-title="[Track 01 Title]" data-track-note="[Live take, date, or note]" data-track-lyrics="[Lyrics for Track 01]\n\n[Second stanza]">
+          <button type="button">Play</button>
+          <div>
+            <div class="track-title">01. [Track 01 Title]</div>
+            <div class="track-note">[Live take, date, or note]</div>
+          </div>
+          <div class="track-note">[Duration]</div>
+          <audio src="audio/track-01.mp3" preload="none"></audio>
+        </div>
+
+        <div class="track" data-track-title="[Track 02 Title]" data-track-note="[Live take, date, or note]" data-track-lyrics="[Lyrics for Track 02]\n\n[Second stanza]">
+          <button type="button">Play</button>
+          <div>
+            <div class="track-title">02. [Track 02 Title]</div>
+            <div class="track-note">[Live take, date, or note]</div>
+          </div>
+          <div class="track-note">[Duration]</div>
+          <audio src="audio/track-02.mp3" preload="none"></audio>
+        </div>
+      </div>
+    </section>
+
+    <section class="split">
+      <div class="panel fade-up fade-delay-2">
+        <h3>Credits</h3>
+        <ul>
+          <li>[Artist] - [Role]</li>
+          <li>[Engineer] - [Role]</li>
+          <li>[Artwork] - [Role]</li>
+        </ul>
+      </div>
+      <div class="panel fade-up fade-delay-2">
+        <h3>Lyrics</h3>
+        <div class="lyrics" id="lyrics-panel">Select a track to show lyrics.</div>
+      </div>
+      <div class="panel fade-up fade-delay-2 links">
+        <h3>Listen / Buy</h3>
+        <ul>
+          <li><a href="[Bandcamp link]">Bandcamp</a></li>
+          <li><a href="[Soundcloud link]">Soundcloud</a></li>
+          <li><a href="[Apple Music link]">Apple Music</a></li>
+        </ul>
+      </div>
+      <div class="panel fade-up fade-delay-3">
+        <h3>Release Notes</h3>
+        <ul>
+          <li>[Session info, recording chain, or venue]</li>
+          <li>[Mastering notes]</li>
+          <li>[Catalog id / ISRC block]</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const tracks = Array.from(document.querySelectorAll('.track'));
+    const nowTitle = document.getElementById('now-playing-title');
+    const nowSub = document.getElementById('now-playing-sub');
+    const lyricsPanel = document.getElementById('lyrics-panel');
+    const stopAll = document.getElementById('stop-all');
+
+    function stopAllTracks() {
+      tracks.forEach((track) => {
+        const audio = track.querySelector('audio');
+        const btn = track.querySelector('button');
+        if (!audio.paused) {
+          audio.pause();
+        }
+        audio.currentTime = 0;
+        btn.textContent = 'Play';
+      });
+      nowTitle.textContent = 'Pick a track to start';
+      nowSub.textContent = '[EP subtitle or session note]';
+      if (lyricsPanel) {
+        lyricsPanel.textContent = 'Select a track to show lyrics.';
+      }
+    }
+
+    tracks.forEach((track) => {
+      const button = track.querySelector('button');
+      const audio = track.querySelector('audio');
+
+      button.addEventListener('click', () => {
+        const isPlaying = !audio.paused;
+        stopAllTracks();
+        if (!isPlaying) {
+          audio.play();
+          button.textContent = 'Pause';
+          nowTitle.textContent = track.dataset.trackTitle || 'Untitled';
+          nowSub.textContent = track.dataset.trackNote || '';
+          if (lyricsPanel) {
+            lyricsPanel.textContent = track.dataset.trackLyrics || 'No lyrics available.';
+          }
+        }
+      });
+
+      audio.addEventListener('ended', () => {
+        button.textContent = 'Play';
+      });
+    });
+
+    stopAll.addEventListener('click', stopAllTracks);
+  </script>
+</body>
+</html>
