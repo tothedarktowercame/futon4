@@ -56,3 +56,8 @@ soon as new work lands.
    :FILES: dev/def-doc-summarize.clj dev/def-doc-backfill.clj dev/prompts/def-doc-summary.prompt
    :TARGET: XTDB doc id (new section for XTDB-native def-doc ingestion)
    :NOTES: ChatGPT-driven per-file summaries for dev/*.el into docbook JSON + toc.json.
+
+** TODO flexiarg golden test fixture
+   :FILES: test/testing.flexiarg
+   :TARGET: XTDB doc id
+   :NOTES: Relocated from docs/; wire into a golden test for flexiarg normalization.

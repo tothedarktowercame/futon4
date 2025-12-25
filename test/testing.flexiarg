@@ -1,0 +1,297 @@
+;;; /home/joe/code/patterns-685450173d4ea701e814d930/outline/preface.flexiarg
+
+@arg popiii/preface
+@title Preface: Simulations as Reflective PrototypeTESTs
+@audience plop-reviewers
+@tone invitational
+@allow-new-claims true
+@order 1
+
+! conclusion:
+  Set expectations that the paper distills conceptual lessons from simulated
+  workshops rather than unveiling a production-ready system, while signalling the
+  three analytic lenses that anchor the rest of the text.
+
+  + CONTEXT:
+    We ran narrative-rich GPT workshops to probe how PLACARD-era pattern methods
+    behave when orchestrated by virtual facilitators and fictional agents.
+
+  + IF:
+    Readers know that these simulations served as thinking tools, not
+    deliverables, and that we will repeatedly view them through Project Action
+    Reviews, Causal Layered Analysis, and a simple “next steps” clause that keeps
+    patterns curious.
+
+  + HOWEVER:
+    Without a clear preface, reviewers might expect implementation detail or
+    empirical validation we cannot provide, or assume the analytic lenses are new
+    inventions rather than familiar practices applied in concert.
+
+  + THEN:
+    Open with a candid statement: the prototypes shaped our understanding, the
+    paper gathers the resulting insights, and the trio of lenses will be used as
+    interpretive tools throughout.
+
+  + BECAUSE:
+    Front-loading intent keeps the scope legible, prevents reviewers from
+    chasing missing code, and frames each later section as part of a reflective
+    synthesis instead of a systems pitch.
+
+  + NEXT STEPS:
+    Draft the prefatory paragraphs using plain, fairy-tale language that names
+    the simulations, introduces the lenses, and emphasizes that what follows is a
+    distillation meant for designers and educators alike.
+
+
+;;; /home/joe/code/patterns-685450173d4ea701e814d930/outline/introduction.flexiarg
+
+@arg popiii/introduction
+@title Introduction: What a Pattern Wants
+@audience plop-reviewers
+@tone lucid
+@allow-new-claims true
+@order 2
+
+! conclusion:
+  Introduce design patterns as living predictive cells that sense context,
+  surface tensions, act, and keep a “next steps” clause to gather new evidence,
+  while highlighting PAR and CLA as complementary bundles for coordinating them.
+
+  + CONTEXT:
+    Readers arrive with varied notions of “pattern”—some think of catalogues,
+    others of reusable code—and need a story that links the PLACARD lineage to
+    present-day questions about agency and pedagogy.
+
+  + IF:
+    We render a pattern as a Jeff Hawkins-style neuron—firing when context and
+    tension align, dampening noise, and triggering action—and explain that the
+    added “next steps” clause keeps it collecting evidence over time.
+
+  + HOWEVER:
+    Too much machinery (predictive processing jargon, PAR/CLA mechanics) could
+    swamp the introduction, obscuring the reader-friendly story before it begins.
+
+  + THEN:
+    Use simple metaphors: PAR is the with-the-grain bundle that gathers agents in
+    a shared moment; CLA is the across-the-grain bundle that rewrites the story;
+    together, they keep a collection of patterns healthy as they learn.
+
+  + BECAUSE:
+    This framing shows why patterns matter beyond documentation—they are active
+    participants in inquiry—and primes readers for the rest of the paper without
+    demanding technical background.
+
+  + NEXT STEPS:
+    Draft two concise introduction paragraphs that (1) define patterns via the
+    neuron metaphor plus the curiosity clause, and (2) preview PAR and CLA as the
+    lenses we use to understand how patterns travel through workshops and futures.
+
+
+;;; /home/joe/code/patterns-685450173d4ea701e814d930/outline/methods.flexiarg
+
+@arg popiii/methods
+@title Methods and Evidence Sources
+@audience plop-reviewers
+@tone transparent
+@allow-new-claims true
+@order 3
+
+! conclusion:
+  Explain how virtual workshops, reflective instrumentation, and
+  prototype-inspired thought experiments provided qualitative evidence for the
+  analysis, while setting expectations about abductive reasoning.
+
+  + CONTEXT:
+    The paper relies on simulated dialogues, in-person workshop notes, and the
+    authors’ ongoing prototyping practice; reviewers need to know how these
+    strands interact.
+
+  + IF:
+    We describe the segmentation protocol for the GPT workshops, the reflective
+    logs and PAR/CLA artefacts that grounded interpretation, and the way
+    prototype work informed but did not dominate our reasoning.
+
+  + HOWEVER:
+    Listing methods without clarifying their qualitative, abductive nature could
+    invite demands for replicable metrics or system benchmarks.
+
+  + THEN:
+    Characterise the methods as narrative instruments: the virtual workshops are
+    staged conversations; the PAR/CLA materials are living notebooks; the
+    prototype efforts are thought experiments that shaped questions.
+
+  + BECAUSE:
+    This framing gives enough procedural detail to show rigor while keeping the
+    ontology aligned with the paper’s reflective, design-oriented goals.
+
+  + NEXT STEPS:
+    Draft subsections for (1) staged workshops, (2) reflective instrumentation,
+    and (3) prototype-informed interpretation, each ending with a note about the
+    qualitative nature of the evidence.
+
+
+;;; /home/joe/code/patterns-685450173d4ea701e814d930/outline/pattern-competent-agents.flexiarg
+
+@arg popiii/pattern-competent-agents
+@title Toward Pattern-Competent Agents
+@audience plop-reviewers
+@tone speculative-grounded
+@allow-new-claims true
+@order 4
+
+! conclusion:
+  Translate workshop insights into three design requirements—recognition,
+  flexiformal expression, and reflection loops—showing why they matter for any
+  future transition from simulated to embodied agents.
+
+  + CONTEXT:
+    Readers are curious about what happens if patterns stop being purely human
+    artefacts and start living inside software or mixed collectives.
+
+  + IF:
+    We present each requirement as a “threshold” that the simulations illuminated
+    (e.g., agents need to notice when a pattern should fire, interpret its clauses
+    legibly, and keep it evolving via PAR/CLA-like loops).
+
+  + HOWEVER:
+    Getting lost in prototype detail would derail the reflective tone and invite
+    requests for benchmarks.
+
+  + THEN:
+    Use narrative vignettes drawn from the simulations: describe what went right
+    or wrong in a virtual breakout, extrapolate the requirement, and sketch what a
+    cautious real-world implementation would have to respect.
+
+  + BECAUSE:
+    This lets us talk about why the simulated→real transition matters—accountable
+    memory, transparent roles, living evidence—without overclaiming progress.
+
+  + NEXT STEPS:
+    Draft three subsections (Recognition, Flexiformality, Reflection) each with a
+    vignette, a requirement statement, and a note about implications for future
+    agent design.
+
+
+;;; /home/joe/code/patterns-685450173d4ea701e814d930/outline/patterns-reflexive.flexiarg
+
+@arg popiii/patterns-as-reflexive-infrastructure
+@title Patterns as Reflective Infrastructure
+@audience plop-reviewers
+@tone narrative-analytic
+@allow-new-claims true
+@order 5
+
+! conclusion:
+  Show how the quadripartite view—interactional, organizational, actionable,
+  environmental—emerged from the workshops, and how PAR, CLA, and the “next
+  steps” clause diagnose tensions in each layer.
+
+  + CONTEXT:
+    Workshop vignettes revealed recurrent stresses: sensing together, sharing
+    facilitation roles, landing actionable moves, and tending to the environment
+    that holds the patterns.
+
+  + IF:
+    We tell short stories for each quadrant, highlighting where a pattern fired,
+    where it faltered, and how a PAR or CLA move exposed what was missing.
+
+  + HOWEVER:
+    Without discipline, this section could balloon into illustrative anecdotes
+    that do not add analytic value.
+
+  + THEN:
+    For each quadrant, pick one concrete moment (two real, two simulated is fine)
+    and walk the reader through how the pattern behaved, what the reflective
+    instrument revealed, and what “next steps” the pattern recorded for itself.
+
+  + BECAUSE:
+    This keeps the section grounded, demonstrates how the analytic trio works in
+    practice, and sets up the later move toward pattern-competent agents.
+
+  + NEXT STEPS:
+    Outline four subsections (A–D) with one paragraph each: scene, diagnosis via
+    PAR/CLA/next-steps, lesson for refining the pattern ecology.
+
+
+;;; /home/joe/code/patterns-685450173d4ea701e814d930/outline/teaching-patterns.flexiarg
+
+@arg popiii/teaching-patterns
+@title Teaching Patterns in the Agent Era
+@audience plop-reviewers
+@tone invitational-structured
+@allow-new-claims true
+@order 6
+
+! conclusion:
+  Outline design requirements for lesson plans that mirror the agent
+  requirements: neuron-like pattern drills, paired PAR/CLA activities, flexiformal
+  writing, and reflective instrumentation.
+
+  + CONTEXT:
+    We lack time to test curricula, but the simulations suggest what future
+    learners would need to practice if they are to steward pattern ecologies with
+    or without computational collaborators.
+
+  + IF:
+    We treat lessons as ensembles of small active inference loops: students learn
+    when a pattern fires, why it might fail, how to reframe it across layers, and
+    how to note “next steps” evidence.
+
+  + HOWEVER:
+    Without a concise structure, this section could read like an afterthought or
+    a speculative rant.
+
+  + THEN:
+    Mirror the agent thresholds: explain the exercise, the reflective instrument
+    it pairs with, and how it prepares students for computational or human
+    collaboration.
+
+  + BECAUSE:
+    This symmetry shows that pedagogy and tooling share constraints and makes the
+    section feel integral rather than appendical.
+
+  + NEXT STEPS:
+    Draft a short section with four bullet-style subsections (Recognition drills,
+    PAR studios, CLA remixes, Flexiformal journaling), each linked to a sample
+    exercise and its intended “next steps” habit.
+
+
+;;; /home/joe/code/patterns-685450173d4ea701e30/outline/discussion.flexiarg
+
+@arg popiii/discussion
+@title Discussion and Future Work
+@audience plop-reviewers
+@tone modest-forward
+@allow-new-claims true
+@order 7
+
+! conclusion:
+  Reflect on the limitations of simulated evidence, articulate the ethical stakes
+  of moving toward real agents, and outline near-term commitments that keep the
+  pattern ecology honest.
+
+  + CONTEXT:
+    The paper closes with enthusiasm tempered by awareness: we have not deployed
+    the systems we imagine, but we have concrete practices to evolve.
+
+  + IF:
+    We revisit key limitations (simulation, lack of classroom pilots, dependence
+    on narrative inference) and translate them into future work commitments.
+
+  + HOWEVER:
+    A generic future-work list would feel detached from the analytic arc we’ve
+    built.
+
+  + THEN:
+    Tie each commitment to the triple analysis: richer “next steps” instrumentation
+    for patterns, hybrid workshops that test PAR/CLA bundles with partial agent
+    support, and curricular pilots that treat patterns as living agents.
+
+  + BECAUSE:
+    This keeps the narrative coherent and shows reviewers that we understand the
+    ethical and methodological boundaries of our current evidence.
+
+  + NEXT STEPS:
+    Draft a closing section with three paragraphs (limitations, commitments,
+    ethical framing) and a sentence inviting collaboration from readers who want
+    to explore the simulated→real transition responsibly
