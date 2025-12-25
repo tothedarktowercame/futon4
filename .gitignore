@@ -2,6 +2,9 @@
 .clj-kondo/
 .lsp/
 
+# Futon0 workflow artifacts
+boundary.edn
+
 # Docbook/log artifacts
 dev/logs/
 
