@@ -75,16 +75,19 @@
   (message "Loaded dev/ modules")
   t)
 
-(defun arxana-build (&optional _unused)
-  "Legacy entry point; now loads `dev/` modules."
+(defun arxana-load (&optional _unused)
+  "Load the current `dev/` modules."
   (interactive "P")
   (when arxana-allow-tangle
     (message "arxana-allow-tangle is set, but this toggle is ignored"))
   (arxana-load-dev))
 
-(defun arxana-batch-build ()
+(defun arxana-batch-load ()
   "Batch entry point: load `dev/` sources, then exit."
-  (arxana-build))
+  (arxana-load))
+
+(defalias 'arxana-build #'arxana-load)
+(defalias 'arxana-batch-build #'arxana-batch-load)
 
 (provide 'arxana-bootstrap)
 

@@ -25,6 +25,10 @@ define the reanimation milestones and current storage workflows.
 5. Re-run `dev/run-tests.sh` after changes; it loads the Emacs modules and runs
    the ERT suites so regressions are caught before pushing.
 
+Note: the media browser auto-detects the Zoom catalog at
+`~/code/storage/zoomr4/meta/zoom_sync_index.json` when present. This is only the
+Zoom catalog; it does not cover `misc-audio` working sets.
+
 ## Testing and verification
 
 - `dev/run-tests.sh` boots Emacs in batch mode and runs the suites under `test/`.

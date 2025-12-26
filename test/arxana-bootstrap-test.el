@@ -9,11 +9,11 @@
 
 (ert-deftest arxana-bootstrap-loads-dev ()
   "Loading dev modules should succeed."
-  (should (arxana-build)))
+  (should (arxana-load)))
 
-(ert-deftest arxana-bootstrap-build-ignores-legacy-arg ()
+(ert-deftest arxana-bootstrap-load-ignores-legacy-arg ()
   "Legacy prefix arguments should not change dev loading."
-  (should (arxana-build t)))
+  (should (arxana-load t)))
 
 (provide 'arxana-bootstrap-test)
 ;;; arxana-bootstrap-test.el ends here

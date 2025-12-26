@@ -6,7 +6,7 @@ Prototype 1 keeps the fast-moving enhancements inside `dev/`, while
 canonical docs live in XTDB.  Filesystem doc snapshots are optional and
 should be treated as temporary unless explicitly promoted.
 
-1. Load the harness (`M-x arxana-build` or `./dev/run-tests.sh`) so the dev
+1. Load the harness (`M-x arxana-load` or `./dev/run-tests.sh`) so the dev
 modules share the same Emacs session as your edits.
 2. Make iterative changes inside `dev/*.el` or `test/*.el`.
 3. Record the change in the living plan (`docs/reanimation-plan.org`) and

@@ -12,7 +12,7 @@ behavior at every stage.
 
 * Workflow loop
 
-1. Load the dev harness (`M-x arxana-build` or `dev/run-tests.sh`).
+1. Load the dev harness (`M-x arxana-load` or `dev/run-tests.sh`).
 2. Run the ERT smoke suite to verify the harness still loads.
 3. Exercise the feature under development inside Emacs and via Futon curl
    checks, capturing the commands we expect contributors to run.

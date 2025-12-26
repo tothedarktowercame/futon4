@@ -40,7 +40,7 @@ Replace `$BASE` with `http://localhost:8080/api/alpha` (or your chosen host).
 
 * Workflow notes
 
-1. Regenerate / load with `M-x arxana-build`.
+1. Regenerate / load with `M-x arxana-load`.
 2. Ensure your article buffer has been turned into an article (`M-x
    make-current-buffer-into-article`).
 3. Run the relevant `arxana-store-*` helper from Emacs; if it reports an

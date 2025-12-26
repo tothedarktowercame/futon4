@@ -103,6 +103,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
+      align-items: center;
     }
 
     .pill {
@@ -113,6 +114,27 @@
       text-transform: uppercase;
       letter-spacing: 0.18em;
       color: var(--sand-soft);
+    }
+
+    .volume-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 10px;
+      margin-left: auto;
+    }
+
+    .volume-pill label {
+      font-size: 0.62rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--sand-soft);
+    }
+
+    .volume-pill input[type="range"] {
+      width: 120px;
+      accent-color: var(--moss);
+      cursor: pointer;
     }
 
     .now-playing {
@@ -145,6 +167,40 @@
       font-size: 0.85rem;
     }
 
+    .now-progress {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.75rem;
+      color: var(--sand-soft);
+    }
+
+    .now-progress .time {
+      min-width: 36px;
+      text-align: center;
+      letter-spacing: 0.04em;
+    }
+
+    .progress-bar-wrap {
+      flex: 1;
+      height: 6px;
+      border-radius: var(--radius-pill);
+      background: rgba(12, 10, 9, 0.9);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0%;
+      background: linear-gradient(90deg, var(--ember), var(--moss));
+      transition: width 0.1s linear;
+    }
+
     .tracklist {
       display: grid;
       gap: 12px;
@@ -162,20 +218,22 @@
     }
 
     .track button {
-      background: var(--ember);
-      color: #1b120b;
-      border: none;
+      background: rgba(12, 10, 9, 0.9);
+      color: var(--sand);
+      border: 1px solid rgba(247, 241, 230, 0.3);
       padding: 8px 14px;
       border-radius: var(--radius-pill);
       font-weight: 600;
       cursor: pointer;
       letter-spacing: 0.05em;
+      box-shadow: inset 0 0 0 1px rgba(247, 241, 230, 0.05);
     }
 
-    .track button.secondary {
-      background: transparent;
-      color: var(--sand);
-      border: 1px solid rgba(247, 241, 230, 0.3);
+    .track button.is-playing {
+      background: linear-gradient(135deg, #5eead4, #14b8a6);
+      color: #0b1714;
+      border-color: transparent;
+      box-shadow: 0 10px 25px rgba(20, 184, 166, 0.35);
     }
 
     .track-title {
@@ -197,6 +255,10 @@
       gap: 16px;
     }
 
+    .lyrics-panel {
+      grid-column: span 2;
+    }
+
     .panel {
       background: rgba(20, 15, 13, 0.75);
       border-radius: 16px;
@@ -210,6 +272,11 @@
       text-transform: uppercase;
       letter-spacing: 0.18em;
       color: var(--moss);
+    }
+
+    .panel h3 + h3,
+    .panel ul + h3 {
+      margin-top: 14px;
     }
 
     .panel ul {
@@ -228,12 +295,6 @@
       color: var(--sand-soft);
       font-size: 0.92rem;
       min-height: 120px;
-    }
-
-    .links a {
-      color: var(--sand);
-      text-decoration: none;
-      border-bottom: 1px solid rgba(247, 241, 230, 0.2);
     }
 
     .fade-up {
@@ -268,6 +329,14 @@
         flex-direction: column;
         align-items: flex-start;
       }
+
+      .now-progress {
+        width: 100%;
+      }
+
+      .lyrics-panel {
+        grid-column: auto;
+      }
     }
   </style>
 </head>
@@ -284,6 +353,10 @@
         <div class="pill">[Artist Name]</div>
         <div class="pill">[Release Date]</div>
         <div class="pill">[Location / Session]</div>
+        <div class="pill volume-pill">
+          <label for="volume-slider">Volume</label>
+          <input id="volume-slider" type="range" min="0" max="1" step="0.01" value="0.85" />
+        </div>
       </div>
 
       <div class="now-playing" id="now-playing">
@@ -292,7 +365,13 @@
           <div class="title" id="now-playing-title">Pick a track to start</div>
           <div class="sub" id="now-playing-sub">[EP subtitle or session note]</div>
         </div>
-        <button class="secondary" id="stop-all" type="button">Stop</button>
+        <div class="now-progress" aria-live="polite">
+          <div class="time" id="current-time">0:00</div>
+          <div class="progress-bar-wrap" id="progress-wrap">
+            <div class="progress-bar" id="progress-bar"></div>
+          </div>
+          <div class="time" id="duration-time">0:00</div>
+        </div>
       </div>
 
       <div class="tracklist" id="tracklist">
@@ -327,26 +406,16 @@
           <li>[Engineer] - [Role]</li>
           <li>[Artwork] - [Role]</li>
         </ul>
-      </div>
-      <div class="panel fade-up fade-delay-2">
-        <h3>Lyrics</h3>
-        <div class="lyrics" id="lyrics-panel">Select a track to show lyrics.</div>
-      </div>
-      <div class="panel fade-up fade-delay-2 links">
-        <h3>Listen / Buy</h3>
-        <ul>
-          <li><a href="[Bandcamp link]">Bandcamp</a></li>
-          <li><a href="[Soundcloud link]">Soundcloud</a></li>
-          <li><a href="[Apple Music link]">Apple Music</a></li>
-        </ul>
-      </div>
-      <div class="panel fade-up fade-delay-3">
         <h3>Release Notes</h3>
         <ul>
           <li>[Session info, recording chain, or venue]</li>
           <li>[Mastering notes]</li>
           <li>[Catalog id / ISRC block]</li>
         </ul>
+      </div>
+      <div class="panel fade-up fade-delay-2 lyrics-panel">
+        <h3>Lyrics</h3>
+        <div class="lyrics" id="lyrics-panel">Select a track to show lyrics.</div>
       </div>
     </section>
   </main>
@@ -356,7 +425,18 @@
     const nowTitle = document.getElementById('now-playing-title');
     const nowSub = document.getElementById('now-playing-sub');
     const lyricsPanel = document.getElementById('lyrics-panel');
-    const stopAll = document.getElementById('stop-all');
+    const currentTimeEl = document.getElementById('current-time');
+    const durationEl = document.getElementById('duration-time');
+    const progressBar = document.getElementById('progress-bar');
+    const volumeSlider = document.getElementById('volume-slider');
+
+    function formatTime(seconds) {
+      if (!Number.isFinite(seconds)) return '0:00';
+      const total = Math.max(0, Math.floor(seconds));
+      const mins = Math.floor(total / 60);
+      const secs = total % 60;
+      return `${mins}:${String(secs).padStart(2, '0')}`;
+    }
 
     function stopAllTracks() {
       tracks.forEach((track) => {
@@ -367,38 +447,89 @@
         }
         audio.currentTime = 0;
         btn.textContent = 'Play';
+        btn.classList.remove('is-playing');
       });
       nowTitle.textContent = 'Pick a track to start';
       nowSub.textContent = '[EP subtitle or session note]';
       if (lyricsPanel) {
         lyricsPanel.textContent = 'Select a track to show lyrics.';
       }
+      if (currentTimeEl) currentTimeEl.textContent = '0:00';
+      if (durationEl) durationEl.textContent = '0:00';
+      if (progressBar) progressBar.style.width = '0%';
+    }
+
+    function playTrackAt(index) {
+      const track = tracks[index];
+      if (!track) return;
+      stopAllTracks();
+      const audio = track.querySelector('audio');
+      const button = track.querySelector('button');
+      audio.play();
+      button.textContent = 'Pause';
+      button.classList.add('is-playing');
+      nowTitle.textContent = track.dataset.trackTitle || 'Untitled';
+      nowSub.textContent = track.dataset.trackNote || '';
+      if (lyricsPanel) {
+        lyricsPanel.textContent = track.dataset.trackLyrics || 'No lyrics available.';
+      }
     }
 
     tracks.forEach((track) => {
       const button = track.querySelector('button');
       const audio = track.querySelector('audio');
+      if (volumeSlider) {
+        audio.volume = parseFloat(volumeSlider.value || '0.85');
+      }
 
       button.addEventListener('click', () => {
         const isPlaying = !audio.paused;
-        stopAllTracks();
-        if (!isPlaying) {
-          audio.play();
-          button.textContent = 'Pause';
-          nowTitle.textContent = track.dataset.trackTitle || 'Untitled';
-          nowSub.textContent = track.dataset.trackNote || '';
-          if (lyricsPanel) {
-            lyricsPanel.textContent = track.dataset.trackLyrics || 'No lyrics available.';
-          }
+        if (isPlaying) {
+          stopAllTracks();
+          return;
         }
+        const index = tracks.indexOf(track);
+        playTrackAt(index);
       });
 
       audio.addEventListener('ended', () => {
-        button.textContent = 'Play';
+        const index = tracks.indexOf(track);
+        const nextIndex = index + 1;
+        if (nextIndex < tracks.length) {
+          playTrackAt(nextIndex);
+        } else {
+          stopAllTracks();
+        }
+      });
+
+      audio.addEventListener('timeupdate', () => {
+        if (!currentTimeEl || !durationEl || !progressBar) return;
+        currentTimeEl.textContent = formatTime(audio.currentTime);
+        const dur = audio.duration;
+        durationEl.textContent = formatTime(dur);
+        if (!Number.isFinite(dur) || dur <= 0) {
+          progressBar.style.width = '0%';
+          return;
+        }
+        const pct = (audio.currentTime / dur) * 100;
+        progressBar.style.width = `${pct}%`;
+      });
+
+      audio.addEventListener('loadedmetadata', () => {
+        if (!durationEl) return;
+        durationEl.textContent = formatTime(audio.duration);
       });
     });
 
-    stopAll.addEventListener('click', stopAllTracks);
+    if (volumeSlider) {
+      volumeSlider.addEventListener('input', () => {
+        const level = parseFloat(volumeSlider.value || '0.85');
+        tracks.forEach((track) => {
+          const audio = track.querySelector('audio');
+          audio.volume = level;
+        });
+      });
+    }
   </script>
 </body>
 </html>
