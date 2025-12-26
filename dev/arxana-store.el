@@ -47,6 +47,31 @@
   (and (boundp 'futon4-enable-sync)
        futon4-enable-sync))
 
+(defcustom arxana-store-auto-start-server nil
+  "When non-nil, automatically start the Futon server when enabling sync."
+  :type 'boolean
+  :group 'arxana)
+
+(defun arxana-store--start-server ()
+  "Start a Futon server if a known helper is available."
+  (cond
+   ((fboundp 'futon4-start-server) (futon4-start-server))
+   ((fboundp 'tatami-start-server) (tatami-start-server))
+   (t nil)))
+
+(defun arxana-store-ensure-sync (&optional prompt)
+  "Enable Futon sync, optionally prompting and starting the server."
+  (if (arxana-store-sync-enabled-p)
+      t
+    (let ((prompt (or prompt "Futon sync is disabled. Enable it now? ")))
+      (when (yes-or-no-p prompt)
+        (setq futon4-enable-sync t)
+        (when (or arxana-store-auto-start-server
+                  (yes-or-no-p "Start the Futon server now? "))
+          (unless (arxana-store--start-server)
+            (message "No Futon server start helper found.")))
+        t))))
+
 (defun arxana-store--record-error (reason detail &optional context)
   "Remember an error REASON/DETAIL/CONTEXT and log it."
   (setq arxana-store-last-error (list :reason reason
@@ -152,7 +177,7 @@ already encoded query string (without the leading ?)."
                                   nil t nil nil default)))
     (intern choice)))
 
-(cl-defun arxana-store-ensure-entity (&key id name type source external-id seen-count pinned? last-seen)
+(cl-defun arxana-store-ensure-entity (&key id name type source external-id seen-count pinned? last-seen props)
   "Ensure Futon has an entity named NAME of TYPE, returning the response.
 ID, SOURCE, EXTERNAL-ID, SEEN-COUNT, PINNED?, and LAST-SEEN mirror the
 payload accepted by Futon's `/entity` endpoint. TYPE may be a keyword or
@@ -170,7 +195,8 @@ string. Signals a user error when NAME is missing."
                                   (when seen-count (cons 'seen-count seen-count))
                                   (when (not (null pinned?))
                                     (cons 'pinned? (and pinned? t)))
-                                  (when last-seen (cons 'last-seen last-seen))))))
+                                  (when last-seen (cons 'last-seen last-seen))
+                                  (when props (cons 'props props))))))
     (arxana-store--request "POST" "/entity" payload)))
 
 (defun arxana-store--relation-payload (src-id dst-id label extra-props)

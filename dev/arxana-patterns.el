@@ -4,7 +4,7 @@
 ;; Fetch pattern-library entries from Futon1 (patterns ingested from Futon3) and
 ;; render them as editable Org buffers.  Each buffer exposes the pattern summary
 ;; and component passages so Emacs users can review and update pattern text
-;; without dropping into the Futon CLI.
+;; without dropping into the Futon CLI.  
 
 ;;; Code:
 
@@ -20,7 +20,23 @@
 (require 'arxana-patterns-ingest)
 (require 'arxana-docbook)
 (require 'arxana-lab)
+(require 'tabulated-list)
 (require 'arxana-media)
+
+(defun arxana-patterns--ensure-tabulated-list ()
+  "Ensure `tabulated-list-mode-map` is available after hot reloads."
+  (unless (boundp 'tabulated-list-mode-map)
+    (when (locate-library "tabulated-list")
+      (load "tabulated-list" nil t)))
+  (unless (boundp 'tabulated-list-mode-map)
+    (message "tabulated-list-mode-map still unavailable; reload tabulated-list.el")))
+
+(defun arxana-patterns--tabulated-list-guard (orig &rest args)
+  (arxana-patterns--ensure-tabulated-list)
+  (apply orig args))
+
+(unless (advice-member-p #'arxana-patterns--tabulated-list-guard 'tabulated-list-mode)
+  (advice-add 'tabulated-list-mode :around #'arxana-patterns--tabulated-list-guard))
 
 (defvar flexiarg-mode-map nil)
 
@@ -905,7 +921,7 @@ use that entry; otherwise prompt for a directory."
     (setq header-line-format "C-c C-s to sync changes; g to refetch from Futon")))
 
 (defun arxana-patterns--ensure-sync ()
-  (unless (arxana-store-sync-enabled-p)
+  (unless (arxana-store-ensure-sync)
     (user-error "Futon sync is disabled; enable futon4-enable-sync first")))
 
 (defun arxana-patterns--alist (key alist)
@@ -1794,15 +1810,37 @@ are ignored for now."
                                                          (if (= pub-count 1) "" "s")
                                                          pub-root)
                                     :view 'media-publications)))))
+        (let* ((misc-root (and (boundp 'arxana-media-misc-root)
+                               arxana-media-misc-root))
+               (misc-root (and misc-root (file-name-as-directory (expand-file-name misc-root))))
+               (misc-ready (and misc-root (fboundp 'arxana-media--misc-directories)))
+               (misc-dirs (if misc-ready (or (arxana-media--misc-directories) '()) '()))
+               (misc-count (length misc-dirs))
+               (misc-description (cond
+                                  (misc-ready
+                                   (format "%d folder%s — %s"
+                                           misc-count
+                                           (if (= misc-count 1) "" "s")
+                                           misc-root))
+                                  (misc-root
+                                   "Reload arxana-media to enable misc audio.")
+                                  (t
+                                   "Set arxana-media-misc-root to enable misc audio."))))
+          (setq items
+                (append items
+                        (list (list :type 'menu
+                                    :label "Misc Audio"
+                                    :description misc-description
+                                    :view (and misc-ready 'media-misc))))))
         (let ((projects (arxana-media--project-items entries)))
           (when projects
             (setq items
                   (append items
                           (list (list :type 'media-projects
                                       :label "Projects"
-                  :description "Recording folders from the Zoom R4."
-                  :view 'media-projects
-                  :count (length projects)))))))
+                                      :description "Recording folders from the Zoom R4."
+                                      :view 'media-projects
+                                      :count (length projects)))))))
         items)))))
 
 (defun arxana-patterns--docbook-books ()
@@ -2514,6 +2552,8 @@ are ignored for now."
         ('media-projects (arxana-media--project-items (or (arxana-media--entries) '())))
         ('media-publications (arxana-media--publications-items))
         ('media-publication (arxana-media--publication-track-items (plist-get context :publication-path)))
+        ('media-misc (arxana-media--misc-items))
+        ('media-misc-folder (arxana-media--misc-track-items (plist-get context :misc-path)))
         (_ (arxana-patterns--menu-items))))
      (t
       (arxana-patterns--browser-pattern-items context)))))
@@ -2623,6 +2663,8 @@ are ignored for now."
             ('media-projects #'arxana-patterns--browser-info-row)
             ('media-publications #'arxana-patterns--browser-info-row)
             ('media-publication #'arxana-media--publication-track-row)
+            ('media-misc #'arxana-patterns--browser-info-row)
+           ('media-misc-folder #'arxana-media--misc-track-row)
             (_ #'arxana-patterns--browser-menu-row)))
         (t #'arxana-patterns--browser-pattern-row))))
     (mapcar (lambda (entry)
@@ -2660,6 +2702,8 @@ are ignored for now."
                             ('media-projects (arxana-patterns--browser-info-format))
                             ('media-publications (arxana-patterns--browser-info-format))
                             ('media-publication (arxana-media--publication-track-format))
+                            ('media-misc (arxana-patterns--browser-info-format))
+                           ('media-misc-folder (arxana-media--misc-track-format))
                             (_ (arxana-patterns--browser-menu-format))))
                         ((eq (plist-get context :type) 'language)
                          (arxana-patterns--browser-pattern-format))
@@ -2716,7 +2760,19 @@ are ignored for now."
                            :publication-path path)
                      arxana-patterns--browser-stack))
          (arxana-patterns--browser-render)))
+      ('media-misc-folder
+       (let ((path (plist-get item :path)))
+         (unless (and path (file-directory-p path))
+           (user-error "Folder path missing or not a directory"))
+         (setq arxana-patterns--browser-stack
+               (cons (list :view 'media-misc-folder
+                           :label (plist-get item :label)
+                           :misc-path path)
+                     arxana-patterns--browser-stack))
+         (arxana-patterns--browser-render)))
       ('media-publication-track
+       (arxana-media-play-at-point))
+      ('media-misc-track
        (arxana-media-play-at-point))
       ((or 'media-category 'media-project)
        (let ((filter (plist-get item :media-filter)))
@@ -2922,7 +2978,9 @@ returning to the top-level list."
 
 (defvar arxana-patterns-browser-mode-map
   (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map tabulated-list-mode-map)
+    (when (and (boundp 'tabulated-list-mode-map)
+               (keymapp tabulated-list-mode-map))
+      (set-keymap-parent map tabulated-list-mode-map))
     (define-key map (kbd "RET") #'arxana-patterns--browser-visit)
     (define-key map (kbd "<right>") #'arxana-patterns--browser-visit)
     (define-key map (kbd "<left>") #'arxana-patterns--browser-up)
@@ -2951,9 +3009,11 @@ returning to the top-level list."
     (define-key map (kbd "-") #'arxana-patterns--browser-move-pattern-down)
     (define-key map (kbd "A") #'arxana-patterns-add-collection-root)
     (define-key map (kbd "t") #'arxana-media-retitle-at-point)
+    (define-key map (kbd "D") #'arxana-media-delete-at-point)
     (define-key map (kbd "p") #'arxana-media-play-at-point)
     (define-key map (kbd "s") #'arxana-media-stop-playback)
     (define-key map (kbd "o") #'arxana-media-toggle-autoplay-next)
+    (define-key map (kbd "L") #'arxana-media-edit-lyrics-at-point)
     (define-key map (kbd "v") #'arxana-patterns--lab-open-trace)
     (define-key map (kbd "r") #'arxana-patterns--lab-open-raw)
     (define-key map (kbd "d") #'arxana-patterns--lab-open-draft)

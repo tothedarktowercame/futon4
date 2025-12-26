@@ -14,6 +14,7 @@
 (require 'subr-x)
 (require 'json)
 (require 'browse-url)
+(require 'arxana-store)
 
 (defvar arxana-patterns--browser-context)
 (defvar arxana-patterns--browser-stack)
@@ -34,6 +35,8 @@
      ((and dir
            (file-readable-p (expand-file-name "../futon0/data/zoom_sync_index.json" dir)))
       (expand-file-name "../futon0/data/zoom_sync_index.json" dir))
+     ((file-readable-p (expand-file-name "~/code/storage/zoomr4/meta/zoom_sync_index.json"))
+      (expand-file-name "~/code/storage/zoomr4/meta/zoom_sync_index.json"))
      ((file-readable-p (expand-file-name "~/code/futon0/data/zoom_sync_index.json"))
       (expand-file-name "~/code/futon0/data/zoom_sync_index.json"))
      (t nil))))
@@ -95,12 +98,19 @@
   :type 'directory
   :group 'arxana-media)
 
+(defcustom arxana-media-misc-root (expand-file-name "~/code/storage/misc-audio/")
+  "Directory containing misc audio working sets (non-Zoom sources)."
+  :type 'directory
+  :group 'arxana-media)
+
 (defcustom arxana-media-publication-tag-prefix "publication:"
   "Prefix used when tagging catalog entries for publications."
   :type 'string
   :group 'arxana-media)
 
 (defvar arxana-media--marked (make-hash-table :test 'equal))
+(defvar arxana-media--lyrics-cache (make-hash-table :test 'equal))
+(defvar arxana-media--misc-sha-cache (make-hash-table :test 'equal))
 (defcustom arxana-media-publication-metadata-file "publication.json"
   "Filename used to store per-publication metadata inside an EP directory."
   :type 'string
@@ -109,6 +119,197 @@
 (defun arxana-media--publication-audio-file-p (path)
   (and (stringp path)
        (string-match-p "\\.\\(mp3\\|wav\\|flac\\|ogg\\|m4a\\)\\'" (downcase path))))
+
+(defun arxana-media--file-sha256 (path)
+  "Return the SHA256 of PATH contents."
+  (with-temp-buffer
+    (insert-file-contents-literally path)
+    (secure-hash 'sha256 (current-buffer))))
+
+(defun arxana-media--misc-sha256 (path)
+  "Return the SHA256 for PATH with a small cache keyed by mtime."
+  (let* ((attrs (and path (file-attributes path)))
+         (mtime (and attrs (file-attribute-modification-time attrs)))
+         (cached (and path (gethash path arxana-media--misc-sha-cache))))
+    (if (and cached (equal (car cached) mtime))
+        (cdr cached)
+      (let ((sha (arxana-media--file-sha256 path)))
+        (when path
+          (puthash path (cons mtime sha) arxana-media--misc-sha-cache))
+        sha))))
+
+(defun arxana-media--track-title (item)
+  (let ((type (plist-get item :type)))
+    (cond
+     ((eq type 'media-track)
+      (let ((entry (plist-get item :entry)))
+        (or (plist-get entry :title)
+            (plist-get entry :base_name)
+            (plist-get entry :sha256)
+            "track")))
+     ((memq type '(media-publication-track media-misc-track))
+      (or (plist-get item :label)
+          (and (plist-get item :path) (file-name-base (plist-get item :path)))
+          "track"))
+     (t "track"))))
+
+(defun arxana-media--track-sha (item)
+  (pcase (plist-get item :type)
+    ('media-track
+     (let ((entry (plist-get item :entry)))
+       (or (plist-get item :sha256)
+           (plist-get entry :sha256))))
+    ('media-misc-track
+     (let ((path (plist-get item :path)))
+       (when (and path (file-readable-p path))
+         (arxana-media--misc-sha256 path))))
+    (_ nil)))
+
+(defun arxana-media--track-entity-id (item)
+  "Return a stable XTDB entity id for ITEM."
+  (pcase (plist-get item :type)
+    ('media-track
+     (let* ((entry (plist-get item :entry))
+            (sha (plist-get entry :sha256)))
+       (unless sha
+         (user-error "Track entry has no :sha256"))
+       (format "arxana/media/zoom/%s" sha)))
+    ('media-misc-track
+     (let* ((path (plist-get item :path)))
+       (unless (and path (file-readable-p path))
+         (user-error "No readable media file found"))
+       (format "arxana/media/misc/%s" (arxana-media--misc-sha256 path))))
+    (_
+     (user-error "Unsupported media item for lyrics"))))
+
+(defun arxana-media--lyrics-entity-id (item)
+  "Return the lyrics entity id for ITEM."
+  (pcase (plist-get item :type)
+    ('media-track
+     (let ((sha (arxana-media--track-sha item)))
+       (unless sha
+         (user-error "Track entry has no :sha256"))
+       (format "arxana/media-lyrics/zoom/%s" sha)))
+    ('media-misc-track
+     (let ((sha (arxana-media--track-sha item)))
+       (unless sha
+         (user-error "No readable media file found"))
+       (format "arxana/media-lyrics/misc/%s" sha)))
+    (_
+     (user-error "Unsupported media item for lyrics"))))
+
+(defun arxana-media--entity-source (entity)
+  (let* ((source (and (listp entity)
+                      (or (alist-get :source entity)
+                          (alist-get 'source entity)
+                          (alist-get :entity/source entity))))
+         (version (and (listp entity) (alist-get :version entity)))
+         (data (and (listp version) (alist-get :data version)))
+         (data-source (and (listp data)
+                           (or (alist-get :source data)
+                               (alist-get 'source data)))))
+    (or (and (stringp source)
+             (not (string-empty-p source))
+             (not (string= source "external"))
+             source)
+        data-source
+        source
+        "")))
+
+(defun arxana-media--maybe-fix-utf8 (text)
+  "Fix common UTF-8-as-Latin-1 mojibake when needed."
+  (if (and (stringp text)
+           (or (string-match-p "[\x80-\x9f]" text)
+               (string-match-p "[Ãâ]" text)))
+      (condition-case nil
+          (decode-coding-string (string-make-unibyte text) 'utf-8)
+        (error text))
+    text))
+
+(defun arxana-media--fetch-lyrics (entity-id)
+  (let* ((response (ignore-errors (arxana-store-fetch-entity entity-id)))
+         (entity (and (listp response) (alist-get :entity response)))
+         (lyrics (arxana-media--entity-source entity)))
+    (arxana-media--maybe-fix-utf8 (or lyrics ""))))
+
+(defvar-local arxana-media--lyrics-context nil)
+
+(defun arxana-media--lyrics-context (item)
+  (let* ((type (plist-get item :type))
+         (entry (plist-get item :entry))
+         (path (plist-get item :path))
+         (title (arxana-media--track-title item))
+         (entity-id (arxana-media--track-entity-id item))
+         (lyrics-id (arxana-media--lyrics-entity-id item))
+         (source (if (eq type 'media-track) "zoom" "misc")))
+    (list :item item
+          :title title
+          :path path
+          :entity-id entity-id
+          :lyrics-entity-id lyrics-id
+          :source source
+          :entry entry)))
+
+(defvar arxana-media-lyrics-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-s") #'arxana-media-lyrics-save)
+    map)
+  "Keymap for `arxana-media-lyrics-mode'.")
+
+(define-derived-mode arxana-media-lyrics-mode text-mode "Lyrics"
+  "Major mode for editing media lyrics."
+  (setq header-line-format "C-c C-s to save lyrics to XTDB"))
+
+(defun arxana-media-lyrics-save ()
+  "Save lyrics in the current buffer to XTDB."
+  (interactive)
+  (unless (arxana-store-ensure-sync)
+    (user-error "Futon sync is disabled; enable futon4-enable-sync first"))
+  (unless (and (listp arxana-media--lyrics-context)
+               (plist-get arxana-media--lyrics-context :entity-id))
+    (user-error "No lyrics context available"))
+  (let* ((context arxana-media--lyrics-context)
+         (entity-id (plist-get context :entity-id))
+         (lyrics-id (plist-get context :lyrics-entity-id))
+         (title (plist-get context :title))
+         (path (plist-get context :path))
+         (source (plist-get context :source))
+         (entry (plist-get context :entry))
+         (lyrics (string-trim-right (buffer-string)))
+         (lyrics-name (format "%s (lyrics)" title)))
+    (arxana-store-ensure-entity :id entity-id
+                                :name title
+                                :type "arxana/media-track"
+                                :external-id entity-id)
+    (arxana-store-ensure-entity :id lyrics-id
+                                :name lyrics-name
+                                :type "arxana/media-lyrics"
+                                :external-id lyrics-id
+                                :source lyrics)
+    (arxana-store-create-relation :src entity-id
+                                  :dst lyrics-id
+                                  :label ":media/lyrics")
+    (puthash lyrics-id (not (string-empty-p lyrics)) arxana-media--lyrics-cache)
+    (message "Saved lyrics for %s" title)))
+
+(defun arxana-media-edit-lyrics-at-point ()
+  "Open a buffer to edit lyrics for the current media track."
+  (interactive)
+  (let* ((item (arxana-patterns--browser-item-at-point)))
+    (unless (and item (memq (plist-get item :type) '(media-track media-misc-track)))
+      (user-error "No media track at point"))
+    (let* ((context (arxana-media--lyrics-context item))
+           (title (plist-get context :title))
+           (lyrics-id (plist-get context :lyrics-entity-id))
+           (buffer (get-buffer-create (format "*Arxana Lyrics: %s*" title))))
+      (with-current-buffer buffer
+        (arxana-media-lyrics-mode)
+        (setq-local arxana-media--lyrics-context context)
+        (let ((inhibit-read-only t))
+          (erase-buffer)
+          (insert (arxana-media--fetch-lyrics lyrics-id))
+          (goto-char (point-min))))
+      (pop-to-buffer buffer))))
 
 (defun arxana-media--publication-metadata-path (directory)
   (expand-file-name arxana-media-publication-metadata-file
@@ -136,6 +337,17 @@
 
 (defun arxana-media--publication-directories ()
   (let ((root (file-name-as-directory (expand-file-name arxana-media-publications-root))))
+    (when (file-directory-p root)
+      (seq-sort
+       #'string<
+       (seq-filter
+        (lambda (path)
+          (and (file-directory-p path)
+               (not (member (file-name-nondirectory (directory-file-name path)) '("." "..")))))
+        (directory-files root t nil t))))))
+
+(defun arxana-media--misc-directories ()
+  (let ((root (file-name-as-directory (expand-file-name arxana-media-misc-root))))
     (when (file-directory-p root)
       (seq-sort
        #'string<
@@ -185,6 +397,35 @@
                     :description "No audio files found in this directory."))
       (mapcar (lambda (path)
                 (list :type 'media-publication-track
+                      :label (file-name-base path)
+                      :path path))
+              files))))
+
+(defun arxana-media--misc-items ()
+  (let ((dirs (or (arxana-media--misc-directories) '())))
+    (if (null dirs)
+        (list (list :type 'info
+                    :label "No misc audio yet"
+                    :description (format "Nothing under %s" (expand-file-name arxana-media-misc-root))))
+      (mapcar (lambda (dir)
+                (let* ((name (file-name-nondirectory (directory-file-name dir)))
+                       (count (length (arxana-media--publication-audio-files dir))))
+                  (list :type 'media-misc-folder
+                        :label name
+                        :path dir
+                        :count count
+                        :description (format "%d track%s"
+                                             count (if (= count 1) "" "s")))))
+              dirs))))
+
+(defun arxana-media--misc-track-items (directory)
+  (let* ((files (or (arxana-media--publication-audio-files directory) '())))
+    (if (null files)
+        (list (list :type 'info
+                    :label "Empty folder"
+                    :description "No audio files found in this directory."))
+      (mapcar (lambda (path)
+                (list :type 'media-misc-track
                       :label (file-name-base path)
                       :path path))
               files))))
@@ -250,6 +491,10 @@
       (let ((path (and context (plist-get context :publication-path))))
         (when path
           (arxana-media--publication-track-items path))))
+     ((eq type 'media-misc-track)
+      (let ((path (and context (plist-get context :misc-path))))
+        (when path
+          (arxana-media--misc-track-items path))))
      (t nil))))
 
 (defun arxana-media--playback-index-for-item (queue item)
@@ -266,6 +511,9 @@
                            (plist-get (plist-get item :entry) :sha256)
                            "")))
              ((eq needle-type 'media-publication-track)
+              (string= (or (plist-get candidate :path) "")
+                       (or (plist-get item :path) "")))
+             ((eq needle-type 'media-misc-track)
               (string= (or (plist-get candidate :path) "")
                        (or (plist-get item :path) "")))
              (t nil))))
@@ -323,6 +571,10 @@
                     (or (plist-get item :label)
                         (and (plist-get item :path) (file-name-base (plist-get item :path)))
                         "track"))
+                   ((eq type 'media-misc-track)
+                    (or (plist-get item :label)
+                        (and (plist-get item :path) (file-name-base (plist-get item :path)))
+                        "track"))
                    (t
                     (or (plist-get entry :title)
                         (plist-get entry :base_name)
@@ -330,6 +582,7 @@
                         "track"))))
            (path (cond
                   ((eq type 'media-publication-track) (plist-get item :path))
+                  ((eq type 'media-misc-track) (plist-get item :path))
                   (t (arxana-media--track-play-path entry)))))
       (when (process-live-p arxana-media--playback-process)
         (setq arxana-media--playback-stop-requested t)
@@ -340,13 +593,15 @@
   "Play the current media track using `arxana-media-player-program`."
   (interactive)
   (let* ((item (arxana-patterns--browser-item-at-point)))
-    (unless (and item (memq (plist-get item :type) '(media-track media-publication-track)))
+    (unless (and item (memq (plist-get item :type) '(media-track media-publication-track media-misc-track)))
       (user-error "No playable track at point"))
     (let* ((type (plist-get item :type))
            (entry (plist-get item :entry))
            (sha (and entry (plist-get entry :sha256)))
            (title (cond
                    ((eq type 'media-publication-track)
+                    (or (plist-get item :label) (and (plist-get item :path) (file-name-base (plist-get item :path))) "track"))
+                   ((eq type 'media-misc-track)
                     (or (plist-get item :label) (and (plist-get item :path) (file-name-base (plist-get item :path))) "track"))
                    (t
                     (or (plist-get entry :title)
@@ -355,6 +610,7 @@
                         "track"))))
            (path (cond
                   ((eq type 'media-publication-track) (plist-get item :path))
+                  ((eq type 'media-misc-track) (plist-get item :path))
                   (t (arxana-media--track-play-path entry)))))
       (when (process-live-p arxana-media--playback-process)
         (arxana-media-stop-playback))
@@ -599,6 +855,7 @@
 
 (defun arxana-media--track-format ()
   [(" " 1 nil)
+   ("Ly" 2 nil)
    ("Recorded" 18 t)
    ("Status" 8 t)
    ("Title" 40 t)
@@ -606,6 +863,25 @@
 
 (defun arxana-media--marked-p (sha)
   (and sha (gethash sha arxana-media--marked)))
+
+(defun arxana-media--lyrics-present-p (lyrics-id)
+  (let ((cached (gethash lyrics-id arxana-media--lyrics-cache 'unset)))
+    (cond
+     ((not (eq cached 'unset)) (eq cached t))
+     ((not (arxana-store-sync-enabled-p)) nil)
+     (t
+      (let* ((response (ignore-errors (arxana-store-fetch-entity lyrics-id)))
+             (entity (and (listp response) (alist-get :entity response)))
+             (lyrics (arxana-media--entity-source entity))
+             (present (and (stringp lyrics) (not (string-empty-p lyrics)))))
+        (puthash lyrics-id (if present t 'none) arxana-media--lyrics-cache)
+        present)))))
+
+(defun arxana-media--lyrics-indicator (item)
+  (condition-case nil
+      (let ((lyrics-id (arxana-media--lyrics-entity-id item)))
+        (if (and lyrics-id (arxana-media--lyrics-present-p lyrics-id)) "L" " "))
+    (error " ")))
 
 (defun arxana-media--track-row (item)
   (let* ((entry (plist-get item :entry))
@@ -619,7 +895,21 @@
                     (plist-get entry :sha256)))
          (recorded (arxana-media--format-recorded entry)))
     (vector (if (arxana-media--marked-p sha) "*" " ")
+            (arxana-media--lyrics-indicator item)
             recorded status title project)))
+
+(defun arxana-media--misc-track-format ()
+  [("Ly" 2 nil)
+   ("Title" 48 t)
+   ("File" 34 t)])
+
+(defun arxana-media--misc-track-row (item)
+  (let ((path (plist-get item :path)))
+    (vector (arxana-media--lyrics-indicator item)
+            (or (plist-get item :label) "")
+            (if (and path (stringp path))
+                (file-name-nondirectory path)
+              ""))))
 
 (defun arxana-media-toggle-mark-at-point ()
   (interactive)
@@ -748,29 +1038,67 @@ When URL is provided, write it to the publication metadata."
       (user-error "No URL recorded for this publication"))))
 
 (defun arxana-media-retitle-at-point ()
-  "Retitle the current media track and sync hold titles back to the Zoom."
+  "Retitle the current media track or misc audio file."
   (interactive)
   (let* ((item (arxana-patterns--browser-item-at-point)))
-    (unless (and item (eq (plist-get item :type) 'media-track))
+    (unless (and item (memq (plist-get item :type) '(media-track media-misc-track)))
       (user-error "No media track at point"))
-    (let* ((entry (plist-get item :entry))
-           (sha (plist-get entry :sha256))
-           (status (downcase (or (plist-get entry :status) "hold")))
-           (current (or (plist-get entry :title)
-                        (plist-get entry :base_name)
-                        "")))
-      (unless sha
-        (user-error "Track entry has no :sha256"))
-      (unless (string= status "hold")
-        (user-error "Only hold items can be retitled on the Zoom (status is %s)" status))
-      (let ((title (string-trim (read-string "New title: " current))))
-        (when (string-empty-p title)
-          (user-error "Title cannot be empty"))
-        (arxana-media--retitle-track entry title)
-        (setq arxana-media--catalog nil
-              arxana-media--catalog-mtime nil)
+    (pcase (plist-get item :type)
+      ('media-track
+       (let* ((entry (plist-get item :entry))
+              (sha (plist-get entry :sha256))
+              (status (downcase (or (plist-get entry :status) "hold")))
+              (current (or (plist-get entry :title)
+                           (plist-get entry :base_name)
+                           "")))
+         (unless sha
+           (user-error "Track entry has no :sha256"))
+         (unless (string= status "hold")
+           (user-error "Only hold items can be retitled on the Zoom (status is %s)" status))
+         (let ((title (string-trim (read-string "New title: " current))))
+           (when (string-empty-p title)
+             (user-error "Title cannot be empty"))
+           (arxana-media--retitle-track entry title)
+           (setq arxana-media--catalog nil
+                 arxana-media--catalog-mtime nil)
+           (arxana-patterns--browser-render)
+           (message "Retitled %s" title))))
+      ('media-misc-track
+       (let* ((path (plist-get item :path))
+              (current (or (plist-get item :label)
+                           (and path (file-name-base path))
+                           "")))
+         (unless (and path (file-readable-p path))
+           (user-error "No readable media file found"))
+         (let* ((title (string-trim (read-string "New title: " current))))
+           (when (string-empty-p title)
+             (user-error "Title cannot be empty"))
+           (let* ((dir (file-name-directory path))
+                  (ext (or (file-name-extension path t) ""))
+                  (slug (arxana-media--slug title))
+                  (dest (expand-file-name (concat slug ext) dir)))
+             (when (string= path dest)
+               (user-error "Title matches existing filename"))
+             (rename-file path dest)
+             (arxana-patterns--browser-render)
+             (message "Retitled %s" title))))))))
+
+(defun arxana-media-delete-at-point ()
+  "Hard-delete the current misc audio file from disk."
+  (interactive)
+  (let* ((item (arxana-patterns--browser-item-at-point)))
+    (unless (and item (eq (plist-get item :type) 'media-misc-track))
+      (user-error "Hard delete is only available for misc audio tracks"))
+    (let* ((path (plist-get item :path))
+           (label (or (plist-get item :label)
+                      (and path (file-name-base path))
+                      "track")))
+      (unless (and path (file-exists-p path))
+        (user-error "No file found for %s" label))
+      (when (yes-or-no-p (format "Delete %s? " label))
+        (delete-file path)
         (arxana-patterns--browser-render)
-        (message "Retitled %s" title)))))
+        (message "Deleted %s" label)))))
 
 (provide 'arxana-media)
 
