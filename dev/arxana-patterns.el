@@ -1810,6 +1810,18 @@ are ignored for now."
                                                          (if (= pub-count 1) "" "s")
                                                          pub-root)
                                     :view 'media-publications)))))
+        (let* ((ep-root (file-name-as-directory (expand-file-name arxana-media-ep-staging-root)))
+               (ep-dirs (or (arxana-media--ep-staging-directories) '()))
+               (ep-count (length ep-dirs)))
+          (setq items
+                (append items
+                        (list (list :type 'menu
+                                    :label "EP staging"
+                                    :description (format "%d EP%s — %s"
+                                                         ep-count
+                                                         (if (= ep-count 1) "" "s")
+                                                         ep-root)
+                                    :view 'media-ep-staging)))))
         (let* ((misc-root (and (boundp 'arxana-media-misc-root)
                                arxana-media-misc-root))
                (misc-root (and misc-root (file-name-as-directory (expand-file-name misc-root))))
@@ -2552,6 +2564,8 @@ are ignored for now."
         ('media-projects (arxana-media--project-items (or (arxana-media--entries) '())))
         ('media-publications (arxana-media--publications-items))
         ('media-publication (arxana-media--publication-track-items (plist-get context :publication-path)))
+        ('media-ep-staging (arxana-media--ep-staging-items))
+        ('media-ep-staging-ep (arxana-media--publication-track-items (plist-get context :ep-staging-path)))
         ('media-misc (arxana-media--misc-items))
         ('media-misc-folder (arxana-media--misc-track-items (plist-get context :misc-path)))
         (_ (arxana-patterns--menu-items))))
@@ -2660,9 +2674,11 @@ are ignored for now."
             ('docbook-recent #'arxana-patterns--docbook-row)
             ('lab #'arxana-patterns--lab-row)
             ('lab-files #'arxana-patterns--lab-file-row)
-            ('media-projects #'arxana-patterns--browser-info-row)
+           ('media-projects #'arxana-patterns--browser-info-row)
             ('media-publications #'arxana-patterns--browser-info-row)
             ('media-publication #'arxana-media--publication-track-row)
+            ('media-ep-staging #'arxana-patterns--browser-info-row)
+            ('media-ep-staging-ep #'arxana-media--publication-track-row)
             ('media-misc #'arxana-patterns--browser-info-row)
            ('media-misc-folder #'arxana-media--misc-track-row)
             (_ #'arxana-patterns--browser-menu-row)))
@@ -2702,8 +2718,10 @@ are ignored for now."
                             ('media-projects (arxana-patterns--browser-info-format))
                             ('media-publications (arxana-patterns--browser-info-format))
                             ('media-publication (arxana-media--publication-track-format))
+                            ('media-ep-staging (arxana-patterns--browser-info-format))
+                            ('media-ep-staging-ep (arxana-media--publication-track-format))
                             ('media-misc (arxana-patterns--browser-info-format))
-                           ('media-misc-folder (arxana-media--misc-track-format))
+                            ('media-misc-folder (arxana-media--misc-track-format))
                             (_ (arxana-patterns--browser-menu-format))))
                         ((eq (plist-get context :type) 'language)
                          (arxana-patterns--browser-pattern-format))
@@ -2758,6 +2776,16 @@ are ignored for now."
                (cons (list :view 'media-publication
                            :label (plist-get item :label)
                            :publication-path path)
+                     arxana-patterns--browser-stack))
+         (arxana-patterns--browser-render)))
+      ('media-ep-staging
+       (let ((path (plist-get item :path)))
+         (unless (and path (file-directory-p path))
+           (user-error "EP staging path missing or not a directory"))
+         (setq arxana-patterns--browser-stack
+               (cons (list :view 'media-ep-staging-ep
+                           :label (plist-get item :label)
+                           :ep-staging-path path)
                      arxana-patterns--browser-stack))
          (arxana-patterns--browser-render)))
       ('media-misc-folder
@@ -3000,11 +3028,11 @@ returning to the top-level list."
     (define-key map [triple-wheel-up] #'arxana-patterns--browser-wheel-up)
     (define-key map [mouse-4] #'arxana-patterns--browser-wheel-up)
     (define-key map [mouse-5] #'arxana-patterns--browser-wheel-down)
-    (define-key map (kbd "b") #'arxana-patterns--browser-up)
+    (define-key map (kbd "b") #'arxana-media-bounce-or-up)
     (define-key map (kbd "g") #'arxana-patterns--browser-refresh)
     (define-key map (kbd "I") #'arxana-patterns--browser-import-library)
     (define-key map (kbd "E") #'arxana-patterns--browser-edit-collection)
-    (define-key map (kbd "e") #'arxana-patterns--browser-edit-current-context)
+    (define-key map (kbd "e") #'arxana-patterns--browser-edit-or-ep-move)
     (define-key map (kbd "+") #'arxana-patterns--browser-move-pattern-up)
     (define-key map (kbd "-") #'arxana-patterns--browser-move-pattern-down)
     (define-key map (kbd "A") #'arxana-patterns-add-collection-root)
@@ -3024,7 +3052,14 @@ returning to the top-level list."
     (define-key map (kbd "C-M-<up>") #'arxana-patterns-docbook-move-section-up)
     (define-key map (kbd "C-M-<down>") #'arxana-patterns-docbook-move-section-down)
     (define-key map (kbd "m") #'arxana-media-toggle-mark-at-point)
+    (define-key map (kbd "a") #'arxana-media-open-in-audacity)
+    (define-key map (kbd "C-c SPC") #'arxana-media-playback-pause-toggle)
+    (define-key map (kbd "C-c <left>") #'arxana-media-playback-seek-back-10)
+    (define-key map (kbd "C-c <right>") #'arxana-media-playback-seek-forward-10)
+    (define-key map (kbd "C-c M-<left>") #'arxana-media-playback-seek-back-30)
+    (define-key map (kbd "C-c M-<right>") #'arxana-media-playback-seek-forward-30)
     (define-key map (kbd "U") #'arxana-media-unmark-all)
+    (define-key map (kbd "S") #'arxana-media-set-status-marked)
     (define-key map (kbd "P") #'arxana-media-publish-marked)
     (define-key map (kbd "u") #'arxana-media-set-publication-url)
     (define-key map (kbd "w") #'arxana-media-open-publication-url)
@@ -3036,8 +3071,18 @@ returning to the top-level list."
   "Mode for browsing Futon pattern libraries."
   (setq tabulated-list-padding 2)
   (setq tabulated-list-sort-key nil)
+  (unless (and (boundp 'arxana-media--marked)
+               (hash-table-p arxana-media--marked))
+    (setq-local arxana-media--marked (make-hash-table :test 'equal)))
   (setq-local hl-line-face 'arxana-patterns-browser-highlight)
   (hl-line-mode 1))
+
+(defun arxana-patterns--browser-edit-or-ep-move ()
+  (interactive)
+  (let ((item (arxana-patterns--browser-item-at-point)))
+    (if (and item (eq (plist-get item :type) 'media-misc-track))
+        (arxana-media-move-misc-to-ep-at-point)
+      (arxana-patterns--browser-edit-current-context))))
 
 ;;;###autoload
 (defun arxana-patterns-browse ()

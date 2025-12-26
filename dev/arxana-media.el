@@ -19,11 +19,18 @@
 (defvar arxana-patterns--browser-context)
 (defvar arxana-patterns--browser-stack)
 (declare-function arxana-patterns--browser-item-at-point "arxana-patterns")
+(declare-function arxana-patterns--browser-current-items "arxana-patterns")
 (declare-function arxana-patterns--browser-render "arxana-patterns")
 
 (defgroup arxana-media nil
   "Media browsing, playback, and publication helpers."
   :group 'arxana)
+
+(defconst arxana-media--source-root
+  (let* ((source (or load-file-name buffer-file-name))
+         (dir (and source (file-name-directory source))))
+    (and dir (file-name-directory (directory-file-name dir))))
+  "Filesystem root inferred from the location of this file.")
 
 (defun arxana-media--locate-default-index ()
   (let* ((base (or load-file-name buffer-file-name default-directory))
@@ -66,6 +73,13 @@
                  file)
   :group 'arxana-media)
 
+(defcustom arxana-media-zoom-root
+  (or (getenv "ZOOM_SYNC_DEST")
+      (expand-file-name "~/code/storage/zoomr4/"))
+  "Root directory for Zoom R4 media files."
+  :type 'directory
+  :group 'arxana-media)
+
 (defun arxana-media--locate-player ()
   (or (executable-find "mpv")
       (executable-find "ffplay")
@@ -92,6 +106,15 @@
 (defvar arxana-media--playback-queue nil)
 (defvar arxana-media--playback-index nil)
 (defvar arxana-media--playback-token 0)
+(defvar arxana-media--playback-player nil)
+
+(defun arxana-media--playback-player-kind ()
+  (cond
+   ((and arxana-media--playback-player
+         (string-match-p "ffplay\\'" arxana-media--playback-player)) 'ffplay)
+   ((and arxana-media--playback-player
+         (string-match-p "mpv\\'" arxana-media--playback-player)) 'mpv)
+   (t nil)))
 
 (defcustom arxana-media-publications-root (expand-file-name "~/code/storage/publications/")
   "Directory used as a holding place for publication exports."
@@ -103,19 +126,94 @@
   :type 'directory
   :group 'arxana-media)
 
+(defcustom arxana-media-ep-staging-root
+  (expand-file-name "ep-staging/" arxana-media-misc-root)
+  "Directory containing EP-in-progress folders."
+  :type 'directory
+  :group 'arxana-media)
+
+(defcustom arxana-media-bounce-profiles
+  '(("vocal+banjo+bass+harp" :script "scripts/bounce_vocal_banjo_bass_harp.sh")
+    ("vocal+bass+pbass+accordion" :script "scripts/bounce_vocal_bass_pbass_accordion.sh")
+    ("vocal-forward+bass+pbass+accordion" :script "scripts/bounce_vocal_bass_pbass_accordion_vocal_forward.sh"))
+  "Profiles for multi-track bounce workflows."
+  :type '(repeat (list (string :tag "Profile")
+                       (const :tag "Script" :script)
+                       (string :tag "Path")))
+  :group 'arxana-media)
+
+(defcustom arxana-media-bounce-output-root nil
+  "Default directory for bounced mixes.
+When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
+  :type '(choice (const :tag "Use misc-audio bounces" nil)
+                 directory)
+  :group 'arxana-media)
+
 (defcustom arxana-media-publication-tag-prefix "publication:"
   "Prefix used when tagging catalog entries for publications."
   :type 'string
   :group 'arxana-media)
 
-(defvar arxana-media--marked (make-hash-table :test 'equal))
+(defvar-local arxana-media--marked (make-hash-table :test 'equal))
 (defvar arxana-media--lyrics-cache (make-hash-table :test 'equal))
 (defvar arxana-media--misc-sha-cache (make-hash-table :test 'equal))
+(defvar arxana-media--duration-cache (make-hash-table :test 'equal))
 (defcustom arxana-media-publication-metadata-file "publication.json"
   "Filename used to store per-publication metadata inside an EP directory."
   :type 'string
   :group 'arxana-media)
 
+(defcustom arxana-media-duration-program (or (executable-find "ffprobe") nil)
+  "Program used to probe audio duration (e.g., ffprobe)."
+  :type '(choice (const :tag "None" nil)
+                 string)
+  :group 'arxana-media)
+
+(defcustom arxana-media-audacity-program (or (executable-find "audacity") nil)
+  "Program used to open audio files in Audacity."
+  :type '(choice (const :tag "None" nil)
+                 string)
+  :group 'arxana-media)
+
+(defcustom arxana-media-enable-audacity nil
+  "When non-nil, enable Audacity integration."
+  :type 'boolean
+  :group 'arxana-media)
+
+(defcustom arxana-media-audacity-script-pipe-dir "/tmp"
+  "Directory where Audacity mod-script-pipe creates its named pipes."
+  :type 'directory
+  :group 'arxana-media)
+
+(defcustom arxana-media-audacity-use-script-pipe t
+  "When non-nil, use Audacity's mod-script-pipe to import tracks into one project."
+  :type 'boolean
+  :group 'arxana-media)
+
+(defcustom arxana-media-audacity-startup-wait 1.0
+  "Seconds to wait after launching Audacity before checking script pipes."
+  :type 'number
+  :group 'arxana-media)
+
+(defcustom arxana-media-audacity-always-launch t
+  "When non-nil, launch Audacity before using script pipes."
+  :type 'boolean
+  :group 'arxana-media)
+
+(defcustom arxana-media-audacity-send-timeout 0.2
+  "Seconds to wait for Audacity script-pipe writes to complete."
+  :type 'number
+  :group 'arxana-media)
+
+(defcustom arxana-media-audacity-fallback-to-args t
+  "When non-nil, fall back to launching Audacity with file arguments."
+  :type 'boolean
+  :group 'arxana-media)
+
+(defcustom arxana-media-misc-hash-notify-threshold (* 10 1024 1024)
+  "File size (bytes) above which misc hashing emits a status message."
+  :type 'integer
+  :group 'arxana-media)
 (defun arxana-media--publication-audio-file-p (path)
   (and (stringp path)
        (string-match-p "\\.\\(mp3\\|wav\\|flac\\|ogg\\|m4a\\)\\'" (downcase path))))
@@ -130,12 +228,21 @@
   "Return the SHA256 for PATH with a small cache keyed by mtime."
   (let* ((attrs (and path (file-attributes path)))
          (mtime (and attrs (file-attribute-modification-time attrs)))
-         (cached (and path (gethash path arxana-media--misc-sha-cache))))
+         (cached (and path (gethash path arxana-media--misc-sha-cache)))
+         (size (and attrs (file-attribute-size attrs)))
+         (notify (and size (>= size arxana-media-misc-hash-notify-threshold))))
     (if (and cached (equal (car cached) mtime))
         (cdr cached)
+      (when notify
+        (message "[arxana-media] Hashing %s (%.1f MB)..."
+                 (file-name-nondirectory path)
+                 (/ size 1048576.0)))
       (let ((sha (arxana-media--file-sha256 path)))
         (when path
           (puthash path (cons mtime sha) arxana-media--misc-sha-cache))
+        (when notify
+          (message "[arxana-media] Hashing %s...done"
+                   (file-name-nondirectory path)))
         sha))))
 
 (defun arxana-media--track-title (item)
@@ -159,6 +266,10 @@
      (let ((entry (plist-get item :entry)))
        (or (plist-get item :sha256)
            (plist-get entry :sha256))))
+    ('media-publication-track
+     (let ((path (plist-get item :path)))
+       (when (and path (file-readable-p path))
+         (arxana-media--misc-sha256 path))))
     ('media-misc-track
      (let ((path (plist-get item :path)))
        (when (and path (file-readable-p path))
@@ -174,6 +285,11 @@
        (unless sha
          (user-error "Track entry has no :sha256"))
        (format "arxana/media/zoom/%s" sha)))
+    ('media-publication-track
+     (let* ((path (plist-get item :path)))
+       (unless (and path (file-readable-p path))
+         (user-error "No readable media file found"))
+       (format "arxana/media/misc/%s" (arxana-media--misc-sha256 path))))
     ('media-misc-track
      (let* ((path (plist-get item :path)))
        (unless (and path (file-readable-p path))
@@ -190,6 +306,11 @@
        (unless sha
          (user-error "Track entry has no :sha256"))
        (format "arxana/media-lyrics/zoom/%s" sha)))
+    ('media-publication-track
+     (let ((sha (arxana-media--track-sha item)))
+       (unless sha
+         (user-error "No readable media file found"))
+       (format "arxana/media-lyrics/misc/%s" sha)))
     ('media-misc-track
      (let ((sha (arxana-media--track-sha item)))
        (unless sha
@@ -296,7 +417,8 @@
   "Open a buffer to edit lyrics for the current media track."
   (interactive)
   (let* ((item (arxana-patterns--browser-item-at-point)))
-    (unless (and item (memq (plist-get item :type) '(media-track media-misc-track)))
+    (unless (and item (memq (plist-get item :type)
+                            '(media-track media-misc-track media-publication-track)))
       (user-error "No media track at point"))
     (let* ((context (arxana-media--lyrics-context item))
            (title (plist-get context :title))
@@ -346,6 +468,57 @@
                (not (member (file-name-nondirectory (directory-file-name path)) '("." "..")))))
         (directory-files root t nil t))))))
 
+(defun arxana-media--ep-staging-directories ()
+  (let ((root (file-name-as-directory (expand-file-name arxana-media-ep-staging-root))))
+    (when (file-directory-p root)
+      (seq-sort
+       #'string<
+       (seq-filter
+        (lambda (path)
+          (and (file-directory-p path)
+               (not (member (file-name-nondirectory (directory-file-name path)) '("." "..")))))
+        (directory-files root t nil t))))))
+
+(defun arxana-media--ep-staging-items ()
+  (let ((dirs (or (arxana-media--ep-staging-directories) '())))
+    (if (null dirs)
+        (list (list :type 'info
+                    :label "No EPs in staging"
+                    :description (format "Nothing under %s"
+                                         (expand-file-name arxana-media-ep-staging-root))))
+      (mapcar (lambda (dir)
+                (let* ((name (file-name-nondirectory (directory-file-name dir)))
+                       (count (length (arxana-media--publication-audio-files dir))))
+                  (list :type 'media-ep-staging
+                        :label name
+                        :path dir
+                        :count count
+                        :description (format "%d track%s"
+                                             count (if (= count 1) "" "s")))))
+              dirs))))
+
+(defun arxana-media--prompt-ep-directory ()
+  (let* ((dirs (or (arxana-media--ep-staging-directories) '()))
+         (names (mapcar (lambda (dir)
+                          (file-name-nondirectory (directory-file-name dir)))
+                        dirs))
+         (create-label "Create new...")
+         (choice (if names
+                     (completing-read "EP in progress (staging): "
+                                      (append names (list create-label)) nil t)
+                   create-label)))
+    (if (string= choice create-label)
+        (let* ((name (string-trim (read-string "New EP name: "))))
+          (when (string-empty-p name)
+            (user-error "EP name cannot be empty"))
+          (let* ((slug (arxana-media--slug name))
+                 (dest (file-name-as-directory
+                        (expand-file-name slug arxana-media-ep-staging-root))))
+            (make-directory dest t)
+            (arxana-media--write-publication-metadata dest name "")
+            dest))
+      (file-name-as-directory (expand-file-name choice arxana-media-ep-staging-root)))))
+
 (defun arxana-media--misc-directories ()
   (let ((root (file-name-as-directory (expand-file-name arxana-media-misc-root))))
     (when (file-directory-p root)
@@ -354,7 +527,10 @@
        (seq-filter
         (lambda (path)
           (and (file-directory-p path)
-               (not (member (file-name-nondirectory (directory-file-name path)) '("." "..")))))
+               (not (member (file-name-nondirectory (directory-file-name path)) '("." "..")))
+               (not (and arxana-media-ep-staging-root
+                         (string= (file-name-as-directory (expand-file-name path))
+                                  (file-name-as-directory (expand-file-name arxana-media-ep-staging-root)))))))
         (directory-files root t nil t))))))
 
 (defun arxana-media--publication-audio-files (directory)
@@ -431,12 +607,18 @@
               files))))
 
 (defun arxana-media--publication-track-format ()
-  [("Title" 48 t)
+  [("Ly" 2 nil)
+   ("Title" 40 t)
+   ("Len" 6 nil)
    ("File" 34 t)])
 
 (defun arxana-media--publication-track-row (item)
   (let ((path (plist-get item :path)))
-    (vector (or (plist-get item :label) "")
+    (vector (arxana-media--lyrics-indicator item)
+            (or (plist-get item :label) "")
+            (or (arxana-media--format-duration
+                 (arxana-media--duration-seconds path))
+                "")
             (if (and path (stringp path))
                 (file-name-nondirectory path)
               ""))))
@@ -456,11 +638,38 @@
   (let ((candidates (list (plist-get entry :mp3)
                           (plist-get entry :copied_to)
                           (plist-get entry :source))))
-    (seq-find (lambda (path)
-                (and path
-                     (stringp path)
-                     (file-readable-p path)))
-              candidates)))
+    (seq-find #'identity
+              (mapcar #'arxana-media--resolve-zoom-path candidates))))
+
+(defun arxana-media--zoom-candidate-paths (path root catalog-root parent)
+  (let* ((prefixes '("media/zoomr4/" "media/zoomr4\\" "zoomr4/" "zoomr4\\"))
+         (stripped (cl-loop for prefix in prefixes
+                            when (string-prefix-p prefix path)
+                            return (substring path (length prefix))))
+         (bases (delq nil (list root catalog-root parent)))
+         (candidates (mapcar (lambda (base) (expand-file-name path base)) bases)))
+    (when stripped
+      (setq candidates
+            (append candidates
+                    (mapcar (lambda (base) (expand-file-name stripped base)) bases))))
+    candidates))
+
+(defun arxana-media--resolve-zoom-path (path)
+  (when (and path (stringp path))
+    (cond
+     ((and (file-name-absolute-p path) (file-readable-p path))
+      path)
+     ((file-name-absolute-p path)
+      nil)
+     (t
+      (let* ((root (and arxana-media-zoom-root
+                        (file-name-as-directory (expand-file-name arxana-media-zoom-root))))
+             (parent (and root (file-name-directory (directory-file-name root))))
+             (catalog (arxana-media--catalog-path))
+             (catalog-root (and catalog
+                                (file-name-directory (directory-file-name (file-name-directory catalog)))))
+             (candidates (arxana-media--zoom-candidate-paths path root catalog-root parent)))
+        (seq-find #'file-readable-p candidates))))))
 
 (defun arxana-media-stop-playback ()
   (interactive)
@@ -531,14 +740,19 @@
             (append
              (cond
               ((string-match-p "ffplay\\'" player) (list "-autoexit" "-nodisp"))
-              ((string-match-p "mpv\\'" player) (list "--no-video" "--really-quiet"))
+              ((string-match-p "mpv\\'" player)
+               (list "--no-video"
+                     "--really-quiet"))
               (t nil))
              arxana-media-player-extra-args
              (list path)))
            (buffer (get-buffer-create "*arxana-media-play*"))
-           (proc (apply #'start-process "arxana-media-play" buffer player args))
+           (use-pty (and player (string-match-p "\\(ffplay\\|mpv\\)\\'" player)))
+           (proc (let ((process-connection-type use-pty))
+                   (apply #'start-process "arxana-media-play" buffer player args)))
            (sentinel-token (or token arxana-media--playback-token)))
       (setq arxana-media--playback-process proc)
+      (setq arxana-media--playback-player player)
       (set-process-query-on-exit-flag proc nil)
       (set-process-sentinel
        proc
@@ -550,6 +764,54 @@
                     (equal sentinel-token arxana-media--playback-token))
            (arxana-media-play-next))))
       (message "Playing: %s" title))))
+
+(defun arxana-media--playback-send (payload &optional label)
+  (let ((proc arxana-media--playback-process))
+    (cond
+     ((not (and proc (process-live-p proc)))
+      (user-error "No active playback process"))
+     ((not (arxana-media--playback-player-kind))
+      (user-error "Playback controls are only available for ffplay/mpv"))
+     (t
+      (let ((kind (arxana-media--playback-player-kind)))
+        (process-send-string proc (if (and (eq kind 'ffplay)
+                                           (not (string-suffix-p "\n" payload)))
+                                      (concat payload "\n")
+                                    payload)))
+      (when label
+        (message "%s" label))))))
+
+(defun arxana-media-playback-pause-toggle ()
+  "Toggle pause for active ffplay playback."
+  (interactive)
+  (pcase (arxana-media--playback-player-kind)
+    ('ffplay (arxana-media--playback-send "p" "Toggle pause"))
+    ('mpv (arxana-media--playback-send " " "Toggle pause"))
+    (_ (arxana-media--playback-send " " "Toggle pause"))))
+
+(defun arxana-media-playback-seek-back-10 ()
+  "Seek backward 10 seconds in ffplay."
+  (interactive)
+  (arxana-media--playback-send "\e[D" "Seek -10s"))
+
+(defun arxana-media-playback-seek-forward-10 ()
+  "Seek forward 10 seconds in ffplay."
+  (interactive)
+  (arxana-media--playback-send "\e[C" "Seek +10s"))
+
+(defun arxana-media-playback-seek-back-30 ()
+  "Seek backward 30 seconds in ffplay."
+  (interactive)
+  (dotimes (_ 3)
+    (arxana-media--playback-send "\e[D"))
+  (message "Seek -30s"))
+
+(defun arxana-media-playback-seek-forward-30 ()
+  "Seek forward 30 seconds in ffplay."
+  (interactive)
+  (dotimes (_ 3)
+    (arxana-media--playback-send "\e[C"))
+  (message "Seek +30s"))
 
 (defun arxana-media-play-next ()
   (interactive)
@@ -858,11 +1120,65 @@
    ("Ly" 2 nil)
    ("Recorded" 18 t)
    ("Status" 8 t)
+   ("Len" 6 nil)
    ("Title" 40 t)
    ("Project" 20 t)])
 
-(defun arxana-media--marked-p (sha)
-  (and sha (gethash sha arxana-media--marked)))
+(defun arxana-media--marked-p (key)
+  (and key (gethash key arxana-media--marked)))
+
+(defun arxana-media--mark-key-for-item (item)
+  (pcase (plist-get item :type)
+    ('media-track
+     (or (plist-get item :sha256)
+         (plist-get (plist-get item :entry) :sha256)))
+    ('media-misc-track
+     (plist-get item :path))
+    (_ nil)))
+
+(defun arxana-media--duration-seconds (path)
+  "Return duration in seconds for PATH, or nil."
+  (let ((program (if (boundp 'arxana-media-duration-program)
+                     arxana-media-duration-program
+                   (executable-find "ffprobe"))))
+    (when (and path (stringp path)
+               program
+               (file-readable-p path))
+      (let* ((attrs (file-attributes path))
+             (mtime (and attrs (file-attribute-modification-time attrs)))
+             (cached (gethash path arxana-media--duration-cache))
+             (cached-mtime (car-safe cached))
+             (cached-seconds (cdr-safe cached)))
+        (if (and cached (equal cached-mtime mtime))
+            cached-seconds
+          (with-temp-buffer
+            (let ((exit-code (process-file program nil t nil
+                                           "-v" "error"
+                                           "-show_entries" "format=duration"
+                                           "-of" "default=noprint_wrappers=1:nokey=1"
+                                           path)))
+              (when (and (equal exit-code 0)
+                         (> (buffer-size) 0))
+                (let* ((text (string-trim (buffer-string)))
+                       (seconds (ignore-errors (string-to-number text))))
+                  (when (and seconds (> seconds 0))
+                    (puthash path (cons mtime seconds) arxana-media--duration-cache)
+                    seconds))))))))))
+
+(defun arxana-media--format-duration (seconds)
+  (when (and seconds (numberp seconds))
+    (let* ((total (floor seconds))
+           (mins (/ total 60))
+           (secs (% total 60))
+           (hours (/ mins 60))
+           (mins-rem (% mins 60)))
+      (if (> hours 0)
+          (format "%d:%02d:%02d" hours mins-rem secs)
+        (format "%d:%02d" mins secs)))))
+
+(defun arxana-media--entry-duration (entry)
+  (let ((path (arxana-media--track-play-path entry)))
+    (arxana-media--duration-seconds path)))
 
 (defun arxana-media--lyrics-present-p (lyrics-id)
   (let ((cached (gethash lyrics-id arxana-media--lyrics-cache 'unset)))
@@ -879,8 +1195,22 @@
 
 (defun arxana-media--lyrics-indicator (item)
   (condition-case nil
-      (let ((lyrics-id (arxana-media--lyrics-entity-id item)))
-        (if (and lyrics-id (arxana-media--lyrics-present-p lyrics-id)) "L" " "))
+      (pcase (plist-get item :type)
+        ('media-publication-track
+         (let* ((path (plist-get item :path))
+                (cached (and path (gethash path arxana-media--misc-sha-cache)))
+                (sha (cdr-safe cached))
+                (lyrics-id (and sha (format "arxana/media-lyrics/misc/%s" sha))))
+           (if (and lyrics-id (arxana-media--lyrics-present-p lyrics-id)) "L" " ")))
+        ('media-misc-track
+         (let* ((path (plist-get item :path))
+                (cached (and path (gethash path arxana-media--misc-sha-cache)))
+                (sha (cdr-safe cached))
+                (lyrics-id (and sha (format "arxana/media-lyrics/misc/%s" sha))))
+           (if (and lyrics-id (arxana-media--lyrics-present-p lyrics-id)) "L" " ")))
+        (_
+         (let ((lyrics-id (arxana-media--lyrics-entity-id item)))
+           (if (and lyrics-id (arxana-media--lyrics-present-p lyrics-id)) "L" " "))))
     (error " ")))
 
 (defun arxana-media--track-row (item)
@@ -893,20 +1223,28 @@
          (title (or (plist-get entry :title)
                     (plist-get entry :base_name)
                     (plist-get entry :sha256)))
-         (recorded (arxana-media--format-recorded entry)))
+         (recorded (arxana-media--format-recorded entry))
+         (duration (arxana-media--format-duration
+                    (arxana-media--entry-duration entry))))
     (vector (if (arxana-media--marked-p sha) "*" " ")
             (arxana-media--lyrics-indicator item)
-            recorded status title project)))
+            recorded status duration title project)))
 
 (defun arxana-media--misc-track-format ()
-  [("Ly" 2 nil)
-   ("Title" 48 t)
+  [(" " 1 nil)
+   ("Ly" 2 nil)
+   ("Title" 40 t)
+   ("Len" 6 nil)
    ("File" 34 t)])
 
 (defun arxana-media--misc-track-row (item)
   (let ((path (plist-get item :path)))
-    (vector (arxana-media--lyrics-indicator item)
+    (vector (if (arxana-media--marked-p path) "*" " ")
+            (arxana-media--lyrics-indicator item)
             (or (plist-get item :label) "")
+            (or (arxana-media--format-duration
+                 (arxana-media--duration-seconds path))
+                "")
             (if (and path (stringp path))
                 (file-name-nondirectory path)
               ""))))
@@ -914,15 +1252,14 @@
 (defun arxana-media-toggle-mark-at-point ()
   (interactive)
   (let* ((item (arxana-patterns--browser-item-at-point)))
-    (unless (and item (eq (plist-get item :type) 'media-track))
+    (unless (and item (memq (plist-get item :type) '(media-track media-misc-track)))
       (user-error "No media track at point"))
-    (let* ((sha (or (plist-get item :sha256)
-                    (plist-get (plist-get item :entry) :sha256))))
-      (unless sha
-        (user-error "Track entry has no :sha256"))
-      (if (arxana-media--marked-p sha)
-          (remhash sha arxana-media--marked)
-        (puthash sha t arxana-media--marked))
+    (let* ((key (arxana-media--mark-key-for-item item)))
+      (unless key
+        (user-error "Track entry has no markable key"))
+      (if (arxana-media--marked-p key)
+          (remhash key arxana-media--marked)
+        (puthash key t arxana-media--marked))
       (arxana-patterns--browser-render))))
 
 (defun arxana-media-unmark-all ()
@@ -930,6 +1267,13 @@
   (clrhash arxana-media--marked)
   (arxana-patterns--browser-render)
   (message "Unmarked all tracks"))
+
+(defun arxana-media--marked-misc-items-in-context ()
+  (let* ((items (arxana-patterns--browser-current-items)))
+    (seq-filter (lambda (item)
+                  (and (eq (plist-get item :type) 'media-misc-track)
+                       (arxana-media--marked-p (plist-get item :path))))
+                items)))
 
 (defun arxana-media--slug (value)
   (let* ((raw (downcase (string-trim (or value ""))))
@@ -945,6 +1289,190 @@
                   (gethash (plist-get entry :sha256) want))
                 entries)))
 
+(defun arxana-media--marked-tracks-in-context ()
+  (let* ((entries (or (arxana-media--entries) '()))
+         (context arxana-patterns--browser-context)
+         (filter (and (listp context) (plist-get context :media-filter)))
+         (visible (if filter
+                      (arxana-media--filter-entries entries filter)
+                    entries))
+         (want (make-hash-table :test 'equal)))
+    (maphash (lambda (sha _flag) (puthash sha t want)) arxana-media--marked)
+    (seq-filter (lambda (entry)
+                  (gethash (plist-get entry :sha256) want))
+                visible)))
+
+(defun arxana-media--status-prompt (&optional default)
+  (let* ((choices '("hold" "archive" "trash"))
+         (default (or default "hold")))
+    (completing-read "Set status (hold/archive/trash): " choices nil t nil nil default)))
+
+(defun arxana-media--apply-status (entries status)
+  (let* ((normalized (downcase status))
+         (assignments (delq nil
+                            (mapcar (lambda (entry)
+                                      (let ((sha (plist-get entry :sha256)))
+                                        (when sha (format "%s=%s" sha normalized))))
+                                    entries))))
+    (when assignments
+      (let* ((args (append (arxana-media--zoom-sync-args)
+                           (apply #'append (mapcar (lambda (spec) (list "--status" spec))
+                                                   assignments))))
+             (buf (get-buffer-create "*arxana-media*"))
+             (exit-code
+              (progn
+                (with-current-buffer buf
+                  (let ((inhibit-read-only t))
+                    (erase-buffer)))
+                (apply #'process-file (car args) nil buf nil (cdr args)))))
+        (unless (equal exit-code 0)
+          (user-error "zoom_sync.py failed (see *arxana-media* buffer)"))
+        (setq arxana-media--catalog nil
+              arxana-media--catalog-mtime nil)
+        (message "Updated status for %d recording%s"
+                 (length assignments)
+                 (if (= (length assignments) 1) "" "s"))))))
+
+(defun arxana-media-set-status-marked (status)
+  "Set STATUS for all marked Zoom tracks (or the track at point if none marked)."
+  (interactive (list (arxana-media--status-prompt)))
+  (let* ((marked (arxana-media--marked-tracks))
+         (visible-marked (arxana-media--marked-tracks-in-context))
+         (entries nil))
+    (when (and marked (> (length marked) (length visible-marked)))
+      (message "Ignoring %d marked track%s outside this view"
+               (- (length marked) (length visible-marked))
+               (if (= (- (length marked) (length visible-marked)) 1) "" "s")))
+    (when (and visible-marked (> (length visible-marked) 0))
+      (unless (yes-or-no-p (format "Apply status to %d marked track%s? "
+                                   (length visible-marked)
+                                   (if (= (length visible-marked) 1) "" "s")))
+        (setq visible-marked nil))
+      (setq entries visible-marked))
+    (unless entries
+      (let ((item (arxana-patterns--browser-item-at-point)))
+        (unless (and item (eq (plist-get item :type) 'media-track))
+          (user-error "No marked tracks or media track at point"))
+        (setq entries (list (plist-get item :entry)))))
+    (arxana-media--apply-status entries status)
+    (clrhash arxana-media--marked)
+    (arxana-patterns--browser-render)))
+
+(defun arxana-media--item-play-path (item)
+  (pcase (plist-get item :type)
+    ('media-track
+     (arxana-media--track-play-path (plist-get item :entry)))
+    ('media-misc-track
+     (plist-get item :path))
+    ('media-publication-track
+     (plist-get item :path))
+    (_ nil)))
+
+(defun arxana-media-open-in-audacity ()
+  "Open marked media tracks (or the track at point) in Audacity."
+  (interactive)
+  (unless arxana-media-enable-audacity
+    (user-error "Audacity integration is disabled"))
+  (unless arxana-media-audacity-program
+    (user-error "Audacity not found (customize arxana-media-audacity-program)"))
+  (let* ((marked (arxana-media--marked-tracks-in-context))
+         (items nil)
+         (paths nil))
+    (if (and marked (> (length marked) 0))
+        (setq items (mapcar (lambda (entry)
+                              (list :type 'media-track :entry entry))
+                            marked))
+      (let ((item (arxana-patterns--browser-item-at-point)))
+        (unless (and item (memq (plist-get item :type)
+                                '(media-track media-misc-track media-publication-track)))
+          (user-error "No media track at point"))
+        (setq items (list item))))
+    (dolist (item items)
+      (let ((path (arxana-media--item-play-path item)))
+        (when (and path (file-readable-p path))
+          (push path paths))))
+    (setq paths (nreverse paths))
+    (unless paths
+      (user-error "No readable media files for Audacity"))
+    (let ((result (and arxana-media-audacity-use-script-pipe
+                       (arxana-media--audacity-import-via-pipe paths))))
+      (cond
+       ((eq result t)
+        (message "Imported %d track%s into Audacity" (length paths) (if (= (length paths) 1) "" "s")))
+       ((eq result :no-pipes)
+        (message "Audacity script pipes not available; enable mod-script-pipe and restart Audacity."))
+       ((eq result :send-failed)
+        (message "Audacity script pipes not responding; enable mod-script-pipe and restart Audacity.")))
+      (cond
+       ((eq result t) nil)
+       (arxana-media-audacity-fallback-to-args
+        (apply #'start-process "arxana-audacity" nil arxana-media-audacity-program paths)
+        (message "Opening %d track%s in Audacity" (length paths) (if (= (length paths) 1) "" "s")))
+       (t
+        (user-error "Audacity script pipes unavailable; see messages for setup steps"))))))
+
+(defun arxana-media--audacity-pipe-paths ()
+  (let* ((dir (file-name-as-directory (expand-file-name arxana-media-audacity-script-pipe-dir)))
+         (candidates (list (user-login-name) (number-to-string (user-uid))))
+         (stem (or (seq-find (lambda (candidate)
+                               (let ((to (expand-file-name (format "audacity_script_pipe.to.%s" candidate) dir))
+                                     (from (expand-file-name (format "audacity_script_pipe.from.%s" candidate) dir)))
+                                 (and (file-exists-p to) (file-exists-p from))))
+                             candidates)
+                   (car candidates)))
+         (to (expand-file-name (format "audacity_script_pipe.to.%s" stem) dir))
+         (from (expand-file-name (format "audacity_script_pipe.from.%s" stem) dir)))
+    (list :to to :from from)))
+
+(defun arxana-media--audacity-pipes-ready-p (paths)
+  (and (file-exists-p (plist-get paths :to))
+       (file-exists-p (plist-get paths :from))))
+
+(defun arxana-media--audacity-send (pipe message)
+  (when (and pipe (file-exists-p pipe))
+    (let ((proc (make-process :name "arxana-audacity-pipe"
+                              :buffer nil
+                              :command (list "sh" "-c" (format "cat > %s" (shell-quote-argument pipe)))
+                              :noquery t))
+          (deadline (+ (float-time) arxana-media-audacity-send-timeout)))
+      (process-send-string proc (concat message "\n"))
+      (process-send-eof proc)
+      (while (and (process-live-p proc)
+                  (< (float-time) deadline))
+        (accept-process-output proc 0.02))
+      (when (process-live-p proc)
+        (delete-process proc)
+        nil))))
+
+(defun arxana-media--audacity-read-response (_pipe)
+  nil)
+
+(defun arxana-media--audacity-import-via-pipe (paths)
+  "Try importing PATHS into a single Audacity project via mod-script-pipe."
+  (let* ((pipes (arxana-media--audacity-pipe-paths))
+         (to (plist-get pipes :to))
+         (from (plist-get pipes :from)))
+    (when arxana-media-audacity-always-launch
+      (apply #'start-process "arxana-audacity" nil arxana-media-audacity-program nil)
+      (sleep-for arxana-media-audacity-startup-wait))
+    (unless (arxana-media--audacity-pipes-ready-p pipes)
+      (apply #'start-process "arxana-audacity" nil arxana-media-audacity-program nil)
+      (sleep-for arxana-media-audacity-startup-wait))
+    (if (not (arxana-media--audacity-pipes-ready-p pipes))
+        :no-pipes
+      (if (and (arxana-media--audacity-send to "New:")
+               (let ((ok t))
+                 (dolist (path paths)
+                   (setq ok (and ok
+                                 (arxana-media--audacity-send
+                                  to
+                                  (format "Import2: Filename=\"%s\"" (expand-file-name path))))))
+                 (when ok
+                   (arxana-media--audacity-read-response from))
+                 ok))
+          t
+        :send-failed))))
+
 (defun arxana-media--track-export-path (entry)
   (let ((candidates (list (plist-get entry :mp3)
                           (plist-get entry :copied_to)
@@ -954,6 +1482,123 @@
                      (stringp path)
                      (file-readable-p path)))
               candidates)))
+
+(defun arxana-media--project-root ()
+  (let* ((base (or (and load-file-name (file-name-directory load-file-name))
+                   (and buffer-file-name (file-name-directory buffer-file-name))
+                   default-directory)))
+    (or (locate-dominating-file base ".git")
+        base)))
+
+(defun arxana-media--script-path (path)
+  (if (file-name-absolute-p path)
+      path
+    (let* ((base (or load-file-name buffer-file-name default-directory))
+           (dir (and base (file-name-directory base)))
+           (local-root (and dir (file-name-directory (directory-file-name dir))))
+           (candidates (delq nil (list (and arxana-media--source-root
+                                           (expand-file-name path arxana-media--source-root))
+                                       (and local-root (expand-file-name path local-root))
+                                       (expand-file-name path (arxana-media--project-root))))))
+      (or (seq-find #'file-exists-p candidates)
+          (car candidates)
+          path))))
+
+(defun arxana-media--bounce-profile-choice ()
+  (let* ((choices (mapcar #'car arxana-media-bounce-profiles))
+         (choice (completing-read "Bounce profile: " choices nil t)))
+    (assoc choice arxana-media-bounce-profiles)))
+
+(defun arxana-media--bounce-output-root ()
+  (file-name-as-directory
+   (expand-file-name
+    (or arxana-media-bounce-output-root
+        (expand-file-name "bounces" arxana-media-misc-root)))))
+
+(defun arxana-media--bounce-input-path (entry)
+  (let ((candidates (delq nil (list (plist-get entry :source)
+                                    (plist-get entry :mp3)
+                                    (plist-get entry :copied_to))))
+        (paths nil))
+    (dolist (candidate candidates)
+      (when (and candidate (stringp candidate))
+        (let ((resolved (arxana-media--resolve-zoom-path candidate)))
+          (when resolved (push resolved paths)))
+        (when (string-match-p "\\.mp3\\'" (downcase candidate))
+          (let* ((wav (concat (file-name-sans-extension candidate) ".wav"))
+                 (wav-res (arxana-media--resolve-zoom-path wav)))
+            (when wav-res (push wav-res paths))))
+        (when (string-match-p "/mp3/" candidate)
+          (let* ((wav (replace-regexp-in-string "/mp3/" "/wav/" candidate))
+                 (wav (if (string-match-p "\\.mp3\\'" (downcase wav))
+                          (concat (file-name-sans-extension wav) ".wav")
+                        wav))
+                 (wav-res (arxana-media--resolve-zoom-path wav)))
+            (when wav-res (push wav-res paths))))))
+    (seq-find (lambda (path)
+                (and path (file-readable-p path)))
+              (nreverse paths))))
+
+(defun arxana-media-bounce-marked ()
+  "Bounce marked tracks using a selected profile."
+  (interactive)
+  (let ((entries (arxana-media--marked-tracks-in-context)))
+    (unless entries
+      (user-error "No marked tracks for bounce"))
+    (unless (= (length entries) 4)
+      (user-error "Bounce expects 4 tracks (got %d)" (length entries)))
+    (let* ((profile (arxana-media--bounce-profile-choice))
+           (script-rel (plist-get (cdr profile) :script))
+           (script (arxana-media--script-path script-rel)))
+      (unless (and script (file-exists-p script) (file-executable-p script))
+        (user-error "Bounce script not executable: %s" script))
+      (let ((inputs nil))
+        (dolist (entry entries)
+          (let ((path (arxana-media--bounce-input-path entry)))
+            (unless path
+              (user-error "No readable input for %s"
+                          (or (plist-get entry :title)
+                              (plist-get entry :recorded)
+                              (plist-get entry :name)
+                              "track")))
+            (push path inputs)))
+        (setq inputs (nreverse inputs))
+        (let* ((out-root (arxana-media--bounce-output-root))
+               (_ (unless (file-directory-p out-root)
+                    (user-error "Bounce output directory missing: %s" out-root)))
+               (default-path (expand-file-name "mix.wav" out-root))
+               (raw (read-file-name "Output wav: " out-root default-path nil
+                                    (file-name-nondirectory default-path)))
+               (raw (replace-regexp-in-string "\\`[[:space:]\n\r\t]+\\|[[:space:]\n\r\t]+\\'" "" raw))
+               (out (expand-file-name raw))
+               (out (if (string-match-p "\\.wav\\'" (downcase out))
+                        out
+                      (concat out ".wav")))
+               (mp3 (when (y-or-n-p "Also create mp3? ")
+                      (concat (file-name-sans-extension out) ".mp3")))
+               (buffer (get-buffer-create "*arxana-media-bounce*"))
+               (args (append inputs (list out) (when mp3 (list mp3)))))
+          (unless (file-directory-p (file-name-directory out))
+            (user-error "Output directory missing: %s" (file-name-directory out)))
+          (with-current-buffer buffer
+            (let ((inhibit-read-only t))
+              (erase-buffer)))
+          (let ((exit-code (apply #'process-file script nil buffer t args)))
+            (unless (equal exit-code 0)
+              (user-error "Bounce failed (see %s)" (buffer-name buffer))))
+          (message "Bounce complete: %s" out))))))
+
+(defun arxana-media-bounce-or-up ()
+  "Bounce marked tracks in media views, otherwise go up."
+  (interactive)
+  (let* ((context arxana-patterns--browser-context)
+         (media-context (or (plist-get context :media-filter)
+                            (memq (plist-get context :view)
+                                  '(media-projects media-publications media-publication))
+                            (eq (plist-get context :type) 'media-category))))
+    (if (and media-context (arxana-media--marked-tracks-in-context))
+        (arxana-media-bounce-marked)
+      (arxana-patterns--browser-up))))
 
 (defun arxana-media--tag-entries (entries tag)
   (let ((args (apply #'append
@@ -1037,11 +1682,44 @@ When URL is provided, write it to the publication metadata."
         (browse-url url)
       (user-error "No URL recorded for this publication"))))
 
+(defun arxana-media-move-misc-to-ep-at-point ()
+  "Move the misc audio track at point into an EP-in-progress directory."
+  (interactive)
+  (let* ((marked (arxana-media--marked-misc-items-in-context))
+         (items (if (and marked (> (length marked) 0))
+                    marked
+                  (let ((item (arxana-patterns--browser-item-at-point)))
+                    (unless (and item (eq (plist-get item :type) 'media-misc-track))
+                      (user-error "No misc audio track at point"))
+                    (list item)))))
+    (when (and (> (length items) 1)
+               (not (yes-or-no-p (format "Move %d tracks into an EP? " (length items)))))
+      (user-error "Canceled"))
+    (let ((dest-dir (arxana-media--prompt-ep-directory)))
+      (dolist (item items)
+        (let* ((path (plist-get item :path))
+               (label (or (plist-get item :label)
+                          (and path (file-name-base path))
+                          "track")))
+          (unless (and path (file-readable-p path))
+            (user-error "No readable media file found for %s" label))
+          (let ((dest (expand-file-name (file-name-nondirectory path) dest-dir)))
+            (when (file-exists-p dest)
+              (user-error "Destination already exists: %s" dest))
+            (rename-file path dest)
+            (remhash path arxana-media--misc-sha-cache)
+            (remhash path arxana-media--marked))))
+      (arxana-patterns--browser-render)
+      (message "Moved %d track%s to %s"
+               (length items)
+               (if (= (length items) 1) "" "s")
+               dest-dir))))
 (defun arxana-media-retitle-at-point ()
   "Retitle the current media track or misc audio file."
   (interactive)
   (let* ((item (arxana-patterns--browser-item-at-point)))
-    (unless (and item (memq (plist-get item :type) '(media-track media-misc-track)))
+    (unless (and item (memq (plist-get item :type)
+                            '(media-track media-misc-track media-publication-track)))
       (user-error "No media track at point"))
     (pcase (plist-get item :type)
       ('media-track
@@ -1063,7 +1741,7 @@ When URL is provided, write it to the publication metadata."
                  arxana-media--catalog-mtime nil)
            (arxana-patterns--browser-render)
            (message "Retitled %s" title))))
-      ('media-misc-track
+      ((or 'media-misc-track 'media-publication-track)
        (let* ((path (plist-get item :path))
               (current (or (plist-get item :label)
                            (and path (file-name-base path))
