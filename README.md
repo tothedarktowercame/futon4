@@ -11,6 +11,8 @@ define the reanimation milestones and current storage workflows.
 - `test/` – ERT suites that gate the harness (`dev/run-tests.sh` runs them all).
 - `docs/` – prose references including `docs/reanimation-plan.org` (living spec)
   and `docs/storage-bridge.org` (storage notes).
+- `resources/typesetting/` – font test helpers and TeX samples for typesetting
+  experiments.
 
 ## Quickstart
 
@@ -28,6 +30,8 @@ define the reanimation milestones and current storage workflows.
 Note: the media browser auto-detects the Zoom catalog at
 `~/code/storage/zoomr4/meta/zoom_sync_index.json` when present. This is only the
 Zoom catalog; it does not cover `misc-audio` working sets.
+Lyrics buffers now support chord-prefixed styling: lines that begin with
+`[A]`-style tags display the lyric text in the mapped font face.
 
 ## Testing and verification
 

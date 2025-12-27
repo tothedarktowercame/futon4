@@ -34,6 +34,21 @@ production-bound (not a throwaway experiment), add an entry.
    :TARGET: XTDB doc id (or temporary snapshot path)
    :NOTES: Commit <hash>; store transactions + new attributes
 
+** TODO browser marks scoped to active view
+   :FILES: dev/arxana-browser-marks.el dev/arxana-media.el
+   :TARGET: XTDB doc id
+   :NOTES: Introduced shared mark filtering helper; media actions now ignore marks from inactive views.
+
+** TODO vocal-forward banjo bounce profile
+   :FILES: dev/arxana-media.el
+   :TARGET: XTDB doc id
+   :NOTES: Added vocal-forward banjo/bass/harmonica bounce profile.
+
+** TODO lyrics chord font mapping
+   :FILES: dev/arxana-media.el
+   :TARGET: XTDB doc id
+   :NOTES: Added chord-aware font faces + font-lock in lyrics mode.
+
 This placeholder shows the preferred structure.  Replace it with real entries as
 soon as new work lands.
 

@@ -59,6 +59,10 @@ milestone.
 - Org→graph semantic mirroring is still one-way.  We can import/export Org
 trees, but live edits inside Org buffers are not yet reflected into the
 EAV stores automatically.
+- In terminal Emacs, `ffplay` can still receive keypresses from the TTY, so
+media hotkeys (like `m` for mute/volume) can affect playback while the
+browser is focused.  Restart Emacs after changing playback flags, or use a
+GUI session to avoid this limitation.
 
 Track both of these gaps in README/plan updates so contributors know where
 help is welcome.

@@ -16,3 +16,14 @@ Usage:
 ```sh
 ./bounce_vocal_bass_pbass_accordion_vocal_forward.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
 ```
+
+## Vocal-forward mix (vocal + banjo + bass + harmonica)
+
+`bounce_vocal_banjo_bass_harp_vocal_forward.sh` keeps vocals forward using the
+same sidechain-ducking approach as the pbass/accordion variant.
+
+Usage:
+
+```sh
+./bounce_vocal_banjo_bass_harp_vocal_forward.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
+```

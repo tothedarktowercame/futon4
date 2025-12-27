@@ -3031,8 +3031,8 @@ returning to the top-level list."
     (define-key map (kbd "b") #'arxana-media-bounce-or-up)
     (define-key map (kbd "g") #'arxana-patterns--browser-refresh)
     (define-key map (kbd "I") #'arxana-patterns--browser-import-library)
-    (define-key map (kbd "E") #'arxana-patterns--browser-edit-collection)
-    (define-key map (kbd "e") #'arxana-patterns--browser-edit-or-ep-move)
+    (define-key map (kbd "E") #'arxana-patterns--browser-edit-current-context)
+    (define-key map (kbd "e") #'arxana-patterns--browser-stage-to-ep)
     (define-key map (kbd "+") #'arxana-patterns--browser-move-pattern-up)
     (define-key map (kbd "-") #'arxana-patterns--browser-move-pattern-down)
     (define-key map (kbd "A") #'arxana-patterns-add-collection-root)
@@ -3077,12 +3077,9 @@ returning to the top-level list."
   (setq-local hl-line-face 'arxana-patterns-browser-highlight)
   (hl-line-mode 1))
 
-(defun arxana-patterns--browser-edit-or-ep-move ()
+(defun arxana-patterns--browser-stage-to-ep ()
   (interactive)
-  (let ((item (arxana-patterns--browser-item-at-point)))
-    (if (and item (eq (plist-get item :type) 'media-misc-track))
-        (arxana-media-move-misc-to-ep-at-point)
-      (arxana-patterns--browser-edit-current-context))))
+  (arxana-media-move-misc-to-ep-at-point))
 
 ;;;###autoload
 (defun arxana-patterns-browse ()
