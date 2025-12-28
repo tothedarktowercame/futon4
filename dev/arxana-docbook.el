@@ -55,6 +55,50 @@
   :type 'boolean
   :group 'arxana-docbook)
 
+(defcustom arxana-docbook-remote-preserve-order t
+  "When non-nil, trust remote TOC order as returned by /docs/:book/contents."
+  :type 'boolean
+  :group 'arxana-docbook)
+
+(defcustom arxana-docbook-remote-delete-path-format "/docs/%s/doc/%s"
+  "Format string for docbook delete endpoint (book, doc-id)."
+  :type 'string
+  :group 'arxana-docbook)
+
+(defcustom arxana-docbook-remote-delete-method "DELETE"
+  "HTTP method used when deleting docbook entries from the remote API."
+  :type 'string
+  :group 'arxana-docbook)
+
+(defvar arxana-docbook-last-delete-errors nil
+  "Details from the last failed remote docbook delete attempt.")
+
+(defcustom arxana-docbook-remote-delete-toc-path-format "/docs/%s/toc/%s"
+  "Format string for docbook TOC delete endpoint (book, doc-id)."
+  :type 'string
+  :group 'arxana-docbook)
+
+(defcustom arxana-docbook-remote-order-path-format "/docs/%s/contents/order"
+  "Format string for docbook TOC order endpoint (book)."
+  :type 'string
+  :group 'arxana-docbook)
+
+(defcustom arxana-docbook-remote-order-method "POST"
+  "HTTP method used when updating remote docbook TOC order."
+  :type 'string
+  :group 'arxana-docbook)
+
+(defcustom arxana-docbook-org-export-directory nil
+  "Directory for docbook Org exports (nil uses dev/logs/books/<book>/export)."
+  :type '(choice (const :tag "Auto" nil)
+                 directory)
+  :group 'arxana-docbook)
+
+(defcustom arxana-docbook-write-filesystem-toc nil
+  "When non-nil, allow writing toc.json as a filesystem byproduct."
+  :type 'boolean
+  :group 'arxana-docbook)
+
 (defvar-local arxana-docbook--book nil
   "Current doc book identifier (e.g., futon4) for the browser buffer.")
 
@@ -134,9 +178,14 @@
           (expand-file-name "dev/logs/books" root)))))
 
 (defun arxana-docbook--repo-root ()
-  (or (locate-dominating-file default-directory "dev/logs/books")
-      (locate-dominating-file default-directory "dev")
-      default-directory))
+  (let* ((base (or load-file-name buffer-file-name))
+         (root (and base (locate-dominating-file base "dev"))))
+    (or root
+        (when-let* ((books (arxana-docbook--locate-books-root)))
+          (expand-file-name "../../.." books))
+        (locate-dominating-file default-directory "dev/logs/books")
+        (locate-dominating-file default-directory "dev")
+        default-directory)))
 
 (defun arxana-docbook--remote-base-url ()
   (when (and (boundp 'futon4-base-url) futon4-base-url)
@@ -169,11 +218,12 @@
                 (root root))))
     (and path (file-directory-p path))))
 
-(defun arxana-docbook--http-response (path)
+(defun arxana-docbook--http-response (path &optional method)
   "Return a plist with :status, :data, and :error for PATH."
-  (let ((base (arxana-docbook--remote-base-url)))
+  (let ((base (arxana-docbook--remote-base-url))
+        (method (or method "GET")))
     (when base
-      (let* ((url-request-method "GET")
+      (let* ((url-request-method method)
              (url (concat base path))
              (buf (url-retrieve-synchronously url t t 5)))
         (when (buffer-live-p buf)
@@ -199,7 +249,7 @@
   (let ((book (or book "futon4")))
     (if (not (arxana-docbook--remote-enabled-p))
         (list :status :disabled)
-      (let* ((path (format "/docs/%s/contents" book))
+      (let* ((path (format "/docs/%s/toc" book))
              (resp (arxana-docbook--http-response path))
              (status (plist-get resp :status))
              (data (plist-get resp :data)))
@@ -322,11 +372,130 @@
     (when (and resp (or (null status) (= status 200)))
       data)))
 
+(defun arxana-docbook--http-json-request (path method payload)
+  "Return a plist with :status, :data, and :error for PATH using METHOD and PAYLOAD."
+  (let ((base (arxana-docbook--remote-base-url)))
+    (when base
+      (let* ((url-request-method (or method "POST"))
+             (url-request-extra-headers '(("Content-Type" . "application/json")))
+             (url-request-data (and payload (encode-coding-string (json-encode payload) 'utf-8)))
+             (url (concat base path))
+             (buf (url-retrieve-synchronously url t t 5)))
+        (when (buffer-live-p buf)
+          (unwind-protect
+              (with-current-buffer buf
+                (let ((status (and (boundp 'url-http-response-status)
+                                   url-http-response-status)))
+                  (goto-char (point-min))
+                  (if (not (re-search-forward "\n\n" nil t))
+                      (list :status status :error "No HTTP body")
+                    (decode-coding-region (point) (point-max) 'utf-8-unix t)
+                    (let ((json-object-type 'plist)
+                          (json-array-type 'list)
+                          (json-key-type 'keyword))
+                      (condition-case err
+                          (list :status status :data (json-read))
+                        (error (list :status status
+                                     :error (error-message-string err))))))))
+            (kill-buffer buf)))))))
+
+(defun arxana-docbook--remote-update-toc-order (book order)
+  "Update remote TOC order for BOOK using ORDER (list of doc-ids)."
+  (when (and book (listp order) (arxana-docbook--remote-enabled-p))
+    (let* ((path (format arxana-docbook-remote-order-path-format book))
+           (payload (list (cons "order" order)))
+           (resp (arxana-docbook--http-json-request path arxana-docbook-remote-order-method payload))
+           (status (plist-get resp :status)))
+      (if (and (numberp status) (<= 200 status 299))
+          (list :status :ok :response resp)
+        (list :status :error :response resp
+              :error (or (plist-get resp :error)
+                         (and (plist-get resp :data)
+                              (plist-get (plist-get resp :data) :error))
+                         status))))))
+
+(defun arxana-docbook--remote-delete-doc (book doc-id)
+  "Delete DOC-ID from the remote docbook store."
+  (when (and book doc-id (arxana-docbook--remote-enabled-p))
+    (let* ((path (format arxana-docbook-remote-delete-path-format book doc-id))
+           (resp (arxana-docbook--http-response path arxana-docbook-remote-delete-method))
+           (status (plist-get resp :status)))
+      (if (and (numberp status) (<= 200 status 299))
+          (list :status :ok :response resp)
+        (list :status :error :response resp
+              :error (or (plist-get resp :error)
+                         (and (plist-get resp :data)
+                              (plist-get (plist-get resp :data) :error))
+                         status))))))
+
+(defun arxana-docbook--remote-delete-toc (book doc-id &optional cascade)
+  "Delete DOC-ID from the remote docbook TOC.
+When CASCADE is non-nil, request that entries are deleted too."
+  (when (and book doc-id (arxana-docbook--remote-enabled-p))
+    (let* ((path (format arxana-docbook-remote-delete-toc-path-format book doc-id))
+           (path (if cascade (concat path "?cascade=true") path))
+           (resp (arxana-docbook--http-response path arxana-docbook-remote-delete-method))
+           (status (plist-get resp :status)))
+      (if (and (numberp status) (<= 200 status 299))
+          (list :status :ok :response resp)
+        (list :status :error :response resp
+              :error (or (plist-get resp :error)
+                         (and (plist-get resp :data)
+                              (plist-get (plist-get resp :data) :error))
+                         status))))))
+
+(defun arxana-docbook--toc-remove-doc-id (book doc-id)
+  "Remove DOC-ID from the filesystem toc.json for BOOK.
+Return non-nil when the toc file was updated."
+  (let* ((path (arxana-docbook--toc-path book))
+         (json-object-type 'plist)
+         (json-array-type 'list)
+         (json-key-type 'keyword))
+    (when (and path (file-readable-p path))
+      (let* ((toc (json-read-file path))
+             (filtered (and (listp toc)
+                            (seq-filter (lambda (heading)
+                                          (not (equal doc-id
+                                                      (or (plist-get heading :doc_id)
+                                                          (plist-get heading :doc-id)))))
+                                        toc))))
+        (when (and (listp filtered) (/= (length filtered) (length toc)))
+          (let ((json-encoding-pretty-print t))
+            (with-temp-file path
+              (insert (json-encode filtered))
+              (insert "\n")))
+          t)))))
+
+(defun arxana-docbook--filesystem-delete-doc (book doc-id)
+  "Delete filesystem docbook entries for DOC-ID and return deleted paths."
+  (let* ((entries (ignore-errors (arxana-docbook-entries book)))
+         (matches (seq-filter (lambda (entry)
+                                (equal doc-id (plist-get entry :doc-id)))
+                              (or entries '())))
+         (deleted '()))
+    (dolist (entry matches)
+      (let* ((raw (plist-get entry :raw-path))
+             (run-id (plist-get entry :run-id))
+             (stub (or (plist-get entry :stub-path)
+                       (and raw run-id
+                            (expand-file-name (format "../stubs/%s.org" run-id)
+                                              (file-name-directory raw))))))
+        (when (and raw (file-exists-p raw))
+          (delete-file raw)
+          (push raw deleted))
+        (when (and stub (file-exists-p stub))
+          (delete-file stub)
+          (push stub deleted))))
+    (when (and matches (arxana-docbook--filesystem-available-p book))
+      (arxana-docbook--toc-remove-doc-id book doc-id))
+    (nreverse deleted)))
+
 (defun arxana-docbook--normalize-remote-entry (entry)
   (let* ((entry-id (or (plist-get entry :doc/entry-id)
                        (plist-get entry :doc_entry_id)
                        (plist-get entry :doc/entry_id)))
          (raw-summary (or (plist-get entry :doc/summary)
+                          (plist-get entry :doc/body)
                           (plist-get entry :doc/context)
                           (plist-get entry :doc/delta)))
          (summary (when raw-summary
@@ -351,7 +520,8 @@
             :entry entry))))
 
 (defun arxana-docbook--remote-contents (book)
-  (when-let* ((data (arxana-docbook--http-json (format "/docs/%s/contents" book)))
+  (when-let* ((data (or (arxana-docbook--http-json (format "/docs/%s/toc" book))
+                        (arxana-docbook--http-json (format "/docs/%s/contents" book))))
               (headings (plist-get data :headings)))
     (mapcar (lambda (h)
               (list :type 'docbook-heading
@@ -551,6 +721,53 @@
 (defun arxana-docbook--demote-org (text)
   (replace-regexp-in-string "^\\(\\*+\\) " "*\\1 " (or text "")))
 
+(defun arxana-docbook--demote-org-by (text steps)
+  (let ((out (or text "")))
+    (dotimes (_ (max 0 steps))
+      (setq out (arxana-docbook--demote-org out)))
+    out))
+
+(defun arxana-docbook--export-context ()
+  "Return plist with :host-root and :book inferred from the current buffer file."
+  (when buffer-file-name
+    (when (string-match "\\(.*\\)/dev/logs/books/\\([^/]+\\)/" buffer-file-name)
+      (list :host-root (match-string 1 buffer-file-name)
+            :book (match-string 2 buffer-file-name)))))
+
+(defun arxana-docbook--resolve-include-path (path base-dir)
+  "Resolve PATH for #+INCLUDE relative to BASE-DIR and known repo roots."
+  (let* ((base-dir (or base-dir default-directory))
+         (repo-root (file-name-as-directory (arxana-docbook--repo-root)))
+         (ctx (arxana-docbook--export-context))
+         (host-root (plist-get ctx :host-root))
+         (book (plist-get ctx :book))
+         (candidates
+          (delq nil
+                (list
+                 (when (file-name-absolute-p path) path)
+                 (expand-file-name path base-dir)
+                 (and (string-prefix-p "dev/" path)
+                      (expand-file-name path repo-root))
+                 (and host-root book (string-prefix-p "dev/" path)
+                      (expand-file-name path
+                                        (file-name-as-directory
+                                         (expand-file-name book host-root))))))))
+    (or (seq-find #'file-readable-p candidates)
+        path)))
+
+(defun arxana-docbook--rewrite-include-paths (text base-dir)
+  "Rewrite relative Org include paths in TEXT to absolute paths under BASE-DIR."
+  (replace-regexp-in-string
+   "^#\\+INCLUDE:[ \t]+\"\\([^\"]+\\)\"\\(.*\\)$"
+   (lambda (line)
+     (if (string-match "^#\\+INCLUDE:[ \t]+\"\\([^\"]+\\)\"\\(.*\\)$" line)
+         (let* ((path (match-string 1 line))
+                (rest (match-string 2 line))
+                (abs (arxana-docbook--resolve-include-path path base-dir)))
+           (format "#+INCLUDE: \"%s\"%s" abs rest))
+       line))
+   (or text "") t t))
+
 (defun arxana-docbook--entries-by-doc-id (entries)
   (let ((table (make-hash-table :test 'equal)))
     (dolist (entry entries)
@@ -569,10 +786,80 @@
       (plist-get heading :doc/outline_path)
       (plist-get heading :outline_path)))
 
+(defun arxana-docbook--heading-path-string (heading)
+  (or (plist-get heading :path_string)
+      (plist-get heading :doc/path_string)
+      (plist-get heading :path-string)))
+
 (defun arxana-docbook--toc-doc-id (heading)
   (or (plist-get heading :doc-id)
       (plist-get heading :doc_id)
       (plist-get heading :doc/id)))
+
+(defun arxana-docbook--heading-level (heading)
+  (or (plist-get heading :level)
+      (let ((outline (arxana-docbook--heading-outline heading)))
+        (and (listp outline) (length outline)))
+      1))
+
+(defun arxana-docbook--outline-key (heading)
+  (or (arxana-docbook--heading-outline heading)
+      (let ((path (arxana-docbook--heading-path-string heading)))
+        (and path (split-string path " / " t)))))
+
+(defun arxana-docbook--outline-less-p (a b)
+  "Return non-nil when A should sort before B by outline path."
+  (let* ((oa (or (arxana-docbook--outline-key a) '()))
+         (ob (or (arxana-docbook--outline-key b) '()))
+         (len-a (length oa))
+         (len-b (length ob))
+         (min-len (min len-a len-b))
+         (idx 0)
+         (result nil)
+         (done nil))
+    (while (and (not done) (< idx min-len))
+      (let* ((seg-a (format "%s" (nth idx oa)))
+             (seg-b (format "%s" (nth idx ob))))
+        (cond
+         ((string< seg-a seg-b)
+          (setq result t done t))
+         ((string< seg-b seg-a)
+          (setq result nil done t))
+         (t (setq idx (1+ idx))))))
+    (unless done
+      (cond
+       ((/= len-a len-b)
+        (setq result (< len-a len-b)))
+       (t
+        (let* ((id-a (format "%s" (arxana-docbook--toc-doc-id a)))
+               (id-b (format "%s" (arxana-docbook--toc-doc-id b))))
+          (setq result (string< id-a id-b))))))
+    result))
+
+(defun arxana-docbook--normalize-remote-toc (toc)
+  "Return a TOC list for remote sources, sorted when configured."
+  (cond
+   ((not (listp toc)) toc)
+   (arxana-docbook-remote-preserve-order toc)
+   (t (sort (copy-sequence toc) #'arxana-docbook--outline-less-p))))
+
+(defun arxana-docbook--order-headings (headings order)
+  (let ((by-id (make-hash-table :test 'equal))
+        (seen (make-hash-table :test 'equal))
+        (ordered '()))
+    (dolist (heading headings)
+      (when-let* ((doc-id (arxana-docbook--toc-doc-id heading)))
+        (puthash doc-id heading by-id)))
+    (dolist (doc-id order)
+      (let ((heading (gethash doc-id by-id)))
+        (when heading
+          (puthash doc-id t seen)
+          (push heading ordered))))
+    (dolist (heading headings)
+      (let ((doc-id (arxana-docbook--toc-doc-id heading)))
+        (when (and doc-id (not (gethash doc-id seen)))
+          (push heading ordered))))
+    (nreverse ordered)))
 
 (defun arxana-docbook--lab-addition-label (session-id)
   (if session-id
@@ -654,6 +941,113 @@
                                        'line-prefix (propertize "> " 'face 'arxana-docbook-new-content)
                                        'wrap-prefix (propertize "> " 'face 'arxana-docbook-new-content)))))))
     (insert "\n")))
+
+(defun arxana-docbook--export-heading (book heading)
+  (let* ((doc-id (arxana-docbook--toc-doc-id heading))
+         (title (arxana-docbook--heading-title heading))
+         (level (max 1 (or (arxana-docbook--heading-level heading) 1)))
+         (stars (make-string level ?*))
+         (entries (and doc-id (arxana-docbook--entries-for-doc book doc-id)))
+         (base-entry (and entries (arxana-docbook--latest-non-lab entries)))
+         (content (and base-entry (arxana-docbook--entry-content base-entry)))
+         (trimmed (string-trim (or content "")))
+         (source-line (and base-entry (arxana-docbook--source-link-line base-entry))))
+    (insert (format "%s %s\n" stars (or title doc-id "")))
+    (if (and trimmed (not (string-empty-p trimmed)))
+        (progn
+          (when source-line
+            (insert source-line))
+          (let* ((root (arxana-docbook--repo-root))
+                 (content (arxana-docbook--rewrite-include-paths content root)))
+            (insert (arxana-docbook--demote-org-by content 1) "\n")))
+      (if-let* ((desc (arxana-docbook--first-descendant-entry book heading))
+                (child-title (arxana-docbook--heading-title (plist-get desc :heading)))
+                (child-content (plist-get desc :content))
+                (child-entry (plist-get desc :entry))
+                (child-source (arxana-docbook--source-link-line child-entry)))
+          (progn
+            (insert (format "%s %s\n" (make-string (1+ level) ?*) child-title))
+            (when child-source
+              (insert child-source))
+            (let* ((root (arxana-docbook--repo-root))
+                   (child-content (arxana-docbook--rewrite-include-paths child-content root)))
+              (insert (arxana-docbook--demote-org-by child-content 2) "\n")))
+        (insert "- (no entry content yet)\n")))
+    (insert "\n")))
+
+(defun arxana-docbook-export-org-book (&optional book output-file order)
+  "Export docbook BOOK into a single Org file at OUTPUT-FILE.
+ORDER, when provided, reorders TOC headings by doc-id."
+  (interactive)
+  (let* ((book (or book arxana-docbook--book
+                   (car (arxana-docbook--available-books))
+                   "futon4"))
+         (default (arxana-docbook--default-org-export-path book))
+         (output-file (or output-file
+                          (read-file-name "Export Org file: "
+                                          (file-name-directory default)
+                                          default nil
+                                          (file-name-nondirectory default)))))
+    (let* ((toc (arxana-docbook--toc-for-view book))
+           (headings (if (and order (listp order))
+                         (arxana-docbook--order-headings toc order)
+                       toc)))
+      (with-temp-buffer
+        (insert (format "#+TITLE: Docbook %s\n" book))
+        (insert (format "#+DATE: %s\n\n" (format-time-string "%Y-%m-%d")))
+        (dolist (heading headings)
+          (when heading
+            (arxana-docbook--export-heading book heading)))
+        (write-region (point-min) (point-max) output-file))
+      (message "Wrote docbook Org export to %s" output-file)
+      output-file)))
+
+(defun arxana-docbook--export-org-to-pdf (org-file &optional pdf-file)
+  "Export ORG-FILE to PDF, returning the PDF path."
+  (require 'ox-latex)
+  (let* ((org-file (expand-file-name org-file))
+         (default-directory (file-name-directory org-file))
+         (pdf-file (or pdf-file (concat (file-name-sans-extension org-file) ".pdf")))
+         (org-export-show-temporary-export-buffer nil)
+         (org-export-in-background nil)
+         (org-export-with-broken-links 'mark))
+    (with-current-buffer (find-file-noselect org-file)
+      (let ((org-export-before-parsing-functions
+             (cons #'arxana-docbook--normalize-include-paths
+                   org-export-before-parsing-functions))
+            (exported (org-latex-export-to-pdf)))
+        (unless exported
+          (error "Org LaTeX export did not produce a PDF"))
+        (setq exported (expand-file-name exported))
+        (setq pdf-file (expand-file-name pdf-file))
+        (unless (string= exported pdf-file)
+          (copy-file exported pdf-file t))
+        pdf-file))))
+
+(defun arxana-docbook--normalize-include-paths (&optional backend)
+  "Rewrite #+INCLUDE paths to absolute paths when possible."
+  (ignore backend)
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward "^#\\+INCLUDE: \"\\([^\"]+\\)\"" nil t)
+      (let* ((raw (match-string 1))
+             (resolved (arxana-docbook--resolve-include-path raw default-directory)))
+        (when (and resolved (not (string= raw resolved)))
+          (replace-match resolved t t nil 1))))))
+
+(defun arxana-docbook-export-pdf-book (&optional book org-file pdf-file order)
+  "Export docbook BOOK to Org (ORG-FILE) and then to PDF (PDF-FILE).
+ORDER, when provided, reorders TOC headings by doc-id."
+  (interactive)
+  (let* ((book (or book arxana-docbook--book
+                   (car (arxana-docbook--available-books))
+                   "futon4"))
+         (org-file (or org-file (arxana-docbook--default-org-export-path book)))
+         (pdf-file (or pdf-file (concat (file-name-sans-extension org-file) ".pdf")))
+         (org-path (arxana-docbook-export-org-book book org-file order)))
+    (arxana-docbook--export-org-to-pdf org-path pdf-file)
+    (message "Wrote docbook PDF export to %s" pdf-file)
+    pdf-file))
 
 (defun arxana-docbook-open-book (&optional book)
   "Open a compiled docbook view for BOOK using filesystem entries."
@@ -811,6 +1205,22 @@
          (dir (and root (expand-file-name book root))))
     (and dir (expand-file-name "toc.json" dir))))
 
+(defun arxana-docbook--export-dir (book)
+  (or arxana-docbook-org-export-directory
+      (let* ((root (arxana-docbook--locate-books-root))
+             (dir (and root (expand-file-name book root))))
+        (when dir
+          (setq dir (expand-file-name "export" dir))
+          (make-directory dir t)
+          dir))))
+
+(defun arxana-docbook--default-org-export-path (book)
+  (let ((dir (arxana-docbook--export-dir book)))
+    (if dir
+        (expand-file-name (format "%s.org" book) dir)
+      (expand-file-name (format "docbook-%s.org" book)
+                        (arxana-docbook--repo-root)))))
+
 (defun arxana-docbook--toc (book)
   "Return list of heading plists for BOOK from toc.json."
   (let* ((path (arxana-docbook--toc-path book))
@@ -824,11 +1234,52 @@
          (message "[arxana-docbook] Failed to read toc %s: %s" path (error-message-string err))
          nil)))))
 
+(defun arxana-docbook--toc-write-order (book order)
+  "Rewrite toc.json for BOOK to match ORDER (list of doc-ids).
+Return non-nil when the file was updated."
+  (let* ((path (arxana-docbook--toc-path book))
+         (json-object-type 'plist)
+         (json-array-type 'list)
+         (json-key-type 'keyword))
+    (when (and path (file-readable-p path))
+      (let* ((toc (json-read-file path))
+             (ordered (and (listp toc) (arxana-docbook--order-headings toc order))))
+        (when (and ordered (/= (length ordered) (length toc)))
+          (message "[arxana-docbook] TOC order missing %d headings"
+                   (- (length toc) (length ordered))))
+        (when (and ordered (listp toc))
+          (let ((json-encoding-pretty-print t))
+            (with-temp-file path
+              (insert (json-encode ordered))
+              (insert "\n")))
+          t)))))
+
+(defun arxana-docbook--toc-write-headings (book headings &optional order)
+  "Write HEADINGS as toc.json for BOOK, reordering by ORDER when provided."
+  (let* ((path (or (arxana-docbook--toc-path book)
+                   (expand-file-name (format "dev/logs/books/%s/toc.json" book)
+                                     (arxana-docbook--repo-root))))
+         (dir (and path (file-name-directory path))))
+    (unless (and dir (file-directory-p dir))
+      (when dir
+        (make-directory dir t)))
+    (unless (and headings (listp headings))
+      (error "No toc headings available to write"))
+    (let* ((ordered (if (and order (listp order))
+                        (arxana-docbook--order-headings headings order)
+                      headings))
+           (json-encoding-pretty-print t))
+      (with-temp-file path
+        (insert (json-encode ordered))
+        (insert "\n")))
+    t))
+
 (defun arxana-docbook--toc-for-view (book)
-  (or (when (arxana-docbook--remote-available-p book)
-        (ignore-errors (arxana-docbook--remote-contents book)))
-      (arxana-docbook--toc book)
-      '()))
+  (let ((remote (when (arxana-docbook--remote-available-p book)
+                  (ignore-errors (arxana-docbook--remote-contents book)))))
+    (cond
+     (remote (arxana-docbook--normalize-remote-toc remote))
+     (t (or (arxana-docbook--toc book) '())))))
 
 (defun arxana-docbook--heading-for-doc-id (book doc-id)
   (when doc-id
@@ -1083,12 +1534,12 @@
     (cond
      ((and (buffer-live-p return-buffer)
            (with-current-buffer return-buffer
-             (derived-mode-p 'arxana-patterns-browser-mode)))
+             (derived-mode-p 'arxana-browser-mode)))
       (with-current-buffer return-buffer
-        (when (fboundp 'arxana-patterns--browser-render)
-          (arxana-patterns--browser-render))
-        (when (fboundp 'arxana-patterns--browser-goto-doc-id)
-          (arxana-patterns--browser-goto-doc-id doc-id))))
+        (when (fboundp 'arxana-browser--render)
+          (arxana-browser--render))
+        (when (fboundp 'arxana-browser--goto-doc-id)
+          (arxana-browser--goto-doc-id doc-id))))
      (t
       (let ((buf (get-buffer-create (format "*DocBook:%s*" book))))
         (with-current-buffer buf
