@@ -61,7 +61,7 @@
   (ignore-errors (require 'arxana-article))
   (ignore-errors (require 'arxana-scholium))
   (ignore-errors (require 'arxana-relations))
-  (ignore-errors (require 'arxana-browse))
+  (ignore-errors (require 'arxana-browser))
   (ignore-errors (require 'arxana-derivation))
   (ignore-errors (require 'arxana-saving))
   (ignore-errors (require 'arxana-inclusion))

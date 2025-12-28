@@ -11,6 +11,14 @@ to quickly detect paren/quote mismatches before or after edits. Example:
 
 - `dev/` + `test/` are canonical for code. Keep docs in XTDB aligned with the
   current behavior and public API surface.
+- Avoid duplicate implementations: search for existing helpers before adding
+  new ones; extend or relocate code instead of cloning logic.
+- Keep modules small and focused: prefer new, well-scoped files over growing
+  large ones; add clear section headers, docstrings, and a `defgroup` per module.
+- Maintain a single entry point per subsystem; keep UI wrappers thin and route
+  behavior through shared core helpers.
+- When moving code, remove or alias old entry points immediately and update
+  tests/docs in the same change.
 - If you create a filesystem doc snapshot, mark it as temporary or archival so
   it is easy to prune or promote later.
 - Any new namespace, public function, or data shape should be documented in the

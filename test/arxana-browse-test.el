@@ -1,7 +1,7 @@
 ;;; arxana-browse-test.el --- Tests for browsing helpers -*- lexical-binding: t; -*-
 
 (require 'ert)
-(require 'arxana-browse)
+(require 'arxana-browser-browse)
 
 (ert-deftest arxana-browse-open-catalog-defaults ()
   (let ((called nil))

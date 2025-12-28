@@ -17,11 +17,11 @@
 (require 'arxana-browser-marks)
 (require 'arxana-store)
 
-(defvar arxana-patterns--browser-context)
-(defvar arxana-patterns--browser-stack)
-(declare-function arxana-patterns--browser-item-at-point "arxana-patterns")
-(declare-function arxana-patterns--browser-current-items "arxana-patterns")
-(declare-function arxana-patterns--browser-render "arxana-patterns")
+(defvar arxana-browser--context)
+(defvar arxana-browser--stack)
+(declare-function arxana-browser--item-at-point "arxana-browser-core")
+(declare-function arxana-browser--current-items "arxana-browser-core")
+(declare-function arxana-browser--render "arxana-browser-core")
 
 (defgroup arxana-media nil
   "Media browsing, playback, and publication helpers."
@@ -574,14 +574,14 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
                                   :dst lyrics-id
                                   :label ":media/lyrics")
     (puthash lyrics-id (not (string-empty-p lyrics)) arxana-media--lyrics-cache)
-    (when (fboundp 'arxana-patterns--browser-render)
-      (arxana-patterns--browser-render))
+    (when (fboundp 'arxana-browser--render)
+      (arxana-browser--render))
     (message "Saved lyrics for %s" title)))
 
 (defun arxana-media-edit-lyrics-at-point ()
   "Open a buffer to edit lyrics for the current media track."
   (interactive)
-  (let* ((item (arxana-patterns--browser-item-at-point)))
+  (let* ((item (arxana-browser--item-at-point)))
     (unless (and item (memq (plist-get item :type)
                             '(media-track media-misc-track media-publication-track)))
       (user-error "No media track at point"))
@@ -853,8 +853,8 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
   (message "Autoplay next: %s" (if arxana-media-autoplay-next "on" "off")))
 
 (defun arxana-media--current-playback-context ()
-  (or arxana-patterns--browser-context
-      (car arxana-patterns--browser-stack)))
+  (or arxana-browser--context
+      (car arxana-browser--stack)))
 
 (defun arxana-media--playback-queue-for-item (item)
   (let* ((type (plist-get item :type))
@@ -1022,7 +1022,7 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
 (defun arxana-media-play-at-point ()
   "Play the current media track using `arxana-media-player-program`."
   (interactive)
-  (let* ((item (arxana-patterns--browser-item-at-point)))
+  (let* ((item (arxana-browser--item-at-point)))
     (unless (and item (memq (plist-get item :type) '(media-track media-publication-track media-misc-track)))
       (user-error "No playable track at point"))
     (let* ((type (plist-get item :type))
@@ -1242,10 +1242,86 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
                        :latest-time (aref vec 1))
                  items)))
        table)
-      (seq-sort-by (lambda (item)
+                   (seq-sort-by (lambda (item)
                      (- (or (plist-get item :latest-time) 0.0)))
                    #'<
                    items))))
+
+(defun arxana-media--items ()
+  (let* ((entries (or (arxana-media--entries) '()))
+         (total (length entries)))
+    (cond
+     ((zerop total)
+      (list (list :type 'info
+                  :label "No Zoom catalog detected"
+                  :description (if (and arxana-media-index-path
+                                        (not (file-readable-p arxana-media-index-path)))
+                                   (format "Expected catalog at %s" arxana-media-index-path)
+                                 "Run zoom_sync.py to populate data/zoom_sync_index.json."))))
+     (t
+      (let ((items (list (list :type 'media-category
+                               :label "All tracks"
+                               :description (format "%d total recording%s"
+                                                    total (if (= total 1) "" "s"))
+                               :media-filter 'all
+                               :count total))))
+        (setq items (append items (arxana-media--status-items entries)))
+        (let* ((pub-root (file-name-as-directory (expand-file-name arxana-media-publications-root)))
+               (pub-dirs (or (arxana-media--publication-directories) '()))
+               (pub-count (length pub-dirs)))
+          (setq items
+                (append items
+                        (list (list :type 'menu
+                                    :label "EPs"
+                                    :description (format "%d publication%s — %s"
+                                                         pub-count
+                                                         (if (= pub-count 1) "" "s")
+                                                         pub-root)
+                                    :view 'media-publications)))))
+        (let* ((ep-root (file-name-as-directory (expand-file-name arxana-media-ep-staging-root)))
+               (ep-dirs (or (arxana-media--ep-staging-directories) '()))
+               (ep-count (length ep-dirs)))
+          (setq items
+                (append items
+                        (list (list :type 'menu
+                                    :label "EP staging"
+                                    :description (format "%d EP%s — %s"
+                                                         ep-count
+                                                         (if (= ep-count 1) "" "s")
+                                                         ep-root)
+                                    :view 'media-ep-staging)))))
+        (let* ((misc-root (and (boundp 'arxana-media-misc-root)
+                               arxana-media-misc-root))
+               (misc-root (and misc-root (file-name-as-directory (expand-file-name misc-root))))
+               (misc-ready (and misc-root (fboundp 'arxana-media--misc-directories)))
+               (misc-dirs (if misc-ready (or (arxana-media--misc-directories) '()) '()))
+               (misc-count (length misc-dirs))
+               (misc-description (cond
+                                  (misc-ready
+                                   (format "%d folder%s — %s"
+                                           misc-count
+                                           (if (= misc-count 1) "" "s")
+                                           misc-root))
+                                  (misc-root
+                                   "Reload arxana-media to enable misc audio.")
+                                  (t
+                                   "Set arxana-media-misc-root to enable misc audio."))))
+          (setq items
+                (append items
+                        (list (list :type 'menu
+                                    :label "Misc Audio"
+                                    :description misc-description
+                                    :view (and misc-ready 'media-misc))))))
+        (let ((projects (arxana-media--project-items entries)))
+          (when projects
+            (setq items
+                  (append items
+                          (list (list :type 'media-projects
+                                      :label "Projects"
+                                      :description "Recording folders from the Zoom R4."
+                                      :view 'media-projects
+                                      :count (length projects)))))))
+        items)))))
 
 (defun arxana-media--filter-entries (entries filter)
   (pcase filter
@@ -1419,7 +1495,7 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
 
 (defun arxana-media-toggle-mark-at-point ()
   (interactive)
-  (let* ((item (arxana-patterns--browser-item-at-point)))
+  (let* ((item (arxana-browser--item-at-point)))
     (unless (and item (memq (plist-get item :type)
                             '(media-track media-misc-track media-publication-track)))
       (user-error "No media track at point"))
@@ -1429,12 +1505,12 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
       (if (arxana-media--marked-p key)
           (remhash key arxana-media--marked)
         (puthash key t arxana-media--marked))
-      (arxana-patterns--browser-render))))
+      (arxana-browser--render))))
 
 (defun arxana-media-unmark-all ()
   (interactive)
   (clrhash arxana-media--marked)
-  (arxana-patterns--browser-render)
+  (arxana-browser--render)
   (message "Unmarked all tracks"))
 
 (defun arxana-media--marked-items-in-context ()
@@ -1507,13 +1583,13 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
         (setq visible-marked nil))
       (setq entries visible-marked))
     (unless entries
-      (let ((item (arxana-patterns--browser-item-at-point)))
+      (let ((item (arxana-browser--item-at-point)))
         (unless (and item (eq (plist-get item :type) 'media-track))
           (user-error "No marked tracks or media track at point"))
         (setq entries (list (plist-get item :entry)))))
     (arxana-media--apply-status entries status)
     (clrhash arxana-media--marked)
-    (arxana-patterns--browser-render)))
+    (arxana-browser--render)))
 
 (defun arxana-media--item-play-path (item)
   (pcase (plist-get item :type)
@@ -1540,7 +1616,7 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
          (paths nil))
     (if (and marked (> (length marked) 0))
         (setq items marked)
-      (let ((item (arxana-patterns--browser-item-at-point)))
+      (let ((item (arxana-browser--item-at-point)))
         (unless (and item (memq (plist-get item :type)
                                 '(media-track media-misc-track media-publication-track)))
           (user-error "No media track at point"))
@@ -1833,14 +1909,14 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
 (defun arxana-media-bounce-or-up ()
   "Bounce marked tracks in media views, otherwise go up."
   (interactive)
-  (let* ((context arxana-patterns--browser-context)
+  (let* ((context arxana-browser--context)
          (media-context (or (plist-get context :media-filter)
                             (memq (plist-get context :view)
                                   '(media-projects media-publications media-publication))
                             (eq (plist-get context :type) 'media-category))))
     (if (and media-context (arxana-media--marked-track-entries-in-context))
         (arxana-media-bounce-marked)
-      (arxana-patterns--browser-up))))
+      (arxana-browser--up))))
 
 (defun arxana-media--tag-entries (entries tag)
   (let ((args (apply #'append
@@ -1890,10 +1966,10 @@ When URL is provided, write it to the publication metadata."
       (setq arxana-media--catalog nil
             arxana-media--catalog-mtime nil)
       (message "Published %d track(s) to %s (tag %s)" (length entries) dest-dir tag)
-      (arxana-patterns--browser-render))))
+      (arxana-browser--render))))
 
 (defun arxana-media--publication-at-point ()
-  (let ((item (arxana-patterns--browser-item-at-point)))
+  (let ((item (arxana-browser--item-at-point)))
     (unless (and item (eq (plist-get item :type) 'media-publication))
       (user-error "No publication at point"))
     item))
@@ -1911,7 +1987,7 @@ When URL is provided, write it to the publication metadata."
       (user-error "URL cannot be empty"))
     (arxana-media--write-publication-metadata dir (or label "") url)
     (message "Updated URL for %s" label)
-    (arxana-patterns--browser-render)))
+    (arxana-browser--render)))
 
 (defun arxana-media-open-publication-url ()
   "Open the publication URL at point, if present."
@@ -1930,7 +2006,7 @@ When URL is provided, write it to the publication metadata."
   (let* ((marked (arxana-media--marked-items-in-context))
          (items (if (and marked (> (length marked) 0))
                     marked
-                  (let ((item (arxana-patterns--browser-item-at-point)))
+                  (let ((item (arxana-browser--item-at-point)))
                     (unless (and item (memq (plist-get item :type)
                                             '(media-track media-misc-track media-publication-track)))
                       (user-error "No media track at point"))
@@ -1976,7 +2052,7 @@ When URL is provided, write it to the publication metadata."
       (dolist (item items)
         (let ((key (arxana-media--mark-key-for-item item)))
           (when key (remhash key arxana-media--marked))))
-      (arxana-patterns--browser-render)
+      (arxana-browser--render)
       (message "Staged %d track%s to %s (%d moved, %d copied)"
                (+ moved copied)
                (if (= (+ moved copied) 1) "" "s")
@@ -1986,7 +2062,7 @@ When URL is provided, write it to the publication metadata."
 (defun arxana-media-retitle-at-point ()
   "Retitle the current media track or misc audio file."
   (interactive)
-  (let* ((item (arxana-patterns--browser-item-at-point)))
+  (let* ((item (arxana-browser--item-at-point)))
     (unless (and item (memq (plist-get item :type)
                             '(media-track media-misc-track media-publication-track)))
       (user-error "No media track at point"))
@@ -2008,7 +2084,7 @@ When URL is provided, write it to the publication metadata."
            (arxana-media--retitle-track entry title)
            (setq arxana-media--catalog nil
                  arxana-media--catalog-mtime nil)
-           (arxana-patterns--browser-render)
+           (arxana-browser--render)
            (message "Retitled %s" title))))
       ((or 'media-misc-track 'media-publication-track)
        (let* ((path (plist-get item :path))
@@ -2027,13 +2103,13 @@ When URL is provided, write it to the publication metadata."
              (when (string= path dest)
                (user-error "Title matches existing filename"))
              (rename-file path dest)
-             (arxana-patterns--browser-render)
+             (arxana-browser--render)
              (message "Retitled %s" title))))))))
 
 (defun arxana-media-delete-at-point ()
   "Hard-delete the current misc audio file from disk."
   (interactive)
-  (let* ((item (arxana-patterns--browser-item-at-point)))
+  (let* ((item (arxana-browser--item-at-point)))
     (unless (and item (eq (plist-get item :type) 'media-misc-track))
       (user-error "Hard delete is only available for misc audio tracks"))
     (let* ((path (plist-get item :path))
@@ -2044,7 +2120,7 @@ When URL is provided, write it to the publication metadata."
         (user-error "No file found for %s" label))
       (when (yes-or-no-p (format "Delete %s? " label))
         (delete-file path)
-        (arxana-patterns--browser-render)
+        (arxana-browser--render)
         (message "Deleted %s" label)))))
 
 (provide 'arxana-media)

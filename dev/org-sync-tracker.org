@@ -63,7 +63,7 @@ soon as new work lands.
    :NOTES: Function-level doc browsing + source jump driven by XTDB-ingested headings (no local parsing).
 
 ** TODO remove legacy arxana-allow-tangle toggle
-   :FILES: dev/bootstrap.el dev/arxana-browse.el dev/arxana-test-support.el dev/run-tests.sh test/arxana-bootstrap-test.el
+   :FILES: dev/bootstrap.el dev/arxana-browser-browse.el dev/arxana-test-support.el dev/run-tests.sh test/arxana-bootstrap-test.el
    :TARGET: XTDB doc id
    :NOTES: align bootstrap/testing guidance with dev/ as the canonical source.
 
