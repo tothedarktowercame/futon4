@@ -696,6 +696,26 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
       (_
        (user-error "Don't know how to open %S entries" (plist-get item :type))))))
 
+(defun arxana-browser--pattern-location (item)
+  (let* ((label (plist-get item :label))
+         (file (plist-get item :file)))
+    (cond
+     ((and label (not (string-empty-p label)))
+      (format "pattern://%s" label))
+     ((and file (file-exists-p file))
+      (format "file://%s" (expand-file-name file)))
+     (t nil))))
+
+(defun arxana-browser--collection-location (item)
+  (let ((label (plist-get item :label)))
+    (when (and label (not (string-empty-p label)))
+      (format "pattern-library://%s" label))))
+
+(defun arxana-browser--language-location (item)
+  (let ((label (plist-get item :label)))
+    (when (and label (not (string-empty-p label)))
+      (format "pattern-language://%s" label))))
+
 (defun arxana-browser--copy-location ()
   "Copy a location identifier for the current browser item."
   (interactive)
@@ -703,6 +723,12 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
          (location (cond
                     ((and item (memq (plist-get item :type) '(docbook-entry docbook-heading)))
                      (arxana-browser--docbook-location item))
+                    ((and item (eq (plist-get item :type) 'pattern))
+                     (arxana-browser--pattern-location item))
+                    ((and item (eq (plist-get item :type) 'collection))
+                     (arxana-browser--collection-location item))
+                    ((and item (eq (plist-get item :type) 'language))
+                     (arxana-browser--language-location item))
                     (t nil))))
     (unless location
       (user-error "No location available for this item"))
@@ -715,6 +741,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
   (arxana-browser--ensure-context)
   (let* ((context (or arxana-browser--context
                       (car arxana-browser--stack)))
+         (context-type (and context (plist-get context :type)))
          (book (or (plist-get context :book)
                    (plist-get (car arxana-browser--stack) :book)
                    (plist-get (cadr arxana-browser--stack) :book)))
@@ -723,6 +750,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                                       (eq (plist-get context :type) 'docbook-entry)))
                      (or (arxana-browser--docbook-location context)
                          (and book (format "docbook://%s" book))))
+                    ((eq context-type 'collection)
+                     (arxana-browser--collection-location context))
+                    ((eq context-type 'language)
+                     (arxana-browser--language-location context))
                     (book (format "docbook://%s" book))
                     (t nil))))
     (unless location

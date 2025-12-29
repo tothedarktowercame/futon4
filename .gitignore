@@ -1,6 +1,7 @@
 *.elc
 .clj-kondo/
 .lsp/
+.arxana-language
 
 # Futon0 workflow artifacts
 boundary.edn

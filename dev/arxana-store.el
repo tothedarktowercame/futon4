@@ -10,9 +10,13 @@
 
 (require 'cl-lib)
 (require 'json)
+(require 'pp)
 (require 'subr-x)
 (require 'url)
 (require 'url-http)
+
+(defvar futon4-enable-sync nil
+  "Non-nil enables Futon sync operations.")
 
 (defgroup arxana-store nil
   "Futon storage bridge settings."
@@ -35,12 +39,19 @@
 (defvar arxana-store-last-error nil
   "Most recent storage error (plist with :reason, :detail, :context).")
 
+(defvar arxana-store-last-request nil
+  "Most recent request metadata (plist with :method, :target, :payload, :query).")
+
+(defvar arxana-store-last-failure nil
+  "Most recent failed request (plist with :request and :error).")
+
 (defvar arxana-store-last-response nil
   "Most recent JSON body returned by `arxana-store--request'.")
 
 (defun arxana-store-clear-error ()
   "Clear `arxana-store-last-error'."
-  (setq arxana-store-last-error nil))
+  (setq arxana-store-last-error nil
+        arxana-store-last-failure nil))
 
 (defun arxana-store-sync-enabled-p ()
   "Return non-nil when Futon sync is enabled."
@@ -76,7 +87,9 @@
   "Remember an error REASON/DETAIL/CONTEXT and log it."
   (setq arxana-store-last-error (list :reason reason
                                       :detail detail
-                                      :context context))
+                                      :context context)
+        arxana-store-last-failure (list :request arxana-store-last-request
+                                        :error arxana-store-last-error))
   (message "[arxana-store] %s" detail)
   nil)
 
@@ -85,11 +98,13 @@
       (error "futon4-base-url is not set")))
 
 (defun arxana-store--build-url (path &optional query)
-  (concat (arxana-store--base-url)
-          path
-          (if (and query (> (length query) 0))
-              (concat "?" query)
-            "")))
+  (let ((base (arxana-store--base-url))
+        (path (if (stringp path) path "")))
+    (concat base
+            path
+            (if (and query (> (length query) 0))
+                (concat "?" query)
+              ""))))
 
 (defun arxana-store--encode-segment (value)
   (url-hexify-string (or value "")))
@@ -123,17 +138,37 @@ Optional PAYLOAD is JSON encoded for POST requests. QUERY is an
 already encoded query string (without the leading ?)."
   (if (not (arxana-store-sync-enabled-p))
       (arxana-store--record-error 'disabled "Futon sync disabled" method)
+    (unless (stringp path)
+      (cl-return-from arxana-store--request
+        (arxana-store--record-error 'invalid "Missing request path" path)))
     (let* ((url-request-method method)
            (url-request-data (when payload
                                (encode-coding-string (json-encode payload) 'utf-8)))
            (url-request-extra-headers (arxana-store--default-headers payload))
-           (target (arxana-store--build-url path query)))
+           (target (arxana-store--build-url path query))
+           (fallback-target (when (and (stringp target)
+                                       (string-match-p "://localhost\\b" target))
+                              (replace-regexp-in-string "://localhost\\b"
+                                                        "://127.0.0.1"
+                                                        target))))
+      (setq arxana-store-last-request (list :method method
+                                            :target target
+                                            :payload payload
+                                            :query query))
       (condition-case err
           (let ((buf (url-retrieve-synchronously target nil nil arxana-store-request-timeout)))
             (if (not (buffer-live-p buf))
-                (progn
+                (let ((retry nil))
                   (when buf (kill-buffer buf))
-                  (arxana-store--record-error 'connection "No response buffer" target))
+                  (when fallback-target
+                    (setq retry (url-retrieve-synchronously fallback-target nil nil
+                                                            arxana-store-request-timeout)))
+                  (if (buffer-live-p retry)
+                      (setq buf retry)
+                    (arxana-store--record-error
+                     'connection
+                     (format "No response buffer (target %s)" target)
+                     arxana-store-last-request)))
               (with-current-buffer buf
                 (goto-char (point-min))
                 (if (not (re-search-forward "\r?\n\r?\n" nil t))
@@ -151,6 +186,9 @@ already encoded query string (without the leading ?)."
                                 arxana-store-last-response body)
                           body)
                       (arxana-store--record-error 'protocol "Failed to parse Futon JSON" target)))))))
+        (quit
+         (arxana-store--record-error 'quit "Request aborted" arxana-store-last-request)
+         (signal 'quit nil))
         (error
          (arxana-store--record-error 'request err target))))))
 
@@ -176,6 +214,19 @@ already encoded query string (without the leading ?)."
          (choice (completing-read prompt arxana-store--snapshot-scopes
                                   nil t nil nil default)))
     (intern choice)))
+
+(cl-defun arxana-store-ensure-article (&key name path spine props)
+  "Ensure Futon has an article entity NAME, returning its canonical id."
+  (cond
+   ((not (arxana-store-sync-enabled-p))
+    (arxana-store--record-error 'disabled "Futon sync disabled" 'article))
+   ((not name)
+    (arxana-store--record-error 'invalid "Article name is required" 'article))
+   (t
+    (let* ((canonical (when path (futon4--canonical-path path)))
+           (id (futon4--article-id-for name canonical)))
+      (futon4-ensure-article-entity id name canonical spine nil props)
+      id))))
 
 (cl-defun arxana-store-ensure-entity (&key id name type source external-id seen-count pinned? last-seen props)
   "Ensure Futon has an entity named NAME of TYPE, returning the response.
@@ -217,6 +268,43 @@ string. Signals a user error when NAME is missing."
     (let ((payload (arxana-store--relation-payload src-id dst-id label extra-props)))
       (arxana-store--request "POST" "/relation" payload)))))
 
+(defun arxana-store--nema-simple-wrapper (src dst label &optional callback)
+  "Post a simple scholium relation and invoke CALLBACK with the response."
+  (let ((resp (arxana-store--post-relation src dst label)))
+    (when (and callback resp)
+      (funcall callback resp))
+    resp))
+
+(defun arxana-store--install-relation-shim ()
+  "Install legacy relation entry points on top of the store helpers."
+  (unless (fboundp 'futon4-store-nema-simple)
+    (defalias 'futon4-store-nema-simple #'arxana-store--nema-simple-wrapper))
+  (unless (fboundp 'futon4-store-hyperedge)
+    (defalias 'futon4-store-hyperedge #'arxana-store--hyperedge-wrapper)))
+
+(defun futon4--sync-about-links (source links)
+  "Sync ABOUT LINKS for SOURCE using the legacy Futon shim."
+  (let ((source-id (cond
+                    ((fboundp 'futon4-lookup-article-id)
+                     (futon4-lookup-article-id source))
+                    ((fboundp 'futon4--article-id-for)
+                     (futon4--article-id-for source))
+                    (t nil))))
+    (dolist (link links)
+      (let* ((target (car link))
+             (extras (cdr link))
+             (target-id (cond
+                         ((fboundp 'futon4--article-id-for)
+                          (futon4--article-id-for target))
+                         ((fboundp 'futon4-lookup-article-id)
+                          (futon4-lookup-article-id target))
+                         (t nil)))
+             (label (if extras
+                        (mapconcat #'prin1-to-string extras " | ")
+                      "")))
+        (when (and source-id target-id (fboundp 'futon4-store-nema-simple))
+          (futon4-store-nema-simple source-id target-id label nil))))))
+
 (cl-defun arxana-store-create-relation (&key src dst label props)
   (unless (and src dst)
     (user-error "Provide both :src and :dst ids"))
@@ -246,6 +334,13 @@ string. Signals a user error when NAME is missing."
    (t
     (let ((payload (arxana-store--hyperedge-payload type hx-type endpoints props)))
       (arxana-store--request "POST" "/hyperedge" payload)))))
+
+(defun arxana-store--hyperedge-wrapper (type hx-type endpoints props &optional callback)
+  "Post a hyperedge and invoke CALLBACK with the response."
+  (let ((resp (arxana-store--post-hyperedge type hx-type endpoints props)))
+    (when (and callback resp)
+      (funcall callback resp))
+    resp))
 
 (defun arxana-store-upsert-scholium (source target &optional label)
   (interactive
@@ -334,6 +429,85 @@ string. Signals a user error when NAME is missing."
     (when (and body (called-interactively-p 'interactive))
       (message "Fetched /tail (%d relations)" limit))
     body))
+
+;;;###autoload
+(defun arxana-store-ping (&optional limit)
+  "Probe the Futon API and report diagnostics in a buffer."
+  (interactive "P")
+  (let* ((limit (if (numberp limit) limit 1))
+         (query (arxana-store--query-string (when limit (list (cons "limit" limit)))))
+         (target (arxana-store--build-url "/tail" query))
+         (response (arxana-store--request "GET" "/tail" nil query))
+         (buffer (get-buffer-create "*Arxana Store Ping*")))
+    (with-current-buffer buffer
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert (format "Sync enabled: %s\n" (if (arxana-store-sync-enabled-p) "yes" "no")))
+        (insert (format "Base URL: %s\n" (arxana-store--base-url)))
+        (insert (format "Target: %s\n" target))
+        (insert (format "Timeout: %ss\n" arxana-store-request-timeout))
+        (insert (format "Proxy: %S\n" url-proxy-services))
+        (insert "\nLast request:\n")
+        (pp arxana-store-last-request (current-buffer))
+        (insert "\n\nLast error:\n")
+        (pp arxana-store-last-error (current-buffer))
+        (insert "\n\nLast failure:\n")
+        (pp arxana-store-last-failure (current-buffer))
+        (insert "\n\nResponse:\n")
+        (if response
+            (pp response (current-buffer))
+          (insert "(nil)\n"))
+        (goto-char (point-min))
+        (view-mode 1)))
+    (pop-to-buffer buffer)))
+
+;;;###autoload
+(defun arxana-store-last-request-report ()
+  "Show the last request/error without issuing a new HTTP call."
+  (interactive)
+  (let ((buffer (get-buffer-create "*Arxana Store Last Request*")))
+    (with-current-buffer buffer
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert (format "Sync enabled: %s\n" (if (arxana-store-sync-enabled-p) "yes" "no")))
+        (insert (format "Base URL: %s\n" (arxana-store--base-url)))
+        (insert (format "Timeout: %ss\n" arxana-store-request-timeout))
+        (insert (format "Proxy: %S\n" url-proxy-services))
+        (insert "\nLast request:\n")
+        (pp arxana-store-last-request (current-buffer))
+        (insert "\n\nLast error:\n")
+        (pp arxana-store-last-error (current-buffer))
+        (insert "\n\nLast failure:\n")
+        (pp arxana-store-last-failure (current-buffer))
+        (goto-char (point-min))
+        (view-mode 1)))
+    (pop-to-buffer buffer)))
+
+(defun arxana-store-save-snapshot (&optional scope label)
+  "Save an XTDB snapshot with SCOPE and optional LABEL."
+  (cond
+   ((not (arxana-store-sync-enabled-p))
+    (arxana-store--record-error 'disabled "Futon sync disabled" 'snapshot))
+   (t
+    (let ((scope (arxana-store--normalize-snapshot-scope scope 'snapshot)))
+      (when scope
+        (arxana-store--request "POST" "/snapshot"
+                               (delq nil (list (cons 'scope scope)
+                                               (when label (cons 'label label))))))))))
+
+(defun arxana-store-restore-snapshot (&optional snapshot-id scope)
+  "Restore XTDB snapshot SNAPSHOT-ID for SCOPE."
+  (cond
+   ((not (arxana-store-sync-enabled-p))
+    (arxana-store--record-error 'disabled "Futon sync disabled" 'snapshot))
+   (t
+    (let ((scope (arxana-store--normalize-snapshot-scope scope 'snapshot)))
+      (when scope
+        (arxana-store--request "POST" "/snapshot/restore"
+                               (delq nil (list (cons 'action "restore")
+                                               (cons 'scope scope)
+                                               (when snapshot-id
+                                                 (cons 'snapshot/id snapshot-id))))))))))
 
 (provide 'arxana-store)
 

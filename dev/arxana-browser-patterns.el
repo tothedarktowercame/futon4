@@ -16,7 +16,7 @@
 (require 'arxana-store)
 (require 'arxana-patterns-ingest)
 
-(defvar flexiarg-mode-map nil)
+(defvar flexiarg-mode-map (make-sparse-keymap))
 (declare-function arxana-browser--click-path "arxana-browser-core")
 (declare-function arxana-browser--item-at-point "arxana-browser-core")
 (declare-function arxana-browser--render "arxana-browser-core")

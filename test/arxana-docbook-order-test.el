@@ -2,7 +2,7 @@
 
 (require 'ert)
 (setq load-prefer-newer t)
-(defvar flexiarg-mode-map nil)
+(defvar flexiarg-mode-map (make-sparse-keymap))
 (require 'arxana-patterns)
 (require 'arxana-browser-docbook)
 
