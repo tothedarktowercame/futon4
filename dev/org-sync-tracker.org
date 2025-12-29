@@ -53,12 +53,12 @@ This placeholder shows the preferred structure.  Replace it with real entries as
 soon as new work lands.
 
 ** TODO futon4 doc book (pilot)
-   :FILES: dev/logs/README.md dev/logs/books/futon4/index.org dev/logs/books/futon4/stubs/futon4-demo-001.org dev/logs/books/futon4/raw/futon4-demo-001.json dev/logs/books/futon4/stubs/futon4-quickstart-20240606.org dev/logs/books/futon4/raw/futon4-quickstart-20240606.json dev/logs/books/futon4/stubs/futon4-storage-bridge-20240606.org dev/logs/books/futon4/raw/futon4-storage-bridge-20240606.json dev/logs/books/futon4/toc.json dev/arxana-docbook.el dev/arxana-patterns.el dev/docbook-toc-export.el
+   :FILES: dev/logs/README.md dev/logs/books/futon4/index.org dev/logs/books/futon4/stubs/futon4-demo-001.org dev/logs/books/futon4/raw/futon4-demo-001.json dev/logs/books/futon4/stubs/futon4-quickstart-20240606.org dev/logs/books/futon4/raw/futon4-quickstart-20240606.json dev/logs/books/futon4/stubs/futon4-storage-bridge-20240606.org dev/logs/books/futon4/raw/futon4-storage-bridge-20240606.json dev/logs/books/futon4/toc.json dev/arxana-docbook.el dev/arxana-docbook-core.el dev/arxana-docbook-remote.el dev/arxana-docbook-toc.el dev/arxana-docbook-export.el dev/arxana-docbook-ui.el dev/arxana-patterns.el dev/docbook-toc-export.el
    :TARGET: XTDB doc id (or filesystem snapshot)
    :NOTES: uncommitted; filesystem-backed doc book skeleton; update once XTDB ingest path exists
 
 ** TODO docbook function browsing
-   :FILES: dev/arxana-docbook.el dev/arxana-patterns.el
+   :FILES: dev/arxana-docbook.el dev/arxana-docbook-core.el dev/arxana-docbook-remote.el dev/arxana-docbook-toc.el dev/arxana-docbook-export.el dev/arxana-docbook-ui.el dev/arxana-patterns.el
    :TARGET: XTDB doc id
    :NOTES: Function-level doc browsing + source jump driven by XTDB-ingested headings (no local parsing).
 
