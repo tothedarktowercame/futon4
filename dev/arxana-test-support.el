@@ -8,6 +8,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'arxana-saving nil t)
 
 (defun arxana-test--locate-tangled ()
   "Return the best-effort path to the legacy `arxana-tangled.el' bundle."
@@ -23,9 +24,9 @@
   "Load the legacy bundle if it is not already resident."
   (unless (featurep 'arxana-tangled)
     (let ((tangled (arxana-test--locate-tangled)))
-      (unless tangled
-        (error "Cannot find arxana-tangled.el; load the dev/ modules before running these tests"))
-      (load-file tangled))))
+      (if tangled
+          (load-file tangled)
+        (message "arxana-tangled.el not found; continuing with dev modules")))))
 
 (provide 'arxana-test-support)
 
