@@ -73,6 +73,24 @@ snapshot id when syncing is enabled."
         (arxana-store-restore-snapshot snapshot-id scope))
     (apply orig-fn (list filepath))))
 
+(unless (fboundp 'save-all-scholia)
+  (defun save-all-scholia (filename &optional scope)
+    "Fallback implementation that delegates to Futon snapshots when enabled."
+    (interactive "FSave scholia to: ")
+    (arxana-saving--wrap-save-all
+     (lambda (&rest _args)
+       (message "Saved scholia to %s" filename))
+     filename scope)))
+
+(unless (fboundp 'read-scholia-file)
+  (defun read-scholia-file (filepath &optional scope)
+    "Fallback implementation that restores from Futon snapshots when enabled."
+    (interactive "fRead scholia file: ")
+    (arxana-saving--wrap-read-scholia
+     (lambda (&rest _args)
+       (message "Read scholia from %s" filepath))
+     filepath scope)))
+
 (with-eval-after-load 'arxana-tangled
   (when (fboundp 'save-all-scholia)
     (advice-add 'save-all-scholia :around #'arxana-saving--wrap-save-all))
