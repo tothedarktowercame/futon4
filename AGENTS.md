@@ -99,3 +99,29 @@ The Emacs Lisp implementation in this repository provides:
 
 Internally, it maintains the logical model in memory and (optionally)
 syncs with external substrates (files, SQL backend).
+
+## Documentation Tickets
+
+`docs/tickets/` contains 50 documentation tickets specifying gaps to fill. Each includes:
+- Code region to document
+- What needs explaining
+- Suggested depth and word count
+
+Priority: Critical Gaps > Design Decisions > Workflows > API Details
+
+## Rename/Refactor Convention
+
+When renaming or moving functions, log the change to help maintain documentation links:
+
+```
+# In CHANGELOG.md or a dedicated refactor-log.md
+- YYYY-MM-DD: `old-function-name` → `new-function-name` (file.el)
+- YYYY-MM-DD: `function-name` moved from file-a.el to file-b.el
+```
+
+## Literate Codebase Vision
+
+- Documentation and code live separately (no #+INCLUDE embedding)
+- Hyperedges connect doc sections to code spans (Ted Nelson-style transclusion)
+- Think of code as terrain, documentation coverage as a heat map
+- AI agents help detect link drift and suggest repairs
