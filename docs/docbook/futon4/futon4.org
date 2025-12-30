@@ -1,0 +1,469 @@
+#+TITLE: Docbook futon4
+#+DATE: 2025-12-30
+
+* Quickstart
+- Source: [[file:dev/bootstrap2.el][dev/bootstrap2.el]]
+- Start Futon1 locally (`http://localhost:8080`).
+- `M-x load-file` → `arxana/dev/bootstrap.el`
+- `M-x arxana-build` (use `C-u` to force tangling).
+- `(setq futon4-base-url "http://localhost:8080/api/alpha")`
+- `(setq futon4-enable-sync t)`
+- Register buffers: `(make-current-buffer-into-article "Demo")`
+- Capture scholia: `(scholium "demo/link" "Note" '(("Demo")))`
+
+
+* Overview
+The classic Arxana client now talks to Futon1 through a small set of
+Elisp helpers.  This document captures the supported operations, the
+Elisp entry points you should call, and the matching HTTP routes + curl
+snippets you can run to verify what Emacs just did.
+
+All commands assume the Futon API is reachable at `futon4-base-url`
+(default `http://localhost:8080/api/alpha`).  Set `X-Profile` headers if you
+work inside multiple plexus profiles.
+
+* Storage bridge
+- Source: [[file:dev/arxana-store.el][dev/arxana-store.el]]
+
+
+
+#+INCLUDE: "/home/joe/code/futon4/dev/arxana-store.el" src emacs-lisp
+
+* Logical model
+Arxana manages a single logical hypergraph. The core primitives are:
+
+- Nema :: Universal node record with stable id, labels, optional endpoints, and payload.
+- Article :: A nema labeled :label/article, holding text and core metadata.
+- Metadata scholium :: A nema paired 1–1 with an article, caching backlinks, labels, and indexes.
+- Event (hyperedge) :: A nema representing a relation or annotation, with :hx/type and N endpoints.
+- Plexus :: A nema that names a working set or profile and carries configuration.
+
+Classic Arxana entities, relations, and scholia embed cleanly:
+
+- Entities → article nemas with derived identifiers.
+- Relations → 2-end events (:hx/*) between nemas.
+- Scholia → events and/or metadata nemas attached to articles.
+- Inclusion / clusion / provenance → multi-end events with appropriate :role values.
+
+*** Storage substrates
+
+All storage backends implement the same logical model.
+
+**** In-memory storage of one form or another
+- Historically, nemas, articles, events, and plexuses were held in hash tables / HONEY-style networks.
+- This is the reference representation; other substrates hydrate/dehydrate it.
+
+**** Document-based substrates
+- Literate sources (e.g., LaTeX, Org, Markdown, TEI) could be parsed into nemas and events.
+- Arxana can — in principle and, increasingly, in practice — both read *and write* these formats, keeping ids and links stable across round-trips.
+
+**** Historical: Relational substrate
+- Common Lisp provided a bridge to SQL that encode relations in tables.
+- Semantics are those of a structured triple store: subjects, predicates, objects, plus spans and provenance.
+- Suitable for durability, multi-user access, and heavy queries.
+
+**** Possible future: Triple-store substrate
+- Direct RDF/quad representation of the same model — not implemented but it could be if we want it.
+- Again, we could in principle read and write external knowledge graphs (and integrate SPARQL tooling).
+
+**** Current reality: EAV in Clojure (Datascript + XTDB)
+
+Instead of going the triple route, all storage backends in the current
+‘beta’ generation converge on an open **entity–attribute–value (EAV)**
+model.  Each record—whether an article, event, or plexus—is
+represented as a set of attribute–value pairs attached to a unique
+entity id.  This design keeps the schema *open*, so new attributes or
+link types can appear dynamically without migration.
+
+The canonical implementation uses:
+
+- **Datascript** for in-memory, client-side operation.  
+  - Pure Clojure; lightweight and immutable.  
+  - Supports live queries, undo/redo, and fast incremental updates.  
+  - Ideal for interactive use inside Emacs or JVM clients.
+
+- **XTDB** for durable, time-traveling storage.  
+  - Schemaless documents mirror the same EAV keys verbatim.  
+  - Transactions are append-only; every version of the graph is queryable.  
+  - Perfect for provenance, journaling, and long-term archives.
+
+Together these give Arxana an *open-schema substrate*: a graph database where nemas, events, and
+plexuses are all entities, and attributes such as `:hx/type`, `:article/text`, or `:plexus/members`
+are just first-class keys.  Queries can run over the generic EAV view, or use higher-level helpers
+that expose structured projections (e.g., “articles”, “hyperedges”, “plexuses”).
+
+> **Design posture:** Start open (EAV); specialize only when scale or semantics demand it.  
+> Structured views—relational tables, triple stores, materialized indexes—can be layered on
+> demand without altering the underlying data model.
+
+This approach keeps computational properties stable: query complexity
+and transaction semantics stay identical whether data are viewed as
+triples, hash maps, or SQL rows.  It also makes cross-substrate
+replication trivial: each backend stores the same `(entity attribute
+value)` facts, differing only in query language and persistence model.
+
+*** Emacs client (Arxana classic)
+
+The Emacs Lisp implementation in this repository provides:
+
+- Interactive creation and editing of articles and scholia.
+- Browsing modes over the in-memory graph.
+- Operations for inclusion, derivation, and provenance as events.
+- Import/export for specific document formats (historically LaTeX/Org).
+
+Internally, it maintains the logical model in memory and (optionally)
+syncs with external substrates (files, SQL backend).
+nil
+
+** Emacs client (Arxana classic)
+The Emacs Lisp implementation in this repository provides:
+
+- Interactive creation and editing of articles and scholia.
+- Browsing modes over the in-memory graph.
+- Operations for inclusion, derivation, and provenance as events.
+- Import/export for specific document formats (historically LaTeX/Org).
+
+Internally, it maintains the logical model in memory and (optionally)
+syncs with external substrates (files, SQL backend).
+nil
+
+** Storage substrates
+All storage backends implement the same logical model.
+
+**** In-memory storage of one form or another
+- Historically, nemas, articles, events, and plexuses were held in hash tables / HONEY-style networks.
+- This is the reference representation; other substrates hydrate/dehydrate it.
+
+**** Document-based substrates
+- Literate sources (e.g., LaTeX, Org, Markdown, TEI) could be parsed into nemas and events.
+- Arxana can — in principle and, increasingly, in practice — both read *and write* these formats, keeping ids and links stable across round-trips.
+
+**** Historical: Relational substrate
+- Common Lisp provided a bridge to SQL that encode relations in tables.
+- Semantics are those of a structured triple store: subjects, predicates, objects, plus spans and provenance.
+- Suitable for durability, multi-user access, and heavy queries.
+
+**** Possible future: Triple-store substrate
+- Direct RDF/quad representation of the same model — not implemented but it could be if we want it.
+- Again, we could in principle read and write external knowledge graphs (and integrate SPARQL tooling).
+
+**** Current reality: EAV in Clojure (Datascript + XTDB)
+
+Instead of going the triple route, all storage backends in the current
+‘beta’ generation converge on an open **entity–attribute–value (EAV)**
+model.  Each record—whether an article, event, or plexus—is
+represented as a set of attribute–value pairs attached to a unique
+entity id.  This design keeps the schema *open*, so new attributes or
+link types can appear dynamically without migration.
+
+The canonical implementation uses:
+
+- **Datascript** for in-memory, client-side operation.  
+  - Pure Clojure; lightweight and immutable.  
+  - Supports live queries, undo/redo, and fast incremental updates.  
+  - Ideal for interactive use inside Emacs or JVM clients.
+
+- **XTDB** for durable, time-traveling storage.  
+  - Schemaless documents mirror the same EAV keys verbatim.  
+  - Transactions are append-only; every version of the graph is queryable.  
+  - Perfect for provenance, journaling, and long-term archives.
+
+Together these give Arxana an *open-schema substrate*: a graph database where nemas, events, and
+plexuses are all entities, and attributes such as `:hx/type`, `:article/text`, or `:plexus/members`
+are just first-class keys.  Queries can run over the generic EAV view, or use higher-level helpers
+that expose structured projections (e.g., “articles”, “hyperedges”, “plexuses”).
+
+> **Design posture:** Start open (EAV); specialize only when scale or semantics demand it.  
+> Structured views—relational tables, triple stores, materialized indexes—can be layered on
+> demand without altering the underlying data model.
+
+This approach keeps computational properties stable: query complexity
+and transaction semantics stay identical whether data are viewed as
+triples, hash maps, or SQL rows.  It also makes cross-substrate
+replication trivial: each backend stores the same `(entity attribute
+value)` facts, differing only in query language and persistence model.
+
+*** Current reality: EAV in Clojure (Datascript + XTDB)
+Instead of going the triple route, all storage backends in the current
+‘beta’ generation converge on an open **entity–attribute–value (EAV)**
+model.  Each record—whether an article, event, or plexus—is
+represented as a set of attribute–value pairs attached to a unique
+entity id.  This design keeps the schema *open*, so new attributes or
+link types can appear dynamically without migration.
+
+The canonical implementation uses:
+
+- **Datascript** for in-memory, client-side operation.  
+  - Pure Clojure; lightweight and immutable.  
+  - Supports live queries, undo/redo, and fast incremental updates.  
+  - Ideal for interactive use inside Emacs or JVM clients.
+
+- **XTDB** for durable, time-traveling storage.  
+  - Schemaless documents mirror the same EAV keys verbatim.  
+  - Transactions are append-only; every version of the graph is queryable.  
+  - Perfect for provenance, journaling, and long-term archives.
+
+Together these give Arxana an *open-schema substrate*: a graph database where nemas, events, and
+plexuses are all entities, and attributes such as `:hx/type`, `:article/text`, or `:plexus/members`
+are just first-class keys.  Queries can run over the generic EAV view, or use higher-level helpers
+that expose structured projections (e.g., “articles”, “hyperedges”, “plexuses”).
+
+> **Design posture:** Start open (EAV); specialize only when scale or semantics demand it.  
+> Structured views—relational tables, triple stores, materialized indexes—can be layered on
+> demand without altering the underlying data model.
+
+This approach keeps computational properties stable: query complexity
+and transaction semantics stay identical whether data are viewed as
+triples, hash maps, or SQL rows.  It also makes cross-substrate
+replication trivial: each backend stores the same `(entity attribute
+value)` facts, differing only in query language and persistence model.
+
+*** Document-based substrates
+- Literate sources (e.g., LaTeX, Org, Markdown, TEI) could be parsed into nemas and events.
+- Arxana can — in principle and, increasingly, in practice — both read *and write* these formats, keeping ids and links stable across round-trips.
+
+*** Historical: Relational substrate
+- Common Lisp provided a bridge to SQL that encode relations in tables.
+- Semantics are those of a structured triple store: subjects, predicates, objects, plus spans and provenance.
+- Suitable for durability, multi-user access, and heavy queries.
+
+*** In-memory storage of one form or another
+- Historically, nemas, articles, events, and plexuses were held in hash tables / HONEY-style networks.
+- This is the reference representation; other substrates hydrate/dehydrate it.
+
+*** Possible future: Triple-store substrate
+- Direct RDF/quad representation of the same model — not implemented but it could be if we want it.
+- Again, we could in principle read and write external knowledge graphs (and integrate SPARQL tooling).
+
+* Article lifecycle
+- Source: [[file:dev/arxana-scholium.el][dev/arxana-scholium.el]]
+- `arxana-scholium-*` commands wrap the legacy new-scholium flows with modern error handling.
+- `arxana-inclusion.el` guards include/transclude so users get actionable errors.
+- `arxana-article.el` syncs metadata and ensures Futon entities stay fresh.
+
+
+
+
+** Catalog & label menus
+- Source: [[file:dev/arxana-browse.el][dev/arxana-browse.el]]
+The Part VI menus still work via modern commands:
+
+
+** Commands & context
+- Source: [[file:dev/arxana-relations.el][dev/arxana-relations.el]]
+Finally we wire up interactive commands (`arxana-relations-show-ego`, etc.),
+store the last Futon context, and expose refresh/provenance/copy-id helpers.
+
+
+** Formatting helpers
+- Source: [[file:dev/arxana-relations.el][dev/arxana-relations.el]]
+Before we render anything we normalize type labels, build friendly names,
+and provide helpers for inserting sections into the buffer.
+
+
+** Legacy navigation commands
+- Source: [[file:dev/arxana-browse.el][dev/arxana-browse.el]]
+#+INCLUDE: "dev/arxana-browse.el" src emacs-lisp
+
+** Link-following & history
+- (no entry content yet)
+
+** Relation buffers in context
+- Source: [[file:dev/arxana-relations.el][dev/arxana-relations.el]]
+The relation helpers render Futon adjacency inside Emacs so we no longer
+need to shell out to curl. Each buffer is a minor mode with refresh,
+provenance, and copy-id bindings.
+
+
+** Rendering Futon responses
+- Source: [[file:dev/arxana-relations.el][dev/arxana-relations.el]]
+Each renderer translates a Futon response (`/ego`, `/cooccur`, `/tail`) into a
+human-readable set of lines.
+
+
+** Tabulated UI & commands
+- Source: [[file:dev/arxana-xtdb-browse.el][dev/arxana-xtdb-browse.el]]
+The major mode uses `tabulated-list-mode` with shortcuts for refreshing,
+changing limits, inspecting raw payloads, and opening relation buffers.
+
+
+** XTDB browsing shims
+- Source: [[file:dev/arxana-xtdb-browse.el][dev/arxana-xtdb-browse.el]]
+The XTDB browser exposes `/tail` data via a tabulated list and lets contributors
+inspect source/target entities, jump into relation buffers, or tweak the limit.
+
+
+** XTDB helpers
+- Source: [[file:dev/arxana-xtdb-browse.el][dev/arxana-xtdb-browse.el]]
+Normalize Futon rows into tabulated entries and provide entity inspectors.
+
+
+* Compatibility & test support
+- Source: [[file:dev/arxana-compat.el][dev/arxana-compat.el]]
+- The compatibility shim ensures modern `get-article` lookups hit the in-memory table before falling back to the legacy tangle.
+- Test suites load the tangled code by way of the shared helper so they work whether invoked from the repo root or inside `arxana/`.
+
+
+
+* Contributor guide (embedded)
+- Source: [[file:docs/contributor-guide.md][docs/contributor-guide.md]]
+#+INCLUDE: "/home/joe/code/futon4/docs/contributor-guide.md"
+
+* Downtime handling
+- When `futon4-enable-sync` is nil or Futon is unreachable, the helpers
+  refuse to send traffic and stash a diagnostic plist in
+  `arxana-store-last-error`.  Inspect it with `(message "%S" arxana-store-last-error)`.
+- Calls never signal errors back to users; they log with `message` and
+  return `nil` so interactive commands can degrade gracefully.
+
+* Entry points
+| Elisp helper | Description | Futon route | Verification |
+|--------------+-------------+-------------+--------------|
+| `arxana-store-ensure-article` | Ensure an entity exists for an article name/path. | `POST /entity` | `curl -s -X POST "$BASE/entity" -H 'Content-Type: application/json' -d '{"id":"...","name":"...","type":"arxana/article"}'` |
+| `arxana-store-upsert-scholium` | Mirror a scholium-style relation between two articles. | `POST /relation` | `curl -s -X POST "$BASE/relation" -H 'Content-Type: application/json' -d '{"type":"arxana/scholium","src":"...","dst":"..."}'` |
+| `arxana-store-post-hyperedge` | Publish multi-end inclusion / derivation hyperedges with spans + provenance. | `POST /hyperedge` | `curl -s -X POST "$BASE/hyperedge" -H 'Content-Type: application/json' -d '{"type":"arxana/transclusion","hx/type":":hx/transclusion","hx/endpoints":[{"role":":role/source","entity":"..."},{"role":":role/target","entity":"..."},{"role":":role/passage","data":{"article":"...","begin":0,"end":42}}],"props":{"label":"(passage ...)","scholium/type":"derives-from"}}'` |
+| `arxana-store-save-snapshot` | Request an XTDB snapshot (`all` history vs `latest` revisions). | `POST /snapshot` | `curl -s -X POST "$BASE/snapshot" -H 'Content-Type: application/json' -d '{"scope":"all","label":"nightly"}'` |
+| `arxana-store-restore-snapshot` | Rehydrate Futon/XTDB from a recorded snapshot id. | `POST /snapshot/restore` | `curl -s -X POST "$BASE/snapshot/restore" -H 'Content-Type: application/json' -d '{"action":"restore","scope":"all","snapshot/id":"xtdb:snapshot/2024-11-14"}'` |
+| `arxana-export-org-directory` | Export the current article table as `.org` files + manifest. | (local) | `M-x arxana-export-org-directory` → pick destination & scope. |
+| `arxana-patterns-open` | Fetch Futon pattern library entries (and edit them) inside Emacs. | (local) | `M-x arxana-patterns-open` → enter pattern slug, edit headings, `C-c C-s` to sync. |
+
+`MANIFEST.org` now captures a sortable article table, per-article hyperedge
+summaries (inclusion/transclusion passages), and a label index so the
+iPod-style browser can jump through categories offline.  Those sections live
+alongside the snapshot metadata, so bundles carry both provenance and enough
+navigation hints to explore the export without Emacs.
+| `arxana-store-fetch-entity` | Fetch the latest copy of a Futon entity. | `GET /entity/:id` | `curl -s "$BASE/entity/<url-encoded-id>" | jq '.'` |
+| `arxana-store-entity-history` | Inspect prior versions of an entity. | `GET /entities/history/:id?limit=n` | `curl -s "$BASE/entities/history/<id>?limit=5" | jq '.versions'` |
+| `arxana-store-ego` | List relations touching a given article (wrapper around Futon's `/ego`). | `GET /ego/:name` | `curl -s "$BASE/ego/Demo%20Article" | jq '.ego.links'` |
+| `arxana-store-cooccur` | Fetch entities that co-occur with the named article. | `GET /cooccur/:name` | `curl -s "$BASE/cooccur/Demo%20Article" | jq '.rows'` |
+| `arxana-store-tail` | Show the latest Futon relations (recent tail). | `GET /tail?limit=n` | `curl -s "$BASE/tail?limit=5" | jq '.relations'` |
+| `arxana-store-sync-current-article` | Force-sync the current buffer's metadata and status. | `POST /entity` | `curl -s "$BASE/entity/<id>" | jq '.entity.props'` to confirm the new `metadata` / `status` values. |
+
+Replace `$BASE` with `http://localhost:8080/api/alpha` (or your chosen host).
+
+* Inclusion / derivation UX
+- Source: [[file:dev/arxana-derivation.el][dev/arxana-derivation.el]]
+- The Scholia Display buffer now summarizes inclusion/transclusion passages in a “Derivation previews” block with toggleable excerpts.
+- Source text is highlighted using dedicated faces (`arxana-derivation-inclusion-face`, etc.), and contributors can toggle or isolate each derivative type via the new highlight-only commands.
+- The README’s interactive verification loop (register two articles, include one in the other, inspect `/ego`/`/cooccur`/`/tail`) remains the canonical self-test; the scripted version is in the README’s “Scripted verification” section.
+
+- Now we bring in the actual derivation preview code (already literate) followed by the scholium/inclusion/article helpers so readers can see how the editing stack hangs together.
+
+#+INCLUDE: "/home/joe/code/futon4/dev/arxana-derivation.el" src emacs-lisp
+
+* Known limitations
+- Pattern-language wide editing (future milestone).
+- Org→graph semantic mirroring pending.
+
+** Directory importer
+- (no entry content yet)
+
+** Export helpers
+- Source: [[file:dev/arxana-export.el][dev/arxana-export.el]]
+- Write each article to disk with metadata header lines.
+- Capture label/link summaries for the manifest.
+- Optionally tie exports to Futon snapshots when sync is enabled.
+
+
+** Single-file importer
+- (no entry content yet)
+
+* Pattern workflows
+- Source: [[file:dev/arxana-patterns.el][dev/arxana-patterns.el]]
+The reanimation plan calls out pattern tooling as the last literate piece: we need both the pattern editing helpers and the ingest shims (see docs/reanimation-plan.org) inside the new spine so contributors change Org first and then tangle.
+
+*** Editing Futon pattern entries
+
+These commands let Emacs users work with Futon patterns without leaving Org buffers.
+
+- `M-x arxana-patterns-open` — fetch a Futon pattern (e.g., `mojo/center`) into an Org buffer, complete with the component identifiers.
+- Edit the buffer like any other Org document; the Futon ids stay in the headings so provenance survives.
+- `g` (`arxana-patterns-refresh-buffer`) refetches the same slug; `C-c C-s` (`arxana-patterns-save`) pushes the updated text back to Futon.
+- Run `dev/run-tests.sh` before publishing to confirm the pattern helpers and storage shims still behave.
+
+
+*** Importing pattern libraries
+
+Pattern data usually starts in the flexiarg collections from Futon3.  The ingest shim converts every `.flexiarg` entry into Futon entities, links them to pattern languages, and registers each language inside the shared catalog so `/ego` lookups stay consistent.
+
+- `M-x arxana-patterns-list-languages` lists languages plus the number of linked patterns.
+- `M-x arxana-patterns-ingest-directory` ingests an entire directory and optionally wires the results into a named language.
+
+
+** Editing Futon pattern entries
+- Source: [[file:dev/arxana-patterns.el][dev/arxana-patterns.el]]
+These commands let Emacs users work with Futon patterns without leaving Org buffers.
+
+- `M-x arxana-patterns-open` — fetch a Futon pattern (e.g., `mojo/center`) into an Org buffer, complete with the component identifiers.
+- Edit the buffer like any other Org document; the Futon ids stay in the headings so provenance survives.
+- `g` (`arxana-patterns-refresh-buffer`) refetches the same slug; `C-c C-s` (`arxana-patterns-save`) pushes the updated text back to Futon.
+- Run `dev/run-tests.sh` before publishing to confirm the pattern helpers and storage shims still behave.
+
+
+** Importing pattern libraries
+- Source: [[file:dev/arxana-patterns-ingest.el][dev/arxana-patterns-ingest.el]]
+Pattern data usually starts in the flexiarg collections from Futon3.  The ingest shim converts every `.flexiarg` entry into Futon entities, links them to pattern languages, and registers each language inside the shared catalog so `/ego` lookups stay consistent.
+
+- `M-x arxana-patterns-list-languages` lists languages plus the number of linked patterns.
+- `M-x arxana-patterns-ingest-directory` ingests an entire directory and optionally wires the results into a named language.
+
+
+* QA checklist
+- (no entry content yet)
+
+* Relation browsing inside Emacs
+- `M-x arxana-relations-show-ego` renders the `/ego/:name` response in the
+  `*Arxana Relations*` buffer, splitting outgoing vs incoming links.
+- `M-x arxana-relations-show-cooccur` formats `/cooccur/:name` so you can spot
+  frequently paired entities without leaving Emacs.
+- `M-x arxana-relations-show-tail` displays the `/tail` feed (most recent
+  relations) with confidence + timestamp notes.
+
+Each of these commands relies on the `arxana-store-*` helpers above, so they
+honour the same failure handling and record diagnostics in
+`arxana-store-last-error` when Futon is unreachable.
+
+The hyperedge helper is exercised via the scholium adjacency tests
+(`arxana/test/arxana-adjacency-test.el`), which stub the HTTP layer and verify
+that inclusion / transclusion scholia emit source, target, passage, and
+provenance endpoints before hitting `/hyperedge`.  Snapshot save/restore flows
+are covered by `arxana/test/arxana-saving-test.el`, ensuring the Emacs commands
+call `/snapshot` and `/snapshot/restore` with the selected scope.  The
+Org importer/exporter are covered by `arxana/test/arxana-import-test.el` and
+`arxana/test/arxana-export-test.el`, guaranteeing that `.org` bundles can round-trip
+through XTDB snapshots.
+
+* Testing hooks
+The ERT suite in `arxana/test/arxana-store-test.el` provides fake
+responses for `/entity` and `/ego`, so we can validate the glue without a
+running Futon server.  Extend those tests whenever you add a new helper.
+
+* Troubleshooting relations
+1. Verify `futon4-enable-sync` is non-nil and rerun the command that failed.
+2. Inspect `arxana-store-last-error` to see the HTTP method, reason, and any
+   context when a request returns `nil`.
+3. Use the relation browser commands above to confirm Futon is returning the
+   data you expect; the buffer will show “No data returned from Futon” when the
+   server was unreachable.
+4. Run the adjacency unit tests to prove scholium links are mirrored correctly:
+
+   ```bash
+   HOME=$PWD/.home-tmp EMACS_NATIVE_COMPILATION=0 emacs --batch \
+     -l arxana/dev/bootstrap.el \
+     -l arxana/test/arxana-adjacency-test.el \
+     -f ert-run-tests-batch-and-exit
+   ```
+
+   These tests stub the network layer and assert that `futon4--sync-about-links`
+   calls the new store helpers with derived ids, so failures often indicate an
+   unexpected change in the hook wiring.
+
+* Workflow notes
+1. Regenerate / load with `M-x arxana-build`.
+2. Ensure your article buffer has been turned into an article (`M-x
+   make-current-buffer-into-article`).
+3. Run the relevant `arxana-store-*` helper from Emacs; if it reports an
+   error check `arxana-store-last-error` for the diagnostic.
+4. Run the matching curl command to confirm the Futon server contains the
+   expected data.
+
