@@ -14,6 +14,7 @@
 (require 'tabulated-list)
 
 (require 'arxana-store)
+(require 'arxana-flexiarg-collection)
 (require 'arxana-patterns-ingest)
 
 (defvar flexiarg-mode-map (make-sparse-keymap))
@@ -48,6 +49,18 @@
     map)
   "Keymap for `arxana-browser-patterns-view-mode'.")
 
+(defun arxana-browser-patterns--update-header-state ()
+  "Update header-line to reflect dirty state without editing buffer content."
+  (let* ((dirty (buffer-modified-p))
+         (face (if dirty
+                   arxana-browser-patterns--header-dirty-face
+                 arxana-browser-patterns--header-clean-face))
+         (suffix (if dirty " [unsaved edits]" "")))
+    (setq-local header-line-format
+                (propertize
+                 (concat "C-c C-s to sync changes; g to refetch from Futon." suffix)
+                 'face face))))
+
 (defgroup arxana-patterns nil
   "Utilities for browsing Futon pattern entities in Emacs."
   :group 'arxana)
@@ -70,6 +83,11 @@ relative to the current buffer or this file."
                  directory)
   :group 'arxana-patterns)
 
+(defcustom arxana-browser-patterns-prefer-filesystem t
+  "When non-nil, open local flexiarg files if they are newer than XTDB."
+  :type 'boolean
+  :group 'arxana-patterns)
+
 (defcustom arxana-browser-patterns-collection-roots-file
   (locate-user-emacs-file "arxana-collection-roots.el")
   "File used to remember additional collection roots across Emacs sessions.
@@ -84,6 +102,11 @@ Set to nil to disable persistence."
 (defconst arxana-browser-patterns--summary-begin "#+BEGIN_SUMMARY")
 
 (defconst arxana-browser-patterns--summary-end "#+END_SUMMARY")
+
+(defconst arxana-browser-patterns--header-clean-face
+  '(:inherit mode-line))
+(defconst arxana-browser-patterns--header-dirty-face
+  '(:inherit mode-line :foreground "orange"))
 
 (defun arxana-browser-patterns--play-click ()
   (let ((path (arxana-browser--click-path)))
@@ -132,6 +155,42 @@ Set to nil to disable persistence."
         (when root
           (let ((candidate (expand-file-name "futon3/library" root)))
             (and (file-directory-p candidate) candidate))))))))
+
+(defun arxana-browser-patterns--file-mtime (file)
+  (when (and file (file-exists-p file))
+    (file-attribute-modification-time (file-attributes file))))
+
+(defun arxana-browser-patterns--pattern-file (name)
+  "Return the flexiarg file path for NAME if it exists."
+  (when (and name (not (string-empty-p name)))
+    (let* ((relative (concat name ".flexiarg"))
+           (roots (delq nil (append (arxana-browser-patterns--collection-root-paths)
+                                    (list (arxana-browser-patterns--locate-library-root))
+                                    (list default-directory)))))
+      (cl-loop for root in roots
+               for candidate = (expand-file-name relative root)
+               when (file-exists-p candidate)
+               return candidate))))
+
+(defun arxana-browser-patterns--normalize-last-seen (value)
+  "Coerce VALUE into a time value (seconds) when possible."
+  (cond
+   ((null value) nil)
+   ((consp value) value)
+   ((numberp value)
+    (if (> value 1000000000000)
+        (seconds-to-time (/ value 1000.0))
+      (seconds-to-time value)))
+   ((stringp value)
+    (ignore-errors (date-to-time value)))
+   (t nil)))
+
+(defun arxana-browser-patterns--filesystem-newer-p (file xtdb-last-seen)
+  (let ((file-time (arxana-browser-patterns--file-mtime file))
+        (xtdb-time (arxana-browser-patterns--normalize-last-seen xtdb-last-seen)))
+    (and file-time
+         (or (not xtdb-time)
+             (time-less-p xtdb-time file-time)))))
 
 (defun arxana-browser-patterns--library-directories (&optional root)
   (let ((root (or root (arxana-browser-patterns--locate-library-root))))
@@ -822,7 +881,8 @@ use that entry; otherwise prompt for a directory."
   :lighter " Pattern"
   :keymap arxana-browser-patterns-view-mode-map
   (when arxana-browser-patterns-view-mode
-    (setq header-line-format "C-c C-s to sync changes; g to refetch from Futon")))
+    (add-hook 'after-change-functions #'arxana-browser-patterns--update-header-state nil t)
+    (arxana-browser-patterns--update-header-state)))
 
 (defun arxana-browser-patterns--ensure-sync ()
   (unless (arxana-store-ensure-sync)
@@ -1144,11 +1204,43 @@ use that entry; otherwise prompt for a directory."
         (setq-local arxana-browser-patterns--pattern pattern)))
     (pop-to-buffer buffer)))
 
+;;;###autoload
+(defun arxana-browser-patterns-open-filesystem (&optional name-or-path)
+  "Open the flexiarg file for NAME-OR-PATH in a regular buffer."
+  (interactive (list (read-string "Pattern name or path: "
+                                  (thing-at-point 'symbol t))))
+  (let* ((path (if (and name-or-path (file-exists-p name-or-path))
+                   name-or-path
+                 (arxana-browser-patterns--pattern-file name-or-path))))
+    (unless path
+      (user-error "No flexiarg file found for %s" name-or-path))
+    (arxana-flexiarg--ensure-flexiarg)
+    (let ((buffer (find-file path)))
+      (with-current-buffer buffer
+        (let ((was-modified (buffer-modified-p)))
+          (when (fboundp 'flexiarg-mode)
+            (flexiarg-mode))
+          (arxana-flexiarg-file-mode 1)
+          (unless was-modified
+            (setq-local arxana-flexiarg--last-sync-errors nil)
+            (set-buffer-modified-p nil)
+            (arxana-flexiarg--update-file-header-state))))
+      (pop-to-buffer buffer)
+      buffer)))
+
+;;;###autoload
 (defun arxana-browser-patterns-open (name)
   "Fetch the Futon pattern NAME and render it in an Org buffer."
   (interactive (list (read-string "Pattern name: " (thing-at-point 'symbol t))))
-  (let ((pattern (arxana-browser-patterns--fetch-pattern-data name)))
-    (arxana-browser-patterns--render-pattern pattern)))
+  (let* ((pattern (arxana-browser-patterns--fetch-pattern-data name))
+         (file (arxana-browser-patterns--pattern-file name)))
+    (if (and arxana-browser-patterns-prefer-filesystem
+             (arxana-browser-patterns--filesystem-newer-p file
+                                                         (plist-get pattern :last-seen)))
+        (progn
+          (message "Opening local flexiarg; it is newer than XTDB.")
+          (arxana-browser-patterns-open-filesystem file))
+      (arxana-browser-patterns--render-pattern pattern))))
 
 (defun arxana-browser-patterns-inspect-entity (name)
   "Show the Futon source text for entity NAME (pattern or component)."

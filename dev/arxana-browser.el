@@ -22,6 +22,9 @@
           arxana-browser--context nil))
   (arxana-browser--render))
 
+;;;###autoload
+(defalias 'arxana-patterns-browse #'arxana-browser-browse)
+
 (defalias 'arxana-browse #'arxana-browser-browse)
 
 (provide 'arxana-browser)

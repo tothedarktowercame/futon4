@@ -531,8 +531,17 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                            arxana-browser--last-row)))
         (arxana-browser--ensure-context)
         (let* ((context (car arxana-browser--stack))
-               (items (arxana-browser--current-items))
-               (format (cond
+               (items (arxana-browser--current-items)))
+          (when (and context
+                     (eq (plist-get context :view) 'docbook-section)
+                     (listp items)
+                     (= (length items) 1)
+                     (eq (plist-get (car items) :type) 'docbook-entry))
+            (when (cdr arxana-browser--stack)
+              (setq arxana-browser--stack (cdr arxana-browser--stack)))
+            (arxana-docbook-open-entry-object (plist-get (car items) :entry))
+            (cl-return-from arxana-browser--render))
+          (let* ((format (cond
                         ((not context) (arxana-browser--menu-format))
                         ((plist-get context :media-filter)
                          (arxana-media--track-format))
@@ -562,23 +571,23 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                          (arxana-browser--pattern-format))
                         (t (arxana-browser--root-format))))
                (entries (arxana-browser--tabulated-entries context items)))
-          (setq arxana-browser--context context)
-          (let ((inhibit-read-only t))
-            (arxana-browser-mode)
-            (setq tabulated-list-format format
-                  tabulated-list-entries entries
-                  tabulated-list-use-header-line t)
-            (when (and context (eq (plist-get context :view) 'docbook-contents))
-              (setq tabulated-list-sort-key nil))
-            (tabulated-list-init-header)
-            (arxana-browser--decorate-header-line context (length items))
-            (force-mode-line-update)
-            (tabulated-list-print t)
-            (let* ((count (arxana-browser--row-count))
-                   (clamped (if (> count 0)
-                                (max 0 (min desired-row (1- count)))
-                              0)))
-              (arxana-browser--goto-row clamped))))))
+            (setq arxana-browser--context context)
+            (let ((inhibit-read-only t))
+              (arxana-browser-mode)
+              (setq tabulated-list-format format
+                    tabulated-list-entries entries
+                    tabulated-list-use-header-line t)
+              (when (and context (eq (plist-get context :view) 'docbook-contents))
+                (setq tabulated-list-sort-key nil))
+              (tabulated-list-init-header)
+              (arxana-browser--decorate-header-line context (length items))
+              (force-mode-line-update)
+              (tabulated-list-print t)
+              (let* ((count (arxana-browser--row-count))
+                     (clamped (if (> count 0)
+                                  (max 0 (min desired-row (1- count)))
+                                0)))
+                (arxana-browser--goto-row clamped)))))))
       (display-buffer buffer)))
 
 (defun arxana-browser--visit ()
@@ -672,10 +681,16 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                    arxana-browser--stack))
        (arxana-browser--render))
       ('docbook-heading
-       (setq arxana-browser--stack
-             (cons (plist-put (copy-sequence item) :view 'docbook-section)
-                   arxana-browser--stack))
-       (arxana-browser--render))
+       (let* ((book (plist-get item :book))
+              (entries (arxana-browser--docbook-section-items book item)))
+         (if (and (listp entries)
+                  (= (length entries) 1)
+                  (eq (plist-get (car entries) :type) 'docbook-entry))
+             (arxana-docbook-open-entry-object (plist-get (car entries) :entry))
+           (setq arxana-browser--stack
+                 (cons (plist-put (copy-sequence item) :view 'docbook-section)
+                       arxana-browser--stack))
+           (arxana-browser--render))))
       ('docbook-recent
        (setq arxana-browser--stack
              (cons (list :view 'docbook-recent
