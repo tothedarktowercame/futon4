@@ -13,6 +13,8 @@ to quickly detect paren/quote mismatches before or after edits. Example:
   current behavior and public API surface.
 - Avoid duplicate implementations: search for existing helpers before adding
   new ones; extend or relocate code instead of cloning logic.
+- File size guardrail: any single code file over 50K is a warning; over 100K is
+  a breaking violation and must be refactored.
 - Keep modules small and focused: prefer new, well-scoped files over growing
   large ones; add clear section headers, docstrings, and a `defgroup` per module.
 - Maintain a single entry point per subsystem; keep UI wrappers thin and route
@@ -28,7 +30,7 @@ to quickly detect paren/quote mismatches before or after edits. Example:
 
 ## Tracking doc/code alignment
 
-- `dev/org-sync-tracker.org` flags drift between `dev/` code and XTDB-backed
+- `dev/docs-backlog.org` flags drift between `dev/` code and XTDB-backed
   docs, plus any temporary filesystem snapshots that still need ingesting.
 
 * Logical model
