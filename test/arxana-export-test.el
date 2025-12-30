@@ -8,7 +8,7 @@
 
 (arxana-test--ensure-tangled-loaded)
 
-(require 'arxana-export)
+(require 'arxana-articles-export)
 
 (ert-deftest arxana-export-org-directory-writes-files ()
   (let ((futon4-enable-sync nil)

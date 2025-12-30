@@ -66,7 +66,7 @@
   (ignore-errors (require 'arxana-saving))
   (ignore-errors (require 'arxana-inclusion))
   (ignore-errors (require 'arxana-import))
-  (ignore-errors (require 'arxana-export))
+  (ignore-errors (require 'arxana-articles-export))
   (ignore-errors (require 'arxana-compat))
   (ignore-errors (require 'arxana-xtdb-browse))
   (ignore-errors (require 'arxana-patterns))

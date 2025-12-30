@@ -64,16 +64,27 @@ behavior at every stage.
 - [X] Provide toggle commands to highlight each derivative type independently.
 - [X] Document the visual affordances and add a regression test covering both styles.
 
-** M6 — QA & Release Prep [2/4]
+** M6 — QA & Release Prep [3/4]
 - [X] Grow the ERT suite (unit, integration, CLI smoke).
 - [X] Document test instructions + CI hooks.
-- [ ] Provide contributor guide (coding style, doc sync, testing).
+- [X] Provide contributor guide (coding style, doc sync, testing).
 - [ ] Tag a “revived” release with reproducible steps.
+
+** M7 — Docbook + Manual Export [0/5]
+- [ ] Verify docbook browser health (filesystem + XTDB sources) and list any blockers.
+- [ ] Finish XTDB docbook ingest pipeline (contract → API → storage).
+- [ ] Define canonical export targets (Markdown/HTML/PDF) for non-Emacs readers.
+- [ ] Build an export command to render manuals from XTDB (or a snapshot mirror).
+- [ ] Document the export workflow + prerequisites in README and XTDB docs.
+
+** M8 — Legacy dataset migration notes [0/2]
+- [ ] Define scope for “historical datasets” (which backends and export formats).
+- [ ] Produce migration notes or close the milestone if no longer relevant.
 
 ** Doc sync tracker [2/6]
 - [X] Storage + snapshots (`arxana-store`, `arxana-saving`).
 - [X] Browsing & relations (`arxana-browse`, `arxana-relations`, `arxana-xtdb-browse`).
-- [ ] Import/export helpers (`arxana-import`, `arxana-export`).
+- [ ] Import/export helpers (`arxana-import`, `arxana-articles-export`).
 - [ ] Pattern workflows (`arxana-patterns` + ingest shims).
 - [ ] Article/scholium/inclusion stack (`arxana-article`, `arxana-scholium`, `arxana-inclusion`).
 - [ ] QA/compat/test support modules.
