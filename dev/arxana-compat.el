@@ -8,6 +8,9 @@
 (defvar arxana-compat--orig-get-article nil
   "Original `get-article' captured before installing the compat shim.")
 
+(defvar article-table nil
+  "Legacy article table keyed by article name.")
+
 (defun arxana-compat--hash-article (name)
   "Return (NAME . VALUE) from `article-table' when available."
   (when (and (boundp 'article-table)
@@ -27,6 +30,9 @@
   (unless arxana-compat--orig-get-article
     (setq arxana-compat--orig-get-article (symbol-function 'get-article))
     (fset 'get-article #'arxana-compat--get-article)))
+
+(unless (fboundp 'get-article)
+  (fset 'get-article #'arxana-compat--get-article))
 
 (provide 'arxana-compat)
 
