@@ -15,6 +15,11 @@
 (declare-function arxana-store-ensure-article "arxana-store" (&rest _))
 (declare-function futon4--canonical-path "arxana-tangled" (path))
 
+(unless (fboundp 'sch-book)
+  (defun sch-book ()
+    "Return the current scholium book, if any."
+    nil))
+
 (defun arxana-import--read-file-contents (path)
   "Return the contents of PATH as a string."
   (with-temp-buffer
