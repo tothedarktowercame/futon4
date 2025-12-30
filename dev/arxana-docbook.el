@@ -2,8 +2,8 @@
 
 ;;; Commentary:
 ;; Browse filesystem-backed doc book entries (pilot) inside Emacs. Entries are
-;; stored under dev/logs/books/<book>/raw/*.json with matching stubs in
-;; dev/logs/books/<book>/stubs/*.org. This view keeps a separation between the
+;; stored under .docbook/books/<book>/raw/*.json with matching stubs in
+;; .docbook/books/<book>/stubs/*.org. This view keeps a separation between the
 ;; reading buffer and the source files (a “yad”/hand separation), but still lets
 ;; you jump to the underlying artifacts when needed.
 ;;
@@ -13,6 +13,7 @@
 ;;; Code:
 
 (require 'arxana-docbook-core)
+(require 'arxana-docbook-checkout)
 (require 'arxana-docbook-remote)
 (require 'arxana-docbook-toc)
 (require 'arxana-docbook-export)
@@ -94,7 +95,7 @@
 
 
 
-;; TODO(org-sync): Track docbook function browsing/jump UI in XTDB docs (see org-sync-tracker).
+;; TODO(org-sync): Track docbook function browsing/jump UI in XTDB docs (see docs-backlog).
 
 
 

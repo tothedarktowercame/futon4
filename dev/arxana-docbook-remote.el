@@ -13,6 +13,7 @@
 
 (declare-function arxana-docbook--locate-books-root "arxana-docbook-core")
 (declare-function arxana-docbook--filesystem-available-p "arxana-docbook-core" (&optional book))
+(declare-function arxana-docbook--maybe-fix-mojibake "arxana-docbook-core" (text))
 
 (defvar arxana-docbook--storage-probe nil)
 (defvar arxana-docbook--filesystem-probe nil)
@@ -277,6 +278,7 @@ When CASCADE is non-nil, request that entries are deleted too."
                           (plist-get entry :doc/body)
                           (plist-get entry :doc/context)
                           (plist-get entry :doc/delta)))
+         (raw-summary (arxana-docbook--maybe-fix-mojibake raw-summary))
          (summary (when raw-summary
                     (replace-regexp-in-string
                      "[[:space:]\n]+" " "

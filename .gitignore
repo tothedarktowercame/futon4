@@ -8,6 +8,7 @@ boundary.edn
 
 # Docbook/log artifacts
 dev/logs/
+.docbook/
 
 # Spine export artifacts
 spine.el

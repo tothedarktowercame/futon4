@@ -2,12 +2,12 @@
 
 ;;; Commentary:
 ;; Batch-friendly helper to emit a JSON table of contents for a filesystem
-;; docbook snapshot. The output lives under dev/logs/books/<book>/toc.json and
+;; docbook snapshot. The output lives under .docbook/books/<book>/toc.json and
 ;; is consumed by the doc book browser to mirror the outline.
 ;;
 ;; Usage:
 ;;   emacs --batch -l dev/docbook-toc-export.el \
-;;     --eval "(arxana-docbook-export-toc \"futon4\" \"dev/logs/books/futon4/index.org\")"
+;;     --eval "(arxana-docbook-export-toc \"futon4\" \".docbook/books/futon4/index.org\")"
 
 ;;; Code:
 
@@ -42,20 +42,30 @@
       (locate-dominating-file default-directory "dev")
       default-directory))
 
+(defun arxana-docbook--default-books-root (root)
+  (let ((dot-root (expand-file-name ".docbook/books" root))
+        (legacy-root (expand-file-name "dev/logs/books" root)))
+    (cond
+     ((file-directory-p dot-root) dot-root)
+     ((file-directory-p legacy-root) legacy-root)
+     (t dot-root))))
+
 (defun arxana-docbook--default-org-file (book root)
-  (let ((candidate (expand-file-name (format "dev/logs/books/%s/index.org" book)
-                                     root)))
-    (when (file-readable-p candidate)
-      candidate)))
+  (let ((dot (expand-file-name (format ".docbook/books/%s/index.org" book) root))
+        (legacy (expand-file-name (format "dev/logs/books/%s/index.org" book) root)))
+    (cond
+     ((file-readable-p dot) dot)
+     ((file-readable-p legacy) legacy)
+     (t nil))))
 
 (defun arxana-docbook-export-toc (&optional book org-file output-file)
   "Export a TOC JSON for BOOK (default: futon4) from ORG-FILE.
-Write to OUTPUT-FILE (default: dev/logs/books/BOOK/toc.json)."
+Write to OUTPUT-FILE (default: .docbook/books/BOOK/toc.json)."
   (let* ((book (or book "futon4"))
          (root (arxana-docbook--repo-root))
          (org-file (or org-file (arxana-docbook--default-org-file book root)))
          (org-file (and org-file (expand-file-name org-file root)))
-         (books-root (expand-file-name "dev/logs/books" root))
+         (books-root (arxana-docbook--default-books-root root))
          (output-dir (expand-file-name book books-root))
          (output-file (expand-file-name (or output-file "toc.json") output-dir)))
     (unless (and org-file (file-readable-p org-file))

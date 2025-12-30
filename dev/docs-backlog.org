@@ -1,0 +1,83 @@
+#+TITLE: Org Sync Tracker
+#+AUTHOR: Arxana team
+#+OPTIONS: toc:nil num:nil
+#+TODO: TODO(t) WIP(w!) READY(r!) | DONE(d!)
+
+This file records every `.el` change that still needs to be mirrored into the
+XTDB-backed docs. Keep it close to reality: as soon as a change feels
+production-bound (not a throwaway experiment), add an entry.
+
+* Usage
+
+- Create a new heading under *Backlog* per feature/namespace that needs a
+  literate counterpart; set its TODO keyword to `TODO`.
+- Use the property drawer to list the relevant Lisp files, target Org file or
+  heading, and any breadcrumbs (commit hash, link to discussion, etc.).
+- Advance the keyword to `WIP` when someone actively ports the code, `READY` when
+  the Org section is up-to-date and pending verification, and finally `DONE`
+  once the breadcrumb comments are removed from the `.el`.
+- Feel free to add subheadings if a namespace spans multiple Org targets.
+- Keep descriptions short but specific so reviewers can confirm coverage.
+
+* Review checklist
+
+1. Does the change introduce or modify public APIs, data shapes, or behavior?
+2. If yes, is there a corresponding entry below with files, targets, and notes?
+3. Do the touched `.el` files include `;; TODO(org-sync): …` pointers?
+4. Once the Org port is confirmed, mark the entry `READY` (awaiting review) or
+   `DONE` (fully merged) and delete the in-file TODO markers.
+
+* Backlog
+
+** TODO Example entry (replace me)
+   :FILES: dev/arxana-store.el
+   :TARGET: XTDB doc id (or temporary snapshot path)
+   :NOTES: Commit <hash>; store transactions + new attributes
+
+** TODO browser marks scoped to active view
+   :FILES: dev/arxana-browser-marks.el dev/arxana-media.el
+   :TARGET: XTDB doc id
+   :NOTES: Introduced shared mark filtering helper; media actions now ignore marks from inactive views.
+
+** TODO vocal-forward banjo bounce profile
+   :FILES: dev/arxana-media.el
+   :TARGET: XTDB doc id
+   :NOTES: Added vocal-forward banjo/bass/harmonica bounce profile.
+
+** TODO lyrics chord font mapping
+   :FILES: dev/arxana-media.el
+   :TARGET: XTDB doc id
+   :NOTES: Added chord-aware font faces + font-lock in lyrics mode.
+
+This placeholder shows the preferred structure.  Replace it with real entries as
+soon as new work lands.
+
+** TODO futon4 doc book (pilot)
+   :FILES: dev/logs/README.md .docbook/books/futon4/index.org .docbook/books/futon4/stubs/futon4-demo-001.org .docbook/books/futon4/raw/futon4-demo-001.json .docbook/books/futon4/stubs/futon4-quickstart-20240606.org .docbook/books/futon4/raw/futon4-quickstart-20240606.json .docbook/books/futon4/stubs/futon4-storage-bridge-20240606.org .docbook/books/futon4/raw/futon4-storage-bridge-20240606.json .docbook/books/futon4/toc.json dev/arxana-docbook.el dev/arxana-docbook-core.el dev/arxana-docbook-checkout.el dev/arxana-docbook-remote.el dev/arxana-docbook-toc.el dev/arxana-docbook-export.el dev/arxana-docbook-ui.el dev/arxana-patterns.el dev/docbook-toc-export.el test/arxana-docbook-checkout-test.el
+   :TARGET: XTDB doc id (or filesystem snapshot)
+   :NOTES: uncommitted; filesystem-backed doc book skeleton; update once XTDB ingest path exists
+
+** TODO docbook function browsing
+   :FILES: dev/arxana-docbook.el dev/arxana-docbook-core.el dev/arxana-docbook-remote.el dev/arxana-docbook-toc.el dev/arxana-docbook-export.el dev/arxana-docbook-ui.el dev/arxana-patterns.el
+   :TARGET: XTDB doc id
+   :NOTES: Function-level doc browsing + source jump driven by XTDB-ingested headings (no local parsing).
+
+** TODO docbook contents highlight follows viewer
+   :FILES: dev/arxana-browser-docbook.el dev/arxana-docbook-ui.el
+   :TARGET: XTDB doc id
+   :NOTES: Keep contents list highlighting synchronized with the current docbook entry view.
+
+** TODO remove legacy arxana-allow-tangle toggle
+   :FILES: dev/bootstrap.el dev/arxana-browser-browse.el dev/arxana-test-support.el dev/run-tests.sh test/arxana-bootstrap-test.el
+   :TARGET: XTDB doc id
+   :NOTES: align bootstrap/testing guidance with dev/ as the canonical source.
+
+** TODO def-doc summarizer pipeline
+   :FILES: dev/def-doc-summarize.clj dev/def-doc-backfill.clj dev/prompts/def-doc-summary.prompt
+   :TARGET: XTDB doc id (new section for XTDB-native def-doc ingestion)
+   :NOTES: ChatGPT-driven per-file summaries for dev/*.el into docbook JSON + toc.json.
+
+** TODO flexiarg golden test fixture
+   :FILES: test/testing.flexiarg
+   :TARGET: XTDB doc id
+   :NOTES: Relocated from docs/; wire into a golden test for flexiarg normalization.

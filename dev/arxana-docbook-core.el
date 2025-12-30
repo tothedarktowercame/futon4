@@ -17,22 +17,29 @@
   "Browse doc book entries for Futon systems."
   :group 'arxana)
 (defcustom arxana-docbook-books-root nil
-  "Root directory containing doc book folders (e.g., dev/logs/books)."
+  "Root directory containing doc book folders (e.g., .docbook/books)."
   :type '(choice (const :tag "Auto-detect" nil)
                  directory)
   :group 'arxana-docbook)
 (defun arxana-docbook--locate-books-root ()
   (or arxana-docbook-books-root
       (let* ((base (or load-file-name buffer-file-name default-directory))
-             (root (and base (locate-dominating-file base "dev/logs/books"))))
-        (when root
-          (expand-file-name "dev/logs/books" root)))))
+             (dot-root (and base (locate-dominating-file base ".docbook")))
+             (legacy-root (and base (locate-dominating-file base "dev/logs/books")))
+             (repo-root (and base (locate-dominating-file base "dev"))))
+        (cond
+         (dot-root (expand-file-name ".docbook/books" dot-root))
+         (legacy-root (expand-file-name "dev/logs/books" legacy-root))
+         (repo-root (expand-file-name ".docbook/books" repo-root))))))
 (defun arxana-docbook--repo-root ()
   (let* ((base (or load-file-name buffer-file-name))
+         (lib (and (not base) (locate-library "arxana-docbook-core")))
+         (base (or base lib))
          (root (and base (locate-dominating-file base "dev"))))
     (or root
         (when-let* ((books (arxana-docbook--locate-books-root)))
           (expand-file-name "../../.." books))
+        (locate-dominating-file default-directory ".docbook")
         (locate-dominating-file default-directory "dev/logs/books")
         (locate-dominating-file default-directory "dev")
         default-directory)))
@@ -60,6 +67,32 @@
       (error
        (message "[arxana-docbook] Failed to read %s: %s" path (error-message-string err))
        nil))))
+
+(defun arxana-docbook--normalize-timestamp (value)
+  "Coerce VALUE into a time value when possible."
+  (cond
+   ((null value) nil)
+   ((consp value) value)
+   ((numberp value)
+    (if (> value 1000000000000)
+        (seconds-to-time (/ value 1000.0))
+      (seconds-to-time value)))
+   ((stringp value)
+    (ignore-errors (date-to-time value)))
+   (t nil)))
+
+(defun arxana-docbook--file-mtime (path)
+  (when (and path (file-exists-p path))
+    (file-attribute-modification-time (file-attributes path))))
+(defun arxana-docbook--entry-mtime (entry)
+  "Return the newest mtime for ENTRY's raw or stub file."
+  (let ((raw (arxana-docbook--file-mtime (plist-get entry :raw-path)))
+        (stub (arxana-docbook--file-mtime (plist-get entry :stub-path))))
+    (cond
+     ((and raw stub) (if (time-less-p raw stub) stub raw))
+     (raw raw)
+     (stub stub)
+     (t nil))))
 (defun arxana-docbook--entry-from-json (book path)
   (let* ((payload (arxana-docbook--read-json path))
          (run-id (or (plist-get payload :run_id)
@@ -72,6 +105,7 @@
       (list :book book
             :doc-id (plist-get payload :doc_id)
             :run-id run-id
+            :entry-id run-id
             :version (plist-get payload :version)
             :timestamp (plist-get payload :timestamp)
             :summary (plist-get payload :agent_summary)
@@ -88,7 +122,21 @@
   (let* ((remote (when (arxana-docbook--remote-available-p book)
                    (ignore-errors (arxana-docbook--remote-heading book doc-id))))
          (local (ignore-errors (arxana-docbook-entries book)))
-         (entries (append remote local)))
+         (local-index (make-hash-table :test 'equal))
+         (entries nil))
+    (dolist (entry local)
+      (when-let* ((entry-id (plist-get entry :entry-id))
+                  (mtime (arxana-docbook--entry-mtime entry)))
+        (puthash entry-id mtime local-index)))
+    (dolist (entry remote)
+      (let* ((entry-id (plist-get entry :entry-id))
+             (local-mtime (and entry-id (gethash entry-id local-index)))
+             (remote-time (arxana-docbook--normalize-timestamp (plist-get entry :timestamp))))
+        (when (or (not local-mtime)
+                  (not remote-time)
+                  (time-less-p local-mtime remote-time))
+          (push entry entries))))
+    (setq entries (append (nreverse entries) local))
     (seq-filter (lambda (entry)
                   (equal doc-id (plist-get entry :doc-id)))
                 entries)))
@@ -140,24 +188,55 @@
        ((not skip)
         (push line result))))
     (string-join (nreverse result) "\n")))
+(defun arxana-docbook--maybe-fix-mojibake (text)
+  "Best-effort repair for UTF-8 text mis-decoded as Latin-1/Windows-1252."
+  (if (stringp text)
+      (let* ((raw (if (multibyte-string-p text)
+                      text
+                    (decode-coding-string text 'latin-1)))
+             (count (lambda (s)
+                      (let ((idx 0)
+                            (hits 0)
+                            (len (length s)))
+                        (while (< idx len)
+                          (let ((ch (aref s idx)))
+                            (when (or (= ch #x00e2)
+                                      (= ch #x00c2)
+                                      (= ch #x00c3))
+                              (setq hits (1+ hits))))
+                          (setq idx (1+ idx)))
+                        hits)))
+             (before (funcall count raw))
+             (converted (condition-case nil
+                            (decode-coding-string (encode-coding-string raw 'latin-1) 'utf-8)
+                          (error raw)))
+             (after (funcall count converted)))
+        (if (and (> before 0) (< after before))
+            converted
+          text))
+    text))
 (defun arxana-docbook--entry-content (entry)
   (let ((stub (arxana-docbook--read-stub entry)))
     (cond
-     (stub (arxana-docbook--strip-org-metadata
-            (arxana-docbook--strip-org-code-blocks
-             (arxana-docbook--strip-stub-header stub))))
+     (stub (arxana-docbook--maybe-fix-mojibake
+            (arxana-docbook--strip-org-metadata
+             (arxana-docbook--strip-org-code-blocks
+              (arxana-docbook--strip-stub-header stub)))))
      ((plist-get entry :summary-raw)
-      (arxana-docbook--strip-org-metadata
-       (arxana-docbook--strip-org-code-blocks (plist-get entry :summary-raw))))
+      (arxana-docbook--maybe-fix-mojibake
+       (arxana-docbook--strip-org-metadata
+        (arxana-docbook--strip-org-code-blocks (plist-get entry :summary-raw)))))
      ((plist-get entry :summary)
-      (arxana-docbook--strip-org-metadata
-       (arxana-docbook--strip-org-code-blocks (plist-get entry :summary))))
+      (arxana-docbook--maybe-fix-mojibake
+       (arxana-docbook--strip-org-metadata
+        (arxana-docbook--strip-org-code-blocks (plist-get entry :summary)))))
      (t ""))))
 (defun arxana-docbook--entry-raw-text (entry)
-  (or (arxana-docbook--read-stub entry)
-      (plist-get entry :summary-raw)
-      (plist-get entry :summary)
-      ""))
+  (arxana-docbook--maybe-fix-mojibake
+   (or (arxana-docbook--read-stub entry)
+       (plist-get entry :summary-raw)
+       (plist-get entry :summary)
+       "")))
 (defun arxana-docbook--entry-function-name (entry)
   (or (plist-get entry :function-name)
       (plist-get entry :doc/function-name)

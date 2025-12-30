@@ -184,7 +184,7 @@ Return non-nil when the file was updated."
 (defun arxana-docbook--toc-write-headings (book headings &optional order)
   "Write HEADINGS as toc.json for BOOK, reordering by ORDER when provided."
   (let* ((path (or (arxana-docbook--toc-path book)
-                   (expand-file-name (format "dev/logs/books/%s/toc.json" book)
+                   (expand-file-name (format ".docbook/books/%s/toc.json" book)
                                      (arxana-docbook--repo-root))))
          (dir (and path (file-name-directory path))))
     (unless (and dir (file-directory-p dir))

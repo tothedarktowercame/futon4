@@ -55,10 +55,13 @@
 (declare-function arxana-docbook--remote-enabled-p "arxana-docbook-remote" ())
 (declare-function arxana-docbook--entry-raw-text "arxana-docbook-core" (entry))
 (declare-function arxana-docbook--entry-function-name "arxana-docbook-core" (entry))
+(declare-function arxana-docbook--entry-mtime "arxana-docbook-core" (entry))
+(declare-function arxana-docbook--normalize-timestamp "arxana-docbook-core" (value))
 (declare-function arxana-docbook--strip-org-metadata "arxana-docbook-core" (text))
 (declare-function arxana-docbook--strip-org-code-blocks "arxana-docbook-core" (text))
 (declare-function arxana-docbook--strip-stub-header "arxana-docbook-core" (text))
 (declare-function arxana-docbook--session-id-from-run "arxana-docbook-core" (run-id))
+(declare-function arxana-docbook-open-stub "arxana-docbook-checkout" (&optional entry))
 
 (defface arxana-docbook-source-green
   '((t :foreground "ForestGreen" :weight bold))
@@ -76,6 +79,10 @@
   '((t :background "#2b2b2b"))
   "Face for lab-draft additions in docbook views."
   :group 'arxana-docbook)
+(defface arxana-docbook-entry-dirty-face
+  '((t :foreground "orange"))
+  "Face for dirty docbook entry headers."
+  :group 'arxana-docbook)
 (defvar-local arxana-docbook--book nil
   "Current doc book identifier (e.g., futon4) for the browser buffer.")
 (defvar-local arxana-docbook--source :filesystem
@@ -90,6 +97,8 @@
   "Doc id for the current docbook entry buffer.")
 (defvar-local arxana-docbook--entry-entry-id nil
   "Entry id for the current docbook entry buffer.")
+(defvar-local arxana-docbook--entry-current nil
+  "Entry plist for the current docbook entry buffer.")
 (defvar-local arxana-docbook--entry-toc nil
   "Cached TOC list for the current docbook entry buffer.")
 (defvar-local arxana-docbook--return-buffer nil
@@ -137,6 +146,26 @@
             (or arxana-docbook--book "unknown")
             label
             summary)))
+
+(defun arxana-docbook--entry-dirty-p (entry)
+  (or (buffer-modified-p)
+      (let ((local (and entry (arxana-docbook--entry-mtime entry)))
+            (remote (arxana-docbook--normalize-timestamp (plist-get entry :timestamp))))
+        (and local
+             (or (not remote)
+                 (time-less-p remote local))))))
+
+(defun arxana-docbook--entry-header-line ()
+  (let* ((dirty (arxana-docbook--entry-dirty-p arxana-docbook--entry-current))
+         (suffix (if dirty " [dirty]" ""))
+         (text (format "Docbook entry%s — M-n/M-p next/prev; M-y copies link."
+                       suffix)))
+    (if dirty
+        (propertize text 'face 'arxana-docbook-entry-dirty-face)
+      text)))
+
+(defun arxana-docbook--entry-update-header (&rest _args)
+  (force-mode-line-update))
 (defun arxana-docbook--jump-to-function (buffer name)
   (when (and buffer name)
     (with-current-buffer buffer
@@ -376,6 +405,7 @@
           (setq arxana-docbook--entry-book book
                 arxana-docbook--entry-doc-id doc-id
                 arxana-docbook--entry-entry-id (plist-get entry :entry-id)
+                arxana-docbook--entry-current entry
                 arxana-docbook--entry-toc doc-ids
                 arxana-docbook--return-buffer return-buffer
                 arxana-docbook--return-doc-id doc-id
@@ -387,17 +417,11 @@
         (goto-char (point-min))
         (org-show-all)
         (visual-line-mode 1)
-        (view-mode 1)
         (arxana-docbook-entry-mode 1)
+        (setq-local header-line-format '(:eval (arxana-docbook--entry-header-line)))
         (setq-local minor-mode-overriding-map-alist
                     `((arxana-docbook-entry-mode . ,arxana-docbook-entry-mode-map)))))
-    (let* ((source (arxana-docbook--entry-source-path entry))
-           (source-path (and source (expand-file-name source (arxana-docbook--repo-root))))
-           (source-buf (when (and source-path (file-readable-p source-path))
-                         (find-file-noselect source-path))))
-      (arxana-docbook--ensure-two-up buf source-buf)
-      (when (and function-name source-buf)
-        (arxana-docbook--jump-to-function source-buf function-name)))))
+    (pop-to-buffer buf)))
 (defun arxana-docbook--entry-next-doc-id ()
   (let* ((doc-id arxana-docbook--entry-doc-id)
          (doc-ids (or arxana-docbook--entry-toc '()))
@@ -472,7 +496,10 @@
   (let ((entry (tabulated-list-get-id)))
     (unless entry
       (user-error "No entry at point"))
-    (arxana-docbook--render-entry entry (current-buffer) (plist-get entry :entry-id))))
+    (if (and (plist-get entry :stub-path)
+             (file-readable-p (plist-get entry :stub-path)))
+        (arxana-docbook-open-stub entry)
+      (arxana-docbook--render-entry entry (current-buffer) (plist-get entry :entry-id)))))
 (defun arxana-docbook-open-raw ()
   "Open the raw JSON log for the entry at point."
   (interactive)
@@ -482,7 +509,10 @@
     (arxana-docbook--view-raw entry)))
 (defun arxana-docbook-open-entry-object (entry)
   "Open ENTRY (plist) in a read-only buffer."
-  (arxana-docbook--render-entry entry (current-buffer) (plist-get entry :entry-id)))
+  (if (and (plist-get entry :stub-path)
+           (file-readable-p (plist-get entry :stub-path)))
+      (arxana-docbook-open-stub entry)
+    (arxana-docbook--render-entry entry (current-buffer) (plist-get entry :entry-id))))
 (defun arxana-docbook-open-entry-raw (entry)
   "Open the raw JSON backing ENTRY (plist)."
   (arxana-docbook--view-raw entry))
@@ -502,9 +532,34 @@
     (kill-new location)
     (message "Copied %s" location)))
 
+(defvar arxana-docbook-entry-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "M-n") #'arxana-docbook-next-entry)
+    (define-key map (kbd "M-p") #'arxana-docbook-prev-entry)
+    (define-key map (kbd "M-y") #'arxana-docbook-copy-location)
+    map)
+  "Keymap for `arxana-docbook-entry-mode'.")
+
 (define-minor-mode arxana-docbook-entry-mode
   "Minor mode for docbook entry buffers."
-  :keymap arxana-docbook-entry-mode-map)
+  :keymap arxana-docbook-entry-mode-map
+  (if arxana-docbook-entry-mode
+      (progn
+        (setq-local header-line-format '(:eval (arxana-docbook--entry-header-line)))
+        (let ((maps (copy-sequence minor-mode-overriding-map-alist)))
+          (setf (alist-get 'arxana-docbook-entry-mode maps)
+                arxana-docbook-entry-mode-map)
+          (setq-local minor-mode-overriding-map-alist maps))
+        (add-hook 'after-change-functions #'arxana-docbook--entry-update-header nil t)
+        (add-hook 'after-save-hook #'arxana-docbook--entry-update-header nil t)
+        (arxana-docbook--entry-update-header))
+    (remove-hook 'after-change-functions #'arxana-docbook--entry-update-header t)
+    (remove-hook 'after-save-hook #'arxana-docbook--entry-update-header t)
+    (when (assoc 'arxana-docbook-entry-mode minor-mode-overriding-map-alist)
+      (setq-local minor-mode-overriding-map-alist
+                  (assq-delete-all 'arxana-docbook-entry-mode
+                                   minor-mode-overriding-map-alist)))
+    (kill-local-variable 'header-line-format)))
 
 (define-derived-mode arxana-docbook-mode tabulated-list-mode "ArxDocBook"
   "Browser for filesystem-backed doc book entries."
@@ -524,14 +579,6 @@
     (define-key map (kbd "v") #'arxana-docbook-open-raw)
     map)
   "Keymap for `arxana-docbook-mode'.")
-(defvar arxana-docbook-entry-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "n") #'arxana-docbook-next-entry)
-    (define-key map (kbd "p") #'arxana-docbook-prev-entry)
-    (define-key map (kbd "b") #'arxana-docbook-return-to-browser)
-    (define-key map (kbd "y") #'arxana-docbook-copy-location)
-    map)
-  "Keymap for `arxana-docbook-entry-mode'.")
 (defun arxana-docbook-browse (&optional book)
   "Browse doc book entries for BOOK (default: futon4)."
   (interactive)
@@ -541,7 +588,7 @@
                         (completing-read "Doc book: " books nil t nil nil (car books)))
                    (car books))))
     (unless book
-      (user-error "No doc books found under dev/logs/books"))
+      (user-error "No doc books found (set arxana-docbook-books-root if needed)"))
     (let ((buf (get-buffer-create (format "*DocBook:%s*" book))))
       (with-current-buffer buf
         (arxana-docbook-mode)

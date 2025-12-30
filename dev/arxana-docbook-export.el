@@ -24,7 +24,7 @@
 (declare-function arxana-docbook--first-descendant-entry "arxana-docbook-ui" (book heading))
 
 (defcustom arxana-docbook-org-export-directory nil
-  "Directory for docbook Org exports (nil uses dev/logs/books/<book>/export)."
+  "Directory for docbook Org exports (nil uses docs/docbook/<book>/)."
   :type '(choice (const :tag "Auto" nil)
                  directory)
   :group 'arxana-docbook)
@@ -38,9 +38,13 @@
 (defun arxana-docbook--export-context ()
   "Return plist with :host-root and :book inferred from the current buffer file."
   (when buffer-file-name
-    (when (string-match "\\(.*\\)/dev/logs/books/\\([^/]+\\)/" buffer-file-name)
+    (cond
+     ((string-match "\\(.*\\)/\\.docbook/books/\\([^/]+\\)/" buffer-file-name)
       (list :host-root (match-string 1 buffer-file-name)
-            :book (match-string 2 buffer-file-name)))))
+            :book (match-string 2 buffer-file-name)))
+     ((string-match "\\(.*\\)/dev/logs/books/\\([^/]+\\)/" buffer-file-name)
+      (list :host-root (match-string 1 buffer-file-name)
+            :book (match-string 2 buffer-file-name))))))
 (defun arxana-docbook--resolve-include-path (path base-dir)
   "Resolve PATH for #+INCLUDE relative to BASE-DIR and known repo roots."
   (let* ((base-dir (or base-dir default-directory))
@@ -177,10 +181,10 @@ ORDER, when provided, reorders TOC headings by doc-id."
     pdf-file))
 (defun arxana-docbook--export-dir (book)
   (or arxana-docbook-org-export-directory
-      (let* ((root (arxana-docbook--locate-books-root))
-             (dir (and root (expand-file-name book root))))
+      (let* ((root (arxana-docbook--repo-root))
+             (dir (and root (expand-file-name "docs/docbook" root))))
         (when dir
-          (setq dir (expand-file-name "export" dir))
+          (setq dir (expand-file-name book dir))
           (make-directory dir t)
           dir))))
 (defun arxana-docbook--default-org-export-path (book)
