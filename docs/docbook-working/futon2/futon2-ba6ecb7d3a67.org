@@ -1,0 +1,13 @@
+#+TITLE: AIF observation layer
+:PROPERTIES:
+:DOC_ID: futon2-ba6ecb7d3a67
+:ENTRY_ID: futon2-ba6ecb7d3a67::org
+:VERSION: org
+:OUTLINE_PATH: Active Inference / AIF observation layer
+:PATH_STRING: Active Inference / AIF observation layer
+:REPLACES:
+:END:
+
+* Overview
+- (no summary yet)
+

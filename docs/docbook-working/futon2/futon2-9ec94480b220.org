@@ -1,0 +1,13 @@
+#+TITLE: AIF affect and state regulation
+:PROPERTIES:
+:DOC_ID: futon2-9ec94480b220
+:ENTRY_ID: futon2-9ec94480b220::org
+:VERSION: org
+:OUTLINE_PATH: Active Inference / AIF affect and state regulation
+:PATH_STRING: Active Inference / AIF affect and state regulation
+:REPLACES:
+:END:
+
+* Overview
+- (no summary yet)
+

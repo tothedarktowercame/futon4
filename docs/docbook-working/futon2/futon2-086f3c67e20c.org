@@ -1,0 +1,13 @@
+#+TITLE: AIF policy selection
+:PROPERTIES:
+:DOC_ID: futon2-086f3c67e20c
+:ENTRY_ID: futon2-086f3c67e20c::org
+:VERSION: org
+:OUTLINE_PATH: Active Inference / AIF policy selection
+:PATH_STRING: Active Inference / AIF policy selection
+:REPLACES:
+:END:
+
+* Overview
+- (no summary yet)
+

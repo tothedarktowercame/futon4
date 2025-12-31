@@ -1,0 +1,13 @@
+#+TITLE: Open world ingest
+:PROPERTIES:
+:DOC_ID: futon1-889495613d8b
+:ENTRY_ID: futon1-889495613d8b::org
+:VERSION: org
+:OUTLINE_PATH: Ingest / Open world ingest
+:PATH_STRING: Ingest / Open world ingest
+:REPLACES:
+:END:
+
+* Overview
+- (no summary yet)
+

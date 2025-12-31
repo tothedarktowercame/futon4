@@ -1,0 +1,13 @@
+#+TITLE: Systemd automation layer
+:PROPERTIES:
+:DOC_ID: futon0-b19b2b939d81
+:ENTRY_ID: futon0-b19b2b939d81::org
+:VERSION: org
+:OUTLINE_PATH: Vitality / Systemd automation layer
+:PATH_STRING: Vitality / Systemd automation layer
+:REPLACES:
+:END:
+
+* Overview
+- (no summary yet)
+

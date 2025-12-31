@@ -1,0 +1,13 @@
+#+TITLE: Git activity aggregator
+:PROPERTIES:
+:DOC_ID: futon0-bd95298965f1
+:ENTRY_ID: futon0-bd95298965f1::org
+:VERSION: org
+:OUTLINE_PATH: Vitality / Git activity aggregator
+:PATH_STRING: Vitality / Git activity aggregator
+:REPLACES:
+:END:
+
+* Overview
+- (no summary yet)
+

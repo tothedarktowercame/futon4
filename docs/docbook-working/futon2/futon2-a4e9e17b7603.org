@@ -1,0 +1,13 @@
+#+TITLE: AIF predictive coding
+:PROPERTIES:
+:DOC_ID: futon2-a4e9e17b7603
+:ENTRY_ID: futon2-a4e9e17b7603::org
+:VERSION: org
+:OUTLINE_PATH: Active Inference / AIF predictive coding
+:PATH_STRING: Active Inference / AIF predictive coding
+:REPLACES:
+:END:
+
+* Overview
+- (no summary yet)
+

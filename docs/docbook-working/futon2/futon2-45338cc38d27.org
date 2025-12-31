@@ -1,0 +1,13 @@
+#+TITLE: Ant grid and world physics
+:PROPERTIES:
+:DOC_ID: futon2-45338cc38d27
+:ENTRY_ID: futon2-45338cc38d27::org
+:VERSION: org
+:OUTLINE_PATH: Simulation / Ant grid and world physics
+:PATH_STRING: Simulation / Ant grid and world physics
+:REPLACES:
+:END:
+
+* Overview
+- (no summary yet)
+

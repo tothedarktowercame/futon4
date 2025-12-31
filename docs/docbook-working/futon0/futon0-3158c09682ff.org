@@ -1,0 +1,13 @@
+#+TITLE: Vitality scanner
+:PROPERTIES:
+:DOC_ID: futon0-3158c09682ff
+:ENTRY_ID: futon0-3158c09682ff::org
+:VERSION: org
+:OUTLINE_PATH: Vitality / Vitality scanner
+:PATH_STRING: Vitality / Vitality scanner
+:REPLACES:
+:END:
+
+* Overview
+- (no summary yet)
+

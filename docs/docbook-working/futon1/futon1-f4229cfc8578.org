@@ -1,0 +1,13 @@
+#+TITLE: Entity and relation model
+:PROPERTIES:
+:DOC_ID: futon1-f4229cfc8578
+:ENTRY_ID: futon1-f4229cfc8578::org
+:VERSION: org
+:OUTLINE_PATH: Storage / Entity and relation model
+:PATH_STRING: Storage / Entity and relation model
+:REPLACES:
+:END:
+
+* Overview
+- (no summary yet)
+

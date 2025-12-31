@@ -1,0 +1,13 @@
+#+TITLE: Zoom R4 sync pipeline
+:PROPERTIES:
+:DOC_ID: futon0-68713c504790
+:ENTRY_ID: futon0-68713c504790::org
+:VERSION: org
+:OUTLINE_PATH: Vitality / Zoom R4 sync pipeline
+:PATH_STRING: Vitality / Zoom R4 sync pipeline
+:REPLACES:
+:END:
+
+* Overview
+- (no summary yet)
+

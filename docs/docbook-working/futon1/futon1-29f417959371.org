@@ -1,0 +1,13 @@
+#+TITLE: Demo CLI wrapper
+:PROPERTIES:
+:DOC_ID: futon1-29f417959371
+:ENTRY_ID: futon1-29f417959371::org
+:VERSION: org
+:OUTLINE_PATH: Client / Demo CLI wrapper
+:PATH_STRING: Client / Demo CLI wrapper
+:REPLACES:
+:END:
+
+* Overview
+- (no summary yet)
+

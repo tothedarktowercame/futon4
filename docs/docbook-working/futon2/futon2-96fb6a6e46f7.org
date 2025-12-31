@@ -1,0 +1,13 @@
+#+TITLE: War scenario orchestrator
+:PROPERTIES:
+:DOC_ID: futon2-96fb6a6e46f7
+:ENTRY_ID: futon2-96fb6a6e46f7::org
+:VERSION: org
+:OUTLINE_PATH: Simulation / War scenario orchestrator
+:PATH_STRING: Simulation / War scenario orchestrator
+:REPLACES:
+:END:
+
+* Overview
+- (no summary yet)
+

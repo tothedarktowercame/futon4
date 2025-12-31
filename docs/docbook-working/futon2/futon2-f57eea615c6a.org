@@ -1,0 +1,13 @@
+#+TITLE: Swing visualizer
+:PROPERTIES:
+:DOC_ID: futon2-f57eea615c6a
+:ENTRY_ID: futon2-f57eea615c6a::org
+:VERSION: org
+:OUTLINE_PATH: UI / Swing visualizer
+:PATH_STRING: UI / Swing visualizer
+:REPLACES:
+:END:
+
+* Overview
+- (no summary yet)
+

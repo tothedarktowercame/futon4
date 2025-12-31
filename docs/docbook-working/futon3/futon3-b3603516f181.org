@@ -1,0 +1,13 @@
+#+TITLE: Pattern hints system
+:PROPERTIES:
+:DOC_ID: futon3-b3603516f181
+:ENTRY_ID: futon3-b3603516f181::org
+:VERSION: org
+:OUTLINE_PATH: Patterns / Pattern hints system
+:PATH_STRING: Patterns / Pattern hints system
+:REPLACES:
+:END:
+
+* Overview
+- (no summary yet)
+
