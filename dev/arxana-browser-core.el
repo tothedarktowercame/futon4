@@ -696,6 +696,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
        (arxana-media-play-at-point))
       ('media-misc-track
        (arxana-media-play-at-point))
+      ('media-podcast
+       (arxana-media-play-at-point))
       ((or 'media-category 'media-project)
        (let ((filter (plist-get item :media-filter)))
          (if (not filter)

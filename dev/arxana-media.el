@@ -1376,12 +1376,17 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
   "Play the current media track using `arxana-media-player-program`."
   (interactive)
   (let* ((item (arxana-browser--item-at-point)))
-    (unless (and item (memq (plist-get item :type) '(media-track media-publication-track media-misc-track)))
+    (unless (and item (memq (plist-get item :type)
+                            '(media-track media-publication-track media-misc-track media-podcast)))
       (user-error "No playable track at point"))
     (let* ((type (plist-get item :type))
            (entry (plist-get item :entry))
            (sha (and entry (plist-get entry :sha256)))
            (title (cond
+                   ((eq type 'media-podcast)
+                    (or (plist-get item :label)
+                        (and (plist-get item :path) (file-name-base (plist-get item :path)))
+                        "podcast"))
                    ((eq type 'media-publication-track)
                     (or (plist-get item :label) (and (plist-get item :path) (file-name-base (plist-get item :path))) "track"))
                    ((eq type 'media-misc-track)
@@ -1392,6 +1397,7 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
                         sha
                         "track"))))
            (path (cond
+                  ((eq type 'media-podcast) (plist-get item :path))
                   ((eq type 'media-publication-track) (plist-get item :path))
                   ((eq type 'media-misc-track) (plist-get item :path))
                   (t (arxana-media--track-play-path entry)))))
