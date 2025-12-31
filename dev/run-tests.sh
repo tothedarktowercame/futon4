@@ -20,6 +20,8 @@ TEST_FILES=(
   arxana-saving-test.el
   arxana-browse-test.el
   arxana-docbook-order-test.el
+  arxana-docbook-redirect-test.el
+  arxana-docbook-checkout-test.el
   arxana-xtdb-browse-test.el
   arxana-compat-test.el
   arxana-flexiarg-normalize-test.el
