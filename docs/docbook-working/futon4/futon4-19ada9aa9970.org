@@ -1,0 +1,34 @@
+#+TITLE: Bootstrap and build process
+:PROPERTIES:
+:DOC_ID: futon4-19ada9aa9970
+:ENTRY_ID: futon4-19ada9aa9970::org
+:VERSION: org
+:OUTLINE_PATH: Bootstrap and build process
+:PATH_STRING: Bootstrap and build process
+:REPLACES:
+:END:
+
+* Overview
+Bootstrap sets up load paths and pulls in the dev modules. The current workflow
+loads `dev/` directly rather than tangling a monolith, but the entry points keep
+legacy compatibility.
+
+* bootstrap.el and bootstrap2.el
+`dev/bootstrap.el` defines the repo root, adds `dev/` to `load-path`, checks the
+Emacs version, and loads key modules. `dev/bootstrap2.el` simply delegates to
+bootstrap.el so older callers still work.
+
+* Build commands
+`arxana-build` is an alias for `arxana-load`, which loads the dev modules and
+prints “Loaded dev/ modules”. The `C-u` prefix is accepted for compatibility but
+no longer forces a tangle in the current workflow.
+
+* Load order
+Bootstrap ensures core packages (Org, JSON, URL) are available before requiring
+Arxana modules. This keeps docbook, store, and browser functionality available
+regardless of where you run the load from.
+
+* Verifying the build
+Run `M-x arxana-load` and check for the “Loaded dev/ modules” message. If a
+module fails to load, inspect `*Messages*` for require errors and confirm your
+Emacs version meets `arxana-minimum-emacs-version`.

@@ -1,0 +1,58 @@
+#+TITLE: The nema/article/event conceptual model
+:PROPERTIES:
+:DOC_ID: futon4-c28a7b7b15e4
+:ENTRY_ID: futon4-c28a7b7b15e4::org
+:VERSION: org
+:OUTLINE_PATH: The nema/article/event conceptual model
+:PATH_STRING: The nema/article/event conceptual model
+:REPLACES:
+:END:
+
+* Overview
+The Arxana logical model starts with a single primitive: the *nema*. A nema is a
+universal node record with a stable id, labels, optional endpoints, and a
+payload. Everything else—articles, events, metadata, and plexuses—are nemas with
+conventions layered on top. This keeps the graph open‑schema while still
+allowing specialized behaviors where needed.
+
+* Articles and metadata scholia
+An article is a nema labeled `:label/article` whose payload contains the core
+text and metadata. Each article has a paired metadata scholium: a separate nema
+that caches backlinks, labels, indexes, and other derived fields. The one‑to‑one
+pairing keeps read performance fast without mixing derived state into the
+article itself.
+
+* Events as hyperedges
+Events are nemas that represent hyperedges. They carry an `:hx/type` and an
+endpoint list rather than a single src/dst pair. This enables N‑ary relations:
+provenance chains, inclusions, and annotations can connect multiple entities in
+one edge while still tagging each endpoint with a role. In practice, a single
+transclusion event might link a source article, a passage range, and a target
+article as three distinct endpoints.
+
+* Plexuses
+A plexus is a nema that names a working set or profile. It is not a “folder” so
+much as a graph‑level lens: a plexus can store configuration, membership, and
+view preferences, allowing multiple overlapping workspaces to coexist over the
+same underlying hypergraph.
+
+* Relationship between concepts
+Think of the model as a shared substrate:
+
+- Nema is the base node type.
+- Article is a labeled nema with text payload.
+- Metadata scholium is a 1–1 paired nema that indexes the article.
+- Event is a hyperedge nema with `:hx/type` and endpoint roles.
+- Plexus is a nema that groups and configures a working set.
+
+Because all of these are nemas, they can participate in the same graph queries.
+Articles can reference plexuses; events can annotate metadata scholia; plexuses
+can themselves be related by events. The model stays uniform even as the
+semantics specialize.
+
+* Examples
+- Article: `:label/article` with `:article/text` and basic metadata fields.
+- Metadata scholium: a paired nema with backlink lists and label caches.
+- Event: an inclusion hyperedge connecting a source article and a target
+  article, optionally with a passage endpoint.
+- Plexus: a nema with `:plexus/members` and view settings for a project.

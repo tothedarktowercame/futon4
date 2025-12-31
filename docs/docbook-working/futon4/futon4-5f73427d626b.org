@@ -1,0 +1,28 @@
+#+TITLE: The X-Profile header for multi-profile setups
+:PROPERTIES:
+:DOC_ID: futon4-5f73427d626b
+:ENTRY_ID: futon4-5f73427d626b::org
+:VERSION: org
+:OUTLINE_PATH: The X-Profile header for multi-profile setups
+:PATH_STRING: The X-Profile header for multi-profile setups
+:REPLACES:
+:END:
+
+* Overview
+Profiles let you separate workspaces or plexuses on the same Futon server.
+Arxana sends the active profile via the `X-Profile` HTTP header so the server
+can route reads and writes to the appropriate working set.
+
+* Configuration
+Set `arxana-store-default-profile` to the profile name you want to use. The
+header is attached by `arxana-store--default-headers` for every request once
+the value is set.
+
+* Use cases
+- Separate personal and team workspaces.
+- Maintain parallel projects on a shared Futon instance.
+- Switch between experimental and production data sets.
+
+* Switching profiles
+Update `arxana-store-default-profile` and rerun the operation. The header is
+included in subsequent requests; no restart is required.

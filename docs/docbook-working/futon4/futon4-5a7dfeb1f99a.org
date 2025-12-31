@@ -1,0 +1,23 @@
+#+TITLE: Boundary generation script
+:PROPERTIES:
+:DOC_ID: futon4-5a7dfeb1f99a
+:ENTRY_ID: futon4-5a7dfeb1f99a::org
+:VERSION: org
+:OUTLINE_PATH: Boundary generation script
+:PATH_STRING: Boundary generation script
+:REPLACES:
+:END:
+
+* Overview
+`dev/boundary-generate.clj` writes a repo-local `boundary.edn` snapshot with
+counts for lab artifacts and media ingestion state. It is a lightweight health
+check for missing evidence and outstanding work.
+
+* Inputs and outputs
+Inputs include the repo root and an optional media index path. The output is a
+single `boundary.edn` file containing counts for lab/raw, lab/stubs, lab
+ doc-drafts, and media entries that are still unpersisted.
+
+* When to run
+Run the script when you need an at-a-glance inventory of lab and media coverage,
+or when preparing a status report that needs concrete counts.

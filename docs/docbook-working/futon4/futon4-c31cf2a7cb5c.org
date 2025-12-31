@@ -1,0 +1,41 @@
+#+TITLE: Docbook browser UI
+:PROPERTIES:
+:DOC_ID: futon4-c31cf2a7cb5c
+:ENTRY_ID: futon4-c31cf2a7cb5c::org
+:VERSION: org
+:OUTLINE_PATH: Docbook browser UI
+:PATH_STRING: Docbook browser UI
+:REPLACES:
+:END:
+
+* Overview
+The docbook browser UI is the primary way to navigate generated documentation.
+It presents a book list, then a book view that splits into Contents and Recent.
+From there you can drill into headings, open entry stubs for editing, and manage
+ordering and exports.
+
+* Navigation flow
+1. Open the Arxana Browser and choose Docs.
+2. Select a book (for example, futon4).
+3. Choose Contents (outline order) or Recent (latest entries).
+4. Selecting a heading drills into its section; selecting an entry opens the
+   editable stub when available.
+
+* Entry rendering and stubs
+Entries appear in a tabulated list with title, status, and timestamps. If a
+filesystem stub exists, the browser opens that stub directly so edits happen on
+the working copy rather than a JSON snapshot.
+
+* Reordering and section drill-down
+Use M-<up>/M-<down> (or the section variants) to reorder entries in the contents
+view. The browser tracks order overrides and can sync them back to storage.
+
+* Marks, remove, delete
+The contents view supports marking items for batch operations. Marks persist
+across refresh, so you can collect headings and then remove or hard delete them
+in one action.
+
+* Export and sync
+From the docbook views you can export to Org or PDF and sync order changes to
+remote storage. The header line reflects dirty status so you can see when local
+reordering needs to be pushed.

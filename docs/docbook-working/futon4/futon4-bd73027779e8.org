@@ -1,0 +1,44 @@
+#+TITLE: Workflow - Including and transcluding text
+:PROPERTIES:
+:DOC_ID: futon4-bd73027779e8
+:ENTRY_ID: futon4-bd73027779e8::org
+:VERSION: org
+:OUTLINE_PATH: Workflow - Including and transcluding text
+:PATH_STRING: Workflow - Including and transcluding text
+:REPLACES:
+:END:
+
+* Overview
+Including and transcluding are the core Ted Nelson workflows. Inclusion copies
+text from another article; transclusion creates a stronger linkage and is meant
+for passages that should keep provenance back to the source. Both flows rely on
+registered articles and record derivation metadata so the preview system can
+highlight the result.
+
+* Step-by-step
+1. Register both source and target articles with `make-current-buffer-into-article`.
+2. In the target buffer, move point to the insertion location.
+3. Run `M-x include-article` (or `M-x transclude-article`) and supply the source
+   article name.
+4. The system checks that the source exists; for transclusion it also verifies
+   the current target article.
+5. The source text is inserted into the target buffer.
+6. Derivation metadata is recorded, and you can review it in the Scholium
+   Display via the derivation previews.
+
+* Include vs transclude
+Include is a literal insert of the source text; it does not require the target
+article to be registered. Transclude is stricter: it expects the current buffer
+to be a registered article and treats the inclusion as provenance‑sensitive.
+This distinction lets the UI surface transclusions as a stronger relationship.
+
+* Guards and missing articles
+If the named source does not exist, both commands error with a helpful message
+prompting you to register the source article first. This prevents silent “nil”
+insertions in buffers where no article is known to the system.
+
+* Derivation previews and provenance
+Once inserted, derivation previews in the Scholium Display show which passages
+were pulled in and how. Hyperedges posted to Futon encode the provenance of
+transclusions, and the highlight overlays make the linked passages visible in
+context.

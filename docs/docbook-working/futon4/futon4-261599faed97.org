@@ -1,0 +1,37 @@
+#+TITLE: Diagnostic and debugging tools
+:PROPERTIES:
+:DOC_ID: futon4-261599faed97
+:ENTRY_ID: futon4-261599faed97::org
+:VERSION: org
+:OUTLINE_PATH: Diagnostic and debugging tools
+:PATH_STRING: Diagnostic and debugging tools
+:REPLACES:
+:END:
+
+* Overview
+Arxana includes lightweight diagnostics for store failures and for inspecting
+folding behavior in flexiarg buffers. These tools are meant for quick triage
+when sync or rendering behaves unexpectedly.
+
+* Store diagnostics
+Use `M-x arxana-store-ping` to probe the Futon API. It runs a `/tail` request
+and opens `*Arxana Store Ping*`, showing sync status, base URL, timeout, proxy
+settings, the last request, last error, and the response body. This is the
+fastest way to confirm whether the HTTP bridge is working.
+
+If you want a post‑mortem without making a new HTTP call, use
+`M-x arxana-store-last-request-report`. It renders the last request/error state
+in `*Arxana Store Last Request*` so you can see what failed and why.
+
+* Fold debugging scripts
+`dev/debug-fold-output.el` and `dev/debug-fold-props.el` are small scripts for
+inspecting flexiarg folding behavior. They load flexiarg mode, prepare a sample
+flexiarg file, and print either the visible buffer snippet or the overlay
+properties after folding. Use these when metadata/context overlays don’t render
+as expected.
+
+* When to use what
+- Use the store diagnostics when Futon calls time out or return unexpected
+  data.
+- Use the fold debug scripts when flexiarg metadata or context folding appears
+  broken or inconsistent.

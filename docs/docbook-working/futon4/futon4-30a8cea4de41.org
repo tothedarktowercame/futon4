@@ -1,0 +1,34 @@
+#+TITLE: Docbook TOC system
+:PROPERTIES:
+:DOC_ID: futon4-30a8cea4de41
+:ENTRY_ID: futon4-30a8cea4de41::org
+:VERSION: org
+:OUTLINE_PATH: Docbook TOC system
+:PATH_STRING: Docbook TOC system
+:REPLACES:
+:END:
+
+* Overview
+The TOC system stores the docbook outline order as a JSON list of headings.
+This keeps ordering stable across sessions and lets the browser reapply a
+preferred order even when entries are fetched from remote storage.
+
+* What the TOC tracks
+Each toc.json entry includes doc id, title, outline path, path string, and
+level. The browser uses these fields to render the contents view and to keep
+section ordering consistent.
+
+* Ordering and top-level preferences
+`arxana-docbook--order-headings` applies an explicit order list on top of the
+raw headings. For top-level sections, the browser can apply
+`arxana-browser-docbook-top-order` so key sections stay in a preferred order.
+
+* Dirty state and sync
+When the contents view is reordered, the local order is tracked separately from
+the last synced order. The header shows a dirty indicator until
+`arxana-docbook--toc-write-order` (or the remote order endpoint) has been
+updated.
+
+* Export helpers
+`dev/docbook-toc-export.el` regenerates toc.json from an Org index file. This
+is the batch-friendly way to rebuild the TOC when headings change on disk.

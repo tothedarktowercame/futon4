@@ -1,0 +1,46 @@
+#+TITLE: What "literate" means for this codebase
+:PROPERTIES:
+:DOC_ID: futon4-70882d1cc535
+:ENTRY_ID: futon4-70882d1cc535::org
+:VERSION: org
+:OUTLINE_PATH: What "literate" means for this codebase
+:PATH_STRING: What "literate" means for this codebase
+:REPLACES:
+:END:
+
+* Overview
+Arxana’s literate stance is not Knuth‑style embedding of code inside documents.
+Instead, code and documentation live as peers, linked by explicit graph edges.
+The goal is a navigable web of code spans and doc sections, with transclusion
+used to connect them rather than to co‑locate them.
+
+* Ted Nelson vs. Knuth
+Knuth’s literate programming weaves code and prose into a single source. Arxana
+leans toward Ted Nelson’s vision: documents and code are independent but richly
+linked. The links are the story—hyperedges that point from a doc paragraph to a
+code span, and back. This preserves autonomy (docs can evolve without reshaping
+code) while still enabling precise cross‑reference.
+
+* Hyperedges and code spans
+In this model, a doc section links to a specific defun, variable, or span of
+code. That link is an explicit hyperedge, not an inline include. The current
+code→docs browser sync is a prototype of this idea: it derives links on the fly
+and highlights relevant paragraphs. The future state persists those links and
+allows bidirectional navigation without heuristics.
+
+* The heat map metaphor
+Documentation coverage is treated like a heat map: some regions of code are
+well‑documented, others are cold. The browser should help users see these gaps
+at a glance and surface the most relevant docs for the code they are reading.
+
+* AI as maintenance crew
+AI assistants are intended to help maintain freshness by detecting link drift,
+updating doc stubs, and proposing new cross‑links. The human author remains the
+source of truth, but AI can automate the tedious mapping and verification work.
+
+* Current and future states
+Today, the system is still scaffolded: some docs rely on #+INCLUDE and filesystem
+snapshots. The direction of travel is to remove embedding and replace it with
+explicit graph links and docbook entries. The end state is a bidirectional
+workspace where reading code immediately surfaces its documentation, and reading
+docs immediately reveals the code they describe.

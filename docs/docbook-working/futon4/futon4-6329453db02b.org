@@ -1,0 +1,29 @@
+#+TITLE: Remote docbook access
+:PROPERTIES:
+:DOC_ID: futon4-6329453db02b
+:ENTRY_ID: futon4-6329453db02b::org
+:VERSION: org
+:OUTLINE_PATH: Remote docbook access
+:PATH_STRING: Remote docbook access
+:REPLACES:
+:END:
+
+* Overview
+Docbook entries can come from remote storage or the local filesystem. Remote
+access uses the Futon API when sync is enabled; the filesystem is the fallback
+when remote storage is unavailable.
+
+* When remote is used
+Remote access is active when `arxana-docbook-remote-enabled` is non-nil, sync is
+enabled, and `futon4-base-url` is available. The probe helper
+`arxana-docbook--remote-available-p` checks the remote toc endpoint and records
+whether the remote store is ok, empty, or unreachable.
+
+* Fallback behavior
+If the remote probe fails, the browser falls back to filesystem entries under
+`docs/docbook-working/<book>/`. The data source label in the header line shows
+whether the view is backed by storage, filesystem, or ephemeral state.
+
+* Configuration
+Set `futon4-base-url` and enable sync to turn on remote docbook access. If you
+want to force local-only browsing, disable `arxana-docbook-remote-enabled`.

@@ -1,0 +1,42 @@
+#+TITLE: Workflow - Browsing relations
+:PROPERTIES:
+:DOC_ID: futon4-91a0eb190c64
+:ENTRY_ID: futon4-91a0eb190c64::org
+:VERSION: org
+:OUTLINE_PATH: Workflow - Browsing relations
+:PATH_STRING: Workflow - Browsing relations
+:REPLACES:
+:END:
+
+* Overview
+Relation browsing is the entry point for exploring the graph neighborhood of an
+article. The current Emacs wrapper focuses on the ego view, which shows the
+inbound and outbound edges for a named entity. Co-occur and tail views are
+available via the store helpers and XTDB browser but are not yet wrapped with
+dedicated commands in `arxana-relations.el`.
+
+* Step-by-step (ego view)
+1. Run `M-x arxana-relations-show-ego` and enter the article name.
+2. The buffer lists outgoing and incoming relations in separate sections.
+3. The header line shows the Futon id (or “unknown” if it could not resolve).
+4. Press `g` to refresh the view with the same limit and name.
+5. Press `y` to copy the Futon id to the kill ring.
+
+* Interpreting the display
+Outgoing lines show “<neighbor> via <relation-type>” for edges where the ego is
+source. Incoming lines use the same format but reflect edges where the ego is
+the target. This split makes it clear which edges you authored versus which ones
+reference you.
+
+* Co-occur and tail views
+The store helper `arxana-store-cooccur` fetches the co‑occurrence list for a
+name, and `arxana-store-tail` fetches recent relations. For a tabulated list of
+recent activity, use `M-x arxana-xtdb-browse`. A future `arxana-relations-show-`
+wrapper can present these alongside ego once the UI is expanded.
+
+* Keybindings
+The relations buffer uses `arxana-relations-buffer-mode` with these defaults:
+
+- `g` refreshes the current view.
+- `y` copies the Futon id.
+- `p` opens the provenance view (when configured).

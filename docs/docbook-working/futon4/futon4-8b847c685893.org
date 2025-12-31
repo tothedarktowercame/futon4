@@ -1,0 +1,26 @@
+#+TITLE: Snapshot scopes (all vs. latest)
+:PROPERTIES:
+:DOC_ID: futon4-8b847c685893
+:ENTRY_ID: futon4-8b847c685893::org
+:VERSION: org
+:OUTLINE_PATH: Snapshot scopes (all vs. latest)
+:PATH_STRING: Snapshot scopes (all vs. latest)
+:REPLACES:
+:END:
+
+* Overview
+Snapshots can capture either the full history or just the current state.
+Arxana exposes two scopes: `all` and `latest`.
+
+* Scope meanings
+- `all` captures the complete XTDB history for the selected data set.
+- `latest` captures only the current state, omitting historical versions.
+
+* Choosing a scope
+Use `all` when you need provenance, time travel, or full auditability. Use
+`latest` when you want a lighter snapshot for sharing or quick restores.
+
+* Prompt behavior
+When saving a snapshot, `arxana-store--snapshot-scope-prompt` asks for the scope
+and validates it against the allowed list. Invalid values are rejected with a
+clear error.

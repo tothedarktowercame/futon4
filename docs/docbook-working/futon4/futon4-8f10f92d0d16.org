@@ -1,0 +1,23 @@
+#+TITLE: Co-occurrence queries
+:PROPERTIES:
+:DOC_ID: futon4-8f10f92d0d16
+:ENTRY_ID: futon4-8f10f92d0d16::org
+:VERSION: org
+:OUTLINE_PATH: Co-occurrence queries
+:PATH_STRING: Co-occurrence queries
+:REPLACES:
+:END:
+
+* Overview
+Co-occurrence queries find entities that appear together with a given name.
+`arxana-store-cooccur` calls `/cooccur/:name` and returns rows with counts that
+rank related entities by frequency.
+
+* How counts are used
+Counts are the number of times two entities appear together in relation data.
+Higher counts suggest stronger topical proximity or repeated annotation patterns.
+
+* Practical usage
+Use co-occurrence to discover related articles, cluster themes, or validate that
+new annotations are linking the intended entities. For a UI view, pair this with
+the relations browser or XTDB browser output.

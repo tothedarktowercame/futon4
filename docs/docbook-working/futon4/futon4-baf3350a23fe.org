@@ -1,0 +1,35 @@
+#+TITLE: Workflow - Importing from Org
+:PROPERTIES:
+:DOC_ID: futon4-baf3350a23fe
+:ENTRY_ID: futon4-baf3350a23fe::org
+:VERSION: org
+:OUTLINE_PATH: Workflow - Importing from Org
+:PATH_STRING: Workflow - Importing from Org
+:REPLACES:
+:END:
+
+* Overview
+Org import is the onboarding path for existing notes. It reads `.org` files,
+creates local articles, and (when sync is enabled) registers them in Futon.
+
+* Step-by-step
+1. For a single file, run `M-x arxana-import-org-file` and select the `.org`.
+2. For a batch, run `M-x arxana-import-org-directory` and choose a directory.
+3. Use a prefix argument to enable recursive directory scanning.
+4. The importer extracts the title or uses the filename to name the article.
+5. Each article is stored locally and synced to Futon if enabled.
+
+* How names are derived
+`arxana-import--derive-name` prefers a `#+TITLE` header. If none exists, it uses
+`file-name-base` and then the full filename. This keeps the import stable even
+for minimal Org files.
+
+* Existing names
+If an article name already exists, the import will overwrite that entry in the
+local table. For safety, verify the derived names before importing large
+batches.
+
+* Verification
+Use `M-x arxana-store-ping` or the XTDB browser to confirm the imported entity
+exists. For a single article, check `/entity/<id>` where the id comes from
+`futon4--article-id-for`.

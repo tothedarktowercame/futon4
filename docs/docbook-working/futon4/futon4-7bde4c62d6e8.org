@@ -1,0 +1,40 @@
+#+TITLE: Workflow - Editing patterns
+:PROPERTIES:
+:DOC_ID: futon4-7bde4c62d6e8
+:ENTRY_ID: futon4-7bde4c62d6e8::org
+:VERSION: org
+:OUTLINE_PATH: Workflow - Editing patterns
+:PATH_STRING: Workflow - Editing patterns
+:REPLACES:
+:END:
+
+* Step-by-step
+1. In the Arxana Browser, navigate to a pattern language or collection.
+2. Press RET on a pattern to open it in an Org buffer.
+3. Edit the summary block and component sections.
+4. Press `g` to refresh from the source if you need to discard local edits.
+5. Press `C-c C-s` to save changes back to Futon (and update components).
+
+* Summary block and provenance
+Each pattern buffer includes a `#+BEGIN_SUMMARY` … `#+END_SUMMARY` section for
+the summary text. The header area also includes identifiers such as the pattern
+id, title, and order to keep provenance visible while editing. These fields are
+preserved when you save; only the summary and component bodies are updated.
+
+* What gets synced
+`arxana-browser-patterns-save` updates the pattern entity itself and then
+updates all existing component entities. New headings without a component id are
+ignored, so they won’t create new components until the ingestion pipeline
+assigns ids.
+
+* Sync behavior
+Saving requires sync to be enabled; otherwise the command errors. The sync
+process updates the pattern entity and its components, then reports how many
+components were written. For visual confirmation, use the browser status labels
+or re-open the pattern to confirm the updated text.
+
+* Testing after edits
+After saving, re-open the pattern or refresh the browser list to ensure the
+summary and components are visible. For filesystem-backed patterns, verify the
+local flexiarg file timestamps to confirm your edits are now the preferred
+source.

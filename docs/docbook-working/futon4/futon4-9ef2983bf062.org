@@ -1,0 +1,40 @@
+#+TITLE: Workflow - Exporting to Org
+:PROPERTIES:
+:DOC_ID: futon4-9ef2983bf062
+:ENTRY_ID: futon4-9ef2983bf062::org
+:VERSION: org
+:OUTLINE_PATH: Workflow - Exporting to Org
+:PATH_STRING: Workflow - Exporting to Org
+:REPLACES:
+:END:
+
+* Overview
+Org export writes the current article table to a portable directory of `.org`
+files plus a manifest. This is the recommended way to share or archive Arxana
+content outside of Futon/XTDB.
+
+* Step-by-step
+1. Run `M-x arxana-export-org-directory`.
+2. Choose a destination directory.
+3. If sync is enabled, select a snapshot scope and optional label.
+4. The exporter writes one `.org` file per article and a `MANIFEST.org` summary.
+
+* Export structure
+The destination directory contains:
+
+- One `.org` file per article, named from a sanitized article title.
+- `MANIFEST.org`, which records the snapshot info and an index of articles.
+
+Each article file starts with a `#+TITLE` header followed by the body text.
+
+* Manifest contents
+`MANIFEST.org` includes:
+
+- Snapshot metadata (ID and scope, when available).
+- A table listing article name, file, Futon id, labels, and links.
+- A label index section for quick browsing of tags and relationships.
+
+* Snapshots and verification
+When Futon sync is enabled, the exporter can request a snapshot via
+`arxana-store-save-snapshot` before writing files. This lets you tie the export
+back to a specific XTDB snapshot id for reproducibility.

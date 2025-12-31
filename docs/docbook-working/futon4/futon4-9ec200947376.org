@@ -1,0 +1,24 @@
+#+TITLE: Entity history queries
+:PROPERTIES:
+:DOC_ID: futon4-9ec200947376
+:ENTRY_ID: futon4-9ec200947376::org
+:VERSION: org
+:OUTLINE_PATH: Entity history queries
+:PATH_STRING: Entity history queries
+:REPLACES:
+:END:
+
+* Overview
+Entity history queries expose XTDB time-travel for a specific entity. The
+command `arxana-store-entity-history` hits `/entities/history/:id` and returns
+prior versions of the entity record.
+
+* Limit and usage
+The helper accepts a limit argument to control how many historical versions are
+returned. Use it when you want a concise audit trail or a deeper provenance
+review.
+
+* Use cases
+- Debugging unexpected changes to entity metadata.
+- Auditing who or what updated a record.
+- Reconstructing provenance for derived entities.

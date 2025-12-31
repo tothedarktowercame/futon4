@@ -1,0 +1,38 @@
+#+TITLE: Pattern library ingestion
+:PROPERTIES:
+:DOC_ID: futon4-f1c8c427256a
+:ENTRY_ID: futon4-f1c8c427256a::org
+:VERSION: org
+:OUTLINE_PATH: Pattern library ingestion
+:PATH_STRING: Pattern library ingestion
+:REPLACES:
+:END:
+
+* Overview
+Ingestion converts flexiarg files into Futon entities. Each pattern becomes a
+pattern entity plus component entities, and a pattern-language entity can be
+created to represent the ordered collection. Relations wire languages to
+patterns and patterns to components so `/ego` queries can browse them.
+
+* Core command
+`arxana-patterns-ingest-directory` is the entry point for ingesting a directory
+of `.flexiarg` files. It parses headers, creates or updates the pattern and
+component entities, and emits relations based on
+`arxana-patterns-ingest-language-relation` and related settings.
+
+* Language registration
+When a language is ingested, the system creates a language entity and links it
+into a catalog (`pattern-language/catalog`). The language status and source are
+recorded based on whether the directory is under futon3/library or an ad-hoc
+location.
+
+* Ego lookups and consistency
+After ingest, `/ego` queries can treat the language entity as a list of
+member patterns, preserving ordering and making the browser view consistent.
+The helper `arxana-patterns-list-languages` reads these language rows to build
+the language list.
+
+* Language rows
+Language rows are plists that include the language name, status, source, and
+ordered pattern ids. These rows drive the pattern browser and ensure the UI
+reflects the ingest order.

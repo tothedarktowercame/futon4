@@ -1,0 +1,34 @@
+#+TITLE: Test support helpers
+:PROPERTIES:
+:DOC_ID: futon4-2933bb1c3529
+:ENTRY_ID: futon4-2933bb1c3529::org
+:VERSION: org
+:OUTLINE_PATH: Test support helpers
+:PATH_STRING: Test support helpers
+:REPLACES:
+:END:
+
+* Overview
+The test support helpers make it easy to run ERT suites from any working
+directory and to load the legacy `arxana-tangled.el` bundle when present. This
+keeps the test harness compatible with both the historic monolith and the newer
+`dev/` modules.
+
+* Tangled bundle loading
+`arxana-test--locate-tangled` searches for `arxana-tangled.el` relative to the
+repo root, and `arxana-test--ensure-tangled-loaded` loads it on demand. If the
+bundle is missing, the helper logs a message and continues so tests can still
+run against the modular code in `dev/`.
+
+* Running tests
+Use `dev/run-tests.sh` to run the full ERT suite. It boots Emacs in batch mode,
+loads `dev/bootstrap.el`, and executes each test file under `test/`. The script
+creates an isolated HOME directory and disables native compilation to keep runs
+repeatable.
+
+* Writing new tests
+New tests should live under `test/` and use `dev/bootstrap.el` for setup. If
+your test depends on legacy definitions, call the test support helpers to ensure
+`arxana-tangled.el` is loaded. If your test needs to avoid live Futon calls,
+stub the HTTP helpers in `arxana-store` and assert on `arxana-store-last-request`
+instead of hitting the network.

@@ -1,0 +1,37 @@
+#+TITLE: Relation types and their meanings
+:PROPERTIES:
+:DOC_ID: futon4-a0e98c2dd536
+:ENTRY_ID: futon4-a0e98c2dd536::org
+:VERSION: org
+:OUTLINE_PATH: Relation types and their meanings
+:PATH_STRING: Relation types and their meanings
+:REPLACES:
+:END:
+
+* Overview
+Relation types describe how two entities are connected. Simple relations use a
+single `type` field, while hyperedges use `:hx/type` plus endpoint roles. The
+naming conventions below are the current defaults.
+
+* Simple relations
+- `arxana/scholium` is used for scholia relations between a source and target
+  article. These appear in `/ego` and `/cooccur` like any other edge.
+
+* Hyperedge types
+Hyperedges carry `:hx/type` values such as inclusion or transclusion. These are
+used when the relation needs more than two endpoints or role annotations (for
+example, a passage span).
+
+* Derivation markers
+Derivation previews classify ranges as `:inclusion`, `:transclusion`, or
+`:identification` based on scholia tags in the rendered buffer. These markers
+control highlighting and labeling in the UI.
+
+* Query visibility
+Simple relations appear directly in relation queries. Hyperedges appear as event
+entities and are surfaced through their endpoint roles and `:hx/type` values.
+
+* Custom relation types
+You can introduce new relation labels or hyperedge types by passing a custom
+`type` or `:hx/type` when creating relations. Keep naming consistent and document
+new types in the docbook model descriptors.

@@ -1,0 +1,47 @@
+#+TITLE: Media library overview
+:PROPERTIES:
+:DOC_ID: futon4-7775e2ac0052
+:ENTRY_ID: futon4-7775e2ac0052::org
+:VERSION: org
+:OUTLINE_PATH: Media library overview
+:PATH_STRING: Media library overview
+:REPLACES:
+:END:
+
+* Overview
+The media library manages audio tracks, projects, publications, and podcasts
+inside Arxana. It integrates filesystem catalogs with Futon metadata so you can
+browse recordings, stage EPs, edit lyrics, and control playback from the browser
+UI.
+
+* Directory structure
+The library expects a Zoom‑style catalog plus working directories:
+
+- `arxana-media-zoom-root` and `arxana-media-index-path` point to recording
+  catalogs.
+- `arxana-media-publications-root` stores published EPs.
+- `arxana-media-ep-staging-root` is a staging area before publication.
+- `arxana-media-misc-root` holds misc audio folders.
+- `arxana-media-podcast-roots` enumerate podcast output trees.
+
+* Track metadata and projects
+Tracks are normalized into entries with title, status, sha256, and derived
+project labels. Status markers and publication URLs are stored in metadata
+files (e.g., `publication.json`) and are surfaced in the browser list.
+
+* Publications and EP staging
+The EP workflow splits browsing into “Publications” and “EP staging.” Selecting
+an EP shows its tracks; you can retitle, stage, and publish via browser commands.
+This lets you move from raw recordings to curated releases without leaving the
+UI.
+
+* Playback and controls
+Playback routes through an external player defined by
+`arxana-media-player-program`. The browser maps keys for play/stop, seek, pause,
+and autoplay next. Playback queues are built from the current view, so you can
+play through a project or folder sequentially.
+
+* Marks and batch operations
+The browser supports marking tracks for batch actions: publish, stage to EP,
+set status, or delete. Marks are scoped to the current view, and the header line
+reflects the active filter so you can keep track of what the batch applies to.

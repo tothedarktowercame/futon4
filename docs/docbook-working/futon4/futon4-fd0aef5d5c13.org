@@ -1,0 +1,26 @@
+#+TITLE: Creating scholia about text regions
+:PROPERTIES:
+:DOC_ID: futon4-fd0aef5d5c13
+:ENTRY_ID: futon4-fd0aef5d5c13::org
+:VERSION: org
+:OUTLINE_PATH: Creating scholia about text regions
+:PATH_STRING: Creating scholia about text regions
+:REPLACES:
+:END:
+
+* Overview
+Region scholia attach commentary to a specific span of text instead of the
+entire article. This is the precise form of annotation used by transclusion and
+passage-level discussion.
+
+* How to create a region scholium
+1. Select a region in the current article buffer.
+2. Run `M-x arxana-scholium-compose-from-region`.
+3. The helper calls `make-scholium-about-part-of-current-article` to capture the
+   bounds and open the scholium buffer.
+4. Enter the scholium text and publish with `C-c C-c`.
+
+* What gets recorded
+The region bounds are stored in the scholium “about” payload. When synced, the
+resulting hyperedge includes a passage endpoint so provenance can point back to
+that exact span, not just the whole article.

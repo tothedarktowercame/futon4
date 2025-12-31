@@ -1,0 +1,29 @@
+#+TITLE: Browser marks and selection system
+:PROPERTIES:
+:DOC_ID: futon4-c83863b33d29
+:ENTRY_ID: futon4-c83863b33d29::org
+:VERSION: org
+:OUTLINE_PATH: Browser marks and selection system
+:PATH_STRING: Browser marks and selection system
+:REPLACES:
+:END:
+
+* Overview
+Marks let you stage batch operations in the Arxana Browser. Each view maintains
+a hash table of marked items keyed by a stable identifier (for example a track
+sha or doc id), so marks survive refreshes and pagination.
+
+* Mark workflow
+- Press `m` to toggle a mark on the current row.
+- Press `U` to clear all marks in the current view.
+- Use batch commands (publish, delete, remove) to act on the marked set.
+
+* Context-aware filtering
+`arxana-browser-marks-items-in-context` filters the current item list against
+the mark table, so only items in the active view are considered. This prevents
+marks from bleeding across unrelated views.
+
+* Batch operations
+Batch operations call the helper with a view-specific key function (e.g., track
+sha or doc id). This keeps the mark semantics consistent while allowing each
+view to define its own notion of identity.

@@ -1,0 +1,29 @@
+#+TITLE: Documentation backfill scripts
+:PROPERTIES:
+:DOC_ID: futon4-4299f76f30d1
+:ENTRY_ID: futon4-4299f76f30d1::org
+:VERSION: org
+:OUTLINE_PATH: Documentation backfill scripts
+:PATH_STRING: Documentation backfill scripts
+:REPLACES:
+:END:
+
+* Overview
+The def-doc scripts generate and backfill documentation for existing code.
+They are used to populate docbook entries for `dev/*.el` files and to repair
+missing def summaries in older entries.
+
+* Summarization flow
+`dev/def-doc-summarize.clj` walks the dev tree, sends file contents to the LLM
+prompt, and writes XTDB-ready JSON entries plus a generated toc.json. It records
+per-file summaries and def bullet lists under `dev/logs/books/<book>/raw`.
+
+* Backfill flow
+`dev/def-doc-backfill.clj` reads existing docbook JSON entries and populates
+`doc/defs` and `doc/def-count` by parsing the summary bullet format. This is
+useful when earlier runs stored only the text summary.
+
+* When to use them
+Run summarization when you want a fresh baseline for under-documented modules.
+Run backfill when you need structured def metadata but do not want to regenerate
+full summaries.
