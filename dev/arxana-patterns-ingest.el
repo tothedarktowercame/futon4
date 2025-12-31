@@ -154,6 +154,66 @@ When EXPLICIT is non-nil, return it; otherwise derive from DIRECTORY."
         "component"
       trimmed)))
 
+(defun arxana-patterns-ingest--parse-sigil-token (token)
+  "Return plist for TOKEN formatted as EMOJI/HANZI, or nil when invalid."
+  (let* ((raw (string-trim token))
+         (parts (split-string raw "/" t "[[:space:]]+")))
+    (when (>= (length parts) 1)
+      (let ((emoji (string-trim (nth 0 parts)))
+            (hanzi (when (> (length parts) 1)
+                     (string-trim (nth 1 parts)))))
+        (when (and (not (string-empty-p emoji))
+                   (or (null hanzi) (not (string-empty-p hanzi))))
+          (list :emoji emoji :hanzi hanzi))))))
+
+(defun arxana-patterns-ingest--parse-sigils (value)
+  "Parse VALUE into a list of sigil plists.
+VALUE may be a string like \"[🐜/基 ⚙️/形]\" or \"🐜/基 ⚙️/形\"."
+  (when (and value (stringp value))
+    (let* ((trimmed (string-trim value))
+           (stripped (replace-regexp-in-string
+                      "\\`\\[\\|\\]\\'" "" trimmed))
+           (tokens (split-string stripped "[[:space:]]+" t)))
+      (delq nil (mapcar #'arxana-patterns-ingest--parse-sigil-token tokens)))))
+
+(defun arxana-patterns-ingest--sigil-name (sigil)
+  (let ((emoji (plist-get sigil :emoji))
+        (hanzi (plist-get sigil :hanzi)))
+    (concat (or emoji "?")
+            (when hanzi
+              (concat " / " hanzi)))))
+
+(defun arxana-patterns-ingest--ensure-sigil (sigil)
+  (let* ((name (arxana-patterns-ingest--sigil-name sigil))
+         (external (format "%s|%s"
+                           (or (plist-get sigil :emoji) "?")
+                           (or (plist-get sigil :hanzi) "?")))
+         (spec (arxana-patterns-ingest--build-spec
+                :name name
+                :type "sigil"
+                :external-id external
+                :source "futon3/sigil"))
+         (_ (arxana-patterns-ingest--log-entity "ensure-sigil" spec))
+         (response (apply #'arxana-store-ensure-entity spec))
+         (id (or (arxana-patterns-ingest--extract-id response)
+                 (arxana-patterns-ingest--lookup-id name))))
+    (list :id id :name name)))
+
+(defun arxana-patterns-ingest--ensure-sigil-links (pattern-name pattern-id sigils)
+  (when (and pattern-id (seq sigils))
+    (let ((existing (arxana-patterns-ingest--existing-targets
+                     pattern-name ":pattern/has-sigil")))
+      (dolist (sigil sigils)
+        (when (and (plist-get sigil :emoji)
+                   (not (string-empty-p (plist-get sigil :emoji))))
+          (let* ((sig-entity (arxana-patterns-ingest--ensure-sigil sigil))
+                 (sig-id (plist-get sig-entity :id)))
+            (when (and sig-id (not (gethash sig-id existing)))
+              (arxana-store-create-relation :src pattern-id
+                                            :dst sig-id
+                                            :label ":pattern/has-sigil")
+              (puthash sig-id t existing))))))))
+
 (defun arxana-patterns-ingest--extract-id (node)
   "Recursively locate an :id/:entity/id entry inside NODE."
   (cond
@@ -400,10 +460,12 @@ When EXPLICIT is non-nil, return it; otherwise derive from DIRECTORY."
         (unless (and name (not (string-empty-p name)))
           (user-error "Missing @arg/@flexiarg in %s" path))
         (let* ((title (plist-get meta :title))
+               (sigils (arxana-patterns-ingest--parse-sigils (plist-get meta :sigils)))
                (ordered (nreverse sections))
                (first (car ordered)))
           (list :name name
                 :title title
+                :sigils sigils
                 :summary (or (plist-get first :text) "")
                 :components ordered
                 :meta meta))))))
@@ -421,6 +483,10 @@ When EXPLICIT is non-nil, return it; otherwise derive from DIRECTORY."
          (response (apply #'arxana-store-ensure-entity spec))
          (id (or (arxana-patterns-ingest--extract-id response)
                  (arxana-patterns-ingest--lookup-id (plist-get pattern :name)))))
+    (arxana-patterns-ingest--ensure-sigil-links
+     (plist-get pattern :name)
+     id
+     (plist-get pattern :sigils))
     id))
 
 (defun arxana-patterns-ingest--ensure-component (pattern-id pattern-name component index existing)

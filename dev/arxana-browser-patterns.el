@@ -1062,6 +1062,45 @@ use that entry; otherwise prompt for a directory."
       (when (re-search-forward rx nil t)
         (string-trim (match-string 1))))))
 
+(defun arxana-browser-patterns--sigil-key (sigil)
+  (format "%s|%s"
+          (or (plist-get sigil :emoji) "")
+          (or (plist-get sigil :hanzi) "")))
+
+(defun arxana-browser-patterns--dedupe-sigils (sigils)
+  (let ((seen (make-hash-table :test 'equal))
+        (results nil))
+    (dolist (sigil sigils)
+      (let ((key (arxana-browser-patterns--sigil-key sigil)))
+        (unless (gethash key seen)
+          (puthash key t seen)
+          (push sigil results))))
+    (nreverse results)))
+
+(defun arxana-browser-patterns--parse-sigils-from-header ()
+  (let ((fields (delq nil (list (arxana-browser-patterns--read-header-field "PATTERN-TITLE")
+                                (arxana-browser-patterns--read-header-field "TITLE"))))
+        (sigils nil))
+    (dolist (field fields)
+      (let ((start 0))
+        (while (string-match "\\[[^][]+\\]" field start)
+          (setq sigils
+                (nconc sigils
+                       (arxana-patterns-ingest--parse-sigils (match-string 0 field))))
+          (setq start (match-end 0)))))
+    (let ((deduped (arxana-browser-patterns--dedupe-sigils sigils)))
+      (unless (seq-empty-p deduped)
+        deduped))))
+
+(defun arxana-browser-patterns--pattern-sigils (pattern-name)
+  (let* ((file (arxana-browser-patterns--pattern-file pattern-name))
+         (data (and file
+                    (file-exists-p file)
+                    (ignore-errors (arxana-patterns-ingest--parse-flexiarg file))))
+         (sigils (and data (plist-get data :sigils))))
+    (or sigils
+        (arxana-browser-patterns--parse-sigils-from-header))))
+
 (defun arxana-browser-patterns--component-name-info (name)
   (if (and name (string-match "/\\([0-9]+\\)-\\([^/]+\\)$" name))
       (list :order (string-to-number (match-string 1 name))
@@ -1345,11 +1384,16 @@ are ignored for now."
            (pattern-title (arxana-browser-patterns--read-header-field "PATTERN-TITLE"))
            (summary (arxana-browser-patterns--extract-summary))
            (components (arxana-browser-patterns--collect-components)))
-      (arxana-store-ensure-entity :id pattern-id
-                                  :name pattern-name
-                                  :type "pattern/library"
-                                  :source summary
-                                  :external-id pattern-title)
+      (let* ((response (arxana-store-ensure-entity :id pattern-id
+                                                   :name pattern-name
+                                                   :type "pattern/library"
+                                                   :source summary
+                                                   :external-id pattern-title))
+             (resolved-id (or pattern-id
+                              (arxana-patterns-ingest--extract-id response))))
+        (setq pattern-id resolved-id)
+        (let ((sigils (arxana-browser-patterns--pattern-sigils pattern-name)))
+          (arxana-patterns-ingest--ensure-sigil-links pattern-name pattern-id sigils)))
       (dolist (component components)
         (let ((cid (plist-get component :id))
               (cname (plist-get component :name))
