@@ -1,0 +1,35 @@
+#+TITLE: Inclusion / derivation UX
+:PROPERTIES:
+:DOC_ID: futon4-69916e2600e5
+:ENTRY_ID: futon4-69916e2600e5::org
+:VERSION: org
+:OUTLINE_PATH: Inclusion / derivation UX
+:PATH_STRING: Inclusion / derivation UX
+:REPLACES: 
+:END:
+
+* Context
+This module is a small guardrail for include and transclude workflows. The
+problem it solves is silent failure: if you call `include-article` or
+`transclude-article` with an article name that has not been registered, classic
+behavior can end up inserting `nil` or doing nothing without explanation. The
+guards force a clear, actionable error instead of a confusing empty insert.
+
+The core helper is `arxana-inclusion--require-article`. It calls a lookup
+function (typically `get-article`) and raises a `user-error` if the article is
+missing. The error message tells you exactly what to do: go to the source buffer
+and run `make-current-buffer-into-article` to register it. This is the main
+user-facing improvement.
+
+`include-article` and `transclude-article` are both defined here as fallbacks
+when the canonical definitions are not available. They are similar but not
+identical. `include-article` inserts the plain text of the named article into
+the current buffer. `transclude-article` also verifies the *target* article (the
+buffer you are in) has been registered, so cross-article inclusion remains
+consistent and traceable.
+
+When `arxana-tangled` is loaded, the module uses advice-like wrapping: it captures
+the existing function definition and rebinds it to a guarded wrapper. This lets
+the guard apply even when a different implementation is already present, without
+changing that implementation. The result is a smoother UX: missing registration
+is caught early, with a message that tells you how to fix it.
