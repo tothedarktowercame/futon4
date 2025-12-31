@@ -9,5 +9,16 @@
 :END:
 
 * Overview
-- (no summary yet)
+`apps/demo` is a minimal REPL-like shell around the client session runner.
+It is the fastest way to smoke-test the stack locally without standing up
+the HTTP API server.
 
+* Usage
+From the repo root run `clojure -M:run-m` or `bb demo`. The CLI accepts free
+text turns plus the same slash/bang commands as the API, and it prints EDN
+summaries plus the focus header to stdout.
+
+* Role
+The demo wrapper is intentionally thin: it delegates to `apps/client` for
+ingest, graph updates, and focus header logic, so the CLI stays deterministic
+with the API and tests.

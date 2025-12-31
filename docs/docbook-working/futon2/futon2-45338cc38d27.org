@@ -9,5 +9,11 @@
 :END:
 
 * Overview
-- (no summary yet)
+The grid world lives in `ants.war`. It encodes the Rich Hickey ruleset plus
+Futon2 extensions: food placement, pheromone evaporation, movement, combat,
+and carrying logic.
 
+* World state
+The world tracks hive positions, food caps, pheromone trails, and fallen ants
+so the HUD and visualizer can render consistent snapshots. Physics updates
+are deterministic given the same initial config and random seed.

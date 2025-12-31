@@ -9,5 +9,17 @@
 :END:
 
 * Overview
-- (no summary yet)
+`apps/open-world-ingest` is a standalone CLI that streams arbitrary text into
+Futon1 using the CoreNLP-backed pipeline. It is designed for large batch
+imports where the input is not already structured.
 
+* Pipeline behavior
+The ingest pipeline extracts entities, mentions, and relations, writes them
+into XTDB, and registers relation types when OpenIE can derive a usable
+predicate. When the predicate cannot be resolved it falls back to the
+generic `:links-to` edge.
+
+* Type registry integration
+Unrecognized entity types are queued in the model registry so archivists can
+decide whether to formalize them. This keeps open-world ingestion flexible
+without breaking the invariants enforced by the registry.

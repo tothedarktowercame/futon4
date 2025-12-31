@@ -9,5 +9,11 @@
 :END:
 
 * Overview
-- (no summary yet)
+`futon3.tatami-store` is a local EDN and JSONL logger for Tatami events. It
+keeps configurable log paths (`resources/tatami-events.edn` and
+`resources/tatami/logs/sessions.jsonl`) and appends events on every log call.
 
+* Operations
+The store exposes `append`, `read`, and `reset` helpers plus setters for the
+log paths. A TODO marker notes the planned Futon1 integration once the
+persistence adapter is ready.

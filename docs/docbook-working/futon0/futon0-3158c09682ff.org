@@ -9,5 +9,23 @@
 :END:
 
 * Overview
-- (no summary yet)
+The vitality scanner is a Clojure helper (`scripts/futon0/vitality/scanner.clj`)
+that summarizes recent filesystem activity and Tatami gaps for the Stack HUD.
+It is a lightweight "negative space" probe: it does not ingest content, it
+counts what changed in the last lookback window and reports missing activity.
 
+* Inputs and configuration
+The scanner reads `~/code/storage/futon0/vitality/vitality_scanner.json`, which
+lists filesystem roots and optional Tatami export locations to watch. Each
+entry can include `import_index` and `import_limit` so the report can show how
+many assets were imported even when the drive is offline.
+
+* Output and HUD integration
+Runs write `~/code/storage/futon0/vitality/latest_scan.json` by default. Futon3
+reads that file (along with git summary and boundary data) to populate the
+Stack HUD vitality rows and Tatami gap warnings.
+
+* Automation
+The `systemd/user-vitality-scanner.service` and `.timer` units run the scanner
+hourly and publish straight into `../futon3/resources/vitality/latest_scan.json`.
+Enable the optional path unit to trigger scans on repository changes.

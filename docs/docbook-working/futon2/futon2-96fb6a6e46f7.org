@@ -9,5 +9,16 @@
 :END:
 
 * Overview
-- (no summary yet)
+Scenario orchestration lives in `ants.war/run` and `ants.war/simulate`. These
+helpers build the initial world, spawn hives, and run the tick loop until a
+termination condition is reached.
 
+* Termination and reporting
+The loop stops on starvation, total ant death, or a configured tick limit.
+Each tick can emit HUD lines, and the final summary includes scores and
+reserve levels for both factions.
+
+* Configuration
+`ants.war/default-config` exposes grid size, ants-per-side, hunger tuning,
+and tick count. CLI aliases (`clj -M:run`, `clj -M:viz`) simply override these
+config keys.

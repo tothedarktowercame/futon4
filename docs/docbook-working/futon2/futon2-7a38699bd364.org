@@ -9,5 +9,11 @@
 :END:
 
 * Overview
-- (no summary yet)
+The trace analyzer tooling captures deterministic snapshots of the AIF
+micro-step loop. Run `clj -M -m tools.trace-tick` to write
+`doc/trace/single_tick.edn` plus a small SVG plot of the trace evolution.
 
+* Goldens
+`tools.microtrace-goldens` refreshes the fixture at
+`test/resources/goldens/microtraces.edn`, locking the predictive-coding
+dynamics for regression tests.

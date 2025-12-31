@@ -9,5 +9,16 @@
 :END:
 
 * Overview
-- (no summary yet)
+`apps/nlp-interface` provides the deterministic NLP stack shared by every
+Futon1 entry point. It combines tokenization, NER/POS tagging, a gazetteer,
+and pattern recognition to produce stable, testable extracts.
 
+* Outputs
+The pipeline yields normalized token and mention maps plus relation
+candidates that feed the ingest pipeline. Pronouns such as "I" and "you" are
+intentionally ignored unless later resolved by a dedicated pass.
+
+* Determinism
+The interface is designed to be repeatable: the same input text should
+always emit the same entities and relations so downstream focus headers and
+XTDB snapshots remain stable.

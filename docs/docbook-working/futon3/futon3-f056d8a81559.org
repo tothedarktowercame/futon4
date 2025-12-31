@@ -9,5 +9,12 @@
 :END:
 
 * Overview
-- (no summary yet)
+`f2.ui` exposes JSON endpoints for monitoring and Tatami operations. It wraps
+transport and Tatami helpers in simple Ring handlers and returns JSON
+responses for the browser UI and tools.
 
+* Routes
+GET endpoints include `/musn/clients`, `/musn/sessions`, `/musn/practices`,
+and `/musn/tatami/status`. POST endpoints include
+`/musn/tatami/start|log|close|select`, `/musn/hints`, `/musn/cues`, and
+`/musn/export`.

@@ -9,5 +9,11 @@
 :END:
 
 * Overview
-- (no summary yet)
+`futon3.tatami` manages interactive Tatami sessions. It starts sessions,
+logs events, selects targets, and closes sessions while enforcing that a
+session is active before logging.
 
+* Integration
+The module delegates event normalization to `futon3.tatami-schema` and
+persists entries via `futon3.tatami-store`. UI endpoints call these helpers
+directly so the API stays thin.

@@ -9,5 +9,23 @@
 :END:
 
 * Overview
-- (no summary yet)
+The API server is the supported integration surface for Futon1. It exposes
+deterministic ingest and query endpoints over HTTP so higher futons can rely
+on stable storage without embedding the CLI or session runner directly.
 
+* Startup and configuration
+Launch from the repo root with `clojure -M:api`, or from `apps/api` with
+`clojure -M:server`. Set `BASIC_CHAT_DATA_DIR` and optional
+`BASIC_CHAT_XTDB_*` overrides so the server points at the correct XTDB store.
+
+* Core endpoints
+The API accepts turns at `/api/alpha/turns`, exposes focus state via
+`/api/alpha/focus-header`, and serves model metadata at
+`/api/alpha/meta/model/*`. Docbook ingest uses
+`/api/alpha/docs/<book>/entry` and `/api/alpha/docs/<book>/entries` for batch
+updates.
+
+* Role in the stack
+External clients should talk to the API rather than the demo CLI. The API
+calls the same session pipeline and focus header logic as the CLI, so the
+results are deterministic across transports.

@@ -9,5 +9,10 @@
 :END:
 
 * Overview
-- (no summary yet)
+`f2.repl` provides SAFE and ADMIN evaluators for MUSN. SAFE uses SCI with a
+small allowlist, while ADMIN is token-gated and permits full eval.
 
+* DSL surface
+SAFE mode exposes a compact `musn.api` DSL (clients, history, links, now,
+check, etc.). Both modes enforce limits on code size, result size, and CPU
+time to keep the transport safe.

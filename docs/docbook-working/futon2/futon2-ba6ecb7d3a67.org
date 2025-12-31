@@ -9,5 +9,11 @@
 :END:
 
 * Overview
-- (no summary yet)
+Observation lives in `ants.aif.observe/g-observe`. It gathers local evidence
+from the grid (food, pheromone, proximity, trace signals) and normalizes the
+channels into a stable evidence vector.
 
+* ABI and normalization
+The sense vector ordering is a stable ABI consumed by the rest of the AIF
+stack. Inputs are normalized to `[0,1]` using max caps and epsilon thresholds
+so agents remain comparable across grid sizes.

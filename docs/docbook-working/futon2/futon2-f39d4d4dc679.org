@@ -9,5 +9,10 @@
 :END:
 
 * Overview
-- (no summary yet)
+`ants.bench` defines the benchmarking harness used by `clj -M:bench`. It
+executes preconfigured scenarios and writes `out/bench.csv` with scores,
+durations, and score deltas.
 
+* Extending
+Edit `ants.bench/scenarios` to add new grid sizes or parameter sweeps, then
+rerun the benchmark alias to regenerate the CSV.

@@ -9,5 +9,11 @@
 :END:
 
 * Overview
-- (no summary yet)
+The Swing visualizer (`ants.visual`) animates the war simulation in a window
+with color-coded agents and resources (AIF ants in red, classic in charcoal,
+food in orange, pheromone in green).
 
+* Controls
+`clj -M:viz` launches the UI with configurable frame delay and optional log
+cadence. The non-blocking API returns the frame and world atom so you can
+inspect state while the animation runs.

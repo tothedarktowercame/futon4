@@ -9,5 +9,15 @@
 :END:
 
 * Overview
-- (no summary yet)
+Predictive coding lives in `ants.aif.perceive/perceive`. It runs a short
+sequence of micro-steps that update the belief state (`mu`, `prec`) to reduce
+prediction error against the current observation.
 
+* Micro-step trace
+Each micro-step records `:tau`, `:h`, and `:error` snapshots. The full trace
+is returned alongside free energy summaries and is used by the trace
+analyzer tools and golden tests.
+
+* Outputs
+The perceive step returns updated beliefs, accumulated errors, a free-energy
+estimate, and the trace vector for downstream inspection.

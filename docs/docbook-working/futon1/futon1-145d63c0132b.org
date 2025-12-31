@@ -9,5 +9,20 @@
 :END:
 
 * Overview
-- (no summary yet)
+`apps/client` is the deterministic session runner that drives the ingest
+pipeline, slash/bang commands, and focus header rendering. The demo CLI and
+API both invoke this layer so behavior stays consistent across transports.
 
+* Command surface
+Interactive sessions accept slash commands (`/tail`, `/me`, `/types`) and
+bang commands (`!entity`, `!rel`, `!links`). These commands feed the same
+graph mutation code path used by bulk ingest.
+
+* Persistence hooks
+On boot the session hydrates from XTDB (or the legacy snapshot/events log
+when XTDB is disabled). Updates are mirrored into XTDB via the store manager
+so the in-memory graph and the persistent store remain in sync.
+
+* Determinism tests
+The `apps/client/test/client/session_test.clj` suite compares focus headers
+and graph summaries against the baseline snapshot to ensure reproducibility.

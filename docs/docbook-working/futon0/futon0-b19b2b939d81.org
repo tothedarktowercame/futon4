@@ -9,5 +9,22 @@
 :END:
 
 * Overview
-- (no summary yet)
+Futon0 ships user-scoped systemd unit files that keep core automation tasks
+running without manual scripts. They orchestrate recorder ingest, git
+vitality refreshes, filesystem scanning, and negative space reminders.
 
+* Zoom R4 ingest units
+`zoom-mount.path` watches the recorder UUID, `zoom-mount.service` mounts the
+card and ensures a stable `/media/joe/R4_SD` path, and `zoom-sync.service`
+runs a single ingest pass before unmounting the card. This prevents repeat
+runs until the card is replugged.
+
+* Vitality and git timers
+`user-git-vitality.timer` runs `scripts/git_vitality_sync.sh` hourly so the
+git activity HUD feed stays fresh. `user-vitality-scanner.timer` runs the
+filesystem scanner and publishes `latest_scan.json` for Futon3.
+
+* Negative space timers
+Optional `negative-*` timers fire reminders for Tai Chi and curfew windows.
+These call `scripts/negative_space_notify.py` and can be enabled or disabled
+independently.

@@ -9,5 +9,25 @@
 :END:
 
 * Overview
-- (no summary yet)
+`scripts/zoom_sync.py` copies WAV recordings off the Zoom R4, normalizes them
+into a single catalog, and optionally produces MP3 derivatives. It is the
+canonical ingest path for the recorder library and keeps the SD card and the
+local storage tree in sync.
 
+* Catalog model
+The catalog lives at `~/code/storage/zoomr4/meta/zoom_sync_index.json` and
+records SHA, recorder project, derived tags, mp3 path, duration/channel
+counts (via `ffprobe`), and the curation status. A legacy
+`zoom_titles.json` is regenerated for older consumers, but edits flow through
+the catalog.
+
+* Editing and lifecycle
+The CLI supports `--title` and `--status` updates, `--list` views, and helper
+flags such as `--rename-hold` and `--delete-from-recorder`. Status values
+(`hold`, `archive`, `trash`) control whether files remain on the SD card or
+are safe to delete.
+
+* Automation
+The `systemd/zoom-sync.path` and related user units mount the SD card at a
+stable path (`/media/joe/R4_SD`), run a single sync, then unmount. This keeps
+the ingest loop hands-free while preventing repeated syncs per insertion.

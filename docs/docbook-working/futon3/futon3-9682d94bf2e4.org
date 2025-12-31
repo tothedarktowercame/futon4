@@ -9,5 +9,11 @@
 :END:
 
 * Overview
-- (no summary yet)
+`f2.transport` implements the MUSN transport layer. WebSocket clients connect
+via `/musn/ws` while HTTP clients stream NDJSON to `/musn/ingest`.
 
+* Routing and lifecycle
+The transport assigns `run-id` and per-frame acknowledgements, maintains
+per-client history, and enforces back-pressure. It routes hello/event/eval
+frames into the appropriate handlers and emits structured `ack` or `err`
+replies.

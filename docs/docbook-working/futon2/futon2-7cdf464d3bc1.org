@@ -9,5 +9,16 @@
 :END:
 
 * Overview
-- (no summary yet)
+`ants.aif.core/aif-step` is the pure orchestrator for the AIF loop. It wires
+observation, predictive coding, affect regulation, and policy selection into
+a single step that returns updated ant state and diagnostics.
 
+* Step sequence
+The core step runs `observe` to normalize evidence, `perceive` to update
+beliefs, `affect` to adjust hunger and precision, and `choose-action` to pick
+the next move. It also assembles a trace (`G`, `P`, micro-step history) for
+debugging.
+
+* Integration
+The war loop calls `aif-step` for AIF ants on every tick, keeping UI and
+world physics separate from the inference core.

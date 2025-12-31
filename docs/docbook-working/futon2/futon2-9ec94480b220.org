@@ -9,5 +9,16 @@
 :END:
 
 * Overview
-- (no summary yet)
+`ants.aif.affect` models hunger dynamics and precision modulation. It keeps
+ant internal state consistent across ticks and ties energy balance to
+decision temperature.
 
+* Hunger model
+Hunger rises with metabolic burn, load, and distance from home, and falls
+when the ant gathers or deposits food or rests on the nest. Hive reserves
+provide a shared buffer before starvation triggers termination.
+
+* Precision modulation
+The affect step adjusts modulation factors that influence the predictive
+coding step and the policy softmax, so the agent becomes more exploratory or
+focused as hunger changes.

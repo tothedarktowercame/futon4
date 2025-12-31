@@ -9,5 +9,11 @@
 :END:
 
 * Overview
-- (no summary yet)
+`futon3.pattern-hints` computes pattern, fruit, and paramita suggestions from
+sigils and hotword scans. It loads the sigil indices from `resources/sigils`
+and returns scored candidates for the Tatami HUD.
 
+* Learn-or-act envelope
+`futon3.learn-or-act` wraps the hints in a retrieval envelope that records
+failure modes, candidate lists, and gap stubs. `/musn/hints` returns this
+structure so the client can display why a hint succeeded or failed.

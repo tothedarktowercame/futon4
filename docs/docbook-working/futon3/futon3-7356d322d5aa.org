@@ -9,5 +9,11 @@
 :END:
 
 * Overview
-- (no summary yet)
+`futon3.stack.status` builds the Stack HUD payload. It merges vitality scans,
+boundary snapshots, git summaries, Tatami status, and reminder data into a
+single report used by the HUD and API callers.
 
+* Consumers
+The Tatami context pane and HUD views read this status report to surface
+missing evidence warnings, storage alerts, and daily reminders alongside
+session summaries.

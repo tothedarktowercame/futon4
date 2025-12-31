@@ -9,5 +9,17 @@
 :END:
 
 * Overview
-- (no summary yet)
+`apps/graph-memory` houses the Datascript schema, store manager, and
+persistence utilities. It keeps an in-memory graph cache while mirroring all
+mutations into XTDB for durability.
 
+* Hydration and mirroring
+On startup `app.store-manager/start!` spins up Datascript and XTDB, hydrates
+identity/version docs, and loads cached type definitions via
+`graph_memory.types_registry`. Every mutation is submitted to XTDB so the
+next session can replay the same graph state.
+
+* XTDB touchpoints
+`app.xt` wraps node lifecycle and query helpers, while `app.store` writes
+entity/relation documents into XTDB alongside Datascript. See
+`README-storage.md` for the hydration sequence and inspection snippets.

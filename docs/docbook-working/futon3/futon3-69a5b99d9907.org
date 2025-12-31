@@ -9,5 +9,11 @@
 :END:
 
 * Overview
-- (no summary yet)
+`f2.musn` owns system start/stop and wiring. It constructs the transport,
+optional REPL modules, and Tatami store, and it exposes helpers to load demo
+events for development.
 
+* Configuration
+`musn/start!` accepts a map of options (for example `:repl` or `:drawbridge`)
+that gates SAFE/ADMIN evals, outbound adapters, and logging behavior. The
+`make dev` target uses the same entry point.

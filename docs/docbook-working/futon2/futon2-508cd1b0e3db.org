@@ -9,5 +9,10 @@
 :END:
 
 * Overview
-- (no summary yet)
+The terminal HUD lives in `ants.ui`. It prints per-tick scoreboard lines with
+the classic vs AIF score, tick counter, expected free energy EMA, hive
+reserves, and most recent actions.
 
+* Usage
+The HUD is used by the CLI (`clj -M:run`) and can be disabled by passing
+`{:hud? false}` to `ants.war/simulate` for quiet programmatic runs.

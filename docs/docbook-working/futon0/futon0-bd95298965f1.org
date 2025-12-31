@@ -9,5 +9,16 @@
 :END:
 
 * Overview
-- (no summary yet)
+The git activity aggregator turns multi-repo commit history into a compact
+vitality feed for the Stack HUD. It is the primary source of "what changed"
+signals outside of filesystem scanning.
 
+* Pipeline
+`scripts/git_vitality_sync.sh` runs `python3 scripts/git_activity.py` using
+`data/git_sources.json`, then calls `clojure -M:vitality/git-summary` inside
+the futon3 repo. This produces `git_activity.json` plus the derived
+`futon3/resources/vitality/git_summary.edn` snapshot.
+
+* Automation
+The `user-git-vitality.timer` unit refreshes the summary hourly. Disable it
+when running manual scans or when the HUD should freeze for debugging.

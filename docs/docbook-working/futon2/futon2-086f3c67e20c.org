@@ -9,5 +9,15 @@
 :END:
 
 * Overview
-- (no summary yet)
+Policy selection lives in `ants.aif.policy/choose-action`. It scores abstract
+actions using expected free energy, then samples a softmax distribution
+driven by the current precision (`tau`).
 
+* Inputs
+The policy step consumes the current observation vector (food, pheromone,
+trace signals, home proximity, hunger) plus recent action history and tuning
+parameters. These inputs bias exploration versus exploitation.
+
+* Outputs
+The function returns the chosen action along with diagnostics used by the HUD
+and trace tooling to explain why the action was selected.

@@ -9,5 +9,21 @@
 :END:
 
 * Overview
-- (no summary yet)
+Futon1 stores entities and relations as XTDB documents mirrored into
+Datascript. Entities carry identity and salience metadata, while relations
+encode typed links between entities.
 
+* Entity fields
+Entity docs include `:entity/id`, `:entity/name`, and runtime metadata such
+as `:entity/seen-count`, `:entity/last-seen`, and `:entity/pinned?`. These
+fields power focus headers and `/me` summaries.
+
+* Relation fields and defaults
+Relation docs carry `:relation/id`, `:relation/type`, `:relation/src`, and
+`:relation/dst`. The deterministic ingest pipeline emits `:links-to` for
+co-occurrence; custom relations are only created by `!rel` or explicit rules.
+
+* Type registry
+`/types` is backed by the type registry cache populated from `:type/*` docs
+in XTDB. Seeded types (for example `:me` and `:person`) appear even when no
+relations exist yet, keeping the model discoverable from day one.

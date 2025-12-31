@@ -9,5 +9,18 @@
 :END:
 
 * Overview
-- (no summary yet)
+The negative space notifier is a small reminder loop that fires when nothing
+has happened yet (for example, leaving for Tai Chi or shutting down for the
+night). It is intentionally simple and external to Emacs so it can nudge you
+even when the stack UI is closed.
 
+* Delivery path
+User systemd timers call `scripts/negative_space_notify.py`, which emits
+desktop notifications via `notify-send` and falls back to stdout if the
+notifier is unavailable. The timers live in `systemd/` and are installed as
+`negative-*` units.
+
+* Schedules
+The shipped timers cover Tai Chi (18:30 / 18:50 on Wed/Thu) and nightly
+curfew reminders (20:30 / 20:50). Disable or adjust the timers to tune the
+cadence without touching code.
