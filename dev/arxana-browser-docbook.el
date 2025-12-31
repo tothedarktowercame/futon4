@@ -27,6 +27,9 @@
 (declare-function arxana-browser--goto-row "arxana-browser-core" (row))
 (declare-function arxana-browser--item-at-point "arxana-browser-core")
 (declare-function arxana-browser--ensure-context "arxana-browser-core")
+(declare-function arxana-docbook--entry-mtime "arxana-docbook-core" (entry))
+(declare-function arxana-docbook--normalize-timestamp "arxana-docbook-core" (value))
+(declare-function arxana-docbook--normalize-remote-entry "arxana-docbook-remote" (entry))
 
 (defface arxana-browser-docbook-latest-face
   '((t :foreground "#7fdc7f"))
@@ -46,6 +49,11 @@
 (defface arxana-browser-docbook-marked-face
   '((t :foreground "#f0d85c"))
   "Face used for marked docbook headings."
+  :group 'arxana-browser-docbook)
+
+(defface arxana-browser-docbook-dirty-face
+  '((t :foreground "orange"))
+  "Face used for docbook headings with local changes."
   :group 'arxana-browser-docbook)
 
 (defcustom arxana-browser-docbook-top-order
@@ -228,10 +236,32 @@
                     (arxana-browser--docbook-contents-items-live)))
          (current (and (listp items)
                        (arxana-browser--docbook-contents-current-order items)))
-         (synced arxana-browser--docbook-contents-synced-order))
-    (and (listp current)
-         (listp synced)
-         (not (equal (delq nil current) (delq nil synced))))))
+         (synced arxana-browser--docbook-contents-synced-order)
+         (order-dirty (and (listp current)
+                           (listp synced)
+                           (not (equal (delq nil current) (delq nil synced)))))
+         (entry-dirty (and (listp items)
+                           (seq-find (lambda (item)
+                                       (plist-get item :dirty))
+                                     items))))
+    (or order-dirty entry-dirty)))
+
+(defun arxana-browser--docbook-entry-local-mtime (entry)
+  (or (and entry (arxana-docbook--entry-mtime entry)) nil))
+
+(defun arxana-browser--docbook-latest-remote-entry (heading)
+  (let* ((latest (plist-get heading :latest)))
+    (cond
+     ((and (listp latest) (plist-get latest :entry-id)) latest)
+     ((listp latest) (arxana-docbook--normalize-remote-entry latest))
+     (t nil))))
+
+(defun arxana-browser--docbook-entry-dirty-p (local-mtime remote-entry)
+  (let ((remote-time (arxana-docbook--normalize-timestamp
+                      (plist-get remote-entry :timestamp))))
+    (and local-mtime
+         (or (not remote-time)
+             (time-less-p remote-time local-mtime)))))
 
 (defun arxana-browser--docbook-sync-order (book order &optional prompt)
   "Sync ORDER for BOOK to remote and/or filesystem toc.json."
@@ -545,12 +575,17 @@
          (indent (make-string (max 0 (1- level)) ?.))
          (latest (plist-get item :latest))
          (virtual (plist-get item :virtual))
+         (dirty (plist-get item :dirty))
          (marked (arxana-browser--docbook-contents-marked-p doc-id))
          (marker (cond
                   (marked (propertize "M" 'face 'arxana-browser-docbook-marked-face))
                   (virtual (propertize "!" 'face 'arxana-browser-docbook-unindexed-face))
                   (latest (propertize "*" 'face 'arxana-browser-docbook-latest-face))
                   (t (propertize "." 'face 'arxana-browser-docbook-empty-face)))))
+    (when (and dirty (stringp marker))
+      (add-face-text-property 0 (length marker)
+                              'arxana-browser-docbook-dirty-face
+                              t marker))
     (vector (format "%s %s%s"
                     marker
                     (if (string-empty-p indent)
@@ -642,6 +677,15 @@
                             (when-let* ((doc-id (plist-get entry :doc-id)))
                               (puthash doc-id t table)))
                           table)))
+         (local-time-map (let ((table (make-hash-table :test 'equal)))
+                           (dolist (entry (or local-entries '()))
+                             (when-let* ((doc-id (plist-get entry :doc-id))
+                                         (mtime (arxana-browser--docbook-entry-local-mtime entry)))
+                               (let ((existing (gethash doc-id table)))
+                                 (when (or (not existing)
+                                           (time-less-p existing mtime))
+                                   (puthash doc-id mtime table)))))
+                           table))
          (remote-map (when (and remote (listp remote))
                        (let ((table (make-hash-table :test 'equal)))
                          (dolist (h remote)
@@ -660,7 +704,11 @@
                                 (latest (or (and remote-h (plist-get remote-h :latest))
                                             (plist-get h :latest)
                                             (and latest-docs (gethash doc-id latest-docs))))
+                                (remote-entry (and remote-h
+                                                   (arxana-browser--docbook-latest-remote-entry remote-h)))
                                 (entry (and doc-id (gethash doc-id entry-map)))
+                                (local-mtime (and doc-id (gethash doc-id local-time-map)))
+                                (dirty (arxana-browser--docbook-entry-dirty-p local-mtime remote-entry))
                                 (coverage (and entry (arxana-browser--docbook-entry-coverage entry)))
                                 (ratio (and entry (arxana-browser--docbook-entry-ratio entry))))
                            (list :type 'docbook-heading
@@ -670,6 +718,7 @@
                                  :path_string path-string
                                  :level (plist-get h :level)
                                  :latest latest
+                                 :dirty dirty
                                  :book book
                                  :coverage coverage
                                  :ratio ratio
@@ -739,14 +788,15 @@
                                 :doc-id doc-id
                                 :title (format "%s (unindexed)" title)
                                 :outline outline
-                                :path_string path-str
-                                :level (or (plist-get h :level) 1)
-                                :latest t
-                                :virtual t
-                                :book book
-                                :coverage (and (gethash doc-id entry-map)
-                                               (arxana-browser--docbook-entry-coverage
-                                                (gethash doc-id entry-map)))
+                               :path_string path-str
+                               :level (or (plist-get h :level) 1)
+                               :latest t
+                                :dirty (and (gethash doc-id local-time-map) t)
+                               :virtual t
+                               :book book
+                               :coverage (and (gethash doc-id entry-map)
+                                              (arxana-browser--docbook-entry-coverage
+                                               (gethash doc-id entry-map)))
                                 :ratio (and (gethash doc-id entry-map)
                                             (arxana-browser--docbook-entry-ratio
                                              (gethash doc-id entry-map))))))))

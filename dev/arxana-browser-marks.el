@@ -3,7 +3,7 @@
 ;;; Commentary:
 ;; Shared helpers for interpreting marks relative to the active browser view.
 ;;
-;; TODO(org-sync): Track this module in dev/org-sync-tracker.org for mirroring
+;; TODO(org-sync): Track this module in dev/docs-backlog.org for mirroring
 ;; into the literate sources.
 
 ;;; Code:

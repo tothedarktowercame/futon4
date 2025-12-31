@@ -17,20 +17,21 @@
   "Browse doc book entries for Futon systems."
   :group 'arxana)
 (defcustom arxana-docbook-books-root nil
-  "Root directory containing doc book folders (e.g., .docbook/books)."
+  "Root directory containing doc book folders (e.g., docs/docbook-working)."
   :type '(choice (const :tag "Auto-detect" nil)
                  directory)
   :group 'arxana-docbook)
 (defun arxana-docbook--locate-books-root ()
   (or arxana-docbook-books-root
       (let* ((base (or load-file-name buffer-file-name default-directory))
-             (dot-root (and base (locate-dominating-file base ".docbook")))
-             (legacy-root (and base (locate-dominating-file base "dev/logs/books")))
-             (repo-root (and base (locate-dominating-file base "dev"))))
+             (repo-root (and base (locate-dominating-file base "dev")))
+             (working-root (and repo-root
+                                (expand-file-name "docs/docbook-working" repo-root)))
+             (legacy-root (and base (locate-dominating-file base "dev/logs/books"))))
         (cond
-         (dot-root (expand-file-name ".docbook/books" dot-root))
+         ((and working-root (file-directory-p working-root)) working-root)
          (legacy-root (expand-file-name "dev/logs/books" legacy-root))
-         (repo-root (expand-file-name ".docbook/books" repo-root))))))
+         (repo-root (expand-file-name "docs/docbook-working" repo-root))))))
 (defun arxana-docbook--repo-root ()
   (let* ((base (or load-file-name buffer-file-name))
          (lib (and (not base) (locate-library "arxana-docbook-core")))
@@ -39,7 +40,6 @@
     (or root
         (when-let* ((books (arxana-docbook--locate-books-root)))
           (expand-file-name "../../.." books))
-        (locate-dominating-file default-directory ".docbook")
         (locate-dominating-file default-directory "dev/logs/books")
         (locate-dominating-file default-directory "dev")
         default-directory)))
@@ -85,20 +85,14 @@
   (when (and path (file-exists-p path))
     (file-attribute-modification-time (file-attributes path))))
 (defun arxana-docbook--entry-mtime (entry)
-  "Return the newest mtime for ENTRY's raw or stub file."
-  (let ((raw (arxana-docbook--file-mtime (plist-get entry :raw-path)))
-        (stub (arxana-docbook--file-mtime (plist-get entry :stub-path))))
-    (cond
-     ((and raw stub) (if (time-less-p raw stub) stub raw))
-     (raw raw)
-     (stub stub)
-     (t nil))))
+  "Return the mtime for ENTRY's stub file when available."
+  (arxana-docbook--file-mtime (plist-get entry :stub-path)))
 (defun arxana-docbook--entry-from-json (book path)
   (let* ((payload (arxana-docbook--read-json path))
          (run-id (or (plist-get payload :run_id)
                      (file-name-base path)))
-         (stub (expand-file-name (format "stubs/%s.org" run-id)
-                                 (file-name-directory (directory-file-name (file-name-directory path)))))
+         (stub (expand-file-name (format "../%s.org" run-id)
+                                 (file-name-directory (directory-file-name path))))
          (files (plist-get payload :files_touched))
          (outline (plist-get payload :outline_path)))
     (when payload
@@ -113,6 +107,55 @@
             :files (and (listp files) files)
             :raw-path path
             :stub-path (and (file-readable-p stub) stub)))))
+(defun arxana-docbook--entry-from-stub (book path)
+  (let* ((text (when (file-readable-p path)
+                 (with-temp-buffer
+                   (let ((coding-system-for-read 'utf-8-unix))
+                     (insert-file-contents path))
+                   (buffer-string))))
+         (lines (and text (split-string text "\n")))
+         (title nil)
+         (props (make-hash-table :test 'equal))
+         (in-props nil)
+         (mtime (arxana-docbook--file-mtime path))
+         (timestamp (and mtime (format-time-string "%Y-%m-%dT%H:%M:%SZ" mtime t))))
+    (when text
+      (dolist (line lines)
+        (cond
+         ((string-prefix-p "#+TITLE:" line)
+          (setq title (string-trim (substring line (length "#+TITLE:")))))
+         ((string= ":PROPERTIES:" line)
+          (setq in-props t))
+         ((string= ":END:" line)
+          (setq in-props nil))
+         (in-props
+          (when (string-match "^:\\([A-Z0-9_]+\\):[ \t]*\\(.*\\)$" line)
+            (puthash (match-string 1 line) (string-trim (match-string 2 line)) props))))))
+    (when text
+      (let* ((entry-id (file-name-base path))
+             (doc-id (gethash "DOC_ID" props))
+             (entry-id (or (gethash "ENTRY_ID" props) entry-id))
+             (version (gethash "VERSION" props))
+             (outline (gethash "OUTLINE_PATH" props))
+             (path-string (gethash "PATH_STRING" props)))
+        (list :book book
+              :doc-id doc-id
+              :entry-id entry-id
+              :run-id entry-id
+              :version version
+              :timestamp timestamp
+              :outline (and outline (split-string outline " / " t))
+              :path-string path-string
+              :title title
+              :stub-path path)))))
+
+(defun arxana-docbook--stub-path-for-doc (book doc-id)
+  "Return the stub path for DOC-ID in BOOK when it exists."
+  (let* ((root (arxana-docbook--locate-books-root))
+         (book-dir (and root book (expand-file-name book root)))
+         (path (and book-dir doc-id
+                    (expand-file-name (format "%s.org" doc-id) book-dir))))
+    (and path (file-readable-p path) path)))
 (defun arxana-docbook--entry-version (entry)
   (or (plist-get entry :version)
       (plist-get entry :doc/version)))
@@ -137,9 +180,17 @@
                   (time-less-p local-mtime remote-time))
           (push entry entries))))
     (setq entries (append (nreverse entries) local))
-    (seq-filter (lambda (entry)
-                  (equal doc-id (plist-get entry :doc-id)))
-                entries)))
+    (let* ((filtered (seq-filter (lambda (entry)
+                                   (equal doc-id (plist-get entry :doc-id)))
+                                 entries)))
+      (mapcar (lambda (entry)
+                (if (plist-get entry :stub-path)
+                    entry
+                  (let ((stub (arxana-docbook--stub-path-for-doc book doc-id)))
+                    (if stub
+                        (plist-put (copy-sequence entry) :stub-path stub)
+                      entry))))
+              filtered))))
 (defun arxana-docbook--latest-non-lab (entries)
   (let ((filtered (seq-filter (lambda (entry) (not (arxana-docbook--lab-draft-p entry)))
                               entries)))
@@ -270,18 +321,31 @@
 (defun arxana-docbook--entries-for (book)
   (let* ((root (arxana-docbook--locate-books-root))
          (book-dir (and root (expand-file-name book root)))
-         (raw-dir (and book-dir (expand-file-name "raw" book-dir))))
+         (stub-dir book-dir)
+         (raw-dir (and book-dir (expand-file-name "raw" book-dir)))
+         (entries '()))
+    (when (and stub-dir (file-directory-p stub-dir))
+      (setq entries
+            (append entries
+                    (delq nil
+                          (mapcar (lambda (path)
+                                    (when (string-match-p "\\.org\\'" path)
+                                      (arxana-docbook--entry-from-stub book path)))
+                                  (directory-files stub-dir t nil t))))))
     (when (and raw-dir (file-directory-p raw-dir))
-      (let ((entries (delq nil
-                           (mapcar (lambda (path)
-                                     (when (string-match-p "\\.json\\'" path)
-                                       (arxana-docbook--entry-from-json book path)))
-                                   (directory-files raw-dir t nil t)))))
-        (seq-sort
-         (lambda (a b)
-           (string> (or (plist-get a :timestamp) "")
-                    (or (plist-get b :timestamp) "")))
-         entries)))))
+      (setq entries
+            (append entries
+                    (delq nil
+                          (mapcar (lambda (path)
+                                    (when (string-match-p "\\.json\\'" path)
+                                      (arxana-docbook--entry-from-json book path)))
+                                  (directory-files raw-dir t nil t))))))
+    (when entries
+      (seq-sort
+       (lambda (a b)
+         (string> (or (plist-get a :timestamp) "")
+                  (or (plist-get b :timestamp) "")))
+       entries))))
 (defun arxana-docbook-entries (book)
   "Return a list of doc book entries for BOOK."
   (arxana-docbook--entries-for book))

@@ -1,7 +1,7 @@
 ;;; arxana-docbook-checkout.el --- Checkout docbook entries -*- lexical-binding: t; -*-
 
 ;;; Commentary:
-;; Fetch remote docbook entries and write stubs/raw JSON into the repo checkout.
+;; Fetch remote docbook entries and write stubs into the repo checkout.
 
 ;;; Code:
 
@@ -11,7 +11,6 @@
 (require 'arxana-docbook-toc)
 (require 'arxana-store)
 (require 'subr-x)
-(require 'json)
 
 (declare-function arxana-docbook--available-books "arxana-docbook-core")
 (declare-function arxana-docbook--entries-for-doc "arxana-docbook-core" (book doc-id))
@@ -46,9 +45,66 @@
 (defvar-local arxana-docbook--stub-last-sync-error nil
   "Last sync error for the current docbook stub buffer.")
 
+(defun arxana-docbook--stub-metadata-from-buffer ()
+  (arxana-docbook--stub-metadata
+   (buffer-substring-no-properties (point-min) (point-max))))
+
+(defun arxana-docbook--stub-synced-at ()
+  "Return the last sync time for this stub buffer, if recorded."
+  (let* ((meta (arxana-docbook--stub-metadata-from-buffer))
+         (raw (cdr (assoc "SYNCED_AT" meta))))
+    (and raw (ignore-errors (date-to-time raw)))))
+
+(defun arxana-docbook--stub-set-property (key value)
+  "Set property KEY to VALUE in the stub's property drawer."
+  (save-excursion
+    (goto-char (point-min))
+    (if (re-search-forward "^:PROPERTIES:" nil t)
+        (let ((start (point)))
+          (if (re-search-forward (format "^:%s:[ \t]*\\(.*\\)$" key) nil t)
+              (replace-match value t t nil 1)
+            (goto-char start)
+            (insert (format ":%s: %s\n" key value))))
+      (goto-char (point-min))
+      (insert ":PROPERTIES:\n"
+              (format ":%s: %s\n" key value)
+              ":END:\n\n"))))
+
+(defun arxana-docbook--stub-record-sync ()
+  "Record the current time as the last successful sync."
+  (let ((stamp (format-time-string "%Y-%m-%dT%H:%M:%SZ" (current-time) t)))
+    (arxana-docbook--stub-set-property "SYNCED_AT" stamp)
+    (save-buffer)
+    (set-buffer-modified-p nil)))
+
+(defconst arxana-docbook--sync-fs-skew-seconds 1
+  "Allowed filesystem mtime skew (seconds) before marking a stub as fs-dirty.")
+
+(defun arxana-docbook--stub-fs-dirty-p (synced-at file-mtime)
+  "Return non-nil when FILE-MTIME is meaningfully newer than SYNCED-AT."
+  (and synced-at
+       file-mtime
+       (time-less-p (time-add synced-at (seconds-to-time arxana-docbook--sync-fs-skew-seconds))
+                    file-mtime)))
+
+(defun arxana-docbook--face-safe (face)
+  "Return FACE when valid, otherwise `default`."
+  (if (or (null face) (eq face t))
+      'default
+    face))
+
 (defun arxana-docbook--stub-header-line ()
   (let* ((dirty (buffer-modified-p))
-         (label (if dirty "Docbook stub [dirty]" "Docbook stub [clean]"))
+         (synced-at (arxana-docbook--stub-synced-at))
+         (file-mtime (and buffer-file-name
+                          (file-attribute-modification-time
+                           (file-attributes buffer-file-name))))
+         (fs-dirty (arxana-docbook--stub-fs-dirty-p synced-at file-mtime))
+         (status (cond
+                  (dirty "Docbook stub [dirty]")
+                  (fs-dirty "Docbook stub [fs-dirty]")
+                  ((not synced-at) "Docbook stub [unsynced]")
+                  (t "Docbook stub [clean]")))
          (sync (cond
                 ((not (arxana-store-sync-enabled-p)) " [sync disabled]")
                 (arxana-docbook--stub-last-sync-error " [sync error]")
@@ -56,10 +112,12 @@
          (face (if (or dirty arxana-docbook--stub-last-sync-error)
                    arxana-docbook--stub-dirty-face
                  arxana-docbook--stub-clean-face))
-         (doc-id (or arxana-docbook--stub-doc-id "unknown")))
+         (meta (arxana-docbook--stub-metadata-from-buffer))
+         (meta-doc-id (cdr (assoc "DOC_ID" meta)))
+         (doc-id (or arxana-docbook--stub-doc-id meta-doc-id "unknown")))
     (propertize (format "%s - %s%s - C-c C-s saves + syncs"
-                        label doc-id sync)
-                'face face)))
+                        status doc-id sync)
+                'face (arxana-docbook--face-safe face))))
 
 (defun arxana-docbook--update-stub-header (&rest _args)
   (setq-local header-line-format
@@ -71,16 +129,58 @@
     map)
   "Keymap for `arxana-docbook-stub-mode'.")
 
+(defvar-local arxana-docbook--emulation-map-alist nil
+  "Emulation map entry for `arxana-docbook-stub-mode`.")
+(defvar-local arxana-docbook--override-map nil
+  "Override map entry for `arxana-docbook-stub-mode`.")
+
 (define-minor-mode arxana-docbook-stub-mode
   "Minor mode for editing docbook stub files."
   :keymap arxana-docbook-stub-mode-map
   (if arxana-docbook-stub-mode
       (progn
+        (setq-local arxana-docbook--emulation-map-alist
+                    (list (cons 'arxana-docbook-stub-mode arxana-docbook-stub-mode-map)))
+        (setq-local emulation-mode-map-alists
+                    (cons arxana-docbook--emulation-map-alist
+                          emulation-mode-map-alists))
+        (setq-local arxana-docbook--override-map
+                    (cons 'arxana-docbook-stub-mode arxana-docbook-stub-mode-map))
+        (setq-local minor-mode-overriding-map-alist
+                    (cons arxana-docbook--override-map
+                          minor-mode-overriding-map-alist))
         (add-hook 'after-change-functions #'arxana-docbook--update-stub-header nil t)
         (add-hook 'after-save-hook #'arxana-docbook--update-stub-header nil t)
         (arxana-docbook--update-stub-header))
     (remove-hook 'after-change-functions #'arxana-docbook--update-stub-header t)
-    (remove-hook 'after-save-hook #'arxana-docbook--update-stub-header t)))
+    (remove-hook 'after-save-hook #'arxana-docbook--update-stub-header t)
+    (when arxana-docbook--emulation-map-alist
+      (setq-local emulation-mode-map-alists
+                  (delq arxana-docbook--emulation-map-alist
+                        emulation-mode-map-alists))
+      (setq-local arxana-docbook--emulation-map-alist nil))
+    (when arxana-docbook--override-map
+      (setq-local minor-mode-overriding-map-alist
+                  (delq arxana-docbook--override-map
+                        minor-mode-overriding-map-alist))
+      (setq-local arxana-docbook--override-map nil))))
+
+(defun arxana-docbook--maybe-enable-stub-mode ()
+  "Enable `arxana-docbook-stub-mode` for docbook stub files."
+  (when (and buffer-file-name
+             (string-suffix-p ".org" buffer-file-name))
+    (let* ((root (arxana-docbook--locate-books-root))
+           (root (and root (file-name-as-directory (expand-file-name root))))
+           (abs (expand-file-name buffer-file-name))
+           (in-root (and root (string-prefix-p root abs)))
+           (docbook-marker nil))
+      (save-excursion
+        (goto-char (point-min))
+        (setq docbook-marker (re-search-forward "^:DOC_ID:" nil t)))
+      (when (and docbook-marker (or in-root (not root)))
+        (arxana-docbook-stub-mode 1)))))
+
+(add-hook 'org-mode-hook #'arxana-docbook--maybe-enable-stub-mode)
 
 (defun arxana-docbook--stub-book-from-path (path)
   (when path
@@ -147,7 +247,8 @@
          (verification (arxana-docbook--stub-section sections "verification"))
          (book (or arxana-docbook--stub-book
                    (arxana-docbook--stub-book-from-path buffer-file-name)))
-         (entry-id (or arxana-docbook--stub-entry-id
+         (entry-id (or (cdr (assoc "ENTRY_ID" metadata))
+                       arxana-docbook--stub-entry-id
                        (and buffer-file-name (file-name-base buffer-file-name))))
          (heading (and book doc-id (arxana-docbook--heading-for-doc-id book doc-id)))
          (outline (and heading (arxana-docbook--heading-outline heading)))
@@ -184,11 +285,12 @@
     (cl-return-from arxana-docbook--sync-stub-buffer nil))
   (let* ((payload (arxana-docbook--stub-payload-from-buffer))
          (book (cdr (assoc "book_id" payload)))
-         (path (format "/api/alpha/docs/%s/entry" book))
+         (path (format "/docs/%s/entry" book))
          (resp (arxana-store--request "POST" path payload)))
     (if resp
         (progn
           (setq-local arxana-docbook--stub-last-sync-error nil)
+          (arxana-docbook--stub-record-sync)
           (message "Docbook sync ok.")
           t)
       (setq-local arxana-docbook--stub-last-sync-error
@@ -210,21 +312,18 @@
     (and root book (expand-file-name book root))))
 
 (defun arxana-docbook--ensure-book-dirs (book)
-  (let* ((book-dir (arxana-docbook--book-dir book))
-         (raw-dir (and book-dir (expand-file-name "raw" book-dir)))
-         (stub-dir (and book-dir (expand-file-name "stubs" book-dir))))
-    (unless (and book-dir raw-dir stub-dir)
+  (let* ((book-dir (arxana-docbook--book-dir book)))
+    (unless book-dir
       (error "No docbook root for %s" book))
-    (dolist (dir (list book-dir raw-dir stub-dir))
+    (dolist (dir (list book-dir))
       (unless (file-directory-p dir)
         (make-directory dir t)))
-    (list :book book-dir :raw raw-dir :stubs stub-dir)))
+    (list :book book-dir)))
 
 (defun arxana-docbook--entry-paths (book entry-id)
   (let* ((dirs (arxana-docbook--ensure-book-dirs book))
-         (raw (expand-file-name (format "%s.json" entry-id) (plist-get dirs :raw)))
-         (stub (expand-file-name (format "%s.org" entry-id) (plist-get dirs :stubs))))
-    (list :raw raw :stub stub)))
+         (stub (expand-file-name (format "%s.org" entry-id) (plist-get dirs :book))))
+    (list :stub stub)))
 
 (defun arxana-docbook--checkout-file-mtime (path)
   "Return PATH's mtime without relying on core helpers."
@@ -245,13 +344,7 @@
    (t nil)))
 
 (defun arxana-docbook--entry-local-mtime (paths)
-  (let ((raw (arxana-docbook--checkout-file-mtime (plist-get paths :raw)))
-        (stub (arxana-docbook--checkout-file-mtime (plist-get paths :stub))))
-    (cond
-     ((and raw stub) (if (time-less-p raw stub) stub raw))
-     (raw raw)
-     (stub stub)
-     (t nil))))
+  (arxana-docbook--checkout-file-mtime (plist-get paths :stub)))
 
 (defun arxana-docbook--entry-local-newer-p (paths entry)
   (let ((local (arxana-docbook--entry-local-mtime paths))
@@ -340,20 +433,27 @@
                     (plist-get entry :doc-id)
                     entry-id))
          (doc-id (or (plist-get entry :doc-id) "unknown"))
-         (version (or (plist-get entry :version) "unversioned")))
+         (version (or (plist-get entry :version) "unversioned"))
+         (outline (or (arxana-docbook--heading-outline heading)
+                      (plist-get entry :outline)))
+         (path-string (or (arxana-docbook--heading-path-string heading)
+                          (and outline (string-join outline " / ")))))
     (concat (format "#+TITLE: %s\n" title)
             ":PROPERTIES:\n"
             (format ":DOC_ID: %s\n" doc-id)
+            (format ":ENTRY_ID: %s\n" (or entry-id ""))
             (format ":VERSION: %s\n" version)
+            (format ":OUTLINE_PATH: %s\n" (or path-string ""))
+            (format ":PATH_STRING: %s\n" (or path-string ""))
             (format ":REPLACES: %s\n"
                     (or (plist-get (plist-get entry :entry) :doc/replaces) ""))
             ":END:\n\n"
             (arxana-docbook--entry-org-body entry))))
 
-(defun arxana-docbook--entry-json-text (book heading entry)
-  (let ((payload (arxana-docbook--entry-payload book heading entry))
-        (json-encoding-pretty-print t))
-    (concat (json-encode payload) "\n")))
+(defun arxana-docbook--entry-file-id (entry)
+  "Return the filename stem to use for ENTRY."
+  (or (plist-get entry :doc-id)
+      (plist-get entry :entry-id)))
 
 (defun arxana-docbook--read-file-text (path)
   (when (and path (file-readable-p path))
@@ -362,14 +462,11 @@
         (insert-file-contents path))
       (buffer-string))))
 
-(defun arxana-docbook--entry-files-differ-p (paths stub-text json-text)
-  (let* ((raw-path (plist-get paths :raw))
-         (stub-path (plist-get paths :stub))
-         (raw-local (arxana-docbook--read-file-text raw-path))
+(defun arxana-docbook--entry-files-differ-p (paths stub-text)
+  (let* ((stub-path (plist-get paths :stub))
          (stub-local (arxana-docbook--read-file-text stub-path))
-         (raw-diff (and raw-path (not (string= (or raw-local "") (or json-text "")))))
          (stub-diff (and stub-path (not (string= (or stub-local "") (or stub-text ""))))))
-    (list :raw raw-diff :stub stub-diff)))
+    (list :stub stub-diff)))
 
 (defun arxana-docbook--diff-path (path text &optional label)
   (when (and path text (file-readable-p path))
@@ -387,9 +484,8 @@
         (when (file-exists-p tmp)
           (delete-file tmp))))))
 
-(defun arxana-docbook--review-entry-overwrite (paths stub-text json-text local-newer)
+(defun arxana-docbook--review-entry-overwrite (paths stub-text local-newer)
   (let* ((stub-path (plist-get paths :stub))
-         (raw-path (plist-get paths :raw))
          (prompt (format "Remote docbook entry differs%s. Overwrite local? "
                          (if local-newer " (local newer)" "")))
          (choice nil))
@@ -398,35 +494,30 @@
                     (concat prompt "[y]es [n]o [d]iff")
                     '(?y ?n ?d)))
       (when (eq choice ?d)
-        (when (plist-get (arxana-docbook--entry-files-differ-p paths stub-text json-text) :stub)
-          (arxana-docbook--diff-path stub-path stub-text "stub"))
-        (when (plist-get (arxana-docbook--entry-files-differ-p paths stub-text json-text) :raw)
-          (arxana-docbook--diff-path raw-path json-text "raw")))
+        (when (plist-get (arxana-docbook--entry-files-differ-p paths stub-text) :stub)
+          (arxana-docbook--diff-path stub-path stub-text "stub")))
       (unless (memq choice '(?y ?n))
         (setq choice nil)))
     (eq choice ?y)))
 
 (defun arxana-docbook--write-entry-files (book heading entry &optional force review)
-  (let* ((entry-id (plist-get entry :entry-id))
+  (let* ((entry-id (arxana-docbook--entry-file-id entry))
          (paths (and entry-id (arxana-docbook--entry-paths book entry-id))))
     (unless entry-id
       (error "Entry missing entry-id"))
     (let* ((local-newer (arxana-docbook--entry-local-newer-p paths entry))
            (stub-text (arxana-docbook--entry-stub-text heading entry))
-           (json-text (arxana-docbook--entry-json-text book heading entry))
-           (diffs (arxana-docbook--entry-files-differ-p paths stub-text json-text))
-           (changed (or (plist-get diffs :raw) (plist-get diffs :stub)))
+           (diffs (arxana-docbook--entry-files-differ-p paths stub-text))
+           (changed (plist-get diffs :stub))
            (should-write (cond
                           (force t)
                           (review (or (not changed)
                                       (arxana-docbook--review-entry-overwrite
-                                       paths stub-text json-text local-newer)))
+                                       paths stub-text local-newer)))
                           ((and (not review) local-newer) nil)
                           (t t))))
       (if (not should-write)
           :skipped
-        (with-temp-file (plist-get paths :raw)
-          (insert json-text))
         (with-temp-file (plist-get paths :stub)
           (insert stub-text))
         :written))))
@@ -483,10 +574,11 @@ When REVIEW is non-nil, prompt before overwriting differing local files."
                              (doc-id arxana-docbook--entry-doc-id)
                              (entry-id arxana-docbook--entry-entry-id)
                              (entries (arxana-docbook--entries-for-doc book doc-id)))
-                        (or (cl-find-if (lambda (item)
-                                          (equal entry-id (plist-get item :entry-id)))
-                                        entries)
-                            (arxana-docbook--latest-non-lab entries)))))))
+                        (or (and entry-id
+                                 (cl-find-if (lambda (item)
+                                               (equal entry-id (plist-get item :entry-id)))
+                                             entries))
+                            (arxana-docbook--latest-non-lab entries))))))
          (stub (and entry (plist-get entry :stub-path))))
     (unless stub
       (user-error "No local stub found (run arxana-docbook-checkout-book first)"))
@@ -499,7 +591,7 @@ When REVIEW is non-nil, prompt before overwriting differing local files."
                         (arxana-docbook--stub-book-from-path stub)))
         (setq-local arxana-docbook--stub-last-sync-error nil)
         (arxana-docbook-stub-mode 1))
-      (pop-to-buffer buffer)))
+      (pop-to-buffer buffer))))
 
 (provide 'arxana-docbook-checkout)
 ;;; arxana-docbook-checkout.el ends here
