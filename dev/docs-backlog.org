@@ -1,11 +1,12 @@
-#+TITLE: Org Sync Tracker
+#+TITLE: Docs Backlog
 #+AUTHOR: Arxana team
 #+OPTIONS: toc:nil num:nil
 #+TODO: TODO(t) WIP(w!) READY(r!) | DONE(d!)
 
 This file records every `.el` change that still needs to be mirrored into the
-XTDB-backed docs. Keep it close to reality: as soon as a change feels
-production-bound (not a throwaway experiment), add an entry.
+XTDB-backed docs. It replaces the old `dev/org-sync-tracker.org` and serves as
+the canonical org-sync tracker. Keep it close to reality: as soon as a change
+feels production-bound (not a throwaway experiment), add an entry.
 
 * Usage
 
@@ -53,7 +54,7 @@ This placeholder shows the preferred structure.  Replace it with real entries as
 soon as new work lands.
 
 ** TODO futon4 doc book (pilot)
-   :FILES: dev/logs/README.md .docbook/books/futon4/index.org .docbook/books/futon4/stubs/futon4-demo-001.org .docbook/books/futon4/raw/futon4-demo-001.json .docbook/books/futon4/stubs/futon4-quickstart-20240606.org .docbook/books/futon4/raw/futon4-quickstart-20240606.json .docbook/books/futon4/stubs/futon4-storage-bridge-20240606.org .docbook/books/futon4/raw/futon4-storage-bridge-20240606.json .docbook/books/futon4/toc.json dev/arxana-docbook.el dev/arxana-docbook-core.el dev/arxana-docbook-checkout.el dev/arxana-docbook-remote.el dev/arxana-docbook-toc.el dev/arxana-docbook-export.el dev/arxana-docbook-ui.el dev/arxana-patterns.el dev/docbook-toc-export.el test/arxana-docbook-checkout-test.el
+   :FILES: dev/logs/README.md docs/docbook-working/futon4/index.org docs/docbook-working/futon4/futon4-demo-001.org docs/docbook-working/futon4/futon4-quickstart-20240606.org docs/docbook-working/futon4/futon4-storage-bridge-20240606.org docs/docbook-working/futon4/toc.json dev/arxana-docbook.el dev/arxana-docbook-core.el dev/arxana-docbook-checkout.el dev/arxana-docbook-remote.el dev/arxana-docbook-toc.el dev/arxana-docbook-export.el dev/arxana-docbook-ui.el dev/arxana-patterns.el dev/docbook-toc-export.el test/arxana-docbook-checkout-test.el
    :TARGET: XTDB doc id (or filesystem snapshot)
    :NOTES: uncommitted; filesystem-backed doc book skeleton; update once XTDB ingest path exists
 
