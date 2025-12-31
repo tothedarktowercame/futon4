@@ -228,11 +228,12 @@ already encoded query string (without the leading ?)."
       (futon4-ensure-article-entity id name canonical spine nil props)
       id))))
 
-(cl-defun arxana-store-ensure-entity (&key id name type source external-id seen-count pinned? last-seen props)
+(cl-defun arxana-store-ensure-entity (&key id name type source external-id seen-count pinned? last-seen props media/sha256)
   "Ensure Futon has an entity named NAME of TYPE, returning the response.
 ID, SOURCE, EXTERNAL-ID, SEEN-COUNT, PINNED?, and LAST-SEEN mirror the
 payload accepted by Futon's `/entity` endpoint. TYPE may be a keyword or
-string. Signals a user error when NAME is missing."
+string. MEDIA/SHA256 is stored at the top level when provided. Signals a
+user error when NAME is missing."
   (unless name
     (user-error "Entity name is required"))
   (let* ((payload (delq nil (list (cons 'name name)
@@ -247,6 +248,7 @@ string. Signals a user error when NAME is missing."
                                   (when (not (null pinned?))
                                     (cons 'pinned? (and pinned? t)))
                                   (when last-seen (cons 'last-seen last-seen))
+                                  (when media/sha256 (cons 'media/sha256 media/sha256))
                                   (when props (cons 'props props))))))
     (arxana-store--request "POST" "/entity" payload)))
 

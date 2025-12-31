@@ -27,3 +27,14 @@ Usage:
 ```sh
 ./bounce_vocal_banjo_bass_harp_vocal_forward.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
 ```
+
+## Vocal-forward mix (dual vocals + banjo + bass + accordion)
+
+`bounce_vocals_banjo_bass_accordion_vocal_forward.sh` extends the banjo/bass
+flow for two vocal tracks panned left/right plus accordion.
+
+Usage:
+
+```sh
+./bounce_vocals_banjo_bass_accordion_vocal_forward.sh t1.wav t2.wav t3.wav t4.wav t5.wav out.wav [out.mp3]
+```

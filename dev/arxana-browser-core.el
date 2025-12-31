@@ -9,6 +9,7 @@
 (require 'seq)
 (require 'subr-x)
 (require 'tabulated-list)
+(require 'url-util)
 
 (require 'arxana-store)
 
@@ -19,8 +20,6 @@
 (declare-function arxana-browser-patterns--language-index-by-path "arxana-browser-patterns" (language-rows))
 (declare-function arxana-browser-patterns--filesystem-collection-items "arxana-browser-patterns" (&optional language-index))
 (declare-function arxana-browser-patterns--friendly-classification "arxana-browser-patterns" (value))
-(declare-function arxana-browser-patterns--menu-items "arxana-browser-patterns")
-(declare-function arxana-browser-patterns--code-items "arxana-browser-patterns")
 (declare-function arxana-browser-patterns--browser-pattern-items "arxana-browser-patterns" (language))
 (declare-function arxana-browser-patterns--browser-pattern-row "arxana-browser-patterns" (item))
 (declare-function arxana-browser-patterns--move-entry "arxana-browser-patterns" (entries old-index new-index))
@@ -75,9 +74,11 @@
 (declare-function arxana-media--ep-staging-items "arxana-media")
 (declare-function arxana-media--misc-items "arxana-media")
 (declare-function arxana-media--misc-track-items "arxana-media" (directory))
+(declare-function arxana-media--podcast-items "arxana-media")
 (declare-function arxana-media--track-row "arxana-media" (item))
 (declare-function arxana-media--publication-track-row "arxana-media" (item))
 (declare-function arxana-media--misc-track-row "arxana-media" (item))
+(declare-function arxana-media--track-sha "arxana-media" (item))
 (declare-function arxana-media--track-format "arxana-media")
 (declare-function arxana-media--publication-track-format "arxana-media")
 (declare-function arxana-media--misc-track-format "arxana-media")
@@ -102,8 +103,16 @@
 (declare-function arxana-media-delete-at-point "arxana-media")
 (declare-function arxana-media-move-misc-to-ep-at-point "arxana-media")
 (declare-function arxana-media-toggle-mark-at-point "arxana-media")
+(declare-function arxana-media-transcribe-and-podcast-at-point "arxana-media")
 
 (declare-function arxana-browser-marks-items-in-context "arxana-browser-marks" (marks key-fn &optional filter-fn))
+
+(defun arxana-browser--require-patterns ()
+  "Ensure the pattern browser helpers are available."
+  (unless (featurep 'arxana-browser-patterns)
+    (require 'arxana-browser-patterns nil t))
+  (unless (featurep 'arxana-browser-patterns)
+    (user-error "Pattern browser helpers are unavailable; load arxana-browser-patterns")))
 (defun arxana-browser--ensure-tabulated-list ()
   "Ensure `tabulated-list-mode-map` is available after hot reloads."
   (unless (boundp 'tabulated-list-mode-map)
@@ -215,6 +224,36 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
   (vector (or (plist-get item :label) "")
           (or (plist-get item :description) "")))
 
+(defun arxana-browser--menu-items ()
+  (list (list :type 'menu
+              :label "Patterns"
+              :description "Browse pattern languages and flexiarg collections."
+              :view 'patterns)
+        (list :type 'menu
+              :label "Code"
+              :description "Upcoming Arxana code browser (imports pending)."
+              :view 'code)
+        (list :type 'menu
+              :label "Media"
+              :description "Zoom/Napster media library prototype."
+              :view 'media)
+        (list :type 'menu
+              :label "Docs"
+              :description "Doc books (XTDB-backed, futon4)."
+              :view 'docbook)
+        (list :type 'menu
+              :label "Lab"
+              :description "Lab notebook sessions staged under lab/."
+              :view 'lab)))
+
+(defun arxana-browser--code-items ()
+  (list (list :type 'info
+              :label "Arxana source"
+              :description "Hook up Futon1 code entities to browse modules here.")
+        (list :type 'info
+              :label "Import status"
+              :description "No code catalogs detected yet.")))
+
 (defun arxana-browser--header-line (context total)
   (cond
    ((not context)
@@ -289,6 +328,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
   (setq mode-line-format (list " " (arxana-browser--header-line context total))))
 
 (defun arxana-browser--root-items ()
+  (arxana-browser--require-patterns)
   (let* ((language-rows (when (arxana-store-sync-enabled-p)
                           (arxana-patterns-ingest-language-rows)))
          (language-index (and language-rows
@@ -325,6 +365,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
 
 (defun arxana-browser--move-pattern (delta)
   (arxana-browser--ensure-context)
+  (arxana-browser--require-patterns)
   (let ((context (car arxana-browser--stack))
         (entry (tabulated-list-get-id)))
     (unless context
@@ -369,13 +410,13 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
   (let ((context (car arxana-browser--stack)))
     (cond
      ((not context)
-      (arxana-browser-patterns--menu-items))
+      (arxana-browser--menu-items))
      ((plist-get context :media-filter)
       (arxana-media--track-items (plist-get context :media-filter)))
      ((plist-get context :view)
       (pcase (plist-get context :view)
         ('patterns (arxana-browser--root-items))
-        ('code (arxana-browser-patterns--code-items))
+        ('code (arxana-browser--code-items))
         ('media (arxana-media--items))
         ('docbook (arxana-browser--docbook-books))
         ('docbook-book (arxana-browser--docbook-book-items (plist-get context :book)))
@@ -391,8 +432,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         ('media-ep-staging-ep (arxana-media--publication-track-items (plist-get context :ep-staging-path)))
         ('media-misc (arxana-media--misc-items))
         ('media-misc-folder (arxana-media--misc-track-items (plist-get context :misc-path)))
-        (_ (arxana-browser-patterns--menu-items))))
+        ('media-podcasts (arxana-media--podcast-items))
+        (_ (arxana-browser--menu-items))))
      (t
+      (arxana-browser--require-patterns)
       (arxana-browser-patterns--browser-pattern-items context)))))
 
 (defun arxana-browser--row-count ()
@@ -436,7 +479,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
       (setq arxana-browser--last-row new-row)
       (beginning-of-line)
       (when (and (> count 0) (/= old new-row))
-        (arxana-browser-patterns--play-click)))))
+        (when (fboundp 'arxana-browser-patterns--play-click)
+          (arxana-browser-patterns--play-click))))))
 
 (defun arxana-browser--goto-doc-id (doc-id)
   "Move point to the first browser row matching DOC-ID."
@@ -513,9 +557,11 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
             ('media-ep-staging #'arxana-browser--info-row)
             ('media-ep-staging-ep #'arxana-media--publication-track-row)
             ('media-misc #'arxana-browser--info-row)
-           ('media-misc-folder #'arxana-media--misc-track-row)
+            ('media-misc-folder #'arxana-media--misc-track-row)
+            ('media-podcasts #'arxana-browser--info-row)
             (_ #'arxana-browser--menu-row)))
-        (t #'arxana-browser-patterns--browser-pattern-row))))
+        (t (arxana-browser--require-patterns)
+           #'arxana-browser-patterns--browser-pattern-row))))
     (mapcar (lambda (entry)
               (list entry (funcall row-fn entry)))
             items)))
@@ -564,6 +610,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                             ('media-ep-staging-ep (arxana-media--publication-track-format))
                             ('media-misc (arxana-browser--info-format))
                             ('media-misc-folder (arxana-media--misc-track-format))
+                            ('media-podcasts (arxana-browser--info-format))
                             (_ (arxana-browser--menu-format))))
                         ((eq (plist-get context :type) 'language)
                          (arxana-browser--pattern-format))
@@ -573,6 +620,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                (entries (arxana-browser--tabulated-entries context items)))
             (setq arxana-browser--context context)
             (let ((inhibit-read-only t))
+              (arxana-browser--ensure-mode-map)
               (arxana-browser-mode)
               (setq tabulated-list-format format
                     tabulated-list-entries entries
@@ -612,6 +660,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
              (cons item arxana-browser--stack))
        (arxana-browser--render))
       ('pattern
+       (arxana-browser--require-patterns)
        (arxana-browser-patterns-open (plist-get item :label)))
       ('media-publication
        (let ((path (plist-get item :path)))
@@ -731,13 +780,83 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
     (when (and label (not (string-empty-p label)))
       (format "pattern-language://%s" label))))
 
+(defun arxana-browser--location-token (value)
+  (url-hexify-string (format "%s" value)))
+
+(defun arxana-browser--media-filter-location (filter)
+  (pcase filter
+    ('all "arxana://media/tracks")
+    (`(status . ,status)
+     (format "arxana://media/status/%s" (arxana-browser--location-token status)))
+    (`(project . ,project)
+     (format "arxana://media/project/%s" (arxana-browser--location-token project)))
+    (_ nil)))
+
+(defun arxana-browser--media-track-location (item)
+  (let* ((type (plist-get item :type))
+         (sha (ignore-errors (arxana-media--track-sha item))))
+    (cond
+     ((and sha (eq type 'media-track))
+      (format "arxana://media/zoom/%s" sha))
+     ((and sha (eq type 'media-publication-track))
+      (format "arxana://media/publication-track/%s" sha))
+     ((and sha (eq type 'media-misc-track))
+      (format "arxana://media/misc-track/%s" sha))
+     (t nil))))
+
+(defun arxana-browser--media-location (item)
+  (let ((type (plist-get item :type)))
+    (pcase type
+      ('media-category
+       (arxana-browser--media-filter-location (plist-get item :media-filter)))
+      ('media-project
+       (format "arxana://media/project/%s"
+               (arxana-browser--location-token (plist-get item :label))))
+      ('media-projects "arxana://media/projects")
+      ('media-publications "arxana://media/publications")
+      ('media-publication
+       (format "arxana://media/publication/%s"
+               (arxana-browser--location-token (plist-get item :label))))
+      ('media-ep-staging "arxana://media/ep-staging")
+      ('media-ep-staging-ep
+       (format "arxana://media/ep-staging/%s"
+               (arxana-browser--location-token (plist-get item :label))))
+      ('media-podcasts "arxana://media/podcasts")
+      ('media-podcast
+       (let ((path (plist-get item :path)))
+         (if (and path (file-exists-p path))
+             (format "file://%s" (expand-file-name path))
+           (format "arxana://media/podcast/%s"
+                   (arxana-browser--location-token (plist-get item :label))))))
+      ('media-misc "arxana://media/misc")
+      ('media-misc-folder
+       (format "arxana://media/misc/%s"
+               (arxana-browser--location-token (plist-get item :label))))
+      ((or 'media-track 'media-publication-track 'media-misc-track)
+       (or (arxana-browser--media-track-location item)
+           (let ((path (plist-get item :path)))
+             (when (and path (file-exists-p path))
+               (format "file://%s" (expand-file-name path))))))
+      (_ nil))))
+
+(defun arxana-browser--menu-location (item)
+  (let ((view (plist-get item :view)))
+    (when view
+      (format "arxana://view/%s" view))))
+
 (defun arxana-browser--copy-location ()
   "Copy a location identifier for the current browser item."
   (interactive)
   (let* ((item (arxana-browser--item-at-point))
+         (type (and item (plist-get item :type)))
          (location (cond
                     ((and item (memq (plist-get item :type) '(docbook-entry docbook-heading)))
                      (arxana-browser--docbook-location item))
+                    ((and item (eq (plist-get item :type) 'menu))
+                     (arxana-browser--menu-location item))
+                    ((and (symbolp type)
+                          (string-prefix-p "media-" (symbol-name type)))
+                     (arxana-browser--media-location item))
                     ((and item (eq (plist-get item :type) 'pattern))
                      (arxana-browser--pattern-location item))
                     ((and item (eq (plist-get item :type) 'collection))
@@ -765,11 +884,23 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                                       (eq (plist-get context :type) 'docbook-entry)))
                      (or (arxana-browser--docbook-location context)
                          (and book (format "docbook://%s" book))))
+                    ((and context (plist-get context :media-filter))
+                     (arxana-browser--media-filter-location (plist-get context :media-filter)))
+                    ((and context (eq (plist-get context :view) 'media-ep-staging-ep)
+                          (plist-get context :label))
+                     (format "arxana://view/media-ep-staging-%s"
+                             (arxana-browser--location-token (plist-get context :label))))
+                    ((and context (symbolp (plist-get context :view))
+                          (string-prefix-p "media-" (symbol-name (plist-get context :view))))
+                     (format "arxana://view/%s" (plist-get context :view)))
+                    ((and context (plist-get context :view))
+                     (format "arxana://view/%s" (plist-get context :view)))
                     ((eq context-type 'collection)
                      (arxana-browser--collection-location context))
                     ((eq context-type 'language)
                      (arxana-browser--language-location context))
                     (book (format "docbook://%s" book))
+                    ((not context) "arxana://")
                     (t nil))))
     (unless location
       (user-error "No location available for this view"))
@@ -799,6 +930,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
 (defun arxana-browser--import-library ()
   "Ingest the flexiarg collection at point into Futon."
   (interactive)
+  (arxana-browser--require-patterns)
   (let ((item (arxana-browser--item-at-point)))
     (unless (and item (eq (plist-get item :type) 'collection))
       (user-error "Place point on a collection entry to import"))
@@ -812,6 +944,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
 (defun arxana-browser--edit-collection ()
   "Open an Org buffer for editing every pattern inside the collection at point."
   (interactive)
+  (arxana-browser--require-patterns)
   (let ((item (arxana-browser--item-at-point)))
     (unless (and item (eq (plist-get item :type) 'collection))
       (user-error "Place point on a collection entry to edit"))
@@ -822,13 +955,19 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
 Useful after drilling into a collection so you can start editing without
 returning to the top-level list."
   (interactive)
+  (arxana-browser--require-patterns)
   (arxana-browser--ensure-context)
   (let ((context (car arxana-browser--stack)))
     (unless (and context (eq (plist-get context :type) 'collection))
       (user-error "Not currently viewing a collection"))
     (arxana-browser-patterns-edit-collection context)))
 
-(defvar arxana-browser-mode-map
+(defun arxana-browser--add-collection-root ()
+  (interactive)
+  (arxana-browser--require-patterns)
+  (call-interactively #'arxana-browser-patterns-add-collection-root))
+
+(defun arxana-browser--make-mode-map ()
   (let ((map (make-sparse-keymap)))
     (when (and (boundp 'tabulated-list-mode-map)
                (keymapp tabulated-list-mode-map))
@@ -859,8 +998,9 @@ returning to the top-level list."
     (define-key map (kbd "e") #'arxana-browser--stage-to-ep)
     (define-key map (kbd "+") #'arxana-browser--move-pattern-up)
     (define-key map (kbd "-") #'arxana-browser--move-pattern-down)
-    (define-key map (kbd "A") #'arxana-browser-patterns-add-collection-root)
+    (define-key map (kbd "A") #'arxana-browser--add-collection-root)
     (define-key map (kbd "t") #'arxana-media-retitle-at-point)
+    (define-key map (kbd "T") #'arxana-media-transcribe-and-podcast-at-point)
     (define-key map (kbd "D") #'arxana-browser--delete-marked)
     (define-key map (kbd "p") #'arxana-media-play-at-point)
     (define-key map (kbd "s") #'arxana-media-stop-playback)
@@ -896,8 +1036,19 @@ returning to the top-level list."
     (define-key map (kbd "C-c C-e") #'arxana-browser-docbook-export-org)
     (define-key map (kbd "C-c C-p") #'arxana-browser-docbook-export-pdf)
     (define-key map (kbd "C-c C-s") #'arxana-browser-docbook-sync-order)
+    (define-key map (kbd "C-c C-l") #'arxana-media-lyrics-refresh-at-point)
+    (define-key map (kbd "C-c C-L") #'arxana-media-lyrics-adopt-entity-at-point)
     (define-key map (kbd "q") #'quit-window)
     map))
+
+(defvar arxana-browser-mode-map
+  (arxana-browser--make-mode-map)
+  "Keymap for `arxana-browser-mode'.")
+
+(defun arxana-browser--ensure-mode-map ()
+  "Rebuild the mode map if it was unbound by a reload."
+  (unless (boundp 'arxana-browser-mode-map)
+    (setq arxana-browser-mode-map (arxana-browser--make-mode-map))))
 
 (define-derived-mode arxana-browser-mode tabulated-list-mode "Arxana-Browse"
   "Mode for browsing Futon pattern libraries."

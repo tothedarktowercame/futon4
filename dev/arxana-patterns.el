@@ -190,7 +190,8 @@ Set to nil to disable persistence."
 (defvaralias 'arxana-patterns-browser-click-sound 'arxana-browser-click-sound)
 (defvaralias 'arxana-patterns-browser-click-volume 'arxana-browser-click-volume)
 (defvaralias 'arxana-patterns-browser-wheel-step 'arxana-browser-wheel-step)
-(defvaralias 'arxana-patterns-browser-mode-map 'arxana-browser-mode-map)
+(with-eval-after-load 'arxana-browser-core
+  (defvaralias 'arxana-patterns-browser-mode-map 'arxana-browser-mode-map))
 (defalias 'arxana-patterns-browser-mode #'arxana-browser-mode)
 (defalias 'arxana-patterns--browser-click-path #'arxana-browser--click-path)
 (defalias 'arxana-patterns--browser-ensure-context #'arxana-browser--ensure-context)

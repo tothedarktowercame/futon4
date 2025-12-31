@@ -81,6 +81,81 @@
   :type 'directory
   :group 'arxana-media)
 
+(defun arxana-media--locate-transcribe-script ()
+  (let* ((base (or load-file-name buffer-file-name default-directory))
+         (dir (and base (file-name-directory base)))
+         (root (and dir (locate-dominating-file dir "futon0"))))
+    (cond
+     (root
+      (let ((candidate (expand-file-name "futon0/scripts/zoom_transcribe.py" root)))
+        (and (file-readable-p candidate) candidate)))
+     (t nil))))
+
+(defcustom arxana-media-transcribe-script (arxana-media--locate-transcribe-script)
+  "Path to futon0/scripts/zoom_transcribe.py for media transcription."
+  :type '(choice (const :tag "Auto-detect" nil)
+                 file)
+  :group 'arxana-media)
+
+(defun arxana-media--locate-podcast-script ()
+  (let* ((base (or load-file-name buffer-file-name default-directory))
+         (dir (and base (file-name-directory base)))
+         (root (and dir (locate-dominating-file dir "futon0"))))
+    (cond
+     (root
+      (let ((candidate (expand-file-name "futon0/scripts/transcript_to_podcast.py" root)))
+        (and (file-readable-p candidate) candidate)))
+     (t nil))))
+
+(defcustom arxana-media-podcast-script (arxana-media--locate-podcast-script)
+  "Path to futon0/scripts/transcript_to_podcast.py for podcast generation."
+  :type '(choice (const :tag "Auto-detect" nil)
+                 file)
+  :group 'arxana-media)
+
+(defcustom arxana-media-tts-root (expand-file-name "~/code/tts/")
+  "Root directory for media transcription/podcast artifacts."
+  :type 'directory
+  :group 'arxana-media)
+
+(defun arxana-media--locate-lualatex ()
+  (or (executable-find "lualatex")
+      (let ((candidate "/usr/local/texlive/2025/bin/x86_64-linux/lualatex"))
+        (and (file-executable-p candidate) candidate))))
+
+(defcustom arxana-media-lualatex-program (arxana-media--locate-lualatex)
+  "Path to lualatex used for lyrics PDF export."
+  :type '(choice (const :tag "Auto-detect" nil)
+                 file)
+  :group 'arxana-media)
+
+(defun arxana-media--locate-podcast-roots ()
+  (let* ((roots nil)
+         (tts (and arxana-media-tts-root
+                   (expand-file-name arxana-media-tts-root))))
+    (when (and tts (file-directory-p tts))
+      (push tts roots))
+    (let* ((base (or load-file-name buffer-file-name default-directory))
+           (dir (and base (file-name-directory base)))
+           (root (and dir (locate-dominating-file dir "futon0"))))
+      (when root
+        (let ((candidate (expand-file-name "futon0/data/zoomr4_demo" root)))
+          (when (file-directory-p candidate)
+            (push candidate roots)))))
+    (nreverse roots)))
+
+(defcustom arxana-media-podcast-roots (arxana-media--locate-podcast-roots)
+  "Roots to scan for generated podcast audio."
+  :type '(repeat directory)
+  :group 'arxana-media)
+
+(defcustom arxana-media-transcribe-python
+  (let ((candidate "/home/joe/opt/voice-typing-linux/venv/bin/python"))
+    (if (file-executable-p candidate) candidate "python3"))
+  "Python executable used for transcription."
+  :type 'string
+  :group 'arxana-media)
+
 (defun arxana-media--locate-player ()
   (or (executable-find "mpv")
       (executable-find "ffplay")
@@ -140,12 +215,24 @@
     ("vocal-forward+banjo+bass+harp"
      :script "scripts/bounce_vocal_banjo_bass_harp_vocal_forward.sh"
      :instruments ("vocal" "banjo" "bass" "harmonica"))
+    ("dual-vocal-forward+banjo+bass+accordion"
+     :script "scripts/bounce_vocals_banjo_bass_accordion_vocal_forward.sh"
+     :instruments ("vocal" "vocal2" "banjo" "bass" "accordion")
+     :track-count 5)
     ("vocal+bass+pbass+accordion" :script "scripts/bounce_vocal_bass_pbass_accordion.sh")
     ("vocal-forward+bass+pbass+accordion" :script "scripts/bounce_vocal_bass_pbass_accordion_vocal_forward.sh"))
   "Profiles for multi-track bounce workflows.
 Each entry is (PROFILE-NAME :script PATH [:instruments (\"vocal\" ...)])."
   :type '(repeat sexp)
   :group 'arxana-media)
+
+(let ((profile '("dual-vocal-forward+banjo+bass+accordion"
+                 :script "scripts/bounce_vocals_banjo_bass_accordion_vocal_forward.sh"
+                 :instruments ("vocal" "vocal2" "banjo" "bass" "accordion")
+                 :track-count 5)))
+  (unless (assoc (car profile) arxana-media-bounce-profiles)
+    (setq arxana-media-bounce-profiles
+          (append arxana-media-bounce-profiles (list profile)))))
 
 (defcustom arxana-media-bounce-instrument-aliases
   '(("harmonic" . "harmonica")
@@ -233,6 +320,11 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
 (defcustom arxana-media-lyrics-auto-hash-limit (* 25 1024 1024)
   "Max file size (bytes) to auto-hash for lyrics indicators."
   :type 'integer
+  :group 'arxana-media)
+
+(defcustom arxana-media-lyrics-indicator-force-hash nil
+  "When non-nil, hash large files to show the lyrics indicator."
+  :type 'boolean
   :group 'arxana-media)
 
 (defface arxana-media-lyrics-serif
@@ -511,10 +603,37 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
 (defun arxana-media--fetch-lyrics (entity-id)
   (let* ((response (ignore-errors (arxana-store-fetch-entity entity-id)))
          (entity (and (listp response) (alist-get :entity response)))
-         (lyrics (arxana-media--entity-source entity)))
-    (arxana-media--maybe-fix-utf8 (or lyrics ""))))
+         (lyrics (arxana-media--entity-source entity))
+         (text (arxana-media--maybe-fix-utf8 (or lyrics ""))))
+    (when (and (stringp entity-id) (not (string-empty-p entity-id)))
+      (puthash entity-id (if (string-empty-p text) 'none t) arxana-media--lyrics-cache))
+    text))
 
 (defvar-local arxana-media--lyrics-context nil)
+
+(defun arxana-media--store-track-entity (item title)
+  "Upsert ITEM into Futon with TITLE when sync is enabled."
+  (when (arxana-store-sync-enabled-p)
+    (let* ((type (plist-get item :type))
+           (entry (plist-get item :entry))
+           (path (plist-get item :path))
+           (sha (ignore-errors (arxana-media--track-sha item)))
+           (entity-id (ignore-errors (arxana-media--track-entity-id item)))
+           (source (if (eq type 'media-track) "zoom" "misc"))
+           (props (delq nil
+                        (list (when path (cons 'media/path path))
+                              (when (and entry (plist-get entry :project_path))
+                                (cons 'media/project-path (plist-get entry :project_path)))
+                              (when (and entry (plist-get entry :project_folder))
+                                (cons 'media/project-folder (plist-get entry :project_folder)))
+                              (cons 'media/source source)))))
+      (when entity-id
+        (arxana-store-ensure-entity :id entity-id
+                                    :name title
+                                    :type "arxana/media-track"
+                                    :external-id entity-id
+                                    :media/sha256 sha
+                                    :props props)))))
 
 (defun arxana-media--lyrics-context (item)
   (let* ((type (plist-get item :type))
@@ -535,12 +654,13 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
 (defvar arxana-media-lyrics-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-s") #'arxana-media-lyrics-save)
+    (define-key map (kbd "C-c C-e") #'arxana-media-lyrics-export-pdf)
     map)
   "Keymap for `arxana-media-lyrics-mode'.")
 
 (define-derived-mode arxana-media-lyrics-mode text-mode "Lyrics"
   "Major mode for editing media lyrics."
-  (setq header-line-format "C-c C-s to save lyrics to XTDB")
+  (setq header-line-format "C-c C-s to save lyrics; C-c C-e to export PDF")
   (add-hook 'after-change-functions #'arxana-media--lyrics-refresh-region nil t)
   (arxana-media--lyrics-apply-chord-faces (point-min) (point-max)))
 
@@ -555,20 +675,20 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
   (let* ((context arxana-media--lyrics-context)
          (entity-id (plist-get context :entity-id))
          (lyrics-id (plist-get context :lyrics-entity-id))
+         (item (plist-get context :item))
+         (sha (and item (arxana-media--track-sha item)))
          (title (plist-get context :title))
          (path (plist-get context :path))
          (source (plist-get context :source))
          (entry (plist-get context :entry))
          (lyrics (string-trim-right (buffer-string)))
          (lyrics-name (format "%s (lyrics)" title)))
-    (arxana-store-ensure-entity :id entity-id
-                                :name title
-                                :type "arxana/media-track"
-                                :external-id entity-id)
+    (arxana-media--store-track-entity item title)
     (arxana-store-ensure-entity :id lyrics-id
                                 :name lyrics-name
                                 :type "arxana/media-lyrics"
                                 :external-id lyrics-id
+                                :media/sha256 sha
                                 :source lyrics)
     (arxana-store-create-relation :src entity-id
                                   :dst lyrics-id
@@ -577,6 +697,183 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
     (when (fboundp 'arxana-browser--render)
       (arxana-browser--render))
     (message "Saved lyrics for %s" title)))
+
+(defun arxana-media-lyrics-adopt-entity-at-point (source-id)
+  "Copy lyrics from SOURCE-ID into the current track's lyrics entity."
+  (interactive (list (string-trim (read-string "Source lyrics entity id: "))))
+  (unless (arxana-store-ensure-sync)
+    (user-error "Futon sync is disabled; enable futon4-enable-sync first"))
+  (unless (and source-id (> (length source-id) 0))
+    (user-error "Source lyrics entity id is required"))
+  (let* ((item (arxana-browser--item-at-point)))
+    (unless (and item (memq (plist-get item :type)
+                            '(media-track media-misc-track media-publication-track)))
+      (user-error "No media track at point"))
+    (let* ((context (arxana-media--lyrics-context item))
+           (title (plist-get context :title))
+           (target-entity-id (plist-get context :entity-id))
+           (target-lyrics-id (plist-get context :lyrics-entity-id))
+           (sha (and item (arxana-media--track-sha item)))
+           (response (ignore-errors (arxana-store-fetch-entity source-id)))
+           (entity (and (listp response) (alist-get :entity response)))
+           (source (arxana-media--entity-source entity))
+           (lyrics (string-trim-right (or source ""))))
+      (unless (and lyrics (> (length lyrics) 0))
+        (user-error "No lyrics text found in %s" source-id))
+      (arxana-media--store-track-entity item title)
+      (arxana-store-ensure-entity :id target-lyrics-id
+                                  :name (format "%s (lyrics)" title)
+                                  :type "arxana/media-lyrics"
+                                  :external-id target-lyrics-id
+                                  :media/sha256 sha
+                                  :source lyrics)
+      (arxana-store-create-relation :src target-entity-id
+                                    :dst target-lyrics-id
+                                    :label ":media/lyrics")
+      (puthash target-lyrics-id t arxana-media--lyrics-cache)
+      (when (fboundp 'arxana-browser--render)
+        (arxana-browser--render))
+      (message "Adopted lyrics into %s" target-lyrics-id))))
+
+(defun arxana-media--latex-escape (text)
+  (let ((escaped (replace-regexp-in-string "\\\\" "\\\\textbackslash{}" text t t)))
+    (setq escaped (replace-regexp-in-string "[#$%&_{}]" "\\\\\\&" escaped))
+    escaped))
+
+(defun arxana-media--lyrics-face->latex (face text)
+  (let ((body (arxana-media--latex-escape text)))
+    (pcase face
+      ('arxana-media-lyrics-serif
+       (format "\\LyricsSerif{%s}" body))
+      ('arxana-media-lyrics-serif-bold
+       (format "\\LyricsSerifBold{%s}" body))
+      ('arxana-media-lyrics-serif-italic
+       (format "\\LyricsSerifItalic{%s}" body))
+      ('arxana-media-lyrics-serif-bold-italic
+       (format "\\LyricsSerifBoldItalic{%s}" body))
+      ('arxana-media-lyrics-sans
+       (format "\\LyricsSans{%s}" body))
+      ('arxana-media-lyrics-sans-bold
+       (format "\\LyricsSansBold{%s}" body))
+      ('arxana-media-lyrics-sans-bold-italic
+       (format "\\LyricsSansBoldItalic{%s}" body))
+      ('arxana-media-lyrics-script
+       (format "\\LyricsScript{%s}" body))
+      ('arxana-media-lyrics-script-bold
+       (format "\\LyricsScriptBold{%s}" body))
+      ('arxana-media-lyrics-blackletter
+       (format "\\LyricsBlackletter{%s}" body))
+      ('arxana-media-lyrics-blackletter-bold
+       (format "\\LyricsBlackletterBold{%s}" body))
+      ('arxana-media-lyrics-mono
+       (format "\\LyricsMono{%s}" body))
+      (_ body))))
+
+(defun arxana-media--lyrics-display-chord (chord)
+  (let ((value (or chord "")))
+    (setq value (replace-regexp-in-string "#" "♯" value))
+    (setq value (replace-regexp-in-string "\\([A-G]\\)b" "\\1♭" value))
+    value))
+
+(defun arxana-media--lyrics-line->latex (line)
+  (if (string-match arxana-media--lyrics-chord-regexp line)
+      (let* ((chord (match-string 1 line))
+             (body (match-string 2 line))
+             (face (arxana-media--lyrics-face-for-chord chord))
+             (display (arxana-media--lyrics-display-chord chord))
+             (prefix (arxana-media--latex-escape (format "[%s] " display))))
+        (concat prefix (arxana-media--lyrics-face->latex face body)))
+    (arxana-media--latex-escape line)))
+
+(defun arxana-media-lyrics-export-pdf (&optional filename)
+  "Export the current lyrics buffer to a PDF via lualatex."
+  (interactive)
+  (unless (and (listp arxana-media--lyrics-context)
+               (plist-get arxana-media--lyrics-context :title))
+    (user-error "No lyrics context available"))
+  (let* ((context arxana-media--lyrics-context)
+         (title (plist-get context :title))
+         (path (plist-get context :path))
+         (dir (or (and path (file-name-directory path))
+                  default-directory))
+         (slug (arxana-media--slug title))
+         (default (expand-file-name (format "%s-lyrics.pdf" slug) dir))
+         (pdf (expand-file-name
+               (or filename
+                   (read-file-name "Export PDF to: " dir default nil
+                                   (file-name-nondirectory default)))))
+         (lualatex (or arxana-media-lualatex-program
+                       (arxana-media--locate-lualatex)))
+         (lualatex-ok (if (and lualatex (file-name-absolute-p lualatex))
+                          (file-executable-p lualatex)
+                        (and lualatex (executable-find lualatex)))))
+    (unless lualatex-ok
+      (user-error "lualatex not found; set arxana-media-lualatex-program"))
+    (let* ((tmp-dir (make-temp-file "arxana-lyrics-" t))
+           (tex (expand-file-name "lyrics.tex" tmp-dir))
+           (pdf-out (expand-file-name "lyrics.pdf" tmp-dir))
+         (lines (split-string (string-trim-right (buffer-string)) "\n" nil))
+         (tex-body (mapconcat
+                    (lambda (line)
+                      (if (string-empty-p line)
+                          "\\vspace{0.6em}\\par"
+                        (concat "\\noindent "
+                                (arxana-media--lyrics-line->latex line)
+                                "\\par")))
+                    lines
+                    "\n"))
+         (tex-content
+          (concat
+             "\\documentclass[12pt]{article}\n"
+             "\\usepackage[margin=1in]{geometry}\n"
+             "\\usepackage{fontspec}\n"
+             "\\usepackage{newunicodechar}\n"
+             "\\setmainfont{TeX Gyre Pagella}\n"
+             "\\newfontfamily\\coda[Scale=MatchLowercase]{Noto Sans Math}\n"
+             "\\newunicodechar{♯}{\\raisebox{.5ex}{{\\coda ♯}}}\n"
+             "\\newunicodechar{♭}{\\raisebox{.5ex}{{\\coda {\\large ♭}}}}\n"
+             "\\newcommand{\\LyricsSerif}[1]{{\\fontspec{TeX Gyre Termes}#1}}\n"
+             "\\newcommand{\\LyricsSerifBold}[1]{{\\fontspec{TeX Gyre Termes}\\textbf{#1}}}\n"
+             "\\newcommand{\\LyricsSerifItalic}[1]{{\\fontspec{TeX Gyre Termes}\\textit{#1}}}\n"
+             "\\newcommand{\\LyricsSerifBoldItalic}[1]{{\\fontspec{TeX Gyre Termes}\\textbf{\\textit{#1}}}}\n"
+             "\\newcommand{\\LyricsSans}[1]{{\\fontspec{TeX Gyre Heros}#1}}\n"
+             "\\newcommand{\\LyricsSansBold}[1]{{\\fontspec{TeX Gyre Heros}\\textbf{#1}}}\n"
+             "\\newcommand{\\LyricsSansBoldItalic}[1]{{\\fontspec{TeX Gyre Heros}\\textbf{\\textit{#1}}}}\n"
+             "\\newcommand{\\LyricsScript}[1]{{\\fontspec{Allura}#1}}\n"
+             "\\newcommand{\\LyricsScriptBold}[1]{{\\fontspec{Parisienne}\\textbf{#1}}}\n"
+             "\\newcommand{\\LyricsBlackletter}[1]{{\\fontspec{UnifrakturMaguntia}#1}}\n"
+             "\\newcommand{\\LyricsBlackletterBold}[1]{{\\fontspec{UnifrakturMaguntia}\\textbf{#1}}}\n"
+             "\\newcommand{\\LyricsMono}[1]{{\\fontspec{Iosevka Term}#1}}\n"
+             "\\usepackage{microtype}\n"
+             "\\usepackage{setspace}\n"
+             "\\setstretch{1.15}\n"
+             "\\usepackage{hyperref}\n"
+             "\\hypersetup{hidelinks}\n"
+             "\\usepackage{parskip}\n"
+             "\\title{" (replace-regexp-in-string "[#%&_{}]" "" title) "}\n"
+             "\\date{}\n"
+             "\\begin{document}\n"
+             "\\maketitle\n"
+             "\\thispagestyle{empty}\n"
+             "\\begin{flushleft}\n"
+             tex-body
+             "\n\\end{flushleft}\n"
+             "\\end{document}\n")))
+      (with-temp-file tex
+        (insert tex-content))
+      (with-current-buffer (get-buffer-create "*arxana-lyrics-export*")
+        (let ((inhibit-read-only t))
+          (erase-buffer))
+        (let ((exit-code (call-process lualatex nil t nil "-interaction=nonstopmode"
+                                       "-halt-on-error"
+                                       (format "-output-directory=%s" tmp-dir)
+                                       tex)))
+          (unless (equal exit-code 0)
+            (user-error "PDF export failed (see %s)" (buffer-name))))
+        (unless (file-exists-p pdf-out)
+          (user-error "PDF export failed: no output generated"))
+        (copy-file pdf-out pdf t)
+        (message "Exported lyrics to %s" pdf)))))
 
 (defun arxana-media-edit-lyrics-at-point ()
   "Open a buffer to edit lyrics for the current media track."
@@ -598,6 +895,20 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
           (goto-char (point-min))
           (arxana-media--lyrics-apply-chord-faces (point-min) (point-max))))
       (pop-to-buffer buffer))))
+
+(defun arxana-media-lyrics-refresh-at-point ()
+  "Clear the lyrics cache for the current media item and rerender."
+  (interactive)
+  (let* ((item (arxana-browser--item-at-point)))
+    (unless item
+      (user-error "No media item at point"))
+    (let ((lyrics-id (ignore-errors (arxana-media--lyrics-entity-id item))))
+      (unless (and lyrics-id (stringp lyrics-id))
+        (user-error "No lyrics entity for item"))
+      (remhash lyrics-id arxana-media--lyrics-cache)
+      (when (fboundp 'arxana-browser--render)
+        (arxana-browser--render))
+      (message "Refreshed lyrics indicator for %s" lyrics-id))))
 
 (defun arxana-media--publication-metadata-path (directory)
   (expand-file-name arxana-media-publication-metadata-file
@@ -771,6 +1082,48 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
                       :label (file-name-base path)
                       :path path))
               files))))
+
+(defun arxana-media--podcast-label (path)
+  (let* ((audio-dir (file-name-directory path))
+         (commentary-dir (and audio-dir (file-name-directory (directory-file-name audio-dir))))
+         (item-dir (and commentary-dir (file-name-directory (directory-file-name commentary-dir)))))
+    (or (and item-dir (file-name-nondirectory (directory-file-name item-dir)))
+        (file-name-base path))))
+
+(defun arxana-media--podcast-description (path root)
+  (let* ((relative (and root (file-relative-name path root))))
+    (if (and relative (not (string-prefix-p ".." relative)))
+        relative
+      path)))
+
+(defun arxana-media--podcast-items ()
+  (let* ((roots (seq-filter #'file-directory-p
+                            (mapcar #'expand-file-name arxana-media-podcast-roots)))
+         (paths (apply #'append
+                       (mapcar (lambda (root)
+                                 (directory-files-recursively
+                                  root
+                                  "commentary_full\\.mp3\\'"))
+                               roots))))
+    (if (and paths (> (length paths) 0))
+        (mapcar (lambda (path)
+                  (let* ((path-dir (file-name-as-directory (file-name-directory path)))
+                         (root (seq-find (lambda (candidate)
+                                           (string-prefix-p (file-name-as-directory candidate) path-dir))
+                                         roots)))
+                    (list :type 'media-podcast
+                          :label (arxana-media--podcast-label path)
+                          :description (arxana-media--podcast-description path root)
+                          :path path
+                          :podcast-root root)))
+                (sort paths #'string<))
+      (list (list :type 'info
+                  :label "No podcasts yet"
+                  :description (if roots
+                                   (format "No commentary_full.mp3 found under %s root%s"
+                                           (length roots)
+                                           (if (= (length roots) 1) "" "s"))
+                                 "Set arxana-media-podcast-roots to enable scanning."))))))
 
 (defun arxana-media--publication-track-format ()
   [(" " 1 nil)
@@ -1079,6 +1432,7 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
             (apply #'process-file (car args) nil buf nil (cdr args)))))
     (unless (equal exit-code 0)
       (user-error "zoom_sync.py failed (see *arxana-media* buffer)"))
+    (arxana-media--store-track-entity (list :type 'media-track :entry entry) title)
     (when (not (string= status "hold"))
       (message "[arxana-media] Note: retitled non-hold entry %s" sha))))
 
@@ -1321,6 +1675,25 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
                                       :description "Recording folders from the Zoom R4."
                                       :view 'media-projects
                                       :count (length projects)))))))
+        (let* ((roots (seq-filter #'file-directory-p
+                                  (mapcar #'expand-file-name arxana-media-podcast-roots)))
+               (podcasts (arxana-media--podcast-items))
+               (count (length (seq-filter (lambda (item)
+                                            (eq (plist-get item :type) 'media-podcast))
+                                          podcasts)))
+               (root-label (cond
+                            ((null roots) "arxana-media-podcast-roots")
+                            ((= (length roots) 1) (car roots))
+                            (t (format "%d roots" (length roots))))))
+          (setq items
+                (append items
+                        (list (list :type 'menu
+                                    :label "Podcasts"
+                                    :description (format "%d item%s under %s"
+                                                         count
+                                                         (if (= count 1) "" "s")
+                                                         root-label)
+                                    :view 'media-podcasts)))))
         items)))))
 
 (defun arxana-media--filter-entries (entries filter)
@@ -1439,17 +1812,22 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
         (puthash lyrics-id (if present t 'none) arxana-media--lyrics-cache)
         present)))))
 
+(defun arxana-media--lyrics-indicator-sha (item path)
+  (if arxana-media-lyrics-indicator-force-hash
+      (arxana-media--track-sha item)
+    (arxana-media--maybe-cache-misc-sha path)))
+
 (defun arxana-media--lyrics-indicator (item)
   (condition-case nil
       (pcase (plist-get item :type)
         ('media-publication-track
          (let* ((path (plist-get item :path))
-                (sha (arxana-media--maybe-cache-misc-sha path))
+                (sha (arxana-media--lyrics-indicator-sha item path))
                 (lyrics-id (and sha (format "arxana/media-lyrics/misc/%s" sha))))
            (if (and lyrics-id (arxana-media--lyrics-present-p lyrics-id)) "L" " ")))
         ('media-misc-track
          (let* ((path (plist-get item :path))
-                (sha (arxana-media--maybe-cache-misc-sha path))
+                (sha (arxana-media--lyrics-indicator-sha item path))
                 (lyrics-id (and sha (format "arxana/media-lyrics/misc/%s" sha))))
            (if (and lyrics-id (arxana-media--lyrics-present-p lyrics-id)) "L" " ")))
         (_
@@ -1600,6 +1978,74 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
     ('media-publication-track
      (plist-get item :path))
     (_ nil)))
+
+(defun arxana-media--ensure-tts-root ()
+  (let ((root (and arxana-media-tts-root
+                   (expand-file-name arxana-media-tts-root))))
+    (unless (and root (file-directory-p root))
+      (user-error "Set arxana-media-tts-root to an existing directory"))
+    root))
+
+(defun arxana-media--tts-item-root (item)
+  (let* ((sha (ignore-errors (arxana-media--track-sha item)))
+         (fallback (or (plist-get item :label) "media"))
+         (slug (or sha (arxana-media--slug fallback)))
+         (root (arxana-media--ensure-tts-root)))
+    (expand-file-name (format "media/%s/" slug) root)))
+
+(defun arxana-media-transcribe-and-podcast-at-point ()
+  "Run transcription + podcast generation for the media track at point."
+  (interactive)
+  (let* ((item (arxana-browser--item-at-point)))
+    (unless (and item (memq (plist-get item :type)
+                            '(media-track media-misc-track media-publication-track)))
+      (user-error "Place point on a media track to transcribe"))
+    (let* ((path (arxana-media--item-play-path item)))
+      (unless (and path (file-readable-p path))
+        (user-error "No readable media file found for this track"))
+      (let* ((transcribe (and arxana-media-transcribe-script
+                              (arxana-media--script-path arxana-media-transcribe-script)))
+             (podcast (and arxana-media-podcast-script
+                           (arxana-media--script-path arxana-media-podcast-script))))
+        (unless (and transcribe (file-readable-p transcribe))
+          (user-error "Set arxana-media-transcribe-script to a readable file"))
+        (unless (and podcast (file-readable-p podcast))
+          (user-error "Set arxana-media-podcast-script to a readable file"))
+        (let* ((python (or arxana-media-transcribe-python "python3"))
+               (python-ok (if (file-name-absolute-p python)
+                              (file-executable-p python)
+                            (executable-find python))))
+          (unless python-ok
+            (user-error "Transcribe python not found: %s" python))
+          (let* ((base-dir (arxana-media--tts-item-root item))
+                 (transcript-dir (expand-file-name "transcript" base-dir))
+                 (commentary-dir (expand-file-name "commentary" base-dir))
+                 (stem (file-name-base path))
+                 (transcript (expand-file-name (format "%s_full.txt" stem) transcript-dir))
+                 (has-transcript (and (file-readable-p transcript)
+                                      (> (nth 7 (file-attributes transcript)) 0)))
+                 (steps (list (format "python3 %s %s --out-dir %s"
+                                      (shell-quote-argument podcast)
+                                      (shell-quote-argument transcript)
+                                      (shell-quote-argument commentary-dir)))))
+            (unless has-transcript
+              (setq steps
+                    (cons (format "%s %s %s --output-dir %s"
+                                  (shell-quote-argument python)
+                                  (shell-quote-argument transcribe)
+                                  (shell-quote-argument path)
+                                  (shell-quote-argument transcript-dir))
+                          steps)))
+            (let* ((cmd (string-join steps " && "))
+               (buffer (get-buffer-create "*arxana-media-podcast*")))
+          (make-directory transcript-dir t)
+          (make-directory commentary-dir t)
+          (with-current-buffer buffer
+            (read-only-mode -1)
+            (erase-buffer))
+          (let ((proc (start-process-shell-command "arxana-media-podcast" buffer cmd)))
+            (set-process-query-on-exit-flag proc nil)
+            (message "Started transcription/podcast pipeline for %s" stem)))))))))
 
 (defun arxana-media-open-in-audacity ()
   "Open marked media tracks (or the track at point) in Audacity."
@@ -1806,14 +2252,21 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
   (let ((entries (arxana-media--marked-track-entries-in-context)))
     (unless entries
       (user-error "No marked tracks for bounce"))
-    (unless (= (length entries) 4)
-      (user-error "Bounce expects 4 tracks (got %d)" (length entries)))
     (let* ((profile (arxana-media--bounce-profile-choice))
            (script-rel (plist-get (cdr profile) :script))
            (script (arxana-media--script-path script-rel))
+           (expected-count (or (plist-get (cdr profile) :track-count)
+                               (let ((instrument-order (plist-get (cdr profile) :instruments)))
+                                 (and instrument-order (length instrument-order)))))
            (instrument-order (plist-get (cdr profile) :instruments))
+           (use-marked-order (plist-get (cdr profile) :use-marked-order))
            (instrument-aliases (or (plist-get (cdr profile) :instrument-aliases)
                                    arxana-media-bounce-instrument-aliases)))
+      (when (and expected-count (/= (length entries) expected-count))
+        (user-error "Bounce expects %d track%s (got %d)"
+                    expected-count
+                    (if (= expected-count 1) "" "s")
+                    (length entries)))
       (unless (and script (file-exists-p script) (file-executable-p script))
         (user-error "Bounce script not executable: %s" script))
       (let ((entry-data nil))
@@ -1827,7 +2280,7 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
                               "track")))
             (push (list :entry entry :path path) entry-data)))
         (setq entry-data (nreverse entry-data))
-      (when instrument-order
+      (when (and instrument-order (not use-marked-order))
         (let ((assignments (make-hash-table :test 'equal))
               (unmatched nil)
               (ambiguous nil)
@@ -2103,8 +2556,12 @@ When URL is provided, write it to the publication metadata."
              (when (string= path dest)
                (user-error "Title matches existing filename"))
              (rename-file path dest)
-             (arxana-browser--render)
-             (message "Retitled %s" title))))))))
+            (arxana-media--store-track-entity (list :type (plist-get item :type)
+                                                    :path dest
+                                                    :label title)
+                                              title)
+            (arxana-browser--render)
+            (message "Retitled %s" title))))))))
 
 (defun arxana-media-delete-at-point ()
   "Hard-delete the current misc audio file from disk."

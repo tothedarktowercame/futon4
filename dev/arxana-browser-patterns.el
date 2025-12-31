@@ -13,6 +13,7 @@
 (require 'org-element)
 (require 'tabulated-list)
 
+(require 'arxana-browser-core)
 (require 'arxana-store)
 (require 'arxana-flexiarg-collection)
 (require 'arxana-patterns-ingest)
@@ -115,7 +116,14 @@ Set to nil to disable persistence."
                (display-graphic-p)
                (fboundp 'play-sound))
       (ignore-errors
-        (play-sound `(sound :file ,path :volume ,(max 0.0 (min 1.0 arxana-browser-click-volume))))))))
+        (let ((player (executable-find "pw-play"))
+              (volume (max 0.0 (min 1.0 arxana-browser-click-volume))))
+          (if player
+              (start-process "arxana-click" nil player
+                             "--volume" (format "%.3f" volume)
+                             "--media-role" "event"
+                             path)
+            (play-sound `(sound :file ,path :volume ,volume))))))))
 
 (defun arxana-flexiarg--find-contrib-path ()
   "Return a plausible futon3 contrib path containing flexiarg.el, or nil."
@@ -1364,35 +1372,9 @@ are ignored for now."
                 (file-name-nondirectory file)
               title))))
 
-(defun arxana-browser-patterns--menu-items ()
-  (list (list :type 'menu
-              :label "Patterns"
-              :description "Browse pattern languages and flexiarg collections."
-              :view 'patterns)
-        (list :type 'menu
-              :label "Code"
-              :description "Upcoming Arxana code browser (imports pending)."
-              :view 'code)
-        (list :type 'menu
-              :label "Media"
-              :description "Zoom/Napster media library prototype."
-              :view 'media)
-        (list :type 'menu
-              :label "Docs"
-              :description "Doc books (XTDB-backed, futon4)."
-              :view 'docbook)
-        (list :type 'menu
-              :label "Lab"
-              :description "Lab notebook sessions staged under lab/."
-              :view 'lab)))
+(defalias 'arxana-browser-patterns--menu-items #'arxana-browser--menu-items)
 
-(defun arxana-browser-patterns--code-items ()
-  (list (list :type 'info
-              :label "Arxana source"
-              :description "Hook up Futon1 code entities to browse modules here.")
-        (list :type 'info
-              :label "Import status"
-              :description "No code catalogs detected yet.")))
+(defalias 'arxana-browser-patterns--code-items #'arxana-browser--code-items)
 
 (defun arxana-browser-patterns--ensure-frame ()
   (or (seq-find (lambda (frame)
