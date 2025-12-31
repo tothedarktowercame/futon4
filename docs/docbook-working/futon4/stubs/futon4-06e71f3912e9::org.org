@@ -1,0 +1,12 @@
+#+TITLE: Storage substrates
+:PROPERTIES:
+:DOC_ID: unknown
+:VERSION: org
+:OUTLINE_PATH: Logical model / Storage substrates
+:PATH_STRING: Logical model / Storage substrates
+:REPLACES: 
+:END:
+
+* Context
+- (no summary yet)
+

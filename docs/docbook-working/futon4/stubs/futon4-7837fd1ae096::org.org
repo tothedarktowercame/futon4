@@ -1,0 +1,12 @@
+#+TITLE: Emacs client (Arxana classic)
+:PROPERTIES:
+:DOC_ID: unknown
+:VERSION: org
+:OUTLINE_PATH: Logical model / Emacs client (Arxana classic)
+:PATH_STRING: Logical model / Emacs client (Arxana classic)
+:REPLACES: 
+:END:
+
+* Context
+- (no summary yet)
+

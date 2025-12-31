@@ -1,0 +1,12 @@
+#+TITLE: Testing hooks
+:PROPERTIES:
+:DOC_ID: unknown
+:VERSION: org
+:OUTLINE_PATH: Testing hooks
+:PATH_STRING: Testing hooks
+:REPLACES: 
+:END:
+
+* Context
+- (no summary yet)
+

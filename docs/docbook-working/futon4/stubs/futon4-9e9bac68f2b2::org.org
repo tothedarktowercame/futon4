@@ -1,0 +1,12 @@
+#+TITLE: Downtime handling
+:PROPERTIES:
+:DOC_ID: unknown
+:VERSION: org
+:OUTLINE_PATH: Downtime handling
+:PATH_STRING: Downtime handling
+:REPLACES: 
+:END:
+
+* Context
+- (no summary yet)
+

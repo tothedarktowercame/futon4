@@ -1,0 +1,12 @@
+#+TITLE: Tabulated UI & commands
+:PROPERTIES:
+:DOC_ID: unknown
+:VERSION: org
+:OUTLINE_PATH: Browsing & relations / Tabulated UI & commands
+:PATH_STRING: Browsing & relations / Tabulated UI & commands
+:REPLACES: 
+:END:
+
+* Context
+- (no summary yet)
+

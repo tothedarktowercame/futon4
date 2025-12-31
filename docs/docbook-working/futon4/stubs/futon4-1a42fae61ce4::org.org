@@ -1,0 +1,12 @@
+#+TITLE: In-memory storage of one form or another
+:PROPERTIES:
+:DOC_ID: unknown
+:VERSION: org
+:OUTLINE_PATH: Logical model / Storage substrates / In-memory storage of one form or another
+:PATH_STRING: Logical model / Storage substrates / In-memory storage of one form or another
+:REPLACES: 
+:END:
+
+* Context
+- (no summary yet)
+

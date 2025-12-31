@@ -1,0 +1,12 @@
+#+TITLE: Contributor guide (embedded)
+:PROPERTIES:
+:DOC_ID: unknown
+:VERSION: org
+:OUTLINE_PATH: Contributor guide (embedded)
+:PATH_STRING: Contributor guide (embedded)
+:REPLACES: 
+:END:
+
+* Context
+- (no summary yet)
+

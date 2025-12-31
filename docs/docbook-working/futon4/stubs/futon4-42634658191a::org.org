@@ -1,0 +1,12 @@
+#+TITLE: Rendering Futon responses
+:PROPERTIES:
+:DOC_ID: unknown
+:VERSION: org
+:OUTLINE_PATH: Browsing & relations / Rendering Futon responses
+:PATH_STRING: Browsing & relations / Rendering Futon responses
+:REPLACES: 
+:END:
+
+* Context
+- (no summary yet)
+

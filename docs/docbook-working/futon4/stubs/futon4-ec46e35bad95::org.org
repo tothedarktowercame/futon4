@@ -1,0 +1,12 @@
+#+TITLE: Pattern workflows
+:PROPERTIES:
+:DOC_ID: unknown
+:VERSION: org
+:OUTLINE_PATH: Pattern workflows
+:PATH_STRING: Pattern workflows
+:REPLACES: 
+:END:
+
+* Context
+- (no summary yet)
+

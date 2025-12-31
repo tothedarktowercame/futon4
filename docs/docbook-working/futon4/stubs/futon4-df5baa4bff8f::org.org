@@ -1,0 +1,12 @@
+#+TITLE: Document-based substrates
+:PROPERTIES:
+:DOC_ID: unknown
+:VERSION: org
+:OUTLINE_PATH: Logical model / Storage substrates / Document-based substrates
+:PATH_STRING: Logical model / Storage substrates / Document-based substrates
+:REPLACES: 
+:END:
+
+* Context
+- (no summary yet)
+

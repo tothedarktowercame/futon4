@@ -1,0 +1,12 @@
+#+TITLE: Legacy navigation commands
+:PROPERTIES:
+:DOC_ID: unknown
+:VERSION: org
+:OUTLINE_PATH: Browsing & relations / Legacy navigation commands
+:PATH_STRING: Browsing & relations / Legacy navigation commands
+:REPLACES: 
+:END:
+
+* Context
+- (no summary yet)
+

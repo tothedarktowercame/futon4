@@ -1,0 +1,12 @@
+#+TITLE: Workflow notes
+:PROPERTIES:
+:DOC_ID: unknown
+:VERSION: org
+:OUTLINE_PATH: Workflow notes
+:PATH_STRING: Workflow notes
+:REPLACES: 
+:END:
+
+* Context
+- (no summary yet)
+

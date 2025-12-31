@@ -1,0 +1,12 @@
+#+TITLE: Logical model
+:PROPERTIES:
+:DOC_ID: unknown
+:VERSION: org
+:OUTLINE_PATH: Logical model
+:PATH_STRING: Logical model
+:REPLACES: 
+:END:
+
+* Context
+- (no summary yet)
+

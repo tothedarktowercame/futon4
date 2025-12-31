@@ -1,0 +1,12 @@
+#+TITLE: Possible future: Triple-store substrate
+:PROPERTIES:
+:DOC_ID: unknown
+:VERSION: org
+:OUTLINE_PATH: Logical model / Storage substrates / Possible future: Triple-store substrate
+:PATH_STRING: Logical model / Storage substrates / Possible future: Triple-store substrate
+:REPLACES: 
+:END:
+
+* Context
+- (no summary yet)
+

@@ -1,0 +1,12 @@
+#+TITLE: Article lifecycle
+:PROPERTIES:
+:DOC_ID: unknown
+:VERSION: org
+:OUTLINE_PATH: Article lifecycle
+:PATH_STRING: Article lifecycle
+:REPLACES: 
+:END:
+
+* Context
+- (no summary yet)
+

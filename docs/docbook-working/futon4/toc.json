@@ -1,0 +1,926 @@
+{
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-0cf1aad99fe8",
+    "title",
+    "Quickstart",
+    "outline",
+    [
+      "Quickstart"
+    ],
+    "path_string",
+    "Quickstart",
+    "level",
+    1,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-0cf1aad99fe8::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-e8f0f026e2d1",
+    "title",
+    "Overview",
+    "outline",
+    [
+      "Overview"
+    ],
+    "path_string",
+    "Overview",
+    "level",
+    1,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-e8f0f026e2d1::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-00eed2b34c80",
+    "title",
+    "Storage bridge",
+    "outline",
+    [
+      "Storage bridge"
+    ],
+    "path_string",
+    "Storage bridge",
+    "level",
+    1,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-00eed2b34c80::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-09c07c0eae61",
+    "title",
+    "Logical model",
+    "outline",
+    [
+      "Logical model"
+    ],
+    "path_string",
+    "Logical model",
+    "level",
+    1,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-09c07c0eae61::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-7837fd1ae096",
+    "title",
+    "Emacs client (Arxana classic)",
+    "outline",
+    [
+      "Logical model",
+      "Emacs client (Arxana classic)"
+    ],
+    "path_string",
+    "Logical model / Emacs client (Arxana classic)",
+    "level",
+    2,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-7837fd1ae096::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-06e71f3912e9",
+    "title",
+    "Storage substrates",
+    "outline",
+    [
+      "Logical model",
+      "Storage substrates"
+    ],
+    "path_string",
+    "Logical model / Storage substrates",
+    "level",
+    2,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-06e71f3912e9::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-b0097454f709",
+    "title",
+    "Current reality: EAV in Clojure (Datascript + XTDB)",
+    "outline",
+    [
+      "Logical model",
+      "Storage substrates",
+      "Current reality: EAV in Clojure (Datascript + XTDB)"
+    ],
+    "path_string",
+    "Logical model / Storage substrates / Current reality: EAV in Clojure (Datascript + XTDB)",
+    "level",
+    3,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-b0097454f709::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-df5baa4bff8f",
+    "title",
+    "Document-based substrates",
+    "outline",
+    [
+      "Logical model",
+      "Storage substrates",
+      "Document-based substrates"
+    ],
+    "path_string",
+    "Logical model / Storage substrates / Document-based substrates",
+    "level",
+    3,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-df5baa4bff8f::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-13f8f712b100",
+    "title",
+    "Historical: Relational substrate",
+    "outline",
+    [
+      "Logical model",
+      "Storage substrates",
+      "Historical: Relational substrate"
+    ],
+    "path_string",
+    "Logical model / Storage substrates / Historical: Relational substrate",
+    "level",
+    3,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-13f8f712b100::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-1a42fae61ce4",
+    "title",
+    "In-memory storage of one form or another",
+    "outline",
+    [
+      "Logical model",
+      "Storage substrates",
+      "In-memory storage of one form or another"
+    ],
+    "path_string",
+    "Logical model / Storage substrates / In-memory storage of one form or another",
+    "level",
+    3,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-1a42fae61ce4::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-33f36cfcab5e",
+    "title",
+    "Possible future: Triple-store substrate",
+    "outline",
+    [
+      "Logical model",
+      "Storage substrates",
+      "Possible future: Triple-store substrate"
+    ],
+    "path_string",
+    "Logical model / Storage substrates / Possible future: Triple-store substrate",
+    "level",
+    3,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-33f36cfcab5e::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-2c09c5856f2e",
+    "title",
+    "Article lifecycle",
+    "outline",
+    [
+      "Article lifecycle"
+    ],
+    "path_string",
+    "Article lifecycle",
+    "level",
+    1,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-2c09c5856f2e::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-c075976f6a93",
+    "title",
+    "Catalog & label menus",
+    "outline",
+    [
+      "Browsing & relations",
+      "Catalog & label menus"
+    ],
+    "path_string",
+    "Browsing & relations / Catalog & label menus",
+    "level",
+    2,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-c075976f6a93::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-b0ffbda6fac6",
+    "title",
+    "Commands & context",
+    "outline",
+    [
+      "Browsing & relations",
+      "Commands & context"
+    ],
+    "path_string",
+    "Browsing & relations / Commands & context",
+    "level",
+    2,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-b0ffbda6fac6::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-b0879f2e4b40",
+    "title",
+    "Formatting helpers",
+    "outline",
+    [
+      "Browsing & relations",
+      "Formatting helpers"
+    ],
+    "path_string",
+    "Browsing & relations / Formatting helpers",
+    "level",
+    2,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-b0879f2e4b40::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-5ea4620a44fc",
+    "title",
+    "Legacy navigation commands",
+    "outline",
+    [
+      "Browsing & relations",
+      "Legacy navigation commands"
+    ],
+    "path_string",
+    "Browsing & relations / Legacy navigation commands",
+    "level",
+    2,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-5ea4620a44fc::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-bced1ef693fb",
+    "title",
+    "Link-following & history",
+    "outline",
+    [
+      "Browsing & relations",
+      "Link-following & history"
+    ],
+    "path_string",
+    "Browsing & relations / Link-following & history",
+    "level",
+    2,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-bced1ef693fb::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-131ce6433c2e",
+    "title",
+    "Relation buffers in context",
+    "outline",
+    [
+      "Browsing & relations",
+      "Relation buffers in context"
+    ],
+    "path_string",
+    "Browsing & relations / Relation buffers in context",
+    "level",
+    2,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-131ce6433c2e::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-42634658191a",
+    "title",
+    "Rendering Futon responses",
+    "outline",
+    [
+      "Browsing & relations",
+      "Rendering Futon responses"
+    ],
+    "path_string",
+    "Browsing & relations / Rendering Futon responses",
+    "level",
+    2,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-42634658191a::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-b99525987fef",
+    "title",
+    "Tabulated UI & commands",
+    "outline",
+    [
+      "Browsing & relations",
+      "Tabulated UI & commands"
+    ],
+    "path_string",
+    "Browsing & relations / Tabulated UI & commands",
+    "level",
+    2,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-b99525987fef::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-66f1d73982c4",
+    "title",
+    "XTDB browsing shims",
+    "outline",
+    [
+      "Browsing & relations",
+      "XTDB browsing shims"
+    ],
+    "path_string",
+    "Browsing & relations / XTDB browsing shims",
+    "level",
+    2,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-66f1d73982c4::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-d58c7634ecc8",
+    "title",
+    "XTDB helpers",
+    "outline",
+    [
+      "Browsing & relations",
+      "XTDB helpers"
+    ],
+    "path_string",
+    "Browsing & relations / XTDB helpers",
+    "level",
+    2,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-d58c7634ecc8::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-c207e3a7679a",
+    "title",
+    "Compatibility & test support",
+    "outline",
+    [
+      "Compatibility & test support"
+    ],
+    "path_string",
+    "Compatibility & test support",
+    "level",
+    1,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-c207e3a7679a::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-d8a5d600715e",
+    "title",
+    "Contributor guide (embedded)",
+    "outline",
+    [
+      "Contributor guide (embedded)"
+    ],
+    "path_string",
+    "Contributor guide (embedded)",
+    "level",
+    1,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-d8a5d600715e::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-9e9bac68f2b2",
+    "title",
+    "Downtime handling",
+    "outline",
+    [
+      "Downtime handling"
+    ],
+    "path_string",
+    "Downtime handling",
+    "level",
+    1,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-9e9bac68f2b2::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-c06ca05633ea",
+    "title",
+    "Entry points",
+    "outline",
+    [
+      "Entry points"
+    ],
+    "path_string",
+    "Entry points",
+    "level",
+    1,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-c06ca05633ea::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-69916e2600e5",
+    "title",
+    "Inclusion / derivation UX",
+    "outline",
+    [
+      "Inclusion / derivation UX"
+    ],
+    "path_string",
+    "Inclusion / derivation UX",
+    "level",
+    1,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-69916e2600e5::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-8d30ed550fb1",
+    "title",
+    "Known limitations",
+    "outline",
+    [
+      "Known limitations"
+    ],
+    "path_string",
+    "Known limitations",
+    "level",
+    1,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-8d30ed550fb1::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-841342cf2b60",
+    "title",
+    "Directory importer",
+    "outline",
+    [
+      "Org imports / exports & snapshots",
+      "Directory importer"
+    ],
+    "path_string",
+    "Org imports / exports & snapshots / Directory importer",
+    "level",
+    2,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-841342cf2b60::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-1cf7e8683779",
+    "title",
+    "Export helpers",
+    "outline",
+    [
+      "Org imports / exports & snapshots",
+      "Export helpers"
+    ],
+    "path_string",
+    "Org imports / exports & snapshots / Export helpers",
+    "level",
+    2,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-1cf7e8683779::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-d1cad5e3ad96",
+    "title",
+    "Single-file importer",
+    "outline",
+    [
+      "Org imports / exports & snapshots",
+      "Single-file importer"
+    ],
+    "path_string",
+    "Org imports / exports & snapshots / Single-file importer",
+    "level",
+    2,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-d1cad5e3ad96::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-ec46e35bad95",
+    "title",
+    "Pattern workflows",
+    "outline",
+    [
+      "Pattern workflows"
+    ],
+    "path_string",
+    "Pattern workflows",
+    "level",
+    1,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-ec46e35bad95::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-7da32fa5e066",
+    "title",
+    "Editing Futon pattern entries",
+    "outline",
+    [
+      "Pattern workflows",
+      "Editing Futon pattern entries"
+    ],
+    "path_string",
+    "Pattern workflows / Editing Futon pattern entries",
+    "level",
+    2,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-7da32fa5e066::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-1a16133f3d22",
+    "title",
+    "Importing pattern libraries",
+    "outline",
+    [
+      "Pattern workflows",
+      "Importing pattern libraries"
+    ],
+    "path_string",
+    "Pattern workflows / Importing pattern libraries",
+    "level",
+    2,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-1a16133f3d22::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-a9bbc20a2e39",
+    "title",
+    "QA checklist",
+    "outline",
+    [
+      "QA checklist"
+    ],
+    "path_string",
+    "QA checklist",
+    "level",
+    1,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-a9bbc20a2e39::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-3193d8774e51",
+    "title",
+    "Relation browsing inside Emacs",
+    "outline",
+    [
+      "Relation browsing inside Emacs"
+    ],
+    "path_string",
+    "Relation browsing inside Emacs",
+    "level",
+    1,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-3193d8774e51::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-b97ac3a64466",
+    "title",
+    "Testing hooks",
+    "outline",
+    [
+      "Testing hooks"
+    ],
+    "path_string",
+    "Testing hooks",
+    "level",
+    1,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-b97ac3a64466::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-49d2f0121730",
+    "title",
+    "Troubleshooting relations",
+    "outline",
+    [
+      "Troubleshooting relations"
+    ],
+    "path_string",
+    "Troubleshooting relations",
+    "level",
+    1,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-49d2f0121730::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ],
+  "type": [
+    "docbook-heading",
+    "doc-id",
+    "futon4-238a87a8789f",
+    "title",
+    "Workflow notes",
+    "outline",
+    [
+      "Workflow notes"
+    ],
+    "path_string",
+    "Workflow notes",
+    "level",
+    1,
+    "book",
+    "futon4",
+    "latest",
+    {
+      "doc/entry-id": "futon4-238a87a8789f::org",
+      "doc/version": "org",
+      "doc/status": "active"
+    }
+  ]
+}

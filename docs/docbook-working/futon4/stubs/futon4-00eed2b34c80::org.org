@@ -1,0 +1,12 @@
+#+TITLE: Storage bridge
+:PROPERTIES:
+:DOC_ID: unknown
+:VERSION: org
+:OUTLINE_PATH: Storage bridge
+:PATH_STRING: Storage bridge
+:REPLACES: 
+:END:
+
+* Context
+- (no summary yet)
+

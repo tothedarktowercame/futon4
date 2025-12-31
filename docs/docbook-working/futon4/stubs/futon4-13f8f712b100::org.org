@@ -1,0 +1,12 @@
+#+TITLE: Historical: Relational substrate
+:PROPERTIES:
+:DOC_ID: unknown
+:VERSION: org
+:OUTLINE_PATH: Logical model / Storage substrates / Historical: Relational substrate
+:PATH_STRING: Logical model / Storage substrates / Historical: Relational substrate
+:REPLACES: 
+:END:
+
+* Context
+- (no summary yet)
+
