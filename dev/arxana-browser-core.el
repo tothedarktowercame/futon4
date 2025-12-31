@@ -21,6 +21,10 @@
 (declare-function arxana-browser-code-format "arxana-browser-code")
 (declare-function arxana-browser-code-row "arxana-browser-code")
 (declare-function arxana-browser-code-open "arxana-browser-code")
+(declare-function arxana-browser-graph-items "arxana-browser-graph")
+(declare-function arxana-browser-graph-format "arxana-browser-graph")
+(declare-function arxana-browser-graph-row "arxana-browser-graph")
+(declare-function arxana-browser-graph-open "arxana-browser-graph")
 
 (declare-function arxana-browser-patterns--language-index-by-path "arxana-browser-patterns" (language-rows))
 (declare-function arxana-browser-patterns--filesystem-collection-items "arxana-browser-patterns" (&optional language-index))
@@ -239,6 +243,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
               :description "Upcoming Arxana code browser (imports pending)."
               :view 'code)
         (list :type 'menu
+              :label "Graph"
+              :description "Explore Futon graph types."
+              :view 'graph)
+        (list :type 'menu
               :label "Media"
               :description "Zoom/Napster media library prototype."
               :view 'media)
@@ -261,6 +269,13 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                 :label "Import status"
                 :description "No code catalogs detected yet."))))
 
+(defun arxana-browser--graph-items ()
+  (if (require 'arxana-browser-graph nil t)
+      (arxana-browser-graph-items)
+    (list (list :type 'info
+                :label "Graph unavailable"
+                :description "Load arxana-browser-graph.el for /types."))))
+
 (defun arxana-browser--header-line (context total)
   (cond
    ((not context)
@@ -274,6 +289,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         (concat base " [sync disabled: showing filesystem only]"))))
    ((eq (plist-get context :view) 'code)
     "Code browser — wire Futon1 source entities here. LEFT/b returns.")
+   ((eq (plist-get context :view) 'graph)
+    "Graph types — browse /types from Futon. RET/right shows details. LEFT/b returns.")
    ((eq (plist-get context :view) 'media)
     "Media library — pick All tracks, a status, or Projects to drill into recorder projects. LEFT/b returns.")
    ((eq (plist-get context :view) 'media-projects)
@@ -424,6 +441,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
       (pcase (plist-get context :view)
         ('patterns (arxana-browser--root-items))
         ('code (arxana-browser--code-items))
+        ('graph (arxana-browser--graph-items))
         ('media (arxana-media--items))
         ('docbook (arxana-browser--docbook-books))
         ('docbook-book (arxana-browser--docbook-book-items (plist-get context :book)))
@@ -552,6 +570,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
             ('code (if (fboundp 'arxana-browser-code-row)
                        #'arxana-browser-code-row
                      #'arxana-browser--info-row))
+            ('graph (if (fboundp 'arxana-browser-graph-row)
+                        #'arxana-browser-graph-row
+                      #'arxana-browser--info-row))
             ('media #'arxana-browser--info-row)
             ('docbook #'arxana-browser--info-row)
             ('docbook-book #'arxana-browser--info-row)
@@ -606,6 +627,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                             ('code (if (fboundp 'arxana-browser-code-format)
                                        (arxana-browser-code-format)
                                      (arxana-browser--info-format)))
+                            ('graph (if (fboundp 'arxana-browser-graph-format)
+                                        (arxana-browser-graph-format)
+                                      (arxana-browser--info-format)))
                             ('media (arxana-browser--info-format))
                             ('docbook (arxana-browser--info-format))
                             ('docbook-book (arxana-browser--info-format))
@@ -678,6 +702,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
            (arxana-browser-code-open item)
          (let ((path (plist-get item :path)))
            (when path (find-file path)))))
+      ('graph-type
+       (if (fboundp 'arxana-browser-graph-open)
+           (arxana-browser-graph-open item)
+         (message "Graph type: %s" (or (plist-get item :label) "?"))))
       ('media-publication
        (let ((path (plist-get item :path)))
          (unless (and path (file-directory-p path))

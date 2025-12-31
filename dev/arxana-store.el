@@ -432,6 +432,11 @@ user error when NAME is missing."
       (message "Fetched /tail (%d relations)" limit))
     body))
 
+(defun arxana-store-types ()
+  "Fetch the type registry from Futon."
+  (interactive)
+  (arxana-store--request "GET" "/types"))
+
 ;;;###autoload
 (defun arxana-store-ping (&optional limit)
   "Probe the Futon API and report diagnostics in a buffer."
