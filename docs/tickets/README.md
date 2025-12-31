@@ -84,6 +84,7 @@ Each ticket includes:
 - 048: X-Profile header
 - 049: Snapshot scopes
 - 050: Relation types taxonomy
+- 051: Docbook entry_id format suffix
 
 ## Usage
 

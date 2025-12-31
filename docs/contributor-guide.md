@@ -22,7 +22,7 @@ To keep code and docs aligned:
 the temporary snapshot) that describes the behavior.
 - When adding a new entry point, add a short paragraph to the relevant
 XTDB doc entry explaining how it fits the plan.
-- Track drift in `dev/org-sync-tracker.org` so missing doc updates are
+- Track drift in `dev/docs-backlog.org` so missing doc updates are
 easy to spot.
 
 ## Pattern library contributions

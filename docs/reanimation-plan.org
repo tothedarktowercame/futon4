@@ -91,7 +91,7 @@ behavior at every stage.
 
    Each check means the module has a matching XTDB doc entry and any optional
    filesystem snapshot is aligned with the current `dev/` behavior. If a snapshot
-   exists, record the doc id and snapshot location in `dev/org-sync-tracker.org`.
+   exists, record the doc id and snapshot location in `dev/docs-backlog.org`.
 
 * Artifacts
 
