@@ -1,0 +1,40 @@
+#+TITLE: Relations ego display
+:PROPERTIES:
+:DOC_ID: futon4-1da30e289791
+:ENTRY_ID: futon4-1da30e289791::org
+:VERSION: org
+:OUTLINE_PATH: Relations ego display
+:PATH_STRING: Relations ego display
+:REPLACES:
+:END:
+
+* Overview
+The ego view is a focused neighborhood report for a single entity. It names the
+current article (the “ego”) and lists the entities linked directly to it. This
+buffer is the fastest way to see how an article sits inside the graph without
+running ad‑hoc queries.
+
+* Data flow and direction
+`arxana-relations--render-ego` receives a Futon `/ego` payload and extracts the
+`:ego` section. Each link entry carries a `:direction` tag, which is parsed as
+`:out` for edges originating at the ego and `:in` for edges pointing toward the
+ego. The renderer splits links into outgoing and incoming lists so the reader
+can see what the article references versus what references it.
+
+* Entity formatting
+The ego name comes from `:entity/name` (falling back to `:name`). Neighbor
+entities are formatted as “name (type)” using `arxana-relations--name-with-type`,
+which normalizes the entity type into a readable label. Relation types are
+formatted with `arxana-relations--type-label`, so each line reads as
+“<neighbor> via <relation-type>”.
+
+* Buffer structure
+The buffer is structured in three blocks:
+
+1. An “Ego: <name>” header.
+2. An “Outgoing” section listing edges where the ego is the source.
+3. An “Incoming” section listing edges where the ego is the target.
+
+If either section is empty, a “(none)” placeholder is shown to make the absence
+explicit. This consistent structure makes it easy to scan for missing links or
+unexpected relation types.

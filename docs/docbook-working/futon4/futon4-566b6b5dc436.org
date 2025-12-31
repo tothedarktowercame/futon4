@@ -1,0 +1,80 @@
+#+TITLE: Hyperedge model and endpoint structure
+:PROPERTIES:
+:DOC_ID: futon4-566b6b5dc436
+:ENTRY_ID: futon4-566b6b5dc436::org
+:VERSION: org
+:OUTLINE_PATH: Hyperedge model and endpoint structure
+:PATH_STRING: Hyperedge model and endpoint structure
+:REPLACES:
+:END:
+
+* Overview
+Hyperedges are the multi-endpoint relations that carry the Ted Nelson style
+linking semantics: inclusion, transclusion, provenance, and annotation.
+In contrast, a simple relation (see `arxana-store-create-relation`) is just a
+binary edge between two entity ids with an optional label. Hyperedges allow an
+arbitrary number of endpoints, each with a role, and a type that describes the
+kind of link being asserted. This makes it possible to model more than a source
+and target, for example a passage range, a note, and a derived artifact in the
+same relation.
+
+The code→docs correspondence work in the browser is a concrete example of why
+hyperedges matter: it wants links that connect a code symbol to one or more
+doc paragraphs, potentially with passage-style ranges and provenance metadata
+as the system evolves.
+
+* Payload shape
+The Futon client constructs hyperedges in `arxana-store--hyperedge-payload`.
+The payload is a plain map with these keys:
+
+- `type` (optional): a coarse logical category for the edge.
+- `hx/type` (required): the hyperedge kind, such as inclusion, provenance, or
+  annotation.
+- `hx/endpoints` (required): a list of endpoint maps.
+- `props` (optional): an arbitrary map of extra fields.
+
+Endpoints are passed through `delq nil` so any nil entries are dropped before
+posting. The HTTP call goes to the `/hyperedge` endpoint and is rejected when
+`hx/type` or endpoints are missing.
+
+* Endpoints and roles
+An endpoint is a map that at minimum names an entity id and a role. Roles are
+stable keywords that define the semantics of the endpoint inside the edge. The
+common ones are:
+
+- `:role/source` for the origin article or entity.
+- `:role/target` for the destination or included entity.
+- `:role/passage` for a range inside a source article.
+
+A hyperedge can include multiple endpoints with the same role if needed. The
+order of endpoints is not semantically significant; role tags carry the meaning.
+
+* Passage endpoints
+A passage endpoint represents a slice of text within an article. It typically
+includes the article entity id plus range data (start, end) for the excerpt.
+This enables transclusion and precise annotation without duplicating the source.
+Passage endpoints are commonly paired with a source endpoint and a target or
+annotation endpoint to express "this specific span participates in this link."
+
+* Props and scholia
+The `props` map is how you carry extra fields that are not part of the generic
+hyperedge shape. Examples include a `label` for a human name, `scholium/type`
+for annotation classification, or any other metadata required by a feature.
+Keeping these in `props` preserves the open schema design while still allowing
+clients to agree on well known keys.
+
+* When to use hyperedges vs. simple relations
+Use simple relations for binary facts that do not require extra context, such
+as "article A references article B" with no additional roles. Use hyperedges
+when any of these are true: more than two endpoints are involved, the link needs
+roles (source/target/passage), or you need to encode a structured annotation or
+provenance chain. Hyperedges are heavier, but they capture the structured graph
+semantics that drive inclusion, transclusion, and attribution.
+
+* Examples
+- Inclusion: endpoints for the source article (`:role/source`) and the included
+  article (`:role/target`) with `hx/type` set to an inclusion type.
+- Transclusion: source article, passage endpoint for the range, and target
+  article in a single edge.
+- Provenance: a derived artifact as `:role/target` plus one or more sources and
+  a `props` map that names the derivation method.

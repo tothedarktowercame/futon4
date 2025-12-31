@@ -55,6 +55,11 @@ feels production-bound (not a throwaway experiment), add an entry.
    :TARGET: XTDB doc id
    :NOTES: Use Futon1 archivist flow (see /home/joe/code/futon1/README-archivist.md). Current non-persisted structures: arxana-browser-code--doc-symbol-map (alist symbol -> paragraph bounds in *Arxana Code Docs*), arxana-browser-code--doc-source-path (current file), arxana-browser-code--doc-highlight-overlay (active highlight), arxana-browser-code--doc-cycle-cache (plist :bounds :positions :index), arxana-browser-code--symbol-cache (hash path -> (mtime version symbols)). Computed by arxana-browser-code--render-docs using arxana-docbook--entry-content and arxana-browser-code--index-docs (symbols derived by defun/defvar/defvar-local/etc regexp). Persist: code symbol -> doc paragraph anchor; file -> doc entry association; doc paragraph -> code definitions backlink index. Decide whether this is a new model type or fits existing docbook entry metadata.
 
+** TODO graph browser: entity type drill-down
+   :FILES: dev/arxana-browser-graph.el dev/arxana-store.el dev/arxana-browser-core.el
+   :TARGET: XTDB doc id
+   :NOTES: Graph view currently lists /types and opens /ego for kind=entity using the type id; confirm correct identifier and add a next-level entity listing (per /type or /entities?type=) before ego.
+
 This placeholder shows the preferred structure.  Replace it with real entries as
 soon as new work lands.
 

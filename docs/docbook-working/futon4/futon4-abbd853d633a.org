@@ -1,0 +1,41 @@
+#+TITLE: Flexiarg format integration
+:PROPERTIES:
+:DOC_ID: futon4-abbd853d633a
+:ENTRY_ID: futon4-abbd853d633a::org
+:VERSION: org
+:OUTLINE_PATH: Flexiarg format integration
+:PATH_STRING: Flexiarg format integration
+:REPLACES:
+:END:
+
+* Overview
+Flexiarg is the pattern description format inherited from Futon3. It captures
+pattern metadata, summaries, and component clauses in a compact text layout that
+maps cleanly into Org buffers. Arxana treats `.flexiarg` files as the canonical
+serialization for pattern libraries and provides both single‑file and
+multi‑file editing modes inside Emacs.
+
+* File structure and loading
+A flexiarg file contains a header and a clause body. Clauses are the numbered or
+tagged sections that hold pattern text. Arxana loads the flexiarg syntax support
+from futon3’s contrib directory (`flexiarg.el`) when present. The collection
+mode wraps that major mode so the usual syntax helpers are available.
+
+* Editing modes
+`arxana-flexiarg-collection-mode` opens multiple flexiarg files in a single
+buffer while tracking the source ranges for each segment. Edit guards prevent
+accidental cross‑file edits. For individual `.flexiarg` files,
+`arxana-flexiarg-file-mode` adds save/sync helpers and status feedback. Both
+modes expose keybindings for save, revert, metadata visibility, and fold
+cycling.
+
+* Order tracking and normalization
+Flexiarg libraries encode ordering inside the files. Arxana keeps those order
+markers intact and uses helpers from `arxana-flexiarg-normalize.el` to rewrite
+older flexiargs into the canonical clause layout. The normalization pass updates
+alias headings and ensures clause blocks are formatted consistently before sync.
+
+* Sync on save
+When `arxana-flexiarg-sync-on-save` is enabled, saving a flexiarg buffer triggers
+a sync to XTDB via the Futon bridge. The header line reflects clean/dirty/error
+states so editors can see whether the last sync succeeded.

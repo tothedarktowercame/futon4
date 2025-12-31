@@ -1,0 +1,34 @@
+#+TITLE: XTDB browsing system
+:PROPERTIES:
+:DOC_ID: futon4-0f487c3e0734
+:ENTRY_ID: futon4-0f487c3e0734::org
+:VERSION: org
+:OUTLINE_PATH: XTDB browsing system
+:PATH_STRING: XTDB browsing system
+:REPLACES:
+:END:
+
+* Overview
+The XTDB browser is a lightweight audit view for recent Futon activity. It
+presents the `/tail` feed in a tabulated list so you can scan the latest
+relations without writing curl commands. This is useful for debugging sync
+issues, confirming that transactions landed, or inspecting recent edges.
+
+* Recent relations via `/tail`
+`arxana-xtdb-browse` calls `arxana-store-tail`, which fetches the `/tail`
+endpoint and caches the response. The browser normalizes whatever shape Futon
+returns (`:relations`, `:links`, or `:items`) into a list of relation rows, each
+with source, target, relation type, and last-seen timestamp.
+
+* Inspecting entities and relations
+From the list view, RET opens the ego report for the relation at point. The
+source and target entity names are displayed as “name (type)” in the list, and
+entity ids are available for deeper inspection. Use the source/target commands
+to open those entities directly; `arxana-store-fetch-entity` is used to render
+full payloads in a separate buffer.
+
+* Limits and refresh
+The default limit is controlled by `arxana-xtdb-browse-default-limit`, and you
+can change it interactively with `l`. Refresh (`g`) re-runs the `/tail` query and
+updates the table. The raw `/tail` response can be viewed with `R` for
+troubleshooting.

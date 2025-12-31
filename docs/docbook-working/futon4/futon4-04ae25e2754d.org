@@ -1,0 +1,43 @@
+#+TITLE: How articles become Futon entities
+:PROPERTIES:
+:DOC_ID: futon4-04ae25e2754d
+:ENTRY_ID: futon4-04ae25e2754d::org
+:VERSION: org
+:OUTLINE_PATH: How articles become Futon entities
+:PATH_STRING: How articles become Futon entities
+:REPLACES:
+:END:
+
+* Overview
+Turning an Emacs buffer into a Futon entity is a two‑step process: register the
+article locally, then ensure a corresponding entity exists in Futon. Local
+registration is immediate and purely in‑memory; remote registration happens via
+`/entity` when sync is enabled.
+
+* Local registration
+`make-current-buffer-into-article` stores the buffer text in
+`arxana-article--table` keyed by article name and sets `name-of-current-article`
+for the buffer. This is the minimal contract for classic Arxana tools that
+expect an “article” to exist even when Futon is offline.
+
+* Remote registration
+`arxana-store-ensure-article` is the primary bridge into Futon. It checks sync
+status, derives a canonical path (via `futon4--canonical-path`), and computes a
+stable article id using `futon4--article-id-for`. It then calls
+`futon4-ensure-article-entity`, which posts to `/entity` with the article id,
+name, and optional spine/props.
+
+* Entity payload fields
+The underlying `/entity` payload supports:
+
+- `name` and `type` (the primary identity fields).
+- `id` when you already have a stable identifier.
+- `source`, `external-id`, `seen-count`, `pinned?`, and `last-seen` for tracking.
+- `props` for open‑schema metadata.
+- `media/sha256` when storing media‑linked entities.
+
+* When registration happens
+Local registration is manual (via `make-current-buffer-into-article`) and can
+be done without sync. Remote registration happens whenever
+`arxana-store-ensure-article` is invoked by higher‑level flows (e.g., scholia or
+metadata export) and sync is enabled.

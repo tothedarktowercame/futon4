@@ -1,0 +1,41 @@
+#+TITLE: arxana-derivation--classify - Derivation type detection
+:PROPERTIES:
+:DOC_ID: futon4-4231d4368922
+:ENTRY_ID: futon4-4231d4368922::org
+:VERSION: org
+:OUTLINE_PATH: arxana-derivation--classify - Derivation type detection
+:PATH_STRING: arxana-derivation--classify - Derivation type detection
+:REPLACES:
+:END:
+
+* Overview
+`arxana-derivation--classify` decides how a derived passage should be labeled
+and highlighted in the preview UI. It inspects the buffer range associated with
+a scholium and returns one of three derivation modes: `:transclusion`,
+`:identification`, or `:inclusion`. This classification is used downstream to
+pick the correct iconography and messaging for the preview list.
+
+* How the scan works
+The helper `arxana-derivation--region-has` walks the text properties between
+BEG and END, looking at the `scholia` property on each stretch of text. The
+`scholia` property is expected to be a list of entries, where each entry is a
+list whose first element is a keyword tag. When the tag matches the key passed
+in (for example `transclusion-of`), the scan returns true.
+
+* Priority order
+Classification uses a strict priority order:
+
+1. If the region has `transclusion-of`, the result is `:transclusion`.
+2. Otherwise, if the region has `identifies-with`, the result is `:identification`.
+3. If neither marker is present, the default is `:inclusion`.
+
+This order matters because transclusion is the most specific case: it denotes a
+passage boundary and a source that should be rendered as an embedded excerpt.
+Identification is next, because it overrides the generic inclusion label but
+still lacks the explicit passage semantics of transclusion.
+
+* Why `:inclusion` is the default
+Inclusion is the base case for derived material. When no stronger scholia tag is
+present, the preview should still render the passage as included content. This
+keeps the UI stable even when metadata is incomplete or when older scholia
+entries predate the richer tagging scheme.

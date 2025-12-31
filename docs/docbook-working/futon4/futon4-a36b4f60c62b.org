@@ -1,0 +1,42 @@
+#+TITLE: Pattern library system overview
+:PROPERTIES:
+:DOC_ID: futon4-a36b4f60c62b
+:ENTRY_ID: futon4-a36b4f60c62b::org
+:VERSION: org
+:OUTLINE_PATH: Pattern library system overview
+:PATH_STRING: Pattern library system overview
+:REPLACES:
+:END:
+
+* Overview
+Arxana’s pattern system treats a “pattern language” as a curated collection of
+Alexander‑style patterns. Each pattern lives in a flexiarg file (Org‑flavored
+text with structured headings) and can be surfaced either from the filesystem
+or from the XTDB/Futon store. The Emacs side provides a browser and editor so
+patterns can be reviewed and updated in-place without leaving the Arxana UI.
+
+* Flexiarg files and pattern content
+Flexiarg files are the canonical on‑disk representation. They hold pattern
+metadata, a summary block, and component passages. The browser can render these
+files directly into Org buffers, making the summary and components editable.
+This allows local iteration before or alongside XTDB ingestion.
+
+* Library roots and discovery
+The system locates a library root via `arxana-patterns-library-root`. When it
+is nil, it auto‑detects a `futon3/library` checkout relative to the current
+buffer. Additional collection roots can be registered, giving the browser more
+sources to scan. These roots are persisted in
+`arxana-patterns-collection-roots-file` unless persistence is disabled.
+
+* Filesystem vs XTDB sources
+The browser can load patterns from XTDB or from the filesystem. The preference
+is controlled by `arxana-patterns-prefer-filesystem`: when enabled, local files
+win if they are newer than the XTDB entry. This keeps local edits authoritative
+while still allowing Futon to act as the durable store.
+
+* Browser integration and editing
+Pattern browsing lives inside the core Arxana Browser. Selecting a pattern
+opens an Org buffer that includes the summary and components as editable
+sections. Save commands write back to the preferred source and update the
+browser’s status labels so users can see which patterns are local, imported, or
+out of sync.

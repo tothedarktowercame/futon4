@@ -1,0 +1,47 @@
+#+TITLE: Browser visit dispatch logic
+:PROPERTIES:
+:DOC_ID: futon4-0b8ac4c5b6c9
+:ENTRY_ID: futon4-0b8ac4c5b6c9::org
+:VERSION: org
+:OUTLINE_PATH: Browser visit dispatch logic
+:PATH_STRING: Browser visit dispatch logic
+:REPLACES:
+:END:
+
+* Overview
+`arxana-browser--visit` is the RET/right-click dispatch for the Arxana Browser.
+It inspects the `:type` of the item under point and decides whether to push a
+new context onto the browser stack, open a detail buffer, or trigger a playback
+command. This single function is the rulebook for “what happens when you open
+something,” so its type table defines the user’s mental model of navigation.
+
+* Stack-driven navigation
+Items that represent a deeper view (menus, collections, project lists, docbook
+contents) push a context plist onto `arxana-browser--stack` and re-render. This
+keeps navigation uniform: LEFT/b pops the stack, and the header line updates to
+reflect the current view. The stack is used for patterns, media project lists,
+docbook book/contents/recent, and lab file lists.
+
+* Direct open actions
+Some items open immediately instead of pushing stack context:
+
+- `pattern` uses `arxana-browser-patterns-open` to open the pattern viewer.
+- `code-file` delegates to `arxana-browser-code-open` (or `find-file`).
+- `graph-type` calls `arxana-browser-graph-open` for type details.
+- `docbook-entry` opens the docbook entry object.
+- `lab-entry` and `lab-file` open the lab entry or file viewer.
+
+These actions avoid adding extra stack layers when the user expects a direct
+view or editor.
+
+* Media dispatch
+Media types combine both styles. Containers like `media-publication` and
+`media-misc-folder` push a new view with the selected path. Track entries such
+as `media-publication-track`, `media-misc-track`, and `media-podcast` call
+`arxana-media-play-at-point` directly. Category and project rows push a filter
+context so the next render lists tracks for the selected category.
+
+* Error and info handling
+`info` items simply display their message. Any unknown `:type` triggers a user
+error (“Don’t know how to open …”), which makes missing handlers obvious during
+refactors.

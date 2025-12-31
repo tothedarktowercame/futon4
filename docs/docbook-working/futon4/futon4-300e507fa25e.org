@@ -1,0 +1,48 @@
+#+TITLE: arxana-store--request - Core HTTP helper
+:PROPERTIES:
+:DOC_ID: futon4-300e507fa25e
+:ENTRY_ID: futon4-300e507fa25e::org
+:VERSION: org
+:OUTLINE_PATH: arxana-store--request - Core HTTP helper
+:PATH_STRING: arxana-store--request - Core HTTP helper
+:REPLACES:
+:END:
+
+* Overview
+`arxana-store--request` is the single HTTP gateway for Futon sync. Every higher
+level helper (articles, hyperedges, snapshots) funnels through it, so its
+behavior determines how errors are reported and how request/response data are
+tracked. The function is intentionally defensive: it prefers recording a
+structured error over throwing, and it always returns either parsed JSON or nil.
+
+* Sync gate and inputs
+The first check is `arxana-store-sync-enabled-p`. If sync is disabled, it
+records a `disabled` error and returns. It then validates that PATH is a string
+and records an `invalid` error if not. At this point it assembles a URL request
+by combining METHOD, PATH, optional PAYLOAD, and optional QUERY string.
+
+* URL construction and fallback
+`arxana-store--build-url` combines the configured base URL with PATH and QUERY.
+If the target uses `localhost`, a fallback URL is prepared by swapping it to
+`127.0.0.1`. This avoids certain IPv6/hostname resolution failures without
+altering the configured base in other cases.
+
+* Request metadata
+Before issuing the call, the function writes `arxana-store-last-request` with
+method, target, payload, and query. This is the primary debugging breadcrumb
+when a call fails or returns unexpected data.
+
+* Timeout and response handling
+The call uses `url-retrieve-synchronously` with `arxana-store-request-timeout`.
+If no response buffer arrives, it retries once with the localhost fallback. A
+missing or malformed response triggers a `connection` or `protocol` error. When
+a response is present, the function skips headers and attempts to parse JSON
+into an alist keyed by keywords.
+
+* Errors and return values
+Errors are caught with `condition-case`. Quit signals are rethrown after logging
+so user interrupts behave normally. Other errors are logged as `request` errors.
+When JSON parsing succeeds, `arxana-store-last-error` is cleared and
+`arxana-store-last-response` is set. The final return value is either the parsed
+JSON body or nil; callers should inspect the last-error metadata rather than
+expecting exceptions.

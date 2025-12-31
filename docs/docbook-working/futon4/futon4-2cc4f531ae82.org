@@ -1,0 +1,40 @@
+#+TITLE: Workflow - Registering and syncing an article
+:PROPERTIES:
+:DOC_ID: futon4-2cc4f531ae82
+:ENTRY_ID: futon4-2cc4f531ae82::org
+:VERSION: org
+:OUTLINE_PATH: Workflow - Registering and syncing an article
+:PATH_STRING: Workflow - Registering and syncing an article
+:REPLACES:
+:END:
+
+* Prerequisites
+Before registering, make sure Futon sync is configured:
+
+- `futon4-base-url` points at your Futon API (e.g. http://localhost:8080/api/alpha).
+- `futon4-enable-sync` is enabled (or call `arxana-store-ensure-sync`).
+
+Without sync, registration still works locally but no remote entity is created.
+
+* Step-by-step
+1. Open a buffer containing the article text.
+2. Run `M-x make-current-buffer-into-article` and enter the article name.
+3. The article is stored in `arxana-article--table` and the buffer is tagged
+   with `name-of-current-article`.
+4. If sync is enabled, call `arxana-store-ensure-article` (directly or via a
+   higher‑level command) to POST the entity to `/entity`.
+5. Verify the remote entity using `M-x arxana-store-ping` or a curl request to
+   `/entity/<id>`.
+
+* Interactive vs programmatic use
+Interactive use relies on `make-current-buffer-into-article` to register the
+buffer. Programmatic flows can call the same function and then invoke
+`arxana-store-ensure-article` with a name/path/spine when a Futon entity is
+required.
+
+* Troubleshooting
+If sync fails, check `arxana-store-last-error` and `arxana-store-last-request`
+for the last failure details. Ensure the Futon server is running and that
+`futon4-base-url` is reachable. If the entity is missing, re-run
+`arxana-store-ensure-article` and confirm the derived id with
+`futon4--article-id-for`.

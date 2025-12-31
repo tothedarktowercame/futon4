@@ -1,0 +1,38 @@
+#+TITLE: How scholia flow through the system
+:PROPERTIES:
+:DOC_ID: futon4-ce512f40e4e5
+:ENTRY_ID: futon4-ce512f40e4e5::org
+:VERSION: org
+:OUTLINE_PATH: How scholia flow through the system
+:PATH_STRING: How scholia flow through the system
+:REPLACES:
+:END:
+
+* Overview
+A scholium is Arxana’s annotation unit: a commentary or note that targets
+another article (or a passage within it). The scholium workflow bridges the
+legacy authoring UI and the Futon relation model so annotations become searchable
+edges in the graph.
+
+* Authoring entry points
+The historical flow uses `new-scholium-mode` and related helpers. The modern
+wrapper is `arxana-scholium-compose`, which opens a scholium buffer and guides
+you to publish with `C-c C-c`. `arxana-scholium-compose-from-region` creates a
+scholium tied to a region of the current article, using the classic “about
+part of current article” helper under the hood.
+
+* Resolving source and target
+When a scholium is published, its source and target articles are resolved to
+Futon ids. `arxana-store-upsert-scholium` looks up ids via
+`futon4--article-id-for`, then posts a relation between the two ids. If either
+id is missing, it records an error rather than failing silently.
+
+* Storage and relation type
+Scholia are stored as relations with the label “arxana/scholium”. That means
+scholia show up alongside other edges in `/ego` and `/cooccur` queries, making
+annotations discoverable in the same graph navigation tools.
+
+* Where they appear
+Once posted, scholia appear in the ego view for both the source and target
+articles. This makes commentary visible from either side: you can inspect what
+notes an article has authored as well as which notes reference it.

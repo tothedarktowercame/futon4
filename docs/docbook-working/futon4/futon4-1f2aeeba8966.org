@@ -1,0 +1,36 @@
+#+TITLE: Workflow - Creating a scholium
+:PROPERTIES:
+:DOC_ID: futon4-1f2aeeba8966
+:ENTRY_ID: futon4-1f2aeeba8966::org
+:VERSION: org
+:OUTLINE_PATH: Workflow - Creating a scholium
+:PATH_STRING: Workflow - Creating a scholium
+:REPLACES:
+:END:
+
+* Prerequisites
+Ensure both the source and target articles are registered (locally and in
+Futon, if sync is enabled). If you can open the articles and they resolve ids
+via `futon4--article-id-for`, you are ready to post scholia.
+
+* Step-by-step
+1. Run `M-x arxana-scholium-compose` to open a scholium buffer.
+2. Enter the scholium text.
+3. Publish with `C-c C-c` (the legacy scholium publishing command).
+4. The system resolves source/target ids and posts a relation to `/relation`.
+5. Verify the scholium via an ego query or by inspecting `/tail`.
+
+* Compose vs upsert
+`arxana-scholium-compose` is the interactive authoring flow; it opens a buffer
+and uses the classic scholium tools. `arxana-store-upsert-scholium` is the
+programmatic API for directly posting a scholium relation when you already have
+source and target names.
+
+* Region scholia
+To annotate a specific passage, use `M-x arxana-scholium-compose-from-region`.
+This invokes the legacy “about part of current article” flow and attaches the
+scholium to the selected range.
+
+* Verifying results
+Scholia show up in `/ego` for both source and target articles. Use
+`arxana-relations-show-ego` or the XTDB browser to confirm the relation exists.

@@ -1,0 +1,50 @@
+#+TITLE: How Emacs to Futon sync works
+:PROPERTIES:
+:DOC_ID: futon4-3dbef75462bc
+:ENTRY_ID: futon4-3dbef75462bc::org
+:VERSION: org
+:OUTLINE_PATH: How Emacs to Futon sync works
+:PATH_STRING: How Emacs to Futon sync works
+:REPLACES:
+:END:
+
+* Overview
+Emacs sync flows through `arxana-store.el`, which is the HTTP bridge to Futon
+(HTTP API) and therefore to XTDB. The local editor state remains the source of
+truth for buffer contents, but key events register or update entities and
+relations through the Futon API. The general flow is: local article/metadata →
+`arxana-store--request` → Futon HTTP endpoints → XTDB persistence.
+
+* When sync happens
+Sync is invoked by explicit helpers rather than a background daemon. Typical
+entry points include:
+
+- Article registration via `make-current-buffer-into-article` (local table
+  update) followed by Futon entity creation when required.
+- Scholium creation and relation posting through `arxana-store-create-relation`.
+- Hyperedge posting for inclusion/transclusion via `arxana-store--post-hyperedge`.
+
+Each of these eventually calls `arxana-store--request` with the appropriate
+endpoint.
+
+* Endpoints and payloads
+Futon distinguishes between:
+
+- `/entity` for entities (articles, plexuses, generic nemas).
+- `/relation` for simple binary edges.
+- `/hyperedge` for multi‑endpoint relations with roles.
+
+The payloads are plain JSON maps; `arxana-store--hyperedge-payload` assembles the
+endpoints and props, while `arxana-store--relation-payload` handles simple
+relations.
+
+* Canonical paths and profiles
+Paths can be normalized through `futon4--canonical-path` before being stored in
+entity metadata. If you are using multiple profiles, `arxana-store--request`
+adds an `X-Profile` header when `arxana-store-default-profile` is set.
+
+* Error handling and diagnostics
+Sync failures do not raise hard errors; instead, `arxana-store--record-error`
+captures the reason and details in `arxana-store-last-error` and
+`arxana-store-last-request`. This means callers can continue without crashing
+Emacs, while users can inspect the last error buffer for diagnostics.

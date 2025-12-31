@@ -1,0 +1,43 @@
+#+TITLE: Browser stack-based navigation model
+:PROPERTIES:
+:DOC_ID: futon4-d7465cba3abb
+:ENTRY_ID: futon4-d7465cba3abb::org
+:VERSION: org
+:OUTLINE_PATH: Browser stack-based navigation model
+:PATH_STRING: Browser stack-based navigation model
+:REPLACES:
+:END:
+
+* Overview
+The Arxana Browser uses a simple stack of context plists to model navigation.
+Every time you drill into a view, a context is pushed; when you go back, it is
+popped. This makes navigation predictable and stateless: the current view is
+always the head of the stack, and the rest of the stack is your breadcrumb
+trail.
+
+* Context structure
+Each stack entry is a plist describing the current view. Common keys are:
+
+- `:view` for the current browser view (patterns, media, docbook, lab, graph).
+- `:type` for item-type contexts (language or collection).
+- `:label` for human-readable names.
+- View-specific fields like `:book`, `:publication-path`, or `:media-filter`.
+
+These fields are used by the header line and the item renderer to decide how to
+format and drill further.
+
+* Push, pop, and context persistence
+When you press RET/right, `arxana-browser--visit` often pushes a new context and
+re-renders. The back command (`LEFT` or `b`) calls `arxana-browser--up`, which
+pops the stack and refreshes the list. When the stack is empty, the browser
+returns to the root menu.
+
+`arxana-browser--stack` and `arxana-browser--context` are buffer‑local and have
+`permanent-local` set so hot reloads don’t erase your navigation history. The
+helper `arxana-browser--ensure-context` repopulates the stack from
+`arxana-browser--context` when needed.
+
+* Navigation affordances
+The header line reflects the current context (view name, book, or filter) so you
+can see where you are at a glance. RET/right drills in, LEFT/b backs up; this
+mirrors the click‑wheel model where navigation is always one level at a time.

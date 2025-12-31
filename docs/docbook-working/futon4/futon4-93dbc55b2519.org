@@ -1,0 +1,51 @@
+#+TITLE: The derivation preview system
+:PROPERTIES:
+:DOC_ID: futon4-93dbc55b2519
+:ENTRY_ID: futon4-93dbc55b2519::org
+:VERSION: org
+:OUTLINE_PATH: The derivation preview system
+:PATH_STRING: The derivation preview system
+:REPLACES:
+:END:
+
+* Overview
+The derivation preview system is the visual audit trail for inclusion,
+transclusion, and identification scholia. After `mark-things-up` runs, it scans
+for hidden `derives-from` scholia, extracts the referenced passages, and renders
+summaries into a collapsible block inside the Scholium Display buffer. This
+lets readers verify which passages were pulled into the current article without
+opening the source documents manually.
+
+* Preview collection and state
+`arxana-derivation--collect-previews` runs from `mark-things-up-hook`. It builds
+preview items with `arxana-derivation--build-items`, which captures the source
+article, passage range, excerpt snippet, and derived kind. Each preview gets a
+stable key (`target::scholium-name`) used to store expansion state in
+`arxana-derivation-preview-state`. This hash table preserves collapsed/expanded
+state across re-renders. The current buffer also tracks the rendered block
+markers so the preview section can be refreshed in place.
+
+* Faces and highlight toggles
+Three faces define the highlight colors: `arxana-derivation-inclusion-face`,
+`arxana-derivation-transclusion-face`, and
+`arxana-derivation-identification-face`. Highlights can be toggled globally via
+custom options (`arxana-derivation-highlight-inclusions`,
+`arxana-derivation-highlight-transclusions`,
+`arxana-derivation-highlight-identifications`). Each toggle command refreshes
+all overlays so the display updates immediately.
+
+* Rendering and interaction
+The preview block is inserted by `arxana-derivation--render-previews` through
+`scholia-display-extras-hook`. Each item renders a disclosure button (`[+]` or
+`[-]`), a one-line summary with source and length, and a snippet when expanded.
+Buttons are wired through a custom button type that calls
+`arxana-derivation-preview-toggle`, which flips the stored state and re-renders
+in place. The snippet content is trimmed to configured limits in characters and
+logical lines to keep the preview compact.
+
+* Highlight overlays
+The source buffer receives overlays for each preview range. Overlay selection is
+filtered by derivation kind and the highlight toggles; overlays carry the kind
+and a fixed priority so they remain visible during editing. Use the “highlight
+only” commands to isolate inclusions, transclusions, or identifications when
+reviewing dense scholia.
