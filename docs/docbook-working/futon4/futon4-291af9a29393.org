@@ -1,0 +1,68 @@
+#+TITLE: Browser core architecture
+:PROPERTIES:
+:DOC_ID: futon4-291af9a29393
+:ENTRY_ID: futon4-291af9a29393::org
+:VERSION: org
+:OUTLINE_PATH: Browser core architecture
+:PATH_STRING: Browser core architecture
+:REPLACES: 
+:END:
+
+* Overview
+`arxana-browser-core.el` is the shared navigation hub for Arxana. It presents a
+single tabulated list UI, but it can switch between many domains: pattern
+libraries, docbook entries, media, lab sessions, and future code browsing. The
+core idea is that every row in the browser is a small plist tagged with `:type`
+(or `:view`), and the browser decides what to show and how to open it based on
+that tag.
+
+* Stack + context model
+Navigation is stack-based. `arxana-browser--stack` holds a list of context
+plists, each describing the active view (for example `:view 'media-projects` or
+`:type 'collection`). The top of the stack is the current context, and
+`arxana-browser--context` mirrors it so the UI can survive hot reloads. Moving
+forward (RET/right) pushes a new context; moving back (LEFT/b) pops one. This
+makes drill‑down behavior uniform across patterns, docbook, media, and lab.
+
+* View routing
+`arxana-browser--current-items` maps the current context into a list of items.
+Menus return a fixed list of sections; media views ask `arxana-media` for tracks
+or projects; docbook views fetch headings or entries; lab views enumerate
+sessions and files. Row rendering is decided by `arxana-browser--tabulated-entries`
+which pairs each item with a row function appropriate for the view. Format
+vectors (`arxana-browser--root-format`, `--menu-format`, `--info-format`, plus
+media/docbook-specific formats) define the column layout.
+
+* Render loop
+`arxana-browser--render` is the heartbeat. It computes the current items, chooses
+the right row/format functions, rebuilds `tabulated-list-entries`, then prints
+and restores the previously selected row. It also short‑circuits docbook section
+views that only contain a single entry, opening the entry directly instead of
+showing a one‑line list.
+
+* Visit dispatch
+`arxana-browser--visit` handles RET/right. It dispatches by item `:type`:
+patterns open a pattern editor, docbook headings open sections, media tracks
+start playback, lab entries open trace/raw/draft buffers, and menu entries push
+new contexts. This makes “open” behavior consistent while still allowing each
+subsystem to provide its own item types.
+
+* Navigation + input
+The browser supports keyboard and wheel navigation. `arxana-browser--move-selection`
+updates the selected row; the wheel handlers translate trackpad gestures into
+row deltas (configurable via `arxana-browser-wheel-step`). The keymap binds
+RET/right to visit, LEFT/b to back, plus a wide set of subsystem commands (media
+playback, docbook reorder/sync, pattern reordering, etc.).
+
+* Click feedback
+Navigation feedback is optional. When `arxana-browser-enable-click` is non‑nil,
+`arxana-browser-patterns--play-click` plays a short sound at `arxana-browser-click-volume`
+whenever the highlighted row changes. The sound file is configurable, so teams
+can swap or disable it without touching code.
+
+* Marks and batch actions
+Marks are tracked in a hash table (`arxana-media--marked`) and reused across
+views. The core toggles marks via `arxana-browser--toggle-mark` and delegates
+batch operations to the active subsystem: docbook removal or media deletion,
+depending on the current context. This keeps the UI consistent even when the
+underlying actions differ.

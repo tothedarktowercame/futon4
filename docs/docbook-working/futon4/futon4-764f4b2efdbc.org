@@ -1,0 +1,52 @@
+#+TITLE: Lab notebook browser
+:PROPERTIES:
+:DOC_ID: futon4-764f4b2efdbc
+:ENTRY_ID: futon4-764f4b2efdbc::org
+:VERSION: org
+:OUTLINE_PATH: Lab notebook browser
+:PATH_STRING: Lab notebook browser
+:REPLACES: 
+:END:
+
+* Context
+The lab notebook is Arxana’s capture format for AI coding sessions. Unlike
+Docbook entries (which are curated docs), lab data preserves the raw session
+trace, message timeline, and generated stubs. `arxana-lab.el` is the browsing
+layer: it reads files under `lab/`, normalizes them into entry plists, and
+exposes viewer commands for raw JSON, stub summaries, traces, and draft docs.
+
+* Directory layout
+`lab/` is split into four main areas:
+- `lab/raw/` holds session JSON payloads (one file per session).
+- `lab/stubs/` contains extracted summaries as Org stubs.
+- `lab/trace/` contains annotated traces (usually Org).
+- `lab/doc-drafts/` stores draft docs (JSON) produced during sessions.
+
+Each raw payload includes a `lab/session-id`, timestamps, and references to
+trace/stub/draft paths. If a path is missing, `arxana-lab` synthesizes a default
+path based on the session id.
+
+* Entry discovery
+`arxana-lab-entries` scans `lab/raw/` for JSON files and builds a list of
+`:type 'lab-entry` plists. Each entry includes timestamps, files touched, and
+paths to related stub/trace/draft files. Entries are sorted by
+`lab/timestamp-start` so the newest sessions appear first.
+
+* Viewing raw sessions
+`arxana-lab-open-raw-viewer` renders a timeline from the raw JSON. It builds an
+Org buffer with a summary section (session metadata + files touched) and then a
+chronological message timeline. Assistant messages are visually highlighted with
+`arxana-lab-assistant-face` so the thread is easy to scan.
+
+* Viewing stubs and drafts
+Stub viewers (`arxana-lab-open-stub-viewer`) extract Org content embedded in the
+raw JSON, falling back through several strategies (parsed JSON, decoded
+contents, or raw text) and warning when only raw JSON can be shown. Drafts and
+traces use `arxana-lab--open-file` to open a read‑only buffer in Org or JS mode
+depending on the file kind.
+
+* File browsers
+`arxana-lab-file-items` exposes the raw, stub, and draft files as listable items
+for the browser UI. `arxana-lab-open-file-entry` chooses the appropriate viewer
+based on the file type so browsing remains consistent with the entry‑based
+views.

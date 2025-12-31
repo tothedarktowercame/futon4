@@ -1,0 +1,41 @@
+#+TITLE: Snapshot save/restore shims
+:PROPERTIES:
+:DOC_ID: futon4-2c14d9f36136
+:ENTRY_ID: futon4-2c14d9f36136::org
+:VERSION: org
+:OUTLINE_PATH: Snapshot save/restore shims
+:PATH_STRING: Snapshot save/restore shims
+:REPLACES: 
+:END:
+
+* Context
+`arxana-saving.el` keeps legacy save/restore commands working while Futon
+snapshots become the authoritative storage path. The goal is to intercept
+`save-all-scholia` and `read-scholia-file` calls and route them through the
+snapshot HTTP endpoints *only* when sync is enabled. If sync is disabled, the
+original file-based behavior stays intact so older workflows continue to work.
+
+* Save shim flow
+When `save-all-scholia` is invoked, the shim checks a gate:
+`futon4-enable-sync` must be non-nil and the store helper
+`arxana-store-save-snapshot` must be present. If that gate fails, the original
+function is called unchanged. Otherwise the wrapper prompts for a snapshot scope
+(`all` or `latest`) and an optional label. In noninteractive runs, the prompt is
+skipped: the scope defaults to `all`, and the legacy filename argument is reused
+as the label. The wrapper then calls `arxana-store-save-snapshot`, extracts the
+snapshot id (when available), and prints a user-facing confirmation message.
+
+* Restore shim flow
+`read-scholia-file` is wrapped similarly. When sync is enabled, the shim treats
+the provided file path as a snapshot id (empty strings become nil) and prompts
+for a scope. It then calls `arxana-store-restore-snapshot`. If sync is disabled
+or the store helper is missing, it delegates to the original file-based
+implementation.
+
+* Compatibility strategy
+The shims are installed with `advice-add` *after* `arxana-tangled` loads, so the
+guarded behavior applies even if other implementations are already defined. The
+file also provides fallback definitions of `save-all-scholia` and
+`read-scholia-file` when those functions are not defined at all. Together these
+choices preserve backwards compatibility while enabling a clean transition to
+Futon snapshots.

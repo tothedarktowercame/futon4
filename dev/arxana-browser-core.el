@@ -17,6 +17,11 @@
 (declare-function arxana-store-sync-enabled-p "arxana-store")
 (declare-function arxana-patterns-ingest-language-rows "arxana-patterns-ingest")
 
+(declare-function arxana-browser-code-items "arxana-browser-code")
+(declare-function arxana-browser-code-format "arxana-browser-code")
+(declare-function arxana-browser-code-row "arxana-browser-code")
+(declare-function arxana-browser-code-open "arxana-browser-code")
+
 (declare-function arxana-browser-patterns--language-index-by-path "arxana-browser-patterns" (language-rows))
 (declare-function arxana-browser-patterns--filesystem-collection-items "arxana-browser-patterns" (&optional language-index))
 (declare-function arxana-browser-patterns--friendly-classification "arxana-browser-patterns" (value))
@@ -247,12 +252,14 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
               :view 'lab)))
 
 (defun arxana-browser--code-items ()
-  (list (list :type 'info
-              :label "Arxana source"
-              :description "Hook up Futon1 code entities to browse modules here.")
-        (list :type 'info
-              :label "Import status"
-              :description "No code catalogs detected yet.")))
+  (if (require 'arxana-browser-code nil t)
+      (arxana-browser-code-items)
+    (list (list :type 'info
+                :label "Arxana source"
+                :description "Hook up Futon1 code entities to browse modules here.")
+          (list :type 'info
+                :label "Import status"
+                :description "No code catalogs detected yet."))))
 
 (defun arxana-browser--header-line (context total)
   (cond
@@ -542,7 +549,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
          ((plist-get context :view)
           (pcase (plist-get context :view)
             ('patterns #'arxana-browser--root-row)
-            ('code #'arxana-browser--info-row)
+            ('code (if (fboundp 'arxana-browser-code-row)
+                       #'arxana-browser-code-row
+                     #'arxana-browser--info-row))
             ('media #'arxana-browser--info-row)
             ('docbook #'arxana-browser--info-row)
             ('docbook-book #'arxana-browser--info-row)
@@ -594,7 +603,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                         ((plist-get context :view)
                          (pcase (plist-get context :view)
                             ('patterns (arxana-browser--root-format))
-                            ('code (arxana-browser--info-format))
+                            ('code (if (fboundp 'arxana-browser-code-format)
+                                       (arxana-browser-code-format)
+                                     (arxana-browser--info-format)))
                             ('media (arxana-browser--info-format))
                             ('docbook (arxana-browser--info-format))
                             ('docbook-book (arxana-browser--info-format))
@@ -662,6 +673,11 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
       ('pattern
        (arxana-browser--require-patterns)
        (arxana-browser-patterns-open (plist-get item :label)))
+      ('code-file
+       (if (fboundp 'arxana-browser-code-open)
+           (arxana-browser-code-open item)
+         (let ((path (plist-get item :path)))
+           (when path (find-file path)))))
       ('media-publication
        (let ((path (plist-get item :path)))
          (unless (and path (file-directory-p path))
@@ -859,6 +875,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                     ((and (symbolp type)
                           (string-prefix-p "media-" (symbol-name type)))
                      (arxana-browser--media-location item))
+                    ((and item (eq (plist-get item :type) 'code-file))
+                     (let ((path (plist-get item :path)))
+                       (when path (format "file://%s" (expand-file-name path)))))
                     ((and item (eq (plist-get item :type) 'pattern))
                      (arxana-browser--pattern-location item))
                     ((and item (eq (plist-get item :type) 'collection))

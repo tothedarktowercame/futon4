@@ -1,0 +1,41 @@
+#+TITLE: Sync gate: futon4-enable-sync
+:PROPERTIES:
+:DOC_ID: futon4-cd0fffac287c
+:ENTRY_ID: futon4-cd0fffac287c::org
+:VERSION: org
+:OUTLINE_PATH: Sync gate: futon4-enable-sync
+:PATH_STRING: Sync gate: futon4-enable-sync
+:REPLACES: 
+:END:
+
+* Context
+`futon4-enable-sync` is the global switch that determines whether any network
+calls to Futon are allowed. The store helpers (`arxana-store-*`) treat it as the
+authoritative gate: when it is nil, all sync operations short‑circuit and return
+nil without contacting the server. This makes “offline mode” the default and
+lets users opt in to XTDB sync only when they are ready.
+
+* What it controls
+`arxana-store-sync-enabled-p` is the predicate used throughout the codebase. Any
+operation that would write or read from Futon checks it first. This includes
+article upserts, relations, entity fetches, and snapshots. In practice, turning
+sync off makes Arxana behave like a purely local, in‑memory system.
+
+* Enabling sync interactively
+`arxana-store-ensure-sync` provides the interactive path. If sync is disabled,
+it prompts the user to enable it and can optionally start the Futon server via
+`arxana-store-auto-start-server`. The auto‑start helper delegates to
+`futon4-start-server` or `tatami-start-server` when available, but does nothing
+if those helpers are missing.
+
+* Why a global gate exists
+The gate keeps interactive workflows resilient: the browser can still run when
+Futon is offline, in development, or under network restrictions. It also
+supports gradual adoption: contributors can work on docbook, media, or pattern
+features without requiring a running XTDB instance.
+
+* Practical usage
+Set `(setq futon4-enable-sync t)` when you want Emacs to hit the API. For
+one‑off operations, `M-x arxana-store-ensure-sync` is the safer entry point
+because it checks for server availability and asks before enabling network
+traffic.

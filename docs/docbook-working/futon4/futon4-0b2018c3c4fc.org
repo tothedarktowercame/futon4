@@ -1,0 +1,48 @@
+#+TITLE: Store error handling
+:PROPERTIES:
+:DOC_ID: futon4-0b2018c3c4fc
+:ENTRY_ID: futon4-0b2018c3c4fc::org
+:VERSION: org
+:OUTLINE_PATH: Store error handling
+:PATH_STRING: Store error handling
+:REPLACES: 
+:END:
+
+* Context
+`arxana-store.el` deliberately avoids raising errors back to callers. The
+storage helpers are used by interactive workflows, and a hard error would
+frequently interrupt unrelated UI flows. Instead, failures are recorded in a
+small diagnostic state and the functions return nil. This “silent failure with
+logging” model is designed for graceful degradation: browsing still works even
+if Futon is offline, and users can opt in to debugging when needed.
+
+* Error state layout
+`arxana-store--record-error` writes to three globals:
+- `arxana-store-last-error` — plist with `:reason`, `:detail`, `:context`.
+- `arxana-store-last-request` — the most recent request metadata (method, target,
+  payload, query).
+- `arxana-store-last-failure` — a combined view `{ :request … :error … }` for the
+  last failed call.
+
+`arxana-store-clear-error` resets the error and failure slots without touching
+normal state.
+
+* Why no exceptions
+Most helpers are called from UI commands or background refreshes. Throwing
+would translate into modal Emacs errors and broken navigation. By recording
+state and returning nil, the browser can continue to render cached or
+filesystem‑backed data. The caller can still check `arxana-store-last-error`
+when a result is missing.
+
+* Diagnosing problems
+Two interactive tools expose the captured state:
+- `M-x arxana-store-ping` performs a lightweight request and opens a buffer that
+  shows the last request, error, failure, and response. It also prints the base
+  URL and timeout settings.
+- `M-x arxana-store-last-request-report` shows the stored request and error
+  data without issuing a new HTTP call.
+
+A typical debugging flow is: repeat the action, then open the ping buffer to
+inspect `:reason` (e.g., `disabled`, `request`, `protocol`) and `:detail` for the
+human‑readable message. This preserves the “no hard errors” UX while still
+making failures observable.

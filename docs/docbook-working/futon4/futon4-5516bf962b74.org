@@ -1,0 +1,48 @@
+#+TITLE: Advice-based compatibility
+:PROPERTIES:
+:DOC_ID: futon4-5516bf962b74
+:ENTRY_ID: futon4-5516bf962b74::org
+:VERSION: org
+:OUTLINE_PATH: Advice-based compatibility
+:PATH_STRING: Advice-based compatibility
+:REPLACES: 
+:END:
+
+* Context
+Arxana uses `advice-add` and deferred rebinding to keep legacy entry points
+working while newer implementations take over. This lets the system evolve
+without breaking older commands or requiring every module to be rewritten at
+once. The compatibility layer in `arxana-compat.el` is the canonical example,
+and `arxana-saving.el` repeats the same pattern for save/restore shims.
+
+* Why advice instead of redefinition
+Directly redefining legacy functions would overwrite user customizations and
+third‑party integrations. Advice keeps the original function intact while
+wrapping new behavior around it. That means you can preserve old semantics and
+still intercept calls when Futon sync is enabled.
+
+* Deferred installation
+Both modules use `with-eval-after-load 'arxana-tangled` to delay installation
+until the legacy functions are present. In `arxana-compat.el`, the original
+`get-article` is captured in `arxana-compat--orig-get-article` before the symbol
+is rebound. This prevents losing the historical behavior and makes a clean
+fallback path possible.
+
+* Modern‑first, legacy‑fallback
+The shim logic always tries the modern source first. For `get-article`, that
+means consulting the new article hash table (`article-table`) and only calling
+the captured legacy function if the modern lookup fails. For save/restore,
+`arxana-saving` wraps `save-all-scholia` and `read-scholia-file`, routing them to
+Futon snapshots when sync is enabled, otherwise delegating to the original
+implementations.
+
+* Guidance for new modules
+Use advice when you need to intercept a legacy API without breaking downstream
+callers. Prefer a “modern first” path plus a clearly named fallback. Capture the
+original function once, and install the shim after the legacy module loads so
+it is safe across hot reloads.
+
+* Trade‑offs
+Advice is powerful but can make debugging harder, because stack traces include
+wrappers rather than the original function body. Keep shims small and add
+messages or diagnostics when needed to make the control flow visible.

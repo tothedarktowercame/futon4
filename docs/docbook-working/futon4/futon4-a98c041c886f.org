@@ -1,0 +1,53 @@
+#+TITLE: Docbook entry parsing
+:PROPERTIES:
+:DOC_ID: futon4-a98c041c886f
+:ENTRY_ID: futon4-a98c041c886f::org
+:VERSION: org
+:OUTLINE_PATH: Docbook entry parsing
+:PATH_STRING: Docbook entry parsing
+:REPLACES: 
+:END:
+
+* Context
+In Arxana, a “docbook” is a collection of AI‑generated documentation entries,
+not DocBook XML. `arxana-docbook-core.el` is the parsing layer that turns those
+filesystem assets (and optional remote entries) into the plists consumed by the
+browser and checkout UI. It is deliberately narrow: it does *not* render UI or
+edit buffers; it only discovers entries and extracts their content.
+
+* Books root and entry sources
+The books root defaults to `docs/docbook-working/` (auto‑detected from the repo),
+falling back to the legacy `dev/logs/books` layout if needed. Each book folder
+contains stub `.org` files named by `doc_id` (for example
+`futon4-2c09c5856f2e.org`). Stubs are the authoritative working copies. If a
+`raw/` subdirectory exists, JSON snapshots are also parsed and merged so older
+pipelines can still surface entries.
+
+* Parsing stubs and JSON
+`arxana-docbook--entry-from-stub` reads the Org stub, extracts `#+TITLE`, and
+parses the property drawer to get `DOC_ID`, `ENTRY_ID`, `VERSION`,
+`OUTLINE_PATH`, and `PATH_STRING`. It also records the file mtime as a timestamp
+so the browser can sort and compare entries. JSON parsing (`arxana-docbook--entry-from-json`)
+reads run metadata like `doc_id`, `run_id`, `outline_path`, `files_touched`, and
+`agent_summary`, and points `:stub-path` at a sibling `.org` file when present.
+
+* Entry selection and versions
+`arxana-docbook--entries-for-doc` merges local entries with remote entries when
+available. Remote entries are kept only if they are newer than the local stub.
+“Lab draft” entries are detected by version (`lab-draft`) so the UI can treat
+those specially. Helpers like `arxana-docbook--latest-non-lab` and
+`arxana-docbook--lab-drafts` expose that split.
+
+* Content extraction
+When a stub exists, `arxana-docbook--entry-content` reads from the stub first.
+It strips Org metadata and code blocks, then removes the header so the rendered
+summary is just the body text. If no stub is available, it falls back to the
+stored summary. A small mojibake repair (`arxana-docbook--maybe-fix-mojibake`)
+tries to correct UTF‑8 text misdecoded as Latin‑1.
+
+* Source path hints
+`arxana-docbook--entry-source-path` scans entry content for source references
+(`:tangle`, `#+INCLUDE`, or “code> path” markers). This is used to render
+“- Source: …” links in the UI. The public API surface is small:
+`arxana-docbook-entries` returns the sorted entry list for a book, and the other
+helpers keep docbook browsing aligned to filesystem reality.

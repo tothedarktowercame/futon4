@@ -1,0 +1,37 @@
+#+TITLE: Org to XTDB import
+:PROPERTIES:
+:DOC_ID: futon4-994ec7cb244a
+:ENTRY_ID: futon4-994ec7cb244a::org
+:VERSION: org
+:OUTLINE_PATH: Org to XTDB import
+:PATH_STRING: Org to XTDB import
+:REPLACES: 
+:END:
+
+* Context
+`arxana-import.el` provides the small, focused entry points for importing Org
+content into Arxana’s article graph and, when sync is enabled, into Futon/XTDB.
+It is intentionally lightweight: it does not parse Org structure, it simply
+reads the file as text and registers the whole buffer as a single article.
+
+* Single-file import
+`arxana-import-org-file` reads the file contents and derives an article name.
+The name is chosen in this order: the `#+TITLE:` line (case-insensitive), the
+file base name, or the full file name. It then calls `scholium` to register the
+text as an article in the in-memory graph, tagging the entry as `(org)` and
+using the current `sch-book` (if any). When store sync is available, it also
+calls `arxana-store-ensure-article` with the canonicalized path so Futon can
+track the source location.
+
+* Directory import
+`arxana-import-org-directory` is a thin wrapper that gathers `.org` files and
+calls the single-file importer for each one. By default it scans only the
+specified directory; with a prefix argument it descends into subdirectories via
+`arxana-import--org-files-recursively`. A summary message reports how many files
+were imported.
+
+* Notes and expectations
+The importer does not attempt to merge with existing articles: re-importing a
+file replaces the text for that article name. If no name can be derived, the
+import aborts with an error. For large hierarchies, prefer the directory
+importer so the same naming and sync rules are applied consistently.
