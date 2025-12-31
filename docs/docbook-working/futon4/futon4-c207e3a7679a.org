@@ -1,10 +1,11 @@
 #+TITLE: Compatibility & test support
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-c207e3a7679a
 :VERSION: org
 :OUTLINE_PATH: Compatibility & test support
 :PATH_STRING: Compatibility & test support
 :REPLACES: 
+:ENTRY_ID: futon4-c207e3a7679a::org
 :END:
 
 * Context

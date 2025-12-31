@@ -1,10 +1,11 @@
 #+TITLE: XTDB helpers
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-d58c7634ecc8
 :VERSION: org
 :OUTLINE_PATH: Browsing & relations / XTDB helpers
 :PATH_STRING: Browsing & relations / XTDB helpers
 :REPLACES: 
+:ENTRY_ID: futon4-d58c7634ecc8::org
 :END:
 
 * Context

@@ -1,10 +1,11 @@
 #+TITLE: Known limitations
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-8d30ed550fb1
 :VERSION: org
 :OUTLINE_PATH: Known limitations
 :PATH_STRING: Known limitations
 :REPLACES: 
+:ENTRY_ID: futon4-8d30ed550fb1::org
 :END:
 
 * Context

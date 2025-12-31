@@ -1,10 +1,11 @@
 #+TITLE: Logical model
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-09c07c0eae61
 :VERSION: org
 :OUTLINE_PATH: Logical model
 :PATH_STRING: Logical model
 :REPLACES: 
+:ENTRY_ID: futon4-09c07c0eae61::org
 :END:
 
 * Context

@@ -1,10 +1,11 @@
 #+TITLE: Storage substrates
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-06e71f3912e9
 :VERSION: org
 :OUTLINE_PATH: Logical model / Storage substrates
 :PATH_STRING: Logical model / Storage substrates
 :REPLACES: 
+:ENTRY_ID: futon4-06e71f3912e9::org
 :END:
 
 * Context

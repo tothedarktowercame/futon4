@@ -1,10 +1,11 @@
 #+TITLE: Formatting helpers
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-b0879f2e4b40
 :VERSION: org
 :OUTLINE_PATH: Browsing & relations / Formatting helpers
 :PATH_STRING: Browsing & relations / Formatting helpers
 :REPLACES: 
+:ENTRY_ID: futon4-b0879f2e4b40::org
 :END:
 
 * Context

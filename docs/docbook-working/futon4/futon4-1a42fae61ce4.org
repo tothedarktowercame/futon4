@@ -1,10 +1,11 @@
 #+TITLE: In-memory storage of one form or another
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-1a42fae61ce4
 :VERSION: org
 :OUTLINE_PATH: Logical model / Storage substrates / In-memory storage of one form or another
 :PATH_STRING: Logical model / Storage substrates / In-memory storage of one form or another
 :REPLACES: 
+:ENTRY_ID: futon4-1a42fae61ce4::org
 :END:
 
 * Context

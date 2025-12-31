@@ -1,10 +1,11 @@
 #+TITLE: Editing Futon pattern entries
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-7da32fa5e066
 :VERSION: org
 :OUTLINE_PATH: Pattern workflows / Editing Futon pattern entries
 :PATH_STRING: Pattern workflows / Editing Futon pattern entries
 :REPLACES: 
+:ENTRY_ID: futon4-7da32fa5e066::org
 :END:
 
 * Context

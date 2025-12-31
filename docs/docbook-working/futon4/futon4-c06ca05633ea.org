@@ -1,10 +1,11 @@
 #+TITLE: Entry points
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-c06ca05633ea
 :VERSION: org
 :OUTLINE_PATH: Entry points
 :PATH_STRING: Entry points
 :REPLACES: 
+:ENTRY_ID: futon4-c06ca05633ea::org
 :END:
 
 * Context

@@ -1,10 +1,11 @@
 #+TITLE: Quickstart
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-0cf1aad99fe8
 :VERSION: org
 :OUTLINE_PATH: Quickstart
 :PATH_STRING: Quickstart
 :REPLACES: 
+:ENTRY_ID: futon4-0cf1aad99fe8::org
 :END:
 
 * Context

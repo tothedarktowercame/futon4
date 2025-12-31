@@ -1,10 +1,11 @@
 #+TITLE: Single-file importer
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-d1cad5e3ad96
 :VERSION: org
 :OUTLINE_PATH: Org imports / exports & snapshots / Single-file importer
 :PATH_STRING: Org imports / exports & snapshots / Single-file importer
 :REPLACES: 
+:ENTRY_ID: futon4-d1cad5e3ad96::org
 :END:
 
 * Context

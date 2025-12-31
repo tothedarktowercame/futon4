@@ -1,10 +1,11 @@
 #+TITLE: Storage bridge
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-00eed2b34c80
 :VERSION: org
 :OUTLINE_PATH: Storage bridge
 :PATH_STRING: Storage bridge
 :REPLACES: 
+:ENTRY_ID: futon4-00eed2b34c80::org
 :END:
 
 * Context

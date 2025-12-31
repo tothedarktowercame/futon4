@@ -1,10 +1,11 @@
 #+TITLE: Catalog & label menus
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-c075976f6a93
 :VERSION: org
 :OUTLINE_PATH: Browsing & relations / Catalog & label menus
 :PATH_STRING: Browsing & relations / Catalog & label menus
 :REPLACES: 
+:ENTRY_ID: futon4-c075976f6a93::org
 :END:
 
 * Context

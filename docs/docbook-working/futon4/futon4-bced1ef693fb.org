@@ -1,10 +1,11 @@
 #+TITLE: Link-following & history
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-bced1ef693fb
 :VERSION: org
 :OUTLINE_PATH: Browsing & relations / Link-following & history
 :PATH_STRING: Browsing & relations / Link-following & history
 :REPLACES: 
+:ENTRY_ID: futon4-bced1ef693fb::org
 :END:
 
 * Context

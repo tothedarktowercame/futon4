@@ -1,10 +1,11 @@
 #+TITLE: Contributor guide (embedded)
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-d8a5d600715e
 :VERSION: org
 :OUTLINE_PATH: Contributor guide (embedded)
 :PATH_STRING: Contributor guide (embedded)
 :REPLACES: 
+:ENTRY_ID: futon4-d8a5d600715e::org
 :END:
 
 * Context

@@ -1,10 +1,11 @@
 #+TITLE: Rendering Futon responses
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-42634658191a
 :VERSION: org
 :OUTLINE_PATH: Browsing & relations / Rendering Futon responses
 :PATH_STRING: Browsing & relations / Rendering Futon responses
 :REPLACES: 
+:ENTRY_ID: futon4-42634658191a::org
 :END:
 
 * Context

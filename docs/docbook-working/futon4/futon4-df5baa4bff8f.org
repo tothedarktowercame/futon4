@@ -1,10 +1,11 @@
 #+TITLE: Document-based substrates
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-df5baa4bff8f
 :VERSION: org
 :OUTLINE_PATH: Logical model / Storage substrates / Document-based substrates
 :PATH_STRING: Logical model / Storage substrates / Document-based substrates
 :REPLACES: 
+:ENTRY_ID: futon4-df5baa4bff8f::org
 :END:
 
 * Context

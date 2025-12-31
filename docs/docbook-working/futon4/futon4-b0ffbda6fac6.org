@@ -1,10 +1,11 @@
 #+TITLE: Commands & context
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-b0ffbda6fac6
 :VERSION: org
 :OUTLINE_PATH: Browsing & relations / Commands & context
 :PATH_STRING: Browsing & relations / Commands & context
 :REPLACES: 
+:ENTRY_ID: futon4-b0ffbda6fac6::org
 :END:
 
 * Context

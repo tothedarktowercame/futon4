@@ -1,10 +1,11 @@
 #+TITLE: Testing hooks
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-b97ac3a64466
 :VERSION: org
 :OUTLINE_PATH: Testing hooks
 :PATH_STRING: Testing hooks
 :REPLACES: 
+:ENTRY_ID: futon4-b97ac3a64466::org
 :END:
 
 * Context

@@ -1,10 +1,11 @@
 #+TITLE: Historical: Relational substrate
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-13f8f712b100
 :VERSION: org
 :OUTLINE_PATH: Logical model / Storage substrates / Historical: Relational substrate
 :PATH_STRING: Logical model / Storage substrates / Historical: Relational substrate
 :REPLACES: 
+:ENTRY_ID: futon4-13f8f712b100::org
 :END:
 
 * Context

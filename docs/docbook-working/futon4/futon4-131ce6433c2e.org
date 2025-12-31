@@ -1,10 +1,11 @@
 #+TITLE: Relation buffers in context
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-131ce6433c2e
 :VERSION: org
 :OUTLINE_PATH: Browsing & relations / Relation buffers in context
 :PATH_STRING: Browsing & relations / Relation buffers in context
 :REPLACES: 
+:ENTRY_ID: futon4-131ce6433c2e::org
 :END:
 
 * Context

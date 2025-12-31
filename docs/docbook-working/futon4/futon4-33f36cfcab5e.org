@@ -1,10 +1,11 @@
 #+TITLE: Possible future: Triple-store substrate
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-33f36cfcab5e
 :VERSION: org
 :OUTLINE_PATH: Logical model / Storage substrates / Possible future: Triple-store substrate
 :PATH_STRING: Logical model / Storage substrates / Possible future: Triple-store substrate
 :REPLACES: 
+:ENTRY_ID: futon4-33f36cfcab5e::org
 :END:
 
 * Context

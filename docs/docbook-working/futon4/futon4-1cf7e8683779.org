@@ -1,10 +1,11 @@
 #+TITLE: Export helpers
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-1cf7e8683779
 :VERSION: org
 :OUTLINE_PATH: Org imports / exports & snapshots / Export helpers
 :PATH_STRING: Org imports / exports & snapshots / Export helpers
 :REPLACES: 
+:ENTRY_ID: futon4-1cf7e8683779::org
 :END:
 
 * Context

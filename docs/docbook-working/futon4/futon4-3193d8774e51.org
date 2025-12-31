@@ -1,10 +1,11 @@
 #+TITLE: Relation browsing inside Emacs
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-3193d8774e51
 :VERSION: org
 :OUTLINE_PATH: Relation browsing inside Emacs
 :PATH_STRING: Relation browsing inside Emacs
 :REPLACES: 
+:ENTRY_ID: futon4-3193d8774e51::org
 :END:
 
 * Context

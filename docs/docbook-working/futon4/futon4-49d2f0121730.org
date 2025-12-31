@@ -1,10 +1,11 @@
 #+TITLE: Troubleshooting relations
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-49d2f0121730
 :VERSION: org
 :OUTLINE_PATH: Troubleshooting relations
 :PATH_STRING: Troubleshooting relations
 :REPLACES: 
+:ENTRY_ID: futon4-49d2f0121730::org
 :END:
 
 * Context

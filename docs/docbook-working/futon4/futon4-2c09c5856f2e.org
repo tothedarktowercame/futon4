@@ -1,10 +1,11 @@
 #+TITLE: Article lifecycle
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-2c09c5856f2e
 :VERSION: org
 :OUTLINE_PATH: Article lifecycle
 :PATH_STRING: Article lifecycle
 :REPLACES: 
+:ENTRY_ID: futon4-2c09c5856f2e::org
 :END:
 
 * Context

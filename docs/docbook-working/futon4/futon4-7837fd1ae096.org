@@ -1,10 +1,11 @@
 #+TITLE: Emacs client (Arxana classic)
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-7837fd1ae096
 :VERSION: org
 :OUTLINE_PATH: Logical model / Emacs client (Arxana classic)
 :PATH_STRING: Logical model / Emacs client (Arxana classic)
 :REPLACES: 
+:ENTRY_ID: futon4-7837fd1ae096::org
 :END:
 
 * Context

@@ -1,10 +1,11 @@
 #+TITLE: Directory importer
 :PROPERTIES:
-:DOC_ID: unknown
+:DOC_ID: futon4-841342cf2b60
 :VERSION: org
 :OUTLINE_PATH: Org imports / exports & snapshots / Directory importer
 :PATH_STRING: Org imports / exports & snapshots / Directory importer
 :REPLACES: 
+:ENTRY_ID: futon4-841342cf2b60::org
 :END:
 
 * Context
