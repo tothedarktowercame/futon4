@@ -425,7 +425,8 @@ VALUE may be a string like \"[🐜/基 ⚙️/形]\" or \"🐜/基 ⚙️/形\".
 (defun arxana-patterns-ingest--parse-flexiarg (path)
   "Parse PATH and return a plist describing the pattern contents."
   (with-temp-buffer
-    (insert-file-contents path)
+    (let ((coding-system-for-read 'utf-8-unix))
+      (insert-file-contents path))
     (goto-char (point-min))
     (let ((meta nil)
           (sections nil)
@@ -522,6 +523,20 @@ VALUE may be a string like \"[🐜/基 ⚙️/形]\" or \"🐜/基 ⚙️/形\".
       (setq index (1+ index)))
     (list :name (plist-get data :name)
           :id pattern-id)))
+
+;;;###autoload
+(defun arxana-patterns-ingest-file (path)
+  "Ingest a single flexiarg file PATH."
+  (interactive
+   (list (read-file-name "Flexiarg file: " nil nil t nil
+                         (lambda (name)
+                           (or (file-directory-p name)
+                               (string-match-p "\\.flexiarg\\'" name))))))
+  (unless (arxana-store-sync-enabled-p)
+    (user-error "Futon sync is disabled; enable futon4-enable-sync first"))
+  (let ((result (arxana-patterns-ingest--ingest-file path)))
+    (message "Ingested %s" (plist-get result :name))
+    result))
 
 (defun arxana-patterns-ingest--ensure-language (language-name language-title patterns directory language-status)
   "Ensure LANGUAGE-NAME exists and links to PATTERNS in order."

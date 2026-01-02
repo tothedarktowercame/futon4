@@ -99,6 +99,12 @@ Set to nil to disable persistence."
 
 (defvar-local arxana-browser-patterns--pattern nil
   "Buffer-local plist describing the currently loaded pattern.")
+(defvar arxana-browser-patterns--additional-collection-roots nil
+  "Session-local list of ad-hoc pattern collection directories.")
+(defvar arxana-browser-patterns--persisted-collection-roots-loaded nil
+  "Non-nil once persisted collection roots are loaded from disk.")
+(defvar arxana-browser-patterns--persisted-collection-roots nil
+  "Cached list of persisted collection roots.")
 
 (defconst arxana-browser-patterns--summary-begin "#+BEGIN_SUMMARY")
 
@@ -889,7 +895,10 @@ use that entry; otherwise prompt for a directory."
   :lighter " Pattern"
   :keymap arxana-browser-patterns-view-mode-map
   (when arxana-browser-patterns-view-mode
-    (add-hook 'after-change-functions #'arxana-browser-patterns--update-header-state nil t)
+    (add-hook 'after-change-functions
+              (lambda (&rest _)
+                (arxana-browser-patterns--update-header-state))
+              nil t)
     (arxana-browser-patterns--update-header-state)))
 
 (defun arxana-browser-patterns--ensure-sync ()
@@ -1420,12 +1429,26 @@ are ignored for now."
 
 (defalias 'arxana-browser-patterns--code-items #'arxana-browser--code-items)
 
+(defun arxana-browser-patterns--frame-position-hint ()
+  "Return alist of frame position params to keep new frames on current monitor."
+  (when (fboundp 'frame-monitor-attributes)
+    (let* ((attrs (frame-monitor-attributes (selected-frame)))
+           (work (or (alist-get 'workarea attrs)
+                     (alist-get 'geometry attrs))))
+      (when (and (consp work) (>= (length work) 2))
+        (let ((left (nth 0 work))
+              (top (nth 1 work)))
+          (when (and (numberp left) (numberp top))
+            (list (cons 'left (+ left 40))
+                  (cons 'top (+ top 40)))))))))
+
 (defun arxana-browser-patterns--ensure-frame ()
   (or (seq-find (lambda (frame)
                   (and (frame-live-p frame)
                        (equal (frame-parameter frame 'name) arxana-browser-frame-name)))
                 (frame-list))
-      (let ((frame (make-frame `((name . ,arxana-browser-frame-name)))))
+      (let* ((pos (arxana-browser-patterns--frame-position-hint))
+             (frame (make-frame (append `((name . ,arxana-browser-frame-name)) pos))))
         (set-frame-parameter frame 'arxana-frame t)
         (when arxana-browser-frame-fullscreen
           (set-frame-parameter frame 'fullscreen 'fullboth))
