@@ -18,3 +18,13 @@ GET endpoints include `/musn/clients`, `/musn/sessions`, `/musn/practices`,
 and `/musn/tatami/status`. POST endpoints include
 `/musn/tatami/start|log|close|select`, `/musn/hints`, `/musn/cues`, and
 `/musn/export`.
+
+* Fulab (work in progress)
+`f2.ui` also exposes WIP lab-session endpoints for fucodex and fuclaude
+(run, stream, events, and session state). These are used to stream fulab
+events for export tooling.
+
+Human-side logging (fubar) is emitted from Emacs and currently lands in a
+local EDN log with planned ingestion into the fulab stream. Expect endpoint
+names, schemas, and coverage to evolve while the lab export pipeline is
+stabilized.
