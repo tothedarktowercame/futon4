@@ -97,8 +97,16 @@
   (or (and (boundp 'futon4-base-url) futon4-base-url)
       (error "futon4-base-url is not set")))
 
+(defun arxana-store--normalize-base (base)
+  (let* ((base (string-remove-suffix "/" (or base ""))))
+    (cond
+     ((string-match-p "/api\\(/alpha\\)?\\'" base) base)
+     ((string-match-p "/api/%ce%b1\\'" base) base)
+     ((string-match-p "/api/%CE%B1\\'" base) base)
+     (t (concat base "/api")))))
+
 (defun arxana-store--build-url (path &optional query)
-  (let ((base (arxana-store--base-url))
+  (let ((base (arxana-store--normalize-base (arxana-store--base-url)))
         (path (if (stringp path) path "")))
     (concat base
             path
@@ -132,6 +140,15 @@
       (futon4--canonical-path path)
     path))
 
+(defun arxana-store--normalize-json-body (body)
+  "Ensure BODY is UTF-8 decoded so emoji/sigils are not mojibake."
+  (when body
+    (if (multibyte-string-p body)
+        body
+      (condition-case _err
+          (decode-coding-string body 'utf-8)
+        (error body)))))
+
 (defun arxana-store--request (method path &optional payload query)
   "Fire METHOD PATH against Futon and return the parsed JSON body.
 Optional PAYLOAD is JSON encoded for POST requests. QUERY is an
@@ -141,7 +158,9 @@ already encoded query string (without the leading ?)."
     (unless (stringp path)
       (cl-return-from arxana-store--request
         (arxana-store--record-error 'invalid "Missing request path" path)))
-    (let* ((url-request-method method)
+    (let* ((coding-system-for-read 'utf-8)
+           (coding-system-for-write 'utf-8)
+           (url-request-method method)
            (url-request-data (when payload
                                (encode-coding-string (json-encode payload) 'utf-8)))
            (url-request-extra-headers (arxana-store--default-headers payload))
@@ -178,7 +197,28 @@ already encoded query string (without the leading ?)."
                   (let* ((json-object-type 'alist)
                          (json-array-type 'list)
                          (json-key-type 'keyword)
-                         (body (ignore-errors (json-read))))
+                         (body (arxana-store--normalize-json-body
+                                (buffer-substring-no-properties (point) (point-max))))
+                         (body (and body
+                                    (let ((parsed nil))
+                                      (when (fboundp 'json-parse-string)
+                                        (setq parsed
+                                              (or (ignore-errors
+                                                    (json-parse-string body
+                                                                       :object-type 'alist
+                                                                       :array-type 'list
+                                                                       :object-key-type 'keyword
+                                                                       :null-object nil
+                                                                       :false-object nil))
+                                                  (ignore-errors
+                                                    (json-parse-string body
+                                                                       :object-type 'alist
+                                                                       :array-type 'list
+                                                                       :key-type 'keyword
+                                                                       :null-object nil
+                                                                       :false-object nil)))))
+                                      (or parsed
+                                          (ignore-errors (json-read-from-string body)))))))
                     (kill-buffer buf)
                     (if body
                         (progn
@@ -228,7 +268,7 @@ already encoded query string (without the leading ?)."
       (futon4-ensure-article-entity id name canonical spine nil props)
       id))))
 
-(cl-defun arxana-store-ensure-entity (&key id name type source external-id seen-count pinned? last-seen props media/sha256)
+(cl-defun arxana-store-ensure-entity (&key id name type source entity/source external-id seen-count pinned? last-seen props media/sha256)
   "Ensure Futon has an entity named NAME of TYPE, returning the response.
 ID, SOURCE, EXTERNAL-ID, SEEN-COUNT, PINNED?, and LAST-SEEN mirror the
 payload accepted by Futon's `/entity` endpoint. TYPE may be a keyword or
@@ -243,6 +283,7 @@ user error when NAME is missing."
                                                   type)))
                                   (when id (cons 'id id))
                                   (when source (cons 'source source))
+                                  (when entity/source (cons 'entity/source entity/source))
                                   (when external-id (cons 'external-id external-id))
                                   (when seen-count (cons 'seen-count seen-count))
                                   (when (not (null pinned?))
