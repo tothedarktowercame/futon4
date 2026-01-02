@@ -2,16 +2,16 @@
 set -euo pipefail
 
 # Usage:
-#   ./bounce_vocal_banjo_bass_harp.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
+#   ./bounce_vocal_banjo_bass_vocal2.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
 # Track1: vocals (recorded with banjo bleed)
 # Track2: banjo (recorded with vocal bleed)
 # Track3: bass (overdub)
-# Track4: harmonica (overdub)
+# Track4: vocal2 (overdub, treated like accordion)
 
 t1="${1:?t1 (vocals) wav}"
 t2="${2:?t2 (banjo) wav}"
 t3="${3:?t3 (bass) wav}"
-t4="${4:?t4 (harmonica) wav}"
+t4="${4:?t4 (vocal2) wav}"
 out="${5:?output wav}"
 out_mp3="${6:-}"
 
@@ -29,8 +29,8 @@ ffmpeg -hide_banner -y \
     [0:a]highpass=f=80,  acompressor=threshold=-20dB:ratio=2:attack=20:release=200, volume=1.15, pan=stereo|c0=c0|c1=c0[v];
     [1:a]highpass=f=120, acompressor=threshold=-22dB:ratio=2:attack=15:release=180, volume=0.95, pan=stereo|c0=c0|c1=0*c0[bL];
     [2:a]highpass=f=40,  lowpass=f=5000, acompressor=threshold=-18dB:ratio=2.5:attack=25:release=250, volume=1.05, pan=stereo|c0=c0|c1=c0[ba];
-    [3:a]highpass=f=200, acompressor=threshold=-22dB:ratio=2:attack=10:release=150, volume=0.85, pan=stereo|c0=0*c0|c1=c0[hR];
-    [v][bL][ba][hR]amix=inputs=4:normalize=0[m];
+    [3:a]highpass=f=180, acompressor=threshold=-22dB:ratio=2:attack=10:release=150, volume=0.90, pan=stereo|c0=0*c0|c1=c0[v2R];
+    [v][bL][ba][v2R]amix=inputs=4:normalize=0[m];
     [m]alimiter=limit=-1.5dB,aresample=48000
   " \
   -c:a pcm_s16le "$rough"

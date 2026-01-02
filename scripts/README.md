@@ -28,6 +28,17 @@ Usage:
 ./bounce_vocal_banjo_bass_harp_vocal_forward.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
 ```
 
+## Basic mix (vocal + banjo + bass + vocal2)
+
+`bounce_vocal_banjo_bass_vocal2.sh` mirrors the banjo/bass/harp flow, but
+treats the vocal2 overdub like the accordion lane in other mixes.
+
+Usage:
+
+```sh
+./bounce_vocal_banjo_bass_vocal2.sh t1.wav t2.wav t3.wav t4.wav out.wav
+```
+
 ## Vocal-forward mix (dual vocals + banjo + bass + accordion)
 
 `bounce_vocals_banjo_bass_accordion_vocal_forward.sh` extends the banjo/bass

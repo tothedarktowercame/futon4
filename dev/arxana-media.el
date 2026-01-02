@@ -208,10 +208,13 @@
   :type 'directory
   :group 'arxana-media)
 
-(defcustom arxana-media-bounce-profiles
+(defconst arxana-media--bounce-profiles-default
   '(("vocal+banjo+bass+harp"
      :script "scripts/bounce_vocal_banjo_bass_harp.sh"
      :instruments ("vocal" "banjo" "bass" "harmonica"))
+    ("vocal+banjo+bass+vocal2"
+     :script "scripts/bounce_vocal_banjo_bass_vocal2.sh"
+     :instruments ("vocal" "banjo" "bass" "vocal2"))
     ("vocal-forward+banjo+bass+harp"
      :script "scripts/bounce_vocal_banjo_bass_harp_vocal_forward.sh"
      :instruments ("vocal" "banjo" "bass" "harmonica"))
@@ -220,19 +223,21 @@
      :instruments ("vocal" "vocal2" "banjo" "bass" "accordion")
      :track-count 5)
     ("vocal+bass+pbass+accordion" :script "scripts/bounce_vocal_bass_pbass_accordion.sh")
-    ("vocal-forward+bass+pbass+accordion" :script "scripts/bounce_vocal_bass_pbass_accordion_vocal_forward.sh"))
+    ("vocal-forward+bass+pbass+accordion" :script "scripts/bounce_vocal_bass_pbass_accordion_vocal_forward.sh")))
+
+(defcustom arxana-media-bounce-profiles arxana-media--bounce-profiles-default
   "Profiles for multi-track bounce workflows.
 Each entry is (PROFILE-NAME :script PATH [:instruments (\"vocal\" ...)])."
   :type '(repeat sexp)
   :group 'arxana-media)
 
-(let ((profile '("dual-vocal-forward+banjo+bass+accordion"
-                 :script "scripts/bounce_vocals_banjo_bass_accordion_vocal_forward.sh"
-                 :instruments ("vocal" "vocal2" "banjo" "bass" "accordion")
-                 :track-count 5)))
-  (unless (assoc (car profile) arxana-media-bounce-profiles)
-    (setq arxana-media-bounce-profiles
-          (append arxana-media-bounce-profiles (list profile)))))
+(defun arxana-media--ensure-bounce-profiles ()
+  (dolist (profile arxana-media--bounce-profiles-default)
+    (unless (assoc (car profile) arxana-media-bounce-profiles)
+      (setq arxana-media-bounce-profiles
+            (append arxana-media-bounce-profiles (list profile))))))
+
+(arxana-media--ensure-bounce-profiles)
 
 (defcustom arxana-media-bounce-instrument-aliases
   '(("harmonic" . "harmonica")
@@ -249,6 +254,11 @@ Each entry is (PROFILE-NAME :script PATH [:instruments (\"vocal\" ...)])."
 When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
   :type '(choice (const :tag "Use misc-audio bounces" nil)
                  directory)
+  :group 'arxana-media)
+
+(defcustom arxana-media-bounce-async t
+  "When non-nil, run bounce scripts asynchronously."
+  :type 'boolean
   :group 'arxana-media)
 
 (defcustom arxana-media-publication-tag-prefix "publication:"
@@ -573,21 +583,25 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
      (user-error "Unsupported media item for lyrics"))))
 
 (defun arxana-media--entity-source (entity)
-  (let* ((source (and (listp entity)
+  (let* ((entity-source (and (listp entity)
+                             (or (alist-get :entity/source entity)
+                                 (alist-get 'entity/source entity))))
+         (source (and (listp entity)
                       (or (alist-get :source entity)
-                          (alist-get 'source entity)
-                          (alist-get :entity/source entity))))
+                          (alist-get 'source entity))))
          (version (and (listp entity) (alist-get :version entity)))
          (data (and (listp version) (alist-get :data version)))
          (data-source (and (listp data)
                            (or (alist-get :source data)
                                (alist-get 'source data)))))
-    (or (and (stringp source)
+    (or (and (stringp entity-source)
+             (not (string-empty-p entity-source))
+             entity-source)
+        (and (stringp source)
              (not (string-empty-p source))
              (not (string= source "external"))
              source)
         data-source
-        source
         "")))
 
 (defun arxana-media--maybe-fix-utf8 (text)
@@ -605,6 +619,15 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
          (entity (and (listp response) (alist-get :entity response)))
          (lyrics (arxana-media--entity-source entity))
          (text (arxana-media--maybe-fix-utf8 (or lyrics ""))))
+    (when (and (string-empty-p text) (listp entity))
+      (let ((internal-id (alist-get :id entity)))
+        (when (and internal-id (not (equal internal-id entity-id)))
+          (let* ((fallback (ignore-errors (arxana-store-fetch-entity internal-id)))
+                 (fallback-entity (and (listp fallback) (alist-get :entity fallback)))
+                 (fallback-lyrics (arxana-media--entity-source fallback-entity))
+                 (fallback-text (arxana-media--maybe-fix-utf8 (or fallback-lyrics ""))))
+            (when (and (stringp fallback-text) (> (length fallback-text) 0))
+              (setq text fallback-text))))))
     (when (and (stringp entity-id) (not (string-empty-p entity-id)))
       (puthash entity-id (if (string-empty-p text) 'none t) arxana-media--lyrics-cache))
     text))
@@ -689,7 +712,7 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
                                 :type "arxana/media-lyrics"
                                 :external-id lyrics-id
                                 :media/sha256 sha
-                                :source lyrics)
+                                :entity/source lyrics)
     (arxana-store-create-relation :src entity-id
                                   :dst lyrics-id
                                   :label ":media/lyrics")
@@ -726,7 +749,7 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
                                   :type "arxana/media-lyrics"
                                   :external-id target-lyrics-id
                                   :media/sha256 sha
-                                  :source lyrics)
+                                  :entity/source lyrics)
       (arxana-store-create-relation :src target-entity-id
                                     :dst target-lyrics-id
                                     :label ":media/lyrics")
@@ -2286,56 +2309,56 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
                               "track")))
             (push (list :entry entry :path path) entry-data)))
         (setq entry-data (nreverse entry-data))
-      (when (and instrument-order (not use-marked-order))
-        (let ((assignments (make-hash-table :test 'equal))
-              (unmatched nil)
-              (ambiguous nil)
-              (duplicates nil))
-          (dolist (data entry-data)
-            (let* ((entry (plist-get data :entry))
-                   (path (plist-get data :path))
-                   (matches (arxana-media--bounce-entry-instruments
-                             entry instrument-order instrument-aliases path))
-                   (label (or (and path (file-name-nondirectory path))
-                              (plist-get entry :title)
-                              (plist-get entry :base_name)
-                              (plist-get entry :source)
-                              (plist-get entry :name)
-                              "track")))
-              (cond
-               ((null matches)
-                (push label unmatched))
-               ((> (length matches) 1)
-                (push (cons label matches) ambiguous))
-               (t
-                (let ((instrument (car matches)))
-                  (if (gethash instrument assignments)
-                      (push instrument duplicates)
-                    (puthash instrument data assignments)))))))
-          (when duplicates
-            (user-error "Multiple tracks matched: %s"
-                        (mapconcat #'identity (cl-delete-duplicates duplicates :test #'string=) ", ")))
-          (when ambiguous
-            (user-error "Ambiguous instrument tags: %s"
-                        (mapconcat (lambda (pair)
-                                     (format "%s -> %s"
-                                             (car pair)
-                                             (mapconcat #'identity (cdr pair) "/")))
-                                   (nreverse ambiguous) "; ")))
-          (when unmatched
-            (user-error "No instrument tag found in: %s"
-                        (mapconcat #'identity (nreverse unmatched) ", ")))
-          (let (missing)
-            (dolist (instrument instrument-order)
-              (unless (gethash instrument assignments)
-                (push instrument missing)))
-            (when missing
-              (user-error "Missing instrument tracks: %s"
-                          (mapconcat #'identity (nreverse missing) ", "))))
-          (setq entry-data
-                (mapcar (lambda (instrument)
-                          (gethash instrument assignments))
-                        instrument-order))))
+        (when (and instrument-order (not use-marked-order))
+          (let ((assignments (make-hash-table :test 'equal))
+                (unmatched nil)
+                (ambiguous nil)
+                (duplicates nil))
+            (dolist (data entry-data)
+              (let* ((entry (plist-get data :entry))
+                     (path (plist-get data :path))
+                     (matches (arxana-media--bounce-entry-instruments
+                               entry instrument-order instrument-aliases path))
+                     (label (or (and path (file-name-nondirectory path))
+                                (plist-get entry :title)
+                                (plist-get entry :base_name)
+                                (plist-get entry :source)
+                                (plist-get entry :name)
+                                "track")))
+                (cond
+                 ((null matches)
+                  (push label unmatched))
+                 ((> (length matches) 1)
+                  (push (cons label matches) ambiguous))
+                 (t
+                  (let ((instrument (car matches)))
+                    (if (gethash instrument assignments)
+                        (push instrument duplicates)
+                      (puthash instrument data assignments)))))))
+            (when duplicates
+              (user-error "Multiple tracks matched: %s"
+                          (mapconcat #'identity (cl-delete-duplicates duplicates :test #'string=) ", ")))
+            (when ambiguous
+              (user-error "Ambiguous instrument tags: %s"
+                          (mapconcat (lambda (pair)
+                                       (format "%s -> %s"
+                                               (car pair)
+                                               (mapconcat #'identity (cdr pair) "/")))
+                                     (nreverse ambiguous) "; ")))
+            (when unmatched
+              (user-error "No instrument tag found in: %s"
+                          (mapconcat #'identity (nreverse unmatched) ", ")))
+            (let (missing)
+              (dolist (instrument instrument-order)
+                (unless (gethash instrument assignments)
+                  (push instrument missing)))
+              (when missing
+                (user-error "Missing instrument tracks: %s"
+                            (mapconcat #'identity (nreverse missing) ", "))))
+            (setq entry-data
+                  (mapcar (lambda (instrument)
+                            (gethash instrument assignments))
+                          instrument-order))))
         (let ((inputs nil))
           (dolist (data entry-data)
             (push (plist-get data :path) inputs))
@@ -2360,10 +2383,25 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
             (with-current-buffer buffer
               (let ((inhibit-read-only t))
                 (erase-buffer)))
-            (let ((exit-code (apply #'process-file script nil buffer t args)))
-              (unless (equal exit-code 0)
-                (user-error "Bounce failed (see %s)" (buffer-name buffer))))
-            (message "Bounce complete: %s" out)))))))
+            (if arxana-media-bounce-async
+                (let ((proc (make-process
+                             :name "arxana-media-bounce"
+                             :buffer buffer
+                             :command (cons script args)
+                             :noquery t
+                             :sentinel (lambda (process _event)
+                                         (when (memq (process-status process) '(exit signal))
+                                           (let ((code (process-exit-status process)))
+                                             (if (equal code 0)
+                                                 (message "Bounce complete: %s" out)
+                                               (message "Bounce failed (%s), see %s"
+                                                        code (buffer-name buffer)))))))))
+                  (set-process-query-on-exit-flag proc nil)
+                  (message "Bounce started: %s" out))
+              (let ((exit-code (apply #'process-file script nil buffer t args)))
+                (unless (equal exit-code 0)
+                  (user-error "Bounce failed (see %s)" (buffer-name buffer))))
+              (message "Bounce complete: %s" out))))))))
 
 (defun arxana-media-bounce-or-up ()
   "Bounce marked tracks in media views, otherwise go up."
@@ -2418,7 +2456,31 @@ When URL is provided, write it to the publication metadata."
                (dest (and path (expand-file-name (file-name-nondirectory path) dest-dir))))
           (unless path
             (user-error "No readable media file found for %s" title))
-          (copy-file path dest t)))
+          (copy-file path dest t)
+          (when (arxana-store-sync-enabled-p)
+            (let* ((source-item (list :type 'media-track :entry entry))
+                   (source-lyrics-id (ignore-errors (arxana-media--lyrics-entity-id source-item)))
+                   (source-lyrics (and source-lyrics-id
+                                       (string-trim-right
+                                        (or (arxana-media--fetch-lyrics source-lyrics-id) "")))))
+              (when (and (stringp source-lyrics)
+                         (not (string-empty-p source-lyrics)))
+                (let* ((dest-item (list :type 'media-publication-track :path dest))
+                       (dest-entity-id (ignore-errors (arxana-media--track-entity-id dest-item)))
+                       (dest-lyrics-id (ignore-errors (arxana-media--lyrics-entity-id dest-item)))
+                       (dest-sha (ignore-errors (arxana-media--track-sha dest-item))))
+                  (when (and dest-entity-id dest-lyrics-id)
+                    (arxana-media--store-track-entity dest-item title)
+                    (arxana-store-ensure-entity :id dest-lyrics-id
+                                                :name (format "%s (lyrics)" title)
+                                                :type "arxana/media-lyrics"
+                                                :external-id dest-lyrics-id
+                                                :media/sha256 dest-sha
+                                                :entity/source source-lyrics)
+                    (arxana-store-create-relation :src dest-entity-id
+                                                  :dst dest-lyrics-id
+                                                  :label ":media/lyrics")
+                    (puthash dest-lyrics-id t arxana-media--lyrics-cache))))))))
       (when (and url (stringp url) (not (string-empty-p url)))
         (arxana-media--write-publication-metadata dest-dir name url))
       (arxana-media--tag-entries entries tag)
