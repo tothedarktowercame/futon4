@@ -1,0 +1,32 @@
+#+TITLE: Focus header and salience
+:PROPERTIES:
+:DOC_ID: futon1-67770f77efab
+:ENTRY_ID: futon1-67770f77efab::org
+:VERSION: org
+:OUTLINE_PATH: Client / Focus header and salience
+:PATH_STRING: Client / Focus header and salience
+:REPLACES:
+:END:
+
+* Overview
+The focus header is the deterministic summary returned by the session runner
+and API. It reflects the most salient entities, relations, and short-form
+notes for the active profile, providing a stable snapshot for higher-layer
+clients.
+
+* How salience is computed
+Salience is driven by entity metadata such as `:entity/seen-count`,
+`:entity/last-seen`, and pinning. The graph-memory store updates these fields
+as turns and commands are processed, then the focus builder ranks entities by
+recency and frequency with configurable limits.
+
+* Focus header assembly
+The client session runner delegates focus header construction to the shared
+graph-memory logic. This keeps the demo CLI, API, and tests aligned with the
+same rendering rules and ensures slash/bang commands produce consistent
+results.
+
+* Determinism expectations
+Given the same stored graph state and profile, focus headers should be
+identical across transports. Determinism tests in `apps/client` compare
+headers to baseline snapshots so regressions are caught before release.

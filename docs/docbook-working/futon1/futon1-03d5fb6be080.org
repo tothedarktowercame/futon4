@@ -1,0 +1,37 @@
+#+TITLE: Type registry and aliases
+:PROPERTIES:
+:DOC_ID: futon1-03d5fb6be080
+:ENTRY_ID: futon1-03d5fb6be080::org
+:VERSION: org
+:OUTLINE_PATH: Storage / Type registry and aliases
+:PATH_STRING: Storage / Type registry and aliases
+:REPLACES:
+:END:
+
+* Overview
+Futon1 maintains a lightweight type registry so clients can reason about
+entity and relation hierarchies. The registry captures parent/alias
+relationships and resolves selectors like `:work/*` into concrete types.
+
+* How types register
+On hydration and after ingest, entity and relation types encountered in the
+store are registered in the type registry. Namespaced types (for example
+`:work/project`) automatically inherit from the namespace wildcard
+(`:work/*`). Top-level keywords can be mapped using
+`resources/type_namespace_map.edn`.
+
+* Aliases and parent overrides
+Use the `/api/alpha/types` endpoints to inspect and modify type metadata:
+
+- `GET /api/alpha/types` returns the registry snapshot.
+- `POST /api/alpha/types/parent` overrides or clears a parent.
+- `POST /api/alpha/types/merge` merges aliases into a canonical type.
+
+These adjustments are persisted so downstream focus header and query filters
+use the updated ancestry.
+
+* Selector behavior
+When a request specifies an allowed type like `:work/*`, the registry expands
+it to all known descendants. This ensures focus headers, summaries, and
+neighbor queries use consistent type groupings even as new specific types are
+introduced.

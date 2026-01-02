@@ -1,0 +1,38 @@
+#+TITLE: Model registry and queue
+:PROPERTIES:
+:DOC_ID: futon1-5319d9d9dd2c
+:ENTRY_ID: futon1-5319d9d9dd2c::org
+:VERSION: org
+:OUTLINE_PATH: Storage / Model registry and queue
+:PATH_STRING: Storage / Model registry and queue
+:REPLACES:
+:END:
+
+* Overview
+The model registry exposes which storage models are active along with their
+schema descriptors. The queue view summarizes entity types that are present
+in XTDB but not yet covered by a descriptor, helping archivists decide when
+to formalize new models.
+
+* Registry endpoint
+Use `/api/alpha/meta/model` (or `/api/alpha/meta/model/registry`) to fetch the
+registry snapshot. The response includes each descriptor plus metadata such
+as schema version, client minimum, and certificate details.
+
+The registry is populated from `model/descriptor/*` entities in XTDB. If a
+descriptor is missing, the store manager will seed the default template
+before serving the registry.
+
+* Queue semantics
+The queue endpoint (`/api/alpha/meta/model/queue`) compares the model scopes
+to the entity types currently stored. Any type that does not match a known
+model scope appears in the pending list so you can decide whether to:
+
+- Map it to an existing model scope.
+- Add a descriptor entry with new invariants.
+- Treat it as an open-world label and leave it unmodeled.
+
+* Operational use
+Treat the queue as a checklist when introducing new data sources. After
+defining a descriptor and bootstrapping it, confirm the type leaves the queue
+and appears in the registry.

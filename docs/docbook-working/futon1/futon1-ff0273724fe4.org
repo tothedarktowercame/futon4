@@ -1,0 +1,41 @@
+#+TITLE: Docbook workflow
+:PROPERTIES:
+:DOC_ID: futon1-ff0273724fe4
+:ENTRY_ID: futon1-ff0273724fe4::org
+:VERSION: org
+:OUTLINE_PATH: Ingest / Docbook workflow
+:PATH_STRING: Ingest / Docbook workflow
+:REPLACES:
+:END:
+
+* Overview
+Docbook ingest stores headings, entries, and table-of-contents (TOC) order in
+XTDB. Each entry payload upserts both the entry and its heading so content
+stays synchronized across updates.
+
+* Entry and heading lifecycle
+Each doc entry must include `doc_id`, `entry_id`, and `book_id` along with the
+outline metadata. The handler upserts the heading (identified by `doc_id`)
+and the entry (identified by `entry_id`), which keeps headings stable across
+revisions or removals.
+
+If an entry is removed, mark it with `doc/status :removed` so the invariant
+checker can distinguish missing bodies from intentional deletions.
+
+* TOC order
+The TOC is stored as a separate doc that maps each book to an ordered list of
+doc IDs. Update it via the docbook route that accepts an `order` list. The
+docbook invariants ensure TOC order only references known headings and that
+every heading appears in the TOC.
+
+* Delete semantics
+Two delete paths exist:
+
+- Delete a doc (`/api/alpha/docs/:book/doc/:doc-id`) removes the heading and
+  any entries that share the doc-id.
+- Delete a TOC entry (`/api/alpha/docs/:book/toc/:doc-id`) removes the heading
+  alone; pass `?cascade=true` to remove entries as well.
+
+Use the TOC delete when reordering or pruning headings without removing
+historical entries, and the doc delete when the heading and its content
+should both disappear.

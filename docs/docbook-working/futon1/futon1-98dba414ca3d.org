@@ -1,0 +1,59 @@
+#+TITLE: Model invariants and certificates
+:PROPERTIES:
+:DOC_ID: futon1-98dba414ca3d
+:ENTRY_ID: futon1-98dba414ca3d::org
+:VERSION: org
+:OUTLINE_PATH: Storage / Model invariants and certificates
+:PATH_STRING: Storage / Model invariants and certificates
+:REPLACES:
+:END:
+
+* Overview
+Futon1 uses model descriptors to define required fields, invariant checks,
+and certificate metadata for core storage domains. These invariants guard
+writes into Datascript/XTDB and provide explicit verification endpoints for
+operators who need to audit the store.
+
+* Core models covered
+The invariant runner covers the following model scopes by default:
+
+- `:patterns` (pattern registry and core components)
+- `:media` (tracks and lyrics)
+- `:open-world-ingest` (entities, mentions, relations, and utterances)
+- `:docbook` (headings, entries, and TOC alignment)
+- `:meta-model` (descriptor schemas and certificates)
+- `:penholder` (penholder registry entries)
+
+* Enforcement flow
+When `MODEL_VERIFY_ON_WRITE` (or `:model/verify-on-write?` in config) is
+enabled, the store manager attaches the invariant verifier to every write.
+Each event is previewed against a copy of the Datascript connection, then
+`app.invariants/verify-event` checks relevant models. Failures throw before
+the transaction is committed, keeping XTDB and the in-memory cache consistent.
+
+API routes that mutate data (for example docbook ingest) also surface
+invariant results; when verification fails, the handlers return a 409 with the
+failure payload.
+
+* Certificates and penholders
+Every model descriptor includes `:schema/certificate` with a penholder name
+and issuance timestamp. Certificates are enforced by the penholder registry:
+`model/penholder` entities declare which penholders may issue updates for a
+descriptor and whether the check is strict. Set `MODEL_PENHOLDER` (or
+`:model/penholder` in config) to the active penholder when issuing writes.
+
+To re-issue certificates across descriptors, run:
+
+- `clojure -M -m scripts.model-certify --penholder <name>`
+
+* Operational verification
+Use the verification scripts for ad hoc audits:
+
+- `clojure -M -m scripts.model-verify`
+- `clojure -M -m scripts.model-docbook-verify`
+- `clojure -M -m scripts.model-media-verify`
+- `clojure -M -m scripts.model-meta-verify`
+- `clojure -M -m scripts.model-open-world-verify`
+
+The HTTP API also exposes `/api/alpha/meta/model/*/verify` endpoints for
+media and meta-model checks, plus docbook verification on ingest.
