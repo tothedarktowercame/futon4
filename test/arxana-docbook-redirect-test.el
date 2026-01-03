@@ -42,20 +42,25 @@
   (let ((opened nil)
         (stack (list (list :view 'docbook-section :book "futon4")
                      (list :view 'docbook-contents :book "futon4"))))
-    (with-temp-buffer
-      (setq arxana-browser--stack stack)
-      (cl-letf (((symbol-function 'arxana-browser--current-items)
-                 (lambda ()
-                   (list (list :type 'docbook-entry
-                               :entry (list :doc-id "doc-1" :entry-id "run-1")))))
-                ((symbol-function 'arxana-docbook-open-entry-object)
-                 (lambda (arg) (setq opened arg)))
-                ((symbol-function 'display-buffer)
-                 (lambda (&rest _args) nil)))
-        (arxana-browser--render)
-        (should opened)
-        (should (equal (plist-get opened :entry-id) "run-1"))
-        (should (equal arxana-browser--stack (cdr stack)))))))
+    (let* ((buf (generate-new-buffer " *arxana-docbook-test*"))
+           (arxana-browser--buffer (buffer-name buf)))
+      (unwind-protect
+          (with-current-buffer buf
+            (setq arxana-browser--stack stack)
+            (cl-letf (((symbol-function 'arxana-browser--current-items)
+                       (lambda ()
+                         (list (list :type 'docbook-entry
+                                     :entry (list :doc-id "doc-1" :entry-id "run-1")))))
+                      ((symbol-function 'arxana-docbook-open-entry-object)
+                       (lambda (arg) (setq opened arg)))
+                      ((symbol-function 'display-buffer)
+                       (lambda (&rest _args) nil)))
+              (arxana-browser--render)
+              (should opened)
+              (should (equal (plist-get opened :entry-id) "run-1"))
+              (should (equal arxana-browser--stack (cdr stack)))))
+        (when (buffer-live-p buf)
+          (kill-buffer buf))))))
 
 (provide 'arxana-docbook-redirect-test)
 ;;; arxana-docbook-redirect-test.el ends here
