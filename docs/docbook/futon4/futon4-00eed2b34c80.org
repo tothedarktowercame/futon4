@@ -9,5 +9,48 @@
 :END:
 
 * Context
-- (no summary yet)
+This section documents developer-facing storage concepts and the persistence
+contract used by the Futon4 client when it synchronizes with Futon1/XTDB.
 
+* Arxana links scope
+
+Arxana links target the Xanadu-style semantics that matter for authoring:
+transclusion, versioned anchors, provenance, and scholia. The system persists
+strategies and anchor evidence rather than raw computed links so that links can
+be recomputed as documents evolve while preserving author intent.
+
+* Data structures
+
+- Strategy (arxana/link-strategy): finder rules + source metadata.
+- Scholium (arxana/scholium): author annotations tied to anchors.
+- Voiced link (arxana/voiced-link): declared link assertions tied to a strategy.
+- Surface form (arxana/surface-form): phrase-to-concept mappings for link hints.
+- Embedding cache (arxana/embedding-cache): cached neighbors for pattern lookups.
+
+Each record has a stable id derived from content or deterministic inputs so it
+can be regenerated and round-tripped reliably.
+
+* Persistence model
+
+The persistence model is XTDB-only. Arxana wraps each record as a Futon entity
+with `:id`, `:name`, and `:type`, storing the full record JSON in `:source`.
+This keeps the Futon API contract stable while allowing richer payloads to be
+serialized by the client.
+
+Primary helpers in `dev/arxana-links.el`:
+
+- `arxana-links-persist-*` (write)
+- `arxana-links-load-*` (read)
+- `arxana-links--wrap-entity-payload` / `arxana-links--unwrap-entity` (encoding)
+
+* Authoring workflow
+
+Authoring is scholium-first with region selection:
+
+1. Select text in an article buffer.
+2. Capture a scholium (annotation) or surface form.
+3. Persist the record to Futon1; strategies recompute links as needed.
+
+Anchors are resilient: a content hash plus contextual windows let Arxana re-find
+regions after minor edits. Surface forms and embeddings guide link suggestions
+and future automation.

@@ -34,6 +34,14 @@ is controlled by `arxana-patterns-prefer-filesystem`: when enabled, local files
 win if they are newer than the XTDB entry. This keeps local edits authoritative
 while still allowing Futon to act as the durable store.
 
+* Safety guarantees
+
+- Local flexiarg files take precedence when they are newer than XTDB entries
+  (`arxana-browser-patterns--filesystem-newer-p`).
+- Updates to XTDB require explicit saves (`C-c C-s`) in the pattern editor.
+- Collection roots are persisted in a separate metadata file so adding a local
+  library does not overwrite the stored catalog.
+
 * Browser integration and editing
 Pattern browsing lives inside the core Arxana Browser. Selecting a pattern
 opens an Org buffer that includes the summary and components as editable

@@ -7,10 +7,11 @@
     "Quickstart",
     "outline",
     [
+      "User docs",
       "Quickstart"
     ],
     "path_string",
-    "Quickstart",
+    "User docs / Quickstart",
     "level",
     1,
     "book",
@@ -30,10 +31,11 @@
     "Overview",
     "outline",
     [
+      "User docs",
       "Overview"
     ],
     "path_string",
-    "Overview",
+    "User docs / Overview",
     "level",
     1,
     "book",
@@ -53,10 +55,11 @@
     "Storage bridge",
     "outline",
     [
+      "Developer docs",
       "Storage bridge"
     ],
     "path_string",
-    "Storage bridge",
+    "Developer docs / Storage bridge",
     "level",
     1,
     "book",
@@ -76,10 +79,11 @@
     "Logical model",
     "outline",
     [
+      "Developer docs",
       "Logical model"
     ],
     "path_string",
-    "Logical model",
+    "Developer docs / Logical model",
     "level",
     1,
     "book",
@@ -99,11 +103,12 @@
     "Emacs client (Arxana classic)",
     "outline",
     [
+      "Developer docs",
       "Logical model",
       "Emacs client (Arxana classic)"
     ],
     "path_string",
-    "Logical model / Emacs client (Arxana classic)",
+    "Developer docs / Logical model / Emacs client (Arxana classic)",
     "level",
     2,
     "book",
@@ -123,11 +128,12 @@
     "Storage substrates",
     "outline",
     [
+      "Developer docs",
       "Logical model",
       "Storage substrates"
     ],
     "path_string",
-    "Logical model / Storage substrates",
+    "Developer docs / Logical model / Storage substrates",
     "level",
     2,
     "book",
@@ -147,12 +153,13 @@
     "Current reality: EAV in Clojure (Datascript + XTDB)",
     "outline",
     [
+      "Developer docs",
       "Logical model",
       "Storage substrates",
       "Current reality: EAV in Clojure (Datascript + XTDB)"
     ],
     "path_string",
-    "Logical model / Storage substrates / Current reality: EAV in Clojure (Datascript + XTDB)",
+    "Developer docs / Logical model / Storage substrates / Current reality: EAV in Clojure (Datascript + XTDB)",
     "level",
     3,
     "book",
@@ -172,12 +179,13 @@
     "Document-based substrates",
     "outline",
     [
+      "Developer docs",
       "Logical model",
       "Storage substrates",
       "Document-based substrates"
     ],
     "path_string",
-    "Logical model / Storage substrates / Document-based substrates",
+    "Developer docs / Logical model / Storage substrates / Document-based substrates",
     "level",
     3,
     "book",
@@ -197,12 +205,13 @@
     "Historical: Relational substrate",
     "outline",
     [
+      "Developer docs",
       "Logical model",
       "Storage substrates",
       "Historical: Relational substrate"
     ],
     "path_string",
-    "Logical model / Storage substrates / Historical: Relational substrate",
+    "Developer docs / Logical model / Storage substrates / Historical: Relational substrate",
     "level",
     3,
     "book",
@@ -222,12 +231,13 @@
     "In-memory storage of one form or another",
     "outline",
     [
+      "Developer docs",
       "Logical model",
       "Storage substrates",
       "In-memory storage of one form or another"
     ],
     "path_string",
-    "Logical model / Storage substrates / In-memory storage of one form or another",
+    "Developer docs / Logical model / Storage substrates / In-memory storage of one form or another",
     "level",
     3,
     "book",
@@ -247,12 +257,13 @@
     "Possible future: Triple-store substrate",
     "outline",
     [
+      "Developer docs",
       "Logical model",
       "Storage substrates",
       "Possible future: Triple-store substrate"
     ],
     "path_string",
-    "Logical model / Storage substrates / Possible future: Triple-store substrate",
+    "Developer docs / Logical model / Storage substrates / Possible future: Triple-store substrate",
     "level",
     3,
     "book",
@@ -272,10 +283,11 @@
     "Article lifecycle",
     "outline",
     [
+      "User docs",
       "Article lifecycle"
     ],
     "path_string",
-    "Article lifecycle",
+    "User docs / Article lifecycle",
     "level",
     1,
     "book",
@@ -295,11 +307,12 @@
     "Catalog & label menus",
     "outline",
     [
+      "User docs",
       "Browsing & relations",
       "Catalog & label menus"
     ],
     "path_string",
-    "Browsing & relations / Catalog & label menus",
+    "User docs / Browsing & relations / Catalog & label menus",
     "level",
     2,
     "book",
@@ -319,11 +332,12 @@
     "Commands & context",
     "outline",
     [
+      "User docs",
       "Browsing & relations",
       "Commands & context"
     ],
     "path_string",
-    "Browsing & relations / Commands & context",
+    "User docs / Browsing & relations / Commands & context",
     "level",
     2,
     "book",
@@ -343,11 +357,12 @@
     "Formatting helpers",
     "outline",
     [
+      "User docs",
       "Browsing & relations",
       "Formatting helpers"
     ],
     "path_string",
-    "Browsing & relations / Formatting helpers",
+    "User docs / Browsing & relations / Formatting helpers",
     "level",
     2,
     "book",
@@ -367,11 +382,12 @@
     "Legacy navigation commands",
     "outline",
     [
+      "User docs",
       "Browsing & relations",
       "Legacy navigation commands"
     ],
     "path_string",
-    "Browsing & relations / Legacy navigation commands",
+    "User docs / Browsing & relations / Legacy navigation commands",
     "level",
     2,
     "book",
@@ -391,11 +407,12 @@
     "Link-following & history",
     "outline",
     [
+      "User docs",
       "Browsing & relations",
       "Link-following & history"
     ],
     "path_string",
-    "Browsing & relations / Link-following & history",
+    "User docs / Browsing & relations / Link-following & history",
     "level",
     2,
     "book",
@@ -415,11 +432,12 @@
     "Relation buffers in context",
     "outline",
     [
+      "User docs",
       "Browsing & relations",
       "Relation buffers in context"
     ],
     "path_string",
-    "Browsing & relations / Relation buffers in context",
+    "User docs / Browsing & relations / Relation buffers in context",
     "level",
     2,
     "book",
@@ -439,11 +457,12 @@
     "Rendering Futon responses",
     "outline",
     [
+      "User docs",
       "Browsing & relations",
       "Rendering Futon responses"
     ],
     "path_string",
-    "Browsing & relations / Rendering Futon responses",
+    "User docs / Browsing & relations / Rendering Futon responses",
     "level",
     2,
     "book",
@@ -463,11 +482,12 @@
     "Tabulated UI & commands",
     "outline",
     [
+      "User docs",
       "Browsing & relations",
       "Tabulated UI & commands"
     ],
     "path_string",
-    "Browsing & relations / Tabulated UI & commands",
+    "User docs / Browsing & relations / Tabulated UI & commands",
     "level",
     2,
     "book",
@@ -487,11 +507,12 @@
     "XTDB browsing shims",
     "outline",
     [
+      "User docs",
       "Browsing & relations",
       "XTDB browsing shims"
     ],
     "path_string",
-    "Browsing & relations / XTDB browsing shims",
+    "User docs / Browsing & relations / XTDB browsing shims",
     "level",
     2,
     "book",
@@ -511,11 +532,12 @@
     "XTDB helpers",
     "outline",
     [
+      "User docs",
       "Browsing & relations",
       "XTDB helpers"
     ],
     "path_string",
-    "Browsing & relations / XTDB helpers",
+    "User docs / Browsing & relations / XTDB helpers",
     "level",
     2,
     "book",
@@ -535,10 +557,11 @@
     "Compatibility & test support",
     "outline",
     [
+      "Developer docs",
       "Compatibility & test support"
     ],
     "path_string",
-    "Compatibility & test support",
+    "Developer docs / Compatibility & test support",
     "level",
     1,
     "book",
@@ -558,10 +581,11 @@
     "Contributor guide (embedded)",
     "outline",
     [
+      "Developer docs",
       "Contributor guide (embedded)"
     ],
     "path_string",
-    "Contributor guide (embedded)",
+    "Developer docs / Contributor guide (embedded)",
     "level",
     1,
     "book",
@@ -581,10 +605,11 @@
     "Downtime handling",
     "outline",
     [
+      "Developer docs",
       "Downtime handling"
     ],
     "path_string",
-    "Downtime handling",
+    "Developer docs / Downtime handling",
     "level",
     1,
     "book",
@@ -604,10 +629,11 @@
     "Entry points",
     "outline",
     [
+      "User docs",
       "Entry points"
     ],
     "path_string",
-    "Entry points",
+    "User docs / Entry points",
     "level",
     1,
     "book",
@@ -627,10 +653,11 @@
     "Inclusion / derivation UX",
     "outline",
     [
+      "User docs",
       "Inclusion / derivation UX"
     ],
     "path_string",
-    "Inclusion / derivation UX",
+    "User docs / Inclusion / derivation UX",
     "level",
     1,
     "book",
@@ -650,10 +677,11 @@
     "Known limitations",
     "outline",
     [
+      "User docs",
       "Known limitations"
     ],
     "path_string",
-    "Known limitations",
+    "User docs / Known limitations",
     "level",
     1,
     "book",
@@ -745,10 +773,11 @@
     "Pattern workflows",
     "outline",
     [
+      "Developer docs",
       "Pattern workflows"
     ],
     "path_string",
-    "Pattern workflows",
+    "Developer docs / Pattern workflows",
     "level",
     1,
     "book",
@@ -768,11 +797,12 @@
     "Editing Futon pattern entries",
     "outline",
     [
+      "Developer docs",
       "Pattern workflows",
       "Editing Futon pattern entries"
     ],
     "path_string",
-    "Pattern workflows / Editing Futon pattern entries",
+    "Developer docs / Pattern workflows / Editing Futon pattern entries",
     "level",
     2,
     "book",
@@ -792,11 +822,12 @@
     "Importing pattern libraries",
     "outline",
     [
+      "Developer docs",
       "Pattern workflows",
       "Importing pattern libraries"
     ],
     "path_string",
-    "Pattern workflows / Importing pattern libraries",
+    "Developer docs / Pattern workflows / Importing pattern libraries",
     "level",
     2,
     "book",
@@ -816,10 +847,11 @@
     "QA checklist",
     "outline",
     [
+      "Developer docs",
       "QA checklist"
     ],
     "path_string",
-    "QA checklist",
+    "Developer docs / QA checklist",
     "level",
     1,
     "book",
@@ -839,10 +871,11 @@
     "Relation browsing inside Emacs",
     "outline",
     [
+      "User docs",
       "Relation browsing inside Emacs"
     ],
     "path_string",
-    "Relation browsing inside Emacs",
+    "User docs / Relation browsing inside Emacs",
     "level",
     1,
     "book",
@@ -862,10 +895,11 @@
     "Testing hooks",
     "outline",
     [
+      "Developer docs",
       "Testing hooks"
     ],
     "path_string",
-    "Testing hooks",
+    "Developer docs / Testing hooks",
     "level",
     1,
     "book",
@@ -885,10 +919,11 @@
     "Troubleshooting relations",
     "outline",
     [
+      "User docs",
       "Troubleshooting relations"
     ],
     "path_string",
-    "Troubleshooting relations",
+    "User docs / Troubleshooting relations",
     "level",
     1,
     "book",
@@ -908,10 +943,11 @@
     "Workflow notes",
     "outline",
     [
+      "User docs",
       "Workflow notes"
     ],
     "path_string",
-    "Workflow notes",
+    "User docs / Workflow notes",
     "level",
     1,
     "book",

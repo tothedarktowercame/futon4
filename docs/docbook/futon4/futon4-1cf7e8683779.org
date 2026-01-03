@@ -9,5 +9,31 @@
 :END:
 
 * Context
-- (no summary yet)
+Export helpers produce readable manuals from the docbook store. The preferred
+targets are:
 
+- Org (canonical): a single merged Org file for a book.
+- PDF (compiled): generated from the Org export via LaTeX.
+
+Markdown/HTML exports are not wired yet; use Org + PDF for releases.
+
+* Export commands (Emacs)
+
+From a docbook contents view:
+
+- `M-x arxana-browser-docbook-export-org`
+- `M-x arxana-browser-docbook-export-pdf`
+
+From Lisp (batch or interactive):
+
+- `arxana-docbook-export-org-book`
+- `arxana-docbook-export-pdf-book`
+
+Exports default to `docs/docbook/<book>/<book>.org` (and `.pdf`).
+
+* Prerequisites
+
+- For PDF export, a LaTeX toolchain is required (`ox-latex` uses the system
+  LaTeX engine).
+- For remote-sourced exports, enable sync and point `futon4-base-url` at the
+  Futon1 API.

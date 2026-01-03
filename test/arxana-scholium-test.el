@@ -54,5 +54,48 @@
       (arxana-scholium--escape-and-display #'escape-scholium-creation)
       (should (equal shown "Focus")))))
 
+(ert-deftest arxana-scholium-create-resilient-adds-overlay ()
+  (with-temp-buffer
+    (insert "alpha beta gamma")
+    (let ((arxana-scholium--overlays nil))
+      (cl-letf (((symbol-function 'arxana-links-make-anchor)
+                 (lambda (&rest _) '(:anchor demo)))
+                ((symbol-function 'arxana-links-make-scholium)
+                 (lambda (&rest _)
+                   (list :status :anchored :content "Note")))
+                ((symbol-function 'arxana-store-sync-enabled-p)
+                 (lambda () nil))
+                ((symbol-function 'arxana-links-persist-scholium)
+                 (lambda (&rest _) nil)))
+        (arxana-scholium-create-resilient 1 6 "Note")
+        (should (= (length arxana-scholium--overlays) 1))
+        (let ((ov (car arxana-scholium--overlays)))
+          (should (eq (overlay-get ov 'face) 'arxana-scholium-anchored-face))
+          (should (equal (overlay-get ov 'help-echo) "Note")))))))
+
+(ert-deftest arxana-scholium-verify-updates-overlay-status ()
+  (with-temp-buffer
+    (insert "alpha beta gamma")
+    (let ((arxana-scholium--overlays nil)
+          (scholium (list :status :anchored :content "Note")))
+      (arxana-scholium--add-overlay 1 6 scholium)
+      (cl-letf (((symbol-function 'arxana-links-verify-scholium)
+                 (lambda (&rest _) nil)))
+        (arxana-scholium-verify-all)
+        (let ((ov (car arxana-scholium--overlays)))
+          (should (eq (overlay-get ov 'face) 'arxana-scholium-orphaned-face)))))))
+
+(ert-deftest arxana-scholium-verify-keeps-fuzzy-face ()
+  (with-temp-buffer
+    (insert "alpha beta gamma")
+    (let ((arxana-scholium--overlays nil)
+          (scholium (list :status :fuzzy-matched :content "Note")))
+      (arxana-scholium--add-overlay 1 6 scholium)
+      (cl-letf (((symbol-function 'arxana-links-verify-scholium)
+                 (lambda (&rest _) (cons 1 6))))
+        (arxana-scholium-verify-all)
+        (let ((ov (car arxana-scholium--overlays)))
+          (should (eq (overlay-get ov 'face) 'arxana-scholium-fuzzy-face)))))))
+
 (provide 'arxana-scholium-test)
 ;;; arxana-scholium-test.el ends here

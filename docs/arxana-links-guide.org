@@ -1,0 +1,9 @@
+#+TITLE: Arxana Links Guide
+#+AUTHOR: Futon4 / Arxana team
+#+OPTIONS: toc:nil num:t
+
+* Status
+
+This guide is now maintained inside the Futon4 docbook manual under
+`docs/docbook/futon4/futon4-bced1ef693fb.org` (Link-following & history).
+Use that entry as the canonical reference.

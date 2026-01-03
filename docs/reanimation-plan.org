@@ -57,7 +57,7 @@ behavior at every stage.
 - [X] Map inclusion/derivation/provenance events to multi-end Futon edges.
 - [X] Connect save/restore to XTDB snapshots instead of legacy stores.
 - [X] Create import/export shims for modern doc formats.
-- [ ] Produce migration notes for historical datasets.
+- [X] Produce migration notes for historical datasets. (Closed: rewrite supersedes migration; legacy audit deferred.)
 
 ** M5A — Inclusion/Transclusion UX [3/3]
 - [X] Visually differentiate included vs. transcluded regions in the main article buffer.
@@ -66,39 +66,67 @@ behavior at every stage.
 
 ** M6 — QA & Release Prep [3/4]
 - [X] Grow the ERT suite (unit, integration, CLI smoke).
+  - Added Futon1-backed `arxana-links` persistence + demo coverage (availability-gated).
 - [X] Document test instructions + CI hooks.
 - [X] Provide contributor guide (coding style, doc sync, testing).
-- [ ] Tag a “revived” release with reproducible steps.
 
-** M6A — Cleanup & Final Decisions [0/5]
-- [ ] Confirm the Xanadu-link scope (transclusion, versioned anchors, provenance).
-- [ ] Decide the persistence model (XTDB-only vs local cache and sync rules).
-- [ ] Lock the authoring workflow (region-based, scholium-first, or hybrid).
-- [ ] Define UI expectations (main-buffer overlays, relation browser, docbook).
-- [ ] Record any migration or compatibility callouts for legacy links.
+** M6A — Cleanup & Final Decisions [5/5]
+- [X] Confirm the Xanadu-link scope (transclusion, versioned anchors, provenance).
+  - Documented in `docs/docbook/futon4/futon4-00eed2b34c80.org`.
+- [X] Decide the persistence model (XTDB-only vs local cache and sync rules).
+  - XTDB-only persistence with link strategies/anchors + scholia stored via Futon1.
+  - Storage semantics captured in `docs/storage-bridge.org` and docbook links section.
+- [X] Lock the authoring workflow (region-based, scholium-first, or hybrid).
+  - Scholium-first, region-based workflow documented in `docs/docbook/futon4/futon4-00eed2b34c80.org`.
+- [X] Define UI expectations (main-buffer overlays, relation browser, docbook).
+  - Docbook outline now separates user docs vs developer docs; browsing/links live under user.
+- [X] Record any migration or compatibility callouts for legacy links.
+  - Rewrite supersedes migration; legacy audit deferred post-Prototype-1.
 
-** M7 — Docbook + Manual Export [0/5]
-- [ ] Verify docbook browser health (filesystem + XTDB sources) and list any blockers.
-- [ ] Finish XTDB docbook ingest pipeline (contract → API → storage).
-- [ ] Define canonical export targets (Markdown/HTML/PDF) for non-Emacs readers.
-- [ ] Build an export command to render manuals from XTDB (or a snapshot mirror).
-- [ ] Document the export workflow + prerequisites in README and XTDB docs.
+** M7 — Docbook + Manual Export [5/5]
+- [X] Verify docbook browser health (filesystem + XTDB sources) and list any blockers.
+  - Filesystem: `docs/docbook/futon4` exists; toc snapshot is local.
+  - XTDB: `/docs/futon4/toc` responds via Futon1 API when sync is enabled.
+  - Blocker: outline changes in toc.json are not yet synced to XTDB headings.
+- [X] Finish XTDB docbook ingest pipeline (contract → API → storage).
+  - Contract + API live in Futon1; Futon4 relies on `/docs/:book/toc`,
+    `/docs/:book/contents`, `/docs/:book/heading/:doc-id`, and `/docs/:book/entry`.
+  - Validation is handled server-side by the docbook model invariants.
+- [X] Define canonical export targets (Markdown/HTML/PDF) for non-Emacs readers.
+  - Canonical targets: Org (primary) + PDF (compiled).
+- [X] Build an export command to render manuals from XTDB (or a snapshot mirror).
+  - `arxana-docbook-export-org-book`, `arxana-docbook-export-pdf-book`.
+- [X] Document the export workflow + prerequisites in README and XTDB docs.
+  - Docbook export instructions now live in `docs/docbook/futon4/futon4-1cf7e8683779.org`.
 
-** M8 — Legacy dataset migration notes [0/2]
-- [ ] Define scope for “historical datasets” (which backends and export formats).
-- [ ] Produce migration notes or close the milestone if no longer relevant.
+** M8 — Legacy dataset migration notes [2/2]
+- [X] Define scope for “historical datasets” (which backends and export formats). (Closed: rewrite supersedes migration; consider post-Prototype-1 legacy audit.)
+- [X] Produce migration notes or close the milestone if no longer relevant. (Closed: rewrite supersedes migration; consider post-Prototype-1 legacy audit.)
 
-** Doc sync tracker [2/6]
+** Doc sync tracker [3/7]
 - [X] Storage + snapshots (`arxana-store`, `arxana-saving`).
 - [X] Browsing & relations (`arxana-browse`, `arxana-relations`, `arxana-xtdb-browse`).
-- [ ] Import/export helpers (`arxana-import`, `arxana-articles-export`).
-- [ ] Pattern workflows (`arxana-patterns` + ingest shims).
-- [ ] Article/scholium/inclusion stack (`arxana-article`, `arxana-scholium`, `arxana-inclusion`).
+- [X] Links + strategies (`arxana-links`, `docs/docbook/futon4/futon4-bced1ef693fb.org`).
+- [X] Import/export helpers (`arxana-import`, `arxana-articles-export`).
+  - Import docs: `docs/docbook/futon4/futon4-994ec7cb244a.org`.
+  - Export docs: `docs/docbook/futon4/futon4-9ef2983bf062.org`.
+  - Tests: `test/arxana-import-test.el`, `test/arxana-export-test.el`.
+- [X] Pattern workflows (`arxana-patterns` + ingest shims).
+  - Overview + safety guarantees: `docs/docbook/futon4/futon4-a36b4f60c62b.org`.
+  - Ingestion details: `docs/docbook/futon4/futon4-f1c8c427256a.org`.
+  - Editing workflow: `docs/docbook/futon4/futon4-7bde4c62d6e8.org`.
+- [X] Article/scholium/inclusion stack (`arxana-article`, `arxana-scholium`, `arxana-inclusion`).
+  - Added integration tests for scholia targeting docbook, code, and scholia (`test/arxana-links-test.el`).
+  - Added overlay/verification tests for resilient scholia (`test/arxana-scholium-test.el`).
+  - Interactive QA checklist: `docs/qa-interactive-checklist.org`.
 - [ ] QA/compat/test support modules.
 
-   Each check means the module has a matching XTDB doc entry and any optional
-   filesystem snapshot is aligned with the current `dev/` behavior. If a snapshot
-   exists, record the doc id and snapshot location in `dev/docs-backlog.org`.
+  Each check means the module has a matching XTDB doc entry and any optional
+  filesystem snapshot is aligned with the current `dev/` behavior. If a snapshot
+  exists, record the doc id and snapshot location in `dev/docs-backlog.org`.
+
+** M9 — Release tag [0/1]
+- [ ] Tag a “revived” release with reproducible steps.
 
 * Artifacts
 

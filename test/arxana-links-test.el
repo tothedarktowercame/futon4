@@ -422,6 +422,83 @@
                            :key (lambda (s) (plist-get s :xt/id))
                            :test 'equal)))))))
 
+(ert-deftest arxana-links-test-scholium-docbook-target-roundtrip ()
+  "Test scholium targeting a docbook entry (requires Futon)."
+  :tags '(:integration :futon)
+  (skip-unless (arxana-links-test--server-available-p))
+  (arxana-links-test--with-sync
+    (with-temp-buffer
+      (insert "alpha TARGET omega")
+      (let* ((target "docbook://futon4/futon4-0cf1aad99fe8")
+             (anchor (arxana-links-make-anchor (current-buffer) 7 13))
+             (content (format "Docbook scholium %s" (format-time-string "%Y%m%d%H%M%S")))
+             (scholium (arxana-links-make-scholium
+                        :target-doc target
+                        :anchor anchor
+                        :content content))
+             (scholium-id (plist-get scholium :xt/id)))
+        (should (arxana-links-persist-scholium scholium))
+        (let ((loaded (arxana-links-load-scholia-for-doc target)))
+          (should loaded)
+          (let ((found (cl-find scholium-id loaded
+                                :key (lambda (s) (plist-get s :xt/id))
+                                :test 'equal)))
+            (should found)
+            (should (equal (plist-get found :target-doc) target))))))))
+
+(ert-deftest arxana-links-test-scholium-code-target-roundtrip ()
+  "Test scholium targeting a code location (requires Futon)."
+  :tags '(:integration :futon)
+  (skip-unless (arxana-links-test--server-available-p))
+  (arxana-links-test--with-sync
+    (with-temp-buffer
+      (insert "alpha TARGET omega")
+      (let* ((target "code://dev/arxana-links.el#arxana-links-make-scholium")
+             (anchor (arxana-links-make-anchor (current-buffer) 7 13))
+             (content (format "Code scholium %s" (format-time-string "%Y%m%d%H%M%S")))
+             (scholium (arxana-links-make-scholium
+                        :target-doc target
+                        :anchor anchor
+                        :content content))
+             (scholium-id (plist-get scholium :xt/id)))
+        (should (arxana-links-persist-scholium scholium))
+        (let ((loaded (arxana-links-load-scholia-for-doc target)))
+          (should loaded)
+          (let ((found (cl-find scholium-id loaded
+                                :key (lambda (s) (plist-get s :xt/id))
+                                :test 'equal)))
+            (should found)
+            (should (equal (plist-get found :target-doc) target))))))))
+
+(ert-deftest arxana-links-test-scholium-scholium-target-roundtrip ()
+  "Test scholium targeting another scholium (requires Futon)."
+  :tags '(:integration :futon)
+  (skip-unless (arxana-links-test--server-available-p))
+  (arxana-links-test--with-sync
+    (with-temp-buffer
+      (insert "alpha TARGET omega")
+      (let* ((root-target "docbook://futon4/futon4-0cf1aad99fe8")
+             (anchor (arxana-links-make-anchor (current-buffer) 7 13))
+             (root (arxana-links-make-scholium
+                    :target-doc root-target
+                    :anchor anchor
+                    :content (format "Root scholium %s" (format-time-string "%Y%m%d%H%M%S"))))
+             (root-id (plist-get root :xt/id)))
+        (should (arxana-links-persist-scholium root))
+        (let* ((reply (arxana-links-make-scholium
+                       :target-doc root-id
+                       :anchor anchor
+                       :content (format "Reply scholium %s" (format-time-string "%Y%m%d%H%M%S"))))
+               (reply-id (plist-get reply :xt/id)))
+          (should (arxana-links-persist-scholium reply))
+          (let ((loaded (arxana-links-load-scholia-for-doc root-id)))
+            (should loaded)
+            (let ((found (cl-find reply-id loaded
+                                  :key (lambda (s) (plist-get s :xt/id))
+                                  :test 'equal)))
+              (should found)
+              (should (equal (plist-get found :target-doc) root-id)))))))))
+
 (ert-deftest arxana-links-test-embedding-cache-roundtrip ()
   "Test embedding cache persist and reload (requires Futon)."
   :tags '(:integration :futon)

@@ -9,5 +9,105 @@
 :END:
 
 * Context
-- (no summary yet)
+Arxana links focus on preserving intent rather than storing every computed
+edge. Strategies describe how to find links; anchors and scholia capture the
+human signal around them. When strategies are persisted, links can be
+recomputed as documents evolve without losing the provenance of the
+annotations that motivated them.
 
+* Link tiers
+
+- Tier 0 (Ephemeral): computed links only, no persistence.
+- Tier 1 (Strategy): persist finder rules; links can be recomputed.
+- Tier 2 (Anchored): persist anchored regions for immutable or historic text.
+
+* Core workflows
+
+** Check status
+
+#+begin_src elisp
+M-x arxana-links-status
+#+end_src
+
+** Create or load a strategy
+
+#+begin_src elisp
+M-x arxana-links-demo-create-strategy
+M-x arxana-browser-code-strategy-status
+#+end_src
+
+The demo uses the futon4 repo and a definition-based finder. It is safe to
+run multiple times because the strategy id is deterministic.
+
+** Create a resilient scholium
+
+1. Select a region in a buffer.
+2. Run M-x arxana-links-demo-create-scholium.
+3. Enter the annotation text.
+
+Anchors use content hashes and surrounding context so they survive minor
+edits.
+
+** Capture a surface form
+
+1. Select a phrase.
+2. Run M-x arxana-links-capture-surface-form.
+3. Provide the concept id.
+
+Surface forms inform finders and auto-linking later on.
+
+** Verify anchors
+
+#+begin_src elisp
+M-x arxana-links-demo-verify-anchor
+#+end_src
+
+This runs the three-step re-finding algorithm (offset check, context search,
+fuzzy context).
+
+** Embedding neighbors for patterns
+
+#+begin_src elisp
+M-x arxana-browser-patterns-embedding-status
+M-x arxana-browser-patterns-show-neighbors
+#+end_src
+
+Embedding neighbors require a cached embedding space persisted as an
+embedding cache entity.
+
+* Persistence entities
+
+- Strategy: arxana/link-strategy
+- Voiced Link: arxana/voiced-link
+- Surface Form: arxana/surface-form
+- Scholium: arxana/scholium
+- Embedding Cache: arxana/embedding-cache
+
+Use arxana-links-make-* + arxana-links-persist-* to create and save these
+records. Use the arxana-links-load-* helpers to retrieve them. Payloads are
+stored in Futon entities with the full record serialized into the source
+field so they round-trip through the existing API.
+
+* Testing
+
+** Unit tests (Emacs only)
+
+#+begin_src sh
+bash dev/run-tests.sh
+#+end_src
+
+** Integration tests (real Futon server)
+
+The links test suite includes integration tests tagged :futon that run only
+when a Futon server responds to /types.
+
+#+begin_src sh
+bash dev/run-tests.sh
+#+end_src
+
+Set the base URL with either futon4-base-url or FUTON4_BASE_URL if the
+server is not on http://localhost:8080.
+
+When the server is reachable, the tests exercise persistence for strategies,
+voiced links, surface forms, scholia, embedding caches, and demo strategy
+creation.

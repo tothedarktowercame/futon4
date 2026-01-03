@@ -1,0 +1,59 @@
+#+TITLE: QA Interactive Checklist (Release Candidate)
+#+AUTHOR: Futon4 / Arxana team
+#+OPTIONS: toc:nil num:t
+
+* Purpose
+
+This checklist captures interactive verification steps for the release
+candidate. Run these with Futon1 available unless noted.
+
+* Setup
+
+1. Start Futon1 (API on `http://localhost:8080`).
+2. In Emacs, load Futon4: `M-x arxana-load`.
+3. Set sync: `(setq futon4-base-url "http://localhost:8080/api/alpha")`
+   and `(setq futon4-enable-sync t)`.
+
+* Scholium targets (links-backed)
+
+** Docbook target
+1. Open a docbook entry (e.g., `Quickstart`).
+2. Select a region and run `M-x arxana-links-demo-create-scholium`.
+3. Confirm it persists and reloads via:
+   `M-: (arxana-links-load-scholia-for-doc "docbook://futon4/futon4-0cf1aad99fe8")`.
+
+** Code target
+1. Open a source file (e.g., `dev/arxana-links.el`).
+2. Select a region and run `M-x arxana-links-demo-create-scholium`.
+3. Confirm it persists and reloads via:
+   `M-: (arxana-links-load-scholia-for-doc "code://dev/arxana-links.el#arxana-links-make-scholium")`.
+
+** Scholium-on-scholium
+1. Create a scholium on any target (docbook or code as above).
+2. Capture its id from the returned plist using `M-:`:
+   `M-: (plist-get (car (arxana-links-load-scholia-for-doc "docbook://futon4/futon4-0cf1aad99fe8")) :xt/id)`.
+3. Create a reply scholium with `M-:` using the id as `:target-doc`, then persist:
+   `M-: (arxana-links-persist-scholium (arxana-links-make-scholium :target-doc "<id>" :anchor (arxana-links-make-anchor (current-buffer) (region-beginning) (region-end)) :content "QA reply"))`.
+4. Confirm the reply loads via:
+   `M-: (arxana-links-load-scholia-for-doc "<id>")`.
+
+* Region markup + overlays
+
+1. Select a region and run `M-x arxana-scholium-create-resilient`.
+2. Verify an overlay appears with the annotation tooltip.
+3. Edit the buffer to shift the region, then run `M-x arxana-scholium-verify-all`.
+4. Confirm the overlay is re-anchored (anchored/fuzzy) or marked orphaned.
+
+* Inclusion/transclusion UX
+
+1. Register two articles with `make-current-buffer-into-article`.
+2. Run `M-x include-article` and verify inclusion markers.
+3. Run `M-x transclude-article` and verify transclusion markers + overlays.
+4. Use derivation preview commands (`M-x arxana-derivation-refresh`) to inspect
+   inclusion/transclusion summaries.
+
+* Docbook browsing + exports
+
+1. Open the Arxana Browser → Docs → futon4.
+2. Verify the contents view and heading navigation.
+3. Export to Org and PDF from the docbook contents view.
