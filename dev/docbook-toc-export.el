@@ -2,12 +2,12 @@
 
 ;;; Commentary:
 ;; Batch-friendly helper to emit a JSON table of contents for a filesystem
-;; docbook snapshot. The output lives under docs/docbook-working/<book>/toc.json and
+;; docbook snapshot. The output lives under docs/docbook/<book>/toc.json and
 ;; is consumed by the doc book browser to mirror the outline.
 ;;
 ;; Usage:
 ;;   emacs --batch -l dev/docbook-toc-export.el \
-;;     --eval "(arxana-docbook-export-toc \"futon4\" \"docs/docbook-working/futon4/index.org\")"
+;;     --eval "(arxana-docbook-export-toc \"futon4\" \"docs/docbook/futon4/index.org\")"
 
 ;;; Code:
 
@@ -43,24 +43,20 @@
       default-directory))
 
 (defun arxana-docbook--default-books-root (root)
-  (let ((working-root (expand-file-name "docs/docbook-working" root))
-        (legacy-root (expand-file-name "dev/logs/books" root)))
-    (cond
-     ((file-directory-p working-root) working-root)
-     ((file-directory-p legacy-root) legacy-root)
-     (t working-root))))
+  (let ((working-root (expand-file-name "docs/docbook" root)))
+    (if (file-directory-p working-root)
+        working-root
+      working-root)))
 
 (defun arxana-docbook--default-org-file (book root)
-  (let ((working (expand-file-name (format "docs/docbook-working/%s/index.org" book) root))
-        (legacy (expand-file-name (format "dev/logs/books/%s/index.org" book) root)))
-    (cond
-     ((file-readable-p working) working)
-     ((file-readable-p legacy) legacy)
-     (t nil))))
+  (let ((working (expand-file-name (format "docs/docbook/%s/index.org" book) root)))
+    (if (file-readable-p working)
+        working
+      nil)))
 
 (defun arxana-docbook-export-toc (&optional book org-file output-file)
   "Export a TOC JSON for BOOK (default: futon4) from ORG-FILE.
-Write to OUTPUT-FILE (default: docs/docbook-working/BOOK/toc.json)."
+Write to OUTPUT-FILE (default: docs/docbook/BOOK/toc.json)."
   (let* ((book (or book "futon4"))
          (root (arxana-docbook--repo-root))
          (org-file (or org-file (arxana-docbook--default-org-file book root)))

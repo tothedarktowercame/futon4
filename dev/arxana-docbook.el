@@ -2,7 +2,7 @@
 
 ;;; Commentary:
 ;; Browse filesystem-backed doc book entries (pilot) inside Emacs. Entries are
-;; stored under docs/docbook-working/<book>/*.org (with toc.json for order).
+;; stored under docs/docbook/<book>/*.org (with toc.json for order).
 ;; This view keeps a separation between the
 ;; reading buffer and the source files (a “yad”/hand separation), but still lets
 ;; you jump to the underlying artifacts when needed.

@@ -7,7 +7,7 @@
 boundary.edn
 
 # Docbook/log artifacts
-dev/logs/
+data/logs/
 .docbook/
 
 # Spine export artifacts

@@ -18,7 +18,7 @@ may assume it is an error. We should document that the suffix is intentional and
 represents the payload format/version, while `doc_id` remains stable.
 
 Filesystem snapshots now keep one stub per doc in
-`docs/docbook-working/<book>/<doc_id>.org`. The stub's property drawer records
+`docs/docbook/<book>/<doc_id>.org`. The stub's property drawer records
 both `:DOC_ID:` and `:ENTRY_ID:` so the stable identity and the versioned entry
 remain visible even though the filename does not include the suffix. This
 should be called out explicitly so operators do not expect `::org` on disk, and

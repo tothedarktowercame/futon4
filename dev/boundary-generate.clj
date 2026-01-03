@@ -70,7 +70,7 @@
     0))
 
 (defn- boundary-entry [repo-root media-index]
-  (let [lab-root (io/file repo-root "lab")
+  (let [lab-root (io/file repo-root "data" "logs" "lab")
         raw-count (count-files (io/file lab-root "raw"))
         stub-count (count-files (io/file lab-root "stubs"))
         draft-count (count-files (io/file lab-root "doc-drafts"))

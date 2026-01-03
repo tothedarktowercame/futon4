@@ -16,7 +16,7 @@ browser and checkout UI. It is deliberately narrow: it does *not* render UI or
 edit buffers; it only discovers entries and extracts their content.
 
 * Books root and entry sources
-The books root defaults to `docs/docbook-working/` (auto‑detected from the repo),
+The books root defaults to `docs/docbook/` (auto‑detected from the repo),
 falling back to the legacy `dev/logs/books` layout if needed. Each book folder
 contains stub `.org` files named by `doc_id` (for example
 `futon4-2c09c5856f2e.org`). Stubs are the authoritative working copies. If a

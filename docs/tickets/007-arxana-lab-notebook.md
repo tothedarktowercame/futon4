@@ -4,7 +4,7 @@
 `dev/arxana-lab.el` - entire file (~390 lines)
 
 ## What needs documenting
-- The lab directory structure (`lab/raw`, `lab/stubs`, `lab/trace`, `lab/doc-drafts`)
+- The lab directory structure (`data/logs/lab/raw`, `data/logs/lab/stubs`, `data/logs/lab/trace`, `data/logs/lab/doc-drafts`)
 - How lab entries differ from docbook entries
 - The session-id based organization
 - JSON parsing and message extraction

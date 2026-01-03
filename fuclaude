@@ -71,7 +71,7 @@ echo "[fuclaude] Exporting session: $(basename "$selected")" >&2
 clojure -Sdeps "$LAB_DEPS" -M "$ROOT/dev/lab-export-claude.clj" \
   --session-file "$selected" \
   --repo-root "$RUN_CWD" \
-  --lab-root "$ROOT/lab"
+  --lab-root "$ROOT/data/logs/lab"
 
 # Clean up marker
 rm -f /tmp/fuclaude-marker-$$ 2>/dev/null || true

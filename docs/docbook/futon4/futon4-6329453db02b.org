@@ -21,7 +21,7 @@ whether the remote store is ok, empty, or unreachable.
 
 * Fallback behavior
 If the remote probe fails, the browser falls back to filesystem entries under
-`docs/docbook-working/<book>/`. The data source label in the header line shows
+`docs/docbook/<book>/`. The data source label in the header line shows
 whether the view is backed by storage, filesystem, or ephemeral state.
 
 * Configuration

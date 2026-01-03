@@ -33,13 +33,13 @@ This defines how filesystem-backed docbook entries (JSON + stubs) are ingested i
 
 ## Ingest pipeline (filesystem → XTDB)
 
-1. Source: `dev/logs/books/<book>/raw/*.json` + stubs for display.
+1. Source: `data/logs/books/<book>/raw/*.json` + stubs for display.
 2. For each JSON, derive:
    - heading doc: upsert `:doc/id`, `:doc/book`, `:doc/outline_path`, `:doc/path_string`.
    - entry doc: `:doc/entry-id` = `run_id` or generated; map JSON fields to `:doc/*` keys above.
 3. Append-only: never delete; re-ingesting same `:doc/entry-id` is idempotent (same content).
 4. Removal: an entry with `:doc/status :removed` marks its lineage non-visible in “latest” view.
-5. TOC: ingest `dev/logs/books/<book>/toc.json` as `doc heading` docs; link `:doc/toc-version` on entries if present.
+5. TOC: ingest `data/logs/books/<book>/toc.json` as `doc heading` docs; link `:doc/toc-version` on entries if present.
 6. Transactions: use `xtdb.api/submit!` with `::xtdb/put` for heading + entry docs; optional link docs for crossrefs.
 
 ## Retrieval semantics
@@ -79,4 +79,3 @@ This defines how filesystem-backed docbook entries (JSON + stubs) are ingested i
 
 - Patterns already use append-only entity/relation docs; this doc contract mirrors that style.
 - Media could reuse the same pattern: `media entry` with `status`, `replaces`, `files`, and an optional `:media/id`; removed works the same (latest hides removed chains).
-

@@ -17,7 +17,7 @@
   "Browse doc book entries for Futon systems."
   :group 'arxana)
 (defcustom arxana-docbook-books-root nil
-  "Root directory containing doc book folders (e.g., docs/docbook-working)."
+  "Root directory containing doc book folders (e.g., docs/docbook)."
   :type '(choice (const :tag "Auto-detect" nil)
                  directory)
   :group 'arxana-docbook)
@@ -26,12 +26,10 @@
       (let* ((base (or load-file-name buffer-file-name default-directory))
              (repo-root (and base (locate-dominating-file base "dev")))
              (working-root (and repo-root
-                                (expand-file-name "docs/docbook-working" repo-root)))
-             (legacy-root (and base (locate-dominating-file base "dev/logs/books"))))
+                                (expand-file-name "docs/docbook" repo-root))))
         (cond
          ((and working-root (file-directory-p working-root)) working-root)
-         (legacy-root (expand-file-name "dev/logs/books" legacy-root))
-         (repo-root (expand-file-name "docs/docbook-working" repo-root))))))
+         (repo-root (expand-file-name "docs/docbook" repo-root))))))
 (defun arxana-docbook--repo-root ()
   (let* ((base (or load-file-name buffer-file-name))
          (lib (and (not base) (locate-library "arxana-docbook-core")))
@@ -40,7 +38,6 @@
     (or root
         (when-let* ((books (arxana-docbook--locate-books-root)))
           (expand-file-name "../../.." books))
-        (locate-dominating-file default-directory "dev/logs/books")
         (locate-dominating-file default-directory "dev")
         default-directory)))
 (defun arxana-docbook--filesystem-available-p (&optional book)

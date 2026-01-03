@@ -39,7 +39,7 @@
   "Return plist with :host-root and :book inferred from the current buffer file."
   (when buffer-file-name
     (cond
-     ((string-match "\\(.*\\)/docs/docbook-working/\\([^/]+\\)/" buffer-file-name)
+     ((string-match "\\(.*\\)/docs/docbook/\\([^/]+\\)/" buffer-file-name)
       (list :host-root (match-string 1 buffer-file-name)
             :book (match-string 2 buffer-file-name)))
      ((string-match "\\(.*\\)/\\.docbook/books/\\([^/]+\\)/" buffer-file-name)
@@ -47,7 +47,7 @@
             :book (match-string 2 buffer-file-name)))
      ((string-match "\\(.*\\)/dev/logs/books/\\([^/]+\\)/" buffer-file-name)
       (list :host-root (match-string 1 buffer-file-name)
-            :book (match-string 2 buffer-file-name))))))
+            :book (match-string 2 buffer-file-name)))))) 
 (defun arxana-docbook--resolve-include-path (path base-dir)
   "Resolve PATH for #+INCLUDE relative to BASE-DIR and known repo roots."
   (let* ((base-dir (or base-dir default-directory))

@@ -42,6 +42,6 @@ if [[ -z "${session_id}" || -z "${session_file}" ]]; then
 fi
 
 clojure -Sdeps "$LAB_DEPS" -M "$ROOT/dev/lab-export.clj" --session-file "$session_file"
-clojure -Sdeps "$LAB_DEPS" -M "$ROOT/dev/lab-summarize.clj" --raw "$ROOT/lab/raw/${session_id}.json"
+clojure -Sdeps "$LAB_DEPS" -M "$ROOT/dev/lab-summarize.clj" --raw "$ROOT/data/logs/lab/raw/${session_id}.json"
 
 exit $status

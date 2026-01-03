@@ -256,7 +256,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
               :view 'docbook)
         (list :type 'menu
               :label "Lab"
-              :description "Lab notebook sessions staged under lab/."
+              :description "Lab notebook sessions staged under data/logs/lab/."
               :view 'lab)))
 
 (defun arxana-browser--code-items ()

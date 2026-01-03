@@ -5,4 +5,4 @@
 # timestamp, optional metadata, and the Codex-generated summary for a run.
 
 * Pilot: futon4 doc book
-- Browse the pilot entries: [[file:logs/books/futon4/index.org]]
+- Browse the pilot entries: [[file:../data/logs/books/futon4/index.org]]

@@ -205,7 +205,7 @@ The lab system captures coding sessions as research artifacts.
 ### 5.1 Directory structure
 
 ```bash
-ls -la ~/futon4/lab/
+ls -la ~/futon4/data/logs/lab/
 # Should show: raw/ stubs/ trace/ doc-drafts/
 ```
 
@@ -221,7 +221,7 @@ ls ~/.claude/projects/*//*.jsonl 2>/dev/null | head -3
 # clojure -M dev/lab-export-claude.clj \
 #   --session-file SESSION_FILE \
 #   --repo-root $(pwd) \
-#   --lab-root $(pwd)/lab \
+#   --lab-root $(pwd)/data/logs/lab \
 #   --dry-run
 ```
 
@@ -273,7 +273,7 @@ done
 
 echo
 echo "Lab directories:"
-ls -d ~/futon4/lab/{raw,stubs,trace,doc-drafts} 2>/dev/null && echo "  OK" || echo "  MISSING"
+ls -d ~/futon4/data/logs/lab/{raw,stubs,trace,doc-drafts} 2>/dev/null && echo "  OK" || echo "  MISSING"
 ```
 
 ## 7. Troubleshooting

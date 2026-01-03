@@ -5,7 +5,7 @@
 
 ## What needs documenting
 - What a "docbook" is in Arxana context (not DocBook XML)
-- The books root directory structure (`dev/logs/books/<book>/raw/*.json`)
+- The books root directory structure (`data/logs/books/<book>/raw/*.json`)
 - How entries are parsed from JSON into plists
 - The stub file relationship (`stubs/<run-id>.org`)
 - Lab draft detection via version field

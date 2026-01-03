@@ -64,9 +64,9 @@ This placeholder shows the preferred structure.  Replace it with real entries as
 soon as new work lands.
 
 ** TODO futon4 doc book (pilot)
-   :FILES: dev/logs/README.md docs/docbook-working/futon4/index.org docs/docbook-working/futon4/futon4-demo-001.org docs/docbook-working/futon4/futon4-quickstart-20240606.org docs/docbook-working/futon4/futon4-storage-bridge-20240606.org docs/docbook-working/futon4/toc.json dev/arxana-docbook.el dev/arxana-docbook-core.el dev/arxana-docbook-checkout.el dev/arxana-docbook-remote.el dev/arxana-docbook-toc.el dev/arxana-docbook-export.el dev/arxana-docbook-ui.el dev/arxana-patterns.el dev/docbook-toc-export.el test/arxana-docbook-checkout-test.el
+   :FILES: data/logs/README.md docs/docbook/futon4/index.org docs/docbook/futon4/toc.json dev/arxana-docbook.el dev/arxana-docbook-core.el dev/arxana-docbook-checkout.el dev/arxana-docbook-remote.el dev/arxana-docbook-toc.el dev/arxana-docbook-export.el dev/arxana-docbook-ui.el dev/arxana-patterns.el dev/docbook-toc-export.el test/arxana-docbook-checkout-test.el
    :TARGET: XTDB doc id (or filesystem snapshot)
-   :NOTES: uncommitted; filesystem-backed doc book skeleton; update once XTDB ingest path exists
+   :NOTES: filesystem-backed doc book skeleton now lives under docs/docbook; docs/docbook-working is deprecated.
 
 ** TODO docbook function browsing
    :FILES: dev/arxana-docbook.el dev/arxana-docbook-core.el dev/arxana-docbook-remote.el dev/arxana-docbook-toc.el dev/arxana-docbook-export.el dev/arxana-docbook-ui.el dev/arxana-patterns.el
