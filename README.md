@@ -14,6 +14,11 @@ define the reanimation milestones and current storage workflows.
 - `resources/typesetting/` – font test helpers and TeX samples for typesetting
   experiments.
 
+## Prototype roadmap
+
+The full Arxana prototype plan is tracked in `../futon3/holes/futon4.devmap`.
+This README focuses on the active Prototype 1 client and its test harness.
+
 ## Quickstart
 
 1. Launch Futon1 (the XTDB helper service; default `http://localhost:8080`).

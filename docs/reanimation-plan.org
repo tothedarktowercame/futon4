@@ -70,6 +70,13 @@ behavior at every stage.
 - [X] Provide contributor guide (coding style, doc sync, testing).
 - [ ] Tag a “revived” release with reproducible steps.
 
+** M6A — Cleanup & Final Decisions [0/5]
+- [ ] Confirm the Xanadu-link scope (transclusion, versioned anchors, provenance).
+- [ ] Decide the persistence model (XTDB-only vs local cache and sync rules).
+- [ ] Lock the authoring workflow (region-based, scholium-first, or hybrid).
+- [ ] Define UI expectations (main-buffer overlays, relation browser, docbook).
+- [ ] Record any migration or compatibility callouts for legacy links.
+
 ** M7 — Docbook + Manual Export [0/5]
 - [ ] Verify docbook browser health (filesystem + XTDB sources) and list any blockers.
 - [ ] Finish XTDB docbook ingest pipeline (contract → API → storage).
