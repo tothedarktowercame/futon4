@@ -1,0 +1,802 @@
+#+TITLE: Prototype 1 Links Implementation Plan
+#+DATE: 2025-01-03
+#+AUTHOR: Joe + Claude
+
+* Overview
+
+This document specifies the remaining work to complete Prototype 1 of the Futon4/Arxana
+hyperlink system. The goal is to demonstrate a variety of link types with an extensible
+architecture, not theoretical completeness.
+
+** Design Principles
+
+1. *Persist strategies, not just links* — Store the "finder" rules that generate links,
+   allowing links to be recomputed as code/docs evolve.
+
+2. *Link lifecycle* — Links can be promoted from ephemeral (computed) to voiced (persisted)
+   to annotated (with scholia attached).
+
+3. *Multiple link sources* — Support different "finders": symbol-mention, embedding proximity,
+   explicit references, region-based scholia.
+
+4. *Resilient anchoring* — Region-based links use content hash + context, not brittle offsets.
+
+5. *Latent links as autocomplete* — The "possible links" in a context are like autocomplete
+   candidates, scoped by active finders.
+
+** Key Analogies
+
+- NNexus :: Defined terms auto-link when mentioned; no markup needed
+- Autocomplete :: Latent links = candidates in current scope
+- Musical harmony :: Links have "move types" (proximity, substitution, progression)
+
+* EDN Schema
+
+All entities use Futon1's =/entity= endpoint with =:xt/id= for persistence.
+
+** Link Strategy Declaration
+
+Declares a "finder" that generates links within a scope.
+
+#+begin_src clojure
+{:xt/id "strategy:<unique-slug>"
+ :type "arxana/link-strategy"
+
+ ;; What this strategy applies to
+ :scope {:repo "futon4"                      ;; repository name
+         :code-roots ["dev/" "test/"]        ;; directories to scan
+         :docbook "futon4"}                  ;; target docbook
+
+ ;; List of finders this strategy activates
+ :finders [{:type :symbol-as-term
+            :def-patterns ["defun" "defvar" "defmacro" "defcustom"
+                          "defsubst" "define-derived-mode"
+                          "defn" "defn-"]    ;; elisp + clojure
+            :auto-link? true}                ;; show links without user action
+
+           {:type :filename-mention
+            :auto-link? true}]
+
+ :created-at "2025-01-03T12:00:00Z"
+ :created-by "user"}
+#+end_src
+
+** Voiced Link (Promoted from ephemeral)
+
+A link that has been confirmed/promoted and can have annotations attached.
+
+#+begin_src clojure
+{:xt/id "link:<uuid>"
+ :type "arxana/voiced-link"
+
+ ;; Source endpoint
+ :source {:type :code-symbol
+          :file "dev/arxana-store.el"        ;; relative to repo root
+          :symbol "arxana-store-fetch-entity"
+          :def-type "defun"}                 ;; optional metadata
+
+ ;; Target endpoint
+ :target {:type :doc-paragraph
+          :docbook "futon4"
+          :doc-id "futon1-f4229cfc8578"
+          :paragraph-anchor "overview"}      ;; optional section anchor
+
+ ;; Provenance
+ :found-by "strategy:futon4-code-docs"       ;; which strategy discovered this
+ :promoted-at "2025-01-03T12:00:00Z"
+ :promoted-by "user"
+
+ ;; Status
+ :status :confirmed                          ;; :confirmed | :suppressed | :orphaned
+
+ ;; Annotations (scholia about this link)
+ :annotations ["scholium:<uuid>"]}           ;; list of scholium IDs
+#+end_src
+
+** Surface Form
+
+Records an alternative way of referring to a concept (for open-world ingest).
+
+#+begin_src clojure
+{:xt/id "surface:<uuid>"
+ :type "arxana/surface-form"
+
+ :concept-id "abelian-group"                 ;; canonical concept identifier
+ :surface "commutative thingy"               ;; the surface text used
+
+ ;; Where this usage was observed
+ :context {:doc "my-notes"
+           :snippet "...the commutative thingy is..."
+           :offset 1234}                     ;; optional hint
+
+ :source :explicit                           ;; :explicit (user marked) | :inferred (NLP)
+ :created-at "2025-01-03T12:00:00Z"}
+#+end_src
+
+** Resilient Anchor (for Scholia)
+
+Anchors a scholium to a region using content-addressable strategy.
+
+#+begin_src clojure
+{:xt/id "scholium:<uuid>"
+ :type "arxana/scholium"
+
+ ;; What document this annotates
+ :target-doc "some-article"
+ :target-doc-version "abc123"                ;; optional: pin to specific version
+
+ ;; How to find the region (resilient, not brittle offsets)
+ :anchor {:strategy :content-hash            ;; :content-hash | :xpath | :line-number
+
+          ;; For content-hash strategy:
+          :content-hash "sha256:abc..."      ;; hash of the highlighted text
+          :content-length 47                 ;; length in chars
+          :context-before "...30 chars..."   ;; text before region
+          :context-after "...30 chars..."    ;; text after region
+
+          ;; Hints (used if hash lookup fails, for fuzzy matching)
+          :hint-offset 1234
+          :hint-line 42}
+
+ ;; The annotation itself
+ :content "My annotation on this passage"
+ :content-type "text/plain"                  ;; or "text/org" etc
+
+ ;; Status
+ :status :anchored                           ;; :anchored | :orphaned | :fuzzy-matched
+ :last-verified "2025-01-03T12:00:00Z"
+
+ ;; Metadata
+ :created-at "2025-01-03T12:00:00Z"
+ :created-by "user"}
+#+end_src
+
+** Embedding Cache (for Pattern Neighbors)
+
+Caches computed nearest-neighbors from an embedding space.
+
+#+begin_src clojure
+{:xt/id "embedding-cache:<space-name>"
+ :type "arxana/embedding-cache"
+
+ :space "patterns-glove-50d"                 ;; embedding space identifier
+ :model "glove"                              ;; model used
+ :dimensions 50
+
+ ;; The actual neighbor data
+ :neighbors {"pattern-a" [{:id "pattern-b" :score 0.95}
+                          {:id "pattern-c" :score 0.91}
+                          {:id "pattern-d" :score 0.87}]
+             "pattern-b" [{:id "pattern-a" :score 0.95}
+                          {:id "pattern-e" :score 0.82}]}
+
+ :k 10                                       ;; how many neighbors stored per item
+ :threshold 0.8                              ;; minimum similarity score
+
+ :computed-at "2025-01-03T12:00:00Z"
+ :invalidate-on :re-embed                    ;; when to recompute
+ :ttl-hours 168}                             ;; optional TTL (1 week)
+#+end_src
+
+* Implementation Tasks
+
+** Task 1: Create arxana-links.el
+
+*File:* =dev/arxana-links.el=
+
+*Purpose:* Core data structures and Futon1 persistence for link entities.
+
+*** 1.1 Dependencies and Setup
+
+#+begin_src elisp
+;;; arxana-links.el --- Link persistence for Arxana -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Implements the link strategy, voiced link, surface form, and resilient
+;; anchor data types. Provides persistence via Futon1's /entity endpoint.
+
+;;; Code:
+
+(require 'cl-lib)
+(require 'arxana-store)  ;; for arxana-store--request, arxana-store-sync-enabled-p
+
+(defgroup arxana-links nil
+  "Link persistence settings for Arxana."
+  :group 'arxana)
+#+end_src
+
+*** 1.2 Strategy Functions
+
+#+begin_src elisp
+(defun arxana-links-strategy-id (scope-repo finders-summary)
+  "Generate a deterministic strategy ID from SCOPE-REPO and FINDERS-SUMMARY."
+  (format "strategy:%s-%s" scope-repo (md5 (format "%S" finders-summary))))
+
+(cl-defun arxana-links-make-strategy (&key id scope finders)
+  "Create a link strategy plist.
+SCOPE is a plist with :repo, :code-roots, :docbook.
+FINDERS is a list of finder plists, each with :type and config."
+  (let ((id (or id (arxana-links-strategy-id
+                    (plist-get scope :repo)
+                    finders))))
+    (list :xt/id id
+          :type "arxana/link-strategy"
+          :scope scope
+          :finders finders
+          :created-at (format-time-string "%Y-%m-%dT%H:%M:%SZ" nil t))))
+
+(defun arxana-links-persist-strategy (strategy)
+  "Persist STRATEGY to Futon1. Returns response or nil on failure."
+  (when (arxana-store-sync-enabled-p)
+    (arxana-store--request "POST" "/entity" strategy)))
+
+(defun arxana-links-load-strategies ()
+  "Load all link strategies from Futon1."
+  ;; Query Futon1 for entities of type arxana/link-strategy
+  (when (arxana-store-sync-enabled-p)
+    (let ((response (arxana-store--request
+                     "GET" "/entities" nil
+                     "type=arxana/link-strategy")))
+      (when response
+        (alist-get :entities response)))))
+#+end_src
+
+*** 1.3 Voiced Link Functions
+
+#+begin_src elisp
+(cl-defun arxana-links-make-voiced-link (&key source target found-by status)
+  "Create a voiced link plist.
+SOURCE and TARGET are plists describing endpoints.
+FOUND-BY is the strategy ID that discovered this link.
+STATUS is :confirmed, :suppressed, or :orphaned."
+  (list :xt/id (format "link:%s" (md5 (format "%S%S" source target)))
+        :type "arxana/voiced-link"
+        :source source
+        :target target
+        :found-by found-by
+        :promoted-at (format-time-string "%Y-%m-%dT%H:%M:%SZ" nil t)
+        :status (or status :confirmed)
+        :annotations nil))
+
+(defun arxana-links-persist-voiced-link (link)
+  "Persist voiced LINK to Futon1."
+  (when (arxana-store-sync-enabled-p)
+    (arxana-store--request "POST" "/entity" link)))
+
+(defun arxana-links-suppress-link (link-id)
+  "Mark link LINK-ID as suppressed (false positive)."
+  (when (arxana-store-sync-enabled-p)
+    (arxana-store--request "POST" "/entity"
+                           (list :xt/id link-id
+                                 :status :suppressed))))
+#+end_src
+
+*** 1.4 Surface Form Functions
+
+#+begin_src elisp
+(cl-defun arxana-links-make-surface-form (&key concept-id surface context source)
+  "Create a surface form plist.
+CONCEPT-ID is the canonical concept identifier.
+SURFACE is the alternative text used.
+CONTEXT is a plist with :doc, :snippet, :offset.
+SOURCE is :explicit or :inferred."
+  (list :xt/id (format "surface:%s" (md5 (format "%s-%s" concept-id surface)))
+        :type "arxana/surface-form"
+        :concept-id concept-id
+        :surface surface
+        :context context
+        :source (or source :explicit)
+        :created-at (format-time-string "%Y-%m-%dT%H:%M:%SZ" nil t)))
+
+(defun arxana-links-persist-surface-form (form)
+  "Persist surface FORM to Futon1."
+  (when (arxana-store-sync-enabled-p)
+    (arxana-store--request "POST" "/entity" form)))
+
+(defun arxana-links-surface-forms-for-concept (concept-id)
+  "Fetch all surface forms for CONCEPT-ID."
+  (when (arxana-store-sync-enabled-p)
+    (arxana-store--request "GET" "/entities" nil
+                           (format "type=arxana/surface-form&concept-id=%s"
+                                   (url-hexify-string concept-id)))))
+#+end_src
+
+*** 1.5 Resilient Anchor Functions
+
+#+begin_src elisp
+(defun arxana-links--content-hash (text)
+  "Compute SHA256 hash of TEXT."
+  (secure-hash 'sha256 text))
+
+(defun arxana-links--extract-context (buffer start end &optional context-chars)
+  "Extract context around region START to END in BUFFER.
+CONTEXT-CHARS defaults to 30."
+  (let ((chars (or context-chars 30)))
+    (with-current-buffer buffer
+      (list :context-before (buffer-substring-no-properties
+                             (max (point-min) (- start chars))
+                             start)
+            :context-after (buffer-substring-no-properties
+                            end
+                            (min (point-max) (+ end chars)))))))
+
+(cl-defun arxana-links-make-scholium-anchor (buffer start end)
+  "Create a resilient anchor for region START to END in BUFFER."
+  (with-current-buffer buffer
+    (let* ((content (buffer-substring-no-properties start end))
+           (context (arxana-links--extract-context buffer start end)))
+      (list :strategy :content-hash
+            :content-hash (concat "sha256:" (arxana-links--content-hash content))
+            :content-length (length content)
+            :context-before (plist-get context :context-before)
+            :context-after (plist-get context :context-after)
+            :hint-offset start
+            :hint-line (line-number-at-pos start)))))
+
+(cl-defun arxana-links-make-scholium (&key target-doc anchor content)
+  "Create a scholium plist.
+TARGET-DOC is the document name/id.
+ANCHOR is created by `arxana-links-make-scholium-anchor'.
+CONTENT is the annotation text."
+  (list :xt/id (format "scholium:%s" (md5 (format "%s%S%s" target-doc anchor content)))
+        :type "arxana/scholium"
+        :target-doc target-doc
+        :anchor anchor
+        :content content
+        :content-type "text/plain"
+        :status :anchored
+        :created-at (format-time-string "%Y-%m-%dT%H:%M:%SZ" nil t)
+        :last-verified (format-time-string "%Y-%m-%dT%H:%M:%SZ" nil t)))
+
+(defun arxana-links-persist-scholium (scholium)
+  "Persist SCHOLIUM to Futon1."
+  (when (arxana-store-sync-enabled-p)
+    (arxana-store--request "POST" "/entity" scholium)))
+#+end_src
+
+*** 1.6 Anchor Re-finding (Resilience)
+
+#+begin_src elisp
+(defun arxana-links-find-anchor (buffer anchor)
+  "Try to find ANCHOR in BUFFER. Returns (start . end) or nil."
+  (with-current-buffer buffer
+    (let* ((hash (plist-get anchor :content-hash))
+           (length (plist-get anchor :content-length))
+           (ctx-before (plist-get anchor :context-before))
+           (ctx-after (plist-get anchor :context-after))
+           (hint-offset (plist-get anchor :hint-offset)))
+      ;; Strategy 1: Try hint offset first
+      (when hint-offset
+        (let* ((candidate-start hint-offset)
+               (candidate-end (+ hint-offset length))
+               (candidate (ignore-errors
+                           (buffer-substring-no-properties candidate-start candidate-end)))
+               (candidate-hash (and candidate
+                                    (concat "sha256:"
+                                            (arxana-links--content-hash candidate)))))
+          (when (equal candidate-hash hash)
+            (cl-return-from arxana-links-find-anchor
+              (cons candidate-start candidate-end)))))
+
+      ;; Strategy 2: Search for context pattern
+      (when (and ctx-before ctx-after)
+        (goto-char (point-min))
+        (let ((pattern (concat (regexp-quote ctx-before)
+                               "\\(.\\{" (number-to-string length) "\\}\\)"
+                               (regexp-quote ctx-after))))
+          (when (re-search-forward pattern nil t)
+            (let* ((match-start (match-beginning 1))
+                   (match-end (match-end 1))
+                   (match-text (match-string 1))
+                   (match-hash (concat "sha256:" (arxana-links--content-hash match-text))))
+              (when (equal match-hash hash)
+                (cl-return-from arxana-links-find-anchor
+                  (cons match-start match-end)))))))
+
+      ;; Strategy 3: Fuzzy search (just context, ignore hash)
+      (when (and ctx-before ctx-after)
+        (goto-char (point-min))
+        (when (search-forward ctx-before nil t)
+          (let ((start (point)))
+            (when (search-forward ctx-after nil t)
+              (let ((end (match-beginning 0)))
+                (cl-return-from arxana-links-find-anchor
+                  (cons start end))))))))))
+
+(defun arxana-links-verify-scholium (buffer scholium)
+  "Verify SCHOLIUM's anchor in BUFFER. Updates status and returns result."
+  (let* ((anchor (plist-get scholium :anchor))
+         (found (arxana-links-find-anchor buffer anchor)))
+    (cond
+     (found
+      (plist-put scholium :status :anchored)
+      (plist-put scholium :last-verified
+                 (format-time-string "%Y-%m-%dT%H:%M:%SZ" nil t))
+      found)
+     (t
+      (plist-put scholium :status :orphaned)
+      nil))))
+#+end_src
+
+*** 1.7 Embedding Cache Functions
+
+#+begin_src elisp
+(cl-defun arxana-links-make-embedding-cache (&key space model dimensions neighbors k threshold)
+  "Create an embedding cache plist."
+  (list :xt/id (format "embedding-cache:%s" space)
+        :type "arxana/embedding-cache"
+        :space space
+        :model model
+        :dimensions dimensions
+        :neighbors neighbors
+        :k (or k 10)
+        :threshold (or threshold 0.8)
+        :computed-at (format-time-string "%Y-%m-%dT%H:%M:%SZ" nil t)))
+
+(defun arxana-links-persist-embedding-cache (cache)
+  "Persist embedding CACHE to Futon1."
+  (when (arxana-store-sync-enabled-p)
+    (arxana-store--request "POST" "/entity" cache)))
+
+(defun arxana-links-load-embedding-cache (space)
+  "Load embedding cache for SPACE from Futon1."
+  (when (arxana-store-sync-enabled-p)
+    (arxana-store--request "GET"
+                           (format "/entity/%s"
+                                   (url-hexify-string
+                                    (format "embedding-cache:%s" space))))))
+#+end_src
+
+*** 1.8 Provide
+
+#+begin_src elisp
+(provide 'arxana-links)
+;;; arxana-links.el ends here
+#+end_src
+
+** Task 2: Integrate Strategy Persistence with Code-Docs Browser
+
+*File:* =dev/arxana-browser-code.el= (modify existing)
+
+*Purpose:* Persist the code-docs finder strategy; load on startup.
+
+*** 2.1 Add Strategy Variable
+
+#+begin_src elisp
+(defvar arxana-browser-code--active-strategy nil
+  "The currently active link strategy for code-docs browsing.")
+#+end_src
+
+*** 2.2 Create Default Strategy on First Use
+
+#+begin_src elisp
+(defun arxana-browser-code-ensure-strategy ()
+  "Ensure the code-docs link strategy exists and is persisted."
+  (unless arxana-browser-code--active-strategy
+    (let* ((scope (list :repo "futon4"
+                        :code-roots (arxana-browser-code--resolve-roots)
+                        :docbook arxana-browser-code-docbook))
+           (finders (list (list :type :symbol-as-term
+                                :def-patterns arxana-browser-code--def-patterns
+                                :auto-link? t)
+                          (list :type :filename-mention
+                                :auto-link? t)))
+           (strategy (arxana-links-make-strategy :scope scope :finders finders)))
+      ;; Try to load existing, or persist new
+      (let ((existing (arxana-links-load-strategies)))
+        (setq arxana-browser-code--active-strategy
+              (or (seq-find (lambda (s)
+                              (equal (plist-get (plist-get s :scope) :repo) "futon4"))
+                            existing)
+                  (progn
+                    (arxana-links-persist-strategy strategy)
+                    strategy)))))))
+
+;; Add to existing def patterns
+(defconst arxana-browser-code--def-patterns
+  '("defun" "defmacro" "defsubst" "defvar" "defvar-local"
+    "defcustom" "defconst" "define-derived-mode" "defn" "defn-")
+  "Patterns that define linkable symbols.")
+#+end_src
+
+*** 2.3 Hook Into Browser Open
+
+Add call to =arxana-browser-code-ensure-strategy= at start of =arxana-browser-code--open-path=.
+
+** Task 3: Wire Up Pattern Embedding Neighbors
+
+*File:* =dev/arxana-browser-patterns.el= (modify existing)
+
+*Purpose:* Display nearest neighbors from GloVe embeddings in pattern browser.
+
+*** 3.1 Find Existing Embedding Data
+
+First, locate where pattern embeddings are stored. Check:
+- =arxana-patterns.el= for embedding variables
+- =resources/= for embedding files
+- Futon1 for persisted embeddings
+
+*** 3.2 Add Neighbor Lookup Function
+
+#+begin_src elisp
+(defun arxana-patterns-neighbors (pattern-id &optional k)
+  "Return K nearest neighbors for PATTERN-ID from embedding space.
+K defaults to 5."
+  (let ((k (or k 5))
+        (cache (arxana-links-load-embedding-cache "patterns-glove")))
+    (when cache
+      (let ((neighbors (alist-get (intern pattern-id)
+                                  (plist-get cache :neighbors))))
+        (seq-take neighbors k)))))
+#+end_src
+
+*** 3.3 Display in Browser
+
+Add a "See Also" section to pattern detail view:
+
+#+begin_src elisp
+(defun arxana-patterns--render-neighbors (pattern-id)
+  "Render neighbor links for PATTERN-ID."
+  (let ((neighbors (arxana-patterns-neighbors pattern-id)))
+    (when neighbors
+      (insert "\n* See Also (by embedding proximity)\n")
+      (dolist (neighbor neighbors)
+        (let ((id (plist-get neighbor :id))
+              (score (plist-get neighbor :score)))
+          (insert (format "- [[pattern:%s][%s]] (%.2f)\n" id id score)))))))
+#+end_src
+
+*** 3.4 Cache Computation (if embeddings exist but cache doesn't)
+
+#+begin_src elisp
+(defun arxana-patterns-compute-neighbor-cache (embeddings &optional k threshold)
+  "Compute neighbor cache from EMBEDDINGS hash table.
+K is neighbors per item (default 10), THRESHOLD is min similarity (default 0.8)."
+  (let ((k (or k 10))
+        (threshold (or threshold 0.8))
+        (neighbors (make-hash-table :test 'equal)))
+    ;; For each pattern, compute cosine similarity to all others
+    ;; Store top K above threshold
+    (maphash
+     (lambda (id vec)
+       (let ((scores '()))
+         (maphash
+          (lambda (other-id other-vec)
+            (unless (equal id other-id)
+              (let ((sim (arxana-patterns--cosine-similarity vec other-vec)))
+                (when (>= sim threshold)
+                  (push (list :id other-id :score sim) scores)))))
+          embeddings)
+         (puthash id (seq-take (seq-sort-by (lambda (x) (plist-get x :score)) #'> scores) k)
+                  neighbors)))
+     embeddings)
+    (arxana-links-make-embedding-cache
+     :space "patterns-glove"
+     :model "glove"
+     :dimensions 50  ;; adjust as needed
+     :neighbors neighbors
+     :k k
+     :threshold threshold)))
+
+(defun arxana-patterns--cosine-similarity (vec1 vec2)
+  "Compute cosine similarity between VEC1 and VEC2."
+  (let ((dot 0.0) (norm1 0.0) (norm2 0.0))
+    (cl-loop for v1 across vec1
+             for v2 across vec2
+             do (setq dot (+ dot (* v1 v2))
+                      norm1 (+ norm1 (* v1 v1))
+                      norm2 (+ norm2 (* v2 v2))))
+    (if (or (zerop norm1) (zerop norm2))
+        0.0
+      (/ dot (* (sqrt norm1) (sqrt norm2))))))
+#+end_src
+
+** Task 4: Resilient Anchoring for Classic Scholia
+
+*File:* =dev/arxana-scholium.el= (modify existing)
+
+*Purpose:* Update scholium creation to use resilient anchors.
+
+*** 4.1 Update Scholium Compose
+
+Modify =arxana-scholium-compose= (or equivalent) to:
+1. Capture region with =arxana-links-make-scholium-anchor=
+2. Create scholium with =arxana-links-make-scholium=
+3. Persist with =arxana-links-persist-scholium=
+
+*** 4.2 Add Reanchor Command
+
+#+begin_src elisp
+(defun arxana-scholium-reanchor (scholium-id)
+  "Interactively re-anchor an orphaned scholium."
+  (interactive "sScholium ID: ")
+  (let ((scholium (arxana-links-load-scholium scholium-id)))
+    (when scholium
+      (if (use-region-p)
+          (let* ((new-anchor (arxana-links-make-scholium-anchor
+                              (current-buffer)
+                              (region-beginning)
+                              (region-end))))
+            (plist-put scholium :anchor new-anchor)
+            (plist-put scholium :status :anchored)
+            (arxana-links-persist-scholium scholium)
+            (message "Re-anchored scholium %s" scholium-id))
+        (message "Select a region first")))))
+#+end_src
+
+*** 4.3 Visual Indication of Anchor Status
+
+#+begin_src elisp
+(defface arxana-scholium-anchored-face
+  '((t :background "#e6ffe6"))  ;; light green
+  "Face for anchored scholia regions.")
+
+(defface arxana-scholium-orphaned-face
+  '((t :background "#ffe6e6"))  ;; light red
+  "Face for orphaned scholia regions.")
+
+(defface arxana-scholium-fuzzy-face
+  '((t :background "#fff0e6"))  ;; light orange
+  "Face for fuzzy-matched scholia regions.")
+
+(defun arxana-scholium-apply-overlays (buffer scholia)
+  "Apply visual overlays for SCHOLIA in BUFFER."
+  (with-current-buffer buffer
+    (dolist (scholium scholia)
+      (let* ((status (plist-get scholium :status))
+             (anchor (plist-get scholium :anchor))
+             (bounds (arxana-links-find-anchor buffer anchor))
+             (face (pcase status
+                     (:anchored 'arxana-scholium-anchored-face)
+                     (:orphaned 'arxana-scholium-orphaned-face)
+                     (:fuzzy-matched 'arxana-scholium-fuzzy-face))))
+        (when bounds
+          (let ((ov (make-overlay (car bounds) (cdr bounds))))
+            (overlay-put ov 'face face)
+            (overlay-put ov 'arxana-scholium scholium)
+            (overlay-put ov 'help-echo (plist-get scholium :content))))))))
+#+end_src
+
+** Task 5: Surface Form Capture Path
+
+*File:* =dev/arxana-links.el= (add to existing)
+
+*Purpose:* Capture surface forms when user creates explicit links.
+
+*** 5.1 Interactive Surface Form Creation
+
+#+begin_src elisp
+(defun arxana-links-capture-surface-form (surface concept-id)
+  "Capture that SURFACE was used to refer to CONCEPT-ID."
+  (interactive
+   (list (if (use-region-p)
+             (buffer-substring-no-properties (region-beginning) (region-end))
+           (read-string "Surface form: "))
+         (read-string "Concept ID: ")))
+  (let* ((context (list :doc (buffer-name)
+                        :snippet (when (use-region-p)
+                                   (buffer-substring-no-properties
+                                    (max (point-min) (- (region-beginning) 20))
+                                    (min (point-max) (+ (region-end) 20))))
+                        :offset (when (use-region-p) (region-beginning))))
+         (form (arxana-links-make-surface-form
+                :concept-id concept-id
+                :surface surface
+                :context context
+                :source :explicit)))
+    (arxana-links-persist-surface-form form)
+    (message "Captured surface form: %s -> %s" surface concept-id)))
+#+end_src
+
+*** 5.2 Hook for Explicit Link Creation
+
+If there's an existing "insert link" command, hook into it to capture surface forms
+when the link text differs from the concept name.
+
+** Task 6: Integration Test
+
+*File:* =test/arxana-links-test.el=
+
+*** 6.1 Test Strategy Persistence
+
+#+begin_src elisp
+(ert-deftest arxana-links-test-strategy-roundtrip ()
+  "Test that strategies persist and reload correctly."
+  (let ((strategy (arxana-links-make-strategy
+                   :scope '(:repo "test" :code-roots ("src/") :docbook "test-docs")
+                   :finders '((:type :symbol-as-term :auto-link? t)))))
+    ;; Persist
+    (should (arxana-links-persist-strategy strategy))
+    ;; Reload
+    (let ((loaded (arxana-links-load-strategies)))
+      (should loaded)
+      (should (seq-find (lambda (s)
+                          (equal (plist-get (plist-get s :scope) :repo) "test"))
+                        loaded)))))
+#+end_src
+
+*** 6.2 Test Anchor Resilience
+
+#+begin_src elisp
+(ert-deftest arxana-links-test-anchor-resilience ()
+  "Test that anchors survive text movement."
+  (with-temp-buffer
+    (insert "prefix text TARGET REGION suffix text")
+    (let* ((anchor (arxana-links-make-scholium-anchor
+                    (current-buffer) 13 26))  ;; "TARGET REGION"
+           (scholium (arxana-links-make-scholium
+                      :target-doc "test"
+                      :anchor anchor
+                      :content "annotation")))
+      ;; Verify initial find
+      (should (equal (arxana-links-find-anchor (current-buffer) anchor)
+                     '(13 . 26)))
+      ;; Insert text before region
+      (goto-char (point-min))
+      (insert "NEW STUFF ")
+      ;; Should still find via context
+      (let ((found (arxana-links-find-anchor (current-buffer) anchor)))
+        (should found)
+        (should (equal (buffer-substring-no-properties (car found) (cdr found))
+                       "TARGET REGION"))))))
+#+end_src
+
+*** 6.3 Test Surface Form Capture
+
+#+begin_src elisp
+(ert-deftest arxana-links-test-surface-form ()
+  "Test surface form creation and retrieval."
+  (let ((form (arxana-links-make-surface-form
+               :concept-id "abelian-group"
+               :surface "commutative thingy"
+               :context '(:doc "test" :snippet "the commutative thingy is")
+               :source :explicit)))
+    (should (equal (plist-get form :type) "arxana/surface-form"))
+    (should (equal (plist-get form :concept-id) "abelian-group"))
+    (should (equal (plist-get form :surface) "commutative thingy"))))
+#+end_src
+
+* File Summary
+
+| File | Action | Description |
+|------+--------+-------------|
+| =dev/arxana-links.el= | CREATE | Core link data structures and persistence |
+| =dev/arxana-browser-code.el= | MODIFY | Add strategy persistence, load on startup |
+| =dev/arxana-browser-patterns.el= | MODIFY | Add neighbor display from embeddings |
+| =dev/arxana-scholium.el= | MODIFY | Use resilient anchors |
+| =test/arxana-links-test.el= | CREATE | Integration tests |
+
+* Estimated Time
+
+| Task | Estimate |
+|------+----------|
+| Task 1: arxana-links.el | 60-90 min |
+| Task 2: Strategy integration | 30-45 min |
+| Task 3: Pattern neighbors | 45-60 min |
+| Task 4: Resilient scholia | 45-60 min |
+| Task 5: Surface forms | 20-30 min |
+| Task 6: Tests | 30-45 min |
+| TOTAL | 4-5.5 hours |
+
+* Notes for Handoff
+
+If handing to another AI (Codex, etc.):
+
+1. Start with Task 1 (arxana-links.el) as it's the foundation
+2. Run existing tests first: =bash dev/run-tests.sh=
+3. Futon1 must be running for persistence tests
+4. Check =arxana-store.el= for HTTP request patterns
+5. The =:xt/id= field is required for Futon1/XTDB entities
+6. Use =arxana-store--request= for all HTTP calls
+
+* Acceptance Criteria
+
+Prototype 1 Links is complete when:
+
+1. [ ] =arxana-links.el= exists with all data types
+2. [ ] Code-docs strategy persists and reloads across sessions
+3. [ ] Pattern browser shows "See Also" neighbors
+4. [ ] Scholia use resilient anchors (survive minor edits)
+5. [ ] Surface forms can be captured
+6. [ ] All tests pass
+7. [ ] Demo workflow documented
