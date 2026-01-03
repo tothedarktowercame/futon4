@@ -25,6 +25,7 @@ TEST_FILES=(
   arxana-xtdb-browse-test.el
   arxana-compat-test.el
   arxana-flexiarg-normalize-test.el
+  arxana-links-test.el
 )
 
 for test_file in "${TEST_FILES[@]}"; do

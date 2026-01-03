@@ -35,6 +35,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'json)
 (require 'url-util)
 
 ;; Avoid autoload issues - these are loaded via bootstrap.el
@@ -67,9 +68,171 @@ tiers, from ephemeral computed links to fully anchored archival references."
   :type 'number
   :group 'arxana-links)
 
+(defcustom arxana-links-latest-limit 200
+  "Maximum number of entities to request when querying latest entities."
+  :type 'integer
+  :group 'arxana-links)
+
 ;;;; =========================================================================
 ;;;; Utility Functions
 ;;;; =========================================================================
+
+(defun arxana-links--proper-list-p (value)
+  "Return non-nil if VALUE is a proper list (ends in nil)."
+  (let ((rest value))
+    (while (consp rest)
+      (setq rest (cdr rest)))
+    (null rest)))
+
+(defun arxana-links--plist-p (value)
+  "Return non-nil if VALUE is a keyword plist."
+  (when (arxana-links--proper-list-p value)
+    (let ((rest value)
+          (ok t))
+      (while (and ok (consp rest))
+        (setq ok (keywordp (car rest)))
+        (setq rest (cddr rest)))
+      (and ok (null rest)))))
+
+(defun arxana-links--alist-p (value)
+  "Return non-nil if VALUE is an alist with keyword or string keys."
+  (let ((rest value)
+        (ok t))
+    (while (and ok (consp rest))
+      (let* ((elt (car rest)))
+        (if (not (consp elt))
+            (setq ok nil)
+          (let* ((key (car elt))
+                 (tail (cdr elt))
+                 (plist-elt (arxana-links--plist-p elt)))
+            (setq ok (and (or (keywordp key)
+                              (stringp key))
+                          (or (not (consp tail))
+                              (null (cdr tail))
+                              (not plist-elt)))))))
+      (setq rest (cdr rest)))
+    (and ok
+         (null rest)
+         (arxana-links--proper-list-p value))))
+
+(defun arxana-links--string-plist-p (value)
+  "Return non-nil if VALUE is a plist with keyword or string keys."
+  (when (arxana-links--proper-list-p value)
+    (let ((rest value)
+          (ok t))
+      (while (and ok (consp rest))
+        (setq ok (or (keywordp (car rest))
+                     (stringp (car rest))))
+        (setq rest (cddr rest)))
+      (and ok (null rest)))))
+
+(defun arxana-links--plist-to-alist (plist &optional string-keys)
+  "Convert PLIST into an alist.
+When STRING-KEYS is non-nil, coerce keyword keys to strings."
+  (let ((result nil))
+    (while plist
+      (let ((key (pop plist))
+            (val (pop plist)))
+        (when (and string-keys (keywordp key))
+          (setq key (substring (symbol-name key) 1)))
+        (push (cons key val) result)))
+    (nreverse result)))
+
+(defun arxana-links--normalize-json (value)
+  "Normalize VALUE to use plists instead of alists."
+  (cond
+   ((arxana-links--plist-p value)
+    (let ((result nil)
+          (rest value))
+      (while rest
+        (let ((key (pop rest))
+              (val (pop rest)))
+          (setq result (plist-put result key (arxana-links--normalize-json val)))))
+      result))
+   ((arxana-links--alist-p value)
+    (let ((result nil))
+      (dolist (pair value)
+        (setq result (plist-put result (car pair)
+                                (arxana-links--normalize-json (cdr pair)))))
+      result))
+   ((and (listp value) (arxana-links--proper-list-p value))
+    (mapcar #'arxana-links--normalize-json value))
+   (t value)))
+
+(defun arxana-links--parse-json (text)
+  "Parse TEXT as JSON, returning normalized plists."
+  (when (and text (stringp text))
+    (let ((json-object-type 'alist)
+          (json-array-type 'list)
+          (json-key-type 'keyword))
+      (let ((parsed (or (and (fboundp 'json-parse-string)
+                             (or (ignore-errors
+                                   (json-parse-string text
+                                                      :object-type 'alist
+                                                      :array-type 'list
+                                                      :object-key-type 'keyword
+                                                      :null-object nil
+                                                      :false-object nil))
+                                 (ignore-errors
+                                   (json-parse-string text
+                                                      :object-type 'alist
+                                                      :array-type 'list
+                                                      :key-type 'keyword
+                                                      :null-object nil
+                                                      :false-object nil))))
+                        (ignore-errors (json-read-from-string text)))))
+        (and parsed (arxana-links--normalize-json parsed))))))
+
+(defun arxana-links--jsonify (value)
+  "Convert VALUE into a JSON-friendly structure."
+  (cond
+   ((arxana-links--plist-p value)
+    (let ((alist nil)
+          (rest value))
+      (while rest
+        (let ((key (pop rest))
+              (val (pop rest)))
+          (push (cons key (arxana-links--jsonify val)) alist)))
+      (nreverse alist)))
+   ((arxana-links--alist-p value)
+    (mapcar (lambda (pair)
+              (cons (car pair) (arxana-links--jsonify (cdr pair))))
+            value))
+   ((and (listp value) (arxana-links--proper-list-p value))
+    (if (and value (arxana-links--plist-p (car value)))
+        (vconcat (mapcar #'arxana-links--jsonify value))
+      (mapcar #'arxana-links--jsonify value)))
+   (t value)))
+
+(defun arxana-links--wrap-entity-payload (entity)
+  "Return a Futon payload for ENTITY."
+  (let* ((id (plist-get entity :xt/id))
+         (name (or (plist-get entity :name) id))
+         (type (plist-get entity :type)))
+    (list :id id
+          :name name
+          :type type
+          :source (json-encode (arxana-links--jsonify entity)))))
+
+(defun arxana-links--unwrap-entity (entity)
+  "Return ENTITY with :source decoded when present."
+  (let* ((source (plist-get entity :source))
+         (decoded (and (stringp source) (arxana-links--parse-json source))))
+    (or decoded
+        (if (or (plist-get entity :scope)
+                (plist-get entity :finders)
+                (plist-get entity :anchor)
+                (plist-get entity :neighbors)
+                (plist-get entity :found-by))
+            entity
+          (let ((id (or (plist-get entity :xt/id) (plist-get entity :id))))
+            (list :xt/id id
+                  :type (plist-get entity :type)
+                  :name (plist-get entity :name)))))))
+
+(defun arxana-links--unwrap-entities (entities)
+  "Decode :source payloads for ENTITIES."
+  (mapcar #'arxana-links--unwrap-entity entities))
 
 (defun arxana-links--timestamp ()
   "Return current UTC timestamp in ISO 8601 format."
@@ -125,16 +288,20 @@ Returns the server response or nil on failure."
       (progn
         (message "[arxana-links] Cannot persist strategy: Futon sync disabled")
         nil)
-    (arxana-store--request "POST" "/entity" strategy)))
+    (arxana-store--request "POST" "/entity"
+                           (arxana-links--wrap-entity-payload strategy))))
 
 (defun arxana-links-load-strategies (&optional type-filter)
   "Load all link strategies from Futon1.
 Optional TYPE-FILTER limits results to strategies matching that repo."
   (when (arxana-store-sync-enabled-p)
-    (let* ((query "type=arxana/link-strategy")
-           (response (arxana-store--request "GET" "/entities" nil query)))
+    (let* ((query (format "type=arxana/link-strategy&limit=%d"
+                          arxana-links-latest-limit))
+           (response (arxana-store--request "GET" "/entities/latest" nil query)))
       (when response
-        (let ((entities (cdr (assq :entities response))))
+        (let ((entities (arxana-links--unwrap-entities
+                         (arxana-links--normalize-json
+                          (cdr (assq :entities response))))))
           (if type-filter
               (cl-remove-if-not
                (lambda (s)
@@ -187,7 +354,8 @@ STATUS is one of `arxana-links-status-values' (default :confirmed)."
       (progn
         (message "[arxana-links] Cannot persist link: Futon sync disabled")
         nil)
-    (arxana-store--request "POST" "/entity" link)))
+    (arxana-store--request "POST" "/entity"
+                           (arxana-links--wrap-entity-payload link))))
 
 (defun arxana-links-suppress-link (link-id)
   "Mark link LINK-ID as suppressed (false positive)."
@@ -202,10 +370,13 @@ STATUS is one of `arxana-links-status-values' (default :confirmed)."
   "Load voiced links from Futon1.
 Optional STRATEGY-ID filters to links found by that strategy."
   (when (arxana-store-sync-enabled-p)
-    (let* ((query "type=arxana/voiced-link")
-           (response (arxana-store--request "GET" "/entities" nil query)))
+    (let* ((query (format "type=arxana/voiced-link&limit=%d"
+                          arxana-links-latest-limit))
+           (response (arxana-store--request "GET" "/entities/latest" nil query)))
       (when response
-        (let ((entities (cdr (assq :entities response))))
+        (let ((entities (arxana-links--unwrap-entities
+                         (arxana-links--normalize-json
+                          (cdr (assq :entities response))))))
           (if strategy-id
               (cl-remove-if-not
                (lambda (link)
@@ -243,7 +414,8 @@ SOURCE is :explicit (user marked) or :inferred (NLP detected)."
       (progn
         (message "[arxana-links] Cannot persist surface form: Futon sync disabled")
         nil)
-    (arxana-store--request "POST" "/entity" form)))
+    (arxana-store--request "POST" "/entity"
+                           (arxana-links--wrap-entity-payload form))))
 
 ;;;###autoload
 (defun arxana-links-capture-surface-form (surface concept-id)
@@ -273,11 +445,17 @@ If a region is selected, uses the region text as SURFACE."
 (defun arxana-links-surface-forms-for-concept (concept-id)
   "Fetch all surface forms for CONCEPT-ID from Futon1."
   (when (arxana-store-sync-enabled-p)
-    (let* ((query (format "type=arxana/surface-form&concept-id=%s"
-                          (url-hexify-string concept-id)))
-           (response (arxana-store--request "GET" "/entities" nil query)))
+    (let* ((query (format "type=arxana/surface-form&limit=%d"
+                          arxana-links-latest-limit))
+           (response (arxana-store--request "GET" "/entities/latest" nil query)))
       (when response
-        (cdr (assq :entities response))))))
+        (let* ((entities (arxana-links--unwrap-entities
+                          (arxana-links--normalize-json
+                           (cdr (assq :entities response))))))
+          (cl-remove-if-not
+           (lambda (form)
+             (equal (plist-get form :concept-id) concept-id))
+           entities))))))
 
 ;;;; =========================================================================
 ;;;; Resilient Anchors (Tier 2 - Region References)
@@ -335,7 +513,8 @@ CONTENT-TYPE defaults to \"text/plain\"."
       (progn
         (message "[arxana-links] Cannot persist scholium: Futon sync disabled")
         nil)
-    (arxana-store--request "POST" "/entity" scholium)))
+    (arxana-store--request "POST" "/entity"
+                           (arxana-links--wrap-entity-payload scholium))))
 
 ;;;; =========================================================================
 ;;;; Anchor Re-finding (Resilience)
@@ -368,14 +547,23 @@ Tries three strategies: exact offset, context pattern, fuzzy context."
 
       ;; Strategy 2: Search for context pattern (medium)
       (when (and (not result)
-                 ctx-before ctx-after
-                 (> (length ctx-before) 0)
-                 (> (length ctx-after) 0))
+                 (or (and ctx-before (> (length ctx-before) 0))
+                     (and ctx-after (> (length ctx-after) 0))))
         (save-excursion
           (goto-char (point-min))
-          (let ((pattern (concat (regexp-quote ctx-before)
-                                 "\\(.\\{" (number-to-string len) "\\}\\)"
-                                 (regexp-quote ctx-after))))
+          (let* ((segment (format "\\(?:.\\|\n\\)\\{%d\\}" len))
+                 (pattern (cond
+                           ((and ctx-before (> (length ctx-before) 0)
+                                 ctx-after (> (length ctx-after) 0))
+                            (concat (regexp-quote ctx-before)
+                                    "\\(" segment "\\)"
+                                    (regexp-quote ctx-after)))
+                           ((and ctx-before (> (length ctx-before) 0))
+                            (concat (regexp-quote ctx-before)
+                                    "\\(" segment "\\)"))
+                           (t
+                            (concat "\\(" segment "\\)"
+                                    (regexp-quote ctx-after))))))
             (when (re-search-forward pattern nil t)
               (let* ((match-start (match-beginning 1))
                      (match-end (match-end 1))
@@ -393,10 +581,18 @@ Tries three strategies: exact offset, context pattern, fuzzy context."
           (when (search-forward ctx-before nil t)
             (let ((start (point)))
               (when (search-forward ctx-after nil t)
-                (let ((end (match-beginning 0)))
-                  (when (and (> end start)
-                             (<= (- end start) (* len 2))) ; sanity check
-                    (setq result (cons start end)))))))))
+                (let* ((end (match-beginning 0))
+                       (candidate-end (min (point-max) (+ start len)))
+                       (candidate (and (= candidate-end (+ start len))
+                                       (buffer-substring-no-properties start candidate-end)))
+                       (candidate-hash (and candidate
+                                            (arxana-links--content-hash candidate))))
+                  (cond
+                   ((and candidate-hash (equal candidate-hash hash))
+                    (setq result (cons start candidate-end)))
+                   ((and (> end start)
+                         (<= (- end start) (* len 2))) ; sanity check
+                    (setq result (cons start end))))))))))
 
       result)))
 
@@ -417,11 +613,17 @@ Returns the found bounds (start . end) or nil if orphaned."
 (defun arxana-links-load-scholia-for-doc (doc-name)
   "Load all scholia for DOC-NAME from Futon1."
   (when (arxana-store-sync-enabled-p)
-    (let* ((query (format "type=arxana/scholium&target-doc=%s"
-                          (url-hexify-string doc-name)))
-           (response (arxana-store--request "GET" "/entities" nil query)))
+    (let* ((query (format "type=arxana/scholium&limit=%d"
+                          arxana-links-latest-limit))
+           (response (arxana-store--request "GET" "/entities/latest" nil query)))
       (when response
-        (cdr (assq :entities response))))))
+        (let* ((entities (arxana-links--unwrap-entities
+                          (arxana-links--normalize-json
+                           (cdr (assq :entities response))))))
+          (cl-remove-if-not
+           (lambda (scholium)
+             (equal (plist-get scholium :target-doc) doc-name))
+           entities))))))
 
 ;;;; =========================================================================
 ;;;; Embedding Cache (Vector Space Neighbors)
@@ -453,15 +655,32 @@ THRESHOLD is the minimum similarity score."
       (progn
         (message "[arxana-links] Cannot persist embedding cache: Futon sync disabled")
         nil)
-    (arxana-store--request "POST" "/entity" cache)))
+    (arxana-store--request "POST" "/entity"
+                           (arxana-links--wrap-entity-payload cache))))
 
 (defun arxana-links-load-embedding-cache (space)
   "Load embedding cache for SPACE from Futon1."
   (when (arxana-store-sync-enabled-p)
-    (arxana-store--request "GET"
-                           (format "/entity/%s"
-                                   (url-hexify-string
-                                    (format "embedding-cache:%s" space))))))
+    (let* ((query (format "type=arxana/embedding-cache&limit=%d"
+                          arxana-links-latest-limit))
+           (response (arxana-store--request "GET" "/entities/latest" nil query))
+           (entities (and response (cdr (assq :entities response)))))
+      (when entities
+        (let* ((normalized (arxana-links--unwrap-entities
+                            (arxana-links--normalize-json entities)))
+               (entity-id (format "embedding-cache:%s" space))
+               (matched (or (cl-find entity-id normalized
+                                     :key (lambda (e) (or (plist-get e :xt/id)
+                                                         (plist-get e :name)))
+                                     :test #'equal)
+                            (car normalized))))
+          (when matched
+            (let ((neighbors (plist-get matched :neighbors)))
+              (when (arxana-links--string-plist-p neighbors)
+                (setq matched
+                      (plist-put matched :neighbors
+                                 (arxana-links--plist-to-alist neighbors t))))
+              matched)))))))
 
 (defun arxana-links-get-neighbors (space item-id &optional k)
   "Get K nearest neighbors for ITEM-ID from SPACE's embedding cache.
@@ -470,8 +689,9 @@ K defaults to 5. Returns list of plists with :id and :score."
          (cache (arxana-links-load-embedding-cache space)))
     (when cache
       (let* ((neighbors-alist (plist-get cache :neighbors))
-             (item-neighbors (cdr (assoc item-id neighbors-alist))))
-        (cl-subseq item-neighbors 0 (min k (length item-neighbors)))))))
+             (item-neighbors (cdr (assoc item-id neighbors-alist)))
+             (normalized (arxana-links--normalize-json item-neighbors)))
+        (cl-subseq normalized 0 (min k (length normalized)))))))
 
 ;;;; =========================================================================
 ;;;; Embedding Computation Helpers

@@ -8,9 +8,33 @@
 
 (require 'ert)
 (require 'cl-lib)
+(require 'arxana-store)
 
 ;; Load the module under test
 (require 'arxana-links)
+
+(defun arxana-links-test--server-available-p ()
+  "Return non-nil if a Futon server responds to a health request."
+  (let ((base (or (getenv "FUTON4_BASE_URL")
+                  (and (boundp 'futon4-base-url) futon4-base-url)
+                  "http://localhost:8080")))
+    (and (stringp base)
+         (let ((futon4-base-url base)
+               (futon4-enable-sync t))
+           (arxana-store-clear-error)
+           (let ((resp (ignore-errors
+                         (arxana-store--request "GET" "/types"))))
+             (and resp (not arxana-store-last-error)))))))
+
+(defmacro arxana-links-test--with-sync (&rest body)
+  "Run BODY with Futon sync enabled for integration tests."
+  (declare (indent 0))
+  `(let ((futon4-base-url (or (getenv "FUTON4_BASE_URL")
+                              (and (boundp 'futon4-base-url) futon4-base-url)
+                              "http://localhost:8080"))
+         (futon4-enable-sync t))
+     (arxana-store-clear-error)
+     ,@body))
 
 ;;;; =========================================================================
 ;;;; Unit Tests - Data Structure Creation
@@ -76,6 +100,44 @@
       (should (equal (plist-get scholium :content) "My annotation"))
       (should (equal (plist-get scholium :status) :anchored)))))
 
+(ert-deftest arxana-links-test-load-strategies-alist ()
+  "Test strategy loading normalizes alists into plists."
+  (let ((response '((:entities . (((:xt/id . "strategy:1")
+                                   (:type . "arxana/link-strategy")
+                                   (:scope . ((:repo . "futon4")
+                                              (:docbook . "futon4")
+                                              (:code-roots . ("dev/"))))
+                                   (:finders . ((:type . :symbol-as-term))))
+                                  ((:xt/id . "strategy:2")
+                                   (:type . "arxana/link-strategy")
+                                   (:scope . ((:repo . "other")
+                                              (:docbook . "other")
+                                              (:code-roots . ("src/"))))
+                                   (:finders . ((:type . :filename-mention)))))))))
+    (cl-letf (((symbol-function 'arxana-store-sync-enabled-p) (lambda () t))
+              ((symbol-function 'arxana-store--request) (lambda (&rest _) response)))
+      (let ((strategies (arxana-links-load-strategies "futon4")))
+        (should (= (length strategies) 1))
+        (should (equal (plist-get (car strategies) :xt/id) "strategy:1"))
+        (should (equal (plist-get (plist-get (car strategies) :scope) :repo)
+                       "futon4"))))))
+
+(ert-deftest arxana-links-test-get-neighbors-alist ()
+  "Test embedding neighbors normalize alist payloads."
+  (let* ((cache '((:xt/id . "embedding-cache:test")
+                  (:neighbors . (("alpha" . (((:id . "beta") (:score . 0.91))
+                                             ((:id . "gamma") (:score . 0.85))))))))
+         (normalized (arxana-links--normalize-json cache))
+         (normalized (plist-put normalized :neighbors
+                                (arxana-links--plist-to-alist
+                                 (plist-get normalized :neighbors)))))
+    (cl-letf (((symbol-function 'arxana-links-load-embedding-cache)
+               (lambda (_space) normalized)))
+      (let ((neighbors (arxana-links-get-neighbors "test" "alpha" 1)))
+        (should (= (length neighbors) 1))
+        (should (equal (plist-get (car neighbors) :id) "beta"))
+        (should (numberp (plist-get (car neighbors) :score)))))))
+
 ;;;; =========================================================================
 ;;;; Unit Tests - Anchor Creation and Finding
 ;;;; =========================================================================
@@ -118,6 +180,38 @@
         (should found)
         (should (equal (buffer-substring-no-properties (car found) (cdr found))
                        "TARGET REGION"))))))
+
+(ert-deftest arxana-links-test-find-anchor-multiline ()
+  "Test anchor finding for multi-line regions."
+  (with-temp-buffer
+    (insert "prefix\nTARGET\nREGION\nsuffix")
+    (goto-char (point-min))
+    (search-forward "TARGET\nREGION")
+    (let ((start (match-beginning 0))
+          (end (point)))
+      (let ((anchor (arxana-links-make-anchor (current-buffer) start end)))
+        (goto-char (point-min))
+        (insert "NEW LINE\n")
+        (let ((found (arxana-links-find-anchor (current-buffer) anchor)))
+          (should found)
+          (should (equal (buffer-substring-no-properties (car found) (cdr found))
+                         "TARGET\nREGION")))))))
+
+(ert-deftest arxana-links-test-find-anchor-buffer-start ()
+  "Test anchor finding when the region starts at buffer start."
+  (with-temp-buffer
+    (insert "TARGET REGION suffix")
+    (goto-char (point-min))
+    (search-forward "TARGET REGION")
+    (let ((start (match-beginning 0))
+          (end (point)))
+      (let ((anchor (arxana-links-make-anchor (current-buffer) start end)))
+        (goto-char (point-min))
+        (insert "NEW ")
+        (let ((found (arxana-links-find-anchor (current-buffer) anchor)))
+          (should found)
+          (should (equal (buffer-substring-no-properties (car found) (cdr found))
+                         "TARGET REGION")))))))
 
 (ert-deftest arxana-links-test-find-anchor-orphaned ()
   "Test anchor marked orphaned when content changes completely."
@@ -239,25 +333,112 @@
 ;;;; Integration Test Stubs (require Futon)
 ;;;; =========================================================================
 
-;; These tests are skipped when Futon sync is disabled.
-;; Run with a live Futon server to exercise persistence.
+;; These tests are skipped when Futon is unavailable.
+;; Run with a live Futon server to exercise persistence paths.
 
 (ert-deftest arxana-links-test-strategy-roundtrip ()
   "Test strategy persist and reload (requires Futon)."
-  :tags '(:integration)
-  (skip-unless (arxana-store-sync-enabled-p))
-  (let* ((scope '(:repo "test-integration" :code-roots ("src/") :docbook "test"))
-         (finders '((:type :symbol-as-term :auto-link? t)))
-         (strategy (arxana-links-make-strategy :scope scope :finders finders))
-         (strategy-id (plist-get strategy :xt/id)))
-    ;; Persist
-    (should (arxana-links-persist-strategy strategy))
-    ;; Reload and verify
-    (let ((loaded (arxana-links-load-strategies "test-integration")))
-      (should loaded)
-      (should (cl-find strategy-id loaded
-                       :key (lambda (s) (plist-get s :xt/id))
-                       :test 'equal)))))
+  :tags '(:integration :futon)
+  (skip-unless (arxana-links-test--server-available-p))
+  (arxana-links-test--with-sync
+    (let* ((repo (format "test-integration-%s" (format-time-string "%Y%m%d%H%M%S")))
+           (scope (list :repo repo :code-roots '("src/") :docbook "test"))
+           (finders '((:type :symbol-as-term :auto-link? t)))
+           (strategy (arxana-links-make-strategy :scope scope :finders finders))
+           (strategy-id (plist-get strategy :xt/id)))
+      (should (arxana-links-persist-strategy strategy))
+      (let ((loaded (arxana-links-load-strategies repo)))
+        (should loaded)
+        (should (cl-find strategy-id loaded
+                         :key (lambda (s) (plist-get s :xt/id))
+                         :test 'equal))))))
+
+(ert-deftest arxana-links-test-demo-create-strategy ()
+  "Test the demo strategy creator against Futon."
+  :tags '(:integration :futon)
+  (skip-unless (arxana-links-test--server-available-p))
+  (arxana-links-test--with-sync
+    (arxana-links-demo-create-strategy)
+    (should (arxana-links-find-strategy "futon4"))))
+
+(ert-deftest arxana-links-test-voiced-link-roundtrip ()
+  "Test voiced link persist and reload (requires Futon)."
+  :tags '(:integration :futon)
+  (skip-unless (arxana-links-test--server-available-p))
+  (arxana-links-test--with-sync
+    (let* ((strategy-id (format "strategy:test-%s" (format-time-string "%Y%m%d%H%M%S")))
+           (source '(:type :code-symbol :file "dev/test.el" :symbol "demo-fn"))
+           (target '(:type :doc-paragraph :docbook "futon4" :doc-id "demo-doc"))
+           (link (arxana-links-make-voiced-link
+                  :source source
+                  :target target
+                  :found-by strategy-id
+                  :status :confirmed))
+           (link-id (plist-get link :xt/id)))
+      (should (arxana-links-persist-voiced-link link))
+      (let ((loaded (arxana-links-load-voiced-links strategy-id)))
+        (should loaded)
+        (should (cl-find link-id loaded
+                         :key (lambda (s) (plist-get s :xt/id))
+                         :test 'equal))))))
+
+(ert-deftest arxana-links-test-surface-form-roundtrip ()
+  "Test surface form persist and reload (requires Futon)."
+  :tags '(:integration :futon)
+  (skip-unless (arxana-links-test--server-available-p))
+  (arxana-links-test--with-sync
+    (let* ((concept-id (format "concept-%s" (format-time-string "%Y%m%d%H%M%S")))
+           (form (arxana-links-make-surface-form
+                  :concept-id concept-id
+                  :surface "test surface"
+                  :context '(:doc "test" :snippet "test surface")
+                  :source :explicit))
+           (form-id (plist-get form :xt/id)))
+      (should (arxana-links-persist-surface-form form))
+      (let ((loaded (arxana-links-surface-forms-for-concept concept-id)))
+        (should loaded)
+        (should (cl-find form-id loaded
+                         :key (lambda (s) (plist-get s :xt/id))
+                         :test 'equal))))))
+
+(ert-deftest arxana-links-test-scholium-roundtrip ()
+  "Test scholium persist and reload (requires Futon)."
+  :tags '(:integration :futon)
+  (skip-unless (arxana-links-test--server-available-p))
+  (arxana-links-test--with-sync
+    (with-temp-buffer
+      (insert "prefix TARGET REGION suffix")
+      (let* ((doc-name (format "demo-doc-%s" (format-time-string "%Y%m%d%H%M%S")))
+             (anchor (arxana-links-make-anchor (current-buffer) 8 21))
+             (scholium (arxana-links-make-scholium
+                        :target-doc doc-name
+                        :anchor anchor
+                        :content "Integration scholium"))
+             (scholium-id (plist-get scholium :xt/id)))
+        (should (arxana-links-persist-scholium scholium))
+        (let ((loaded (arxana-links-load-scholia-for-doc doc-name)))
+          (should loaded)
+          (should (cl-find scholium-id loaded
+                           :key (lambda (s) (plist-get s :xt/id))
+                           :test 'equal)))))))
+
+(ert-deftest arxana-links-test-embedding-cache-roundtrip ()
+  "Test embedding cache persist and reload (requires Futon)."
+  :tags '(:integration :futon)
+  (skip-unless (arxana-links-test--server-available-p))
+  (arxana-links-test--with-sync
+    (let* ((space (format "test-space-%s" (format-time-string "%Y%m%d%H%M%S")))
+           (cache (arxana-links-make-embedding-cache
+                   :space space
+                   :model "test-model"
+                   :dimensions 2
+                   :neighbors '(("alpha" . ((:id "beta" :score 0.9))))
+                   :k 1
+                   :threshold 0.5)))
+      (should (arxana-links-persist-embedding-cache cache))
+      (let ((neighbors (arxana-links-get-neighbors space "alpha" 1)))
+        (should neighbors)
+        (should (equal (plist-get (car neighbors) :id) "beta"))))))
 
 (provide 'arxana-links-test)
 

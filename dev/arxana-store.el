@@ -18,6 +18,9 @@
 (defvar futon4-enable-sync nil
   "Non-nil enables Futon sync operations.")
 
+(defvar futon4-base-url nil
+  "Base URL for the Futon API (e.g., http://localhost:8080).")
+
 (defgroup arxana-store nil
   "Futon storage bridge settings."
   :group 'arxana)
