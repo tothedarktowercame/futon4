@@ -1662,5 +1662,81 @@ are ignored for now."
 
 (defalias 'arxana-browser-patterns-import-all-libraries #'arxana-browser-patterns-import-all-collections)
 
+;;;; =========================================================================
+;;;; Embedding-based Neighbors (requires cached embeddings)
+;;;; =========================================================================
+
+;; Forward declarations for arxana-links embedding support
+(declare-function arxana-links-get-neighbors "arxana-links")
+(declare-function arxana-links-load-embedding-cache "arxana-links")
+
+(defcustom arxana-browser-patterns-embedding-space "patterns-glove"
+  "Embedding space name for pattern similarity lookups."
+  :type 'string
+  :group 'arxana-patterns)
+
+(defcustom arxana-browser-patterns-neighbor-count 5
+  "Number of similar patterns to display in 'See Also' sections."
+  :type 'integer
+  :group 'arxana-patterns)
+
+(defun arxana-browser-patterns-neighbors (pattern-id &optional k)
+  "Return K nearest neighbors for PATTERN-ID from embedding space.
+K defaults to `arxana-browser-patterns-neighbor-count'.
+Requires embeddings to be cached via `arxana-links-persist-embedding-cache'."
+  (let ((k (or k arxana-browser-patterns-neighbor-count)))
+    (when (fboundp 'arxana-links-get-neighbors)
+      (arxana-links-get-neighbors
+       arxana-browser-patterns-embedding-space
+       pattern-id
+       k))))
+
+(defun arxana-browser-patterns--render-neighbors (pattern-id)
+  "Insert a 'See Also' section with neighbor links for PATTERN-ID.
+Only inserts content if embeddings are cached and neighbors exist."
+  (let ((neighbors (arxana-browser-patterns-neighbors pattern-id)))
+    (when neighbors
+      (insert "\n* See Also (by embedding proximity)\n")
+      (dolist (neighbor neighbors)
+        (let ((id (plist-get neighbor :id))
+              (score (plist-get neighbor :score)))
+          (insert (format "- [[pattern:%s][%s]] (%.2f)\n" id id score)))))))
+
+;;;###autoload
+(defun arxana-browser-patterns-show-neighbors (&optional pattern-id)
+  "Display neighbors for PATTERN-ID in a temporary buffer.
+If PATTERN-ID is nil, uses the pattern at point or prompts."
+  (interactive)
+  (let* ((pattern-id (or pattern-id
+                         (and (boundp 'arxana-browser-patterns--pattern)
+                              arxana-browser-patterns--pattern
+                              (plist-get arxana-browser-patterns--pattern :id))
+                         (read-string "Pattern ID: ")))
+         (neighbors (arxana-browser-patterns-neighbors pattern-id)))
+    (if neighbors
+        (with-output-to-temp-buffer "*Pattern Neighbors*"
+          (princ (format "Neighbors of %s:\n\n" pattern-id))
+          (dolist (neighbor neighbors)
+            (princ (format "  %s (score: %.3f)\n"
+                           (plist-get neighbor :id)
+                           (plist-get neighbor :score)))))
+      (message "No neighbors found (embeddings may not be cached)"))))
+
+;;;###autoload
+(defun arxana-browser-patterns-embedding-status ()
+  "Check if pattern embeddings are cached."
+  (interactive)
+  (if (fboundp 'arxana-links-load-embedding-cache)
+      (let ((cache (arxana-links-load-embedding-cache
+                    arxana-browser-patterns-embedding-space)))
+        (if cache
+            (message "Embedding cache '%s' loaded: %d patterns, k=%d"
+                     arxana-browser-patterns-embedding-space
+                     (length (plist-get cache :neighbors))
+                     (plist-get cache :k))
+          (message "No embedding cache found for '%s'"
+                   arxana-browser-patterns-embedding-space)))
+    (message "arxana-links module not loaded")))
+
 (provide 'arxana-browser-patterns)
 ;;; arxana-browser-patterns.el ends here

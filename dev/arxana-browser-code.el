@@ -8,6 +8,12 @@
 (require 'cl-lib)
 (require 'subr-x)
 
+;; Link persistence support
+(declare-function arxana-links-make-strategy "arxana-links")
+(declare-function arxana-links-persist-strategy "arxana-links")
+(declare-function arxana-links-find-strategy "arxana-links")
+(declare-function arxana-store-sync-enabled-p "arxana-store")
+
 (declare-function arxana-docbook-entries "arxana-docbook-core" (book))
 (declare-function arxana-docbook--entry-source-path "arxana-docbook-core" (entry))
 (declare-function arxana-docbook--entry-raw-text "arxana-docbook-core" (entry))
@@ -70,6 +76,48 @@ When nil, defaults to <repo>/dev and <repo>/test."
     "Persist file -> doc entry associations (docbook metadata)."
     "Persist backlink index for doc paragraphs -> code definitions.")
   "Notes for future persisted code-docs linkage.")
+
+(defvar arxana-browser-code--active-strategy nil
+  "The currently active link strategy for code-docs browsing.
+This is loaded from Futon1 on first use, or created and persisted if none exists.")
+
+(defconst arxana-browser-code--def-patterns
+  '("defun" "defmacro" "defsubst" "defvar" "defvar-local"
+    "defcustom" "defconst" "define-derived-mode" "defn" "defn-")
+  "Patterns that define linkable symbols in code files.")
+
+(defun arxana-browser-code-ensure-strategy ()
+  "Ensure the code-docs link strategy exists and is persisted.
+Returns the active strategy, or nil if persistence is unavailable."
+  (or arxana-browser-code--active-strategy
+      (when (fboundp 'arxana-store-sync-enabled-p)
+        ;; Try to load existing strategy
+        (let ((existing (and (fboundp 'arxana-links-find-strategy)
+                             (arxana-links-find-strategy "futon4"))))
+          (if existing
+              (setq arxana-browser-code--active-strategy existing)
+            ;; Create and persist new strategy
+            (when (and (fboundp 'arxana-links-make-strategy)
+                       (fboundp 'arxana-links-persist-strategy)
+                       (arxana-store-sync-enabled-p))
+              (let* ((roots (arxana-browser-code--resolve-roots))
+                     (scope (list :repo "futon4"
+                                  :code-roots (mapcar
+                                               (lambda (r)
+                                                 (file-relative-name r (arxana-browser-code--repo-root)))
+                                               roots)
+                                  :docbook arxana-browser-code-docbook))
+                     (finders (list (list :type :symbol-as-term
+                                          :def-patterns arxana-browser-code--def-patterns
+                                          :auto-link? t)
+                                    (list :type :filename-mention
+                                          :auto-link? t)))
+                     (strategy (arxana-links-make-strategy :scope scope :finders finders)))
+                (when (arxana-links-persist-strategy strategy)
+                  (message "[arxana-browser-code] Created link strategy: %s"
+                           (plist-get strategy :xt/id))
+                  (setq arxana-browser-code--active-strategy strategy))))))
+        arxana-browser-code--active-strategy)))
 
 (defvar arxana-browser-code-docs-mode-map
   (let ((map (make-sparse-keymap)))
@@ -294,6 +342,8 @@ When nil, defaults to <repo>/dev and <repo>/test."
 (defun arxana-browser-code--open-path (path)
   (unless (and path (file-readable-p path))
     (user-error "No readable file for %s" path))
+  ;; Ensure link strategy is loaded/created on first use
+  (arxana-browser-code-ensure-strategy)
   (arxana-browser-code--show-browser-frame)
   (let* ((browser-buf (get-buffer "*Arxana Browser*"))
          (browser-frame (and browser-buf (arxana-browser-code--frame-showing-buffer browser-buf)))
@@ -631,6 +681,25 @@ With prefix ACTIVATE, open the symbol after cycling."
 (defun arxana-browser-code-open (item)
   "Open code ITEM and show related docbook entries."
   (arxana-browser-code--open-path (plist-get item :path)))
+
+;;;###autoload
+(defun arxana-browser-code-strategy-status ()
+  "Display the current link strategy for code-docs browsing."
+  (interactive)
+  (let ((strategy (arxana-browser-code-ensure-strategy)))
+    (if strategy
+        (message "Active strategy: %s (repo: %s, docbook: %s)"
+                 (plist-get strategy :xt/id)
+                 (plist-get (plist-get strategy :scope) :repo)
+                 (plist-get (plist-get strategy :scope) :docbook))
+      (message "No active strategy (Futon sync may be disabled)"))))
+
+;;;###autoload
+(defun arxana-browser-code-reset-strategy ()
+  "Reset the cached strategy, forcing reload on next use."
+  (interactive)
+  (setq arxana-browser-code--active-strategy nil)
+  (message "Strategy cache cleared"))
 
 (provide 'arxana-browser-code)
 

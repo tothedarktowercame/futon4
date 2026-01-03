@@ -58,6 +58,7 @@
       (when (file-readable-p path)
         (load path nil t))))
   (ignore-errors (require 'arxana-store))
+  (ignore-errors (require 'arxana-links))
   (ignore-errors (require 'arxana-article))
   (ignore-errors (require 'arxana-scholium))
   (ignore-errors (require 'arxana-relations))
