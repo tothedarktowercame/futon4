@@ -264,12 +264,15 @@
           text))
     text))
 (defun arxana-docbook--entry-content (entry)
-  (let ((stub (arxana-docbook--read-stub entry)))
+  (let* ((stub (arxana-docbook--read-stub entry))
+         (stub-placeholder (and stub
+                                (string-match-p "\\(no summary yet\\)" stub))))
     (cond
-     (stub (arxana-docbook--maybe-fix-mojibake
-            (arxana-docbook--strip-org-metadata
-             (arxana-docbook--strip-org-code-blocks
-              (arxana-docbook--strip-stub-header stub)))))
+     ((and stub (not stub-placeholder))
+      (arxana-docbook--maybe-fix-mojibake
+       (arxana-docbook--strip-org-metadata
+        (arxana-docbook--strip-org-code-blocks
+         (arxana-docbook--strip-stub-header stub)))))
      ((plist-get entry :summary-raw)
       (arxana-docbook--maybe-fix-mojibake
        (arxana-docbook--strip-org-metadata

@@ -7,6 +7,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'subr-x)
 
 ;; Resilient anchoring support
@@ -24,6 +25,24 @@
 (defvar new-scholium-name nil)
 (defvar new-scholium-mode nil)
 (defvar new-scholium-about nil)
+(defvar arxana-scholium--display-buffer "*Arxana Scholia*")
+(defvar arxana-scholium--display-source-buffer nil)
+(defvar arxana-scholium--display-target-doc nil)
+(defvar arxana-scholium--display-index nil)
+(defvar arxana-scholium--display-highlight nil)
+(defvar-local arxana-scholium--last-highlight-id nil)
+(defvar-local arxana-scholium--source-hook-installed nil)
+
+(defvar arxana-scholium-display-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "RET") #'arxana-scholium-display-visit)
+    (define-key map (kbd "q") #'quit-window)
+    map)
+  "Keymap for `arxana-scholium-display-mode'.")
+
+(define-derived-mode arxana-scholium-display-mode special-mode "Arxana Scholia"
+  "Major mode for scholia display buffers."
+  (setq buffer-read-only t))
 
 (defun arxana-scholium--compose-about (target)
   "Helper that normalizes TARGET into the expected scholium about format."
@@ -94,6 +113,56 @@
   "Face for fuzzy-matched scholia regions (orange tint)."
   :group 'arxana-scholium)
 
+(defface arxana-scholium-orphaned-list-face
+  '((t :foreground "#6b7280" :slant italic))
+  "Face for orphaned scholia in the list."
+  :group 'arxana-scholium)
+
+(defface arxana-scholium-legend-1
+  '((t :foreground "#2563eb" :weight bold))
+  "Legend face for scholia correlation."
+  :group 'arxana-scholium)
+(defface arxana-scholium-legend-2
+  '((t :foreground "#dc2626" :weight bold))
+  "Legend face for scholia correlation."
+  :group 'arxana-scholium)
+(defface arxana-scholium-legend-3
+  '((t :foreground "#16a34a" :weight bold))
+  "Legend face for scholia correlation."
+  :group 'arxana-scholium)
+(defface arxana-scholium-legend-4
+  '((t :foreground "#d97706" :weight bold))
+  "Legend face for scholia correlation."
+  :group 'arxana-scholium)
+(defface arxana-scholium-legend-5
+  '((t :foreground "#7c3aed" :weight bold))
+  "Legend face for scholia correlation."
+  :group 'arxana-scholium)
+
+(defconst arxana-scholium--legend-faces
+  '(arxana-scholium-legend-1
+    arxana-scholium-legend-2
+    arxana-scholium-legend-3
+    arxana-scholium-legend-4
+    arxana-scholium-legend-5)
+  "Faces used to correlate scholia list entries with overlays.")
+
+(defun arxana-scholium--scholium-id (scholium)
+  "Return a stable identifier for SCHOLIUM."
+  (or (plist-get scholium :xt/id)
+      (plist-get scholium :name)
+      (plist-get scholium :content)))
+
+(defun arxana-scholium--legend-face (scholium)
+  "Pick a legend face for SCHOLIUM."
+  (let* ((id (or (arxana-scholium--scholium-id scholium) ""))
+         (idx (mod (sxhash id) (length arxana-scholium--legend-faces))))
+    (nth idx arxana-scholium--legend-faces)))
+
+(defun arxana-scholium--legend-marker (legend-face)
+  "Return a marker string with LEGEND-FACE."
+  (propertize "[#] " 'face legend-face))
+
 ;;;###autoload
 (defun arxana-scholium-create-resilient (beg end content)
   "Create a resilient scholium on region BEG to END with CONTENT.
@@ -124,18 +193,161 @@ Uses content-hash anchoring that survives minor edits."
 (defun arxana-scholium--add-overlay (beg end scholium)
   "Add visual overlay from BEG to END for SCHOLIUM."
   (let* ((status (plist-get scholium :status))
-         (face (pcase status
-                 (:anchored 'arxana-scholium-anchored-face)
-                 (:orphaned 'arxana-scholium-orphaned-face)
-                 (:fuzzy-matched 'arxana-scholium-fuzzy-face)
-                 (_ 'arxana-scholium-anchored-face)))
+         (status-face (pcase status
+                        (:anchored 'arxana-scholium-anchored-face)
+                        (:orphaned 'arxana-scholium-orphaned-face)
+                        (:fuzzy-matched 'arxana-scholium-fuzzy-face)
+                        (_ 'arxana-scholium-anchored-face)))
+         (legend-face (arxana-scholium--legend-face scholium))
          (ov (make-overlay beg end)))
-    (overlay-put ov 'face face)
+    (overlay-put ov 'face (list status-face legend-face))
     (overlay-put ov 'arxana-scholium scholium)
+    (overlay-put ov 'arxana-scholium-id (arxana-scholium--scholium-id scholium))
+    (overlay-put ov 'arxana-scholium-face legend-face)
     (overlay-put ov 'help-echo (plist-get scholium :content))
     (overlay-put ov 'evaporate t)
     (push ov arxana-scholium--overlays)
     ov))
+
+(defun arxana-scholium--display-highlight-id (scholium-id)
+  "Highlight the scholium entry matching SCHOLIUM-ID in the display buffer."
+  (let ((buf (get-buffer arxana-scholium--display-buffer)))
+    (when (buffer-live-p buf)
+      (with-current-buffer buf
+        (let ((marker (and arxana-scholium--display-index
+                           (gethash scholium-id arxana-scholium--display-index))))
+          (when (overlayp arxana-scholium--display-highlight)
+            (delete-overlay arxana-scholium--display-highlight))
+          (when (and marker (marker-position marker))
+            (goto-char (marker-position marker))
+            (let ((start (line-beginning-position))
+                  (end (line-end-position)))
+              (setq arxana-scholium--display-highlight (make-overlay start end))
+              (overlay-put arxana-scholium--display-highlight 'face 'highlight))))))))
+
+(defun arxana-scholium--sync-display-from-point ()
+  "Sync scholia display highlight with overlay at point."
+  (let ((scholium-id nil))
+    (dolist (ov (overlays-at (point)))
+      (when (and (null scholium-id) (overlay-get ov 'arxana-scholium-id))
+        (setq scholium-id (overlay-get ov 'arxana-scholium-id))))
+    (unless (equal scholium-id arxana-scholium--last-highlight-id)
+      (setq arxana-scholium--last-highlight-id scholium-id)
+      (when scholium-id
+        (arxana-scholium--display-highlight-id scholium-id)))))
+
+(defun arxana-scholium--arrange-windows (source-buffer display-buffer)
+  "Arrange windows so SOURCE-BUFFER is left of DISPLAY-BUFFER."
+  (let* ((frame (selected-frame))
+         (display-windows (get-buffer-window-list display-buffer nil t))
+         (source-window (or (get-buffer-window source-buffer frame)
+                            (selected-window)))
+         (docbook-p (with-current-buffer source-buffer
+                      (bound-and-true-p arxana-docbook--entry-book)))
+         (code-window (when docbook-p
+                        (cl-find-if
+                         (lambda (win)
+                           (let ((buf (window-buffer win)))
+                             (and (buffer-live-p buf)
+                                  (not (eq buf source-buffer))
+                                  (buffer-file-name buf))))
+                         (window-list frame :no-minibuf))))
+         (code-buffer (and code-window (window-buffer code-window))))
+    (dolist (win display-windows)
+      (let ((win-frame (window-frame win)))
+        (unless (eq win-frame frame)
+          (delete-window win))))
+    (if (and docbook-p code-buffer)
+        (progn
+          (select-window code-window)
+          (delete-other-windows)
+          (let* ((left (selected-window))
+                 (mid (split-window-right))
+                 (right (progn (select-window mid)
+                               (split-window-right))))
+            (set-window-buffer left code-buffer)
+            (set-window-buffer mid source-buffer)
+            (set-window-buffer right display-buffer)
+            (select-window mid)))
+      (select-window source-window)
+      (delete-other-windows)
+      (let* ((left (selected-window))
+             (right (split-window-right)))
+        (set-window-buffer left source-buffer)
+        (set-window-buffer right display-buffer)
+        (select-window left)))))
+
+(defun arxana-scholium--render-display (target-doc scholia source-buffer)
+  (let ((buf (get-buffer-create arxana-scholium--display-buffer)))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (arxana-scholium-display-mode)
+        (setq-local arxana-scholium--display-source-buffer source-buffer)
+        (setq-local arxana-scholium--display-target-doc target-doc)
+        (setq-local arxana-scholium--display-index (make-hash-table :test 'equal))
+        (insert (format "Scholia for %s\n\n" target-doc))
+        (if (null scholia)
+            (insert "No scholia found.\n")
+          (dolist (scholium scholia)
+            (let* ((status (plist-get scholium :status))
+                   (content (or (plist-get scholium :content) ""))
+                   (sch-id (arxana-scholium--scholium-id scholium))
+                   (legend-face (arxana-scholium--legend-face scholium))
+                   (line (format "- [%s] %s\n" (or status "unknown") content)))
+              (let ((start (point))
+                    (marker (if (eq status :orphaned)
+                                (propertize "[!] " 'face 'arxana-scholium-orphaned-list-face)
+                              (arxana-scholium--legend-marker legend-face))))
+                (insert marker)
+                (insert line)
+                (add-text-properties start (point)
+                                     (list 'arxana-scholium scholium
+                                           'arxana-scholium-id sch-id))
+                (add-text-properties (+ start (length marker)) (point)
+                                     (list 'face (if (eq status :orphaned)
+                                                     'arxana-scholium-orphaned-list-face
+                                                   legend-face)))
+                (puthash sch-id (copy-marker start) arxana-scholium--display-index)))))))
+    (arxana-scholium--arrange-windows source-buffer buf)))
+
+;;;###autoload
+(defun arxana-scholium-display-visit ()
+  "Jump to the scholium's target region in the source buffer."
+  (interactive)
+  (let ((scholium (get-text-property (point) 'arxana-scholium))
+        (source-buffer arxana-scholium--display-source-buffer))
+    (unless scholium
+      (user-error "No scholium at point"))
+    (unless (buffer-live-p source-buffer)
+      (user-error "Source buffer is gone"))
+    (let ((bounds (arxana-links-verify-scholium source-buffer scholium)))
+      (unless bounds
+        (user-error "No anchor bounds for scholium"))
+      (pop-to-buffer source-buffer)
+      (goto-char (car bounds))
+      (push-mark (cdr bounds) t t))))
+
+;;;###autoload
+(defun arxana-scholium-show-for-doc (target-doc &optional source-buffer scholia)
+  "Load scholia for TARGET-DOC and display them with overlays."
+  (interactive "sTarget doc (docbook://... or code://...): ")
+  (unless (fboundp 'arxana-links-load-scholia-for-doc)
+    (user-error "Missing scholium loader: arxana-links-load-scholia-for-doc"))
+  (let* ((source (or source-buffer (current-buffer)))
+         (items (or scholia (arxana-links-load-scholia-for-doc target-doc))))
+    (with-current-buffer source
+      (when (fboundp 'arxana-scholium-clear-overlays)
+        (arxana-scholium-clear-overlays))
+      (dolist (scholium items)
+        (let ((bounds (arxana-links-verify-scholium source scholium)))
+          (when bounds
+            (arxana-scholium--add-overlay (car bounds) (cdr bounds) scholium)))))
+      (unless arxana-scholium--source-hook-installed
+        (add-hook 'post-command-hook #'arxana-scholium--sync-display-from-point nil t)
+        (setq arxana-scholium--source-hook-installed t))
+    (arxana-scholium--render-display target-doc items source)
+    items))
 
 ;;;###autoload
 (defun arxana-scholium-verify-all ()

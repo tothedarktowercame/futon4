@@ -56,6 +56,8 @@
 (declare-function arxana-docbook--entry-raw-text "arxana-docbook-core" (entry))
 (declare-function arxana-docbook--entry-function-name "arxana-docbook-core" (entry))
 (declare-function arxana-docbook--entry-mtime "arxana-docbook-core" (entry))
+(declare-function arxana-scholium-show-for-doc "arxana-scholium" (target-doc &optional source-buffer scholia))
+(declare-function arxana-links-load-scholia-for-doc "arxana-links" (doc-name))
 (declare-function arxana-docbook--normalize-timestamp "arxana-docbook-core" (value))
 (declare-function arxana-docbook--strip-org-metadata "arxana-docbook-core" (text))
 (declare-function arxana-docbook--strip-org-code-blocks "arxana-docbook-core" (text))
@@ -518,6 +520,38 @@
 (defun arxana-docbook-open-entry-raw (entry)
   "Open the raw JSON backing ENTRY (plist)."
   (arxana-docbook--view-raw entry))
+
+(defun arxana-docbook--merge-scholia (primary fallback)
+  "Merge scholia lists, deduping by :xt/id when available."
+  (let ((seen (make-hash-table :test 'equal))
+        (out nil))
+    (dolist (scholium (append primary fallback))
+      (let ((sch-id (or (plist-get scholium :xt/id) (plist-get scholium :name))))
+        (unless (gethash sch-id seen)
+          (puthash sch-id t seen)
+          (push scholium out))))
+    (nreverse out)))
+
+;;;###autoload
+(defun arxana-docbook-show-scholia ()
+  "Display scholia for the current docbook entry."
+  (interactive)
+  (let ((load-prefer-newer t))
+    (require 'arxana-scholium)
+    (require 'arxana-links))
+  (unless (fboundp 'arxana-scholium-show-for-doc)
+    (user-error "arxana-scholium-show-for-doc not loaded; re-run M-x arxana-load"))
+  (let ((book arxana-docbook--entry-book)
+        (doc-id arxana-docbook--entry-doc-id))
+    (unless (and book doc-id)
+      (user-error "No docbook entry active"))
+    (let* ((target-doc (format "docbook://%s/%s" book doc-id))
+           (buffer-doc (buffer-name (current-buffer)))
+           (primary (arxana-links-load-scholia-for-doc target-doc))
+           (fallback (unless (equal buffer-doc target-doc)
+                       (arxana-links-load-scholia-for-doc buffer-doc)))
+           (scholia (arxana-docbook--merge-scholia primary fallback)))
+      (arxana-scholium-show-for-doc target-doc (current-buffer) scholia))))
 
 (defun arxana-docbook-copy-location ()
   "Copy a location identifier for the current docbook entry."

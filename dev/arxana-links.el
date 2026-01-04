@@ -338,15 +338,19 @@ TARGET is a plist describing the target endpoint:
 
 FOUND-BY is the strategy ID that discovered this link.
 STATUS is one of `arxana-links-status-values' (default :confirmed)."
-  (list :xt/id (arxana-links--generate-id "link" source target)
-        :type "arxana/voiced-link"
-        :source source
-        :target target
-        :found-by found-by
-        :promoted-at (arxana-links--timestamp)
-        :promoted-by (or promoted-by user-login-name)
-        :status (or status :confirmed)
-        :annotations nil))
+  (let* ((symbol (plist-get source :symbol))
+         (name (when (and symbol (stringp symbol) (string-match-p "\\S-" symbol))
+                 (format "docs for %s" symbol))))
+    (list :xt/id (arxana-links--generate-id "link" source target)
+          :name name
+          :type "arxana/voiced-link"
+          :source source
+          :target target
+          :found-by found-by
+          :promoted-at (arxana-links--timestamp)
+          :promoted-by (or promoted-by user-login-name)
+          :status (or status :confirmed)
+          :annotations nil)))
 
 (defun arxana-links-persist-voiced-link (link)
   "Persist voiced LINK to Futon1."
@@ -792,15 +796,29 @@ The scholium uses content hash + context for resilient anchoring."
   (interactive)
   (unless (use-region-p)
     (user-error "Select a region first"))
-  (let* ((content (read-string "Annotation: "))
+  (let* ((raw (read-string "Annotation: "))
+         (content (string-trim raw))
          (anchor (arxana-links-make-anchor
                   (current-buffer)
                   (region-beginning)
                   (region-end)))
+         (entry-book (or (and (boundp 'arxana-docbook--entry-book)
+                              arxana-docbook--entry-book)
+                         (and (boundp 'arxana-docbook--entry-current)
+                              (plist-get arxana-docbook--entry-current :book))))
+         (entry-doc-id (or (and (boundp 'arxana-docbook--entry-doc-id)
+                                arxana-docbook--entry-doc-id)
+                           (and (boundp 'arxana-docbook--entry-current)
+                                (plist-get arxana-docbook--entry-current :doc-id))))
+         (target-doc (if (and entry-book entry-doc-id)
+                         (format "docbook://%s/%s" entry-book entry-doc-id)
+                       (buffer-name)))
          (scholium (arxana-links-make-scholium
-                    :target-doc (buffer-name)
+                    :target-doc target-doc
                     :anchor anchor
                     :content content)))
+    (when (string-empty-p content)
+      (user-error "Annotation required"))
     (if (arxana-links-persist-scholium scholium)
         (message "Scholium created with resilient anchor")
       (message "Failed to persist scholium"))))

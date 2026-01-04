@@ -50,8 +50,12 @@
   "Load the current `dev/` modules for interactive work."
   (arxana--ensure-version)
   (arxana--ensure-dependencies)
+  (setq load-prefer-newer t)
   ;; Prefer dev/staging implementations for interactive work during Phase 1.
   (dolist (dev-file '("dev/arxana-docbook.el"
+                      "dev/arxana-docbook-ui.el"
+                      "dev/arxana-links.el"
+                      "dev/arxana-scholium.el"
                       "dev/arxana-lab.el"
                       "dev/arxana-patterns.el"))
     (let ((path (expand-file-name dev-file arxana-root-directory)))
@@ -72,6 +76,7 @@
   (ignore-errors (require 'arxana-xtdb-browse))
   (ignore-errors (require 'arxana-patterns))
   (ignore-errors (require 'arxana-docbook))
+  (ignore-errors (require 'arxana-docbook-ui))
   (ignore-errors (require 'arxana-lab))
   (message "Loaded dev/ modules")
   t)

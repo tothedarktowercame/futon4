@@ -21,6 +21,8 @@ candidate. Run these with Futon1 available unless noted.
 2. Select a region and run `M-x arxana-links-demo-create-scholium`.
 3. Confirm it persists and reloads via:
    `M-: (arxana-links-load-scholia-for-doc "docbook://futon4/futon4-0cf1aad99fe8")`.
+4. Confirm scholia render in place and in the side window via:
+   `M-x arxana-docbook-show-scholia` (expect `*Arxana Scholia*` + highlights).
 
 ** Code target
 1. Open a source file (e.g., `dev/arxana-links.el`).
@@ -57,3 +59,129 @@ candidate. Run these with Futon1 available unless noted.
 1. Open the Arxana Browser → Docs → futon4.
 2. Verify the contents view and heading navigation.
 3. Export to Org and PDF from the docbook contents view.
+
+* Hard mode section
+
+** 1. Negative / failure paths
+
+Right now everything assumes the happy path.
+
+Add one explicit failure check per subsystem:
+
+Storage unreachable
+
+Stop Futon1.
+
+Attempt arxana-links-demo-create-scholium.
+
+Confirm:
+
+User-visible error
+
+No partial overlay left behind
+
+No buffer-local corruption
+
+Malformed target-doc
+
+Manually pass an invalid docbook:// or code:// URI to arxana-links-load-scholia-for-doc.
+
+Confirm empty result + warning, not hard error.
+
+** 2. Identity stability checks
+
+You test reload, but not identity invariants.
+
+Add:
+
+Create a scholium.
+
+Reload it twice.
+
+Confirm:
+
+:xt/id remains stable
+
+Anchor hash (or equivalent) remains stable unless buffer content changes
+
+This guards against accidental “new entity per load” regressions.
+
+** 3. Cross-buffer anchoring
+
+You currently test re-anchoring only within one buffer.
+
+Add:
+
+Create a scholium on a code region.
+
+Kill the buffer.
+
+Reopen the file from disk.
+
+Run arxana-scholium-verify-all.
+
+Confirm:
+
+Overlay reappears
+
+Anchor classification is correct (exact / fuzzy / orphaned)
+
+This matches real restart workflows better than in-buffer edits.
+
+** 4. Inclusion / transclusion ordering edge case
+
+Inclusion logic often breaks under nesting.
+
+Add one step:
+
+Include Article A into B.
+
+Transclude Article B into C.
+
+Refresh derivation preview.
+
+Confirm:
+
+Order is deterministic
+
+No duplicate scholia appear
+
+No infinite recursion markers
+
+** 5. Export fidelity spot-check
+
+Exports are currently only “does it run”.
+
+Add:
+
+Export to Org.
+
+Inspect:
+
+Scholium content present exactly once
+
+Anchors represented (IDs or comments)
+
+Export to PDF.
+
+Confirm:
+
+Scholium text rendered (even if flattened)
+
+No raw XTDB IDs leak visibly unless intended
+
+Optional structural refinement
+
+If you want to tighten this further without expanding scope:
+
+Add a final section: “Restart invariants”
+
+Restart Emacs
+
+Restart Futon1
+
+Reload a known docbook
+
+Confirm scholia + overlays rehydrate correctly
+
+That gives you a clean “cold start” gate before calling something a release candidate.
