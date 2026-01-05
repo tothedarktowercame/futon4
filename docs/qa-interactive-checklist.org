@@ -7,16 +7,19 @@
 This checklist captures interactive verification steps for the release
 candidate. Run these with Futon1 available unless noted.
 
-* Setup
+Coverage note: features called out in `./futon4/docs/RELEASE-CANDIDATE-1.1.md`
+should have at least one QA check (or an explicit "not tested" entry) here.
 
+* DONE 1. Setup
+  
 1. Start Futon1 (API on `http://localhost:8080`).
 2. In Emacs, load Futon4: `M-x arxana-load`.
 3. Set sync: `(setq futon4-base-url "http://localhost:8080/api/alpha")`
    and `(setq futon4-enable-sync t)`.
 
-* Scholium targets (links-backed)
+* DONE 2. Scholium targets (links-backed)
 
-** Docbook target
+** 2.1 Docbook target
 1. Open a docbook entry (e.g., `Quickstart`).
 2. Select a region and run `M-x arxana-links-demo-create-scholium`.
 3. Confirm it persists and reloads via:
@@ -24,13 +27,13 @@ candidate. Run these with Futon1 available unless noted.
 4. Confirm scholia render in place and in the side window via:
    `M-x arxana-docbook-show-scholia` (expect `*Arxana Scholia*` + highlights).
 
-** Code target
+** 2.2 Code target
 1. Open a source file (e.g., `dev/arxana-links.el`).
 2. Select a region and run `M-x arxana-links-demo-create-scholium`.
 3. Confirm it persists and reloads via:
    `M-: (arxana-links-load-scholia-for-doc "code://dev/arxana-links.el#arxana-links-make-scholium")`.
 
-** Scholium-on-scholium
+** 2.3 Scholium-on-scholium
 1. Create a scholium on any target (docbook or code as above).
 2. Capture its id from the returned plist using `M-:`:
    `M-: (plist-get (car (arxana-links-load-scholia-for-doc "docbook://futon4/futon4-0cf1aad99fe8")) :xt/id)`.
@@ -40,6 +43,7 @@ candidate. Run these with Futon1 available unless noted.
    `M-: (arxana-links-load-scholia-for-doc "<id>")`.
 
 * Region markup + overlays
+- [X]
 
 1. Select a region and run `M-x arxana-scholium-create-resilient`.
 2. Verify an overlay appears with the annotation tooltip.
@@ -47,6 +51,7 @@ candidate. Run these with Futon1 available unless noted.
 4. Confirm the overlay is re-anchored (anchored/fuzzy) or marked orphaned.
 
 * Inclusion/transclusion UX
+- [X]
 
 1. Register two articles with `make-current-buffer-into-article`.
 2. Run `M-x include-article` and verify inclusion markers.
@@ -56,9 +61,45 @@ candidate. Run these with Futon1 available unless noted.
 
 * Docbook browsing + exports
 
+** Basic operations
+
 1. Open the Arxana Browser → Docs → futon4.
 2. Verify the contents view and heading navigation.
 3. Export to Org and PDF from the docbook contents view.
+
+** Hyperlink quality
+
+Assess hyperlink quality for docbook entries, not content correctness.
+
+1. In `arxana://view/docbook-contents`, press `y` on several headings.
+   Confirm the URI is a `docbook://<book>/<doc-id>` that matches the book.
+2. Press `Y` and confirm it yields the same logical target as `y`
+   (or an explicit error if the higher-fidelity path is unavailable).
+3. Open a docbook entry and use `RET` on any inline link/URI.
+   Confirm it opens the intended target without creating a new frame.
+4. In `*Arxana Docbook*`, hover/cycle links and confirm the target buffer
+   is highlighted/selected consistently (no orphaned link state).
+5. In `*Arxana Code Docs*`, verify that symbol mentions in the preview
+   highlight as you move point within the corresponding defun.
+   Confirm link activation opens the right file/symbol.
+6. Cross-links: from a docbook entry that references a code file or symbol,
+   follow the link into the code buffer and confirm the paired docs view
+   shows the originating docbook entry highlighted.
+
+** Persisted hyperlink types
+
+Verify each supported persisted hyperlink type both works and is documented.
+
+1. Strategy (arxana/link-strategy): create/load via
+   `M-x arxana-links-demo-create-strategy`, then confirm it is listed in
+   `M-x arxana-links-status` and referenced in docs.
+2. Voiced link (arxana/voiced-link): promote a link with
+   `M-x arxana-links-demo-promote-link`, confirm it persists and renders.
+3. Surface form (arxana/surface-form): capture via
+   `M-x arxana-links-capture-surface-form`, confirm it persists and resolves.
+4. Scholium (arxana/scholium): covered in section 2; confirm it is documented.
+5. Embedding cache (arxana/embedding-cache): if enabled, confirm it persists and
+   is documented; if not enabled, note as explicitly unavailable.
 
 * Hard mode section
 
