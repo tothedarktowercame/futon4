@@ -1,13 +1,30 @@
 #+TITLE: Troubleshooting relations
 :PROPERTIES:
 :DOC_ID: futon4-49d2f0121730
+:ENTRY_ID: futon4-49d2f0121730::org
 :VERSION: org
 :OUTLINE_PATH: Troubleshooting relations
 :PATH_STRING: Troubleshooting relations
 :REPLACES: 
-:ENTRY_ID: futon4-49d2f0121730::org
 :END:
 
 * Context
-- (no summary yet)
+1. Verify `futon4-enable-sync` is non-nil and rerun the command that failed.
+2. Inspect `arxana-store-last-error` to see the HTTP method, reason, and any
+   context when a request returns `nil`.
+3. Use the relation browser commands above to confirm Futon is returning the
+   data you expect; the buffer will show âNo data returned from Futonâ when the
+   server was unreachable.
+4. Run the adjacency unit tests to prove scholium links are mirrored correctly:
+
+   ```bash
+   HOME=$PWD/.home-tmp EMACS_NATIVE_COMPILATION=0 emacs --batch \
+     -l arxana/dev/bootstrap.el \
+     -l arxana/test/arxana-adjacency-test.el \
+     -f ert-run-tests-batch-and-exit
+   ```
+
+   These tests stub the network layer and assert that `futon4--sync-about-links`
+   calls the new store helpers with derived ids, so failures often indicate an
+   unexpected change in the hook wiring.
 

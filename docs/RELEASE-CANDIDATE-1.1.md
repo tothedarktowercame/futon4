@@ -30,9 +30,8 @@ Think of it like a window manager widget tray — you populate it with whatever 
 - Systemd automation: `futon4/docs/docbook/futon0/futon0-b19b2b939d81.org`
 
 **Known limitations:**
-- Vitality indicators exist but are not yet integrated into a unified dashboard
-- Reflective and symbolic channels are only loosely coupled
-- Insights that arise in narrative form are not yet expressed in computational terms
+- Telemetry data stores are periodic JSON snapshots; real-time shared state is still pending
+- Some automation hooks remain stubby (backup status checks, boundary-evidence debt)
 
 ---
 
@@ -49,10 +48,8 @@ Includes an open-world NLP ingest pipeline (Stanford CoreNLP) for extracting ent
 - HTTP API surface: `futon4/docs/docbook/futon1/futon1-12e78e8a1316.org`
 
 **Known limitations:**
-- NLP interface and graph-memory module are functional but unevenly documented
-- Tests do not yet cover all intended entry points
-- HTTP API endpoint contracts and data shapes are scattered across READMEs rather than consolidated
-- Naming and configuration conventions show mild drift across modules
+- Running multiple Futon processes against the same data directory can trigger RocksDB lock errors
+- Open-world ingest treats questions as assertions; there is no question→Datalog mapping yet
 
 ---
 
@@ -70,9 +67,7 @@ This is not a research contribution to Active Inference theory — it's an appli
 
 **Known limitations:**
 - Formal semantics documentation incomplete
-- README observation vector is outdated (lists 13 keys, actual is 14)
 - White-space detection property tests missing
-- Policy goldens cover 5 scenarios; target is 10
 
 ---
 
@@ -91,9 +86,9 @@ The nervous system of the stack: a WebSocket/HTTP message bus (MUSN) connecting 
 - Pattern hints system: `futon4/docs/docbook/futon3/futon3-b3603516f181.org`
 
 **Known limitations:**
-- Pattern checks not yet tied into persistent storage (results live in local logs)
+- Tatami evidence does not yet flow back into pattern updates or storage-backed history
+- Checks are not yet tied into persistent storage
 - Proof-state histories need clearer structure for external consumption
-- Stable interfaces for coordinated reasoning with other futons still being built
 
 ---
 
@@ -119,10 +114,9 @@ Multiple HUD layers feed information into the interface:
 - Scholium authoring: `futon4/docs/docbook/futon4/futon4-1f2aeeba8966.org`
 
 **Known limitations:**
-- Inclusion/transclusion UX not fully wired (display buffer works; main buffer highlighting pending)
-- Modern import/export shims need documentation
-- Migration notes for historical datasets not yet written
-- No CI configuration; "revived" release not yet tagged
+- Inclusion/transclusion UX is still WIP
+- Import for modern doc formats is not working yet (export works)
+- QA is in progress; the "revived" release tag is not yet published
 
 ---
 
@@ -139,6 +133,10 @@ A future goal is unifying these into a machine-readable manifest where component
 - Self-verification that the running system matches its declared structure
 
 This closes the reflexivity loop: a semantic network that includes a model of itself.
+
+Post-release milestone: start the manifest with the evidence-backed map at
+`futon4/docs/evidence/rc-1.1-evidence.edn`, then evolve it into a full
+system self-description (components, interfaces, invariants) in Futon1.
 
 ### Futon 5 — Meta-Patterns and Cross-Domain Formalism
 

@@ -1,13 +1,14 @@
 #+TITLE: Possible future: Triple-store substrate
 :PROPERTIES:
 :DOC_ID: futon4-33f36cfcab5e
+:ENTRY_ID: futon4-33f36cfcab5e::org
 :VERSION: org
 :OUTLINE_PATH: Logical model / Storage substrates / Possible future: Triple-store substrate
 :PATH_STRING: Logical model / Storage substrates / Possible future: Triple-store substrate
 :REPLACES: 
-:ENTRY_ID: futon4-33f36cfcab5e::org
 :END:
 
 * Context
-- (no summary yet)
+- Direct RDF/quad representation of the same model â not implemented but it could be if we want it.
+- Again, we could in principle read and write external knowledge graphs (and integrate SPARQL tooling).
 

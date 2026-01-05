@@ -1,13 +1,88 @@
 #+TITLE: Tabulated UI & commands
 :PROPERTIES:
 :DOC_ID: futon4-b99525987fef
+:ENTRY_ID: futon4-b99525987fef::org
 :VERSION: org
 :OUTLINE_PATH: Browsing & relations / Tabulated UI & commands
 :PATH_STRING: Browsing & relations / Tabulated UI & commands
 :REPLACES: 
-:ENTRY_ID: futon4-b99525987fef::org
 :END:
 
 * Context
-- (no summary yet)
+The major mode uses `tabulated-list-mode` with shortcuts for refreshing,
+changing limits, inspecting raw payloads, and opening relation buffers.
+
+#+BEGIN_SRC emacs-lisp :tangle dev/arxana-xtdb-browse.el
+(defun arxana-xtdb-refresh (&optional limit)
+  "Refresh the XTDB browser contents with LIMIT rows."
+  (interactive)
+  (let* ((limit (or limit arxana-xtdb--current-limit))
+         (body (arxana-store-tail limit)))
+    (setq arxana-xtdb--current-limit limit
+          arxana-xtdb--tail-response body)
+    (let ((rows (arxana-xtdb--tail-rows (or body '()))))
+      (if rows
+          (progn
+            (setq tabulated-list-entries (arxana-xtdb--rows->entries rows))
+            (tabulated-list-print t)
+            (message "Fetched %d relations" (length rows)))
+        (setq tabulated-list-entries nil)
+        (tabulated-list-print t)
+        (message "No relations returned from Futon")))))
+
+(defun arxana-xtdb-browse-change-limit (limit)
+  "Set a new LIMIT for `/tail` results and refresh."
+  (interactive (list (read-number "Tail limit: " arxana-xtdb--current-limit)))
+  (arxana-xtdb-refresh limit))
+
+(defun arxana-xtdb-browse-inspect-raw ()
+  "Display the raw `/tail` payload for debugging."
+  (interactive)
+  (unless arxana-xtdb--tail-response
+    (user-error "No XTDB payload captured yet"))
+  (with-current-buffer (get-buffer-create "*Arxana XTDB Raw*")
+    (let ((inhibit-read-only t))
+      (erase-buffer)
+      (pp arxana-xtdb--tail-response (current-buffer))
+      (goto-char (point-min))
+      (view-mode 1))
+    (display-buffer (current-buffer))))
+
+(defvar arxana-xtdb-browse-mode-map
+  (let ((map (copy-keymap tabulated-list-mode-map)))
+    (define-key map (kbd "g") #'arxana-xtdb-refresh)
+    (define-key map (kbd "l") #'arxana-xtdb-browse-change-limit)
+    (define-key map (kbd "RET") #'arxana-xtdb-browse-show-ego)
+    (define-key map (kbd "s") #'arxana-xtdb-browse-open-source)
+    (define-key map (kbd "t") #'arxana-xtdb-browse-open-target)
+    (define-key map (kbd "R") #'arxana-xtdb-browse-inspect-raw)
+    map)
+  "Keymap for `arxana-xtdb-browse-mode'.")
+
+(define-derived-mode arxana-xtdb-browse-mode tabulated-list-mode "XTDB"
+  "Major mode for browsing Futon/XTDB relations."
+  (setq tabulated-list-format [("Seen" 18 t)
+                               ("Relation" 18 t)
+                               ("Source" 25 t)
+                               ("Target" 25 t)]
+        tabulated-list-padding 2
+        tabulated-list-sort-key (cons "Seen" nil))
+  (tabulated-list-init-header))
+
+;;;###autoload
+(defun arxana-xtdb-browse (&optional limit)
+  "List recent Futon relations using a tabulated UI.
+When LIMIT is provided (or via prefix), request that many rows."
+  (interactive (list (when current-prefix-arg
+                       (read-number "Tail limit: " arxana-xtdb-browse-default-limit))))
+  (let ((buffer (get-buffer-create arxana-xtdb-browse-buffer)))
+    (with-current-buffer buffer
+      (arxana-xtdb-browse-mode)
+      (arxana-xtdb-refresh limit))
+    (pop-to-buffer buffer)))
+
+(provide 'arxana-xtdb-browse)
+
+;;; arxana-xtdb-browse.el ends here
+#+END_SRC
 

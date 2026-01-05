@@ -360,12 +360,16 @@
 
 (defun arxana-docbook--latest-entry-for-heading (book heading)
   (let* ((latest (plist-get heading :latest))
-         (entry (and latest (arxana-docbook--normalize-latest-entry latest))))
-    (or entry
-        (when-let* ((doc-id (arxana-docbook--toc-doc-id heading))
-                    (entries (arxana-docbook--remote-heading book doc-id)))
-          (or (arxana-docbook--latest-non-lab entries)
-              (car entries))))))
+         (entry (and latest (arxana-docbook--normalize-latest-entry latest)))
+         (has-summary? (or (plist-get entry :summary-raw)
+                           (plist-get entry :summary))))
+    (cond
+      (has-summary? entry)
+      (t
+       (when-let* ((doc-id (arxana-docbook--toc-doc-id heading))
+                   (entries (arxana-docbook--remote-heading book doc-id)))
+         (or (arxana-docbook--latest-non-lab entries)
+             (car entries)))))))
 
 (defun arxana-docbook--entry-org-block (label text)
   (when (and text (not (string-empty-p (string-trim text))))

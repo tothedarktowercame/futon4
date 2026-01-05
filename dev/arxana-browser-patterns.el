@@ -22,6 +22,7 @@
 (declare-function arxana-browser--click-path "arxana-browser-core")
 (declare-function arxana-browser--item-at-point "arxana-browser-core")
 (declare-function arxana-browser--render "arxana-browser-core")
+;; Optional: backlink helpers live in arxana-org-links but not required here.
 
 (defvar arxana-browser--buffer)
 (defvar arxana-browser--stack)
@@ -114,6 +115,37 @@ Set to nil to disable persistence."
   '(:inherit mode-line))
 (defconst arxana-browser-patterns--header-dirty-face
   '(:inherit mode-line :foreground "orange"))
+
+(defconst arxana-browser-patterns--library-metadata-file ".arxana-language"
+  "Marker file recording Futon language details for a library directory.")
+
+(defvar-local arxana-browser-patterns--backlinks-overlay nil
+  "Overlay used to display pattern backlinks in filesystem buffers.")
+
+(defvar-local arxana-browser-patterns--backlinks-range nil
+  "Cons of markers delimiting the inline backlinks block in filesystem buffers.")
+
+(defvar-local arxana-browser-patterns--backlinks-pattern nil
+  "Pattern name currently associated with inline backlinks in this buffer.")
+
+(defvar-local arxana-browser-patterns--backlinks-generation 0
+  "Monotonic token used to ignore stale backlinks async responses.")
+
+(defvar-local arxana-browser-patterns--backlinks-cache nil
+  "Cached backlinks list for the current pattern buffer.")
+
+;; Hot reload safety: avoid void-variable errors in stale bytecode.
+(defvar start nil)
+(defvar end nil)
+(defvar block-start nil)
+(defvar block-end nil)
+
+(defvar arxana-browser-patterns--backlink-keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "RET") #'arxana-browser-patterns-open-backlink)
+    (define-key map [mouse-1] #'arxana-browser-patterns-open-backlink)
+    map)
+  "Keymap for clickable backlinks inserted into pattern buffers.")
 
 (defun arxana-browser-patterns--play-click ()
   (let ((path (arxana-browser--click-path)))
@@ -1239,10 +1271,395 @@ use that entry; otherwise prompt for a directory."
     (insert (format ":COMPONENT-PARENT: %s\n"
                     (or (plist-get component :parent-id) "")))
     (insert ":END:\n\n")
-    (insert text "\n\n")))
+    (let ((start (point)))
+      (insert text "\n\n")
+      (list :start start :end (point)))))
+
+(defun arxana-browser-patterns--pattern-backlinks-from-response (resp)
+  "Return a list of backlink plists parsed from RESP."
+  (let* ((ego (and resp (arxana-browser-patterns--alist :ego resp)))
+         (incoming (and ego (arxana-browser-patterns--alist :incoming ego)))
+         (links nil))
+    (dolist (row incoming (nreverse links))
+      (when (arxana-browser-patterns--relation-match-p
+             (arxana-browser-patterns--alist :relation row)
+             "arxana/pattern-link")
+        (let* ((entity (arxana-browser-patterns--alist :entity row))
+               (relation (arxana-browser-patterns--alist :relation row))
+               (row-props (and (arxana-browser-patterns--alist-like-p row)
+                               (arxana-browser-patterns--alist :props row)))
+               (props (and (arxana-browser-patterns--alist-like-p relation)
+                           (arxana-browser-patterns--alist :props relation)))
+               (props (or row-props
+                          props
+                          (and (arxana-browser-patterns--alist-like-p relation)
+                               (arxana-browser-patterns--alist :props/relations relation))))
+               (label (or (arxana-browser-patterns--entity-value entity :name :entity/name)
+                          (arxana-browser-patterns--entity-value entity :id :entity/id)
+                          "?"))
+               (eid (or (arxana-browser-patterns--entity-value entity :id :entity/id) ""))
+               (org-id (and (arxana-browser-patterns--alist-like-p props)
+                            (or (cdr (assoc 'org/id props))
+                                (cdr (assoc :org/id props)))))
+               (org-file (and (arxana-browser-patterns--alist-like-p props)
+                              (or (cdr (assoc 'org/file props))
+                                  (cdr (assoc :org/file props)))))
+               (org-todo (and (arxana-browser-patterns--alist-like-p props)
+                              (or (cdr (assoc 'org/todo props))
+                                  (cdr (assoc :org/todo props)))))
+               (org-heading (and (arxana-browser-patterns--alist-like-p props)
+                                 (or (cdr (assoc 'org/heading props))
+                                     (cdr (assoc :org/heading props)))))
+               (org-outline (and (arxana-browser-patterns--alist-like-p props)
+                                 (or (cdr (assoc 'org/outline props))
+                                     (cdr (assoc :org/outline props)))))
+               (org-scheduled (and (arxana-browser-patterns--alist-like-p props)
+                                   (or (cdr (assoc 'org/scheduled props))
+                                       (cdr (assoc :org/scheduled props))))))
+          (push (list :label label
+                      :entity-id eid
+                      :org-id org-id
+                      :org-file org-file
+                      :org/todo org-todo
+                      :org/heading org-heading
+                      :org/outline org-outline
+                      :org/scheduled org-scheduled)
+                links))))))
+
+(defun arxana-browser-patterns--pattern-backlinks (pattern-name)
+  "Return a list of backlink plists for PATTERN-NAME."
+  (let ((resp (ignore-errors (arxana-store-ego pattern-name arxana-browser-patterns-ego-limit))))
+    (arxana-browser-patterns--pattern-backlinks-from-response resp)))
+
+(defun arxana-browser-patterns--task-label (label)
+  "Return a readable task label derived from LABEL, or nil to skip."
+  (when (and (stringp label) (> (length label) 0))
+    (cond
+     ((string-prefix-p "org-task:" label) nil)
+     ((string-match-p "^[A-Z][0-9]Q[0-9]T[0-9]" label) nil)
+     ((string-match-p "^[0-9a-fA-F]\\{8\\}-[0-9a-fA-F]\\{4\\}-[0-9a-fA-F]\\{4\\}-[0-9a-fA-F]\\{4\\}-[0-9a-fA-F]\\{12\\}$" label) nil)
+     (t label))))
+
+(defun arxana-browser-patterns--backlink-label (entry)
+  "Return a display label for ENTRY, or nil to skip."
+  (let ((label (plist-get entry :label)))
+    (arxana-browser-patterns--task-label label)))
+
+(defun arxana-browser-patterns--next-steps-end ()
+  "Return cons of (POSITION . INDENT) after NEXT-STEPS block, or nil."
+  (save-excursion
+    (goto-char (point-min))
+    (when (re-search-forward "^[ \t]*\\+ NEXT-STEPS:" nil t)
+      (let ((indent (make-string (current-indentation) ?\s)))
+        (forward-line 1)
+        (while (and (not (eobp))
+                    (looking-at "^[ \t]*\\(\\+\\s-*\\)?next\\["))
+          (forward-line 1))
+        (cons (point) indent)))))
+
+(defun arxana-browser-patterns--next-steps-heading-end ()
+  "Return cons of (POSITION . INDENT) at the NEXT-STEPS heading line, or nil."
+  (save-excursion
+    (goto-char (point-min))
+    (when (re-search-forward "^[ \t]*\\+ NEXT-STEPS:" nil t)
+      (let ((indent (make-string (current-indentation) ?\s)))
+        (end-of-line)
+        (cons (point) indent)))))
+
+(defun arxana-browser-patterns--clear-backlinks-overlay ()
+  "Remove any existing backlinks overlay."
+  (when (overlayp arxana-browser-patterns--backlinks-overlay)
+    (delete-overlay arxana-browser-patterns--backlinks-overlay)
+    (setq arxana-browser-patterns--backlinks-overlay nil)))
+
+(defun arxana-browser-patterns--purge-backlinks-overlays ()
+  "Remove stale ORG-TODOS overlays from earlier runs."
+  (dolist (ov (overlays-in (point-min) (point-max)))
+    (let ((after (overlay-get ov 'after-string)))
+      (when (and (stringp after)
+                 (string-match-p "\\+ ORG-TODOS:" after))
+        (delete-overlay ov)))))
+
+(defun arxana-browser-patterns--clear-backlinks-inline ()
+  "Remove any inserted inline backlinks block."
+  (when (and arxana-browser-patterns--backlinks-range
+             (consp arxana-browser-patterns--backlinks-range))
+    (let ((start (car arxana-browser-patterns--backlinks-range))
+          (end (cdr arxana-browser-patterns--backlinks-range)))
+      (when (and (markerp start) (markerp end))
+        (let ((inhibit-read-only t))
+          (with-silent-modifications
+            (delete-region start end))))
+      (when (markerp start)
+        (set-marker start nil))
+      (when (markerp end)
+        (set-marker end nil))))
+  (setq arxana-browser-patterns--backlinks-range nil))
+
+(defun arxana-browser-patterns--purge-backlinks-blocks ()
+  "Remove all ORG-TODOS blocks in the current buffer."
+  (let ((inhibit-read-only t))
+    (with-silent-modifications
+      (save-excursion
+        (goto-char (point-min))
+        (while (re-search-forward "^[ \t]*\\+ ORG-TODOS:" nil t)
+          (let* ((indent (make-string (current-indentation) ?\s))
+                 (start (line-beginning-position))
+                 (end (save-excursion
+                        (forward-line 1)
+                        (while (and (not (eobp))
+                                    (or (looking-at "^[ \t]*$")
+                                        (looking-at (concat "^" (regexp-quote indent) "[ \t]*- "))
+                                        (looking-at (concat "^" (regexp-quote indent) "[ \t]+"))))
+                          (forward-line 1))
+                        (point))))
+            (delete-region start end)))))))
+
+(defun arxana-browser-patterns-open-backlink (&optional _event)
+  "Open the Org task associated with the backlink at point."
+  (interactive)
+  (let* ((pos (point))
+         (org-id (get-text-property pos 'arxana-org-id))
+         (org-file (get-text-property pos 'arxana-org-file))
+         (org-outline (get-text-property pos 'arxana-org-outline))
+         (org-heading (get-text-property pos 'arxana-org-heading)))
+    (cond
+     ((and org-id (require 'org-id nil t))
+      (org-id-goto org-id))
+     ((and org-file (file-exists-p org-file))
+      (find-file org-file)
+      (when (and (derived-mode-p 'org-mode)
+                 (or org-outline org-heading))
+        (cond
+         ((and org-outline (fboundp 'org-find-olp))
+          (let ((path (split-string org-outline " / " t)))
+            (when path
+              (org-find-olp path))))
+         ((and org-heading (fboundp 'org-find-exact-headline-in-buffer))
+          (org-find-exact-headline-in-buffer org-heading)))))
+     (t
+      (message "No Org target found for this backlink.")))))
+
+(defun arxana-browser-patterns--insert-backlinks-inline (pos indent text)
+  "Insert TEXT at POS with INDENT and return markers for the inserted block."
+  (let ((inhibit-read-only t)
+        (start nil)
+        (end nil))
+    (with-silent-modifications
+      (save-excursion
+        (goto-char pos)
+        (insert "\n")
+        (setq start (copy-marker (point) t))
+        (insert text)
+        (setq end (copy-marker (point) t))
+        (add-text-properties start end
+                             '(read-only t front-sticky t rear-nonsticky t))))
+    (set-buffer-modified-p nil)
+    (cons start end))
+
+(defun arxana-browser-patterns--insert-backlinks-block (pos indent backlinks pattern-name)
+  "Compatibility shim for older callers."
+  (arxana-browser-patterns--insert-backlinks-block-safe pos indent backlinks pattern-name))
+
+(defun arxana-browser-patterns--insert-backlinks-block-v2 (pos indent backlinks pattern-name)
+  "Insert a backlinks block at POS with INDENT; return markers for the block."
+  (let ((inhibit-read-only t)
+        (block-start nil)
+        (block-end nil)
+        (seen (make-hash-table :test 'equal)))
+    (with-silent-modifications
+      (save-excursion
+        (goto-char pos)
+        (insert "\n")
+        (setq block-start (copy-marker (point) t))
+        (insert (format "%s+ ORG-TODOS:\n" indent))
+        (dolist (entry backlinks)
+          (let ((label (arxana-browser-patterns--backlink-label entry)))
+            (when (and label (not (gethash label seen)))
+              (puthash label t seen)
+              (let ((line-start (point)))
+                (insert (format "%s  - %s" indent label))
+                (let ((line-end (point)))
+                  (make-text-button
+                   line-start line-end
+                   'action #'arxana-browser-patterns-open-backlink
+                   'follow-link t
+                   'help-echo "Open Org task"
+                   'keymap arxana-browser-patterns--backlink-keymap
+                   'arxana-org-id (plist-get entry :org-id)
+                   'arxana-org-file (plist-get entry :org-file)
+                   'arxana-hud-kind "org-task"
+                   'arxana-task-label label
+                   'arxana-task-entity (plist-get entry :entity-id)
+                   'arxana-org-outline (plist-get entry :org/outline)
+                   'arxana-org-heading (plist-get entry :org/heading)
+                   'arxana-hud-entry entry
+                   'arxana-hud-pattern pattern-name)))
+                (insert "\n")))))
+        (insert "\n")
+        (setq block-end (copy-marker (point) t))
+        (add-text-properties block-start block-end
+                             '(read-only t front-sticky t rear-nonsticky t))))
+    (set-buffer-modified-p nil)
+    (cons block-start block-end))
+
+(defun arxana-browser-patterns--insert-backlinks-block-safe (pos indent backlinks pattern-name)
+  "Insert backlinks block in a defensive way."
+  (let ((inhibit-read-only t)
+        (seen (make-hash-table :test 'equal))
+        (block-start nil)
+        (block-end nil))
+    (save-excursion
+      (goto-char pos)
+      (insert "\n")
+      (setq block-start (copy-marker (point) t))
+      (insert (format "%s+ ORG-TODOS:\n" indent))
+      (dolist (entry backlinks)
+        (let ((label (arxana-browser-patterns--backlink-label entry)))
+          (when (and label (not (gethash label seen)))
+            (puthash label t seen)
+            (let ((line-start (point)))
+              (insert (format "%s  - %s" indent label))
+              (let ((line-end (point)))
+                (make-text-button
+                 line-start line-end
+                 'action #'arxana-browser-patterns-open-backlink
+                 'follow-link t
+                 'help-echo "Open Org task"
+                 'keymap arxana-browser-patterns--backlink-keymap
+                 'arxana-org-id (plist-get entry :org-id)
+                 'arxana-org-file (plist-get entry :org-file)
+                 'arxana-hud-kind "org-task"
+                     'arxana-task-label label
+                     'arxana-task-entity (plist-get entry :entity-id)
+                     'arxana-org-outline (plist-get entry :org/outline)
+                     'arxana-org-heading (plist-get entry :org/heading)
+                     'arxana-hud-entry entry
+                     'arxana-hud-pattern pattern-name)))
+              (insert "\n")))))
+      (insert "\n")
+      (setq block-end (copy-marker (point) t))
+      (add-text-properties block-start block-end
+                           '(read-only t front-sticky t rear-nonsticky t)))
+    (set-buffer-modified-p nil)
+    (cons block-start block-end)))
+
+(defun arxana-browser-patterns--apply-backlinks-overlay (pattern-name)
+  "Display pattern backlinks after NEXT-STEPS in the current buffer."
+  (setq arxana-browser-patterns--backlinks-pattern pattern-name)
+  (setq arxana-browser-patterns--backlinks-generation
+        (1+ (or arxana-browser-patterns--backlinks-generation 0)))
+  (require 'arxana-browser-patterns-hud nil t)
+  (arxana-browser-patterns--clear-backlinks-overlay)
+  (arxana-browser-patterns--purge-backlinks-overlays)
+  (arxana-browser-patterns--clear-backlinks-inline)
+  (arxana-browser-patterns--purge-backlinks-blocks)
+  (let* ((buffer (current-buffer))
+         (generation arxana-browser-patterns--backlinks-generation)
+         (marker (arxana-browser-patterns--next-steps-end))
+         (heading (arxana-browser-patterns--next-steps-heading-end))
+         (pos (and marker (car marker)))
+         (indent (and marker (cdr marker)))
+         (use-heading (and pos (get-char-property pos 'invisible) heading))
+         (pos (if use-heading (car heading) pos))
+         (indent (if use-heading (cdr heading) indent)))
+    (unless pos
+      (message "No NEXT-STEPS block found for %s" pattern-name)
+      (cl-return-from arxana-browser-patterns--apply-backlinks-overlay nil))
+    (if (fboundp 'arxana-store-ego-async)
+        (arxana-store-ego-async
+         pattern-name
+         (lambda (resp status)
+           (when (buffer-live-p buffer)
+             (with-current-buffer buffer
+               (when (and (eq generation arxana-browser-patterns--backlinks-generation)
+                          (string= pattern-name arxana-browser-patterns--backlinks-pattern))
+                 (let ((backlinks (arxana-browser-patterns--pattern-backlinks-from-response resp)))
+                   (cond
+                    ((plist-get status :error)
+                     (message "Backlinks fetch failed: %s" (plist-get status :error)))
+                    ((not backlinks)
+                     (arxana-browser-patterns--clear-backlinks-inline)
+                     (arxana-browser-patterns--purge-backlinks-blocks)
+                     (setq arxana-browser-patterns--backlinks-cache nil)
+                     (message "No backlinks found for %s" pattern-name))
+                    (t
+                     (arxana-browser-patterns--clear-backlinks-inline)
+                     (arxana-browser-patterns--purge-backlinks-blocks)
+                     (let ((range (arxana-browser-patterns--insert-backlinks-block-safe
+                                   pos indent backlinks pattern-name)))
+                       (setq arxana-browser-patterns--backlinks-range range)
+                       (setq arxana-browser-patterns--backlinks-cache backlinks)
+                       (when (fboundp 'arxana-browser-patterns-hud-follow-mode)
+                         (arxana-browser-patterns-hud-follow-mode 1))))))))))
+         arxana-browser-patterns-ego-limit)
+      (let ((backlinks (arxana-browser-patterns--pattern-backlinks pattern-name)))
+        (if backlinks
+            (progn
+              (arxana-browser-patterns--clear-backlinks-inline)
+              (arxana-browser-patterns--purge-backlinks-blocks)
+              (let ((range (arxana-browser-patterns--insert-backlinks-block-safe
+                            pos indent backlinks pattern-name)))
+                (setq arxana-browser-patterns--backlinks-range range)
+                (setq arxana-browser-patterns--backlinks-cache backlinks)
+                (when (fboundp 'arxana-browser-patterns-hud-follow-mode)
+                  (arxana-browser-patterns-hud-follow-mode 1))))
+          (message "No backlinks found for %s" pattern-name))))))
+
+;;;###autoload
+(defun arxana-browser-patterns-apply-backlinks ()
+  "Apply backlinks overlay using the current buffer file name."
+  (interactive)
+  (let* ((path (or (buffer-file-name) ""))
+         (pattern-name (and (stringp path)
+                            (> (length path) 0)
+                            (arxana-patterns-ingest--derive-name-from-path path))))
+    (if (and pattern-name (not (string-empty-p pattern-name)))
+        (arxana-browser-patterns--apply-backlinks-overlay pattern-name)
+      (message "Could not derive pattern name for backlinks"))))
+
+(defun arxana-browser-patterns--insert-backlinks-after-next-steps (start end backlinks)
+  "Insert BACKLINKS after NEXT-STEPS between START and END."
+  (when (and backlinks start end (< start end))
+    (save-excursion
+      (goto-char start)
+      (when (re-search-forward "^[ \t]*\\+ NEXT-STEPS:" end t)
+        (let* ((indent (make-string (current-indentation) ?\s))
+               (item-indent (concat indent "    ")))
+          (forward-line 1)
+          (while (and (< (point) end)
+                      (looking-at "^[ \t]+\\(next\\[\\|- \\|\\*\\)"))
+            (forward-line 1))
+          (insert (format "%s+ ORG-TODOS:\n" indent))
+          (dolist (entry backlinks)
+            (let ((label (arxana-browser-patterns--backlink-label entry)))
+              (when label
+                (let ((line-start (point)))
+                  (insert (format "%s- %s" item-indent label))
+                  (let ((line-end (point)))
+                    (make-text-button
+                     line-start line-end
+                     'action #'arxana-browser-patterns-open-backlink
+                     'follow-link t
+                     'help-echo "Open Org task"
+                     'keymap arxana-browser-patterns--backlink-keymap
+                     'arxana-org-id (plist-get entry :org-id)
+                     'arxana-org-file (plist-get entry :org-file)
+                     'arxana-hud-kind "org-task"
+                     'arxana-task-label label
+                     'arxana-task-entity (plist-get entry :entity-id)
+                     'arxana-org-outline (plist-get entry :org/outline)
+                     'arxana-org-heading (plist-get entry :org/heading)
+                     'arxana-hud-entry entry
+                     'arxana-hud-pattern (or (and (boundp 'arxana-browser-patterns--pattern)
+                                                  (plist-get arxana-browser-patterns--pattern :name))
+                                             "")))
+                  (insert "\n")))))
+          (insert "\n"))))))
 
 (defun arxana-browser-patterns--render-pattern (pattern)
   (let* ((name (plist-get pattern :name))
+         (backlinks (arxana-browser-patterns--pattern-backlinks name))
          (buffer (get-buffer-create (format "*Arxana Pattern: %s*" name))))
     (with-current-buffer buffer
       (let ((inhibit-read-only t))
@@ -1253,11 +1670,22 @@ use that entry; otherwise prompt for a directory."
         (insert (format "#+PATTERN-TITLE: %s\n\n" (plist-get pattern :title)))
         (arxana-browser-patterns--insert-summary (plist-get pattern :summary))
         (dolist (component (plist-get pattern :components))
-          (arxana-browser-patterns--insert-component component))
+          (let ((region (arxana-browser-patterns--insert-component component)))
+            (when (and backlinks
+                       (string= (plist-get component :kind) "conclusion"))
+              (arxana-browser-patterns--insert-backlinks-after-next-steps
+               (plist-get region :start)
+               (plist-get region :end)
+               backlinks))))
         (goto-char (point-min))
         (org-mode)
         (arxana-browser-patterns-view-mode 1)
-        (setq-local arxana-browser-patterns--pattern pattern)))
+        (setq-local arxana-browser-patterns--pattern pattern)
+        (setq-local arxana-browser-patterns--backlinks-cache backlinks)
+        (when backlinks
+          (require 'arxana-browser-patterns-hud nil t)
+          (when (fboundp 'arxana-browser-patterns-hud-follow-mode)
+            (arxana-browser-patterns-hud-follow-mode 1)))))
     (pop-to-buffer buffer)))
 
 ;;;###autoload
@@ -1273,6 +1701,14 @@ use that entry; otherwise prompt for a directory."
     (arxana-flexiarg--ensure-flexiarg)
     (let ((buffer (find-file path)))
       (with-current-buffer buffer
+        (when (and (file-exists-p path)
+                   (> (file-attribute-size (file-attributes path)) 0)
+                   (= (buffer-size) 0))
+          (let ((inhibit-read-only t))
+            (erase-buffer)
+            (insert-file-contents path)
+            (set-visited-file-name path nil t)
+            (set-buffer-modified-p nil)))
         (let ((was-modified (buffer-modified-p)))
           (when (fboundp 'flexiarg-mode)
             (flexiarg-mode))
@@ -1280,7 +1716,14 @@ use that entry; otherwise prompt for a directory."
           (unless was-modified
             (setq-local arxana-flexiarg--last-sync-errors nil)
             (set-buffer-modified-p nil)
-            (arxana-flexiarg--update-file-header-state))))
+            (arxana-flexiarg--update-file-header-state)))
+        (let* ((pattern-name (if (and name-or-path (file-exists-p name-or-path))
+                                 (arxana-patterns-ingest--derive-name-from-path path)
+                               name-or-path)))
+          (when (and pattern-name (not (string-empty-p pattern-name)))
+            (arxana-browser-patterns--apply-backlinks-overlay pattern-name))))
+      (with-current-buffer buffer
+        (goto-char (point-min)))
       (pop-to-buffer buffer)
       buffer)))
 

@@ -1,13 +1,46 @@
 #+TITLE: Formatting helpers
 :PROPERTIES:
 :DOC_ID: futon4-b0879f2e4b40
+:ENTRY_ID: futon4-b0879f2e4b40::org
 :VERSION: org
 :OUTLINE_PATH: Browsing & relations / Formatting helpers
 :PATH_STRING: Browsing & relations / Formatting helpers
 :REPLACES: 
-:ENTRY_ID: futon4-b0879f2e4b40::org
 :END:
 
 * Context
-- (no summary yet)
+Before we render anything we normalize type labels, build friendly names,
+and provide helpers for inserting sections into the buffer.
+
+#+BEGIN_SRC emacs-lisp :tangle dev/arxana-relations.el
+(defun arxana-relations--type-label (type)
+  (cond
+   ((keywordp type) (substring (symbol-name type) 1))
+   ((symbolp type) (symbol-name type))
+   ((stringp type) type)
+   (t (format "%s" type))))
+
+(defun arxana-relations--name-with-type (name type)
+  (if (and name type)
+      (format "%s (%s)" name (arxana-relations--type-label type))
+    (or name "?")))
+
+(defun arxana-relations--entity-name (entity)
+  (or (alist-get :entity/name entity)
+      (alist-get :name entity)))
+
+(defun arxana-relations--entity-type (entity)
+  (or (alist-get :entity/type entity)
+      (alist-get :type entity)))
+
+(defun arxana-relations--insert-line (fmt &rest args)
+  (insert (apply #'format (concat fmt "\n") args)))
+
+(defun arxana-relations--insert-section (title lines)
+  (arxana-relations--insert-line "%s" title)
+  (if (seq-empty-p lines)
+      (arxana-relations--insert-line "  (none)")
+    (dolist (line lines)
+      (arxana-relations--insert-line "  - %s" line))))
+#+END_SRC
 

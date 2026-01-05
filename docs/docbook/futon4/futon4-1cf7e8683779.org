@@ -1,13 +1,14 @@
 #+TITLE: Export helpers
 :PROPERTIES:
 :DOC_ID: futon4-1cf7e8683779
+:ENTRY_ID: futon4-1cf7e8683779::org
 :VERSION: org
 :OUTLINE_PATH: Org imports / exports & snapshots / Export helpers
 :PATH_STRING: Org imports / exports & snapshots / Export helpers
 :REPLACES: 
-:ENTRY_ID: futon4-1cf7e8683779::org
 :END:
 
+* Context
 * Context
 Export helpers produce readable manuals from the docbook store. The preferred
 targets are:
@@ -37,3 +38,4 @@ Exports default to `docs/docbook/<book>/<book>.org` (and `.pdf`).
   LaTeX engine).
 - For remote-sourced exports, enable sync and point `futon4-base-url` at the
   Futon1 API.
+

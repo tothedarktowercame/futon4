@@ -19,7 +19,9 @@
   (with-current-buffer (get-buffer-create arxana-browser--buffer)
     (setq arxana-browser--stack nil
           arxana-browser--context nil))
-  (arxana-browser--render))
+  (arxana-browser--render)
+  (when (fboundp 'arxana-ui-refresh)
+    (arxana-ui-refresh)))
 
 ;;;###autoload
 (defalias 'arxana-patterns-browse #'arxana-browser-browse)

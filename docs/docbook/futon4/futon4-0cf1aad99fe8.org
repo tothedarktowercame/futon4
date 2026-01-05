@@ -1,13 +1,23 @@
 #+TITLE: Quickstart
 :PROPERTIES:
 :DOC_ID: futon4-0cf1aad99fe8
+:ENTRY_ID: futon4-0cf1aad99fe8::org
 :VERSION: org
 :OUTLINE_PATH: Quickstart
 :PATH_STRING: Quickstart
 :REPLACES: 
-:ENTRY_ID: futon4-0cf1aad99fe8::org
 :END:
 
 * Context
-- (no summary yet)
+- Start Futon1 locally (`http://localhost:8080`).
+- `M-x load-file` â `arxana/dev/bootstrap.el`
+- `M-x arxana-build` (use `C-u` to force tangling).
+- `(setq futon4-base-url "http://localhost:8080/api/alpha")`
+- `(setq futon4-enable-sync t)`
+- Register buffers: `(make-current-buffer-into-article "Demo")`
+- Capture scholia: `(scholium "demo/link" "Note" '(("Demo")))`
+
+#+BEGIN_SRC emacs-lisp :tangle dev/bootstrap2.el
+(load (expand-file-name "dev/bootstrap.el" default-directory))
+#+END_SRC
 

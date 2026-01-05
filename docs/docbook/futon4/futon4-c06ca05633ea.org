@@ -1,13 +1,33 @@
 #+TITLE: Entry points
 :PROPERTIES:
 :DOC_ID: futon4-c06ca05633ea
+:ENTRY_ID: futon4-c06ca05633ea::org
 :VERSION: org
 :OUTLINE_PATH: Entry points
 :PATH_STRING: Entry points
 :REPLACES: 
-:ENTRY_ID: futon4-c06ca05633ea::org
 :END:
 
 * Context
-- (no summary yet)
+- =arxana-store-ensure-article= — Ensure an entity exists for an article name/path; Route: =POST /entity=; Verify: =curl -s -X POST "$BASE/entity" -H 'Content-Type: application/json' -d '{"id":"...","name":"...","type":"arxana/article"}'=
+- =arxana-store-upsert-scholium= — Mirror a scholium-style relation between two articles; Route: =POST /relation=; Verify: =curl -s -X POST "$BASE/relation" -H 'Content-Type: application/json' -d '{"type":"arxana/scholium","src":"...","dst":"..."}'=
+- =arxana-store-post-hyperedge= — Publish multi-end inclusion/derivation hyperedges with spans + provenance; Route: =POST /hyperedge=; Verify: =curl -s -X POST "$BASE/hyperedge" -H 'Content-Type: application/json' -d '{"type":"arxana/transclusion","hx/type":":hx/transclusion","hx/endpoints":[{"role":":role/source","entity":"..."},{"role":":role/target","entity":"..."},{"role":":role/passage","data":{"article":"...","begin":0,"end":42}}],"props":{"label":"(passage ...)","scholium/type":"derives-from"}}'=
+- =arxana-store-save-snapshot= — Request an XTDB snapshot (=all= history vs =latest= revisions); Route: =POST /snapshot=; Verify: =curl -s -X POST "$BASE/snapshot" -H 'Content-Type: application/json' -d '{"scope":"all","label":"nightly"}'=
+- =arxana-store-restore-snapshot= — Rehydrate Futon/XTDB from a recorded snapshot id; Route: =POST /snapshot/restore=; Verify: =curl -s -X POST "$BASE/snapshot/restore" -H 'Content-Type: application/json' -d '{"action":"restore","scope":"all","snapshot/id":"xtdb:snapshot/2024-11-14"}'=
+- =arxana-export-org-directory= — Export the current article table as =.org= files + manifest; Local: =M-x arxana-export-org-directory= -> pick destination & scope.
+- =arxana-patterns-open= — Fetch Futon pattern library entries (and edit them) inside Emacs; Local: =M-x arxana-patterns-open= -> enter pattern slug, edit headings, =C-c C-s= to sync.
 
+=MANIFEST.org= now captures a sortable article table, per-article hyperedge
+summaries (inclusion/transclusion passages), and a label index so the
+iPod-style browser can jump through categories offline. Those sections live
+alongside the snapshot metadata, so bundles carry both provenance and enough
+navigation hints to explore the export without Emacs.
+
+- =arxana-store-fetch-entity= — Fetch the latest copy of a Futon entity; Route: =GET /entity/:id=; Verify: =curl -s "$BASE/entity/<url-encoded-id>" | jq '.'=
+- =arxana-store-entity-history= — Inspect prior versions of an entity; Route: =GET /entities/history/:id?limit=n=; Verify: =curl -s "$BASE/entities/history/<id>?limit=5" | jq '.versions'=
+- =arxana-store-ego= — List relations touching a given article (wrapper around Futon's =/ego=); Route: =GET /ego/:name=; Verify: =curl -s "$BASE/ego/Demo%20Article" | jq '.ego.links'=
+- =arxana-store-cooccur= — Fetch entities that co-occur with the named article; Route: =GET /cooccur/:name=; Verify: =curl -s "$BASE/cooccur/Demo%20Article" | jq '.rows'=
+- =arxana-store-tail= — Show the latest Futon relations (recent tail); Route: =GET /tail?limit=n=; Verify: =curl -s "$BASE/tail?limit=5" | jq '.relations'=
+- =arxana-store-sync-current-article= — Force-sync the current buffer's metadata and status; Route: =POST /entity=; Verify: =curl -s "$BASE/entity/<id>" | jq '.entity.props'= to confirm the new =metadata= / =status= values.
+
+Replace =$BASE= with =http://localhost:8080/api/alpha= (or your chosen host).

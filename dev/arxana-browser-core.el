@@ -12,8 +12,10 @@
 (require 'url-util)
 
 (require 'arxana-store)
+(require 'arxana-ui nil t)
 
 (declare-function arxana-docbook--source-brief "arxana-docbook" (&optional book))
+(declare-function arxana-docbook--data-source "arxana-docbook-remote" (&optional book))
 (declare-function arxana-store-sync-enabled-p "arxana-store")
 (declare-function arxana-patterns-ingest-language-rows "arxana-patterns-ingest")
 
@@ -303,24 +305,32 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
    ((eq (plist-get context :view) 'media-publication)
     "Publication tracks — RET plays, p plays, s stops. LEFT/b returns.")
    ((eq (plist-get context :view) 'docbook)
-    (format "Doc books — select a book, then Contents or Recent. %s. LEFT/b returns."
-            (arxana-docbook--source-brief)))
+    (let ((line (format "Doc books — select a book, then Contents or Recent. %s. LEFT/b returns."
+                        (arxana-docbook--source-brief))))
+      (arxana-browser--docbook-header line nil)))
    ((eq (plist-get context :view) 'docbook-book)
-    (format "Doc book views — pick Contents or Recent. %s. LEFT/b returns."
-            (arxana-docbook--source-brief (plist-get context :book))))
+    (let* ((book (plist-get context :book))
+           (line (format "Doc book views — pick Contents or Recent. %s. LEFT/b returns."
+                         (arxana-docbook--source-brief book))))
+      (arxana-browser--docbook-header line book)))
    ((eq (plist-get context :view) 'docbook-contents)
     (let* ((book (plist-get context :book))
            (dirty (arxana-browser--docbook-contents-dirty-p book))
-           (prefix (if dirty "[dirty] " "")))
-      (format "%sDoc book contents — RET opens heading; C-c C-s syncs order; %s. LEFT/b returns."
-              prefix
-              (arxana-docbook--source-brief book))))
+           (prefix (if dirty "[dirty] " ""))
+           (line (format "%sDoc book contents — RET opens heading; C-c C-s syncs order; %s. LEFT/b returns."
+                         prefix
+                         (arxana-docbook--source-brief book))))
+      (arxana-browser--docbook-header line book dirty)))
    ((eq (plist-get context :view) 'docbook-section)
-    (format "Doc book section — RET opens entry; %s. LEFT/b returns."
-            (arxana-docbook--source-brief (plist-get context :book))))
+    (let* ((book (plist-get context :book))
+           (line (format "Doc book section — RET opens entry; %s. LEFT/b returns."
+                         (arxana-docbook--source-brief book))))
+      (arxana-browser--docbook-header line book)))
    ((eq (plist-get context :view) 'docbook-recent)
-    (format "Doc book recent entries — RET opens entry; %s. LEFT/b returns."
-            (arxana-docbook--source-brief (plist-get context :book))))
+    (let* ((book (plist-get context :book))
+           (line (format "Doc book recent entries — RET opens entry; %s. LEFT/b returns."
+                         (arxana-docbook--source-brief book))))
+      (arxana-browser--docbook-header line book)))
    ((eq (plist-get context :view) 'lab)
     "Lab notebook — RET stub; v trace, r raw, d draft. LEFT/b returns.")
    ((eq (plist-get context :view) 'lab-files)
@@ -338,21 +348,50 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
     (let ((title (or (plist-get context :title) (plist-get context :label))))
       (format "%s — RET/right opens pattern, LEFT/b returns." title)))))
 
+(defun arxana-browser--docbook-header (line &optional book dirty)
+  (let* ((book (or book "futon4"))
+         (source (and book (arxana-docbook--data-source book)))
+         (face (pcase source
+                 (:storage 'arxana-docbook-source-green)
+                 (:filesystem 'arxana-docbook-source-amber)
+                 (:state 'arxana-docbook-source-red)
+                 (_ nil))))
+    (cond
+     (dirty
+      (propertize line 'face 'arxana-browser--dirty-header))
+     (face (propertize line 'face face))
+     (t line))))
+
 (defun arxana-browser--decorate-header-line (context total)
   "Add status markers to the tabulated header line for CONTEXT."
   (when (and context (eq (plist-get context :view) 'docbook-contents))
     (let* ((book (plist-get context :book))
            (dirty (arxana-browser--docbook-contents-dirty-p book))
+           (source (arxana-docbook--data-source book))
+           (source-face (pcase source
+                          (:storage 'arxana-docbook-source-green)
+                          (:filesystem 'arxana-docbook-source-amber)
+                          (:state 'arxana-docbook-source-red)
+                          (_ nil)))
+           (status (arxana-browser--header-line context total))
            (cols (and (listp header-line-format)
                       (car (last header-line-format)))))
       (when cols
         (setq cols (copy-sequence cols))
+        (when source-face
+          (add-face-text-property 0 (length cols) source-face t cols))
         (when dirty
           (add-face-text-property 0 (length cols)
                                   'arxana-browser--dirty-header
                                   t cols))
-        (setq header-line-format (list "" 'header-line-indent cols)))))
-  (setq mode-line-format (list " " (arxana-browser--header-line context total))))
+        (setq header-line-format (list status " " 'header-line-indent cols))
+        (setq mode-line-format '(" ")))))
+  (when (or (not context)
+            (not (eq (plist-get context :view) 'docbook-contents)))
+    (setq mode-line-format (list " " (arxana-browser--header-line context total))))
+  (when (fboundp 'arxana-ui-mark-managed)
+    (setq-local arxana-ui--base-header-line header-line-format)
+    (arxana-ui-mark-managed "Arxana Browser")))
 
 (defun arxana-browser--root-items ()
   (arxana-browser--require-patterns)
@@ -676,8 +715,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                        (clamped (if (> count 0)
                                     (max 0 (min desired-row (1- count)))
                                   0)))
-                  (arxana-browser--goto-row clamped))))))
-      (display-buffer buffer)))))
+                  (arxana-browser--goto-row clamped)))))))
+      (display-buffer buffer)
+      (when (fboundp 'arxana-ui-refresh)
+        (arxana-ui-refresh)))))
 
 (defun arxana-browser--visit ()
   (interactive)
@@ -939,6 +980,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                                       (eq (plist-get context :type) 'docbook-entry)))
                      (or (arxana-browser--docbook-location context)
                          (and book (format "docbook://%s" book))))
+                    ((and context (memq (plist-get context :view)
+                                        '(docbook docbook-book docbook-contents docbook-recent)))
+                     (and book (format "docbook://%s" book)))
                     ((and context (plist-get context :media-filter))
                      (arxana-browser--media-filter-location (plist-get context :media-filter)))
                     ((and context (eq (plist-get context :view) 'media-ep-staging-ep)
@@ -1114,6 +1158,7 @@ returning to the top-level list."
     (define-key map (kbd "C-c C-s") #'arxana-browser-docbook-sync-order)
     (define-key map (kbd "C-c C-l") #'arxana-media-lyrics-refresh-at-point)
     (define-key map (kbd "C-c C-L") #'arxana-media-lyrics-adopt-entity-at-point)
+    (define-key map (kbd "<left>") #'arxana-browser--up)
     (define-key map (kbd "q") #'quit-window)
     map))
 
@@ -1137,7 +1182,9 @@ returning to the top-level list."
                (hash-table-p arxana-media--marked))
     (setq-local arxana-media--marked (make-hash-table :test 'equal)))
   (setq-local hl-line-face 'arxana-browser--highlight)
-  (hl-line-mode 1))
+  (hl-line-mode 1)
+  (when (fboundp 'arxana-ui-mark-managed)
+    (arxana-ui-mark-managed "Arxana Browser")))
 
 (defun arxana-browser--stage-to-ep ()
   (interactive)

@@ -1,13 +1,14 @@
 #+TITLE: Storage bridge
 :PROPERTIES:
 :DOC_ID: futon4-00eed2b34c80
+:ENTRY_ID: futon4-00eed2b34c80::org
 :VERSION: org
 :OUTLINE_PATH: Storage bridge
 :PATH_STRING: Storage bridge
 :REPLACES: 
-:ENTRY_ID: futon4-00eed2b34c80::org
 :END:
 
+* Context
 * Context
 This section documents developer-facing storage concepts and the persistence
 contract used by the Futon4 client when it synchronizes with Futon1/XTDB.
@@ -54,3 +55,4 @@ Authoring is scholium-first with region selection:
 Anchors are resilient: a content hash plus contextual windows let Arxana re-find
 regions after minor edits. Surface forms and embeddings guide link suggestions
 and future automation.
+

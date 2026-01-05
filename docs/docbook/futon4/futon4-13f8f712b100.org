@@ -1,13 +1,15 @@
 #+TITLE: Historical: Relational substrate
 :PROPERTIES:
 :DOC_ID: futon4-13f8f712b100
+:ENTRY_ID: futon4-13f8f712b100::org
 :VERSION: org
 :OUTLINE_PATH: Logical model / Storage substrates / Historical: Relational substrate
 :PATH_STRING: Logical model / Storage substrates / Historical: Relational substrate
 :REPLACES: 
-:ENTRY_ID: futon4-13f8f712b100::org
 :END:
 
 * Context
-- (no summary yet)
+- Common Lisp provided a bridge to SQL that encode relations in tables.
+- Semantics are those of a structured triple store: subjects, predicates, objects, plus spans and provenance.
+- Suitable for durability, multi-user access, and heavy queries.
 

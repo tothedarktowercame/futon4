@@ -51,10 +51,14 @@
   (arxana--ensure-version)
   (arxana--ensure-dependencies)
   (setq load-prefer-newer t)
+  (let ((books-root (expand-file-name "docs/docbook" arxana-root-directory)))
+    (when (file-directory-p books-root)
+      (setq arxana-docbook-books-root books-root)))
   ;; Prefer dev/staging implementations for interactive work during Phase 1.
   (dolist (dev-file '("dev/arxana-docbook.el"
                       "dev/arxana-docbook-ui.el"
                       "dev/arxana-links.el"
+                      "dev/arxana-org-links.el"
                       "dev/arxana-scholium.el"
                       "dev/arxana-lab.el"
                       "dev/arxana-patterns.el"))
@@ -63,6 +67,7 @@
         (load path nil t))))
   (ignore-errors (require 'arxana-store))
   (ignore-errors (require 'arxana-links))
+  (ignore-errors (require 'arxana-org-links))
   (ignore-errors (require 'arxana-article))
   (ignore-errors (require 'arxana-scholium))
   (ignore-errors (require 'arxana-relations))
@@ -87,6 +92,63 @@
   (when arxana-allow-tangle
     (message "arxana-allow-tangle is set, but this toggle is ignored"))
   (arxana-load-dev))
+
+(defun arxana-reload-harder ()
+  "Unload and reload dev modules to ensure updated definitions take effect."
+  (interactive)
+  (let* ((dev-files '("dev/arxana-docbook.el"
+                      "dev/arxana-docbook-ui.el"
+                      "dev/arxana-docbook-checkout.el"
+                      "dev/arxana-docbook-remote.el"
+                      "dev/arxana-lab.el"
+                      "dev/arxana-patterns.el"
+                      "dev/arxana-store.el"
+                      "dev/arxana-links.el"
+                      "dev/arxana-org-links.el"
+                      "dev/arxana-article.el"
+                      "dev/arxana-scholium.el"
+                      "dev/arxana-relations.el"
+                      "dev/arxana-browser.el"
+                      "dev/arxana-derivation.el"
+                      "dev/arxana-saving.el"
+                      "dev/arxana-inclusion.el"
+                      "dev/arxana-import.el"
+                      "dev/arxana-articles-export.el"
+                      "dev/arxana-compat.el"
+                      "dev/arxana-xtdb-browse.el"
+                      "dev/arxana-media.el"
+                      "dev/arxana-browser-core.el"))
+         (features '(arxana-docbook arxana-docbook-ui arxana-docbook-checkout
+                     arxana-docbook-remote arxana-lab arxana-patterns
+                     arxana-store arxana-links arxana-article arxana-scholium
+                     arxana-org-links arxana-relations arxana-browser arxana-derivation
+                     arxana-saving arxana-inclusion arxana-import
+                     arxana-articles-export arxana-compat arxana-xtdb-browse
+                     arxana-media arxana-browser-core)))
+    (dolist (feat features)
+      (when (featurep feat)
+        (ignore-errors (unload-feature feat t))))
+    (dolist (dev-file dev-files)
+      (let ((path (expand-file-name dev-file arxana-root-directory)))
+        (when (file-readable-p path)
+          (load-file path))))
+    (arxana-load-dev)
+    (message "Reloaded dev/ modules (hard)")))
+
+(defun arxana-reload-after-hot-reload (&optional file)
+  "Refresh Arxana modules after a hot reload of FILE.
+Designed for integration with futon0/contrib hot reload hooks."
+  (let* ((root (and (boundp 'arxana-root-directory) arxana-root-directory))
+         (root* (and root (file-truename root)))
+         (file* (and file (file-truename file)))
+         (under-root (and root* file* (string-prefix-p root* file*))))
+    (when (or (null file) under-root)
+      (arxana-load-dev)
+      (dolist (buf (buffer-list))
+        (with-current-buffer buf
+          (when (derived-mode-p 'arxana-browser-mode)
+            (ignore-errors (arxana-browser--render)))))
+      (message "Arxana hot reload applied."))))
 
 (defun arxana-batch-load ()
   "Batch entry point: load `dev/` sources, then exit."

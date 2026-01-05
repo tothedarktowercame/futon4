@@ -1,13 +1,22 @@
 #+TITLE: Emacs client (Arxana classic)
 :PROPERTIES:
 :DOC_ID: futon4-7837fd1ae096
+:ENTRY_ID: futon4-7837fd1ae096::org
 :VERSION: org
 :OUTLINE_PATH: Logical model / Emacs client (Arxana classic)
 :PATH_STRING: Logical model / Emacs client (Arxana classic)
 :REPLACES: 
-:ENTRY_ID: futon4-7837fd1ae096::org
 :END:
 
 * Context
-- (no summary yet)
+The Emacs Lisp implementation in this repository provides:
+
+- Interactive creation and editing of articles and scholia.
+- Browsing modes over the in-memory graph.
+- Operations for inclusion, derivation, and provenance as events.
+- Import/export for specific document formats (historically LaTeX/Org).
+
+Internally, it maintains the logical model in memory and (optionally)
+syncs with external substrates (files, SQL backend).
+nil
 

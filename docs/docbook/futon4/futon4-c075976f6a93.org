@@ -1,13 +1,60 @@
 #+TITLE: Catalog & label menus
 :PROPERTIES:
 :DOC_ID: futon4-c075976f6a93
+:ENTRY_ID: futon4-c075976f6a93::org
 :VERSION: org
 :OUTLINE_PATH: Browsing & relations / Catalog & label menus
 :PATH_STRING: Browsing & relations / Catalog & label menus
 :REPLACES: 
-:ENTRY_ID: futon4-c075976f6a93::org
 :END:
 
 * Context
-- (no summary yet)
+The Part VI menus still work via modern commands:
+
+#+BEGIN_SRC emacs-lisp :tangle dev/arxana-browse.el
+;;; arxana-browse.el --- Part VI browsing helpers -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Convenience wrappers that expose the legacy Part VI browsing flows via
+;; modern `arxana-*' commands. Contributors can continue to use catalog and
+;; label menus without memorising the old entry points.
+
+;;; Code:
+
+(require 'cl-lib)
+(require 'subr-x)
+
+(defgroup arxana-browse nil
+  "Part VI browsing entry points."
+  :group 'arxana)
+
+(declare-function article-menu-listing "arxana-tangled" (&optional subset accessors))
+(declare-function article-menu-list-all-articles "arxana-tangled" () t)
+(declare-function article-menu-list-labels "arxana-tangled" () t)
+
+(defun arxana-browse--ensure (fn)
+  "Signal a user error unless FN is bound."
+  (unless (fboundp fn)
+    (user-error "Browsing helpers are unavailable; run `arxana-build' first"))
+  fn)
+
+;;;###autoload
+(defun arxana-browse-open-catalog (&optional include-all)
+  "Open the article catalog. With INCLUDE-ALL, show every article."
+  (interactive "P")
+  (if include-all
+      (progn
+        (arxana-browse--ensure 'article-menu-list-all-articles)
+        (article-menu-list-all-articles))
+    (progn
+      (arxana-browse--ensure 'article-menu-listing)
+      (article-menu-listing))))
+
+;;;###autoload
+(defun arxana-browse-open-labels ()
+  "List label articles in the catalog menu."
+  (interactive)
+  (arxana-browse--ensure 'article-menu-list-labels)
+  (article-menu-list-labels))
+#+END_SRC
 

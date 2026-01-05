@@ -7,6 +7,7 @@
 
 (require 'cl-lib)
 (require 'subr-x)
+(require 'arxana-ui nil t)
 
 ;; Link persistence support
 (declare-function arxana-links-make-strategy "arxana-links")
@@ -18,6 +19,7 @@
 (declare-function arxana-docbook--entry-source-path "arxana-docbook-core" (entry))
 (declare-function arxana-docbook--entry-raw-text "arxana-docbook-core" (entry))
 (declare-function arxana-docbook--entry-content "arxana-docbook-core" (entry))
+(declare-function arxana-docbook--entry-function-name "arxana-docbook-core" (entry))
 
 (defgroup arxana-browser-code nil
   "Code browser helpers for Arxana."
@@ -26,6 +28,11 @@
 (defcustom arxana-browser-code-docbook "futon4"
   "Docbook name to search for code-related entries."
   :type 'string
+  :group 'arxana-browser-code)
+
+(defcustom arxana-browser-code-allow-new-frames nil
+  "When non-nil, allow code browsing to create or use separate frames."
+  :type 'boolean
   :group 'arxana-browser-code)
 
 (defcustom arxana-browser-code-file-regexp
@@ -70,6 +77,8 @@ When nil, defaults to <repo>/dev and <repo>/test."
 (defvar arxana-browser-code--symbol-cache (make-hash-table :test 'equal))
 (defconst arxana-browser-code--symbol-cache-version 2
   "Bump to invalidate cached symbol lists.")
+(defvar arxana-browser-code--docbook-entry-cache nil)
+(defvar arxana-browser-code--docbook-index-cache nil)
 
 (defvar arxana-browser-code--persistence-manifest
   '("Persist code-symbol -> doc paragraph anchors."
@@ -215,12 +224,17 @@ Returns the active strategy, or nil if persistence is unavailable."
 
 (defun arxana-browser-code-format ()
   [("Name" 28 t)
+   ("Docs" 8 t)
    ("Path" 80 t)])
 
 (defun arxana-browser-code-row (item)
-  (let ((label (or (plist-get item :label) ""))
-        (desc (or (plist-get item :description) "")))
-    (vector label desc)))
+  (let* ((label (or (plist-get item :label) ""))
+         (desc (or (plist-get item :description) ""))
+         (path (plist-get item :path))
+         (docs (or (plist-get item :docs-label)
+                   (and path (arxana-browser-code--docbook-match-label path))
+                   "")))
+    (vector label docs desc)))
 
 (defun arxana-browser-code--entry-title (entry)
   (or (plist-get entry :title)
@@ -291,17 +305,90 @@ Returns the active strategy, or nil if persistence is unavailable."
           (setq matched t))))
     matched))
 
+(defun arxana-browser-code--docbook-entries ()
+  (let ((book arxana-browser-code-docbook))
+    (if (and arxana-browser-code--docbook-entry-cache
+             (equal (plist-get arxana-browser-code--docbook-entry-cache :book) book))
+        (plist-get arxana-browser-code--docbook-entry-cache :entries)
+      (let ((entries (and (fboundp 'arxana-docbook-entries)
+                          (arxana-docbook-entries book))))
+        (setq arxana-browser-code--docbook-entry-cache
+              (list :book book :entries entries))
+        entries))))
+
+(defun arxana-browser-code--docbook-indices ()
+  (let ((book arxana-browser-code-docbook))
+    (if (and arxana-browser-code--docbook-index-cache
+             (equal (plist-get arxana-browser-code--docbook-index-cache :book) book))
+        arxana-browser-code--docbook-index-cache
+      (let ((path-index (make-hash-table :test 'equal))
+            (basename-index (make-hash-table :test 'equal))
+            (function-index (make-hash-table :test 'equal))
+            (text-index (make-hash-table :test 'equal)))
+        (dolist (entry (or (arxana-browser-code--docbook-entries) '()))
+          (let* ((source (arxana-docbook--entry-source-path entry))
+                 (normalized (and source (arxana-browser-code--normalize-path source)))
+                 (basename (and source (file-name-nondirectory source)))
+                 (function (arxana-docbook--entry-function-name entry))
+                 (raw-text (arxana-docbook--entry-raw-text entry)))
+            (when normalized
+              (puthash normalized (1+ (gethash normalized path-index 0)) path-index))
+            (when basename
+              (puthash basename (1+ (gethash basename basename-index 0)) basename-index))
+            (when (and function (stringp function))
+              (puthash function (1+ (gethash function function-index 0)) function-index))
+            (when (and raw-text (stringp raw-text))
+              (let ((case-fold-search nil)
+                    (pos 0)
+                    (rx "\\b[[:alnum:]_-]+\\.[a-z]+\\b"))
+                (while (and (< pos (length raw-text))
+                            (string-match rx raw-text pos))
+                  (let ((token (match-string 0 raw-text)))
+                    (puthash token (1+ (gethash token text-index 0)) text-index))
+                  (setq pos (match-end 0)))))))
+        (setq arxana-browser-code--docbook-index-cache
+              (list :book book
+                    :path path-index
+                    :basename basename-index
+                    :function function-index
+                    :text text-index))
+        arxana-browser-code--docbook-index-cache))))
+
 (defun arxana-browser-code--docbook-matches (path)
   (let* ((target (arxana-browser-code--normalize-path path))
          (symbols (and target (arxana-browser-code--file-symbols target)))
          (filename (and target (file-name-nondirectory target)))
          (matches '()))
-    (when (and target (fboundp 'arxana-docbook-entries))
-      (dolist (entry (arxana-docbook-entries arxana-browser-code-docbook))
+    (when target
+      (dolist (entry (or (arxana-browser-code--docbook-entries) '()))
         (when (or (arxana-browser-code--entry-matches-path-p entry target)
                   (arxana-browser-code--entry-matches-symbols-p entry symbols filename))
           (push entry matches))))
     (nreverse matches)))
+
+(defun arxana-browser-code--docbook-match-label (path)
+  (let* ((target (and path (arxana-browser-code--normalize-path path)))
+         (filename (and path (file-name-nondirectory path)))
+         (symbols (and target (arxana-browser-code--file-symbols target)))
+         (indices (and target (arxana-browser-code--docbook-indices)))
+         (path-index (plist-get indices :path))
+         (basename-index (plist-get indices :basename))
+         (function-index (plist-get indices :function))
+         (text-index (plist-get indices :text))
+         (path-count (or (and path-index (gethash target path-index 0)) 0))
+         (basename-count (or (and basename-index (gethash filename basename-index 0)) 0))
+         (text-count (or (and text-index (gethash filename text-index 0)) 0))
+         (symbol-count (if (and symbols function-index)
+                           (seq-some (lambda (sym)
+                                       (> (gethash sym function-index 0) 0))
+                                     symbols)
+                         nil)))
+    (cond
+     ((> path-count 0) "path")
+     (symbol-count "symbol")
+     ((> basename-count 0) "name")
+     ((> text-count 0) "text")
+     (t "-"))))
 
 (defun arxana-browser-code--defun-regexp (symbol)
   (concat "^[[:space:]]*(\\(defun\\|defmacro\\|defsubst\\|defvar\\|defvar-local\\|defcustom\\|defconst\\|define-derived-mode\\|defn\\|defn-\\)\\s-+"
@@ -344,16 +431,19 @@ Returns the active strategy, or nil if persistence is unavailable."
     (user-error "No readable file for %s" path))
   ;; Ensure link strategy is loaded/created on first use
   (arxana-browser-code-ensure-strategy)
-  (arxana-browser-code--show-browser-frame)
+  (when arxana-browser-code-allow-new-frames
+    (arxana-browser-code--show-browser-frame))
   (let* ((browser-buf (get-buffer "*Arxana Browser*"))
          (browser-frame (and browser-buf (arxana-browser-code--frame-showing-buffer browser-buf)))
-         (code-frame (or (arxana-browser-code--frame-by-name arxana-browser-code-frame-name)
+         (code-frame (or (and arxana-browser-code-allow-new-frames
+                              (arxana-browser-code--frame-by-name arxana-browser-code-frame-name))
                          (and (not (eq (selected-frame) browser-frame))
                               (selected-frame))
-                         (arxana-browser-code--ensure-frame arxana-browser-code-frame-name)))
+                         (selected-frame)))
          (docs-buf (arxana-browser-code--render-docs path
                                                      (arxana-browser-code--docbook-matches path)))
-         (code-buf (find-file-noselect path)))
+         (code-buf (find-file-noselect path))
+         (return-config (current-window-configuration)))
     (with-selected-frame code-frame
       (let* ((windows (window-list code-frame 'no-mini))
              (side (seq-find (lambda (w)
@@ -389,8 +479,17 @@ Returns the active strategy, or nil if persistence is unavailable."
                  (cons 'window-width arxana-browser-code-docs-width)
                  (cons 'frame code-frame))))))
       (with-current-buffer code-buf
+        (when (fboundp 'arxana-ui-mark-managed)
+          (arxana-ui-mark-managed "Arxana Code"))
+        (when (boundp 'arxana-ui-return-buffer)
+          (setq-local arxana-ui-return-buffer browser-buf))
+        (when (boundp 'arxana-ui-return-window-config)
+          (setq-local arxana-ui-return-window-config return-config))
         (when arxana-browser-code-sync-docs
           (arxana-browser-code-sync-mode 1)))
+      (with-current-buffer docs-buf
+        (when (fboundp 'arxana-ui-mark-managed)
+          (arxana-ui-mark-managed "Arxana Code Docs")))
     code-buf)))
 
 (defun arxana-browser-code--open-symbol (symbol path)

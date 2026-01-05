@@ -1,14 +1,58 @@
 #+TITLE: Relation buffers in context
 :PROPERTIES:
 :DOC_ID: futon4-131ce6433c2e
+:ENTRY_ID: futon4-131ce6433c2e::org
 :VERSION: org
 :OUTLINE_PATH: Browsing & relations / Relation buffers in context
 :PATH_STRING: Browsing & relations / Relation buffers in context
 :REPLACES: 
-:ENTRY_ID: futon4-131ce6433c2e::org
 :END:
 
 * Context
-- (no summary yet)
+The relation helpers render Futon adjacency inside Emacs so we no longer
+need to shell out to curl. Each buffer is a minor mode with refresh,
+provenance, and copy-id bindings.
 
-  
+#+BEGIN_SRC emacs-lisp :tangle dev/arxana-relations.el
+;;; arxana-relations.el --- Relation browsing helpers -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Interactive commands that render Futon relation data (/ego, /cooccur, /tail)
+;; inside Emacs so users no longer need to shell out to curl.
+
+;;; Code:
+
+(require 'cl-lib)
+(require 'seq)
+(require 'subr-x)
+(require 'arxana-store)
+
+(declare-function futon4-lookup-article-id "arxana-tangled" (name))
+(declare-function futon4--article-id-for "arxana-tangled" (name &optional path))
+
+(defgroup arxana-relations nil
+  "Buffers for browsing Futon relation data."
+  :group 'arxana)
+
+(defconst arxana-relations-buffer-name "*Arxana Relations*")
+
+(defvar-local arxana-relations-context nil
+  "Plist describing the last Futon render in this buffer.")
+
+(defvar arxana-relations-buffer-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "g") #'arxana-relations-refresh)
+    (define-key map (kbd "p") #'arxana-relations-provenance)
+    (define-key map (kbd "y") #'arxana-relations-copy-id)
+    map)
+  "Keymap for `arxana-relations-buffer-mode'.")
+
+(define-minor-mode arxana-relations-buffer-mode
+  "Minor mode that adds refresh/provenance commands to relation buffers."
+  :lighter " ArxRel"
+  :keymap arxana-relations-buffer-mode-map
+  (if arxana-relations-buffer-mode
+      (setq-local revert-buffer-function #'arxana-relations--revert-buffer)
+    (kill-local-variable 'revert-buffer-function)))
+#+END_SRC
+

@@ -9,6 +9,7 @@
 :END:
 
 * Context
+* Context
 This module is a small guardrail for include and transclude workflows. The
 problem it solves is silent failure: if you call `include-article` or
 `transclude-article` with an article name that has not been registered, classic
@@ -33,3 +34,4 @@ the existing function definition and rebinds it to a guarded wrapper. This lets
 the guard apply even when a different implementation is already present, without
 changing that implementation. The result is a smoother UX: missing registration
 is caught early, with a message that tells you how to fix it.
+

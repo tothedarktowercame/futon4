@@ -1,13 +1,11 @@
 #+TITLE: Legacy navigation commands
 :PROPERTIES:
 :DOC_ID: futon4-5ea4620a44fc
+:ENTRY_ID: futon4-5ea4620a44fc::org
 :VERSION: org
 :OUTLINE_PATH: Browsing & relations / Legacy navigation commands
 :PATH_STRING: Browsing & relations / Legacy navigation commands
 :REPLACES: 
-:ENTRY_ID: futon4-5ea4620a44fc::org
 :END:
 
 * Context
-- (no summary yet)
-

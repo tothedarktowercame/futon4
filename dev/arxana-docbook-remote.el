@@ -300,8 +300,8 @@ When CASCADE is non-nil, request that entries are deleted too."
                              (plist-get entry :doc/source_path))
             :entry entry))))
 (defun arxana-docbook--remote-contents (book)
-  (when-let* ((data (or (arxana-docbook--http-json (format "/docs/%s/toc" book))
-                        (arxana-docbook--http-json (format "/docs/%s/contents" book))))
+  (when-let* ((data (or (arxana-docbook--http-json (format "/docs/%s/contents" book))
+                        (arxana-docbook--http-json (format "/docs/%s/toc" book))))
               (headings (plist-get data :headings)))
     (mapcar (lambda (h)
               (list :type 'docbook-heading

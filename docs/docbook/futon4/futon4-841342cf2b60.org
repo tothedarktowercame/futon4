@@ -1,13 +1,47 @@
 #+TITLE: Directory importer
 :PROPERTIES:
 :DOC_ID: futon4-841342cf2b60
+:ENTRY_ID: futon4-841342cf2b60::org
 :VERSION: org
 :OUTLINE_PATH: Org imports / exports & snapshots / Directory importer
 :PATH_STRING: Org imports / exports & snapshots / Directory importer
 :REPLACES: 
-:ENTRY_ID: futon4-841342cf2b60::org
 :END:
 
 * Context
-- (no summary yet)
+#+BEGIN_SRC emacs-lisp :tangle dev/arxana-import.el
+(defun arxana-import--org-files-recursively (directory)
+  "Return Org files under DIRECTORY recursively."
+  (let ((results nil))
+    (dolist (entry (directory-files directory t directory-files-no-dot-files-regexp))
+      (cond
+       ((file-directory-p entry)
+        (setq results (nconc results (arxana-import--org-files-recursively entry))))
+       ((and (file-regular-p entry)
+             (string-match-p "\\.org\\'" entry))
+        (push entry results))))
+    results))
+
+(defun arxana-import--org-files-in-directory (directory recursive)
+  "Return Org files under DIRECTORY; RECURSIVE when non-nil."
+  (let ((dir (file-name-as-directory (expand-file-name directory))))
+    (if recursive
+        (arxana-import--org-files-recursively dir)
+      (directory-files dir t "\\.org\\'" t))))
+
+(defun arxana-import-org-directory (directory &optional recursive)
+  "Import all Org files under DIRECTORY.  With RECURSIVE, walk subdirs."
+  (interactive "DImport Org directory: \nP")
+  (let* ((files (arxana-import--org-files-in-directory directory recursive))
+         (count 0))
+    (dolist (file files)
+      (arxana-import-org-file file)
+      (setq count (1+ count)))
+    (message "Imported %d Org file%s" count (if (= count 1) "" "s"))
+    count))
+
+(provide 'arxana-import)
+
+;;; arxana-import.el ends here
+#+END_SRC
 

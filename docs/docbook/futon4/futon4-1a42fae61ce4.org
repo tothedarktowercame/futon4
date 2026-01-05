@@ -1,13 +1,14 @@
 #+TITLE: In-memory storage of one form or another
 :PROPERTIES:
 :DOC_ID: futon4-1a42fae61ce4
+:ENTRY_ID: futon4-1a42fae61ce4::org
 :VERSION: org
 :OUTLINE_PATH: Logical model / Storage substrates / In-memory storage of one form or another
 :PATH_STRING: Logical model / Storage substrates / In-memory storage of one form or another
 :REPLACES: 
-:ENTRY_ID: futon4-1a42fae61ce4::org
 :END:
 
 * Context
-- (no summary yet)
+- Historically, nemas, articles, events, and plexuses were held in hash tables / HONEY-style networks.
+- This is the reference representation; other substrates hydrate/dehydrate it.
 

@@ -1,13 +1,15 @@
 #+TITLE: Testing hooks
 :PROPERTIES:
 :DOC_ID: futon4-b97ac3a64466
+:ENTRY_ID: futon4-b97ac3a64466::org
 :VERSION: org
 :OUTLINE_PATH: Testing hooks
 :PATH_STRING: Testing hooks
 :REPLACES: 
-:ENTRY_ID: futon4-b97ac3a64466::org
 :END:
 
 * Context
-- (no summary yet)
+The ERT suite in `arxana/test/arxana-store-test.el` provides fake
+responses for `/entity` and `/ego`, so we can validate the glue without a
+running Futon server.  Extend those tests whenever you add a new helper.
 

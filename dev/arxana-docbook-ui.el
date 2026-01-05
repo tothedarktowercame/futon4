@@ -10,6 +10,7 @@
 (require 'subr-x)
 (require 'tabulated-list)
 (require 'org)
+(require 'arxana-ui nil t)
 
 (declare-function arxana-docbook--entries-for "arxana-docbook-core" (book))
 (declare-function arxana-docbook--entries-for-doc "arxana-docbook-core" (book doc-id))
@@ -134,6 +135,9 @@
     (set-window-dedicated-p source-window nil)
     (set-window-buffer doc-window doc-buffer)
     (set-window-buffer source-window source-buffer)
+    (with-current-buffer source-buffer
+      (when (fboundp 'arxana-ui-mark-managed)
+        (arxana-ui-mark-managed "Arxana Docbook Source")))
     (set-window-dedicated-p doc-window t)
     (set-window-dedicated-p source-window t)
     (select-window doc-window)
@@ -141,6 +145,30 @@
       (when (and (not (eq win doc-window))
                  (eq (window-buffer win) doc-buffer))
         (set-window-buffer win (get-buffer-create arxana-docbook--source-buffer))))))
+
+(defun arxana-docbook--ensure-browser-left (browser-buffer doc-buffer)
+  (let* ((frame (selected-frame))
+         (browser-window (or (arxana-docbook--frame-window-for-buffer browser-buffer)
+                             (selected-window)))
+         (doc-window nil))
+    (set-window-dedicated-p browser-window nil)
+    (set-window-buffer browser-window browser-buffer)
+    (delete-other-windows browser-window)
+    (setq doc-window (or (window-in-direction 'right browser-window)
+                         (split-window browser-window nil 'right)))
+    (set-window-dedicated-p doc-window nil)
+    (set-window-buffer doc-window doc-buffer)
+    (set-window-dedicated-p doc-window t)
+    (select-window doc-window)
+    (dolist (win (window-list frame 'no-mini))
+      (when (and (not (eq win doc-window))
+                 (eq (window-buffer win) doc-buffer))
+        (set-window-buffer win browser-buffer)))))
+
+(defun arxana-docbook--browser-buffer ()
+  (let ((buf (get-buffer "*Arxana Browser*")))
+    (when (buffer-live-p buf)
+      buf)))
 (defun arxana-docbook--header-line ()
   (let ((label (arxana-docbook--source-label arxana-docbook--book arxana-docbook--source))
         (summary (arxana-docbook--probe-summary arxana-docbook--book)))
@@ -291,7 +319,19 @@
         (org-show-all)
         (visual-line-mode 1)
         (view-mode 1)))
-    (pop-to-buffer buf)))
+    (let* ((return-browser (and return-buffer
+                                (buffer-live-p return-buffer)
+                                (with-current-buffer return-buffer
+                                  (derived-mode-p 'arxana-browser-mode))
+                                return-buffer))
+           (existing-browser (unless return-browser
+                               (let ((candidate (arxana-docbook--browser-buffer)))
+                                 (when (arxana-docbook--frame-window-for-buffer candidate)
+                                   candidate))))
+           (browser (or return-browser existing-browser)))
+      (if browser
+          (arxana-docbook--ensure-browser-left browser buf)
+        (pop-to-buffer buf)))))
 (defun arxana-docbook-open-section-context (&optional book doc-id &rest args)
   "Open a contextual docbook view around DOC-ID for BOOK (prev/current/next)."
   (interactive)
@@ -422,7 +462,9 @@
         (arxana-docbook-entry-mode 1)
         (setq-local header-line-format '(:eval (arxana-docbook--entry-header-line)))
         (setq-local minor-mode-overriding-map-alist
-                    `((arxana-docbook-entry-mode . ,arxana-docbook-entry-mode-map)))))
+                    `((arxana-docbook-entry-mode . ,arxana-docbook-entry-mode-map)))
+        (when (fboundp 'arxana-ui-mark-managed)
+          (arxana-ui-mark-managed "Arxana Docbook"))))
     (pop-to-buffer buf)))
 (defun arxana-docbook--entry-next-doc-id ()
   (let* ((doc-id arxana-docbook--entry-doc-id)
@@ -568,11 +610,19 @@
     (kill-new location)
     (message "Copied %s" location)))
 
+(defun arxana-docbook-left-or-return ()
+  "Move left or return to the docbook browser when at the buffer start."
+  (interactive)
+  (if (<= (point) (point-min))
+      (arxana-docbook-return-to-browser)
+    (backward-char 1)))
+
 (defvar arxana-docbook-entry-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "M-n") #'arxana-docbook-next-entry)
     (define-key map (kbd "M-p") #'arxana-docbook-prev-entry)
     (define-key map (kbd "M-y") #'arxana-docbook-copy-location)
+    (define-key map (kbd "<left>") #'arxana-docbook-left-or-return)
     map)
   "Keymap for `arxana-docbook-entry-mode'.")
 
@@ -606,7 +656,9 @@
                                ("Summary" 0 nil)])
   (setq tabulated-list-padding 2)
   (setq header-line-format '(:eval (arxana-docbook--header-line)))
-  (tabulated-list-init-header))
+  (tabulated-list-init-header)
+  (when (fboundp 'arxana-ui-mark-managed)
+    (arxana-ui-mark-managed "Arxana Docbook")))
 
 (defvar arxana-docbook-mode-map
   (let ((map (make-sparse-keymap)))

@@ -615,7 +615,8 @@ Returns the found bounds (start . end) or nil if orphaned."
       nil)))
 
 (defun arxana-links-load-scholia-for-doc (doc-name)
-  "Load all scholia for DOC-NAME from Futon1."
+  "Load all scholia for DOC-NAME from Futon1.
+Includes direct replies that target the returned scholia ids."
   (when (arxana-store-sync-enabled-p)
     (let* ((query (format "type=arxana/scholium&limit=%d"
                           arxana-links-latest-limit))
@@ -624,10 +625,34 @@ Returns the found bounds (start . end) or nil if orphaned."
         (let* ((entities (arxana-links--unwrap-entities
                           (arxana-links--normalize-json
                            (cdr (assq :entities response))))))
-          (cl-remove-if-not
-           (lambda (scholium)
-             (equal (plist-get scholium :target-doc) doc-name))
-           entities))))))
+          (let* ((primary (cl-remove-if-not
+                           (lambda (scholium)
+                             (equal (plist-get scholium :target-doc) doc-name))
+                           entities))
+                 (ids (delq nil (mapcar (lambda (scholium)
+                                          (plist-get scholium :xt/id))
+                                        primary)))
+                 (replies (when ids
+                            (cl-remove-if-not
+                             (lambda (scholium)
+                               (member (plist-get scholium :target-doc) ids))
+                             entities))))
+            (append primary replies)))))))
+
+(defun arxana-links-load-scholium-by-id (scholium-id)
+  "Load the scholium with SCHOLIUM-ID from Futon1."
+  (when (arxana-store-sync-enabled-p)
+    (let* ((query (format "type=arxana/scholium&limit=%d"
+                          arxana-links-latest-limit))
+           (response (arxana-store--request "GET" "/entities/latest" nil query)))
+      (when response
+        (let* ((entities (arxana-links--unwrap-entities
+                          (arxana-links--normalize-json
+                           (cdr (assq :entities response))))))
+          (cl-find scholium-id entities
+                   :key (lambda (scholium)
+                          (plist-get scholium :xt/id))
+                   :test #'equal))))))
 
 ;;;; =========================================================================
 ;;;; Embedding Cache (Vector Space Neighbors)

@@ -266,6 +266,63 @@ already encoded query string (without the leading ?)."
         (error
          (arxana-store--record-error 'request err target))))))
 
+(defun arxana-store--request-async (method path callback &optional payload query)
+  "Fire METHOD PATH against Futon and invoke CALLBACK with (RESPONSE STATUS)."
+  (if (not (arxana-store-sync-enabled-p))
+      (progn
+        (arxana-store--record-error 'disabled "Futon sync disabled" method)
+        (when (functionp callback)
+          (funcall callback nil (list :error 'disabled))))
+    (unless (stringp path)
+      (arxana-store--record-error 'invalid "Missing request path" path)
+      (cl-return-from arxana-store--request-async nil))
+    (let* ((coding-system-for-read 'utf-8)
+           (coding-system-for-write 'utf-8)
+           (url-request-method method)
+           (url-request-data (when payload
+                               (encode-coding-string (json-encode payload) 'utf-8)))
+           (url-request-extra-headers (arxana-store--default-headers payload))
+           (target (arxana-store--build-url path query)))
+      (setq arxana-store-last-request (list :method method
+                                            :target target
+                                            :payload payload
+                                            :query query))
+      (url-retrieve
+       target
+       (lambda (status)
+         (let ((err (plist-get status :error))
+               (result nil))
+           (when (and (not err) (buffer-live-p (current-buffer)))
+             (goto-char (point-min))
+             (when (re-search-forward "\r?\n\r?\n" nil t)
+               (let* ((json-object-type 'alist)
+                      (json-array-type 'list)
+                      (json-key-type 'keyword)
+                      (body (arxana-store--normalize-json-body
+                             (buffer-substring-no-properties (point) (point-max))))
+                      (parsed (or (and (fboundp 'json-parse-string)
+                                       (or (ignore-errors
+                                             (json-parse-string body
+                                                                :object-type 'alist
+                                                                :array-type 'list
+                                                                :object-key-type 'keyword
+                                                                :null-object nil
+                                                                :false-object nil))
+                                           (ignore-errors
+                                             (json-parse-string body
+                                                                :object-type 'alist
+                                                                :array-type 'list
+                                                                :key-type 'keyword
+                                                                :null-object nil
+                                                                :false-object nil))))
+                                  (ignore-errors (json-read-from-string body)))))
+                 (setq result parsed))))
+           (when (buffer-live-p (current-buffer))
+             (kill-buffer (current-buffer)))
+           (when (functionp callback)
+             (funcall callback result status))))
+       nil t))))
+
 (defun arxana-store--normalize-snapshot-scope (scope context)
   "Return the canonical snapshot SCOPE string or record an error for CONTEXT."
   (let ((value (cond
@@ -327,22 +384,22 @@ user error when NAME is missing."
                                   (when props (cons 'props props))))))
     (arxana-store--request "POST" "/entity" payload)))
 
-(defun arxana-store--relation-payload (src-id dst-id label extra-props)
+(defun arxana-store--relation-payload (src-id dst-id label extra-props &optional type)
   (let ((props (cons (cons 'label (or label "")) (or extra-props '()))))
     (delq nil
-          (list (cons 'type "arxana/scholium")
+          (list (cons 'type (or type "arxana/scholium"))
                 (cons 'src src-id)
                 (cons 'dst dst-id)
                 (when props (cons 'props props))))))
 
-(defun arxana-store--post-relation (src-id dst-id &optional label extra-props)
+(defun arxana-store--post-relation (src-id dst-id &optional label extra-props type)
   (cond
    ((not (arxana-store-sync-enabled-p))
     (arxana-store--record-error 'disabled "Futon sync disabled" 'relation))
    ((or (null src-id) (null dst-id))
     (arxana-store--record-error 'invalid "Provide source and target ids" 'relation))
    (t
-    (let ((payload (arxana-store--relation-payload src-id dst-id label extra-props)))
+    (let ((payload (arxana-store--relation-payload src-id dst-id label extra-props type)))
       (arxana-store--request "POST" "/relation" payload)))))
 
 (defun arxana-store--nema-simple-wrapper (src dst label &optional callback)
@@ -382,10 +439,25 @@ user error when NAME is missing."
         (when (and source-id target-id (fboundp 'futon4-store-nema-simple))
           (futon4-store-nema-simple source-id target-id label nil))))))
 
-(cl-defun arxana-store-create-relation (&key src dst label props)
+(cl-defun arxana-store-create-relation (&key src dst label props type)
   (unless (and src dst)
     (user-error "Provide both :src and :dst ids"))
-  (arxana-store--post-relation src dst label props))
+  (arxana-store--post-relation src dst label props type))
+
+(defun arxana-store-create-relations-batch (relations)
+  "Persist RELATIONS in a single request.
+RELATIONS is a list of relation payloads matching the /relation format."
+  (unless (and (listp relations) relations)
+    (user-error "Provide a non-empty relations list"))
+  (arxana-store--request "POST" "/relations/batch"
+                         (list (cons 'relations relations))))
+
+(defun arxana-store-create-relations-batch-async (relations callback)
+  "Persist RELATIONS asynchronously and invoke CALLBACK with (RESPONSE STATUS)."
+  (unless (and (listp relations) relations)
+    (user-error "Provide a non-empty relations list"))
+  (arxana-store--request-async "POST" "/relations/batch" callback
+                               (list (cons 'relations relations))))
 
 (defun arxana-store--stringify (value)
   (cond
@@ -485,6 +557,53 @@ user error when NAME is missing."
     (let ((query (arxana-store--query-string (when limit (list (cons "limit" limit)))))
           (encoded (arxana-store--encode-segment target-name)))
       (arxana-store--request "GET" (format "/ego/%s" encoded) nil query))))
+
+(defun arxana-store-ego-async (name callback &optional limit)
+  "Fetch ego data for NAME and invoke CALLBACK with (RESPONSE STATUS)."
+  (unless (arxana-store-sync-enabled-p)
+    (arxana-store--record-error 'disabled "Futon sync disabled" 'ego)
+    (cl-return-from arxana-store-ego-async nil))
+  (unless (and name (> (length name) 0))
+    (arxana-store--record-error 'invalid "Missing ego name" 'ego)
+    (cl-return-from arxana-store-ego-async nil))
+  (let* ((query (arxana-store--query-string (when limit (list (cons "limit" limit)))))
+         (encoded (arxana-store--encode-segment name))
+         (target (arxana-store--build-url (format "/ego/%s" encoded) query)))
+    (url-retrieve
+     target
+     (lambda (status)
+       (let ((err (plist-get status :error))
+             (result nil))
+         (when (and (not err) (buffer-live-p (current-buffer)))
+           (goto-char (point-min))
+           (when (re-search-forward "\r?\n\r?\n" nil t)
+             (let* ((json-object-type 'alist)
+                    (json-array-type 'list)
+                    (json-key-type 'keyword)
+                    (body (arxana-store--normalize-json-body
+                           (buffer-substring-no-properties (point) (point-max))))
+                    (parsed (or (and (fboundp 'json-parse-string)
+                                     (or (ignore-errors
+                                           (json-parse-string body
+                                                              :object-type 'alist
+                                                              :array-type 'list
+                                                              :object-key-type 'keyword
+                                                              :null-object nil
+                                                              :false-object nil))
+                                         (ignore-errors
+                                           (json-parse-string body
+                                                              :object-type 'alist
+                                                              :array-type 'list
+                                                              :key-type 'keyword
+                                                              :null-object nil
+                                                              :false-object nil))))
+                                (ignore-errors (json-read-from-string body)))))
+               (setq result parsed))))
+         (when (buffer-live-p (current-buffer))
+           (kill-buffer (current-buffer)))
+         (when (functionp callback)
+           (funcall callback result status))))
+     nil t)))
 
 (defun arxana-store-cooccur (name &optional limit)
   (interactive (list (read-string "Cooccur entity: " (or (and (boundp 'name-of-current-article)

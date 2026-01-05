@@ -1,13 +1,46 @@
 #+TITLE: Article lifecycle
 :PROPERTIES:
 :DOC_ID: futon4-2c09c5856f2e
+:ENTRY_ID: futon4-2c09c5856f2e::org
 :VERSION: org
 :OUTLINE_PATH: Article lifecycle
 :PATH_STRING: Article lifecycle
 :REPLACES: 
-:ENTRY_ID: futon4-2c09c5856f2e::org
 :END:
 
 * Context
-- (no summary yet)
+This module defines the in-memory article lifecycle for the Emacs client. The
+core state is `arxana-article--table`, a hash table keyed by article name. Each
+entry is a plist that minimally carries `:name` and `:text`. This table is the
+local working store that other subsystems (scholia, relations, sync) build on.
+Think of it as the authoritative buffer-backed cache before anything is pushed
+to Futon/XTDB.
+
+`make-current-buffer-into-article` is the registration step. It captures the
+current buffer text, stores it under the given name in the table, and sets
+`name-of-current-article` buffer-locally. That local name is how downstream code
+knows which article a buffer represents without having to re-parse headers.
+
+The path cache `arxana-article-path-cache` exists to normalize and remember
+canonical filesystem paths for articles. `arxana-article--canonical-path` calls
+into `futon4--canonical-path` when available, so every lookup uses the same
+normalized path. This avoids subtle mismatches when the same article is
+referenced via different path spellings.
+
+This file uses `unless (fboundp ...)` wrappers so it can provide fallback
+definitions in environments where the classic Arxana functions are missing. In
+full Futon builds, these names may already be defined elsewhere; the guard lets
+this module fill gaps without overriding canonical implementations.
+
+`get-article` returns the stored plist, and `sch-plain-text` pulls `:text` from
+that plist. The pairing is deliberate: higher-level scholium routines can
+operate on article objects without knowing their internal structure, and the
+plain-text accessor stays small and easy to replace if the article structure
+changes.
+
+Finally, `arxana-article--metadata-envelope` builds a metadata wrapper around a
+doc if `metadata-article` and `scholium-text` are available. It collects the
+scholium metadata and optional labels into an alist under the `metadata` key.
+This envelope is used when emitting structured payloads for storage or export,
+so callers do not need to stitch metadata together themselves.
 

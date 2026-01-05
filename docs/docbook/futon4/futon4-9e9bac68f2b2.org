@@ -1,13 +1,17 @@
 #+TITLE: Downtime handling
 :PROPERTIES:
 :DOC_ID: futon4-9e9bac68f2b2
+:ENTRY_ID: futon4-9e9bac68f2b2::org
 :VERSION: org
 :OUTLINE_PATH: Downtime handling
 :PATH_STRING: Downtime handling
 :REPLACES: 
-:ENTRY_ID: futon4-9e9bac68f2b2::org
 :END:
 
 * Context
-- (no summary yet)
+- When `futon4-enable-sync` is nil or Futon is unreachable, the helpers
+  refuse to send traffic and stash a diagnostic plist in
+  `arxana-store-last-error`.  Inspect it with `(message "%S" arxana-store-last-error)`.
+- Calls never signal errors back to users; they log with `message` and
+  return `nil` so interactive commands can degrade gracefully.
 

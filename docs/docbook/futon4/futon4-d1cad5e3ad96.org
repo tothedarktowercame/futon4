@@ -1,13 +1,71 @@
 #+TITLE: Single-file importer
 :PROPERTIES:
 :DOC_ID: futon4-d1cad5e3ad96
+:ENTRY_ID: futon4-d1cad5e3ad96::org
 :VERSION: org
 :OUTLINE_PATH: Org imports / exports & snapshots / Single-file importer
 :PATH_STRING: Org imports / exports & snapshots / Single-file importer
 :REPLACES: 
-:ENTRY_ID: futon4-d1cad5e3ad96::org
 :END:
 
 * Context
-- (no summary yet)
+#+BEGIN_SRC emacs-lisp :tangle dev/arxana-import.el
+;;; arxana-import.el --- Org â XTDB import helpers -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Utility functions that read Org files/directories and push their
+;; contents into Arxana's article graph (and, via the existing store
+;; hooks, into XTDB).
+
+;;; Code:
+
+(require 'cl-lib)
+(require 'subr-x)
+
+(declare-function scholium "arxana-tangled" (name text &optional about type book))
+(declare-function sch-book "arxana-tangled" () nil)
+(declare-function arxana-store-ensure-article "arxana-store" (&rest _))
+(declare-function futon4--canonical-path "arxana-tangled" (path))
+
+(defun arxana-import--read-file-contents (path)
+  "Return the contents of PATH as a string."
+  (with-temp-buffer
+    (insert-file-contents path)
+    (buffer-string)))
+
+(defun arxana-import--org-title-from-string (text)
+  "Extract a #+TITLE from TEXT when present."
+  (with-temp-buffer
+    (insert text)
+    (goto-char (point-min))
+    (let ((case-fold-search t))
+      (when (re-search-forward "^#\\+TITLE:[[:space:]]*" nil t)
+        (let ((start (point)))
+          (end-of-line)
+          (string-trim (buffer-substring-no-properties start (point))))))))
+
+(defun arxana-import--derive-name (path text)
+  "Pick a reasonable article name from PATH and TEXT."
+  (or (arxana-import--org-title-from-string text)
+      (file-name-base path)
+      (file-name-nondirectory path)))
+
+(defun arxana-import--canonical-path (path)
+  (if (fboundp 'futon4--canonical-path)
+      (futon4--canonical-path path)
+    path))
+
+(defun arxana-import-org-file (path)
+  "Import the Org file at PATH into the Arxana article table."
+  (interactive "fOrg file: ")
+  (let* ((text (arxana-import--read-file-contents path))
+         (name (arxana-import--derive-name path text)))
+    (when (string-empty-p (or name ""))
+      (error "Could not derive article name from %s" path))
+    (scholium name text nil '(org) (sch-book))
+    (when (fboundp 'arxana-store-ensure-article)
+      (arxana-store-ensure-article :name name :path (arxana-import--canonical-path path)))
+    (message "Imported %s" name)
+    name))
+#+END_SRC
 

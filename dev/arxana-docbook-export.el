@@ -24,7 +24,7 @@
 (declare-function arxana-docbook--first-descendant-entry "arxana-docbook-ui" (book heading))
 
 (defcustom arxana-docbook-org-export-directory nil
-  "Directory for docbook Org exports (nil uses docs/docbook/<book>/)."
+  "Directory for docbook Org exports (nil uses docs/exports/docbook/<book>/)."
   :type '(choice (const :tag "Auto" nil)
                  directory)
   :group 'arxana-docbook)
@@ -185,7 +185,7 @@ ORDER, when provided, reorders TOC headings by doc-id."
 (defun arxana-docbook--export-dir (book)
   (or arxana-docbook-org-export-directory
       (let* ((root (arxana-docbook--repo-root))
-             (dir (and root (expand-file-name "docs/docbook" root))))
+             (dir (and root (expand-file-name "docs/exports/docbook" root))))
         (when dir
           (setq dir (expand-file-name book dir))
           (make-directory dir t)

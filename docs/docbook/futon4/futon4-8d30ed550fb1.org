@@ -1,13 +1,14 @@
 #+TITLE: Known limitations
 :PROPERTIES:
 :DOC_ID: futon4-8d30ed550fb1
+:ENTRY_ID: futon4-8d30ed550fb1::org
 :VERSION: org
 :OUTLINE_PATH: Known limitations
 :PATH_STRING: Known limitations
 :REPLACES: 
-:ENTRY_ID: futon4-8d30ed550fb1::org
 :END:
 
 * Context
-- (no summary yet)
+- Pattern-language wide editing (future milestone).
+- Orgâgraph semantic mirroring pending.
 

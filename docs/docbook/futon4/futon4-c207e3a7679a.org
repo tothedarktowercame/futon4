@@ -1,13 +1,86 @@
 #+TITLE: Compatibility & test support
 :PROPERTIES:
 :DOC_ID: futon4-c207e3a7679a
+:ENTRY_ID: futon4-c207e3a7679a::org
 :VERSION: org
 :OUTLINE_PATH: Compatibility & test support
 :PATH_STRING: Compatibility & test support
 :REPLACES: 
-:ENTRY_ID: futon4-c207e3a7679a::org
 :END:
 
 * Context
-- (no summary yet)
+- The compatibility shim ensures modern `get-article` lookups hit the in-memory table before falling back to the legacy tangle.
+- Test suites load the tangled code by way of the shared helper so they work whether invoked from the repo root or inside `arxana/`.
+
+#+BEGIN_SRC emacs-lisp :tangle dev/arxana-compat.el
+;;; arxana-compat.el --- Modern helpers for legacy accessors -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Interposes `get-article` so the modern hash table is consulted before falling back to the legacy implementation.
+
+;;; Code:
+
+(defvar arxana-compat--orig-get-article nil
+  "Original `get-article' captured before installing the compat shim.")
+
+(defun arxana-compat--hash-article (name)
+  "Return (NAME . VALUE) from `article-table' when available."
+  (when (and (boundp 'article-table)
+             (hash-table-p article-table)
+             name)
+    (let ((value (gethash name article-table)))
+      (when value
+        (cons name value)))))
+
+(defun arxana-compat--get-article (name)
+  "Prefer the modern article table before hitting the legacy fallback."
+  (or (arxana-compat--hash-article name)
+      (when (functionp arxana-compat--orig-get-article)
+        (funcall arxana-compat--orig-get-article name))))
+
+(with-eval-after-load 'arxana-tangled
+  (unless arxana-compat--orig-get-article
+    (setq arxana-compat--orig-get-article (symbol-function 'get-article))
+    (fset 'get-article #'arxana-compat--get-article)))
+
+(provide 'arxana-compat)
+
+;;; arxana-compat.el ends here
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp :tangle dev/arxana-test-support.el
+;;; arxana-test-support.el --- Shared helpers for ERT suites -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Provides utilities to locate/load the tangled Arxana sources inside
+;; the dev/test harness, regardless of whether we're running from the
+;; repo root or from within the arxana/ subtree.
+
+;;; Code:
+
+(require 'cl-lib)
+
+(defun arxana-test--locate-tangled ()
+  "Return the best-effort path to `arxana-tangled.el'."
+  (let* ((root (or (and (boundp 'arxana-root-directory)
+                        arxana-root-directory)
+                   default-directory))
+         (candidates (list (expand-file-name "arxana/arxana-tangled.el" root)
+                           (expand-file-name "arxana-tangled.el" root))))
+    (cl-loop for path in candidates
+             when (file-exists-p path)
+             return path)))
+
+(defun arxana-test--ensure-tangled-loaded ()
+  "Load the tangled sources if they are not already resident."
+  (unless (featurep 'arxana-tangled)
+    (let ((tangled (arxana-test--locate-tangled)))
+      (unless tangled
+        (error "Cannot find arxana-tangled.el; run arxana-build first"))
+      (load-file tangled))))
+
+(provide 'arxana-test-support)
+
+;;; arxana-test-support.el ends here
+#+END_SRC
 

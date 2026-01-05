@@ -1,13 +1,22 @@
 #+TITLE: Commands & context
 :PROPERTIES:
 :DOC_ID: futon4-b0ffbda6fac6
+:ENTRY_ID: futon4-b0ffbda6fac6::org
 :VERSION: org
 :OUTLINE_PATH: Browsing & relations / Commands & context
 :PATH_STRING: Browsing & relations / Commands & context
 :REPLACES: 
-:ENTRY_ID: futon4-b0ffbda6fac6::org
 :END:
 
 * Context
-- (no summary yet)
+Finally we wire up interactive commands (`arxana-relations-show-ego`, etc.),
+store the last Futon context, and expose refresh/provenance/copy-id helpers.
+
+#+BEGIN_SRC emacs-lisp :tangle dev/arxana-relations.el
+;; ... remaining functions from dev/arxana-relations.el ...
+
+(provide 'arxana-relations)
+
+;;; arxana-relations.el ends here
+#+END_SRC
 

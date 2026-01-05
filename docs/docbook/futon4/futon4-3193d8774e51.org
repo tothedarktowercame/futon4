@@ -1,13 +1,32 @@
 #+TITLE: Relation browsing inside Emacs
 :PROPERTIES:
 :DOC_ID: futon4-3193d8774e51
+:ENTRY_ID: futon4-3193d8774e51::org
 :VERSION: org
 :OUTLINE_PATH: Relation browsing inside Emacs
 :PATH_STRING: Relation browsing inside Emacs
 :REPLACES: 
-:ENTRY_ID: futon4-3193d8774e51::org
 :END:
 
 * Context
-- (no summary yet)
+- `M-x arxana-relations-show-ego` renders the `/ego/:name` response in the
+  `*Arxana Relations*` buffer, splitting outgoing vs incoming links.
+- `M-x arxana-relations-show-cooccur` formats `/cooccur/:name` so you can spot
+  frequently paired entities without leaving Emacs.
+- `M-x arxana-relations-show-tail` displays the `/tail` feed (most recent
+  relations) with confidence + timestamp notes.
+
+Each of these commands relies on the `arxana-store-*` helpers above, so they
+honour the same failure handling and record diagnostics in
+`arxana-store-last-error` when Futon is unreachable.
+
+The hyperedge helper is exercised via the scholium adjacency tests
+(`arxana/test/arxana-adjacency-test.el`), which stub the HTTP layer and verify
+that inclusion / transclusion scholia emit source, target, passage, and
+provenance endpoints before hitting `/hyperedge`.  Snapshot save/restore flows
+are covered by `arxana/test/arxana-saving-test.el`, ensuring the Emacs commands
+call `/snapshot` and `/snapshot/restore` with the selected scope.  The
+Org importer/exporter are covered by `arxana/test/arxana-import-test.el` and
+`arxana/test/arxana-export-test.el`, guaranteeing that `.org` bundles can round-trip
+through XTDB snapshots.
 

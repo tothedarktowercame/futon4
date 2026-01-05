@@ -1,13 +1,44 @@
 #+TITLE: XTDB browsing shims
 :PROPERTIES:
 :DOC_ID: futon4-66f1d73982c4
+:ENTRY_ID: futon4-66f1d73982c4::org
 :VERSION: org
 :OUTLINE_PATH: Browsing & relations / XTDB browsing shims
 :PATH_STRING: Browsing & relations / XTDB browsing shims
 :REPLACES: 
-:ENTRY_ID: futon4-66f1d73982c4::org
 :END:
 
 * Context
-- (no summary yet)
+The XTDB browser exposes `/tail` data via a tabulated list and lets contributors
+inspect source/target entities, jump into relation buffers, or tweak the limit.
+
+#+BEGIN_SRC emacs-lisp :tangle dev/arxana-xtdb-browse.el
+;;; arxana-xtdb-browse.el --- XTDB browser for Futon datasets -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;; Provides an Emacs UI for peeking into Futon/XTDB data.  Uses `/tail`
+;; to list recent relations and lets users drill into entities or
+;; open the existing relation buffers.
+
+;;; Code:
+
+(require 'seq)
+(require 'tabulated-list)
+(require 'subr-x)
+(require 'arxana-store)
+(require 'arxana-relations)
+
+(defgroup arxana-xtdb-browse nil
+  "Interactive browser for Futon/XTDB contents."
+  :group 'arxana)
+
+(defcustom arxana-xtdb-browse-default-limit 25
+  "Number of relations to request when browsing XTDB."
+  :type 'integer
+  :group 'arxana-xtdb-browse)
+
+(defvar arxana-xtdb-browse-buffer "*Arxana XTDB Browser*")
+(defvar-local arxana-xtdb--current-limit arxana-xtdb-browse-default-limit)
+(defvar-local arxana-xtdb--tail-response nil)
+#+END_SRC
 

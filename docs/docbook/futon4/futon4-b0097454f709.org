@@ -1,13 +1,45 @@
 #+TITLE: Current reality: EAV in Clojure (Datascript + XTDB)
 :PROPERTIES:
 :DOC_ID: futon4-b0097454f709
+:ENTRY_ID: futon4-b0097454f709::org
 :VERSION: org
 :OUTLINE_PATH: Logical model / Storage substrates / Current reality: EAV in Clojure (Datascript + XTDB)
 :PATH_STRING: Logical model / Storage substrates / Current reality: EAV in Clojure (Datascript + XTDB)
 :REPLACES: 
-:ENTRY_ID: futon4-b0097454f709::org
 :END:
 
 * Context
-- (no summary yet)
+Instead of going the triple route, all storage backends in the current
+âbetaâ generation converge on an open **entityâattributeâvalue (EAV)**
+model.  Each recordâwhether an article, event, or plexusâis
+represented as a set of attributeâvalue pairs attached to a unique
+entity id.  This design keeps the schema *open*, so new attributes or
+link types can appear dynamically without migration.
+
+The canonical implementation uses:
+
+- **Datascript** for in-memory, client-side operation.  
+  - Pure Clojure; lightweight and immutable.  
+  - Supports live queries, undo/redo, and fast incremental updates.  
+  - Ideal for interactive use inside Emacs or JVM clients.
+
+- **XTDB** for durable, time-traveling storage.  
+  - Schemaless documents mirror the same EAV keys verbatim.  
+  - Transactions are append-only; every version of the graph is queryable.  
+  - Perfect for provenance, journaling, and long-term archives.
+
+Together these give Arxana an *open-schema substrate*: a graph database where nemas, events, and
+plexuses are all entities, and attributes such as `:hx/type`, `:article/text`, or `:plexus/members`
+are just first-class keys.  Queries can run over the generic EAV view, or use higher-level helpers
+that expose structured projections (e.g., âarticlesâ, âhyperedgesâ, âplexusesâ).
+
+> **Design posture:** Start open (EAV); specialize only when scale or semantics demand it.  
+> Structured viewsârelational tables, triple stores, materialized indexesâcan be layered on
+> demand without altering the underlying data model.
+
+This approach keeps computational properties stable: query complexity
+and transaction semantics stay identical whether data are viewed as
+triples, hash maps, or SQL rows.  It also makes cross-substrate
+replication trivial: each backend stores the same `(entity attribute
+value)` facts, differing only in query language and persistence model.
 

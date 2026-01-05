@@ -1,13 +1,14 @@
 #+TITLE: Document-based substrates
 :PROPERTIES:
 :DOC_ID: futon4-df5baa4bff8f
+:ENTRY_ID: futon4-df5baa4bff8f::org
 :VERSION: org
 :OUTLINE_PATH: Logical model / Storage substrates / Document-based substrates
 :PATH_STRING: Logical model / Storage substrates / Document-based substrates
 :REPLACES: 
-:ENTRY_ID: futon4-df5baa4bff8f::org
 :END:
 
 * Context
-- (no summary yet)
+- Literate sources (e.g., LaTeX, Org, Markdown, TEI) could be parsed into nemas and events.
+- Arxana can â in principle and, increasingly, in practice â both read *and write* these formats, keeping ids and links stable across round-trips.
 

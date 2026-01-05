@@ -1,13 +1,19 @@
 #+TITLE: Workflow notes
 :PROPERTIES:
 :DOC_ID: futon4-238a87a8789f
+:ENTRY_ID: futon4-238a87a8789f::org
 :VERSION: org
 :OUTLINE_PATH: Workflow notes
 :PATH_STRING: Workflow notes
 :REPLACES: 
-:ENTRY_ID: futon4-238a87a8789f::org
 :END:
 
 * Context
-- (no summary yet)
+1. Regenerate / load with `M-x arxana-build`.
+2. Ensure your article buffer has been turned into an article (`M-x
+   make-current-buffer-into-article`).
+3. Run the relevant `arxana-store-*` helper from Emacs; if it reports an
+   error check `arxana-store-last-error` for the diagnostic.
+4. Run the matching curl command to confirm the Futon server contains the
+   expected data.
 

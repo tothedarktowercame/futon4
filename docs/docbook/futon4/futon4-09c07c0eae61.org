@@ -1,13 +1,96 @@
 #+TITLE: Logical model
 :PROPERTIES:
 :DOC_ID: futon4-09c07c0eae61
+:ENTRY_ID: futon4-09c07c0eae61::org
 :VERSION: org
 :OUTLINE_PATH: Logical model
 :PATH_STRING: Logical model
 :REPLACES: 
-:ENTRY_ID: futon4-09c07c0eae61::org
 :END:
 
 * Context
-- (no summary yet)
+Arxana manages a single logical hypergraph. The core primitives are:
+
+- Nema :: Universal node record with stable id, labels, optional endpoints, and payload.
+- Article :: A nema labeled :label/article, holding text and core metadata.
+- Metadata scholium :: A nema paired 1â1 with an article, caching backlinks, labels, and indexes.
+- Event (hyperedge) :: A nema representing a relation or annotation, with :hx/type and N endpoints.
+- Plexus :: A nema that names a working set or profile and carries configuration.
+
+Classic Arxana entities, relations, and scholia embed cleanly:
+
+- Entities â article nemas with derived identifiers.
+- Relations â 2-end events (:hx/*) between nemas.
+- Scholia â events and/or metadata nemas attached to articles.
+- Inclusion / clusion / provenance â multi-end events with appropriate :role values.
+
+** Storage substrates
+
+All storage backends implement the same logical model.
+
+*** In-memory storage of one form or another
+- Historically, nemas, articles, events, and plexuses were held in hash tables / HONEY-style networks.
+- This is the reference representation; other substrates hydrate/dehydrate it.
+
+*** Document-based substrates
+- Literate sources (e.g., LaTeX, Org, Markdown, TEI) could be parsed into nemas and events.
+- Arxana can â in principle and, increasingly, in practice â both read *and write* these formats, keeping ids and links stable across round-trips.
+
+*** Historical: Relational substrate
+- Common Lisp provided a bridge to SQL that encode relations in tables.
+- Semantics are those of a structured triple store: subjects, predicates, objects, plus spans and provenance.
+- Suitable for durability, multi-user access, and heavy queries.
+
+*** Possible future: Triple-store substrate
+- Direct RDF/quad representation of the same model â not implemented but it could be if we want it.
+- Again, we could in principle read and write external knowledge graphs (and integrate SPARQL tooling).
+
+*** Current reality: EAV in Clojure (Datascript + XTDB)
+
+Instead of going the triple route, all storage backends in the current
+âbetaâ generation converge on an open **entityâattributeâvalue (EAV)**
+model.  Each recordâwhether an article, event, or plexusâis
+represented as a set of attributeâvalue pairs attached to a unique
+entity id.  This design keeps the schema *open*, so new attributes or
+link types can appear dynamically without migration.
+
+The canonical implementation uses:
+
+- **Datascript** for in-memory, client-side operation.  
+  - Pure Clojure; lightweight and immutable.  
+  - Supports live queries, undo/redo, and fast incremental updates.  
+  - Ideal for interactive use inside Emacs or JVM clients.
+
+- **XTDB** for durable, time-traveling storage.  
+  - Schemaless documents mirror the same EAV keys verbatim.  
+  - Transactions are append-only; every version of the graph is queryable.  
+  - Perfect for provenance, journaling, and long-term archives.
+
+Together these give Arxana an *open-schema substrate*: a graph database where nemas, events, and
+plexuses are all entities, and attributes such as `:hx/type`, `:article/text`, or `:plexus/members`
+are just first-class keys.  Queries can run over the generic EAV view, or use higher-level helpers
+that expose structured projections (e.g., âarticlesâ, âhyperedgesâ, âplexusesâ).
+
+> **Design posture:** Start open (EAV); specialize only when scale or semantics demand it.  
+> Structured viewsârelational tables, triple stores, materialized indexesâcan be layered on
+> demand without altering the underlying data model.
+
+This approach keeps computational properties stable: query complexity
+and transaction semantics stay identical whether data are viewed as
+triples, hash maps, or SQL rows.  It also makes cross-substrate
+replication trivial: each backend stores the same `(entity attribute
+value)` facts, differing only in query language and persistence model.
+
+** Emacs client (Arxana classic)
+
+The Emacs Lisp implementation in this repository provides:
+
+- Interactive creation and editing of articles and scholia.
+- Browsing modes over the in-memory graph.
+- Operations for inclusion, derivation, and provenance as events.
+- Import/export for specific document formats (historically LaTeX/Org).
+
+Internally, it maintains the logical model in memory and (optionally)
+syncs with external substrates (files, SQL backend).
+nil
 

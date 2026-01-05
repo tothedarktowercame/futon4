@@ -12,6 +12,7 @@
 (require 'tabulated-list)
 
 (require 'arxana-docbook)
+(require 'arxana-docbook-ui)
 (require 'arxana-browser-marks)
 
 (defgroup arxana-browser-docbook nil
@@ -55,6 +56,13 @@
   '((t :foreground "orange"))
   "Face used for docbook headings with local changes."
   :group 'arxana-browser-docbook)
+
+(defun arxana-browser--docbook-source-label (source)
+  (pcase source
+    (:storage (propertize "G" 'face 'arxana-docbook-source-green))
+    (:filesystem (propertize "A" 'face 'arxana-docbook-source-amber))
+    (:state (propertize "R" 'face 'arxana-docbook-source-red))
+    (_ "")))
 
 (defcustom arxana-browser-docbook-top-order
   '("Overview"
@@ -349,7 +357,38 @@
       (when-let* ((doc-id (plist-get item :doc-id)))
         (unless (gethash doc-id seen)
           (push doc-id missing))))
-    (append normalized (nreverse missing))))
+    (arxana-browser--docbook-contents-promote-parents
+     (append normalized (nreverse missing))
+     items)))
+
+(defun arxana-browser--docbook-contents-promote-parents (order items)
+  "Ensure top-level headings appear before their children in ORDER."
+  (let* ((order* (copy-sequence order))
+         (item-map (arxana-browser--docbook-contents-item-map items))
+         (groups (make-hash-table :test 'equal))
+         (parents (make-hash-table :test 'equal)))
+    (dolist (doc-id order*)
+      (let ((item (and doc-id (gethash doc-id item-map))))
+        (when item
+          (let ((key (arxana-browser--docbook-top-key item))
+                (level (or (plist-get item :level) 1)))
+            (when key
+              (puthash key (cons doc-id (gethash key groups)) groups)
+              (when (<= level 1)
+                (puthash key doc-id parents)))))))
+    (maphash
+     (lambda (key parent)
+       (let* ((group (nreverse (gethash key groups)))
+              (first (car group)))
+         (when (and parent first (not (equal parent first)))
+           (setq order* (remove parent order*))
+           (let ((idx (cl-position first order* :test #'equal)))
+             (when idx
+               (setq order* (append (cl-subseq order* 0 idx)
+                                    (list parent)
+                                    (nthcdr idx order*))))))))
+     parents)
+    order*))
 
 (defun arxana-browser--docbook-contents-removed-get (book)
   "Return removed doc-ids for BOOK, migrating obsolete storage."
@@ -570,6 +609,7 @@
          (short-id (arxana-browser--docbook-short-id doc-id))
          (short-col (if short-id (format "%5s" short-id) ""))
          (coverage (or (plist-get item :coverage) ""))
+         (source (arxana-browser--docbook-source-label (plist-get item :source)))
          (ratio (or (plist-get item :ratio) ""))
          ;; ASCII markers only; non-ASCII char literals can break load in some Emacs builds.
          (indent (make-string (max 0 (1- level)) ?.))
@@ -594,7 +634,7 @@
                     title)
             (or (plist-get item :path_string) "")
             short-col
-            coverage
+            (if (string-empty-p source) coverage source)
             ratio)))
 
 (defun arxana-browser--docbook-books ()
@@ -661,6 +701,11 @@
          (recent-entries (when (and remote (arxana-docbook--remote-available-p book))
                            (ignore-errors (arxana-docbook--remote-recent book))))
          (entries-for-metrics (or recent-entries local-entries '()))
+         (local-docs (let ((table (make-hash-table :test 'equal)))
+                       (dolist (entry (or local-entries '()))
+                         (when-let* ((doc-id (plist-get entry :doc-id)))
+                           (puthash doc-id t table)))
+                       table))
          (entry-map (let ((table (make-hash-table :test 'equal)))
                       (dolist (entry entries-for-metrics)
                         (when-let* ((doc-id (plist-get entry :doc-id)))
@@ -709,6 +754,10 @@
                                 (entry (and doc-id (gethash doc-id entry-map)))
                                 (local-mtime (and doc-id (gethash doc-id local-time-map)))
                                 (dirty (arxana-browser--docbook-entry-dirty-p local-mtime remote-entry))
+                                (source (cond
+                                         ((and remote-map doc-id (gethash doc-id remote-map)) :storage)
+                                         ((and local-docs doc-id (gethash doc-id local-docs)) :filesystem)
+                                         (t :state)))
                                 (coverage (and entry (arxana-browser--docbook-entry-coverage entry)))
                                 (ratio (and entry (arxana-browser--docbook-entry-ratio entry))))
                            (list :type 'docbook-heading
@@ -720,6 +769,7 @@
                                  :latest latest
                                  :dirty dirty
                                  :book book
+                                 :source source
                                  :coverage coverage
                                  :ratio ratio
                                  :toc-index idx)))
@@ -791,9 +841,13 @@
                                :path_string path-str
                                :level (or (plist-get h :level) 1)
                                :latest t
-                                :dirty (and (gethash doc-id local-time-map) t)
+                               :dirty (and (gethash doc-id local-time-map) t)
                                :virtual t
                                :book book
+                               :source (cond
+                                        ((and remote-map doc-id (gethash doc-id remote-map)) :storage)
+                                        ((and local-docs doc-id (gethash doc-id local-docs)) :filesystem)
+                                        (t :state))
                                :coverage (and (gethash doc-id entry-map)
                                               (arxana-browser--docbook-entry-coverage
                                                (gethash doc-id entry-map)))

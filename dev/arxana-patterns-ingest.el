@@ -6,6 +6,9 @@
 ;; `:pattern/includes` relations.  An optional pattern-language entity
 ;; can also be created so callers can browse the ordered collection via
 ;; Futon's `/ego` endpoint.
+;;
+;; Preferred: open a flexiarg file buffer and run `C-c C-s` (save + sync),
+;; or call `arxana-patterns-ingest-file` / `arxana-patterns-ingest-files`.
 
 ;;; Code:
 
@@ -439,13 +442,16 @@ VALUE may be a string like \"[🐜/基 ⚙️/形]\" or \"🐜/基 ⚙️/形\".
             (let ((key (intern (concat ":" (downcase (match-string 1 line)))))
                   (value (string-trim (match-string 2 line))))
               (setq meta (plist-put meta key value))))
-           ((string-match "^[[:space:]]*\([!+]\)\\s-*\\([^:]+\\):?\\s*$" line)
+           ((string-match "^[[:space:]]*\\([!+]\\)\\s-*\\([^:]+\\):?\\s-*\\(.*\\)$" line)
             (when current
               (push (arxana-patterns-ingest--section (plist-get current :label)
                                                      (plist-get current :lines))
                     sections))
-            (setq current (list :label (string-trim (match-string 2 line))
-                                :lines nil)))
+            (let* ((label (string-trim (match-string 2 line)))
+                   (rest (string-trim (match-string 3 line))))
+              (setq current (list :label label
+                                  :lines (unless (string-empty-p rest)
+                                           (list rest))))))
            ((and current)
             (setf (plist-get current :lines)
                   (cons line (plist-get current :lines))))))
@@ -537,6 +543,28 @@ VALUE may be a string like \"[🐜/基 ⚙️/形]\" or \"🐜/基 ⚙️/形\".
   (let ((result (arxana-patterns-ingest--ingest-file path)))
     (message "Ingested %s" (plist-get result :name))
     result))
+
+(defun arxana-patterns-ingest-files (paths)
+  "Ingest a list of flexiarg file PATHS."
+  (unless (and (listp paths) paths)
+    (user-error "Provide a non-empty list of .flexiarg files"))
+  (unless (arxana-store-sync-enabled-p)
+    (user-error "Futon sync is disabled; enable futon4-enable-sync first"))
+  (let ((results nil))
+    (dolist (path paths)
+      (unless (and (stringp path) (string-match-p "\\.flexiarg\\'" path))
+        (user-error "Not a flexiarg file: %s" path))
+      (push (arxana-patterns-ingest--ingest-file path) results))
+    (setq results (nreverse results))
+    (message "Ingested %d patterns" (length results))
+    results))
+
+(defun arxana-patterns-ingest-current-file ()
+  "Ingest the current flexiarg buffer into XTDB."
+  (interactive)
+  (unless (buffer-file-name)
+    (user-error "Current buffer has no file name"))
+  (arxana-patterns-ingest-file (buffer-file-name)))
 
 (defun arxana-patterns-ingest--ensure-language (language-name language-title patterns directory language-status)
   "Ensure LANGUAGE-NAME exists and links to PATTERNS in order."

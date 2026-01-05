@@ -1,13 +1,14 @@
 #+TITLE: Link-following & history
 :PROPERTIES:
 :DOC_ID: futon4-bced1ef693fb
+:ENTRY_ID: futon4-bced1ef693fb::org
 :VERSION: org
 :OUTLINE_PATH: Browsing & relations / Link-following & history
 :PATH_STRING: Browsing & relations / Link-following & history
 :REPLACES: 
-:ENTRY_ID: futon4-bced1ef693fb::org
 :END:
 
+* Context
 * Context
 Arxana links focus on preserving intent rather than storing every computed
 edge. Strategies describe how to find links; anchors and scholia capture the
@@ -111,3 +112,4 @@ server is not on http://localhost:8080.
 When the server is reachable, the tests exercise persistence for strategies,
 voiced links, surface forms, scholia, embedding caches, and demo strategy
 creation.
+

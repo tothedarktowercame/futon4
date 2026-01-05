@@ -1,13 +1,32 @@
 #+TITLE: Rendering Futon responses
 :PROPERTIES:
 :DOC_ID: futon4-42634658191a
+:ENTRY_ID: futon4-42634658191a::org
 :VERSION: org
 :OUTLINE_PATH: Browsing & relations / Rendering Futon responses
 :PATH_STRING: Browsing & relations / Rendering Futon responses
 :REPLACES: 
-:ENTRY_ID: futon4-42634658191a::org
 :END:
 
 * Context
-- (no summary yet)
+Each renderer translates a Futon response (`/ego`, `/cooccur`, `/tail`) into a
+human-readable set of lines.
+
+#+BEGIN_SRC emacs-lisp :tangle dev/arxana-relations.el
+(defun arxana-relations--render-ego (body)
+  ;; ... body of function ...
+  )
+
+(defun arxana-relations--render-cooccur (body)
+  ;; ... body of function ...
+  )
+
+(defun arxana-relations--render-tail (body)
+  ;; ... body of function ...
+  )
+
+(defun arxana-relations--render-fallback (body)
+  (arxana-relations--insert-line "Raw response:")
+  (pp body (current-buffer)))
+#+END_SRC
 
