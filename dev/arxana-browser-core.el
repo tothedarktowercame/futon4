@@ -78,6 +78,9 @@
 (declare-function arxana-media--entries "arxana-media")
 (declare-function arxana-media--track-items "arxana-media" (filter))
 (declare-function arxana-media--project-items "arxana-media" (entries))
+(declare-function arxana-media--item-play-path "arxana-media" (item))
+(declare-function arxana-media--podcast-row "arxana-media" (item))
+(declare-function arxana-media--podcast-format "arxana-media")
 (declare-function arxana-media--publications-items "arxana-media")
 (declare-function arxana-media--publication-track-items "arxana-media" (directory))
 (declare-function arxana-media--ep-staging-items "arxana-media")
@@ -588,7 +591,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
             ('media-ep-staging-ep #'arxana-media--publication-track-row)
             ('media-misc #'arxana-browser--info-row)
             ('media-misc-folder #'arxana-media--misc-track-row)
-            ('media-podcasts #'arxana-browser--info-row)
+            ('media-podcasts #'arxana-media--podcast-row)
             (_ #'arxana-browser--menu-row)))
         (t (arxana-browser--require-patterns)
            #'arxana-browser-patterns--browser-pattern-row))))
@@ -648,7 +651,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                         ('media-ep-staging-ep (arxana-media--publication-track-format))
                         ('media-misc (arxana-browser--info-format))
                         ('media-misc-folder (arxana-media--misc-track-format))
-                        ('media-podcasts (arxana-browser--info-format))
+                        ('media-podcasts (arxana-media--podcast-format))
                         (_ (arxana-browser--menu-format))))
                      ((eq (plist-get context :type) 'language)
                       (arxana-browser--pattern-format))
@@ -959,6 +962,26 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
     (kill-new location)
     (message "Copied %s" location)))
 
+(defun arxana-browser--item-file-path (item)
+  (let ((type (and item (plist-get item :type))))
+    (cond
+     ((eq type 'media-podcast) (plist-get item :path))
+     ((memq type '(media-track media-misc-track media-publication-track))
+      (arxana-media--item-play-path item))
+     ((eq type 'code-file) (plist-get item :path))
+     (t nil))))
+
+(defun arxana-browser--copy-file-path ()
+  "Copy a filesystem path for the current browser item."
+  (interactive)
+  (let* ((item (arxana-browser--item-at-point))
+         (path (and item (arxana-browser--item-file-path item))))
+    (unless (and path (stringp path) (not (string-empty-p path)))
+      (user-error "No file path available for this item"))
+    (setq path (expand-file-name path))
+    (kill-new path)
+    (message "Copied %s" path)))
+
 (defun arxana-browser--up ()
   (interactive)
   (arxana-browser--ensure-context)
@@ -1085,6 +1108,7 @@ returning to the top-level list."
     (define-key map (kbd "w") #'arxana-media-open-publication-url)
     (define-key map (kbd "y") #'arxana-browser--copy-location)
     (define-key map (kbd "Y") #'arxana-browser--copy-current-location)
+    (define-key map (kbd "f") #'arxana-browser--copy-file-path)
     (define-key map (kbd "C-c C-e") #'arxana-browser-docbook-export-org)
     (define-key map (kbd "C-c C-p") #'arxana-browser-docbook-export-pdf)
     (define-key map (kbd "C-c C-s") #'arxana-browser-docbook-sync-order)
@@ -1099,8 +1123,11 @@ returning to the top-level list."
 
 (defun arxana-browser--ensure-mode-map ()
   "Rebuild the mode map if it was unbound by a reload."
-  (unless (boundp 'arxana-browser-mode-map)
-    (setq arxana-browser-mode-map (arxana-browser--make-mode-map))))
+  (if (not (boundp 'arxana-browser-mode-map))
+      (setq arxana-browser-mode-map (arxana-browser--make-mode-map))
+    (let ((binding (lookup-key arxana-browser-mode-map (kbd "f"))))
+      (unless (eq binding #'arxana-browser--copy-file-path)
+        (setq arxana-browser-mode-map (arxana-browser--make-mode-map))))))
 
 (define-derived-mode arxana-browser-mode tabulated-list-mode "Arxana-Browse"
   "Mode for browsing Futon pattern libraries."

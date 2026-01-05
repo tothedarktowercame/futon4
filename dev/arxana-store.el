@@ -51,6 +51,11 @@
 (defvar arxana-store-last-response nil
   "Most recent JSON body returned by `arxana-store--request'.")
 
+(defvar arxana-store-invariants-log-file
+  (expand-file-name "../data/logs/qa-invariants.log"
+                    (file-name-directory (or load-file-name buffer-file-name)))
+  "Log file for invariant failures returned by Futon.")
+
 (defun arxana-store-clear-error ()
   "Clear `arxana-store-last-error'."
   (setq arxana-store-last-error nil
@@ -152,6 +157,31 @@
           (decode-coding-string body 'utf-8)
         (error body)))))
 
+(defun arxana-store--log-invariants-failure (body)
+  "Append BODY to the invariants log when Futon reports a failure."
+  (when (and (listp body)
+             (string= (alist-get :error body) "Model invariants failed"))
+    (condition-case _err
+        (let* ((log-file arxana-store-invariants-log-file)
+               (dir (file-name-directory log-file))
+               (timestamp (format-time-string "%Y-%m-%d %H:%M:%S %z"))
+               (request arxana-store-last-request))
+          (make-directory dir t)
+          (with-temp-buffer
+            (insert "* " timestamp " Model invariants failed\n")
+            (when request
+              (insert "- request: "
+                      (or (plist-get request :method) "?")
+                      " "
+                      (or (plist-get request :target) "?")
+                      "\n"))
+            (insert "- response:\n")
+            (insert "#+begin_src elisp\n")
+            (pp body (current-buffer))
+            (insert "#+end_src\n\n")
+            (append-to-file (point-min) (point-max) log-file)))
+      (error nil))))
+
 (defun arxana-store--request (method path &optional payload query)
   "Fire METHOD PATH against Futon and return the parsed JSON body.
 Optional PAYLOAD is JSON encoded for POST requests. QUERY is an
@@ -227,6 +257,7 @@ already encoded query string (without the leading ?)."
                         (progn
                           (setq arxana-store-last-error nil
                                 arxana-store-last-response body)
+                          (arxana-store--log-invariants-failure body)
                           body)
                       (arxana-store--record-error 'protocol "Failed to parse Futon JSON" target)))))))
         (quit
