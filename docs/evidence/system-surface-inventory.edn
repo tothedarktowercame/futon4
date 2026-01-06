@@ -1,0 +1,1008 @@
+{:version "0.1.0"
+ :updated-at "2026-01-06"
+ :scope {:repos ["futon0"
+                 "futon1"
+                 "futon2"
+                 "futon3"
+                 "futon4"
+                 "patterns-685450173d4ea701e814d930"]
+         :notes "Phase 1 inventory grounded in hypertext-porcelain checklist."}
+ :tiers {:core ["f4-release-candidate"
+                "f4-rc-evidence-map"
+                "f3-hypertext-porcelain-plan"
+                "f3-fulab-plumbing"
+                "f3-lab-contract"
+                "f3-drawbridge-doc"
+                "f3-devmap"
+                "f3-p4ng-library"
+                "f1-lab-handlers"
+                "f3-hx-store"
+                "f3-hx-api"
+                "f3-hx-router"
+                "f3-hx-ui"
+                "f3-hx-schema"
+                "f3-hx-link-types"
+                "f3-hx-validate"
+                "f3-hx-register-script"
+                "f3-hx-anchors-script"
+                "f3-hx-suggest-script"
+                "f3-hx-review-script"
+                "f3-hx-log"
+                "f3-hx-demo-run"
+                "paper-phase-outline"
+                "paper-draft"]
+         :expansion {:workspace ["bonus-workspace-agents"]
+                     :futon0 ["bonus-f0-stack-hud"
+                              "bonus-f0-readme"
+                              "bonus-f0-boundary-readme"
+                              "bonus-f0-manifest"
+                              "bonus-f0-protocol"
+                              "bonus-f0-rhythm"
+                              "bonus-f0-resources"
+                              "bonus-f0-scripts"
+                              "bonus-f0-systemd"
+                              "bonus-f0-data"]
+                     :futon1 ["bonus-f1-readme"
+                              "bonus-f1-agents"
+                              "bonus-f1-limitations"
+                              "bonus-f1-history"
+                              "bonus-f1-config"
+                              "bonus-f1-apps"
+                              "bonus-f1-docs"
+                              "bonus-f1-protocols"
+                              "bonus-f1-scripts"
+                              "bonus-f1-resources"]
+                     :futon2 ["bonus-f2-readme"
+                              "bonus-f2-agents"
+                              "bonus-f2-docs"
+                              "bonus-f2-src"
+                              "bonus-f2-resources"
+                              "bonus-f2-tools"
+                              "bonus-f2-build"]
+                     :futon3 ["bonus-f3-lab-ingest-script"
+                              "bonus-f3-fulab-export"
+                              "bonus-f3-fulab-featuregrid"
+                              "bonus-f3-readme"
+                              "bonus-f3-agents"
+                              "bonus-f3-docs-dir"
+                              "bonus-f3-src-dir"
+                              "bonus-f3-scripts-dir"
+                              "bonus-f3-resources"
+                              "bonus-f3-build"
+                              "bonus-f3-boundary-targets"]
+                     :futon4 ["bonus-f4-readme"
+                              "bonus-f4-agents"
+                              "bonus-f4-boundary"
+                              "bonus-f4-apps"
+                              "bonus-f4-docs"
+                              "bonus-f4-scripts"
+                              "bonus-f4-resources"
+                              "bonus-f4-fucodex"
+                              "bonus-f4-fuclaude"
+                              "bonus-f4-dev"]}}
+ :items
+ [{:surface-id "f4-release-candidate"
+   :title "Release candidate notes"
+   :repo "futon4"
+   :path "docs/RELEASE-CANDIDATE-1.1.md"
+   :type :doc
+   :description "Release candidate summary and known limitations for futon4."
+   :evidence [{:path "futon4/docs/RELEASE-CANDIDATE-1.1.md"
+               :note "Primary release note referenced by Phase 1."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "f4-rc-evidence-map"
+   :title "RC evidence ledger"
+   :repo "futon4"
+   :path "docs/evidence/rc-1.1-evidence.edn"
+   :type :log
+   :description "Evidence ledger for RC 1.1 claims."
+   :evidence [{:path "futon4/docs/evidence/rc-1.1-evidence.edn"
+               :note "Existing evidence map used as precedent."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "f3-hypertext-porcelain-plan"
+   :title "Hypertext porcelain plan"
+   :repo "futon3"
+   :path "docs/plans/hypertext-porcelain.md"
+   :type :doc
+   :description "Checklist for hypertext API phases and file targets."
+   :evidence [{:path "futon3/docs/plans/hypertext-porcelain.md"
+               :note "Phase checklist for entity store, API, router, UI, schema, scripts, validation."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "f3-fulab-plumbing"
+   :title "Fulab plumbing notes"
+   :repo "futon3"
+   :path "docs/fulab-plumbing.org"
+   :type :doc
+   :description "Plumbing summary and tickets for fulab work."
+   :evidence [{:path "futon3/docs/fulab-plumbing.org"
+               :note "Phase 1 reference for current plumbing state."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "f3-lab-contract"
+   :title "Lab notebook contract"
+   :repo "futon3"
+   :path "docs/lab-notebook-contract.md"
+   :type :doc
+   :description "Contract for lab session ingest endpoints."
+   :evidence [{:path "futon3/docs/lab-notebook-contract.md"
+               :note "Lists expected API endpoints and payloads."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "f3-drawbridge-doc"
+   :title "Drawbridge session notes"
+   :repo "futon3"
+   :path "docs/repl/drawbridge-session.md"
+   :type :doc
+   :description "REPL connection recipe for drawbridge sessions."
+   :evidence [{:path "futon3/docs/repl/drawbridge-session.md"
+               :note "Documents live REPL entry point for futon3."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "f3-devmap"
+   :title "Futon3 devmap"
+   :repo "futon3"
+   :path "holes/futon3.devmap"
+   :type :devmap
+   :description "Development map and prototype list for futon3."
+   :evidence [{:path "futon3/holes/futon3.devmap"
+               :note "Source of prototype anchors for Phase 1 inventory."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "f3-p4ng-library"
+   :title "P4NG pattern library"
+   :repo "futon3"
+   :path "library/p4ng"
+   :type :library
+   :description "Pattern library used as reference for paper outline and phase patterns."
+   :evidence [{:path "futon3/library/p4ng/p4ng-agents.multiarg"
+               :note "Agent patterns referenced in outline."}
+              {:path "futon3/library/p4ng/p4ng-workshops.multiarg"
+               :note "Workshop patterns referenced in outline."}
+              {:path "futon3/library/p4ng/p4ng-agent-environments.multiarg"
+               :note "Environment patterns referenced in outline."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "f1-lab-handlers"
+   :title "Futon1 lab handlers"
+   :repo "futon1"
+   :path "apps/api/src/api/handlers/lab.clj"
+   :type :api
+   :description "API handlers for lab session ingest and lookup."
+   :evidence [{:path "futon1/apps/api/src/api/handlers/lab.clj"
+               :note "Defines session ingest and retrieval endpoints."}
+              {:path "futon1/apps/api/src/api/routes.clj"
+               :note "Routes for lab session endpoints."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "f3-hx-store"
+   :title "Hypertext entity store"
+   :repo "futon3"
+   :path "src/futon3/hx/store.clj"
+   :type :code
+   :description "Entity store for artifacts, anchors, and links with append-only log + replay."
+   :evidence [{:path "futon3/docs/plans/hypertext-porcelain.md"
+               :note "Phase 1 checklist item: entity store."}
+              {:path "futon3/src/futon3/hx/store.clj"
+               :note "Implementation of in-memory state and log replay."}
+              {:path "futon3/test/hx_store_test.clj"
+               :note "Fake session log replay test (artifacts, anchors, links)."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "f3-hx-api"
+   :title "Hypertext CRUD API"
+   :repo "futon3"
+   :path "src/futon3/hx/api.clj"
+   :type :code
+   :description "CRUD API for artifacts, anchors, and links."
+   :evidence [{:path "futon3/docs/plans/hypertext-porcelain.md"
+               :note "Phase 2 checklist item: CRUD API."}
+              {:path "futon3/src/futon3/hx/api.clj"
+               :note "Implementation of CRUD helpers against hypertext store."}
+              {:path "futon3/test/hx_api_test.clj"
+               :note "Fake session CRUD + accept flow test."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "f3-hx-router"
+   :title "Hypertext router dispatch"
+   :repo "futon3"
+   :path "src/f2/router.clj"
+   :type :code
+   :description "Router dispatch surface for :hx/* registry messages; proof-language routes TBD."
+   :evidence [{:path "futon3/docs/plans/hypertext-porcelain.md"
+               :note "Phase 3 checklist item: router integration."}
+              {:path "futon3/src/f2/router.clj"
+               :note "Router handlers for :hx/* messages."}
+              {:path "futon3/src/f2/schemas.edn"
+               :note "Schemas for :hx/* message validation."}
+              {:path "futon3/src/f2/transport.clj"
+               :note "Transport routes :hx/* messages to router."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "f3-hx-ui"
+   :title "Hypertext HTTP endpoints"
+   :repo "futon3"
+   :path "src/f2/ui.clj"
+   :type :code
+   :description "HTTP UI surface for /musn/hx/* endpoints."
+   :evidence [{:path "futon3/docs/plans/hypertext-porcelain.md"
+               :note "Phase 3 checklist item: UI endpoints."}
+              {:path "futon3/src/f2/ui.clj"
+               :note "Implements /musn/hx/* endpoints."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "f3-hx-schema"
+   :title "Hypertext schema allowlist"
+   :repo "futon3"
+   :path "resources/schemas/hypertext.edn"
+   :type :schema
+   :description "Link validation schema for accept/reject decisions."
+   :evidence [{:path "futon3/docs/plans/hypertext-porcelain.md"
+               :note "Phase 4 checklist item: link type vocabulary schema."}
+              {:path "futon3/resources/schemas/hypertext.edn"
+               :note "Validation schema for link decisions."}
+              {:path "futon3/test/hx_api_test.clj"
+               :note "Test attaches validation payload on accept."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "f3-hx-link-types"
+   :title "Hypertext link types"
+   :repo "futon3"
+   :path "resources/schemas/hypertext-link-types.edn"
+   :type :schema
+   :description "Allowlist of link types with optional futon1 refresh."
+   :evidence [{:path "futon3/docs/plans/hypertext-porcelain.md"
+               :note "Phase 4 checklist item: link type vocabulary."}
+              {:path "futon3/resources/schemas/hypertext-link-types.edn"
+               :note "Local allowlist for link types."}
+              {:path "futon3/src/futon3/hx/link_types.clj"
+               :note "Link type registry with optional futon1 refresh."}
+              {:path "futon3/src/futon3/hx/api.clj"
+               :note "Rejects unknown link types on suggest."}
+              {:path "futon3/test/hx_api_test.clj"
+               :note "Test rejects unknown link type."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "f3-hx-validate"
+   :title "Hypertext validation"
+   :repo "futon3"
+   :path "src/futon3/hx/validate.clj"
+   :type :code
+   :description "Self-validation helpers with structural checks (MVP)."
+   :evidence [{:path "futon3/docs/plans/hypertext-porcelain.md"
+               :note "Phase 6 checklist item: validation module."}
+              {:path "futon3/src/futon3/hx/validate.clj"
+               :note "Self-validation helpers with structural checks."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "f3-hx-register-script"
+   :title "Register stack script"
+   :repo "futon3"
+   :path "scripts/register_stack.clj"
+   :type :script
+   :description "Demo script to register FUTON3 artifacts for the hypertext demo."
+   :evidence [{:path "futon3/docs/plans/hypertext-porcelain.md"
+               :note "Phase 5 checklist item: register stack script."}
+              {:path "futon3/scripts/register_stack.clj"
+               :note "Registers futon3 core artifacts (src, holes, docs)."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "f3-hx-anchors-script"
+   :title "Extract anchors script"
+   :repo "futon3"
+   :path "scripts/extract_anchors.clj"
+   :type :script
+   :description "Extract Clojure ns/defn/defmulti and Elisp defun anchors into hypertext store."
+   :evidence [{:path "futon3/docs/plans/hypertext-porcelain.md"
+               :note "Phase 5 checklist item: anchor extraction script."}
+              {:path "futon3/scripts/extract_anchors.clj"
+               :note "Clojure + Elisp anchor extraction for futon3."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "f3-hx-suggest-script"
+   :title "Suggest links script"
+   :repo "futon3"
+   :path "scripts/suggest_links.clj"
+   :type :script
+   :description "Suggest :documents links from devmaps/docbooks, :applies-pattern from org TODOs/code, and :uses from code scans."
+   :evidence [{:path "futon3/docs/plans/hypertext-porcelain.md"
+               :note "Phase 5 checklist item: link suggestion script."}
+              {:path "futon3/scripts/suggest_links.clj"
+               :note "Devmaps references, futon1 docbook lookup, org :PATTERN: metadata, clojure/elisp CAR scanning, and futon1 pattern registry lookup for :applies-pattern."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "f3-hx-review-script"
+   :title "Hypertext review script"
+   :repo "futon3"
+   :path "scripts/review_links.clj"
+   :type :script
+   :description "QA demo: batch review of suggested links with structural checks."
+   :evidence [{:path "futon3/scripts/review_links.clj"
+               :note "Generates an accept/reject report for suggested links."}
+              {:path "futon3/docs/hx-demo-run.md"
+               :note "Step 5.4 QA demo script."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "f3-hx-log"
+   :title "Hypertext append-only log"
+   :repo "futon3"
+   :path "logs/hypertext.edn"
+   :type :log
+   :description "Runtime append-only log for hypertext events (not yet observed)."
+   :evidence [{:path "futon3/docs/plans/hypertext-porcelain.md"
+               :note "Phase 1 checklist item: runtime log."}]
+   :status :unknown
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "f3-hx-demo-run"
+   :title "Hypertext demo run guide"
+   :repo "futon3"
+   :path "docs/hx-demo-run.md"
+   :type :doc
+   :description "Phase 5 demo run steps (staging only; futon1 persistence deferred)."
+   :evidence [{:path "futon3/docs/hx-demo-run.md"
+               :note "Demo run steps and staging/persistence note."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f0-stack-hud"
+   :title "Futon0 Stack HUD"
+   :repo "futon0"
+   :path "contrib/stack-hud.el"
+   :type :code
+   :description "Bonus: Stack HUD integration surface for futon0."
+   :evidence [{:path "futon0/contrib/stack-hud.el"
+               :note "Bonus: referenced as adopted by futon0."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f3-lab-ingest-script"
+   :title "Lab ingest helper"
+   :repo "futon3"
+   :path "scripts/lab_ingest.sh"
+   :type :script
+   :description "Bonus: helper script to ingest lab sessions."
+   :evidence [{:path "futon3/scripts/lab_ingest.sh"
+               :note "Bonus: supports lab notebook ingest workflow."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f3-fulab-export"
+   :title "Fulab export helper"
+   :repo "futon3"
+   :path "fulab-export"
+   :type :script
+   :description "Bonus: export and ingest wrapper for fulab sessions."
+   :evidence [{:path "futon3/fulab-export"
+               :note "Bonus: entry point for lab export/ingest."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f3-fulab-featuregrid"
+   :title "Fulab feature grid"
+   :repo "futon3"
+   :path "docs/fulab-featuregrid.org"
+   :type :doc
+   :description "Bonus: feature matrix for fulab capabilities."
+   :evidence [{:path "futon3/docs/fulab-featuregrid.org"
+               :note "Bonus: documents validated surfaces."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-workspace-agents"
+   :title "Workspace AGENTS guide"
+   :repo "workspace"
+   :path "AGENTS.md"
+   :type :doc
+   :description "Bonus: agent workflow guidance for futon workspace."
+   :evidence [{:path "AGENTS.md"
+               :note "Bonus: workspace guidance and evidence map reference."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f0-readme"
+   :title "Futon0 README"
+   :repo "futon0"
+   :path "README.md"
+   :type :doc
+   :description "Bonus: futon0 overview and entry points."
+   :evidence [{:path "futon0/README.md"
+               :note "Bonus: futon0 overview."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f0-boundary-readme"
+   :title "Futon0 boundary notes"
+   :repo "futon0"
+   :path "README-boundary.md"
+   :type :doc
+   :description "Bonus: futon0 boundary notes."
+   :evidence [{:path "futon0/README-boundary.md"
+               :note "Bonus: boundary notes for futon0."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f0-manifest"
+   :title "Futon0 manifest"
+   :repo "futon0"
+   :path "futon0_manifest.md"
+   :type :doc
+   :description "Bonus: futon0 manifest."
+   :evidence [{:path "futon0/futon0_manifest.md"
+               :note "Bonus: futon0 manifest."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f0-protocol"
+   :title "Futon0 protocol"
+   :repo "futon0"
+   :path "futon0_protocol.md"
+   :type :doc
+   :description "Bonus: futon0 protocol notes."
+   :evidence [{:path "futon0/futon0_protocol.md"
+               :note "Bonus: protocol notes for futon0."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f0-rhythm"
+   :title "Futon0 rhythm notes"
+   :repo "futon0"
+   :path "futon0_rhythm.md"
+   :type :doc
+   :description "Bonus: futon0 rhythm notes."
+   :evidence [{:path "futon0/futon0_rhythm.md"
+               :note "Bonus: rhythm notes for futon0."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f0-resources"
+   :title "Futon0 resources"
+   :repo "futon0"
+   :path "resources"
+   :type :dir
+   :description "Bonus: futon0 resources directory."
+   :evidence [{:path "futon0/resources"
+               :note "Bonus: resource assets for futon0."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f0-scripts"
+   :title "Futon0 scripts"
+   :repo "futon0"
+   :path "scripts"
+   :type :dir
+   :description "Bonus: futon0 scripts directory."
+   :evidence [{:path "futon0/scripts"
+               :note "Bonus: scripts for futon0."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f0-systemd"
+   :title "Futon0 systemd units"
+   :repo "futon0"
+   :path "systemd"
+   :type :dir
+   :description "Bonus: futon0 systemd unit definitions."
+   :evidence [{:path "futon0/systemd"
+               :note "Bonus: systemd units for futon0."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f0-data"
+   :title "Futon0 data"
+   :repo "futon0"
+   :path "data"
+   :type :dir
+   :description "Bonus: futon0 data directory."
+   :evidence [{:path "futon0/data"
+               :note "Bonus: data directory for futon0."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f1-readme"
+   :title "Futon1 README"
+   :repo "futon1"
+   :path "README.md"
+   :type :doc
+   :description "Bonus: futon1 overview and entry points."
+   :evidence [{:path "futon1/README.md"
+               :note "Bonus: futon1 overview."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f1-agents"
+   :title "Futon1 AGENTS guide"
+   :repo "futon1"
+   :path "AGENTS.md"
+   :type :doc
+   :description "Bonus: futon1 agent workflow notes."
+   :evidence [{:path "futon1/AGENTS.md"
+               :note "Bonus: agent guidance for futon1."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f1-limitations"
+   :title "Futon1 limitations"
+   :repo "futon1"
+   :path "LIMITATIONS.md"
+   :type :doc
+   :description "Bonus: futon1 limitations and caveats."
+   :evidence [{:path "futon1/LIMITATIONS.md"
+               :note "Bonus: limitations reference for futon1."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f1-history"
+   :title "Futon1 history"
+   :repo "futon1"
+   :path "HISTORY.md"
+   :type :doc
+   :description "Bonus: futon1 history log."
+   :evidence [{:path "futon1/HISTORY.md"
+               :note "Bonus: history log for futon1."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f1-config"
+   :title "Futon1 configuration"
+   :repo "futon1"
+   :path "config.edn"
+   :type :config
+   :description "Bonus: futon1 runtime configuration."
+   :evidence [{:path "futon1/config.edn"
+               :note "Bonus: base config for futon1."}
+              {:path "futon1/config-server.edn"
+               :note "Bonus: server config for futon1."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f1-apps"
+   :title "Futon1 apps"
+   :repo "futon1"
+   :path "apps"
+   :type :dir
+   :description "Bonus: futon1 app surfaces (API and services)."
+   :evidence [{:path "futon1/apps"
+               :note "Bonus: apps directory for futon1."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f1-docs"
+   :title "Futon1 docs"
+   :repo "futon1"
+   :path "docs"
+   :type :dir
+   :description "Bonus: futon1 documentation directory."
+   :evidence [{:path "futon1/docs"
+               :note "Bonus: docs directory for futon1."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f1-protocols"
+   :title "Futon1 protocols"
+   :repo "futon1"
+   :path "protocols"
+   :type :dir
+   :description "Bonus: futon1 protocol definitions."
+   :evidence [{:path "futon1/protocols"
+               :note "Bonus: protocols directory for futon1."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f1-scripts"
+   :title "Futon1 scripts"
+   :repo "futon1"
+   :path "scripts"
+   :type :dir
+   :description "Bonus: futon1 scripts directory."
+   :evidence [{:path "futon1/scripts"
+               :note "Bonus: scripts for futon1."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f1-resources"
+   :title "Futon1 resources"
+   :repo "futon1"
+   :path "resources"
+   :type :dir
+   :description "Bonus: futon1 resources directory."
+   :evidence [{:path "futon1/resources"
+               :note "Bonus: resources for futon1."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f2-readme"
+   :title "Futon2 README"
+   :repo "futon2"
+   :path "README.md"
+   :type :doc
+   :description "Bonus: futon2 overview and entry points."
+   :evidence [{:path "futon2/README.md"
+               :note "Bonus: futon2 overview."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f2-agents"
+   :title "Futon2 AGENTS guide"
+   :repo "futon2"
+   :path "AGENTS.md"
+   :type :doc
+   :description "Bonus: futon2 agent workflow notes."
+   :evidence [{:path "futon2/AGENTS.md"
+               :note "Bonus: agent guidance for futon2."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f2-docs"
+   :title "Futon2 docs"
+   :repo "futon2"
+   :path "doc"
+   :type :dir
+   :description "Bonus: futon2 documentation directory."
+   :evidence [{:path "futon2/doc"
+               :note "Bonus: docs directory for futon2."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f2-src"
+   :title "Futon2 source"
+   :repo "futon2"
+   :path "src"
+   :type :dir
+   :description "Bonus: futon2 source directory."
+   :evidence [{:path "futon2/src"
+               :note "Bonus: source code for futon2."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f2-resources"
+   :title "Futon2 resources"
+   :repo "futon2"
+   :path "resources"
+   :type :dir
+   :description "Bonus: futon2 resources directory."
+   :evidence [{:path "futon2/resources"
+               :note "Bonus: resources for futon2."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f2-tools"
+   :title "Futon2 tools"
+   :repo "futon2"
+   :path "tools"
+   :type :dir
+   :description "Bonus: futon2 tools directory."
+   :evidence [{:path "futon2/tools"
+               :note "Bonus: tools for futon2."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f2-build"
+   :title "Futon2 build entry points"
+   :repo "futon2"
+   :path "build.clj"
+   :type :code
+   :description "Bonus: futon2 build entry points."
+   :evidence [{:path "futon2/build.clj"
+               :note "Bonus: build entry points for futon2."}
+              {:path "futon2/Makefile"
+               :note "Bonus: Makefile targets for futon2."}
+              {:path "futon2/deps.edn"
+               :note "Bonus: dependency config for futon2."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f3-readme"
+   :title "Futon3 README"
+   :repo "futon3"
+   :path "README.md"
+   :type :doc
+   :description "Bonus: futon3 overview and entry points."
+   :evidence [{:path "futon3/README.md"
+               :note "Bonus: futon3 overview."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f3-agents"
+   :title "Futon3 AGENTS guide"
+   :repo "futon3"
+   :path "AGENTS.md"
+   :type :doc
+   :description "Bonus: futon3 agent workflow notes."
+   :evidence [{:path "futon3/AGENTS.md"
+               :note "Bonus: agent guidance for futon3."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f3-docs-dir"
+   :title "Futon3 docs"
+   :repo "futon3"
+   :path "docs"
+   :type :dir
+   :description "Bonus: futon3 documentation directory."
+   :evidence [{:path "futon3/docs"
+               :note "Bonus: docs directory for futon3."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f3-src-dir"
+   :title "Futon3 source"
+   :repo "futon3"
+   :path "src"
+   :type :dir
+   :description "Bonus: futon3 source directory."
+   :evidence [{:path "futon3/src"
+               :note "Bonus: source code for futon3."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f3-scripts-dir"
+   :title "Futon3 scripts"
+   :repo "futon3"
+   :path "scripts"
+   :type :dir
+   :description "Bonus: futon3 scripts directory."
+   :evidence [{:path "futon3/scripts"
+               :note "Bonus: scripts for futon3."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f3-resources"
+   :title "Futon3 resources"
+   :repo "futon3"
+   :path "resources"
+   :type :dir
+   :description "Bonus: futon3 resources directory."
+   :evidence [{:path "futon3/resources"
+               :note "Bonus: resources for futon3."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f3-build"
+   :title "Futon3 build entry points"
+   :repo "futon3"
+   :path "deps.edn"
+   :type :config
+   :description "Bonus: futon3 build entry points."
+   :evidence [{:path "futon3/deps.edn"
+               :note "Bonus: dependency config for futon3."}
+              {:path "futon3/Makefile"
+               :note "Bonus: Makefile targets for futon3."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f3-boundary-targets"
+   :title "Futon3 boundary targets"
+   :repo "futon3"
+   :path "boundary_targets.edn"
+   :type :config
+   :description "Bonus: futon3 boundary targets configuration."
+   :evidence [{:path "futon3/boundary_targets.edn"
+               :note "Bonus: boundary targets config for futon3."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f4-readme"
+   :title "Futon4 README"
+   :repo "futon4"
+   :path "README.md"
+   :type :doc
+   :description "Bonus: futon4 overview and entry points."
+   :evidence [{:path "futon4/README.md"
+               :note "Bonus: futon4 overview."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f4-agents"
+   :title "Futon4 AGENTS guide"
+   :repo "futon4"
+   :path "AGENTS.md"
+   :type :doc
+   :description "Bonus: futon4 agent workflow notes."
+   :evidence [{:path "futon4/AGENTS.md"
+               :note "Bonus: agent guidance for futon4."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f4-boundary"
+   :title "Futon4 boundary config"
+   :repo "futon4"
+   :path "boundary.edn"
+   :type :config
+   :description "Bonus: futon4 boundary configuration."
+   :evidence [{:path "futon4/boundary.edn"
+               :note "Bonus: boundary config for futon4."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f4-apps"
+   :title "Futon4 apps"
+   :repo "futon4"
+   :path "apps"
+   :type :dir
+   :description "Bonus: futon4 app surfaces."
+   :evidence [{:path "futon4/apps"
+               :note "Bonus: apps directory for futon4."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f4-docs"
+   :title "Futon4 docs"
+   :repo "futon4"
+   :path "docs"
+   :type :dir
+   :description "Bonus: futon4 documentation directory."
+   :evidence [{:path "futon4/docs"
+               :note "Bonus: docs directory for futon4."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f4-scripts"
+   :title "Futon4 scripts"
+   :repo "futon4"
+   :path "scripts"
+   :type :dir
+   :description "Bonus: futon4 scripts directory."
+   :evidence [{:path "futon4/scripts"
+               :note "Bonus: scripts for futon4."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f4-resources"
+   :title "Futon4 resources"
+   :repo "futon4"
+   :path "resources"
+   :type :dir
+   :description "Bonus: futon4 resources directory."
+   :evidence [{:path "futon4/resources"
+               :note "Bonus: resources for futon4."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f4-fucodex"
+   :title "Futon4 fucodex"
+   :repo "futon4"
+   :path "fucodex"
+   :type :dir
+   :description "Bonus: futon4 fucodex integration surface."
+   :evidence [{:path "futon4/fucodex"
+               :note "Bonus: fucodex directory for futon4."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f4-fuclaude"
+   :title "Futon4 fuclaude"
+   :repo "futon4"
+   :path "fuclaude"
+   :type :dir
+   :description "Bonus: futon4 fuclaude integration surface."
+   :evidence [{:path "futon4/fuclaude"
+               :note "Bonus: fuclaude directory for futon4."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "bonus-f4-dev"
+   :title "Futon4 dev"
+   :repo "futon4"
+   :path "dev"
+   :type :dir
+   :description "Bonus: futon4 development utilities."
+   :evidence [{:path "futon4/dev"
+               :note "Bonus: dev directory for futon4."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "paper-phase-outline"
+   :title "Phase 1-6 pattern outline"
+   :repo "patterns-685450173d4ea701e814d930"
+   :path "notes/phase-1-6-pattern-outline.md"
+   :type :doc
+   :description "Pattern-form outline for phases, used to structure the rewrite."
+   :evidence [{:path "patterns-685450173d4ea701e814d930/notes/phase-1-6-pattern-outline.md"
+               :note "Direct outline used for Phase 1 narrative."}]
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}
+
+  {:surface-id "paper-draft"
+   :title "Paper draft"
+   :repo "patterns-685450173d4ea701e814d930"
+   :path "main.tex"
+   :type :doc
+   :description "Existing draft to be rewritten; used to track retained evidence."
+   :status :active
+   :access :local
+   :last-verified "2026-01-06"}]}
