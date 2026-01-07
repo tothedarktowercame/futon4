@@ -273,13 +273,16 @@ Example:
    :finders \\='((:type :symbol-as-term :auto-link? t)
               (:type :filename-mention :auto-link? t)))"
   (let* ((repo (plist-get scope :repo))
-         (id (or id (arxana-links--generate-id "strategy" repo finders))))
-    (list :xt/id id
-          :type "arxana/link-strategy"
-          :scope scope
-          :finders finders
-          :created-at (arxana-links--timestamp)
-          :created-by (or created-by user-login-name))))
+         (id (or id (arxana-links--generate-id "strategy" repo finders)))
+         (strategy (list :xt/id id
+                         :type "arxana/link-strategy"
+                         :scope scope
+                         :finders finders
+                         :created-at (arxana-links--timestamp)
+                         :created-by (or created-by user-login-name))))
+    (when (fboundp 'arxana-data-constraints-validate-strategy)
+      (arxana-data-constraints-validate-strategy strategy))
+    strategy))
 
 (defun arxana-links-persist-strategy (strategy)
   "Persist STRATEGY to Futon1.
@@ -340,17 +343,20 @@ FOUND-BY is the strategy ID that discovered this link.
 STATUS is one of `arxana-links-status-values' (default :confirmed)."
   (let* ((symbol (plist-get source :symbol))
          (name (when (and symbol (stringp symbol) (string-match-p "\\S-" symbol))
-                 (format "docs for %s" symbol))))
-    (list :xt/id (arxana-links--generate-id "link" source target)
-          :name name
-          :type "arxana/voiced-link"
-          :source source
-          :target target
-          :found-by found-by
-          :promoted-at (arxana-links--timestamp)
-          :promoted-by (or promoted-by user-login-name)
-          :status (or status :confirmed)
-          :annotations nil)))
+                 (format "docs for %s" symbol)))
+         (link (list :xt/id (arxana-links--generate-id "link" source target)
+                     :name name
+                     :type "arxana/voiced-link"
+                     :source source
+                     :target target
+                     :found-by found-by
+                     :promoted-at (arxana-links--timestamp)
+                     :promoted-by (or promoted-by user-login-name)
+                     :status (or status :confirmed)
+                     :annotations nil)))
+    (when (fboundp 'arxana-data-constraints-validate-voiced-link)
+      (arxana-data-constraints-validate-voiced-link link))
+    link))
 
 (defun arxana-links-persist-voiced-link (link)
   "Persist voiced LINK to Futon1."
@@ -403,14 +409,17 @@ CONTEXT is a plist with:
   :offset  - Optional character offset
 
 SOURCE is :explicit (user marked) or :inferred (NLP detected)."
-  (list :xt/id (arxana-links--generate-id "surface" concept-id surface)
-        :type "arxana/surface-form"
-        :concept-id concept-id
-        :surface surface
-        :context context
-        :source (or source :explicit)
-        :created-at (arxana-links--timestamp)
-        :created-by user-login-name))
+  (let ((form (list :xt/id (arxana-links--generate-id "surface" concept-id surface)
+                    :type "arxana/surface-form"
+                    :concept-id concept-id
+                    :surface surface
+                    :context context
+                    :source (or source :explicit)
+                    :created-at (arxana-links--timestamp)
+                    :created-by user-login-name)))
+    (when (fboundp 'arxana-data-constraints-validate-surface-form)
+      (arxana-data-constraints-validate-surface-form form))
+    form))
 
 (defun arxana-links-persist-surface-form (form)
   "Persist surface FORM to Futon1."

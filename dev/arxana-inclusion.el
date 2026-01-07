@@ -317,6 +317,8 @@
 
 (defun arxana-inclusion--require-article (name caller lookup)
   "Return the article NAME using LOOKUP or raise a helpful CALLER error."
+  (when (fboundp 'arxana-data-constraints-validate-inclusion)
+    (arxana-data-constraints-validate-inclusion name caller))
   (let ((article (and name (funcall lookup name))))
     (unless article
       (user-error "%s: unknown article '%s'. Run `make-current-buffer-into-article' in that buffer first."

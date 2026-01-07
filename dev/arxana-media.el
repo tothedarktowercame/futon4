@@ -2316,7 +2316,10 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
                     (length entries)))
       (unless (and script (file-exists-p script) (file-executable-p script))
         (user-error "Bounce script not executable: %s" script))
-      (let ((entry-data nil))
+      (let ((entry-data nil)
+            (duplicates nil)
+            (ambiguous nil)
+            (unmatched nil))
         (dolist (entry entries)
           (let ((path (arxana-media--bounce-input-path entry)))
             (unless path
@@ -2328,10 +2331,7 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
             (push (list :entry entry :path path) entry-data)))
         (setq entry-data (nreverse entry-data))
         (when (and instrument-order (not use-marked-order))
-          (let ((assignments (make-hash-table :test 'equal))
-                (unmatched nil)
-                (ambiguous nil)
-                (duplicates nil))
+          (let ((assignments (make-hash-table :test 'equal)))
             (dolist (data entry-data)
               (let* ((entry (plist-get data :entry))
                      (path (plist-get data :path))
@@ -2377,6 +2377,15 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
                   (mapcar (lambda (instrument)
                             (gethash instrument assignments))
                           instrument-order))))
+        (when (fboundp 'arxana-data-constraints-validate-bounce)
+          (arxana-data-constraints-validate-bounce
+           (list :entries entries
+                 :expected-count expected-count
+                 :script script
+                 :entry-data entry-data
+                 :duplicates duplicates
+                 :ambiguous ambiguous
+                 :unmatched unmatched)))
         (let ((inputs nil))
           (dolist (data entry-data)
             (push (plist-get data :path) inputs))

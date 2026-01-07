@@ -24,6 +24,9 @@
   "Root directory containing the Arxana repository.")
 
 (add-to-list 'load-path (expand-file-name "dev" arxana-root-directory))
+(let ((reazon-root (expand-file-name "dev/vendor/reazon" arxana-root-directory)))
+  (when (file-directory-p reazon-root)
+    (add-to-list 'load-path reazon-root)))
 
 ;; TODO(org-sync): Remove legacy arxana-allow-tangle toggle once no callers remain.
 (defcustom arxana-allow-tangle nil
@@ -59,6 +62,8 @@
                       "dev/arxana-docbook-ui.el"
                       "dev/arxana-links.el"
                       "dev/arxana-org-links.el"
+                      "dev/arxana-data-constraints.el"
+                      "dev/arxana-window-constraints.el"
                       "dev/arxana-scholium.el"
                       "dev/arxana-lab.el"
                       "dev/arxana-patterns.el"))

@@ -475,6 +475,8 @@ RELATIONS is a list of relation payloads matching the /relation format."
                 (when props (cons 'props props))))))
 
 (defun arxana-store--post-hyperedge (type hx-type endpoints &optional props)
+  (when (fboundp 'arxana-data-constraints-validate-hyperedge)
+    (arxana-data-constraints-validate-hyperedge hx-type endpoints))
   (cond
    ((not (arxana-store-sync-enabled-p))
     (arxana-store--record-error 'disabled "Futon sync disabled" 'hyperedge))

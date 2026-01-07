@@ -439,7 +439,10 @@ Uses content-hash anchoring that survives minor edits."
              (right (split-window-right)))
         (set-window-buffer left source-buffer)
         (set-window-buffer right display-buffer)
-        (select-window left)))))
+        (select-window left)))
+    (when (fboundp 'arxana-window-constraints-validate-scholium)
+      (arxana-window-constraints-validate-scholium
+       source-buffer display-buffer code-buffer frame))))
 
 (defun arxana-scholium--arrange-thread-windows (focus-buffer display-buffer)
   "Arrange windows so FOCUS-BUFFER is left of DISPLAY-BUFFER."

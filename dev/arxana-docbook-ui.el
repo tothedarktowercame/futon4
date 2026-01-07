@@ -144,7 +144,10 @@
     (dolist (win (window-list frame 'no-mini))
       (when (and (not (eq win doc-window))
                  (eq (window-buffer win) doc-buffer))
-        (set-window-buffer win (get-buffer-create arxana-docbook--source-buffer))))))
+        (set-window-buffer win (get-buffer-create arxana-docbook--source-buffer)))))
+    (when (fboundp 'arxana-window-constraints-validate-docbook-two-up)
+      (arxana-window-constraints-validate-docbook-two-up
+       doc-buffer source-buffer frame)))
 
 (defun arxana-docbook--ensure-browser-left (browser-buffer doc-buffer)
   (let* ((frame (selected-frame))
@@ -163,7 +166,10 @@
     (dolist (win (window-list frame 'no-mini))
       (when (and (not (eq win doc-window))
                  (eq (window-buffer win) doc-buffer))
-        (set-window-buffer win browser-buffer)))))
+        (set-window-buffer win browser-buffer)))
+    (when (fboundp 'arxana-window-constraints-validate-docbook-browser-left)
+      (arxana-window-constraints-validate-docbook-browser-left
+       browser-buffer doc-buffer frame))))
 
 (defun arxana-docbook--browser-buffer ()
   (let ((buf (get-buffer "*Arxana Browser*")))

@@ -490,6 +490,8 @@ Returns the active strategy, or nil if persistence is unavailable."
       (with-current-buffer docs-buf
         (when (fboundp 'arxana-ui-mark-managed)
           (arxana-ui-mark-managed "Arxana Code Docs")))
+      (when (fboundp 'arxana-window-constraints-validate-code-docs)
+        (arxana-window-constraints-validate-code-docs docs-buf code-frame))
     code-buf)))
 
 (defun arxana-browser-code--open-symbol (symbol path)

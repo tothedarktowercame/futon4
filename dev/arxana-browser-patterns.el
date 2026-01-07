@@ -643,6 +643,8 @@ When ROOT itself has flexiarg files, include it as `\".\"`."
 (defun arxana-flexiarg--segment-for-region (start end)
   (let ((file-start (get-text-property start 'arxana-source-file))
         (file-end (get-text-property (max (1- end) start) 'arxana-source-file)))
+    (when (fboundp 'arxana-data-constraints-validate-flexiarg-span)
+      (arxana-data-constraints-validate-flexiarg-span file-start file-end))
     (when (and (stringp file-start)
                (stringp file-end)
                (string= file-start file-end))

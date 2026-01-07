@@ -35,6 +35,11 @@ feels production-bound (not a throwaway experiment), add an entry.
    :TARGET: XTDB doc id (or temporary snapshot path)
    :NOTES: Commit <hash>; store transactions + new attributes
 
+** TODO reazon-backed constraints (window + data invariants)
+   :FILES: dev/arxana-window-constraints.el dev/arxana-data-constraints.el dev/arxana-docbook-ui.el dev/arxana-browser-patterns-hud.el dev/arxana-ui.el dev/arxana-links.el dev/arxana-store.el dev/arxana-inclusion.el dev/arxana-browser-patterns.el dev/arxana-media.el dev/bootstrap.el
+   :TARGET: XTDB doc id
+   :NOTES: Added optional Reazon validations for window layouts and data shapes; hooked into docbook, HUD, UI focal selection, links, store hyperedges, inclusion, flexiarg guards, and media bounce.
+
 ** TODO browser marks scoped to active view
    :FILES: dev/arxana-browser-marks.el dev/arxana-media.el
    :TARGET: XTDB doc id
