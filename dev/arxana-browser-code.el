@@ -75,7 +75,7 @@ When nil, defaults to <repo>/dev and <repo>/test."
   :group 'arxana-browser-code)
 
 (defvar arxana-browser-code--symbol-cache (make-hash-table :test 'equal))
-(defconst arxana-browser-code--symbol-cache-version 2
+(defconst arxana-browser-code--symbol-cache-version 3
   "Bump to invalidate cached symbol lists.")
 (defvar arxana-browser-code--docbook-entry-cache nil)
 (defvar arxana-browser-code--docbook-index-cache nil)
@@ -92,7 +92,7 @@ This is loaded from Futon1 on first use, or created and persisted if none exists
 
 (defconst arxana-browser-code--def-patterns
   '("defun" "defmacro" "defsubst" "defvar" "defvar-local"
-    "defcustom" "defconst" "define-derived-mode" "defn" "defn-")
+    "defcustom" "defconst" "define-derived-mode" "define-minor-mode" "defn" "defn-")
   "Patterns that define linkable symbols in code files.")
 
 (defun arxana-browser-code-ensure-strategy ()
@@ -146,6 +146,11 @@ Returns the active strategy, or nil if persistence is unavailable."
 (defface arxana-browser-code-docs-file-link-face
   '((t :inherit link :slant italic))
   "Face for file links in code docs buffers."
+  :group 'arxana-browser-code)
+
+(defface arxana-browser-code-docs-symbol-link-face
+  '((t :inherit link :weight bold :underline t))
+  "Face for symbol links in code docs buffers."
   :group 'arxana-browser-code)
 
 (defface arxana-browser-code-docs-highlight-face
@@ -264,7 +269,7 @@ Returns the active strategy, or nil if persistence is unavailable."
             (insert-file-contents path)
             (goto-char (point-min))
             (while (re-search-forward
-                    "^[[:space:]]*(\\(defun\\|defmacro\\|defsubst\\|defvar\\|defvar-local\\|defcustom\\|defconst\\|define-derived-mode\\|defn\\|defn-\\)\\s-+\\([^[:space:]\n]+\\)"
+                    "^[[:space:]]*(\\(defun\\|defmacro\\|defsubst\\|defvar\\|defvar-local\\|defcustom\\|defconst\\|define-derived-mode\\|define-minor-mode\\|defn\\|defn-\\)\\s-+\\([^[:space:]\n]+\\)"
                     nil t)
               (let ((sym (match-string 2)))
                 (when (and sym (not (string-empty-p sym))
@@ -391,7 +396,7 @@ Returns the active strategy, or nil if persistence is unavailable."
      (t "-"))))
 
 (defun arxana-browser-code--defun-regexp (symbol)
-  (concat "^[[:space:]]*(\\(defun\\|defmacro\\|defsubst\\|defvar\\|defvar-local\\|defcustom\\|defconst\\|define-derived-mode\\|defn\\|defn-\\)\\s-+"
+  (concat "^[[:space:]]*(\\(defun\\|defmacro\\|defsubst\\|defvar\\|defvar-local\\|defcustom\\|defconst\\|define-derived-mode\\|define-minor-mode\\|defn\\|defn-\\)\\s-+"
           (regexp-quote symbol)
           "\\_>"))
 
@@ -588,8 +593,8 @@ With prefix ACTIVATE, open the symbol after cycling."
              start end
              (list 'arxana-symbol symbol
                    'arxana-path target
-                   'face 'link
-                   'font-lock-face 'link
+                   'face 'arxana-browser-code-docs-symbol-link-face
+                   'font-lock-face 'arxana-browser-code-docs-symbol-link-face
                    'keymap arxana-browser-code-docs-link-map
                    'mouse-face 'highlight
                    'help-echo "Open symbol")))))
@@ -614,8 +619,8 @@ With prefix ACTIVATE, open the symbol after cycling."
              (match-beginning 0) (match-end 0)
              (list 'arxana-symbol symbol
                    'arxana-path path
-                   'face 'link
-                   'font-lock-face 'link
+                   'face 'arxana-browser-code-docs-symbol-link-face
+                   'font-lock-face 'arxana-browser-code-docs-symbol-link-face
                    'keymap arxana-browser-code-docs-link-map
                    'mouse-face 'highlight
                    'help-echo "Open symbol")))))))
@@ -683,7 +688,7 @@ With prefix ACTIVATE, open the symbol after cycling."
   (save-excursion
     (when (ignore-errors (beginning-of-defun) t)
       (when (looking-at
-             "^[[:space:]]*(\\(defun\\|defmacro\\|defsubst\\|defvar\\|defvar-local\\|defcustom\\|defconst\\|define-derived-mode\\|defn\\|defn-\\)\\s-+\\([^[:space:]\n]+\\)")
+             "^[[:space:]]*(\\(defun\\|defmacro\\|defsubst\\|defvar\\|defvar-local\\|defcustom\\|defconst\\|define-derived-mode\\|define-minor-mode\\|defn\\|defn-\\)\\s-+\\([^[:space:]\n]+\\)")
         (match-string 2)))))
 
 (defun arxana-browser-code--sync-docs ()

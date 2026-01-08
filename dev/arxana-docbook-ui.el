@@ -65,6 +65,10 @@
 (declare-function arxana-docbook--strip-stub-header "arxana-docbook-core" (text))
 (declare-function arxana-docbook--session-id-from-run "arxana-docbook-core" (run-id))
 (declare-function arxana-docbook-open-stub "arxana-docbook-checkout" (&optional entry))
+(declare-function arxana-browser-code--file-symbols "arxana-browser-code" (path))
+(declare-function arxana-browser-code--find-symbol-path "arxana-browser-code" (symbol))
+(declare-function arxana-browser-code--open-symbol "arxana-browser-code" (symbol path))
+(declare-function arxana-browser-code--open-path "arxana-browser-code" (path))
 
 (defface arxana-docbook-source-green
   '((t :foreground "ForestGreen" :weight bold))
@@ -78,6 +82,140 @@
   '((t :foreground "IndianRed" :weight bold))
   "Face for state-only docbook sources."
   :group 'arxana-docbook)
+
+(defface arxana-docbook-symbol-link-face
+  '((t :inherit link :weight bold :underline t))
+  "Face for symbol links in docbook entry buffers."
+  :group 'arxana-docbook)
+
+(defvar arxana-docbook-symbol-link-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mouse-1] #'arxana-docbook-open-symbol-at-point)
+    (define-key map (kbd "RET") #'arxana-docbook-open-symbol-at-point)
+    map)
+  "Keymap for symbol links in docbook entry buffers.")
+
+(defun arxana-docbook--entry-title-text (entry)
+  (or (plist-get entry :title)
+      (plist-get entry :doc/title)
+      (when-let* ((raw (plist-get entry :entry)))
+        (or (plist-get raw :doc/title)
+            (plist-get raw :doc/title_string)))))
+
+(defun arxana-docbook--entry-files (entry)
+  (or (plist-get entry :files)
+      (when-let* ((raw (plist-get entry :entry)))
+        (or (plist-get raw :doc/files)
+            (plist-get raw :doc/files_list)
+            (plist-get raw :doc/files-list)))))
+
+(defun arxana-docbook--guess-source-path (title)
+  "Return a source path derived from TITLE, if any."
+  (when (and title (stringp title))
+    (let ((case-fold-search nil))
+      (cond
+       ((string-match "\\`\\(dev\\|test\\)/[^[:space:]]+\\.[a-z]+\\'" title)
+        (match-string 0 title))
+       ((string-match "\\(dev/[^[:space:]]+\\.[a-z]+\\)" title)
+        (match-string 1 title))
+       (t nil)))))
+
+(defun arxana-docbook-open-symbol-at-point ()
+  "Open the symbol link at point, if any."
+  (interactive)
+  (let* ((symbol (or (get-text-property (point) 'arxana-symbol)
+                     (and (> (point) (point-min))
+                          (get-text-property (1- (point)) 'arxana-symbol))))
+         (path (or (get-text-property (point) 'arxana-path)
+                   (and (> (point) (point-min))
+                        (get-text-property (1- (point)) 'arxana-path)))))
+    (cond
+     ((and symbol path (fboundp 'arxana-browser-code--open-symbol))
+      (arxana-browser-code--open-symbol symbol path))
+     (path
+      (if (fboundp 'arxana-browser-code--open-path)
+          (arxana-browser-code--open-path path)
+        (find-file path)))
+     (t
+      (user-error "No symbol link at point")))))
+
+(defun arxana-docbook--symbol-link-face ()
+  (if (facep 'arxana-docbook-symbol-link-face)
+      'arxana-docbook-symbol-link-face
+    'link))
+
+(defun arxana-docbook--ensure-browser-code ()
+  "Ensure arxana-browser-code helpers are available."
+  (or (featurep 'arxana-browser-code)
+      (require 'arxana-browser-code nil t)
+      (let* ((repo (arxana-docbook--repo-root))
+             (path (and repo (expand-file-name "dev/arxana-browser-code.el" repo))))
+        (when (and path (file-readable-p path))
+          (load path t t)
+          (featurep 'arxana-browser-code)))))
+
+(defvar-local arxana-docbook--symbol-overlays nil
+  "Overlays used for symbol links in docbook entry buffers.")
+
+(defun arxana-docbook--clear-symbol-overlays ()
+  (when arxana-docbook--symbol-overlays
+    (dolist (overlay arxana-docbook--symbol-overlays)
+      (delete-overlay overlay))
+    (setq arxana-docbook--symbol-overlays nil)))
+
+(defun arxana-docbook--repo-root-for-entry (entry)
+  "Return repo root for ENTRY, preferring the current docbook book."
+  (let* ((book (or (plist-get entry :book) arxana-docbook--entry-book))
+         (books-root (arxana-docbook--locate-books-root)))
+    (or (when (and book books-root)
+          (let* ((book-root (expand-file-name book books-root))
+                 (repo-root (expand-file-name "../../.." book-root)))
+            (when (file-directory-p repo-root)
+              repo-root)))
+        (arxana-docbook--repo-root))))
+
+(defun arxana-docbook--linkify-symbols (entry &optional title)
+  "Add symbol links inside the current docbook entry buffer for ENTRY."
+  (arxana-docbook--ensure-browser-code)
+  (arxana-docbook--clear-symbol-overlays)
+  (let* ((source (and entry (arxana-docbook--entry-source-path entry)))
+         (title (or title (and entry (arxana-docbook--entry-title-text entry))))
+         (files (and entry (arxana-docbook--entry-files entry)))
+         (source (or source
+                     (and files (car-safe files))
+                     (arxana-docbook--guess-source-path title)))
+         (repo (arxana-docbook--repo-root-for-entry entry))
+         (path (and source repo (expand-file-name source repo)))
+         (symbols (and path (fboundp 'arxana-browser-code--file-symbols)
+                       (arxana-browser-code--file-symbols path)))
+         (face (arxana-docbook--symbol-link-face)))
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "arxana-[A-Za-z0-9-]+" nil t)
+        (let* ((start (match-beginning 0))
+               (end (match-end 0))
+               (symbol (match-string 0))
+               (target (cond
+                        ((and symbols (member symbol symbols)) path)
+                        ((fboundp 'arxana-browser-code--find-symbol-path)
+                         (arxana-browser-code--find-symbol-path symbol))
+                        (t nil))))
+          (when target
+            (add-text-properties
+             start end
+             (list 'arxana-symbol symbol
+                   'arxana-path target
+                   'face face
+                   'font-lock-face face))
+            (let ((overlay (make-overlay start end)))
+              (overlay-put overlay 'arxana-docbook-symbol t)
+              (overlay-put overlay 'arxana-symbol symbol)
+              (overlay-put overlay 'arxana-path target)
+              (overlay-put overlay 'face face)
+              (overlay-put overlay 'keymap arxana-docbook-symbol-link-map)
+              (overlay-put overlay 'mouse-face 'highlight)
+              (overlay-put overlay 'help-echo "Open symbol")
+              (push overlay arxana-docbook--symbol-overlays))))))))
 (defface arxana-docbook-new-content
   '((t :background "#2b2b2b"))
   "Face for lab-draft additions in docbook views."
@@ -462,6 +600,7 @@
         (arxana-docbook--render-merged-heading book
                                                (list :doc-id doc-id :title base-title)
                                                entries)
+        (arxana-docbook--linkify-symbols entry base-title)
         (goto-char (point-min))
         (org-show-all)
         (visual-line-mode 1)
