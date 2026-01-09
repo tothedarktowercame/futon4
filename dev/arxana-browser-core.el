@@ -188,6 +188,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
 (put 'arxana-browser--context 'permanent-local t)
 
 (defvar-local arxana-browser--last-row 1)
+(defvar-local arxana-browser--suppress-click nil)
 
 (defun arxana-browser--ensure-context ()
   (unless arxana-browser--stack
@@ -281,6 +282,13 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                 :label "Graph unavailable"
                 :description "Load arxana-browser-graph.el for /types."))))
 
+(defun arxana-browser-code-select-docbook ()
+  "Select the docbook used for code docs in the browser."
+  (interactive)
+  (if (require 'arxana-browser-code nil t)
+      (call-interactively #'arxana-browser-code-set-docbook)
+    (user-error "arxana-browser-code is unavailable")))
+
 (defun arxana-browser--header-line (context total)
   (cond
    ((not context)
@@ -293,7 +301,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
           base
         (concat base " [sync disabled: showing filesystem only]"))))
    ((eq (plist-get context :view) 'code)
-    "Code browser — wire Futon1 source entities here. LEFT/b returns.")
+    (let ((book (and (boundp 'arxana-browser-code-docbook)
+                     arxana-browser-code-docbook)))
+      (format "Code browser — docbook: %s (B selects). LEFT/b returns."
+              (or book "unknown"))))
    ((eq (plist-get context :view) 'graph)
     "Graph types — browse /types from Futon. RET/right shows details. LEFT/b returns.")
    ((eq (plist-get context :view) 'media)
@@ -545,7 +556,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
             (setq steps (1- steps)))))
       (setq arxana-browser--last-row new-row)
       (beginning-of-line)
-      (when (and (> count 0) (/= old new-row))
+      (when (and (> count 0)
+                 (/= old new-row)
+                 (not arxana-browser--suppress-click))
         (when (fboundp 'arxana-browser-patterns--play-click)
           (arxana-browser-patterns--play-click))))))
 
@@ -715,7 +728,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                        (clamped (if (> count 0)
                                     (max 0 (min desired-row (1- count)))
                                   0)))
-                  (arxana-browser--goto-row clamped)))))))
+                  (let ((arxana-browser--suppress-click t))
+                    (arxana-browser--goto-row clamped))))))))
       (display-buffer buffer)
       (when (fboundp 'arxana-ui-refresh)
         (arxana-ui-refresh)))))
@@ -1156,6 +1170,7 @@ returning to the top-level list."
     (define-key map (kbd "C-c C-e") #'arxana-browser-docbook-export-org)
     (define-key map (kbd "C-c C-p") #'arxana-browser-docbook-export-pdf)
     (define-key map (kbd "C-c C-s") #'arxana-browser-docbook-sync-order)
+    (define-key map (kbd "B") #'arxana-browser-code-select-docbook)
     (define-key map (kbd "C-c C-l") #'arxana-media-lyrics-refresh-at-point)
     (define-key map (kbd "C-c C-L") #'arxana-media-lyrics-adopt-entity-at-point)
     (define-key map (kbd "<left>") #'arxana-browser--up)
@@ -1172,7 +1187,10 @@ returning to the top-level list."
       (setq arxana-browser-mode-map (arxana-browser--make-mode-map))
     (let ((binding (lookup-key arxana-browser-mode-map (kbd "f"))))
       (unless (eq binding #'arxana-browser--copy-file-path)
-        (setq arxana-browser-mode-map (arxana-browser--make-mode-map))))))
+        (setq arxana-browser-mode-map (arxana-browser--make-mode-map)))))
+  (when (and (boundp 'arxana-browser-mode-map)
+             (null (lookup-key arxana-browser-mode-map (kbd "B"))))
+    (define-key arxana-browser-mode-map (kbd "B") #'arxana-browser-code-select-docbook)))
 
 (define-derived-mode arxana-browser-mode tabulated-list-mode "Arxana-Browse"
   "Mode for browsing Futon pattern libraries."
