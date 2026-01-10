@@ -20,6 +20,7 @@
 (declare-function arxana-docbook--entry-raw-text "arxana-docbook-core" (entry))
 (declare-function arxana-docbook--entry-content "arxana-docbook-core" (entry))
 (declare-function arxana-docbook--entry-function-name "arxana-docbook-core" (entry))
+(declare-function arxana-docbook--available-books "arxana-docbook-core")
 
 (defgroup arxana-browser-code nil
   "Code browser helpers for Arxana."
@@ -29,6 +30,39 @@
   "Docbook name to search for code-related entries."
   :type 'string
   :group 'arxana-browser-code)
+
+(defun arxana-browser-code--ensure-docbook ()
+  "Ensure arxana-docbook core helpers are available."
+  (or (featurep 'arxana-docbook-core)
+      (require 'arxana-docbook-core nil t)
+      (let* ((repo (arxana-browser-code--repo-root))
+             (path (and repo (expand-file-name "dev/arxana-docbook-core.el" repo))))
+        (when (and path (file-readable-p path))
+          (load path t t)
+          (featurep 'arxana-docbook-core)))))
+
+(defun arxana-browser-code-set-docbook (book)
+  "Select the docbook used for code docs."
+  (interactive
+   (progn
+     (arxana-browser-code--ensure-docbook)
+     (let* ((current arxana-browser-code-docbook)
+            (books (or (and (fboundp 'arxana-docbook--available-books)
+                            (arxana-docbook--available-books))
+                       (list current)))
+            (choice (completing-read
+                     (format "Code docbook (%s): " current)
+                     books nil t nil nil current)))
+       (list choice))))
+  (setq arxana-browser-code-docbook book)
+  (arxana-browser-code-reset-strategy)
+  (setq arxana-browser-code--docbook-entry-cache nil
+        arxana-browser-code--docbook-index-cache nil
+        arxana-browser-code--docbook-match-cache (make-hash-table :test 'equal)
+        arxana-browser-code--symbol-cache (make-hash-table :test 'equal))
+  (when (fboundp 'arxana-browser--refresh)
+    (arxana-browser--refresh))
+  (message "Code browser docbook: %s" book))
 
 (defcustom arxana-browser-code-allow-new-frames nil
   "When non-nil, allow code browsing to create or use separate frames."
@@ -64,6 +98,21 @@ When nil, defaults to <repo>/dev and <repo>/test."
   :type 'number
   :group 'arxana-browser-code)
 
+(defcustom arxana-browser-code-profile nil
+  "When non-nil, log slow steps in code->docs resolution."
+  :type 'boolean
+  :group 'arxana-browser-code)
+
+(defcustom arxana-browser-code-profile-threshold 0.05
+  "Minimum seconds required to log a profiling entry."
+  :type 'number
+  :group 'arxana-browser-code)
+
+(defcustom arxana-browser-code-deep-scan nil
+  "When non-nil, allow slow full-text scans for docbook match labels."
+  :type 'boolean
+  :group 'arxana-browser-code)
+
 (defcustom arxana-browser-code-frame-name "Arxana Code"
   "Frame name used for the code + docs split."
   :type 'string
@@ -79,6 +128,7 @@ When nil, defaults to <repo>/dev and <repo>/test."
   "Bump to invalidate cached symbol lists.")
 (defvar arxana-browser-code--docbook-entry-cache nil)
 (defvar arxana-browser-code--docbook-index-cache nil)
+(defvar arxana-browser-code--docbook-match-cache (make-hash-table :test 'equal))
 
 (defvar arxana-browser-code--persistence-manifest
   '("Persist code-symbol -> doc paragraph anchors."
@@ -94,6 +144,24 @@ This is loaded from Futon1 on first use, or created and persisted if none exists
   '("defun" "defmacro" "defsubst" "defvar" "defvar-local"
     "defcustom" "defconst" "define-derived-mode" "define-minor-mode" "defn" "defn-")
   "Patterns that define linkable symbols in code files.")
+
+(defun arxana-browser-code--profile (label thunk)
+  (let ((start (float-time)))
+    (prog1 (funcall thunk)
+      (let ((elapsed (- (float-time) start)))
+        (when (and arxana-browser-code-profile
+                   (>= elapsed arxana-browser-code-profile-threshold))
+          (message "[arxana-code] %s %.3fs" label elapsed))))))
+
+(defun arxana-browser-code--ensure-ui ()
+  "Ensure arxana-ui helpers are available."
+  (or (featurep 'arxana-ui)
+      (require 'arxana-ui nil t)
+      (let* ((repo (arxana-browser-code--repo-root))
+             (path (and repo (expand-file-name "dev/arxana-ui.el" repo))))
+        (when (and path (file-readable-p path))
+          (load path t t)
+          (featurep 'arxana-ui)))))
 
 (defun arxana-browser-code-ensure-strategy ()
   "Ensure the code-docs link strategy exists and is persisted.
@@ -158,9 +226,24 @@ Returns the active strategy, or nil if persistence is unavailable."
   "Face for the current doc paragraph highlight."
   :group 'arxana-browser-code)
 
+(defface arxana-browser-code-docs-target-highlight-face
+  '((t :inherit hl-line :foreground unspecified))
+  "Face for highlighting code linked from doc previews."
+  :group 'arxana-browser-code)
+
+(defcustom arxana-browser-code-link-external-symbols nil
+  "When non-nil, link symbols in doc previews to other files."
+  :type 'boolean
+  :group 'arxana-browser-code)
+
 (defcustom arxana-browser-code-sync-docs t
   "When non-nil, keep doc highlights in sync with code point."
   :type 'boolean
+  :group 'arxana-browser-code)
+
+(defcustom arxana-browser-code-sync-owner-timeout 0.0
+  "Seconds to keep the current sync owner before allowing the other side to drive."
+  :type 'number
   :group 'arxana-browser-code)
 
 (defvar-local arxana-browser-code--doc-symbol-map nil)
@@ -168,6 +251,10 @@ Returns the active strategy, or nil if persistence is unavailable."
 (defvar-local arxana-browser-code--doc-highlight-overlay nil)
 (defvar-local arxana-browser-code--doc-last-symbol nil)
 (defvar-local arxana-browser-code--doc-cycle-cache nil)
+(defvar-local arxana-browser-code--code-highlight-overlay nil)
+(defvar-local arxana-browser-code--code-last-symbol nil)
+(defvar arxana-browser-code--sync-owner nil)
+(defvar arxana-browser-code--sync-owner-time 0.0)
 
 (defvar arxana-browser-code-sync-mode-map
   (let ((map (make-sparse-keymap)))
@@ -178,12 +265,22 @@ Returns the active strategy, or nil if persistence is unavailable."
 (define-minor-mode arxana-browser-code-docs-mode
   "Minor mode for Arxana code docs buffers."
   :lighter " CodeDocs"
-  :keymap arxana-browser-code-docs-mode-map)
+  :keymap arxana-browser-code-docs-mode-map
+  (if arxana-browser-code-docs-mode
+      (add-hook 'post-command-hook #'arxana-browser-code--sync-code-from-docs nil t)
+    (remove-hook 'post-command-hook #'arxana-browser-code--sync-code-from-docs t)))
 
 (defun arxana-browser-code--repo-root ()
-  (let* ((base (or load-file-name buffer-file-name default-directory))
+  (let* ((book-root (and (fboundp 'arxana-docbook--locate-books-root)
+                         arxana-browser-code-docbook
+                         (let* ((books (arxana-docbook--locate-books-root))
+                                (book (and books
+                                           (expand-file-name arxana-browser-code-docbook books))))
+                           (when (and book (file-directory-p book))
+                             (expand-file-name "../../.." book)))))
+         (base (or load-file-name buffer-file-name default-directory))
          (root (and base (locate-dominating-file base "dev"))))
-    (or root default-directory)))
+    (or book-root root default-directory)))
 
 (defun arxana-browser-code--resolve-roots ()
   (let* ((root (arxana-browser-code--repo-root))
@@ -255,36 +352,48 @@ Returns the active strategy, or nil if persistence is unavailable."
         expanded))))
 
 (defun arxana-browser-code--file-symbols (path)
-  (let* ((attrs (and path (file-attributes path)))
-         (mtime (and attrs (file-attribute-modification-time attrs)))
-         (cached (and path (gethash path arxana-browser-code--symbol-cache))))
-    (if (and cached
-             (equal (car cached) mtime)
-             (equal (cadr cached) arxana-browser-code--symbol-cache-version))
-        (caddr cached)
-      (let ((symbols '())
-            (seen (make-hash-table :test 'equal)))
-        (when (and path (file-readable-p path))
-          (with-temp-buffer
-            (insert-file-contents path)
-            (goto-char (point-min))
-            (while (re-search-forward
-                    "^[[:space:]]*(\\(defun\\|defmacro\\|defsubst\\|defvar\\|defvar-local\\|defcustom\\|defconst\\|define-derived-mode\\|define-minor-mode\\|defn\\|defn-\\)\\s-+\\([^[:space:]\n]+\\)"
-                    nil t)
-              (let ((sym (match-string 2)))
-                (when (and sym (not (string-empty-p sym))
-                           (not (gethash sym seen)))
-                  (puthash sym t seen)
-                  (push sym symbols))))))
-        (setq symbols (nreverse symbols))
-        (when path
-          (puthash path (list mtime arxana-browser-code--symbol-cache-version symbols)
-                   arxana-browser-code--symbol-cache))
-        symbols))))
+  (arxana-browser-code--profile
+   "file-symbols"
+   (lambda ()
+     (let* ((attrs (and path (file-attributes path)))
+            (mtime (and attrs (file-attribute-modification-time attrs)))
+            (cached (and path (gethash path arxana-browser-code--symbol-cache))))
+       (if (and cached
+                (equal (car cached) mtime)
+                (equal (cadr cached) arxana-browser-code--symbol-cache-version))
+           (caddr cached)
+         (let ((symbols '())
+               (seen (make-hash-table :test 'equal)))
+           (when (and path (file-readable-p path))
+             (with-temp-buffer
+               (insert-file-contents path)
+               (goto-char (point-min))
+               (while (re-search-forward
+                       "^[[:space:]]*(\\(defun\\|defmacro\\|defsubst\\|defvar\\|defvar-local\\|defcustom\\|defconst\\|define-derived-mode\\|define-minor-mode\\|defn\\|defn-\\)\\s-+\\([^[:space:]\n]+\\)"
+                       nil t)
+                 (let ((sym (match-string 2)))
+                   (when (and sym (not (string-empty-p sym))
+                              (not (gethash sym seen)))
+                     (puthash sym t seen)
+                     (push sym symbols))))))
+           (setq symbols (nreverse symbols))
+           (when path
+             (puthash path (list mtime arxana-browser-code--symbol-cache-version symbols)
+                      arxana-browser-code--symbol-cache))
+           symbols))))))
 
 (defun arxana-browser-code--doc-text (entry)
   (let ((text (and entry (arxana-docbook--entry-raw-text entry))))
     (or text "")))
+
+(defun arxana-browser-code--entry-id (entry)
+  (or (plist-get entry :doc-id)
+      (plist-get entry :doc/id)
+      (plist-get entry :id)))
+
+(defun arxana-browser-code--index-push (table key entry)
+  (when (and table key entry)
+    (puthash key (cons entry (gethash key table)) table)))
 
 (defun arxana-browser-code--text-contains-symbol-p (text symbol)
   (when (and text symbol)
@@ -311,65 +420,123 @@ Returns the active strategy, or nil if persistence is unavailable."
     matched))
 
 (defun arxana-browser-code--docbook-entries ()
-  (let ((book arxana-browser-code-docbook))
-    (if (and arxana-browser-code--docbook-entry-cache
-             (equal (plist-get arxana-browser-code--docbook-entry-cache :book) book))
-        (plist-get arxana-browser-code--docbook-entry-cache :entries)
-      (let ((entries (and (fboundp 'arxana-docbook-entries)
-                          (arxana-docbook-entries book))))
-        (setq arxana-browser-code--docbook-entry-cache
-              (list :book book :entries entries))
-        entries))))
+  (arxana-browser-code--profile
+   "docbook-entries"
+   (lambda ()
+     (let ((book arxana-browser-code-docbook))
+       (if (and arxana-browser-code--docbook-entry-cache
+                (equal (plist-get arxana-browser-code--docbook-entry-cache :book) book))
+           (plist-get arxana-browser-code--docbook-entry-cache :entries)
+         (let ((entries (and (fboundp 'arxana-docbook-entries)
+                             (arxana-docbook-entries book))))
+           (setq arxana-browser-code--docbook-entry-cache
+                 (list :book book :entries entries))
+           entries))))))
 
 (defun arxana-browser-code--docbook-indices ()
-  (let ((book arxana-browser-code-docbook))
-    (if (and arxana-browser-code--docbook-index-cache
-             (equal (plist-get arxana-browser-code--docbook-index-cache :book) book))
-        arxana-browser-code--docbook-index-cache
-      (let ((path-index (make-hash-table :test 'equal))
-            (basename-index (make-hash-table :test 'equal))
-            (function-index (make-hash-table :test 'equal))
-            (text-index (make-hash-table :test 'equal)))
-        (dolist (entry (or (arxana-browser-code--docbook-entries) '()))
-          (let* ((source (arxana-docbook--entry-source-path entry))
-                 (normalized (and source (arxana-browser-code--normalize-path source)))
-                 (basename (and source (file-name-nondirectory source)))
-                 (function (arxana-docbook--entry-function-name entry))
-                 (raw-text (arxana-docbook--entry-raw-text entry)))
-            (when normalized
-              (puthash normalized (1+ (gethash normalized path-index 0)) path-index))
-            (when basename
-              (puthash basename (1+ (gethash basename basename-index 0)) basename-index))
-            (when (and function (stringp function))
-              (puthash function (1+ (gethash function function-index 0)) function-index))
-            (when (and raw-text (stringp raw-text))
-              (let ((case-fold-search nil)
-                    (pos 0)
-                    (rx "\\b[[:alnum:]_-]+\\.[a-z]+\\b"))
-                (while (and (< pos (length raw-text))
-                            (string-match rx raw-text pos))
-                  (let ((token (match-string 0 raw-text)))
-                    (puthash token (1+ (gethash token text-index 0)) text-index))
-                  (setq pos (match-end 0)))))))
-        (setq arxana-browser-code--docbook-index-cache
-              (list :book book
-                    :path path-index
-                    :basename basename-index
-                    :function function-index
-                    :text text-index))
-        arxana-browser-code--docbook-index-cache))))
+  (arxana-browser-code--profile
+   "docbook-indices"
+   (lambda ()
+     (let ((book arxana-browser-code-docbook))
+       (if (and arxana-browser-code--docbook-index-cache
+                (equal (plist-get arxana-browser-code--docbook-index-cache :book) book))
+           arxana-browser-code--docbook-index-cache
+         (let ((path-index (make-hash-table :test 'equal))
+               (basename-index (make-hash-table :test 'equal))
+               (function-index (make-hash-table :test 'equal))
+               (text-index (make-hash-table :test 'equal))
+               (path-entries (make-hash-table :test 'equal))
+               (basename-entries (make-hash-table :test 'equal))
+               (function-entries (make-hash-table :test 'equal))
+               (text-entries (make-hash-table :test 'equal)))
+           (dolist (entry (or (arxana-browser-code--docbook-entries) '()))
+             (let* ((source (arxana-docbook--entry-source-path entry))
+                    (normalized (and source (arxana-browser-code--normalize-path source)))
+                    (basename (and source (file-name-nondirectory source)))
+                    (function (arxana-docbook--entry-function-name entry))
+                    (raw-text (arxana-docbook--entry-raw-text entry)))
+               (when normalized
+                 (puthash normalized (1+ (gethash normalized path-index 0)) path-index))
+               (when basename
+                 (puthash basename (1+ (gethash basename basename-index 0)) basename-index))
+               (when (and function (stringp function))
+                 (puthash function (1+ (gethash function function-index 0)) function-index))
+               (when normalized
+                 (arxana-browser-code--index-push path-entries normalized entry))
+               (when basename
+                 (arxana-browser-code--index-push basename-entries basename entry))
+               (when (and function (stringp function))
+                 (arxana-browser-code--index-push function-entries function entry))
+               (when (and raw-text (stringp raw-text))
+                 (let ((case-fold-search nil)
+                       (pos 0)
+                       (rx "\\b[[:alnum:]_-]+\\.[a-z]+\\b"))
+                   (while (and (< pos (length raw-text))
+                               (string-match rx raw-text pos))
+                     (let ((token (match-string 0 raw-text)))
+                       (puthash token (1+ (gethash token text-index 0)) text-index)
+                       (arxana-browser-code--index-push text-entries token entry))
+                     (setq pos (match-end 0)))))))
+           (setq arxana-browser-code--docbook-match-cache (make-hash-table :test 'equal))
+           (setq arxana-browser-code--docbook-index-cache
+                 (list :book book
+                       :path path-index
+                       :basename basename-index
+                       :function function-index
+                       :text text-index
+                       :path-entries path-entries
+                       :basename-entries basename-entries
+                       :function-entries function-entries
+                       :text-entries text-entries))
+           arxana-browser-code--docbook-index-cache))))))
 
 (defun arxana-browser-code--docbook-matches (path)
-  (let* ((target (arxana-browser-code--normalize-path path))
-         (symbols (and target (arxana-browser-code--file-symbols target)))
-         (filename (and target (file-name-nondirectory target)))
-         (matches '()))
-    (when target
-      (dolist (entry (or (arxana-browser-code--docbook-entries) '()))
-        (when (or (arxana-browser-code--entry-matches-path-p entry target)
-                  (arxana-browser-code--entry-matches-symbols-p entry symbols filename))
-          (push entry matches))))
-    (nreverse matches)))
+  (arxana-browser-code--profile
+   "docbook-matches"
+   (lambda ()
+     (let* ((target (arxana-browser-code--normalize-path path))
+            (cached (and target (gethash target arxana-browser-code--docbook-match-cache))))
+       (if cached
+           cached
+         (let* ((symbols (and target (arxana-browser-code--file-symbols target)))
+                (filename (and target (file-name-nondirectory target)))
+                (indices (and target (arxana-browser-code--docbook-indices)))
+                (path-entries (and indices (plist-get indices :path-entries)))
+                (basename-entries (and indices (plist-get indices :basename-entries)))
+                (function-entries (and indices (plist-get indices :function-entries)))
+                (text-entries (and indices (plist-get indices :text-entries)))
+                (seen (make-hash-table :test 'equal))
+                (matches '()))
+           (cl-labels ((add-entry (entry)
+                         (let ((doc-id (arxana-browser-code--entry-id entry)))
+                           (when (and doc-id (not (gethash doc-id seen)))
+                             (puthash doc-id t seen)
+                             (push entry matches)))))
+             (when target
+               (dolist (entry (and (hash-table-p path-entries)
+                                   (gethash target path-entries)))
+                 (add-entry entry))
+               (when filename
+                 (dolist (entry (and (hash-table-p basename-entries)
+                                     (gethash filename basename-entries)))
+                   (add-entry entry))
+                 (dolist (entry (and (hash-table-p text-entries)
+                                     (gethash filename text-entries)))
+                   (add-entry entry)))
+               (when (and symbols function-entries)
+                 (dolist (sym symbols)
+                   (dolist (entry (and (hash-table-p function-entries)
+                                       (gethash sym function-entries)))
+                     (add-entry entry))))
+               (when (null matches)
+                 (dolist (entry (or (arxana-browser-code--docbook-entries) '()))
+                   (when (or (arxana-browser-code--entry-matches-path-p entry target)
+                             (arxana-browser-code--entry-matches-symbols-p entry symbols filename))
+                     (add-entry entry))))))
+           (setq matches (nreverse matches))
+           (when target
+             (puthash target matches arxana-browser-code--docbook-match-cache))
+           matches))))))
 
 (defun arxana-browser-code--docbook-match-label (path)
   (let* ((target (and path (arxana-browser-code--normalize-path path)))
@@ -393,7 +560,15 @@ Returns the active strategy, or nil if persistence is unavailable."
      (symbol-count "symbol")
      ((> basename-count 0) "name")
      ((> text-count 0) "text")
-     (t "-"))))
+     (t (if (and arxana-browser-code-deep-scan target)
+            (let* ((cached (and target (gethash target arxana-browser-code--docbook-match-cache)))
+                   (matches (or cached (and target (arxana-browser-code--docbook-matches target)))))
+              (when (and target (not cached))
+                (puthash target matches arxana-browser-code--docbook-match-cache))
+              (if (and matches (listp matches) (> (length matches) 0))
+                  "symbol"
+                "-"))
+          "?")))))
 
 (defun arxana-browser-code--defun-regexp (symbol)
   (concat "^[[:space:]]*(\\(defun\\|defmacro\\|defsubst\\|defvar\\|defvar-local\\|defcustom\\|defconst\\|define-derived-mode\\|define-minor-mode\\|defn\\|defn-\\)\\s-+"
@@ -434,6 +609,7 @@ Returns the active strategy, or nil if persistence is unavailable."
 (defun arxana-browser-code--open-path (path)
   (unless (and path (file-readable-p path))
     (user-error "No readable file for %s" path))
+  (arxana-browser-code--ensure-ui)
   ;; Ensure link strategy is loaded/created on first use
   (arxana-browser-code-ensure-strategy)
   (when arxana-browser-code-allow-new-frames
@@ -486,6 +662,8 @@ Returns the active strategy, or nil if persistence is unavailable."
       (with-current-buffer code-buf
         (when (fboundp 'arxana-ui-mark-managed)
           (arxana-ui-mark-managed "Arxana Code"))
+        (when (fboundp 'arxana-ui-left-or-return)
+          (local-set-key (kbd "<left>") #'arxana-ui-left-or-return))
         (when (boundp 'arxana-ui-return-buffer)
           (setq-local arxana-ui-return-buffer browser-buf))
         (when (boundp 'arxana-ui-return-window-config)
@@ -574,114 +752,121 @@ With prefix ACTIVATE, open the symbol after cycling."
         (with-selected-window win
           (recenter))))))
 
-(defun arxana-browser-code--linkify-docs (path entries)
+(defun arxana-browser-code--linkify-docs (path entries &optional start end)
   (let* ((symbols (and path (arxana-browser-code--file-symbols path)))
-         (filename (and path (file-name-nondirectory path))))
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward "arxana-[A-Za-z0-9-]+" nil t)
-        (let* ((start (match-beginning 0))
-               (end (match-end 0))
-               (symbol (match-string 0))
-               (target (cond
-                        ((member symbol symbols) path)
-                        ((arxana-browser-code--find-symbol-path symbol))
-                        ((and filename (string= symbol filename)) path)
-                        (t nil))))
-          (when target
-            (add-text-properties
-             start end
-             (list 'arxana-symbol symbol
-                   'arxana-path target
-                   'face 'arxana-browser-code-docs-symbol-link-face
-                   'font-lock-face 'arxana-browser-code-docs-symbol-link-face
-                   'keymap arxana-browser-code-docs-link-map
-                   'mouse-face 'highlight
-                   'help-echo "Open symbol")))))
-    (when filename
-      (save-excursion
-        (goto-char (point-min))
-        (while (search-forward filename nil t)
-          (add-text-properties
-           (match-beginning 0) (match-end 0)
-           (list 'arxana-path path
-                 'face 'arxana-browser-code-docs-file-link-face
-                 'font-lock-face 'arxana-browser-code-docs-file-link-face
-                 'keymap arxana-browser-code-docs-link-map
-                 'mouse-face 'highlight
-                 'help-echo "Open file"))))
-    (when (and symbols path)
-      (dolist (symbol symbols)
+         (filename (and path (file-name-nondirectory path)))
+         (region-start (and (number-or-marker-p start) start))
+         (region-end (and (number-or-marker-p end) end)))
+    (when (and region-start (not region-end))
+      (setq region-end (point-max)))
+    (when (and region-end (not region-start))
+      (setq region-start (point-min)))
+    (when (and region-start region-end)
+      (when filename
         (save-excursion
-          (goto-char (point-min))
-          (while (search-forward symbol nil t)
-            (add-text-properties
-             (match-beginning 0) (match-end 0)
-             (list 'arxana-symbol symbol
-                   'arxana-path path
-                   'face 'arxana-browser-code-docs-symbol-link-face
-                   'font-lock-face 'arxana-browser-code-docs-symbol-link-face
-                   'keymap arxana-browser-code-docs-link-map
-                   'mouse-face 'highlight
-                   'help-echo "Open symbol")))))))
-)))
+          (goto-char region-start)
+          (while (search-forward filename region-end t)
+            (let ((match-start (match-beginning 0))
+                  (match-end (match-end 0)))
+              (when (and (number-or-marker-p match-start)
+                         (number-or-marker-p match-end))
+                (add-text-properties
+                 match-start match-end
+                 (list 'arxana-path path
+                       'face 'arxana-browser-code-docs-file-link-face
+                       'font-lock-face 'arxana-browser-code-docs-file-link-face
+                       'keymap arxana-browser-code-docs-link-map
+                       'mouse-face 'highlight
+                       'help-echo "Open file")))))))
+      (when (and symbols path)
+        (dolist (symbol symbols)
+          (save-excursion
+            (goto-char region-start)
+            (while (re-search-forward (concat "\_<" (regexp-quote symbol) "\_>") region-end t)
+              (let ((match-start (match-beginning 0))
+                    (match-end (match-end 0)))
+                (when (and (number-or-marker-p match-start)
+                           (number-or-marker-p match-end))
+                  (add-text-properties
+                   match-start match-end
+                   (list 'arxana-symbol symbol
+                         'arxana-path path
+                         'face 'arxana-browser-code-docs-symbol-link-face
+                         'font-lock-face 'arxana-browser-code-docs-symbol-link-face
+                         'keymap arxana-browser-code-docs-link-map
+                         'mouse-face 'highlight
+                         'help-echo "Open symbol")))))))))))
 
 (defun arxana-browser-code--render-docs (path entries)
-  (let ((buf (get-buffer-create arxana-browser-code-docs-buffer)))
+  (let ((buf (get-buffer-create arxana-browser-code-docs-buffer))
+        (preview-start nil)
+        (preview-end nil))
     (with-current-buffer buf
       (let ((inhibit-read-only t))
         (erase-buffer)
         (org-mode)
         (insert (format "#+TITLE: Docs for %s\n\n" (file-name-nondirectory path)))
         (insert (format "- File: %s\n\n" (arxana-browser-code--relative-path path)))
-        (let (preview-start)
-          (if entries
-              (progn
-                (insert "* Matches\n")
-                (dolist (entry entries)
-                  (let* ((doc-id (plist-get entry :doc-id))
-                         (title (arxana-browser-code--entry-title entry))
-                         (uri (and doc-id
-                                   (format "docbook://%s/%s" arxana-browser-code-docbook doc-id))))
-                    (insert (format "- %s\n" title))
-                    (when uri
-                      (insert (format "  - %s\n" uri)))))
-                (let* ((entry (car entries))
+        (if entries
+            (progn
+              (insert "* Matches\n")
+              (dolist (entry entries)
+                (let* ((doc-id (plist-get entry :doc-id))
                        (title (arxana-browser-code--entry-title entry))
-                       (doc-id (plist-get entry :doc-id))
                        (uri (and doc-id
-                                 (format "docbook://%s/%s" arxana-browser-code-docbook doc-id)))
-                       (body (ignore-errors (arxana-docbook--entry-content entry))))
-                  (insert "\n* Doc Preview\n")
-                  (insert (format "** %s\n" title))
+                                 (format "docbook://%s/%s" arxana-browser-code-docbook doc-id))))
+                  (insert (format "- %s\n" title))
                   (when uri
-                    (insert (format "- %s\n\n" uri)))
-                  (setq preview-start (point))
-                  (if (and body (> (length (string-trim body)) 0))
-                      (insert body "\n")
-                    (insert "(No content available)\n"))))
-            (insert "* Matches\n- (none)\n"))
-          (setq arxana-browser-code--doc-symbol-map
-                (arxana-browser-code--index-docs path preview-start))
-          (setq arxana-browser-code--doc-source-path path)
-          (setq arxana-browser-code--doc-last-symbol nil)))
-      (arxana-browser-code--linkify-docs path entries)
+                    (insert (format "  - %s\n" uri)))))
+              (let* ((entry (car entries))
+                     (title (arxana-browser-code--entry-title entry))
+                     (doc-id (plist-get entry :doc-id))
+                     (uri (and doc-id
+                               (format "docbook://%s/%s" arxana-browser-code-docbook doc-id)))
+                     (body (ignore-errors (arxana-docbook--entry-content entry))))
+                (insert "\n* Doc Preview\n")
+                (insert (format "** %s\n" title))
+                (when uri
+                  (insert (format "- %s\n\n" uri)))
+                (setq preview-start (point))
+                (if (and body (> (length (string-trim body)) 0))
+                    (insert body "\n")
+                  (insert "(No content available)\n"))
+                (setq preview-end (point))))
+          (insert "* Matches\n- (none)\n"))
+        (setq arxana-browser-code--doc-symbol-map
+              (arxana-browser-code--index-docs path preview-start preview-end))
+        (setq arxana-browser-code--doc-source-path path)
+        (setq arxana-browser-code--doc-last-symbol nil)
+        (when (overlayp arxana-browser-code--doc-highlight-overlay)
+          (delete-overlay arxana-browser-code--doc-highlight-overlay)
+          (setq arxana-browser-code--doc-highlight-overlay nil)))
+      (when (and preview-start preview-end)
+        (arxana-browser-code--linkify-docs path entries preview-start preview-end))
       (goto-char (point-min))
       (view-mode 1)
       (arxana-browser-code-docs-mode 1))
     buf))
 
-(defun arxana-browser-code--index-docs (path preview-start)
+(defun arxana-browser-code--index-docs (path preview-start preview-end)
   (let ((symbols (and path (arxana-browser-code--file-symbols path)))
         (map '()))
-    (when (and preview-start symbols)
+    (when (and preview-start preview-end symbols)
       (dolist (symbol symbols)
         (save-excursion
           (goto-char preview-start)
-          (when (search-forward symbol nil t)
-            (let ((bounds (bounds-of-thing-at-point 'paragraph)))
-              (when bounds
-                (push (cons symbol bounds) map)))))))
+          (when (search-forward symbol preview-end t)
+            (let ((item-start (line-beginning-position))
+                  (item-end preview-end))
+              (save-excursion
+                (when (re-search-backward "^[[:space:]]*[-+*] " preview-start t)
+                  (setq item-start (line-beginning-position))))
+              (save-excursion
+                (goto-char (line-end-position))
+                (if (re-search-forward "^[[:space:]]*\\($\\|[-+*] \\)" preview-end t)
+                    (setq item-end (match-beginning 0))
+                  (setq item-end preview-end)))
+              (push (cons symbol (cons item-start item-end)) map))))))
     (nreverse map)))
 
 (defun arxana-browser-code--current-def-symbol ()
@@ -691,12 +876,84 @@ With prefix ACTIVATE, open the symbol after cycling."
              "^[[:space:]]*(\\(defun\\|defmacro\\|defsubst\\|defvar\\|defvar-local\\|defcustom\\|defconst\\|define-derived-mode\\|define-minor-mode\\|defn\\|defn-\\)\\s-+\\([^[:space:]\n]+\\)")
         (match-string 2)))))
 
+(defun arxana-browser-code--sync-claim (owner)
+  (when (eq (current-buffer) (window-buffer (selected-window)))
+    (let* ((now (float-time))
+           (recent (and (numberp arxana-browser-code-sync-owner-timeout)
+                        (> arxana-browser-code-sync-owner-timeout 0)
+                        arxana-browser-code--sync-owner-time
+                        (< (- now arxana-browser-code--sync-owner-time)
+                           arxana-browser-code-sync-owner-timeout))))
+      (cond
+       ((and recent (not (eq arxana-browser-code--sync-owner owner)))
+        nil)
+       (t
+        (setq arxana-browser-code--sync-owner owner
+              arxana-browser-code--sync-owner-time now)
+        t)))))
+
+(defun arxana-browser-code--docs-symbol-at-point ()
+  (let ((pos (point))
+        (found nil))
+    (dolist (entry arxana-browser-code--doc-symbol-map)
+      (let ((bounds (cdr entry)))
+        (when (and bounds
+                   (>= pos (car bounds))
+                   (< pos (cdr bounds)))
+          (setq found (car entry)))))
+    found))
+
+(defun arxana-browser-code--find-defun-bounds (symbol)
+  (save-excursion
+    (goto-char (point-min))
+    (when (re-search-forward
+           (format "^[[:space:]]*(\\(defun\\|defmacro\\|defsubst\\|defvar\\|defvar-local\\|defcustom\\|defconst\\|define-derived-mode\\|define-minor-mode\\|defn\\|defn-\\)\\s-+%s\\_>"
+                   (regexp-quote symbol))
+           nil t)
+      (beginning-of-defun)
+      (let ((start (point)))
+        (end-of-defun)
+        (cons start (point))))))
+
+(defun arxana-browser-code--sync-code-highlight (symbol)
+  (if (not symbol)
+      (when (overlayp arxana-browser-code--code-highlight-overlay)
+        (delete-overlay arxana-browser-code--code-highlight-overlay)
+        (setq arxana-browser-code--code-highlight-overlay nil)
+        (setq arxana-browser-code--code-last-symbol nil))
+    (let ((bounds (arxana-browser-code--find-defun-bounds symbol)))
+      (if (not bounds)
+          (when (overlayp arxana-browser-code--code-highlight-overlay)
+            (delete-overlay arxana-browser-code--code-highlight-overlay)
+            (setq arxana-browser-code--code-highlight-overlay nil)
+            (setq arxana-browser-code--code-last-symbol nil))
+        (unless (overlayp arxana-browser-code--code-highlight-overlay)
+          (setq arxana-browser-code--code-highlight-overlay
+                (make-overlay (car bounds) (cdr bounds)))
+          (overlay-put arxana-browser-code--code-highlight-overlay
+                       'face 'arxana-browser-code-docs-target-highlight-face))
+        (move-overlay arxana-browser-code--code-highlight-overlay
+                      (car bounds) (cdr bounds))
+        (setq arxana-browser-code--code-last-symbol symbol)))))
+
+(defun arxana-browser-code--sync-code-from-docs ()
+  (when (and arxana-browser-code--doc-source-path
+             arxana-browser-code--doc-symbol-map
+             (arxana-browser-code--sync-claim 'docs))
+    (let* ((symbol (arxana-browser-code--docs-symbol-at-point))
+           (code-buf (get-file-buffer arxana-browser-code--doc-source-path)))
+      (when code-buf
+        (with-current-buffer code-buf
+          (arxana-browser-code--sync-code-highlight symbol))))))
+
 (defun arxana-browser-code--sync-docs ()
   (when (and arxana-browser-code-sync-docs
-             buffer-file-name)
+             buffer-file-name
+             (arxana-browser-code--sync-claim 'code))
     (let* ((path (arxana-browser-code--normalize-path buffer-file-name))
            (symbol (arxana-browser-code--current-def-symbol))
            (docs-buf (get-buffer arxana-browser-code-docs-buffer)))
+      (arxana-browser-code--sync-code-highlight symbol)
       (when docs-buf
         (with-current-buffer docs-buf
           (when (and arxana-browser-code--doc-source-path

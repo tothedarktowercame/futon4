@@ -101,6 +101,14 @@ Verify each supported persisted hyperlink type both works and is documented.
 5. Embedding cache (arxana/embedding-cache): if enabled, confirm it persists and
    is documented; if not enabled, note as explicitly unavailable.
 
+* Overrun
+
+Items deferred until after the basic checklist passes.
+
+1. Code browser docbook matching is too slow when computed per row.
+   Persist a code→docbook index/TOC in XTDB, fetch it in one query, and
+   refresh it on file changes (same pattern as docbook TOC).
+
 * Hard mode section
 
 ** 1. Negative / failure paths
