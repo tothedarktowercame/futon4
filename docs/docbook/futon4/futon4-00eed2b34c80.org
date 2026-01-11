@@ -1,5 +1,7 @@
 #+TITLE: Storage bridge
-:PROPERTIES:
+:PROPERTIES::SYNCED_AT: 2026-01-10T13:04:44Z
+:SYNCED_AT: 2026-01-10T13:24:58Z
+
 :DOC_ID: futon4-00eed2b34c80
 :ENTRY_ID: futon4-00eed2b34c80::org
 :VERSION: org
@@ -9,16 +11,15 @@
 :END:
 
 * Context
-* Context
 This section documents developer-facing storage concepts and the persistence
 contract used by the Futon4 client when it synchronizes with Futon1/XTDB.
 
 * Arxana links scope
 
-Arxana links target the Xanadu-style semantics that matter for authoring:
+Arxana links offer Xanadu-style semantics for authoring:
 transclusion, versioned anchors, provenance, and scholia. The system persists
 strategies and anchor evidence rather than raw computed links so that links can
-be recomputed as documents evolve while preserving author intent.
+be recomputed as documents evolve while preserving author intent!
 
 * Data structures
 

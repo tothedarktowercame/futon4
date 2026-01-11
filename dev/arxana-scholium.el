@@ -3,7 +3,7 @@
 ;;; Commentary:
 ;; Convenience wrappers around the classic scholium authoring flows.  These
 ;; commands expose the historical `new-scholium-mode` entry points while we
-;; reanimate Part IV tooling.
+;; reanimate Part IV tooling. 
 
 ;;; Code:
 
@@ -28,6 +28,11 @@
 (defvar new-scholium-name nil)
 (defvar new-scholium-mode nil)
 (defvar new-scholium-about nil)
+(defvar new-scholium--source-buffer nil)
+(defvar new-scholium--return-window-config nil)
+(defvar-local new-scholium--about nil)
+(defvar-local new-scholium--target-doc nil)
+(defconst new-scholium--buffer "*New Scholium*")
 (defvar arxana-scholium--display-buffer "*Arxana Scholia*")
 (defvar arxana-scholium--display-source-buffer nil)
 (defvar arxana-scholium--display-target-doc nil)
@@ -57,7 +62,7 @@
     (define-key map (kbd "RET") #'arxana-scholium-display-visit)
     (define-key map (kbd "t") #'arxana-scholium-display-open-thread)
     (define-key map (kbd "<left>") #'arxana-scholium-display-left-or-return)
-    (define-key map (kbd "q") #'quit-window)
+    (define-key map (kbd "q") #'arxana-scholium-display-left-or-return)
     map)
   "Keymap for `arxana-scholium-display-mode'.")
 
@@ -108,6 +113,115 @@
   "Set the scholium NAME when provided."
   (when (and name (stringp name))
     (setq new-scholium-name name)))
+
+(defun arxana-scholium--default-target-doc (&optional buffer)
+  "Return a default target-doc for BUFFER."
+  (with-current-buffer (or buffer (current-buffer))
+    (or (and (boundp 'name-of-current-article)
+             name-of-current-article)
+        (buffer-file-name)
+        (buffer-name))))
+
+(defun arxana-scholium--about-passage (about)
+  (seq-find (lambda (entry)
+              (and (listp entry)
+                   (eq (car entry) 'passage)))
+            about))
+
+(defun new-scholium--publish ()
+  "Publish the current scholium draft."
+  (interactive)
+  (let* ((content (string-trim (buffer-string)))
+         (source new-scholium--source-buffer)
+         (about (or new-scholium--about new-scholium-about))
+         (passage (arxana-scholium--about-passage about))
+         (parts (and passage (cadr passage)))
+         (target (or (and (listp parts) (car parts))
+                     new-scholium--target-doc
+                     (arxana-scholium--default-target-doc source)))
+         (beg (and (listp parts) (nth 1 parts)))
+         (end (and (listp parts) (nth 2 parts))))
+    (when (string-empty-p content)
+      (user-error "Scholium text is empty"))
+    (unless (fboundp 'arxana-links-make-scholium)
+      (user-error "arxana-links not loaded"))
+    (let* ((anchor (and source beg end
+                        (fboundp 'arxana-links-make-anchor)
+                        (arxana-links-make-anchor source beg end)))
+           (scholium (arxana-links-make-scholium
+                      :target-doc target
+                      :anchor anchor
+                      :content content))
+           (persisted (and (fboundp 'arxana-store-sync-enabled-p)
+                           (arxana-store-sync-enabled-p)
+                           (arxana-links-persist-scholium scholium))))
+      (when (and anchor source beg end)
+        (with-current-buffer source
+          (arxana-scholium--add-overlay beg end scholium)))
+      (when (buffer-live-p (current-buffer))
+        (kill-buffer (current-buffer)))
+      (when (and new-scholium--return-window-config
+                 (window-configuration-p new-scholium--return-window-config))
+        (set-window-configuration new-scholium--return-window-config))
+      (when (and (fboundp 'arxana-scholium-show-for-doc) target source)
+        (let ((items (or (and persisted
+                              (fboundp 'arxana-links-load-scholia-for-doc)
+                              (arxana-links-load-scholia-for-doc target))
+                         (list scholium))))
+          (arxana-scholium-show-for-doc target source items)))
+      (message "Scholium saved%s" (if persisted "" " (local only)")))))
+
+(defun new-scholium--cancel ()
+  "Cancel the current scholium draft."
+  (interactive)
+  (when (buffer-live-p (current-buffer))
+    (kill-buffer (current-buffer)))
+  (when (and new-scholium--return-window-config
+             (window-configuration-p new-scholium--return-window-config))
+    (set-window-configuration new-scholium--return-window-config))
+  (message "Scholium cancelled"))
+
+(unless (fboundp 'new-scholium-mode)
+  (defvar new-scholium-mode-map
+    (let ((map (make-sparse-keymap)))
+      (define-key map (kbd "C-c C-c") #'new-scholium--publish)
+      (define-key map (kbd "C-c C-k") #'new-scholium--cancel)
+      map)
+    "Keymap for `new-scholium-mode'.")
+
+  (define-derived-mode new-scholium-mode text-mode "New-Scholium"
+    "Mode for authoring scholium text."
+    (setq-local header-line-format
+                "Scholium draft — C-c C-c to publish, C-c C-k to cancel")))
+
+(unless (fboundp 'make-scholium)
+  (defun make-scholium ()
+    "Create a scholium draft buffer."
+    (interactive)
+    (let ((source (or new-scholium--source-buffer (current-buffer))))
+      (setq new-scholium--source-buffer source)
+      (setq new-scholium--return-window-config (current-window-configuration))
+      (with-current-buffer (get-buffer-create new-scholium--buffer)
+        (erase-buffer)
+        (new-scholium-mode)
+        (setq-local new-scholium--about new-scholium-about)
+        (setq-local new-scholium--target-doc (arxana-scholium--default-target-doc source))
+        (goto-char (point-min)))
+      (pop-to-buffer new-scholium--buffer))))
+
+(defun make-scholium-about-part-of-current-article (beg end)
+  "Legacy helper to create a scholium about the current article region."
+  (interactive "r")
+  (arxana-scholium--ensure-support 'make-scholium)
+  (let* ((target (or (and (boundp 'name-of-current-article)
+                          name-of-current-article)
+                     (buffer-file-name)
+                     (buffer-name)))
+         (about (list (list 'passage (list target beg end)))))
+    (setq new-scholium-about about)
+    (setq new-scholium--source-buffer (current-buffer))
+    (setq new-scholium--return-window-config (current-window-configuration))
+    (make-scholium)))
 
 ;;;###autoload
 (defun arxana-scholium-compose (&optional name)
@@ -349,14 +463,18 @@ Uses content-hash anchoring that survives minor edits."
         (setq arxana-scholium--hover-restore-window other-win)
         (setq arxana-scholium--hover-restore-buffer
               (and other-win (window-buffer other-win))))
-      (let ((url-show-status nil))
+      (let ((url-show-status nil)
+            (return-config (with-current-buffer source-buffer
+                             (current-window-configuration))))
         (let ((items (arxana-links-load-scholia-for-doc target-doc)))
-        (if hover-p
-            (let ((buf (get-buffer-create arxana-scholium--display-buffer)))
-              (arxana-scholium--render-display target-doc (or items '()) source-buffer :skip)
-              (when (window-live-p other-win)
-                (set-window-buffer other-win buf)))
-          (arxana-scholium--render-display target-doc (or items '()) source-buffer)))))))
+          (if hover-p
+              (let ((buf (get-buffer-create arxana-scholium--display-buffer)))
+                (arxana-scholium--render-display target-doc (or items '())
+                                                 source-buffer :skip return-config)
+                (when (window-live-p other-win)
+                  (set-window-buffer other-win buf)))
+            (arxana-scholium--render-display target-doc (or items '())
+                                             source-buffer nil return-config)))))))
 
 (defun arxana-scholium--display-visible-p ()
   (get-buffer-window arxana-scholium--display-buffer (selected-frame)))
@@ -454,7 +572,7 @@ Uses content-hash anchoring that survives minor edits."
       (set-window-buffer right display-buffer)
       (select-window left))))
 
-(defun arxana-scholium--render-display (target-doc scholia source-buffer &optional arrange-p)
+(defun arxana-scholium--render-display (target-doc scholia source-buffer &optional arrange-p return-config)
   (let ((buf (get-buffer-create arxana-scholium--display-buffer)))
     (with-current-buffer buf
       (let ((inhibit-read-only t))
@@ -464,7 +582,10 @@ Uses content-hash anchoring that survives minor edits."
         (setq-local arxana-scholium--display-target-doc target-doc)
         (setq-local arxana-scholium--display-index (make-hash-table :test 'equal))
         (setq-local arxana-scholium--return-window-config
-                    (current-window-configuration))
+                    (if (and return-config
+                             (window-configuration-p return-config))
+                        return-config
+                      (current-window-configuration)))
         (insert (format "Scholia for %s\n\n" target-doc))
         (if (null scholia)
             (insert "No scholia found.\n")
@@ -495,12 +616,25 @@ Uses content-hash anchoring that survives minor edits."
   (interactive)
   (if (> (point) (point-min))
       (backward-char)
-    (if (and arxana-scholium--return-window-config
-             (window-configuration-p arxana-scholium--return-window-config))
-        (set-window-configuration arxana-scholium--return-window-config)
-      (let ((source arxana-scholium--display-source-buffer))
-        (when (buffer-live-p source)
-          (pop-to-buffer source))))))
+    (let ((scholia (current-buffer))
+          (source arxana-scholium--display-source-buffer)
+          (return-config arxana-scholium--return-window-config))
+      (cond
+       ((and return-config
+             (window-configuration-p return-config)
+             (not (and (buffer-live-p source)
+                       (fboundp 'arxana-browser-code--open-path)
+                       (with-current-buffer source (buffer-file-name)))))
+        (set-window-configuration return-config))
+       ((and (buffer-live-p source)
+             (fboundp 'arxana-browser-code--open-path)
+             (with-current-buffer source (buffer-file-name)))
+        (arxana-browser-code--open-path
+         (with-current-buffer source (buffer-file-name))))
+       ((buffer-live-p source)
+        (pop-to-buffer source)))
+      (when (buffer-live-p scholia)
+        (kill-buffer scholia)))))
 
 ;;;###autoload
 (defun arxana-scholium-focus-left-or-return ()
@@ -554,7 +688,8 @@ Uses content-hash anchoring that survives minor edits."
             (setq-local arxana-scholium--display-target-doc thread-target)
             (setq-local arxana-scholium--display-index (make-hash-table :test 'equal))
             (setq-local arxana-scholium--return-window-config
-                        (current-window-configuration))
+                        (with-current-buffer source-buffer
+                          (current-window-configuration)))
             (insert (format "Thread for %s\n\n" (or thread-target "unknown")))
             (insert "Replies\n")
             (arxana-scholium--render-list replies)
@@ -569,7 +704,9 @@ Uses content-hash anchoring that survives minor edits."
   (unless (fboundp 'arxana-links-load-scholia-for-doc)
     (user-error "Missing scholium loader: arxana-links-load-scholia-for-doc"))
   (let* ((source (arxana-scholium--resolve-source-buffer source-buffer))
-         (items (or scholia (arxana-links-load-scholia-for-doc target-doc))))
+         (items (or scholia (arxana-links-load-scholia-for-doc target-doc)))
+         (return-config (with-current-buffer source
+                          (current-window-configuration))))
     (with-current-buffer source
       (when (fboundp 'arxana-scholium-clear-overlays)
         (arxana-scholium-clear-overlays))
@@ -580,7 +717,7 @@ Uses content-hash anchoring that survives minor edits."
       (unless arxana-scholium--source-hook-installed
         (add-hook 'post-command-hook #'arxana-scholium--sync-display-from-point nil t)
         (setq arxana-scholium--source-hook-installed t))
-    (arxana-scholium--render-display target-doc items source)
+    (arxana-scholium--render-display target-doc items source nil return-config)
     items))
 
 ;;;###autoload

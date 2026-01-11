@@ -130,11 +130,15 @@
             (puthash (match-string 1 line) (string-trim (match-string 2 line)) props))))))
     (when text
       (let* ((entry-id (file-name-base path))
-             (doc-id (gethash "DOC_ID" props))
              (entry-id (or (gethash "ENTRY_ID" props) entry-id))
+             (doc-id entry-id)
+             (declared (gethash "DOC_ID" props))
              (version (gethash "VERSION" props))
              (outline (gethash "OUTLINE_PATH" props))
              (path-string (gethash "PATH_STRING" props)))
+        (when (and declared (not (string= declared entry-id)))
+          (message "[arxana-docbook] Ignoring DOC_ID %s (expected %s) in %s"
+                   declared entry-id (file-name-nondirectory path)))
         (list :book book
               :doc-id doc-id
               :entry-id entry-id
@@ -265,22 +269,31 @@
     text))
 (defun arxana-docbook--entry-content (entry)
   (let* ((stub (arxana-docbook--read-stub entry))
+         (keep-src (and stub
+                        (or (string-match-p "^:KEEP_SRC:" stub)
+                            (string-match-p "^#\\+PROPERTY:.*KEEP_SRC" stub))))
          (stub-placeholder (and stub
                                 (string-match-p "\\(no summary yet\\)" stub))))
     (cond
      ((and stub (not stub-placeholder))
       (arxana-docbook--maybe-fix-mojibake
        (arxana-docbook--strip-org-metadata
-        (arxana-docbook--strip-org-code-blocks
-         (arxana-docbook--strip-stub-header stub)))))
+        (if keep-src
+            (arxana-docbook--strip-stub-header stub)
+          (arxana-docbook--strip-org-code-blocks
+           (arxana-docbook--strip-stub-header stub))))))
      ((plist-get entry :summary-raw)
       (arxana-docbook--maybe-fix-mojibake
        (arxana-docbook--strip-org-metadata
-        (arxana-docbook--strip-org-code-blocks (plist-get entry :summary-raw)))))
+       (if keep-src
+           (plist-get entry :summary-raw)
+         (arxana-docbook--strip-org-code-blocks (plist-get entry :summary-raw))))))
      ((plist-get entry :summary)
       (arxana-docbook--maybe-fix-mojibake
        (arxana-docbook--strip-org-metadata
-        (arxana-docbook--strip-org-code-blocks (plist-get entry :summary)))))
+       (if keep-src
+           (plist-get entry :summary)
+         (arxana-docbook--strip-org-code-blocks (plist-get entry :summary))))))
      (t ""))))
 (defun arxana-docbook--entry-raw-text (entry)
   (arxana-docbook--maybe-fix-mojibake

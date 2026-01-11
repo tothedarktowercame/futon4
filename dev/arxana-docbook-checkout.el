@@ -129,6 +129,39 @@
     map)
   "Keymap for `arxana-docbook-stub-mode'.")
 
+(defun arxana-docbook--refresh-linked-code-docs-from-stub ()
+  "Refresh code docs after saving a docbook stub."
+  (let* ((doc-id (or (and (boundp 'arxana-docbook--stub-doc-id)
+                          arxana-docbook--stub-doc-id)
+                     (and buffer-file-name
+                          (string-suffix-p ".org" buffer-file-name)
+                          (file-name-base buffer-file-name)))))
+    (when doc-id
+      (when (and (featurep 'arxana-browser-code)
+                 (boundp 'arxana-browser-code-docs-buffer))
+        (let ((buf (get-buffer arxana-browser-code-docs-buffer)))
+          (when buf
+            (with-current-buffer buf
+              (when (and arxana-browser-code--doc-entry
+                         (equal (plist-get arxana-browser-code--doc-entry :doc-id)
+                                doc-id))
+                (when (fboundp 'arxana-browser-code-docs-refresh)
+                  (arxana-browser-code-docs-refresh)))))))
+      (let ((doc-buf (get-buffer "*Arxana Docbook*")))
+        (when doc-buf
+          (with-current-buffer doc-buf
+            (when (and (boundp 'arxana-docbook--entry-doc-id)
+                       (equal arxana-docbook--entry-doc-id doc-id)
+                       (boundp 'arxana-docbook--entry-current)
+                       arxana-docbook--entry-current)
+              (when (fboundp 'arxana-docbook--entry-update-header)
+                (arxana-docbook--entry-update-header)))))))))
+
+(defun arxana-docbook--ensure-stub-hooks ()
+  "Ensure stub hooks are installed for the current buffer."
+  (when arxana-docbook-stub-mode
+    (add-hook 'after-save-hook #'arxana-docbook--refresh-linked-code-docs-from-stub nil t)))
+
 (defvar-local arxana-docbook--emulation-map-alist nil
   "Emulation map entry for `arxana-docbook-stub-mode`.")
 (defvar-local arxana-docbook--override-map nil
@@ -151,9 +184,12 @@
                           minor-mode-overriding-map-alist))
         (add-hook 'after-change-functions #'arxana-docbook--update-stub-header nil t)
         (add-hook 'after-save-hook #'arxana-docbook--update-stub-header nil t)
+        (add-hook 'after-save-hook #'arxana-docbook--refresh-linked-code-docs-from-stub nil t)
+        (arxana-docbook--ensure-stub-hooks)
         (arxana-docbook--update-stub-header))
     (remove-hook 'after-change-functions #'arxana-docbook--update-stub-header t)
     (remove-hook 'after-save-hook #'arxana-docbook--update-stub-header t)
+    (remove-hook 'after-save-hook #'arxana-docbook--refresh-linked-code-docs-from-stub t)
     (when arxana-docbook--emulation-map-alist
       (setq-local emulation-mode-map-alists
                   (delq arxana-docbook--emulation-map-alist
@@ -179,6 +215,15 @@
         (setq docbook-marker (re-search-forward "^:DOC_ID:" nil t)))
       (when (and docbook-marker (or in-root (not root)))
         (arxana-docbook-stub-mode 1)))))
+
+(defun arxana-docbook--refresh-open-stub-hooks ()
+  "Install stub hooks for any open docbook stub buffers."
+  (dolist (buf (buffer-list))
+    (with-current-buffer buf
+      (when arxana-docbook-stub-mode
+        (arxana-docbook--ensure-stub-hooks)))))
+
+(arxana-docbook--refresh-open-stub-hooks)
 
 (add-hook 'org-mode-hook #'arxana-docbook--maybe-enable-stub-mode)
 
@@ -287,7 +332,8 @@
          (book (cdr (assoc "book_id" payload)))
          (path (format "/docs/%s/entry" book))
          (resp (arxana-store--request "POST" path payload)))
-    (if resp
+    (if (and resp (fboundp 'arxana-store--response-ok-p)
+             (arxana-store--response-ok-p resp))
         (progn
           (setq-local arxana-docbook--stub-last-sync-error nil)
           (arxana-docbook--stub-record-sync)
@@ -296,6 +342,7 @@
       (setq-local arxana-docbook--stub-last-sync-error
                   (or (and (boundp 'arxana-store-last-error)
                            (plist-get arxana-store-last-error :detail))
+                      (and (listp resp) (plist-get resp :error))
                       "XTDB sync failed"))
       (message "Docbook sync failed: %s" arxana-docbook--stub-last-sync-error)
       nil))
@@ -305,7 +352,9 @@
   "Save the current docbook stub and sync it to XTDB."
   (interactive)
   (save-buffer)
-  (arxana-docbook--sync-stub-buffer))
+  (arxana-docbook--sync-stub-buffer)
+  (when (fboundp 'arxana-docbook--refresh-linked-code-docs-from-stub)
+    (arxana-docbook--refresh-linked-code-docs-from-stub)))
 
 (defun arxana-docbook--book-dir (book)
   (let ((root (arxana-docbook--locate-books-root)))

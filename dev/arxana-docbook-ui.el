@@ -18,6 +18,10 @@
 (declare-function arxana-docbook--available-books "arxana-docbook-core")
 (declare-function arxana-docbook-entries "arxana-docbook-core" (book))
 (declare-function arxana-docbook--entries-by-doc-id "arxana-docbook-core" (entries))
+(declare-function arxana-browser-browse "arxana-browser")
+(declare-function arxana-browser--render "arxana-browser-core")
+(declare-function arxana-links-load-strategies "arxana-links" (&optional type-filter))
+(declare-function arxana-links-edit-surface-form-at-point "arxana-links" ())
 (declare-function arxana-docbook--entry-doc-ids "arxana-docbook-toc" (book))
 (declare-function arxana-docbook--entry-source-path "arxana-docbook-core" (entry))
 (declare-function arxana-docbook--entry-version "arxana-docbook-core" (entry))
@@ -57,6 +61,8 @@
 (declare-function arxana-docbook--entry-raw-text "arxana-docbook-core" (entry))
 (declare-function arxana-docbook--entry-function-name "arxana-docbook-core" (entry))
 (declare-function arxana-docbook--entry-mtime "arxana-docbook-core" (entry))
+(declare-function arxana-links-load-voiced-links "arxana-links" (&optional strategy-id))
+(declare-function arxana-links-load-surface-forms "arxana-links" (&optional concept-id))
 (declare-function arxana-scholium-show-for-doc "arxana-scholium" (target-doc &optional source-buffer scholia))
 (declare-function arxana-links-load-scholia-for-doc "arxana-links" (doc-name))
 (declare-function arxana-docbook--normalize-timestamp "arxana-docbook-core" (value))
@@ -88,12 +94,24 @@
   "Face for symbol links in docbook entry buffers."
   :group 'arxana-docbook)
 
+(defface arxana-docbook-surface-link-face
+  '((t :inherit link :underline t))
+  "Face for surface form links in docbook entry buffers."
+  :group 'arxana-docbook)
+
 (defvar arxana-docbook-symbol-link-map
   (let ((map (make-sparse-keymap)))
     (define-key map [mouse-1] #'arxana-docbook-open-symbol-at-point)
     (define-key map (kbd "RET") #'arxana-docbook-open-symbol-at-point)
     map)
   "Keymap for symbol links in docbook entry buffers.")
+
+(defvar arxana-docbook-surface-link-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mouse-1] #'arxana-links-edit-surface-form-at-point)
+    (define-key map (kbd "RET") #'arxana-links-edit-surface-form-at-point)
+    map)
+  "Keymap for surface form links in docbook entry buffers.")
 
 (defun arxana-docbook--entry-title-text (entry)
   (or (plist-get entry :title)
@@ -157,11 +175,34 @@
 (defvar-local arxana-docbook--symbol-overlays nil
   "Overlays used for symbol links in docbook entry buffers.")
 
+(defvar-local arxana-docbook--surface-overlays nil
+  "Overlays used for surface form links in docbook entry buffers.")
+
+(defvar-local arxana-docbook--surface-tooltip-last nil
+  "Last surface form id shown in a tooltip.")
+
 (defun arxana-docbook--clear-symbol-overlays ()
   (when arxana-docbook--symbol-overlays
     (dolist (overlay arxana-docbook--symbol-overlays)
       (delete-overlay overlay))
     (setq arxana-docbook--symbol-overlays nil)))
+
+(defun arxana-docbook--clear-surface-overlays ()
+  (when arxana-docbook--surface-overlays
+    (dolist (overlay arxana-docbook--surface-overlays)
+      (delete-overlay overlay))
+    (setq arxana-docbook--surface-overlays nil)))
+
+(defun arxana-docbook--surface-tooltip (&rest _args)
+  "Show a tooltip for the surface form at point, when available."
+  (let* ((form-id (get-text-property (point) 'arxana-surface-form-id))
+         (concept-id (get-text-property (point) 'arxana-concept-id)))
+    (when (and form-id concept-id
+               (not (equal form-id arxana-docbook--surface-tooltip-last)))
+      (setq arxana-docbook--surface-tooltip-last form-id)
+      (if (fboundp 'tooltip-show)
+          (tooltip-show (format "Surface form → %s" concept-id))
+        (message "Surface form → %s" concept-id)))))
 
 (defun arxana-docbook--repo-root-for-entry (entry)
   "Return repo root for ENTRY, preferring the current docbook book."
@@ -216,6 +257,328 @@
               (overlay-put overlay 'mouse-face 'highlight)
               (overlay-put overlay 'help-echo "Open symbol")
               (push overlay arxana-docbook--symbol-overlays))))))))
+
+(defun arxana-docbook--surface-form-strategy-enabled-p (book)
+  (when (fboundp 'arxana-links-load-strategies)
+    (let* ((strategies (arxana-links-load-strategies))
+           (match nil))
+      (dolist (strategy strategies)
+        (when (and (not match)
+                   (let* ((scope (plist-get strategy :scope))
+                          (docbook (and scope (plist-get scope :docbook))))
+                     (or (not docbook)
+                         (equal docbook book))))
+          (let ((finders (plist-get strategy :finders)))
+            (when (and (listp finders)
+                       (seq-some (lambda (finder)
+                                   (let* ((value (plist-get finder :type))
+                                          (key-name "surface-form-hybrid"))
+                                     (or (eq value :surface-form-hybrid)
+                                         (equal value key-name)
+                                         (equal value ":surface-form-hybrid"))))
+                                 finders))
+              (setq match t)))))
+      match)))
+
+(defun arxana-docbook--word-boundary-ok-p (start end)
+  (let ((before (char-before start))
+        (after (char-after end)))
+    (and (or (not before)
+             (not (string-match-p "\\w" (string before))))
+         (or (not after)
+             (not (string-match-p "\\w" (string after)))))))
+
+(defun arxana-docbook--linkify-surface-forms (entry)
+  "Add surface form links inside the current docbook entry buffer for ENTRY."
+  (arxana-docbook--clear-surface-overlays)
+  (let* ((book (or (plist-get entry :book) arxana-docbook--entry-book))
+         (enabled (arxana-docbook--surface-form-strategy-enabled-p book)))
+    (when (and enabled
+               (fboundp 'arxana-links-load-surface-forms))
+      (let* ((forms (arxana-links-load-surface-forms))
+             (forms (cl-remove-if-not
+                     (lambda (form)
+                       (and (plist-get form :surface)
+                            (plist-get form :concept-id)))
+                     forms))
+             (forms (seq-sort-by
+                     (lambda (form)
+                       (length (plist-get form :surface)))
+                     #'>
+                     forms))
+             (face 'arxana-docbook-surface-link-face))
+        (when forms
+          (save-excursion
+            (dolist (form forms)
+              (let* ((surface (plist-get form :surface))
+                     (form-id (plist-get form :xt/id))
+                     (concept-id (plist-get form :concept-id)))
+                (goto-char (point-min))
+                (while (search-forward surface nil t)
+                  (let ((start (- (point) (length surface)))
+                        (end (point)))
+                    (when (and (arxana-docbook--word-boundary-ok-p start end)
+                               (not (and (fboundp 'org-in-src-block-p)
+                                         (org-in-src-block-p)))
+                               (not (get-text-property start 'arxana-symbol))
+                               (not (get-text-property start 'arxana-surface-form-id)))
+                      (add-text-properties
+                       start end
+                       (list 'arxana-surface-form-id form-id
+                             'arxana-concept-id concept-id
+                             'face face
+                             'font-lock-face face
+                             'help-echo (format "Surface form → %s" concept-id)
+                             'cursor-sensor-functions
+                             (list #'arxana-docbook--surface-tooltip)))
+                      (let ((overlay (make-overlay start end)))
+                        (overlay-put overlay 'arxana-docbook-surface t)
+                        (overlay-put overlay 'arxana-surface-form-id form-id)
+                        (overlay-put overlay 'arxana-concept-id concept-id)
+                        (overlay-put overlay 'face face)
+                        (overlay-put overlay 'keymap arxana-docbook-surface-link-map)
+                        (overlay-put overlay 'mouse-face 'highlight)
+                        (overlay-put overlay 'help-echo (format "Surface form → %s" concept-id))
+                        (overlay-put overlay 'cursor-sensor-functions
+                                     (list #'arxana-docbook--surface-tooltip))
+                        (push overlay arxana-docbook--surface-overlays)))))))))))))
+
+(defun arxana-docbook--voiced-links-for-entry (entry)
+  (when (and (fboundp 'arxana-links-load-voiced-links)
+             (fboundp 'arxana-store-sync-enabled-p)
+             (arxana-store-sync-enabled-p))
+    (let* ((book (or (plist-get entry :book) arxana-docbook--entry-book))
+           (doc-id (or (plist-get entry :doc-id) arxana-docbook--entry-doc-id))
+           (links (arxana-links-load-voiced-links)))
+      (cl-remove-if-not
+       (lambda (link)
+         (let* ((target (plist-get link :target))
+                (target-book (plist-get target :docbook))
+                (target-doc (plist-get target :doc-id)))
+           (and (equal target-book book)
+                (equal target-doc doc-id))))
+       links))))
+
+(defun arxana-docbook--resolve-voiced-source-path (entry source)
+  (let* ((repo (arxana-docbook--repo-root-for-entry entry))
+         (file (plist-get source :file)))
+    (cond
+     ((and file (file-name-absolute-p file) (file-readable-p file)) file)
+     ((and repo file
+           (file-readable-p (expand-file-name file repo)))
+      (expand-file-name file repo))
+     ((and repo file (string-prefix-p "futon4/" file)
+           (file-readable-p (expand-file-name (string-remove-prefix "futon4/" file) repo)))
+      (expand-file-name (string-remove-prefix "futon4/" file) repo))
+     (t nil))))
+
+(defun arxana-docbook--render-voiced-links (entry)
+  (let ((links (arxana-docbook--voiced-links-for-entry entry)))
+    (when links
+      (insert "\n* Voiced links\n")
+      (dolist (link links)
+        (let* ((source (plist-get link :source))
+               (symbol (plist-get source :symbol))
+               (path (arxana-docbook--resolve-voiced-source-path entry source))
+               (label (or symbol "(unknown symbol)"))
+               (file-label (or (plist-get source :file) "(unknown file)"))
+               (line-start (point)))
+          (insert (format "- %s (%s)\n" label file-label))
+          (when (and symbol path)
+            (let* ((line-end (line-end-position))
+                   (sym-start (save-excursion
+                                (goto-char line-start)
+                                (search-forward label line-end t)
+                                (- (point) (length label))))
+                   (sym-end (and sym-start (+ sym-start (length label))))
+                   (face (arxana-docbook--symbol-link-face)))
+              (when (and sym-start sym-end)
+                          (add-text-properties
+                           sym-start sym-end
+                           (list 'arxana-symbol symbol
+                                 'arxana-path path
+                                 'face face
+                                 'font-lock-face face))))))))))
+
+(defun arxana-docbook--edn-escape (text)
+  (replace-regexp-in-string
+   "\\\\" "\\\\\\\\"
+   (replace-regexp-in-string "\"" "\\\"" text t t) t t))
+
+(defun arxana-docbook--plist-p (value)
+  (and (listp value)
+       (keywordp (car value))
+       (cl-evenp (length value))))
+
+(defun arxana-docbook--edn-value (value)
+  (cond
+   ((stringp value) (format "\"%s\"" (arxana-docbook--edn-escape value)))
+   ((keywordp value) (format ":%s" (substring (symbol-name value) 0)))
+   ((symbolp value) (symbol-name value))
+   ((eq value t) "true")
+   ((null value) "nil")
+   ((numberp value) (format "%s" value))
+   ((arxana-docbook--plist-p value)
+    (arxana-docbook--edn-map value))
+   ((listp value)
+    (format "[%s]" (mapconcat #'arxana-docbook--edn-value value " ")))
+   (t (format "%S" value))))
+
+(defun arxana-docbook--edn-map (plist)
+  (let (pairs)
+    (while plist
+      (let ((key (pop plist))
+            (val (pop plist)))
+        (when key
+          (push (cons (substring (symbol-name key) 1)
+                      (arxana-docbook--edn-value val))
+                pairs))))
+    (format "{%s}"
+            (mapconcat
+             (lambda (pair)
+               (format ":%s %s" (car pair) (cdr pair)))
+             (nreverse pairs)
+             ", "))))
+
+(defun arxana-docbook--edn-map-pretty (plist)
+  "Return a pretty-printed EDN map string from PLIST."
+  (let ((pairs '())
+        (max-key 0))
+    (while plist
+      (let* ((key (pop plist))
+             (val (pop plist)))
+        (when key
+          (let* ((k (substring (symbol-name key) 1))
+                 (v (arxana-docbook--edn-value val)))
+            (setq max-key (max max-key (length k)))
+            (push (cons k v) pairs)))))
+    (setq pairs (nreverse pairs))
+    (if (null pairs)
+        "{}"
+      (concat "{\n"
+              (mapconcat
+               (lambda (pair)
+                 (format "  :%s%s %s"
+                         (car pair)
+                         (make-string (- max-key (length (car pair))) ? )
+                         (cdr pair)))
+               pairs
+               "\n")
+              "\n}"))))
+
+(defun arxana-docbook--surface-form-score (form)
+  (let* ((context (plist-get form :context))
+         (doc (and context (plist-get context :doc))))
+    (cond
+     ((and (stringp doc) (string-prefix-p "docbook://" doc)) 3)
+     ((and (stringp doc) (string-match-p "/" doc)) 2)
+     ((and (stringp doc) (not (string-prefix-p "*" doc))) 1)
+     (t 0))))
+
+(defun arxana-docbook--select-surface-form (concept-id form-id)
+  (let* ((forms (if form-id
+                    (cl-remove-if-not
+                     (lambda (form)
+                       (equal (plist-get form :xt/id) form-id))
+                     (arxana-links-load-surface-forms))
+                  (and concept-id
+                       (arxana-links-load-surface-forms concept-id)))))
+    (when (and forms (listp forms))
+      (car (seq-sort-by #'arxana-docbook--surface-form-score #'>
+                        (copy-sequence forms))))))
+
+(defun arxana-docbook--render-link-examples (entry)
+  "Render live UI examples for links in the current buffer."
+  (when (and (fboundp 'arxana-links-load-voiced-links)
+             (fboundp 'arxana-links-load-surface-forms))
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "^#\\+BEGIN_ARXANA_LINK_EXAMPLES\\s-*$" nil t)
+        (let ((block-start (line-beginning-position)))
+          (when (re-search-forward "^#\\+END_ARXANA_LINK_EXAMPLES\\s-*$" nil t)
+            (let* ((block-end (line-end-position))
+                   (raw (buffer-substring-no-properties block-start block-end))
+                   (concept-id (when (string-match "^:concept-id:[ \t]*\\(.+\\)$" raw)
+                                 (string-trim (match-string 1 raw))))
+                   (surface-id (when (string-match "^:surface-form-id:[ \t]*\\(.+\\)$" raw)
+                                 (string-trim (match-string 1 raw))))
+                   (voiced-id (when (string-match "^:voiced-link-id:[ \t]*\\(.+\\)$" raw)
+                                (string-trim (match-string 1 raw))))
+                   (surface (arxana-docbook--select-surface-form concept-id surface-id))
+                   (voiced (and voiced-id
+                                (car (cl-remove-if-not
+                                      (lambda (link)
+                                        (equal (plist-get link :xt/id) voiced-id))
+                                      (arxana-links-load-voiced-links)))))
+                   (surface-edn (and surface
+                                     (arxana-docbook--edn-map-pretty
+                                      (list :xt/id (plist-get surface :xt/id)
+                                            :type (plist-get surface :type)
+                                            :concept-id (plist-get surface :concept-id)
+                                            :concept-label (plist-get surface :concept-label)
+                                            :surface (plist-get surface :surface)
+                                            :term (plist-get surface :term)
+                                            :gloss (plist-get surface :gloss)
+                                            :source (plist-get surface :source)
+                                            :context (plist-get surface :context)))))
+                   (voiced-edn (and voiced
+                                    (arxana-docbook--edn-map-pretty
+                                     (list :xt/id (plist-get voiced :xt/id)
+                                           :type (plist-get voiced :type)
+                                           :name (plist-get voiced :name)
+                                           :source (plist-get voiced :source)
+                                           :target (plist-get voiced :target)))))
+                   (face (arxana-docbook--symbol-link-face)))
+              (delete-region block-start (min (point-max) (1+ block-end)))
+              (goto-char block-start)
+              (insert "\n* Examples (inspectable)\n")
+              (insert "** EDN\n")
+              (insert "*** Surface form\n")
+              (if surface-edn
+                  (insert (format "#+begin_src edn\n%s\n#+end_src\n"
+                                  surface-edn))
+                (insert "- (no matching surface form)\n"))
+              (insert "\n*** Voiced link\n")
+              (if voiced-edn
+                  (insert (format "#+begin_src edn\n%s\n#+end_src\n"
+                                  voiced-edn))
+                (insert "- (no matching voiced link)\n"))
+              (insert "\n** Live UI\n")
+              (insert "*** Surface form\n")
+              (if surface
+                  (let ((line-start (point)))
+                    (insert (format "- \"%s\" -> %s (source: %s)\n"
+                                    (plist-get surface :surface)
+                                    (plist-get surface :concept-id)
+                                    (plist-get surface :source)))
+                    (add-text-properties
+                     line-start (line-end-position -1)
+                     (list 'arxana-surface-form-id (plist-get surface :xt/id))))
+                (insert "- (no matching surface form)\n"))
+              (insert "\n*** Voiced link\n")
+              (if voiced
+                  (let* ((source (plist-get voiced :source))
+                         (symbol (plist-get source :symbol))
+                         (path (arxana-docbook--resolve-voiced-source-path entry source))
+                         (label (or symbol "(unknown symbol)"))
+                         (line-start (point)))
+                    (insert (format "- %s (%s)\n" label (or (plist-get source :file) "(unknown file)")))
+                    (when (and symbol path)
+                      (let* ((line-end (line-end-position))
+                             (sym-start (save-excursion
+                                          (goto-char line-start)
+                                          (search-forward label line-end t)
+                                          (- (point) (length label))))
+                             (sym-end (and sym-start (+ sym-start (length label)))))
+                        (when (and sym-start sym-end)
+                          (add-text-properties
+                           sym-start sym-end
+                           (list 'arxana-symbol symbol
+                                 'arxana-path path
+                                 'face face
+                                 'font-lock-face face))))))
+                (insert "- (no matching voiced link)\n")))))))))
+
 (defface arxana-docbook-new-content
   '((t :background "#2b2b2b"))
   "Face for lab-draft additions in docbook views."
@@ -223,6 +586,11 @@
 (defface arxana-docbook-entry-dirty-face
   '((t :foreground "orange"))
   "Face for dirty docbook entry headers."
+  :group 'arxana-docbook)
+
+(defcustom arxana-docbook-open-uri-prefer-render t
+  "When non-nil, open docbook URIs in the rendered entry view."
+  :type 'boolean
   :group 'arxana-docbook)
 (defvar-local arxana-docbook--book nil
   "Current doc book identifier (e.g., futon4) for the browser buffer.")
@@ -252,6 +620,19 @@
   "Buffer name for the main docbook entry view.")
 (defconst arxana-docbook--source-buffer "*Arxana Docbook Source*"
   "Buffer name for the docbook source view.")
+(defun arxana-docbook--refresh-linked-code-docs ()
+  "Refresh related code docs after saving a docbook entry."
+  (when (and (featurep 'arxana-browser-code)
+             (boundp 'arxana-browser-code-docs-buffer))
+    (let ((buf (get-buffer arxana-browser-code-docs-buffer)))
+      (when buf
+        (with-current-buffer buf
+          (when (and arxana-browser-code--doc-entry
+                     arxana-docbook--entry-doc-id
+                     (equal (plist-get arxana-browser-code--doc-entry :doc-id)
+                            arxana-docbook--entry-doc-id))
+            (when (fboundp 'arxana-browser-code-docs-refresh)
+              (arxana-browser-code-docs-refresh))))))))
 (defun arxana-docbook--cleanup-entry-buffers ()
   (dolist (buf (buffer-list))
     (when (string-match-p "^\\*Arxana Docbook\\*<" (buffer-name buf))
@@ -323,11 +704,35 @@
 
 (defun arxana-docbook--entry-dirty-p (entry)
   (or (buffer-modified-p)
-      (let ((local (and entry (arxana-docbook--entry-mtime entry)))
-            (remote (arxana-docbook--normalize-timestamp (plist-get entry :timestamp))))
-        (and local
-             (or (not remote)
-                 (time-less-p remote local))))))
+      (let* ((stub (and entry (plist-get entry :stub-path)))
+             (synced-at (and stub (arxana-docbook--stub-synced-at-from-path stub)))
+             (file-mtime (and stub (file-attribute-modification-time
+                                    (file-attributes stub))))
+             (fs-dirty (and synced-at
+                            file-mtime
+                            (time-less-p (time-add synced-at
+                                                   (seconds-to-time arxana-docbook--entry-fs-skew-seconds))
+                                         file-mtime))))
+        (if synced-at
+            fs-dirty
+          (let ((local (and entry (arxana-docbook--entry-mtime entry)))
+                (remote (arxana-docbook--normalize-timestamp (plist-get entry :timestamp))))
+            (and local
+                 (or (not remote)
+                     (time-less-p remote local))))))))
+
+(defconst arxana-docbook--entry-fs-skew-seconds 1
+  "Allowed filesystem mtime skew (seconds) before marking an entry dirty.")
+
+(defun arxana-docbook--stub-synced-at-from-path (path)
+  "Return SYNCED_AT timestamp from stub PATH when present."
+  (when (and path (file-readable-p path))
+    (with-temp-buffer
+      (let ((coding-system-for-read 'utf-8-unix))
+        (insert-file-contents path))
+      (goto-char (point-min))
+      (when (re-search-forward "^:SYNCED_AT:[ \t]*\\(.*\\)$" nil t)
+        (ignore-errors (date-to-time (string-trim (match-string 1))))))))
 
 (defun arxana-docbook--entry-header-line ()
   (let* ((dirty (arxana-docbook--entry-dirty-p arxana-docbook--entry-current))
@@ -600,10 +1005,16 @@
         (arxana-docbook--render-merged-heading book
                                                (list :doc-id doc-id :title base-title)
                                                entries)
+        (arxana-docbook--render-voiced-links entry)
+        (arxana-docbook--render-link-examples entry)
         (arxana-docbook--linkify-symbols entry base-title)
+        (arxana-docbook--linkify-surface-forms entry)
         (goto-char (point-min))
         (org-show-all)
         (visual-line-mode 1)
+        (when (fboundp 'cursor-sensor-mode)
+          (cursor-sensor-mode 1))
+        (read-only-mode 1)
         (arxana-docbook-entry-mode 1)
         (setq-local header-line-format '(:eval (arxana-docbook--entry-header-line)))
         (setq-local minor-mode-overriding-map-alist
@@ -651,12 +1062,30 @@
   "Open a docbook URI like docbook://BOOK/DOC-ID[/ENTRY-ID]."
   (interactive "sDocbook URI: ")
   (let* ((clean (string-trim uri))
-         (parts (split-string (string-remove-prefix "docbook://" clean) "/" t))
-         (book (nth 0 parts))
-         (doc-id (nth 1 parts))
-         (entry-id (nth 2 parts)))
-    (unless (and book doc-id)
+         (is-docbook (string-prefix-p "docbook://" clean))
+         (is-view (string-prefix-p "arxana://view/" clean)))
+    (when is-view
+      (let* ((view-name (string-remove-prefix "arxana://view/" clean))
+             (view (intern view-name))
+             (book (when (string-prefix-p "docbook" view-name) "futon4")))
+        (unless (require 'arxana-browser nil t)
+          (user-error "Arxana browser is unavailable; load arxana-browser"))
+        (arxana-browser-browse)
+        (with-current-buffer (get-buffer arxana-browser--buffer)
+          (setq arxana-browser--stack (list (list :view view :book book :label view-name))
+                arxana-browser--context (car arxana-browser--stack))
+          (arxana-browser--render))
+        (when (fboundp 'arxana-ui-refresh)
+          (arxana-ui-refresh))
+        (cl-return-from arxana-docbook-open-uri nil)))
+    (unless is-docbook
       (user-error "Invalid docbook URI: %s" uri))
+    (let* ((parts (split-string (string-remove-prefix "docbook://" clean) "/" t))
+           (book (nth 0 parts))
+           (doc-id (nth 1 parts))
+           (entry-id (nth 2 parts)))
+      (unless (and book doc-id)
+        (user-error "Invalid docbook URI: %s" uri))
     (let* ((root (arxana-docbook--locate-books-root))
            (stub-path (and root doc-id
                            (expand-file-name (format "%s.org" doc-id)
@@ -673,12 +1102,14 @@
            (entry (or (funcall pick-from local-stubs)
                       (funcall pick-from entries)
                       (list :book book :doc-id doc-id))))
-      (if (and stub-path (file-readable-p stub-path))
-          (arxana-docbook-open-stub (plist-put (copy-sequence entry) :stub-path stub-path))
-        (if (and (plist-get entry :stub-path)
-                 (file-readable-p (plist-get entry :stub-path)))
-            (arxana-docbook-open-stub entry)
-          (arxana-docbook--render-entry entry))))))
+        (if arxana-docbook-open-uri-prefer-render
+            (arxana-docbook--render-entry entry)
+          (if (and stub-path (file-readable-p stub-path))
+              (arxana-docbook-open-stub (plist-put (copy-sequence entry) :stub-path stub-path))
+            (if (and (plist-get entry :stub-path)
+                     (file-readable-p (plist-get entry :stub-path)))
+                (arxana-docbook-open-stub entry)
+              (arxana-docbook--render-entry entry))))))))
 (defun arxana-docbook--view-raw (_entry)
   (user-error "Raw JSON cache is disabled; open the stub instead"))
 (defun arxana-docbook-open-entry ()
@@ -762,12 +1193,32 @@
       (arxana-docbook-return-to-browser)
     (backward-char 1)))
 
+(defun arxana-docbook--capture-line-context ()
+  (let ((line (string-trim (buffer-substring-no-properties
+                            (line-beginning-position)
+                            (line-end-position)))))
+    (when (and line (> (length line) 6))
+      line)))
+
+(defun arxana-docbook-open-stub-at-point ()
+  "Open the stub for the current entry and try to preserve point."
+  (interactive)
+  (let ((context (arxana-docbook--capture-line-context)))
+    (arxana-docbook-open-stub arxana-docbook--entry-current)
+    (when context
+      (goto-char (point-min))
+      (when (search-forward context nil t)
+        (goto-char (match-beginning 0))
+        (beginning-of-line)))))
+
 (defvar arxana-docbook-entry-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "M-n") #'arxana-docbook-next-entry)
     (define-key map (kbd "M-p") #'arxana-docbook-prev-entry)
     (define-key map (kbd "M-y") #'arxana-docbook-copy-location)
     (define-key map (kbd "<left>") #'arxana-docbook-left-or-return)
+    (define-key map (kbd "C-c C-s") #'arxana-docbook-open-stub-at-point)
+    (define-key map (kbd "e") #'arxana-docbook-open-stub-at-point)
     map)
   "Keymap for `arxana-docbook-entry-mode'.")
 
@@ -783,9 +1234,11 @@
           (setq-local minor-mode-overriding-map-alist maps))
         (add-hook 'after-change-functions #'arxana-docbook--entry-update-header nil t)
         (add-hook 'after-save-hook #'arxana-docbook--entry-update-header nil t)
+        (add-hook 'after-save-hook #'arxana-docbook--refresh-linked-code-docs nil t)
         (arxana-docbook--entry-update-header))
     (remove-hook 'after-change-functions #'arxana-docbook--entry-update-header t)
     (remove-hook 'after-save-hook #'arxana-docbook--entry-update-header t)
+    (remove-hook 'after-save-hook #'arxana-docbook--refresh-linked-code-docs t)
     (when (assoc 'arxana-docbook-entry-mode minor-mode-overriding-map-alist)
       (setq-local minor-mode-overriding-map-alist
                   (assq-delete-all 'arxana-docbook-entry-mode

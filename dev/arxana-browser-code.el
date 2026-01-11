@@ -188,6 +188,8 @@ Returns the active strategy, or nil if persistence is unavailable."
                                           :def-patterns arxana-browser-code--def-patterns
                                           :auto-link? t)
                                     (list :type :filename-mention
+                                          :auto-link? t)
+                                    (list :type :surface-form-hybrid
                                           :auto-link? t)))
                      (strategy (arxana-links-make-strategy :scope scope :finders finders)))
                 (when (arxana-links-persist-strategy strategy)
@@ -200,6 +202,7 @@ Returns the active strategy, or nil if persistence is unavailable."
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "RET") #'arxana-browser-code-docs-activate)
     (define-key map (kbd "C-m") #'arxana-browser-code-docs-activate)
+    (define-key map (kbd "e") #'arxana-browser-code-docs-open-docbook)
     (define-key map (kbd "C-c C-n") #'arxana-browser-code-docs-cycle-paragraph)
     map)
   "Keymap for `arxana-browser-code-docs-mode'.")
@@ -251,6 +254,8 @@ Returns the active strategy, or nil if persistence is unavailable."
 (defvar-local arxana-browser-code--doc-highlight-overlay nil)
 (defvar-local arxana-browser-code--doc-last-symbol nil)
 (defvar-local arxana-browser-code--doc-cycle-cache nil)
+(defvar-local arxana-browser-code--doc-entry nil)
+(defvar-local arxana-browser-code--docbook-uri nil)
 (defvar-local arxana-browser-code--code-highlight-overlay nil)
 (defvar-local arxana-browser-code--code-last-symbol nil)
 (defvar arxana-browser-code--sync-owner nil)
@@ -269,6 +274,40 @@ Returns the active strategy, or nil if persistence is unavailable."
   (if arxana-browser-code-docs-mode
       (add-hook 'post-command-hook #'arxana-browser-code--sync-code-from-docs nil t)
     (remove-hook 'post-command-hook #'arxana-browser-code--sync-code-from-docs t)))
+
+(defun arxana-browser-code-docs-refresh ()
+  "Re-render the current code docs buffer."
+  (interactive)
+  (unless arxana-browser-code--doc-source-path
+    (user-error "No code docs source available"))
+  (setq arxana-browser-code--docbook-entry-cache nil
+        arxana-browser-code--docbook-index-cache nil)
+  (when (hash-table-p arxana-browser-code--docbook-match-cache)
+    (clrhash arxana-browser-code--docbook-match-cache))
+  (arxana-browser-code--render-docs
+   arxana-browser-code--doc-source-path
+   (arxana-browser-code--docbook-matches arxana-browser-code--doc-source-path)))
+
+(defun arxana-browser-code-docs--header-line ()
+  "Header line for code docs buffers."
+  (concat "Arxana Code Docs (read-only) — press e to edit stub"))
+
+(defun arxana-browser-code-docs-open-docbook ()
+  "Open the docbook entry associated with the current code docs."
+  (interactive)
+  (cond
+   ((and arxana-browser-code--doc-entry
+         (plist-get arxana-browser-code--doc-entry :stub-path)
+         (fboundp 'arxana-docbook-open-stub))
+    (arxana-docbook-open-stub arxana-browser-code--doc-entry))
+   ((and arxana-browser-code--doc-entry
+         (fboundp 'arxana-docbook-open-entry-object))
+    (arxana-docbook-open-entry-object arxana-browser-code--doc-entry))
+   ((and arxana-browser-code--docbook-uri
+         (fboundp 'arxana-docbook-open-uri))
+    (arxana-docbook-open-uri arxana-browser-code--docbook-uri))
+   (t
+    (user-error "No docbook entry available"))))
 
 (defun arxana-browser-code--repo-root ()
   (let* ((book-root (and (fboundp 'arxana-docbook--locate-books-root)
@@ -824,6 +863,8 @@ With prefix ACTIVATE, open the symbol after cycling."
                      (uri (and doc-id
                                (format "docbook://%s/%s" arxana-browser-code-docbook doc-id)))
                      (body (ignore-errors (arxana-docbook--entry-content entry))))
+                (setq arxana-browser-code--doc-entry entry)
+                (setq arxana-browser-code--docbook-uri uri)
                 (insert "\n* Doc Preview\n")
                 (insert (format "** %s\n" title))
                 (when uri
@@ -845,7 +886,8 @@ With prefix ACTIVATE, open the symbol after cycling."
         (arxana-browser-code--linkify-docs path entries preview-start preview-end))
       (goto-char (point-min))
       (view-mode 1)
-      (arxana-browser-code-docs-mode 1))
+      (arxana-browser-code-docs-mode 1)
+      (setq-local header-line-format '(:eval (arxana-browser-code-docs--header-line))))
     buf))
 
 (defun arxana-browser-code--index-docs (path preview-start preview-end)

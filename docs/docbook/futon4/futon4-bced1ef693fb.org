@@ -1,5 +1,7 @@
 #+TITLE: Link-following & history
-:PROPERTIES:
+:PROPERTIES::SYNCED_AT: 2026-01-10T13:12:19Z
+:SYNCED_AT: 2026-01-10T13:57:11Z
+
 :DOC_ID: futon4-bced1ef693fb
 :ENTRY_ID: futon4-bced1ef693fb::org
 :VERSION: org
@@ -9,12 +11,11 @@
 :END:
 
 * Context
-* Context
 Arxana links focus on preserving intent rather than storing every computed
-edge. Strategies describe how to find links; anchors and scholia capture the
-human signal around them. When strategies are persisted, links can be
+edge. /Strategies/ describe how to find links; anchors and scholia capture the
+human signal around them.  When strategies are persisted, links can be
 recomputed as documents evolve without losing the provenance of the
-annotations that motivated them.
+annotations that motivated them!!
 
 * Link tiers
 
@@ -23,6 +24,65 @@ annotations that motivated them.
 - Tier 2 (Anchored): persist anchored regions for immutable or historic text.
 
 * Core workflows
+
+** Authoring workflow (explicit + persisted)
+
+Use this when you want durable, inspectable links.
+
+1. Decide the intent:
+   - Scholium = a human annotation anchored to a region.
+   - Surface form = "this phrase refers to that concept".
+   - Voiced link = "this code symbol links to this doc paragraph".
+2. Capture it with a concrete command:
+   - Scholium (interactive):
+     - Select a region, then `M-x arxana-links-demo-create-scholium`.
+   - Surface form (interactive):
+     - Select a phrase, then `M-x arxana-links-capture-surface-form`.
+     - Enter concept id (e.g. `concept:arxana-compat-shim`).
+     - Provide a concept label and optional gloss for the inspectable record.
+     - Edit later with `M-x arxana-links-edit-surface-form`.
+     - Or use `M-x arxana-links-edit-surface-form-at-point` in the examples block.
+   - Voiced link (interactive):
+     - `M-x arxana-links-demo-promote-link`.
+   - Voiced link (non-interactive, recommended for scripts):
+     - `M-:` then:
+       #+begin_src elisp
+       (arxana-links-promote-voiced-link
+        :source-file "/home/joe/code/futon4/dev/arxana-compat.el"
+        :source-symbol "arxana-compat--get-article"
+        :target-docbook "futon4"
+        :target-doc-id "futon4-4ee0279e2ef1"
+        :render? t)
+       #+end_src
+3. Persist and verify:
+   - `M-x arxana-links-status` is global (not tied to the current file). It
+     lists persisted strategies and demo helpers for the active Futon profile.
+   - For surface forms:
+     - `M-:` then `(arxana-links-surface-forms-for-concept "concept:arxana-compat-shim")`.
+   - For voiced links:
+     - `M-:` then `(arxana-links-load-voiced-links)`.
+4. Confirm in the UI:
+   - Docbook entry view shows `* Voiced links` (open with `docbook://...`).
+   - Code browser shows the corresponding docs and highlights as you move point.
+
+** Data model recap
+
+- Scholium: `arxana/scholium`
+  - Target doc, anchor (content hash + context), content.
+- Surface form: `arxana/surface-form`
+  - `:concept-id`, `:surface`, `:context`, `:source`.
+- Voiced link: `arxana/voiced-link`
+  - `:source` (code symbol) and `:target` (doc paragraph).
+
+** Examples (inspectable)
+
+The following block renders live UI elements in the docbook view.
+
+#+BEGIN_ARXANA_LINK_EXAMPLES
+:concept-id: concept:arxana-compat-shim
+:surface-form-id: surface:030fc81c76b6c366e4745f9e0f293768
+:voiced-link-id: link:0958676ef4a41e3f68311ee81817b6b1
+#+END_ARXANA_LINK_EXAMPLES
 
 ** Check status
 
@@ -39,6 +99,7 @@ M-x arxana-browser-code-strategy-status
 
 The demo uses the futon4 repo and a definition-based finder. It is safe to
 run multiple times because the strategy id is deterministic.
+Surface form matching is enabled by the `:surface-form-hybrid` finder type.
 
 ** Create a resilient scholium
 
@@ -112,4 +173,3 @@ server is not on http://localhost:8080.
 When the server is reachable, the tests exercise persistence for strategies,
 voiced links, surface forms, scholia, embedding caches, and demo strategy
 creation.
-

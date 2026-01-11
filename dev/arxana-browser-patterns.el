@@ -135,10 +135,6 @@ Set to nil to disable persistence."
   "Cached backlinks list for the current pattern buffer.")
 
 ;; Hot reload safety: avoid void-variable errors in stale bytecode.
-(defvar start nil)
-(defvar end nil)
-(defvar block-start nil)
-(defvar block-end nil)
 
 (defvar arxana-browser-patterns--backlink-keymap
   (let ((map (make-sparse-keymap)))
@@ -1724,10 +1720,9 @@ use that entry; otherwise prompt for a directory."
                                name-or-path)))
           (when (and pattern-name (not (string-empty-p pattern-name)))
             (arxana-browser-patterns--apply-backlinks-overlay pattern-name))))
-      (with-current-buffer buffer
-        (goto-char (point-min)))
-      (pop-to-buffer buffer)
-      buffer)))
+        (goto-char (point-min))
+        (pop-to-buffer (current-buffer))
+        (current-buffer))))
 
 ;;;###autoload
 (defun arxana-browser-patterns-open (name)

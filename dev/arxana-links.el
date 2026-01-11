@@ -73,6 +73,11 @@ tiers, from ephemeral computed links to fully anchored archival references."
   :type 'integer
   :group 'arxana-links)
 
+(defcustom arxana-links-demo-render-after-promote t
+  "When non-nil, show a visual confirmation after link promotion."
+  :type 'boolean
+  :group 'arxana-links)
+
 ;;;; =========================================================================
 ;;;; Utility Functions
 ;;;; =========================================================================
@@ -251,8 +256,28 @@ When STRING-KEYS is non-nil, coerce keyword keys to strings."
 ;;;; =========================================================================
 
 (defconst arxana-links-finder-types
-  '(:symbol-as-term :filename-mention :embedding-proximity :explicit)
+  '(:symbol-as-term :filename-mention :embedding-proximity :explicit :surface-form-hybrid)
   "Known finder types for link strategies.")
+
+(defun arxana-links--finder-type-match-p (value finder-type)
+  (let ((key-name (substring (symbol-name finder-type) 1)))
+    (or (eq value finder-type)
+        (equal value key-name)
+        (equal value (symbol-name finder-type)))))
+
+(defun arxana-links--finder-type-present-p (finders finder-type)
+  (and (listp finders)
+       (seq-some (lambda (finder)
+                   (arxana-links--finder-type-match-p
+                    (plist-get finder :type)
+                    finder-type))
+                 finders)))
+
+(defun arxana-links--ensure-finder (finders finder-type &rest props)
+  (if (arxana-links--finder-type-present-p finders finder-type)
+      finders
+    (append (or finders '())
+            (list (append (list :type finder-type :auto-link? t) props)))))
 
 (cl-defun arxana-links-make-strategy (&key id scope finders created-by)
   "Create a link strategy plist.
@@ -394,25 +419,54 @@ Optional STRATEGY-ID filters to links found by that strategy."
                entities)
             entities))))))
 
+(defun arxana-links-load-surface-forms (&optional concept-id)
+  "Load surface forms from Futon1.
+Optional CONCEPT-ID filters to a specific concept."
+  (when (arxana-store-sync-enabled-p)
+    (let* ((query (format "type=arxana/surface-form&limit=%d"
+                          arxana-links-latest-limit))
+           (response (arxana-store--request "GET" "/entities/latest" nil query)))
+      (when response
+        (let* ((entities (arxana-links--unwrap-entities
+                          (arxana-links--normalize-json
+                           (cdr (assq :entities response))))))
+          (if concept-id
+              (cl-remove-if-not
+               (lambda (form)
+                 (equal (plist-get form :concept-id) concept-id))
+               entities)
+            entities))))))
+
+
 ;;;; =========================================================================
 ;;;; Surface Forms (Open World Ingest)
 ;;;; =========================================================================
 
-(cl-defun arxana-links-make-surface-form (&key concept-id surface context source)
+(cl-defun arxana-links-make-surface-form (&key concept-id surface term concept-label gloss context source)
   "Create a surface form plist.
 
 CONCEPT-ID is the canonical concept identifier (string).
 SURFACE is the alternative text used to refer to the concept (string).
+TERM is the normalized term (defaults to SURFACE).
+CONCEPT-LABEL is a human-friendly concept name (defaults to CONCEPT-ID).
+GLOSS is a short description (optional).
 CONTEXT is a plist with:
   :doc     - Document name where this usage occurred
   :snippet - Surrounding text snippet
   :offset  - Optional character offset
 
 SOURCE is :explicit (user marked) or :inferred (NLP detected)."
-  (let ((form (list :xt/id (arxana-links--generate-id "surface" concept-id surface)
+  (let* ((term (or term surface))
+         (concept-label (or concept-label concept-id))
+         (gloss (and gloss (string-trim gloss)))
+         (gloss (and gloss (not (string-empty-p gloss)) gloss))
+         (form (list :xt/id (arxana-links--generate-id "surface" concept-id surface)
                     :type "arxana/surface-form"
                     :concept-id concept-id
+                    :concept-label concept-label
                     :surface surface
+                    :term term
+                    :gloss gloss
                     :context context
                     :source (or source :explicit)
                     :created-at (arxana-links--timestamp)
@@ -430,8 +484,44 @@ SOURCE is :explicit (user marked) or :inferred (NLP detected)."
     (arxana-store--request "POST" "/entity"
                            (arxana-links--wrap-entity-payload form))))
 
+(defun arxana-links--context-doc ()
+  "Return a stable doc identifier for the current buffer."
+  (cond
+   ((and (boundp 'arxana-docbook--entry-doc-id)
+         arxana-docbook--entry-doc-id
+         (boundp 'arxana-docbook--book)
+         arxana-docbook--book)
+    (format "docbook://%s/%s" arxana-docbook--book arxana-docbook--entry-doc-id))
+   ((and (boundp 'arxana-docbook--stub-doc-id)
+         arxana-docbook--stub-doc-id
+         (boundp 'arxana-docbook--stub-book)
+         arxana-docbook--stub-book)
+    (format "docbook://%s/%s" arxana-docbook--stub-book arxana-docbook--stub-doc-id))
+   (buffer-file-name (abbreviate-file-name buffer-file-name))
+   (t (buffer-name))))
+
+(defun arxana-links--stable-doc-p (doc)
+  "Return non-nil when DOC is a stable identifier."
+  (or (and (stringp doc)
+           (string-prefix-p "docbook://" doc))
+      (and (stringp doc)
+           (file-name-absolute-p doc))
+      (and (stringp doc)
+           (file-exists-p doc))))
+
+(defun arxana-links--surface-form-label (form)
+  (let ((surface (or (plist-get form :surface) "?"))
+        (concept (or (plist-get form :concept-id) "?"))
+        (label (or (plist-get form :concept-label) ""))
+        (id (or (plist-get form :xt/id) "?")))
+    (format "%s -> %s%s (%s)"
+            surface
+            concept
+            (if (string-empty-p label) "" (format " [%s]" label))
+            id)))
+
 ;;;###autoload
-(defun arxana-links-capture-surface-form (surface concept-id)
+(defun arxana-links-capture-surface-form (surface concept-id &optional concept-label gloss term)
   "Capture that SURFACE was used to refer to CONCEPT-ID.
 When called interactively, prompts for both values.
 If a region is selected, uses the region text as SURFACE."
@@ -439,8 +529,12 @@ If a region is selected, uses the region text as SURFACE."
    (list (if (use-region-p)
              (buffer-substring-no-properties (region-beginning) (region-end))
            (read-string "Surface form: "))
-         (read-string "Concept ID: ")))
-  (let* ((context (list :doc (buffer-name)
+         (read-string "Concept ID: ")
+         (read-string "Concept label (optional): " nil nil "")
+         (read-string "Gloss (optional): " nil nil "")
+         nil))
+  (let* ((context-doc (arxana-links--context-doc))
+         (context (list :doc context-doc
                         :snippet (when (use-region-p)
                                    (buffer-substring-no-properties
                                     (max (point-min) (- (region-beginning) 20))
@@ -448,12 +542,74 @@ If a region is selected, uses the region text as SURFACE."
                         :offset (when (use-region-p) (region-beginning))))
          (form (arxana-links-make-surface-form
                 :concept-id concept-id
+                :concept-label concept-label
                 :surface surface
+                :term term
+                :gloss gloss
                 :context context
                 :source :explicit)))
+    (unless (arxana-links--stable-doc-p context-doc)
+      (message "[arxana-links] Warning: persisting surface form with ephemeral :context :doc %s"
+               context-doc))
     (if (arxana-links-persist-surface-form form)
         (message "Captured surface form: '%s' -> %s" surface concept-id)
       (message "Failed to persist surface form (check Futon sync)"))))
+
+;;;###autoload
+(defun arxana-links-edit-surface-form (form-id)
+  "Edit an existing surface form and persist the changes."
+  (interactive
+   (let* ((forms (arxana-links-load-surface-forms)))
+     (unless (and forms (listp forms))
+       (user-error "No surface forms available (check Futon sync)"))
+     (let* ((choices (mapcar (lambda (form)
+                               (cons (arxana-links--surface-form-label form) form))
+                             forms))
+            (label (completing-read "Surface form: " choices nil t)))
+       (list (plist-get (cdr (assoc label choices)) :xt/id)))))
+  (let* ((forms (arxana-links-load-surface-forms))
+         (form (and forms
+                    (cl-find-if (lambda (item)
+                                  (equal (plist-get item :xt/id) form-id))
+                                forms))))
+    (unless form
+      (user-error "Surface form not found: %s" form-id))
+    (let* ((old-surface (or (plist-get form :surface) ""))
+           (old-concept (or (plist-get form :concept-id) ""))
+           (old-term (or (plist-get form :term) old-surface ""))
+           (old-label (or (plist-get form :concept-label) old-concept ""))
+           (old-gloss (or (plist-get form :gloss) ""))
+           (surface (read-string "Surface form: " old-surface nil old-surface))
+           (concept-id (read-string "Concept ID: " old-concept nil old-concept))
+           (concept-label (read-string "Concept label: " old-label nil old-label))
+           (term (read-string "Term: " old-term nil old-term))
+           (gloss (read-string "Gloss (optional): " old-gloss nil old-gloss))
+           (context-doc (plist-get (plist-get form :context) :doc))
+           (updated (copy-sequence form)))
+      (setq updated (plist-put updated :surface surface))
+      (setq updated (plist-put updated :concept-id concept-id))
+      (setq updated (plist-put updated :concept-label concept-label))
+      (setq updated (plist-put updated :term term))
+      (setq updated (plist-put updated :gloss (let ((value (and gloss (string-trim gloss))))
+                                                (and value (not (string-empty-p value)) value))))
+      (setq updated (plist-put updated :updated-at (arxana-links--timestamp)))
+      (setq updated (plist-put updated :updated-by user-login-name))
+      (unless (arxana-links--stable-doc-p context-doc)
+        (message "[arxana-links] Warning: surface form has ephemeral :context :doc %s"
+                 context-doc))
+      (if (arxana-links-persist-surface-form updated)
+          (message "Updated surface form: '%s' -> %s" surface concept-id)
+        (message "Failed to update surface form (check Futon sync)")))))
+
+;;;###autoload
+(defun arxana-links-edit-surface-form-at-point ()
+  "Edit the surface form referenced at point."
+  (interactive)
+  (let ((form-id (or (get-text-property (point) 'arxana-surface-form-id)
+                     (get-text-property (line-beginning-position) 'arxana-surface-form-id))))
+    (if form-id
+        (arxana-links-edit-surface-form form-id)
+      (call-interactively #'arxana-links-edit-surface-form))))
 
 (defun arxana-links-surface-forms-for-concept (concept-id)
   "Fetch all surface forms for CONCEPT-ID from Futon1."
@@ -782,20 +938,71 @@ Returns an alist suitable for embedding cache :neighbors field."
 ;;;; =========================================================================
 
 ;;;###autoload
+(cl-defun arxana-links-promote-voiced-link (&key source-file source-symbol
+                                                 target-docbook target-doc-id
+                                                 found-by status promoted-by render?)
+  "Persist a voiced link between SOURCE-SYMBOL and TARGET-DOC-ID.
+
+SOURCE-FILE is the file containing SOURCE-SYMBOL (absolute or relative path).
+TARGET-DOCBOOK defaults to \"futon4\" when omitted. When RENDER? is non-nil,
+show a confirmation buffer."
+  (let* ((source-file (or source-file
+                          (and (buffer-file-name) (buffer-file-name))
+                          (user-error "Source file is required")))
+         (source-symbol (or source-symbol
+                            (user-error "Source symbol is required")))
+         (target-docbook (or target-docbook "futon4"))
+         (target-doc-id (or target-doc-id
+                            (user-error "Target doc ID is required")))
+         (source (list :type :code-symbol
+                       :file (file-relative-name source-file)
+                       :symbol source-symbol))
+         (target (list :type :doc-paragraph
+                       :docbook target-docbook
+                       :doc-id target-doc-id))
+         (link (arxana-links-make-voiced-link
+                :source source
+                :target target
+                :found-by found-by
+                :status status
+                :promoted-by promoted-by)))
+    (if (arxana-links-persist-voiced-link link)
+        (progn
+          (message "Link promoted: %s -> %s" source-symbol target-doc-id)
+          (when (or render? arxana-links-demo-render-after-promote)
+            (arxana-links-demo--render-promoted-link link))
+          link)
+      (message "Failed to persist link")
+      nil)))
+
+;;;###autoload
 (defun arxana-links-demo-create-strategy ()
   "Demo: Create and persist a link strategy for futon4 code-docs.
 This demonstrates Tier 1 persistence - storing finder rules, not individual links."
   (interactive)
-  (let* ((scope (list :repo "futon4"
-                      :code-roots '("dev/" "test/")
-                      :docbook "futon4"))
-         (finders (list (list :type :symbol-as-term
-                              :def-patterns '("defun" "defmacro" "defvar" "defcustom")
-                              :auto-link? t)
-                        (list :type :filename-mention
-                              :auto-link? t)))
-         (strategy (arxana-links-make-strategy :scope scope :finders finders)))
-    (message "Creating strategy: %s" (plist-get strategy :xt/id))
+  (let* ((existing (arxana-links-find-strategy "futon4"))
+         (scope (or (and existing (plist-get existing :scope))
+                    (list :repo "futon4"
+                          :code-roots '("dev/" "test/")
+                          :docbook "futon4")))
+         (base-finders (or (and existing (plist-get existing :finders)) '()))
+         (finders (arxana-links--ensure-finder
+                   (arxana-links--ensure-finder
+                    (arxana-links--ensure-finder
+                     base-finders
+                     :symbol-as-term
+                     :def-patterns '("defun" "defmacro" "defvar" "defcustom"))
+                    :filename-mention)
+                   :surface-form-hybrid))
+         (strategy (if existing
+                       (let ((updated (copy-sequence existing)))
+                         (setq updated (plist-put updated :scope scope))
+                         (setq updated (plist-put updated :finders finders))
+                         (setq updated (plist-put updated :updated-at (arxana-links--timestamp)))
+                         (setq updated (plist-put updated :updated-by user-login-name))
+                         updated)
+                     (arxana-links-make-strategy :scope scope :finders finders))))
+    (message "Persisting strategy: %s" (plist-get strategy :xt/id))
     (if (arxana-links-persist-strategy strategy)
         (message "Strategy persisted successfully!")
       (message "Failed to persist strategy"))))
@@ -820,8 +1027,29 @@ Prompts for source and target information."
                 :target target
                 :status :confirmed)))
     (if (arxana-links-persist-voiced-link link)
-        (message "Link promoted: %s -> %s" source-symbol target-doc-id)
+        (progn
+          (message "Link promoted: %s -> %s" source-symbol target-doc-id)
+          (when arxana-links-demo-render-after-promote
+            (arxana-links-demo--render-promoted-link link)))
       (message "Failed to persist link"))))
+
+(defun arxana-links-demo--render-promoted-link (link)
+  "Render a quick confirmation buffer for LINK."
+  (let ((buf (get-buffer-create "*Arxana Voiced Link*")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert "Arxana Voiced Link\n")
+        (insert "==================\n\n")
+        (insert (format "ID: %s\n" (or (plist-get link :xt/id) "?")))
+        (insert (format "Name: %s\n" (or (plist-get link :name) "(none)")))
+        (insert (format "Status: %s\n" (or (plist-get link :status) "?")))
+        (insert (format "Source: %S\n" (plist-get link :source)))
+        (insert (format "Target: %S\n" (plist-get link :target)))
+        (insert (format "Promoted by: %s\n" (or (plist-get link :promoted-by) "?")))
+        (insert (format "Promoted at: %s\n" (or (plist-get link :promoted-at) "?")))
+        (view-mode 1)))
+    (display-buffer buf)))
 
 ;;;###autoload
 (defun arxana-links-demo-create-scholium ()

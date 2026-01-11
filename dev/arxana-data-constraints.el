@@ -91,7 +91,9 @@ Use `message' to warn, `error' to raise, or nil to ignore."
        (arxana-data-constraints--string-nonempty-p (plist-get form :xt/id))
        (equal (plist-get form :type) "arxana/surface-form")
        (arxana-data-constraints--string-nonempty-p (plist-get form :concept-id))
-       (arxana-data-constraints--string-nonempty-p (plist-get form :surface))))
+       (arxana-data-constraints--string-nonempty-p (plist-get form :surface))
+       (arxana-data-constraints--string-nonempty-p (plist-get form :term))
+       (arxana-data-constraints--string-nonempty-p (plist-get form :concept-label))))
 
 (defun arxana-data-constraints--hyperedge-ok-p (hx-type endpoints)
   (and (or (symbolp hx-type) (arxana-data-constraints--string-nonempty-p hx-type))

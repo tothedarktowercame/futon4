@@ -42,6 +42,17 @@ This defines how filesystem-backed docbook entries (JSON + stubs) are ingested i
 5. TOC: ingest `data/logs/books/<book>/toc.json` as `doc heading` docs; link `:doc/toc-version` on entries if present.
 6. Transactions: use `xtdb.api/submit!` with `::xtdb/put` for heading + entry docs; optional link docs for crossrefs.
 
+## Gatekeeping (Charon)
+
+Futon1 now uses Charon envelopes to gate ingest and will reject docbook writes
+when invariants fail. This can block unrelated ingest (for example patterns)
+because invariants are enforced across models.
+
+When ingest is rejected:
+
+- query `/api/alpha/meta/model/docbook/verify` for detailed failures.
+- inspect the specific docbook entry via `/api/alpha/docs/:book/heading/:doc-id`.
+
 ## Retrieval semantics
 
 - **Latest per heading**: for each `:doc/id`, pick the maximal entry by `timestamp/version` where `status = :active` and not `replaced` by another entry; if forks, prefer `:doc/preferred` else max `(timestamp, version)`. If the latest is `:removed`, treat as absent by default.

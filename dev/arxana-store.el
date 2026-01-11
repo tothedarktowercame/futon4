@@ -182,6 +182,55 @@
             (append-to-file (point-min) (point-max) log-file)))
       (error nil))))
 
+(defcustom arxana-store-show-ingest-error-buffer t
+  "When non-nil, show a buffer for ingest errors returned by Futon."
+  :type 'boolean
+  :group 'arxana-store)
+
+(defvar arxana-store-last-ingest-error nil
+  "Last ingest error payload returned by Futon.")
+
+(defun arxana-store--response-ok-p (body)
+  "Return non-nil when BODY indicates a successful response."
+  (and (listp body)
+       (not (alist-get :error body))
+       (let ((ok-entry (assoc :ok? body)))
+         (or (null ok-entry)
+             (cdr ok-entry)))))
+
+(defun arxana-store--ingest-request-p (request)
+  "Return non-nil if REQUEST looks like a write/ingest call."
+  (let ((method (plist-get request :method)))
+    (memq method '("POST" "PUT" "PATCH" "DELETE"))))
+
+(defun arxana-store--show-ingest-error (body)
+  "Show an ingest error buffer for BODY."
+  (when arxana-store-show-ingest-error-buffer
+    (setq arxana-store-last-ingest-error body)
+    (let ((buf (get-buffer-create "*Arxana Ingest Error*"))
+          (request arxana-store-last-request))
+      (with-current-buffer buf
+        (let ((inhibit-read-only t))
+          (erase-buffer)
+          (insert "Arxana Ingest Error\n")
+          (insert "====================\n\n")
+          (when request
+            (insert (format "Request: %s %s\n\n"
+                            (or (plist-get request :method) "?")
+                            (or (plist-get request :target) "?"))))
+          (when (alist-get :error body)
+            (insert (format "Error: %s\n" (alist-get :error body))))
+          (when (alist-get :reason body)
+            (insert (format "Reason: %s\n" (alist-get :reason body))))
+          (when (alist-get :hint body)
+            (insert (format "Hint: %s\n" (alist-get :hint body))))
+          (insert "\nPayload:\n")
+          (insert "--------\n")
+          (pp body (current-buffer))
+          (insert "\n")
+          (view-mode 1)))
+      (display-buffer buf))))
+
 (defun arxana-store--request (method path &optional payload query)
   "Fire METHOD PATH against Futon and return the parsed JSON body.
 Optional PAYLOAD is JSON encoded for POST requests. QUERY is an
@@ -208,7 +257,9 @@ already encoded query string (without the leading ?)."
                                             :payload payload
                                             :query query))
       (condition-case err
-          (let ((buf (url-retrieve-synchronously target nil nil arxana-store-request-timeout)))
+          (let ((inhibit-message t)
+                (url-show-status nil)
+                (buf (url-retrieve-synchronously target nil nil arxana-store-request-timeout)))
             (if (not (buffer-live-p buf))
                 (let ((retry nil))
                   (when buf (kill-buffer buf))
@@ -258,6 +309,9 @@ already encoded query string (without the leading ?)."
                           (setq arxana-store-last-error nil
                                 arxana-store-last-response body)
                           (arxana-store--log-invariants-failure body)
+                          (when (and (not (arxana-store--response-ok-p body))
+                                     (arxana-store--ingest-request-p arxana-store-last-request))
+                            (arxana-store--show-ingest-error body))
                           body)
                       (arxana-store--record-error 'protocol "Failed to parse Futon JSON" target)))))))
         (quit
@@ -319,6 +373,10 @@ already encoded query string (without the leading ?)."
                  (setq result parsed))))
            (when (buffer-live-p (current-buffer))
              (kill-buffer (current-buffer)))
+           (when (and result
+                      (not (arxana-store--response-ok-p result))
+                      (arxana-store--ingest-request-p arxana-store-last-request))
+             (arxana-store--show-ingest-error result))
            (when (functionp callback)
              (funcall callback result status))))
        nil t))))

@@ -1,5 +1,6 @@
 #+TITLE: Browser core architecture
-:PROPERTIES:
+:PROPERTIES::SYNCED_AT: 2026-01-10T13:29:55Z
+:SYNCED_AT: 2026-01-10T15:45:52Z
 :DOC_ID: futon4-291af9a29393
 :ENTRY_ID: futon4-291af9a29393::org
 :VERSION: org
@@ -15,6 +16,11 @@ libraries, docbook entries, media, lab sessions, and future code browsing. The
 core idea is that every row in the browser is a small plist tagged with `:type`
 (or `:view`), and the browser decides what to show and how to open it based on
 that tag.
+
+* History
+The visual look of the browser is inspired by the iPod browser.  An
+earlier emacs prototype ‘nero.el’ also gives some ideas about how text
+based browsing in Emacs can work.
 
 * Stack + context model
 Navigation is stack-based. `arxana-browser--stack` holds a list of context
