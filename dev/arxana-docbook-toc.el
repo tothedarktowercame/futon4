@@ -16,6 +16,7 @@
 (declare-function arxana-docbook--entries-for "arxana-docbook-core" (book))
 (declare-function arxana-docbook--remote-contents "arxana-docbook-remote" (book))
 (declare-function arxana-docbook--remote-available-p "arxana-docbook-remote" (&optional book))
+(declare-function arxana-docbook--remote-update-toc-order "arxana-docbook-remote" (book order))
 
 (defcustom arxana-docbook-remote-preserve-order t
   "When non-nil, trust remote TOC order as returned by /docs/:book/contents."
@@ -192,6 +193,26 @@ Return non-nil when the file was updated."
         (insert (json-encode ordered))
         (insert "\n")))
     t))
+
+(defun arxana-docbook-sync-toc-from-file (&optional book)
+  "Sync toc.json order for BOOK to the remote docbook store."
+  (interactive
+   (list (completing-read "Docbook toc sync book: "
+                          (or (arxana-docbook--available-books) '("futon4"))
+                          nil t)))
+  (let* ((book (or (and book (not (string-empty-p book)) book) "futon4"))
+         (toc (arxana-docbook--toc book))
+         (order (and (listp toc)
+                     (delq nil (mapcar #'arxana-docbook--toc-doc-id toc)))))
+    (unless (seq order)
+      (user-error "No toc.json headings for %s" book))
+    (unless (arxana-docbook--remote-available-p book)
+      (user-error "Remote docbook storage unavailable; enable sync and check futon4-base-url"))
+    (let ((resp (arxana-docbook--remote-update-toc-order book order)))
+      (if (and (listp resp) (eq (plist-get resp :status) :ok))
+          (message "Synced toc.json order for %s (%d headings)" book (length order))
+        (user-error "Docbook toc sync failed: %s"
+                    (or (plist-get resp :error) "unknown error"))))))
 (defun arxana-docbook--toc-for-view (book)
   (let ((remote (when (arxana-docbook--remote-available-p book)
                   (ignore-errors (arxana-docbook--remote-contents book)))))

@@ -317,9 +317,18 @@ Returns the active strategy, or nil if persistence is unavailable."
                                            (expand-file-name arxana-browser-code-docbook books))))
                            (when (and book (file-directory-p book))
                              (expand-file-name "../../.." book)))))
+         (book-name (and arxana-browser-code-docbook
+                         (file-name-nondirectory (directory-file-name arxana-browser-code-docbook))))
+         (book-root-name (and book-root
+                              (file-name-nondirectory (directory-file-name book-root))))
+         (sibling-root (and book-root
+                            book-name
+                            (not (string= book-name book-root-name))
+                            (expand-file-name (format "../%s" book-name) book-root)))
+         (sibling-root (and sibling-root (file-directory-p sibling-root) sibling-root))
          (base (or load-file-name buffer-file-name default-directory))
          (root (and base (locate-dominating-file base "dev"))))
-    (or book-root root default-directory)))
+    (or sibling-root book-root root default-directory)))
 
 (defun arxana-browser-code--resolve-roots ()
   (let* ((root (arxana-browser-code--repo-root))

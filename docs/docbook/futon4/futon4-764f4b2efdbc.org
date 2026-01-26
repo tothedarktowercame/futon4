@@ -21,6 +21,8 @@ exposes viewer commands for raw JSON, stub summaries, traces, and draft docs.
 - `lab/stubs/` contains extracted summaries as Org stubs.
 - `lab/trace/` contains annotated traces (usually Org).
 - `lab/doc-drafts/` stores draft docs (JSON) produced during sessions.
+- `lab/raw-stream/` holds raw Codex JSONL streams from live runs.
+- `lab/musn/` holds MUSN session logs and snapshots from the turn lifecycle service.
 
 Each raw payload includes a `lab/session-id`, timestamps, and references to
 trace/stub/draft paths. If a path is missing, `arxana-lab` synthesizes a default
@@ -44,6 +46,12 @@ raw JSON, falling back through several strategies (parsed JSON, decoded
 contents, or raw text) and warning when only raw JSON can be shown. Drafts and
 traces use `arxana-lab--open-file` to open a read‑only buffer in Org or JS mode
 depending on the file kind.
+
+* Fucodex runs and MUSN logs
+Live fucodex runs emit JSONL under `lab/raw-stream/` and MUSN turn logs under
+`lab/musn/`. To browse them here, export the JSONL into `lab/raw`, `lab/stubs`,
+and `lab/trace` (see `futon3/dev/lab-export.clj`) and point
+`arxana-lab-root` at the repo that owns the `lab/` directory.
 
 * File browsers
 `arxana-lab-file-items` exposes the raw, stub, and draft files as listable items

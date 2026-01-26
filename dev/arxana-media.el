@@ -212,9 +212,15 @@
   '(("vocal+banjo+bass+harp"
      :script "scripts/bounce_vocal_banjo_bass_harp.sh"
      :instruments ("vocal" "banjo" "bass" "harmonica"))
+    ("vocal+banjo+bass+accordion"
+     :script "scripts/bounce_vocal_banjo_bass_accordion.sh"
+     :instruments ("vocal" "banjo" "bass" "accordion"))
     ("vocal+banjo+bass+vocal2"
      :script "scripts/bounce_vocal_banjo_bass_vocal2.sh"
      :instruments ("vocal" "banjo" "bass" "vocal2"))
+    ("vocal+vocal2+viola+accordion"
+     :script "scripts/bounce_vocal_vocal2_viola_accordion.sh"
+     :instruments ("vocal" "vocal2" "viola" "accordion"))
     ("vocal-forward+banjo+bass+harp"
      :script "scripts/bounce_vocal_banjo_bass_harp_vocal_forward.sh"
      :instruments ("vocal" "banjo" "bass" "harmonica"))

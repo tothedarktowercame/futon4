@@ -1,7 +1,7 @@
 #+TITLE: Tatami session management
 :PROPERTIES:
 :DOC_ID: futon3-574ad9c946f8
-:ENTRY_ID: futon3-574ad9c946f8::org
+:ENTRY_ID: futon3-574ad9c946f8
 :VERSION: org
 :OUTLINE_PATH: Tatami / Tatami session management
 :PATH_STRING: Tatami / Tatami session management

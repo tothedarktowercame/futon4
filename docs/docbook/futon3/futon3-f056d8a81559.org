@@ -1,7 +1,7 @@
 #+TITLE: UI JSON facades
 :PROPERTIES:
 :DOC_ID: futon3-f056d8a81559
-:ENTRY_ID: futon3-f056d8a81559::org
+:ENTRY_ID: futon3-f056d8a81559
 :VERSION: org
 :OUTLINE_PATH: API / UI JSON facades
 :PATH_STRING: API / UI JSON facades
@@ -11,18 +11,34 @@
 * Overview
 `f2.ui` exposes JSON endpoints for monitoring and Tatami operations. It wraps
 transport and Tatami helpers in simple Ring handlers and returns JSON
-responses for the browser UI and tools.
+responses for the browser UI and tools. The MUSN turn lifecycle now lives in
+`futon3.musn.http`, a separate HTTP service that validates session/turn
+requests and persists logs under `lab/musn/`.
 
 * Routes
 GET endpoints include `/musn/clients`, `/musn/sessions`, `/musn/practices`,
-and `/musn/tatami/status`. POST endpoints include
-`/musn/tatami/start|log|close|select`, `/musn/hints`, `/musn/cues`, and
-`/musn/export`.
+`/musn/hx/artifacts`, `/musn/hx/links`, `/musn/hx/candidates`, and
+`/musn/tatami/status`. POST endpoints include
+`/musn/tatami/start|log|close|select`, `/musn/hints`, `/musn/cues`,
+`/musn/hx/links/<path>/accept|reject`, and `/musn/export`. `f2.ui` also serves
+`/codex/*` and `/claude/*` session management endpoints for live runners.
+
+* MUSN lifecycle (HTTP service)
+`futon3.musn.http` serves the session/turn endpoints used by fucodex and
+fubar: `/musn/session/create`, `/musn/turn/start`, `/musn/turn/plan`,
+`/musn/turn/select`, `/musn/turn/action`, `/musn/turn/use`,
+`/musn/evidence/add`, `/musn/turn/end`, `/musn/turn/resume`, and
+`/musn/session/state`. Request/response schemas live in
+`docs/musn-schema.edn` and are enforced at runtime by
+`src/futon3/musn/schema.clj`. The service uses `MUSN_LAB_ROOT` for session
+storage and logs to `MUSN_LOG`.
 
 * Fulab (work in progress)
-`f2.ui` also exposes WIP lab-session endpoints for fucodex and fuclaude
-(run, stream, events, and session state). These are used to stream fulab
-events for export tooling.
+Live fucodex runs in MUSN mode pipe the Codex JSON stream through
+`dev/musn_stream.clj`, translating turn/plan/selection/action events into the
+MUSN lifecycle calls above. The earlier `f2.ui` RPC endpoints remain for
+legacy streaming and UI experiments, but MUSN is now the primary validation
+path for pause/resume and trail enforcement.
 
 Human-side logging (fubar) is emitted from Emacs and currently lands in a
 local EDN log with planned ingestion into the fulab stream. Expect endpoint

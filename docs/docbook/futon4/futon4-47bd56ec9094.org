@@ -14,14 +14,17 @@ The lab export scripts convert session logs into structured artifacts under
 be browsed and summarized alongside other Arxana materials.
 
 * Scripts and roles
-- `dev/lab-export.clj` reads a Codex session JSONL and writes `lab/raw`,
-  `lab/stubs`, and `lab/trace` entries.
-- `dev/lab-export-claude.clj` does the same for Claude session JSONL, including
-  tool-use extraction when available.
-- `dev/lab-summarize.clj` uses an LLM to generate a structured Org stub from a
-  raw session JSON entry.
-- `dev/lab-summary.clj` generates a concise session summary in org/json/text
-  formats from `lab/raw`.
+- `futon3/dev/lab-export.clj` reads a Codex session JSONL (for example, from
+  `lab/raw-stream/`) and writes `lab/raw`, `lab/stubs`, and `lab/trace` entries.
+- `futon3/dev/lab-export-claude.clj` does the same for Claude session JSONL,
+  including tool-use extraction when available.
+- `futon3/dev/lab-summarize.clj` uses an LLM to generate a structured Org stub
+  from a raw session JSON entry.
+- `futon3/dev/lab-summary.clj` generates a concise session summary in
+  org/json/text formats from `lab/raw`.
+- `futon3/dev/musn_stream.clj` is a live run companion that translates Codex
+  JSON streams into MUSN turn calls (not a lab export, but part of the same
+  pipeline).
 
 * Running the scripts
 All scripts accept CLI flags (see the usage output at the top of each file).
@@ -31,4 +34,6 @@ Most scripts support `--dry-run` to preview outputs without writing.
 * Integration points
 Exports are stored under `lab/raw`, `lab/stubs`, `lab/trace`, and `lab/summaries`.
 These outputs feed the lab notebook browser and can be promoted into docbook
-entries as part of the documentation pipeline.
+entries as part of the documentation pipeline. MUSN turn lifecycle logs are
+stored separately under `lab/musn/` by `futon3.musn.http` and can be
+cross-referenced with lab exports during review.

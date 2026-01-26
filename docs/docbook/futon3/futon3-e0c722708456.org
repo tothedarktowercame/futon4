@@ -1,7 +1,7 @@
 #+TITLE: REPL evaluators
 :PROPERTIES:
 :DOC_ID: futon3-e0c722708456
-:ENTRY_ID: futon3-e0c722708456::org
+:ENTRY_ID: futon3-e0c722708456
 :VERSION: org
 :OUTLINE_PATH: Core / REPL evaluators
 :PATH_STRING: Core / REPL evaluators

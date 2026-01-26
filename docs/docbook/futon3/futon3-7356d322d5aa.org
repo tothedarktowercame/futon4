@@ -1,7 +1,7 @@
 #+TITLE: Stack status telemetry
 :PROPERTIES:
 :DOC_ID: futon3-7356d322d5aa
-:ENTRY_ID: futon3-7356d322d5aa::org
+:ENTRY_ID: futon3-7356d322d5aa
 :VERSION: org
 :OUTLINE_PATH: Integration / Stack status telemetry
 :PATH_STRING: Integration / Stack status telemetry

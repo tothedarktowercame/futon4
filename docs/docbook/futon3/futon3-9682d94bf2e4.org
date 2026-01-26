@@ -1,7 +1,7 @@
 #+TITLE: HTTP and WebSocket transport
 :PROPERTIES:
 :DOC_ID: futon3-9682d94bf2e4
-:ENTRY_ID: futon3-9682d94bf2e4::org
+:ENTRY_ID: futon3-9682d94bf2e4
 :VERSION: org
 :OUTLINE_PATH: Transport / HTTP and WebSocket transport
 :PATH_STRING: Transport / HTTP and WebSocket transport
@@ -12,8 +12,19 @@
 `f2.transport` implements the MUSN transport layer. WebSocket clients connect
 via `/musn/ws` while HTTP clients stream NDJSON to `/musn/ingest`.
 
+* Protocol and validation
+The transport delegates frame decoding and validation to `f2.router`, which
+loads Malli schemas from `resources/f2/schemas.edn`. It assigns `run-id`
+values, enforces the 200 ms status timeout and 5 s run timeout, and returns
+structured `ack` or `err` replies for protocol frames.
+
 * Routing and lifecycle
-The transport assigns `run-id` and per-frame acknowledgements, maintains
-per-client history, and enforces back-pressure. It routes hello/event/eval
-frames into the appropriate handlers and emits structured `ack` or `err`
-replies.
+The transport maintains per-client history, enforces a 1k events/minute rate
+limit, and routes hello/event/eval/run/status/session-close frames into the
+appropriate handlers. HX artifact/link routes are also handled here, but the
+strict turn lifecycle is delegated to `futon3.musn.http`.
+
+The transport focuses on event delivery; strict turn lifecycle validation is
+handled by `futon3.musn.router` and the `futon3.musn.http` adapter. Live
+fucodex MUSN runs call the HTTP service endpoints rather than streaming raw
+turns over `/musn/ingest`.

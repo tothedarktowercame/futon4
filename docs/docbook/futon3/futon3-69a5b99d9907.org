@@ -1,7 +1,7 @@
 #+TITLE: MUSN system lifecycle
 :PROPERTIES:
 :DOC_ID: futon3-69a5b99d9907
-:ENTRY_ID: futon3-69a5b99d9907::org
+:ENTRY_ID: futon3-69a5b99d9907
 :VERSION: org
 :OUTLINE_PATH: Core / MUSN system lifecycle
 :PATH_STRING: Core / MUSN system lifecycle
@@ -13,7 +13,37 @@
 optional REPL modules, and Tatami store, and it exposes helpers to load demo
 events for development.
 
+The stricter turn lifecycle (session/turn/plan/select/action/use/end) is now
+handled by `futon3.musn.router` and `futon3.musn.service`, typically exposed
+via the `futon3.musn.http` server. That service persists per-session logs under
+`lab/musn/` and powers live MUSN runs from fucodex and fubar.
+
+* Lifecycle surface
+`futon3.musn.http` provides the HTTP adapter for the lifecycle endpoints and
+delegates to `futon3.musn.service`. The service holds per-session state,
+applies validation via `futon3.musn.router`, and wires in AIF scoring plus
+mana bookkeeping when enabled.
+
+`futon3.musn.schema` defines the request/response schemas used during
+validation, while `docs/musn-schema.edn` remains the reference contract for
+external tooling.
+
+* Persistence and audit
+`futon3.musn.service` writes two persistent streams:
+- `lab/musn/<session>.edn` with the raw request/response log and
+  `lab/musn/<session>.snapshot.edn` for the latest state snapshot.
+- `lab/sessions/<session>.edn` with PSR/PUR claims, AIF summaries, and tap
+  entries used by fulab reporting.
+
+Logic checks are tracked by `futon3.logic-audit`. The `/musn/session/state`
+response includes `:logic/summary`, the latest `:aif/tap` payload, and the
+current `:mana` state so the HUD can reflect which checks ran.
+
 * Configuration
 `musn/start!` accepts a map of options (for example `:repl` or `:drawbridge`)
 that gates SAFE/ADMIN evals, outbound adapters, and logging behavior. The
 `make dev` target uses the same entry point.
+
+`futon3.musn.http` listens on `MUSN_PORT` (default 6065) and can be pointed at
+an alternate lab root with `MUSN_LAB_ROOT` when storing MUSN session logs.
+`MUSN_LOG` controls the HTTP log destination for lifecycle requests.

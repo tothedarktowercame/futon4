@@ -39,6 +39,39 @@ Usage:
 ./bounce_vocal_banjo_bass_vocal2.sh t1.wav t2.wav t3.wav t4.wav out.wav
 ```
 
+## Basic mix (spoken word vocal + banjo + bass + accordion)
+
+`bounce_vocal_banjo_bass_accordion.sh` balances a spoken word vocal with
+banjo slightly left and accordion slightly right.
+
+Usage:
+
+```sh
+./bounce_vocal_banjo_bass_accordion.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
+```
+
+## Mix two bounces (background at 30%)
+
+`bounce_mix_ducked_background.sh` blends two existing bounces, keeping the
+second input at 30% volume.
+
+Usage:
+
+```sh
+./bounce_mix_ducked_background.sh fg.wav bg.wav out.wav [out.mp3]
+```
+
+## Basic mix (vocal + vocal2 + viola + accordion)
+
+`bounce_vocal_vocal2_viola_accordion.sh` balances a lead vocal with a
+harmony vocal plus viola left and accordion right.
+
+Usage:
+
+```sh
+./bounce_vocal_vocal2_viola_accordion.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
+```
+
 ## Vocal-forward mix (dual vocals + banjo + bass + accordion)
 
 `bounce_vocals_banjo_bass_accordion_vocal_forward.sh` extends the banjo/bass

@@ -26,7 +26,10 @@
 (declare-function arxana-docbook--toc-doc-id "arxana-docbook-toc" (heading))
 (declare-function arxana-docbook--heading-path-string "arxana-docbook-toc" (heading))
 (declare-function arxana-docbook--heading-for-doc-id "arxana-docbook-toc" (book doc-id))
+(declare-function arxana-docbook--strip-org-metadata "arxana-docbook-core" (text))
+(declare-function arxana-docbook--strip-stub-header "arxana-docbook-core" (text))
 (declare-function arxana-store--request "arxana-store" (method path &optional payload query))
+(declare-function arxana-store--response-ok-p "arxana-store" (body))
 (declare-function arxana-store-sync-enabled-p "arxana-store")
 
 (defconst arxana-docbook--stub-clean-face
@@ -299,7 +302,14 @@
          (outline (and heading (arxana-docbook--heading-outline heading)))
          (path-string (or (and heading (arxana-docbook--heading-path-string heading))
                           (and outline (string-join outline " / "))
-                          title)))
+                          title))
+         (entry-id (if (and entry-id doc-id (string= entry-id doc-id))
+                       (format "%s::org" doc-id)
+                     entry-id))
+         (body (let ((raw (string-trim
+                           (arxana-docbook--strip-org-metadata
+                            (arxana-docbook--strip-stub-header text)))))
+                 (and (not (string-empty-p raw)) raw))))
     (unless (and book entry-id)
       (error "Docbook stub missing book or entry id"))
     (unless (or doc-id outline)
@@ -310,6 +320,7 @@
                        (cons "version" version)
                        (cons "timestamp" (format-time-string "%Y-%m-%dT%H:%M:%SZ" (current-time) t))
                        (cons "agent_summary" (or context ""))
+                       (cons "body" body)
                        (cons "outline_path" outline)
                        (cons "path_string" path-string)
                        (cons "context" context)
@@ -321,6 +332,93 @@
         (when (cdr pair)
           (push pair payload)))
       (nreverse payload))))
+
+(defun arxana-docbook--stub-payload-from-file (book path)
+  (with-temp-buffer
+    (insert-file-contents path)
+    (let ((buffer-file-name path)
+          (arxana-docbook--stub-book book)
+          (arxana-docbook--stub-entry-id (file-name-base path)))
+      (arxana-docbook--stub-payload-from-buffer))))
+
+(defun arxana-docbook--ingest-entry-file (book path)
+  (let* ((payload (arxana-docbook--stub-payload-from-file book path))
+         (path (format "/docs/%s/entry" book))
+         (resp (arxana-store--request "POST" path payload)))
+    (if (and resp (arxana-store--response-ok-p resp))
+        (list :ok? t :response resp)
+      (list :ok? nil
+            :response resp
+            :error (or arxana-store-last-error
+                       (and (listp resp) (alist-get :error resp))
+                       "Unknown ingest error")))))
+
+(defun arxana-docbook--ingest-error-buffer (book failures)
+  (let ((buf (get-buffer-create "*Arxana Docbook Ingest*")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert (format "Docbook ingest errors for %s\n" book))
+        (insert "===============================\n\n")
+        (dolist (failure failures)
+          (insert (format "File: %s\n" (plist-get failure :path)))
+          (let ((err (plist-get failure :error))
+                (resp (plist-get failure :response)))
+            (cond
+             ((listp err)
+              (insert (format "Reason: %s\n" (plist-get err :reason)))
+              (insert (format "Detail: %s\n" (plist-get err :detail)))
+              (insert (format "Context: %s\n" (plist-get err :context))))
+             (t
+              (insert (format "Error: %s\n" err))))
+            (when (listp resp)
+              (when (alist-get :invariants resp)
+                (insert "Invariants:\n")
+                (pp (alist-get :invariants resp) (current-buffer)))
+              (when (alist-get :result resp)
+                (insert "Result:\n")
+                (pp (alist-get :result resp) (current-buffer)))))
+          (insert "\n"))
+        (view-mode 1)))
+    (display-buffer buf)))
+
+(defun arxana-docbook-ingest-book (&optional book)
+  "Ingest all docbook entries for BOOK into Futon storage."
+  (interactive
+   (list (completing-read "Docbook ingest book: "
+                          (or (arxana-docbook--available-books) '("futon4"))
+                          nil t)))
+  (unless (arxana-store-sync-enabled-p)
+    (user-error "Futon sync is disabled; enable futon4-enable-sync first"))
+  (let* ((book (or (and book (not (string-empty-p book)) book) "futon4"))
+         (book-dir (arxana-docbook--book-dir book))
+         (paths (and book-dir
+                     (directory-files book-dir t "\\.org\\'")))
+         (ok 0)
+         (failed 0)
+         (failures '()))
+    (unless (and book-dir (file-directory-p book-dir))
+      (user-error "Docbook directory missing for %s" book))
+    (dolist (path paths)
+      (condition-case err
+          (let ((result (arxana-docbook--ingest-entry-file book path)))
+            (if (plist-get result :ok?)
+                (setq ok (1+ ok))
+              (setq failed (1+ failed))
+              (push (list :path path
+                          :error (plist-get result :error)
+                          :response (plist-get result :response))
+                    failures)))
+        (error
+         (setq failed (1+ failed))
+         (push (list :path path :error (error-message-string err)) failures))))
+    (when (boundp 'arxana-docbook--storage-probe)
+      (setq arxana-docbook--storage-probe nil))
+    (when (seq failures)
+      (arxana-docbook--ingest-error-buffer book (nreverse failures)))
+    (message "Docbook ingest for %s finished: ok=%d failed=%d%s"
+             book ok failed
+             (if (seq failures) " (see *Arxana Docbook Ingest*)" ""))))
 
 (defun arxana-docbook--sync-stub-buffer ()
   (unless (arxana-store-sync-enabled-p)

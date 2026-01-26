@@ -246,8 +246,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
               :view 'patterns)
         (list :type 'menu
               :label "Code"
-              :description "Upcoming Arxana code browser (imports pending)."
-              :view 'code)
+              :description "Browse code with docbook backlinks."
+              :view 'code-root)
         (list :type 'menu
               :label "Graph"
               :description "Explore Futon graph types."
@@ -258,12 +258,22 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
               :view 'media)
         (list :type 'menu
               :label "Docs"
-              :description "Doc books (XTDB-backed, futon4)."
+              :description "Doc books (XTDB-backed)."
               :view 'docbook)
         (list :type 'menu
               :label "Lab"
               :description "Lab notebook sessions staged under data/logs/lab/."
               :view 'lab)))
+
+(defun arxana-browser--code-root-items ()
+  (list (list :type 'code-root
+              :label "Futon4 code"
+              :description "Browse futon4 code with docbook backlinks."
+              :docbook "futon4")
+        (list :type 'code-root
+              :label "Futon3 code"
+              :description "Browse futon3 code with docbook backlinks."
+              :docbook "futon3")))
 
 (defun arxana-browser--code-items ()
   (if (require 'arxana-browser-code nil t)
@@ -305,6 +315,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                      arxana-browser-code-docbook)))
       (format "Code browser — docbook: %s (B selects). LEFT/b returns."
               (or book "unknown"))))
+   ((eq (plist-get context :view) 'code-root)
+    "Code browser — select a Futon. LEFT/b returns.")
    ((eq (plist-get context :view) 'graph)
     "Graph types — browse /types from Futon. RET/right shows details. LEFT/b returns.")
    ((eq (plist-get context :view) 'media)
@@ -491,8 +503,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
      ((plist-get context :media-filter)
       (arxana-media--track-items (plist-get context :media-filter)))
      ((plist-get context :view)
-      (pcase (plist-get context :view)
+     (pcase (plist-get context :view)
         ('patterns (arxana-browser--root-items))
+        ('code-root (arxana-browser--code-root-items))
         ('code (arxana-browser--code-items))
         ('graph (arxana-browser--graph-items))
         ('media (arxana-media--items))
@@ -744,6 +757,11 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
        (let ((view (plist-get item :view)))
          (if (not view)
              (message "No view associated with this entry")
+           (when (and (eq view 'code)
+                      (plist-get item :docbook))
+             (require 'arxana-browser-code nil t)
+             (when (fboundp 'arxana-browser-code-set-docbook)
+               (arxana-browser-code-set-docbook (plist-get item :docbook))))
            (setq arxana-browser--stack
                  (cons item arxana-browser--stack))
            (arxana-browser--render))))
@@ -763,6 +781,17 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
            (arxana-browser-code-open item)
          (let ((path (plist-get item :path)))
            (when path (find-file path)))))
+      ('code-root
+       (let ((docbook (plist-get item :docbook)))
+         (require 'arxana-browser-code nil t)
+         (when (and docbook (fboundp 'arxana-browser-code-set-docbook))
+           (arxana-browser-code-set-docbook docbook))
+         (setq arxana-browser--stack
+               (cons (list :view 'code
+                           :label (plist-get item :label)
+                           :docbook docbook)
+                     arxana-browser--stack))
+         (arxana-browser--render)))
       ('graph-type
        (if (fboundp 'arxana-browser-graph-open)
            (arxana-browser-graph-open item)
