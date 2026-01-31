@@ -88,15 +88,20 @@ When nil, uses `arxana-lab-sessions-server`."
             sessions))
 
 (defun arxana-lab--server->ws (server)
-  (let ((base (string-remove-suffix "/" (or server ""))))
+  "Convert HTTP server URL to WebSocket URL for lab-ws.
+HTTP port 5050/5051 maps to lab-ws port 5056."
+  (let* ((base (string-remove-suffix "/" (or server "")))
+         ;; Convert port: 5050/5051 -> 5056 for lab-ws
+         (with-port (replace-regexp-in-string
+                     ":505[01]\\b" ":5056" base)))
     (cond
-     ((string-prefix-p "wss://" base) base)
-     ((string-prefix-p "ws://" base) base)
-     ((string-prefix-p "https://" base)
-      (concat "wss://" (string-remove-prefix "https://" base)))
-     ((string-prefix-p "http://" base)
-      (concat "ws://" (string-remove-prefix "http://" base)))
-     (t base))))
+     ((string-prefix-p "wss://" with-port) with-port)
+     ((string-prefix-p "ws://" with-port) with-port)
+     ((string-prefix-p "https://" with-port)
+      (concat "wss://" (string-remove-prefix "https://" with-port)))
+     ((string-prefix-p "http://" with-port)
+      (concat "ws://" (string-remove-prefix "http://" with-port)))
+     (t with-port))))
 
 (defun arxana-lab--fetch-sessions (endpoint)
   "Fetch sessions from ENDPOINT (e.g., /fulab/lab/sessions/active)."
