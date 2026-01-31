@@ -87,24 +87,39 @@ When nil, uses `arxana-lab-sessions-server`."
                        (or (plist-get b :modified) "")))
             sessions))
 
+(defcustom arxana-lab-use-plain-websocket t
+  "Use plain ws:// instead of wss:// for lab-ws connections.
+Set to t as workaround for Emacs 31 TLS/nginx WebSocket issues.
+Set to nil to use wss:// through nginx SSL termination."
+  :type 'boolean
+  :group 'arxana-lab-sessions)
+
 (defun arxana-lab--server->ws (server)
   "Convert HTTP server URL to WebSocket URL for lab-ws.
-HTTP 5050 -> ws 5056 (direct), HTTPS 5051 -> wss 5057 (nginx SSL termination)."
+If `arxana-lab-use-plain-websocket' is t, always use ws://5056 (direct).
+Otherwise, HTTP 5050 -> ws 5056, HTTPS 5051 -> wss 5057 (nginx SSL)."
   (let* ((base (string-remove-suffix "/" (or server "")))
-         (is-ssl (or (string-prefix-p "https://" base)
-                     (string-prefix-p "wss://" base)))
-         ;; Convert port: 5050 -> 5056, 5051 -> 5057
-         (with-port (if is-ssl
-                        (replace-regexp-in-string ":5051\\b" ":5057" base)
-                      (replace-regexp-in-string ":5050\\b" ":5056" base))))
-    (cond
-     ((string-prefix-p "wss://" with-port) with-port)
-     ((string-prefix-p "ws://" with-port) with-port)
-     ((string-prefix-p "https://" with-port)
-      (concat "wss://" (string-remove-prefix "https://" with-port)))
-     ((string-prefix-p "http://" with-port)
-      (concat "ws://" (string-remove-prefix "http://" with-port)))
-     (t with-port))))
+         ;; Extract host from URL
+         (host (replace-regexp-in-string
+                "^\\(https?\\|wss?\\)://" ""
+                (replace-regexp-in-string ":[0-9]+.*$" "" base))))
+    (if arxana-lab-use-plain-websocket
+        ;; Direct connection to lab-ws on 5056 (no SSL)
+        (format "ws://%s:5056" host)
+      ;; SSL path through nginx
+      (let* ((is-ssl (or (string-prefix-p "https://" base)
+                         (string-prefix-p "wss://" base)))
+             (with-port (if is-ssl
+                            (replace-regexp-in-string ":5051\\b" ":5057" base)
+                          (replace-regexp-in-string ":5050\\b" ":5056" base))))
+        (cond
+         ((string-prefix-p "wss://" with-port) with-port)
+         ((string-prefix-p "ws://" with-port) with-port)
+         ((string-prefix-p "https://" with-port)
+          (concat "wss://" (string-remove-prefix "https://" with-port)))
+         ((string-prefix-p "http://" with-port)
+          (concat "ws://" (string-remove-prefix "http://" with-port)))
+         (t with-port))))))
 
 (defun arxana-lab--fetch-sessions (endpoint)
   "Fetch sessions from ENDPOINT (e.g., /fulab/lab/sessions/active)."
