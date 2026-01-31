@@ -79,12 +79,9 @@
 (declare-function arxana-browser--forum-items "arxana-browser-forum")
 (declare-function arxana-browser--forum-row "arxana-browser-forum" (item))
 (declare-function arxana-browser--forum-format "arxana-browser-forum")
-(declare-function arxana-browser--forum-thread-items "arxana-browser-forum" (context))
-(declare-function arxana-browser--forum-thread-row "arxana-browser-forum" (item))
-(declare-function arxana-browser--forum-thread-format "arxana-browser-forum")
 (declare-function arxana-forum-open-thread "arxana-browser-forum" (item))
 (declare-function arxana-forum-compose-for-current-thread "arxana-browser-forum")
-(declare-function arxana-forum-disconnect "arxana-browser-forum")
+(declare-function arxana-forum-stream-connect "arxana-browser-forum")
 
 (declare-function arxana-browser--lab-menu-items "arxana-browser-lab")
 (declare-function arxana-browser--lab-menu-row "arxana-browser-lab" (item))
@@ -541,7 +538,6 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         ('docbook-section (arxana-browser--docbook-section-items (plist-get context :book) context))
         ('docbook-recent (arxana-browser--docbook-items (plist-get context :book)))
         ('forum (arxana-browser--forum-items))
-        ('forum-thread (arxana-browser--forum-thread-items context))
         ('lab-home (arxana-browser--lab-menu-items))
         ('lab-sessions-active (arxana-browser--lab-sessions-active-items))
         ('lab-sessions-recent (arxana-browser--lab-sessions-recent-items))
@@ -680,7 +676,6 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
             ('docbook-section #'arxana-browser--docbook-row)
             ('docbook-recent #'arxana-browser--docbook-row)
             ('forum #'arxana-browser--forum-row)
-            ('forum-thread #'arxana-browser--forum-thread-row)
             ('lab-home #'arxana-browser--lab-menu-row)
             ('lab-sessions-active #'arxana-browser--lab-sessions-active-row)
             ('lab-sessions-recent #'arxana-browser--lab-sessions-active-row)
@@ -746,7 +741,6 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                         ('docbook-section (arxana-browser--docbook-format))
                         ('docbook-recent (arxana-browser--docbook-format))
                         ('forum (arxana-browser--forum-format))
-                        ('forum-thread (arxana-browser--forum-thread-format))
                         ('lab-home (arxana-browser--lab-menu-format))
                         ('lab-sessions-active (arxana-browser--lab-sessions-active-format))
                         ('lab-sessions-recent (arxana-browser--lab-sessions-active-format))
@@ -1124,22 +1118,18 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
 (defun arxana-browser--up ()
   (interactive)
   (arxana-browser--ensure-context)
-  (let ((current (car arxana-browser--stack)))
-    (cond
-     ((not arxana-browser--stack)
-      (if arxana-browser--context
-          (progn
-            (setq arxana-browser--context nil)
-            (arxana-browser--render))
-        (message "Already at top level")))
-     (t
-      (setq arxana-browser--stack (cdr arxana-browser--stack))
-      (when (and current (eq (plist-get current :view) 'forum-thread)
-                 (fboundp 'arxana-forum-disconnect))
-        (arxana-forum-disconnect))
-      (when (null arxana-browser--stack)
-        (setq arxana-browser--context nil))
-      (arxana-browser--render)))))
+  (cond
+   ((not arxana-browser--stack)
+    (if arxana-browser--context
+        (progn
+          (setq arxana-browser--context nil)
+          (arxana-browser--render))
+      (message "Already at top level")))
+   (t
+    (setq arxana-browser--stack (cdr arxana-browser--stack))
+    (when (null arxana-browser--stack)
+      (setq arxana-browser--context nil))
+    (arxana-browser--render))))
 
 (defun arxana-browser--refresh ()
   (interactive)

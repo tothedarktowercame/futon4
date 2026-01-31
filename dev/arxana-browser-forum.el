@@ -52,14 +52,43 @@ When nil, derive from `arxana-forum-server`."
   :type 'integer
   :group 'arxana-forum)
 
-(defvar-local arxana-forum--thread-id nil)
-(defvar-local arxana-forum--thread-title nil)
-(defvar-local arxana-forum--posts nil)
-(defvar-local arxana-forum--post-ids nil)
-(defvar-local arxana-forum--ws nil)
-(defvar-local arxana-forum--ws-thread nil)
+(defcustom arxana-forum-stream-auto-reconnect t
+  "When non-nil, reconnect forum WebSocket after disconnects."
+  :type 'boolean
+  :group 'arxana-forum)
+
+(defcustom arxana-forum-stream-reconnect-delay 3
+  "Seconds to wait before reconnecting to the forum WebSocket."
+  :type 'integer
+  :group 'arxana-forum)
+
+(defvar arxana-forum-stream--buffer-prefix "*Arxana Forum*")
+(defvar arxana-forum-stream--websocket nil)
+(defvar arxana-forum-stream--current-thread-id nil)
+(defvar arxana-forum-stream--ping-timer nil)
+(defvar arxana-forum-stream--reconnect-timer nil)
+
+(defvar-local arxana-forum-stream--thread-id nil)
+(defvar-local arxana-forum-stream--post-ids nil)
+(defvar-local arxana-forum-stream--depths nil)
+(defvar-local arxana-forum-stream--post-map nil)
 
 (defvar arxana-forum--compose-buffer "*Arxana Forum Compose*")
+
+(defface arxana-forum-stream-author-face
+  '((t :inherit font-lock-keyword-face))
+  "Face for forum author names."
+  :group 'arxana-forum)
+
+(defface arxana-forum-stream-timestamp-face
+  '((t :inherit font-lock-comment-face))
+  "Face for forum timestamps."
+  :group 'arxana-forum)
+
+(defface arxana-forum-stream-meta-face
+  '((t :inherit font-lock-doc-face))
+  "Face for forum metadata."
+  :group 'arxana-forum)
 
 (defun arxana-forum--require-websocket ()
   (unless (featurep 'websocket)
@@ -162,20 +191,6 @@ When nil, derive from `arxana-forum-server`."
           :tags tags
           :pinned? pinned?)))
 
-(defun arxana-forum--post-summary (post)
-  (let ((author (or (arxana-forum--get post :post/author) ""))
-        (timestamp (or (arxana-forum--get post :post/timestamp) ""))
-        (claim (or (arxana-forum--get post :post/claim-type) "step"))
-        (pattern (arxana-forum--get post :post/pattern-applied))
-        (body (or (arxana-forum--get post :post/body) "")))
-    (list :type 'forum-post
-          :post-id (arxana-forum--get post :post/id)
-          :author author
-          :timestamp timestamp
-          :claim-type claim
-          :pattern pattern
-          :body body)))
-
 (defun arxana-forum--fetch-threads ()
   (let* ((response (arxana-forum--request "GET"
                                           (format "/forum/threads?limit=%d"
@@ -190,81 +205,260 @@ When nil, derive from `arxana-forum-server`."
          (posts (arxana-forum--get response :posts)))
     (list thread posts)))
 
-(defun arxana-forum--set-thread (thread-id)
-  (let* ((result (arxana-forum--fetch-thread thread-id))
-         (thread (car result))
-         (posts (cadr result)))
-    (setq arxana-forum--thread-id thread-id
-          arxana-forum--thread-title (arxana-forum--get thread :thread/title)
-          arxana-forum--posts (mapcar #'arxana-forum--post-summary (or posts '()))
-          arxana-forum--post-ids (mapcar (lambda (p) (arxana-forum--get p :post-id))
-                                         arxana-forum--posts))
-    thread))
+;; =============================================================================
+;; Forum stream (append-only thread view)
+;; =============================================================================
 
-(defun arxana-forum--maybe-render ()
-  (when (and (boundp 'arxana-browser--context)
-             (let ((context (or arxana-browser--context (car arxana-browser--stack))))
-               (and context
-                    (eq (plist-get context :view) 'forum-thread)
-                    (equal (plist-get context :thread-id) arxana-forum--thread-id))))
-    (arxana-browser--render)))
+(defun arxana-forum-stream--buffer-name (thread-id)
+  (format "%s %s*" arxana-forum-stream--buffer-prefix thread-id))
 
-(defun arxana-forum--ingest-post (post)
-  (let* ((thread-id (arxana-forum--get post :post/thread-id))
-         (post-id (arxana-forum--get post :post/id)))
-    (when (and thread-id post-id
-               (equal thread-id arxana-forum--thread-id)
-               (not (member post-id arxana-forum--post-ids)))
-      (push post-id arxana-forum--post-ids)
-      (setq arxana-forum--posts
-            (sort (append arxana-forum--posts
-                          (list (arxana-forum--post-summary post)))
-                  (lambda (a b)
-                    (string< (or (plist-get a :timestamp) "")
-                             (or (plist-get b :timestamp) "")))))
-      (arxana-forum--maybe-render))))
+(defun arxana-forum-stream--get-buffer (thread-id)
+  "Get or create the forum stream buffer for THREAD-ID."
+  (let ((buf (get-buffer-create (arxana-forum-stream--buffer-name thread-id))))
+    (with-current-buffer buf
+      (unless (eq major-mode 'arxana-forum-stream-mode)
+        (arxana-forum-stream-mode))
+      (setq-local arxana-forum-stream--thread-id thread-id)
+      (unless (hash-table-p arxana-forum-stream--post-ids)
+        (setq-local arxana-forum-stream--post-ids (make-hash-table :test 'equal)))
+      (unless (hash-table-p arxana-forum-stream--depths)
+        (setq-local arxana-forum-stream--depths (make-hash-table :test 'equal)))
+      (unless (hash-table-p arxana-forum-stream--post-map)
+        (setq-local arxana-forum-stream--post-map (make-hash-table :test 'equal))))
+    buf))
 
-(defun arxana-forum--handle-message (payload)
-  (let* ((msg (arxana-forum--parse-json payload))
+(defun arxana-forum-stream--format-time (timestamp)
+  (if (and timestamp (> (length timestamp) 19))
+      (substring timestamp 11 19)
+    (or timestamp "")))
+
+(defun arxana-forum-stream--indent (depth)
+  (make-string (* (max 0 depth) 2) ?\s))
+
+(defun arxana-forum-stream--format-header (post depth)
+  (let* ((timestamp (arxana-forum--get post :post/timestamp))
+         (author (or (arxana-forum--get post :post/author) ""))
+         (claim (or (arxana-forum--get post :post/claim-type) "step"))
+         (pattern (arxana-forum--get post :post/pattern-applied))
+         (reply-to (arxana-forum--get post :post/in-reply-to))
+         (indent (arxana-forum-stream--indent depth))
+         (meta (if pattern
+                   (format "%s/%s" claim pattern)
+                 (format "%s" claim)))
+         (reply (when reply-to (format " reply %s" reply-to))))
+    (concat indent
+            (propertize (format "[%s] " (arxana-forum-stream--format-time timestamp))
+                        'face 'arxana-forum-stream-timestamp-face)
+            (propertize author 'face 'arxana-forum-stream-author-face)
+            " "
+            (propertize (format "(%s)" meta) 'face 'arxana-forum-stream-meta-face)
+            (when reply (propertize reply 'face 'arxana-forum-stream-meta-face))
+            "\n")))
+
+(defun arxana-forum-stream--format-body (post depth)
+  (let* ((body (or (arxana-forum--get post :post/body) ""))
+         (indent (arxana-forum-stream--indent (1+ depth)))
+         (lines (split-string body "\n" nil)))
+    (mapconcat (lambda (line)
+                 (concat indent line))
+               lines
+               "\n")))
+
+(defun arxana-forum-stream--format-post (post depth)
+  (concat (arxana-forum-stream--format-header post depth)
+          (arxana-forum-stream--format-body post depth)
+          "\n\n"))
+
+(defun arxana-forum-stream--append (thread-id text)
+  (let ((buf (arxana-forum-stream--get-buffer thread-id)))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t)
+            (at-end (= (point) (point-max))))
+        (save-excursion
+          (goto-char (point-max))
+          (insert text))
+        (when at-end
+          (goto-char (point-max)))))))
+
+(defun arxana-forum-stream--compute-depths (posts)
+  (let ((post-map (make-hash-table :test 'equal))
+        (depths (make-hash-table :test 'equal)))
+    (dolist (post posts)
+      (let ((pid (arxana-forum--get post :post/id)))
+        (when pid
+          (puthash pid post post-map))))
+    (cl-labels ((depth (pid)
+                       (or (gethash pid depths)
+                           (let* ((post (gethash pid post-map))
+                                  (parent (and post (arxana-forum--get post :post/in-reply-to)))
+                                  (d (if (and parent (gethash parent post-map))
+                                         (1+ (depth parent))
+                                       0)))
+                             (puthash pid d depths)
+                             d))))
+      (dolist (post posts)
+        (let ((pid (arxana-forum--get post :post/id)))
+          (when pid (depth pid)))))
+    (list post-map depths)))
+
+(defun arxana-forum-stream--ingest-post (thread-id post)
+  (let* ((post-id (arxana-forum--get post :post/id))
+         (reply-to (arxana-forum--get post :post/in-reply-to))
+         (buf (arxana-forum-stream--get-buffer thread-id)))
+    (when post-id
+      (with-current-buffer buf
+        (unless (gethash post-id arxana-forum-stream--post-ids)
+          (puthash post-id t arxana-forum-stream--post-ids)
+          (puthash post-id post arxana-forum-stream--post-map)
+          (let* ((parent-depth (and reply-to (gethash reply-to arxana-forum-stream--depths)))
+                 (depth (if parent-depth (1+ parent-depth) 0)))
+            (puthash post-id depth arxana-forum-stream--depths)
+            (arxana-forum-stream--append thread-id
+                                         (arxana-forum-stream--format-post post depth))))))))
+
+(defun arxana-forum-stream--on-message (_ws frame)
+  (let* ((payload (websocket-frame-text frame))
+         (msg (arxana-forum--parse-json payload))
          (type (arxana-forum--get msg :type)))
     (pcase type
       ("init"
        (dolist (post (arxana-forum--get msg :recent-posts))
-         (arxana-forum--ingest-post post)))
+         (when post
+           (arxana-forum-stream--ingest-post arxana-forum-stream--current-thread-id post))))
       ("post-created"
        (let ((post (arxana-forum--get msg :post)))
          (when post
-           (arxana-forum--ingest-post post))))
+           (let ((thread-id (arxana-forum--get post :post/thread-id)))
+             (when (and thread-id (equal thread-id arxana-forum-stream--current-thread-id))
+               (arxana-forum-stream--ingest-post thread-id post))))))
+      ("pong" nil)
       (_ nil))))
 
-(defun arxana-forum--connect (thread-id)
-  (arxana-forum--require-websocket)
-  (when (and arxana-forum--ws
-             (not (equal arxana-forum--ws-thread thread-id)))
-    (ignore-errors (websocket-close arxana-forum--ws))
-    (setq arxana-forum--ws nil
-          arxana-forum--ws-thread nil))
-  (unless arxana-forum--ws
-    (let ((url (arxana-forum--ws-url thread-id)))
-      (setq arxana-forum--ws-thread thread-id
-            arxana-forum--ws
-            (websocket-open
-             url
-             :on-message (lambda (_ws frame)
-                           (let ((payload (websocket-frame-payload frame)))
-                             (when (stringp payload)
-                               (arxana-forum--handle-message payload))))
-             :on-close (lambda (_ws) (setq arxana-forum--ws nil))
-             :on-error (lambda (_ws err)
-                         (message "[arxana-forum] websocket error: %s" err)))))))
+(defun arxana-forum-stream--on-close (_ws)
+  (arxana-forum-stream--append arxana-forum-stream--current-thread-id
+                               "\n--- Disconnected ---\n")
+  (when arxana-forum-stream--ping-timer
+    (cancel-timer arxana-forum-stream--ping-timer)
+    (setq arxana-forum-stream--ping-timer nil))
+  (setq arxana-forum-stream--websocket nil)
+  (when (and arxana-forum-stream-auto-reconnect
+             arxana-forum-stream--current-thread-id)
+    (arxana-forum-stream--schedule-reconnect)))
 
-(defun arxana-forum-disconnect ()
-  "Disconnect any active forum WebSocket."
+(defun arxana-forum-stream--on-error (_ws err)
+  (arxana-forum-stream--append arxana-forum-stream--current-thread-id
+                               (format "\n--- WebSocket error: %s ---\n" err)))
+
+(defun arxana-forum-stream--schedule-reconnect ()
+  (when arxana-forum-stream--reconnect-timer
+    (cancel-timer arxana-forum-stream--reconnect-timer))
+  (setq arxana-forum-stream--reconnect-timer
+        (run-at-time arxana-forum-stream-reconnect-delay nil
+                     (lambda ()
+                       (setq arxana-forum-stream--reconnect-timer nil)
+                       (when arxana-forum-stream--current-thread-id
+                         (arxana-forum-stream-connect arxana-forum-stream--current-thread-id))))))
+
+(defun arxana-forum-stream--start-ping-timer ()
+  (when arxana-forum-stream--ping-timer
+    (cancel-timer arxana-forum-stream--ping-timer))
+  (setq arxana-forum-stream--ping-timer
+        (run-with-timer
+         10 10
+         (lambda ()
+           (when (and arxana-forum-stream--websocket
+                      (websocket-openp arxana-forum-stream--websocket))
+             (websocket-send-text arxana-forum-stream--websocket
+                                  (json-encode (list :type "ping")))))))))
+
+(defun arxana-forum-stream--bootstrap (thread-id)
+  (let* ((result (arxana-forum--fetch-thread thread-id))
+         (thread (car result))
+         (posts (cadr result))
+         (title (or (arxana-forum--get thread :thread/title) thread-id))
+         (sorted (sort (copy-sequence (or posts '()))
+                       (lambda (a b)
+                         (string< (or (arxana-forum--get a :post/timestamp) "")
+                                  (or (arxana-forum--get b :post/timestamp) ""))))))
+    (with-current-buffer (arxana-forum-stream--get-buffer thread-id)
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert (propertize (format "Thread %s — %s\n\n" thread-id title)
+                            'face 'arxana-forum-stream-meta-face)))
+      (let* ((computed (arxana-forum-stream--compute-depths sorted))
+             (post-map (car computed))
+             (depths (cadr computed)))
+        (setq-local arxana-forum-stream--post-map post-map)
+        (setq-local arxana-forum-stream--depths depths)
+        (clrhash arxana-forum-stream--post-ids)
+        (dolist (post sorted)
+          (arxana-forum-stream--ingest-post thread-id post))))))
+
+(defun arxana-forum-stream-disconnect ()
+  "Disconnect the forum WebSocket stream."
   (interactive)
-  (when arxana-forum--ws
-    (ignore-errors (websocket-close arxana-forum--ws)))
-  (setq arxana-forum--ws nil
-        arxana-forum--ws-thread nil))
+  (when arxana-forum-stream--reconnect-timer
+    (cancel-timer arxana-forum-stream--reconnect-timer)
+    (setq arxana-forum-stream--reconnect-timer nil))
+  (when arxana-forum-stream--ping-timer
+    (cancel-timer arxana-forum-stream--ping-timer)
+    (setq arxana-forum-stream--ping-timer nil))
+  (let ((auto-reconnect arxana-forum-stream-auto-reconnect))
+    (setq arxana-forum-stream-auto-reconnect nil)
+    (when (and arxana-forum-stream--websocket
+               (websocket-openp arxana-forum-stream--websocket))
+      (websocket-close arxana-forum-stream--websocket))
+    (setq arxana-forum-stream-auto-reconnect auto-reconnect))
+  (setq arxana-forum-stream--websocket nil))
+
+(defun arxana-forum-stream-connect (thread-id)
+  "Open an append-only forum stream for THREAD-ID."
+  (interactive (list (read-string "Thread id: " arxana-forum-stream--current-thread-id)))
+  (arxana-forum--require-websocket)
+  (when (and arxana-forum-stream--websocket
+             (websocket-openp arxana-forum-stream--websocket))
+    (arxana-forum-stream-disconnect))
+  (setq arxana-forum-stream--current-thread-id thread-id)
+  (arxana-forum-stream--bootstrap thread-id)
+  (let ((url (arxana-forum--ws-url thread-id)))
+    (setq arxana-forum-stream--websocket
+          (websocket-open url
+                          :on-message #'arxana-forum-stream--on-message
+                          :on-close #'arxana-forum-stream--on-close
+                          :on-error #'arxana-forum-stream--on-error)))
+  (arxana-forum-stream--start-ping-timer)
+  (pop-to-buffer (arxana-forum-stream--get-buffer thread-id)))
+
+(defun arxana-forum-stream-reconnect ()
+  "Reconnect the current forum stream."
+  (interactive)
+  (if arxana-forum-stream--current-thread-id
+      (arxana-forum-stream-connect arxana-forum-stream--current-thread-id)
+    (call-interactively #'arxana-forum-stream-connect)))
+
+(defun arxana-forum-stream-clear ()
+  "Clear the forum stream buffer."
+  (interactive)
+  (let ((thread-id arxana-forum-stream--current-thread-id))
+    (when thread-id
+      (with-current-buffer (arxana-forum-stream--get-buffer thread-id)
+        (let ((inhibit-read-only t))
+          (erase-buffer)
+          (insert (propertize (format "Thread %s\n\n" thread-id)
+                              'face 'arxana-forum-stream-meta-face)))))))
+
+(defvar arxana-forum-stream-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "g") #'arxana-forum-stream-reconnect)
+    (define-key map (kbd "c") #'arxana-forum-stream-clear)
+    (define-key map (kbd "q") #'arxana-forum-stream-disconnect)
+    (define-key map (kbd "C-c C-f") #'arxana-forum-compose-for-current-thread)
+    map)
+  "Keymap for `arxana-forum-stream-mode'.")
+
+(define-derived-mode arxana-forum-stream-mode special-mode "Arxana-Forum"
+  "Mode for streaming forum threads."
+  (setq-local truncate-lines nil))
 
 ;; =============================================================================
 ;; Browser integration
@@ -293,27 +487,6 @@ When nil, derive from `arxana-forum-server`."
             (arxana-forum--truncate updated 20)
             tags)))
 
-(defun arxana-browser--forum-thread-format ()
-  [("Author" 12 t)
-   ("Type" 10 t)
-   ("Time" 20 t)
-   ("Body" 0 nil)])
-
-(defun arxana-browser--forum-thread-row (item)
-  (let ((author (or (plist-get item :author) ""))
-        (claim (or (plist-get item :claim-type) "step"))
-        (timestamp (or (plist-get item :timestamp) ""))
-        (pattern (plist-get item :pattern))
-        (body (or (plist-get item :body) "")))
-    (vector (arxana-forum--truncate author 12)
-            (arxana-forum--truncate
-             (if pattern
-                 (format "%s/%s" claim pattern)
-               (format "%s" claim))
-             10)
-            (arxana-forum--truncate timestamp 20)
-            (arxana-forum--truncate body 120))))
-
 (defun arxana-browser--forum-items ()
   (condition-case err
       (arxana-forum--fetch-threads)
@@ -323,26 +496,14 @@ When nil, derive from `arxana-forum-server`."
                  :label "Forum error"
                  :description "Check arxana-forum-server")))))
 
-(defun arxana-browser--forum-thread-items (context)
-  (let ((thread-id (plist-get context :thread-id)))
-    (unless (and thread-id (equal thread-id arxana-forum--thread-id))
-      (arxana-forum--set-thread thread-id))
-    (arxana-forum--connect thread-id)
-    (or arxana-forum--posts '())))
-
 (defun arxana-forum-open-thread (item)
-  "Open a forum thread ITEM in the Arxana browser."
+  "Open a forum thread ITEM in the forum stream buffer."
   (let ((thread-id (plist-get item :thread-id))
         (label (or (plist-get item :label) (plist-get item :thread-id))))
     (unless thread-id
       (user-error "No thread id found"))
-    (arxana-forum--set-thread thread-id)
-    (setq arxana-browser--stack
-          (cons (list :view 'forum-thread
-                      :label label
-                      :thread-id thread-id)
-                arxana-browser--stack))
-    (arxana-browser--render)))
+    (arxana-forum-stream-connect thread-id)
+    (message "Opened forum thread %s (%s)" thread-id label)))
 
 ;; =============================================================================
 ;; Compose / reply
@@ -378,11 +539,17 @@ When nil, derive from `arxana-forum-server`."
 (defun arxana-forum-compose-for-current-thread ()
   "Compose a reply for the currently viewed forum thread."
   (interactive)
-  (arxana-browser--ensure-context)
-  (let* ((context (or arxana-browser--context (car arxana-browser--stack)))
-         (thread-id (plist-get context :thread-id)))
-    (unless (and context (eq (plist-get context :view) 'forum-thread) thread-id)
-      (user-error "Not currently viewing a forum thread"))
+  (let ((thread-id nil))
+    (cond
+     ((and (boundp 'arxana-forum-stream--thread-id)
+           arxana-forum-stream--thread-id)
+      (setq thread-id arxana-forum-stream--thread-id))
+     ((and (fboundp 'tabulated-list-get-id))
+      (let ((item (tabulated-list-get-id)))
+        (when (and item (eq (plist-get item :type) 'forum-thread))
+          (setq thread-id (plist-get item :thread-id))))))
+    (unless thread-id
+      (user-error "No forum thread selected"))
     (arxana-forum-compose thread-id)))
 
 (defun arxana-forum-compose-send ()
