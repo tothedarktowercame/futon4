@@ -481,6 +481,7 @@ When nil, derive from `arxana-forum-server`."
     (define-key map (kbd "g") #'arxana-forum-stream-reconnect)
     (define-key map (kbd "c") #'arxana-forum-stream-clear)
     (define-key map (kbd "q") #'arxana-forum-stream-disconnect)
+    (define-key map (kbd "<left>") #'arxana-forum-stream-back)
     (define-key map (kbd "C-c C-f") #'arxana-forum-compose-for-current-thread)
     map)
   "Keymap for `arxana-forum-stream-mode'.")
@@ -488,6 +489,16 @@ When nil, derive from `arxana-forum-server`."
 (define-derived-mode arxana-forum-stream-mode special-mode "Arxana-Forum"
   "Mode for streaming forum threads."
   (setq-local truncate-lines nil))
+
+(defun arxana-forum-stream-back ()
+  "Return to the Arxana browser when at buffer start."
+  (interactive)
+  (if (= (point) (point-min))
+      (let ((browser (and (boundp 'arxana-browser--buffer) arxana-browser--buffer)))
+        (if (and browser (get-buffer browser))
+            (pop-to-buffer browser)
+          (message "Arxana browser buffer not found")))
+    (goto-char (point-min))))
 
 ;; =============================================================================
 ;; Browser integration
