@@ -89,11 +89,14 @@ When nil, uses `arxana-lab-sessions-server`."
 
 (defun arxana-lab--server->ws (server)
   "Convert HTTP server URL to WebSocket URL for lab-ws.
-HTTP port 5050/5051 maps to lab-ws port 5056."
+HTTP 5050 -> ws 5056 (direct), HTTPS 5051 -> wss 5057 (nginx SSL termination)."
   (let* ((base (string-remove-suffix "/" (or server "")))
-         ;; Convert port: 5050/5051 -> 5056 for lab-ws
-         (with-port (replace-regexp-in-string
-                     ":505[01]\\b" ":5056" base)))
+         (is-ssl (or (string-prefix-p "https://" base)
+                     (string-prefix-p "wss://" base)))
+         ;; Convert port: 5050 -> 5056, 5051 -> 5057
+         (with-port (if is-ssl
+                        (replace-regexp-in-string ":5051\\b" ":5057" base)
+                      (replace-regexp-in-string ":5050\\b" ":5056" base))))
     (cond
      ((string-prefix-p "wss://" with-port) with-port)
      ((string-prefix-p "ws://" with-port) with-port)
