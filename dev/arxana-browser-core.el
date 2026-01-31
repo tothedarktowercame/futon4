@@ -76,6 +76,16 @@
 (declare-function arxana-browser--lab-open-raw "arxana-browser-lab")
 (declare-function arxana-browser--lab-open-draft "arxana-browser-lab")
 
+(declare-function arxana-browser--forum-items "arxana-browser-forum")
+(declare-function arxana-browser--forum-row "arxana-browser-forum" (item))
+(declare-function arxana-browser--forum-format "arxana-browser-forum")
+(declare-function arxana-browser--forum-thread-items "arxana-browser-forum" (context))
+(declare-function arxana-browser--forum-thread-row "arxana-browser-forum" (item))
+(declare-function arxana-browser--forum-thread-format "arxana-browser-forum")
+(declare-function arxana-forum-open-thread "arxana-browser-forum" (item))
+(declare-function arxana-forum-compose-for-current-thread "arxana-browser-forum")
+(declare-function arxana-forum-disconnect "arxana-browser-forum")
+
 (declare-function arxana-media--items "arxana-media")
 (declare-function arxana-media--entries "arxana-media")
 (declare-function arxana-media--track-items "arxana-media" (filter))
@@ -260,6 +270,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
               :label "Docs"
               :description "Doc books (XTDB-backed)."
               :view 'docbook)
+        (list :type 'menu
+              :label "Forum"
+              :description "Live forum threads (WebSocket updates)."
+              :view 'forum)
         (list :type 'menu
               :label "Lab"
               :description "Lab notebook sessions staged under data/logs/lab/."
@@ -514,6 +528,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         ('docbook-contents (arxana-browser--docbook-contents-items (plist-get context :book)))
         ('docbook-section (arxana-browser--docbook-section-items (plist-get context :book) context))
         ('docbook-recent (arxana-browser--docbook-items (plist-get context :book)))
+        ('forum (arxana-browser--forum-items))
+        ('forum-thread (arxana-browser--forum-thread-items context))
         ('lab (arxana-browser--lab-items))
         ('lab-files (arxana-lab-file-items (plist-get context :kind)))
         ('media-projects (arxana-media--project-items (or (arxana-media--entries) '())))
@@ -647,6 +663,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
             ('docbook-contents #'arxana-browser--docbook-contents-row)
             ('docbook-section #'arxana-browser--docbook-row)
             ('docbook-recent #'arxana-browser--docbook-row)
+            ('forum #'arxana-browser--forum-row)
+            ('forum-thread #'arxana-browser--forum-thread-row)
             ('lab #'arxana-browser--lab-row)
             ('lab-files #'arxana-browser--lab-file-row)
            ('media-projects #'arxana-browser--info-row)
@@ -707,6 +725,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                         ('docbook-contents (arxana-browser--docbook-contents-format))
                         ('docbook-section (arxana-browser--docbook-format))
                         ('docbook-recent (arxana-browser--docbook-format))
+                        ('forum (arxana-browser--forum-format))
+                        ('forum-thread (arxana-browser--forum-thread-format))
                         ('lab (arxana-browser--lab-format))
                         ('lab-files (arxana-browser--lab-file-format))
                         ('media-projects (arxana-browser--info-format))
@@ -792,6 +812,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                            :docbook docbook)
                      arxana-browser--stack))
          (arxana-browser--render)))
+      ('forum-thread
+       (arxana-forum-open-thread item))
       ('graph-type
        (if (fboundp 'arxana-browser-graph-open)
            (arxana-browser-graph-open item)
@@ -1072,18 +1094,22 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
 (defun arxana-browser--up ()
   (interactive)
   (arxana-browser--ensure-context)
-  (cond
-   ((not arxana-browser--stack)
-    (if arxana-browser--context
-        (progn
-          (setq arxana-browser--context nil)
-          (arxana-browser--render))
-      (message "Already at top level")))
-   (t
-    (setq arxana-browser--stack (cdr arxana-browser--stack))
-    (when (null arxana-browser--stack)
-      (setq arxana-browser--context nil))
-    (arxana-browser--render))))
+  (let ((current (car arxana-browser--stack)))
+    (cond
+     ((not arxana-browser--stack)
+      (if arxana-browser--context
+          (progn
+            (setq arxana-browser--context nil)
+            (arxana-browser--render))
+        (message "Already at top level")))
+     (t
+      (setq arxana-browser--stack (cdr arxana-browser--stack))
+      (when (and current (eq (plist-get current :view) 'forum-thread)
+                 (fboundp 'arxana-forum-disconnect))
+        (arxana-forum-disconnect))
+      (when (null arxana-browser--stack)
+        (setq arxana-browser--context nil))
+      (arxana-browser--render)))))
 
 (defun arxana-browser--refresh ()
   (interactive)
@@ -1199,6 +1225,7 @@ returning to the top-level list."
     (define-key map (kbd "C-c C-e") #'arxana-browser-docbook-export-org)
     (define-key map (kbd "C-c C-p") #'arxana-browser-docbook-export-pdf)
     (define-key map (kbd "C-c C-s") #'arxana-browser-docbook-sync-order)
+    (define-key map (kbd "C-c C-f") #'arxana-forum-compose-for-current-thread)
     (define-key map (kbd "B") #'arxana-browser-code-select-docbook)
     (define-key map (kbd "C-c C-l") #'arxana-media-lyrics-refresh-at-point)
     (define-key map (kbd "C-c C-L") #'arxana-media-lyrics-adopt-entity-at-point)
