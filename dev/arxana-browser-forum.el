@@ -72,6 +72,11 @@ When nil, derive from `arxana-forum-server`."
   :type 'boolean
   :group 'arxana-forum)
 
+(defcustom arxana-forum-stream-follow-tail nil
+  "When non-nil, keep point at the end of the stream as new posts arrive."
+  :type 'boolean
+  :group 'arxana-forum)
+
 (defvar arxana-forum-stream--buffer-prefix "*Arxana Forum*")
 (defvar arxana-forum-stream--websocket nil)
 (defvar arxana-forum-stream--current-thread-id nil)
@@ -299,7 +304,7 @@ When nil, derive from `arxana-forum-server`."
         (save-excursion
           (goto-char (point-max))
           (insert text))
-        (when at-end
+        (when (and arxana-forum-stream-follow-tail at-end)
           (goto-char (point-max)))))))
 
 (defun arxana-forum-stream--compute-depths (posts)
