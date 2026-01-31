@@ -514,6 +514,7 @@ When nil, derive from `arxana-forum-server`."
                     (arxana-forum--get item :thread/title)
                     (arxana-forum--get item :thread/id)
                     thread-id)))
+    (message "[forum] open-thread item=%S thread-id=%S label=%S" item thread-id label)
     (unless (and thread-id (not (string-empty-p (format "%s" thread-id))))
       (user-error "No thread id found"))
     (arxana-forum-stream-connect (format "%s" thread-id))
