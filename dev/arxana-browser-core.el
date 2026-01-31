@@ -1305,9 +1305,10 @@ returning to the top-level list."
   (when (and (boundp 'arxana-browser-mode-map)
              (null (lookup-key arxana-browser-mode-map (kbd "B"))))
     (define-key arxana-browser-mode-map (kbd "B") #'arxana-browser-code-select-docbook))
-  (when (and (boundp 'arxana-browser-mode-map)
-             (null (lookup-key arxana-browser-mode-map (kbd "y"))))
-    (define-key arxana-browser-mode-map (kbd "y") #'arxana-browser--copy-location)))
+  (when (boundp 'arxana-browser-mode-map)
+    (let ((binding (lookup-key arxana-browser-mode-map (kbd "y"))))
+      (unless (eq binding #'arxana-browser--copy-location)
+        (define-key arxana-browser-mode-map (kbd "y") #'arxana-browser--copy-location)))))
 
 (define-derived-mode arxana-browser-mode tabulated-list-mode "Arxana-Browse"
   "Mode for browsing Futon pattern libraries."
