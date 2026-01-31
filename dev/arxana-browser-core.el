@@ -95,6 +95,18 @@
 (declare-function arxana-browser--lab-sessions-archived-format "arxana-browser-lab")
 (declare-function arxana-browser-lab-open-session "arxana-browser-lab" (item))
 
+(declare-function arxana-browser--encyclopedia-items "arxana-browser-encyclopedia")
+(declare-function arxana-browser--encyclopedia-row "arxana-browser-encyclopedia" (item))
+(declare-function arxana-browser--encyclopedia-format "arxana-browser-encyclopedia")
+(declare-function arxana-browser--encyclopedia-entries-items "arxana-browser-encyclopedia" (context))
+(declare-function arxana-browser--encyclopedia-entries-row "arxana-browser-encyclopedia" (item))
+(declare-function arxana-browser--encyclopedia-entries-format "arxana-browser-encyclopedia")
+(declare-function arxana-browser--encyclopedia-entry-items "arxana-browser-encyclopedia" (context))
+(declare-function arxana-browser--encyclopedia-entry-row "arxana-browser-encyclopedia" (item))
+(declare-function arxana-browser--encyclopedia-entry-format "arxana-browser-encyclopedia")
+(declare-function arxana-browser-encyclopedia-open-corpus "arxana-browser-encyclopedia" (item))
+(declare-function arxana-browser-encyclopedia-open-entry "arxana-browser-encyclopedia" (item))
+
 (declare-function arxana-media--items "arxana-media")
 (declare-function arxana-media--entries "arxana-media")
 (declare-function arxana-media--track-items "arxana-media" (filter))
@@ -286,7 +298,11 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         (list :type 'menu
               :label "Lab"
               :description "Lab sessions (active and archived)."
-              :view 'lab-home)))
+              :view 'lab-home)
+        (list :type 'menu
+              :label "Encyclopedia"
+              :description "PlanetMath and other math reference content."
+              :view 'encyclopedia)))
 
 (defun arxana-browser--code-root-items ()
   (list (list :type 'code-root
@@ -543,6 +559,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         ('lab-sessions-recent (arxana-browser--lab-sessions-recent-items))
         ('lab-sessions-archived (arxana-browser--lab-sessions-archived-items))
         ('lab (arxana-browser--lab-items))
+        ('encyclopedia (arxana-browser--encyclopedia-items))
+        ('encyclopedia-entries (arxana-browser--encyclopedia-entries-items context))
+        ('encyclopedia-entry (arxana-browser--encyclopedia-entry-items context))
         ('lab-files (arxana-lab-file-items (plist-get context :kind)))
         ('media-projects (arxana-media--project-items (or (arxana-media--entries) '())))
         ('media-publications (arxana-media--publications-items))
@@ -681,6 +700,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
             ('lab-sessions-recent #'arxana-browser--lab-sessions-active-row)
             ('lab-sessions-archived #'arxana-browser--lab-sessions-archived-row)
             ('lab #'arxana-browser--lab-row)
+            ('encyclopedia #'arxana-browser--encyclopedia-row)
+            ('encyclopedia-entries #'arxana-browser--encyclopedia-entries-row)
+            ('encyclopedia-entry #'arxana-browser--encyclopedia-entry-row)
             ('lab-files #'arxana-browser--lab-file-row)
            ('media-projects #'arxana-browser--info-row)
             ('media-publications #'arxana-browser--info-row)
@@ -746,6 +768,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                         ('lab-sessions-recent (arxana-browser--lab-sessions-active-format))
                         ('lab-sessions-archived (arxana-browser--lab-sessions-archived-format))
                         ('lab (arxana-browser--lab-format))
+                        ('encyclopedia (arxana-browser--encyclopedia-format))
+                        ('encyclopedia-entries (arxana-browser--encyclopedia-entries-format))
+                        ('encyclopedia-entry (arxana-browser--encyclopedia-entry-format))
                         ('lab-files (arxana-browser--lab-file-format))
                         ('media-projects (arxana-browser--info-format))
                         ('media-publications (arxana-browser--info-format))
@@ -838,6 +863,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
        (arxana-browser-lab-open-session item))
       ('lab-session-archived
        (arxana-browser-lab-open-session item))
+      ('encyclopedia-corpus
+       (arxana-browser-encyclopedia-open-corpus item))
+      ('encyclopedia-entry
+       (arxana-browser-encyclopedia-open-entry item))
       ('graph-type
        (if (fboundp 'arxana-browser-graph-open)
            (arxana-browser-graph-open item)

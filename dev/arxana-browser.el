@@ -7,6 +7,7 @@
 
 (require 'arxana-browser-core)
 (require 'arxana-browser-docbook)
+(require 'arxana-browser-encyclopedia)
 (require 'arxana-browser-forum)
 (require 'arxana-browser-lab)
 (require 'arxana-browser-marks)
