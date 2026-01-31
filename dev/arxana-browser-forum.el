@@ -67,6 +67,11 @@ When nil, derive from `arxana-forum-server`."
   :type 'boolean
   :group 'arxana-forum)
 
+(defcustom arxana-forum-stream-show-status-messages nil
+  "When non-nil, append connection status messages to the stream buffer."
+  :type 'boolean
+  :group 'arxana-forum)
+
 (defvar arxana-forum-stream--buffer-prefix "*Arxana Forum*")
 (defvar arxana-forum-stream--websocket nil)
 (defvar arxana-forum-stream--current-thread-id nil)
@@ -352,8 +357,9 @@ When nil, derive from `arxana-forum-server`."
       (_ nil))))
 
 (defun arxana-forum-stream--on-close (_ws)
-  (arxana-forum-stream--append arxana-forum-stream--current-thread-id
-                               "\n--- Disconnected ---\n")
+  (when arxana-forum-stream-show-status-messages
+    (arxana-forum-stream--append arxana-forum-stream--current-thread-id
+                                 "\n--- Disconnected ---\n"))
   (when arxana-forum-stream--ping-timer
     (cancel-timer arxana-forum-stream--ping-timer)
     (setq arxana-forum-stream--ping-timer nil))
@@ -363,8 +369,10 @@ When nil, derive from `arxana-forum-server`."
     (arxana-forum-stream--schedule-reconnect)))
 
 (defun arxana-forum-stream--on-error (_ws err)
-  (arxana-forum-stream--append arxana-forum-stream--current-thread-id
-                               (format "\n--- WebSocket error: %s ---\n" err)))
+  (if arxana-forum-stream-show-status-messages
+      (arxana-forum-stream--append arxana-forum-stream--current-thread-id
+                                   (format "\n--- WebSocket error: %s ---\n" err))
+    (message "[arxana-forum] websocket error: %s" err)))
 
 (defun arxana-forum-stream--schedule-reconnect ()
   (when arxana-forum-stream--reconnect-timer
