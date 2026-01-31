@@ -373,11 +373,12 @@ When nil, derive from `arxana-forum-server`."
              arxana-forum-stream--current-thread-id)
     (arxana-forum-stream--schedule-reconnect)))
 
-(defun arxana-forum-stream--on-error (_ws err)
-  (if arxana-forum-stream-show-status-messages
-      (arxana-forum-stream--append arxana-forum-stream--current-thread-id
-                                   (format "\n--- WebSocket error: %s ---\n" err))
-    (message "[arxana-forum] websocket error: %s" err)))
+(defun arxana-forum-stream--on-error (&rest args)
+  (let ((err (car (last args))))
+    (if arxana-forum-stream-show-status-messages
+        (arxana-forum-stream--append arxana-forum-stream--current-thread-id
+                                     (format "\n--- WebSocket error: %s ---\n" err))
+      (message "[arxana-forum] websocket error: %s" err))))
 
 (defun arxana-forum-stream--schedule-reconnect ()
   (when arxana-forum-stream--reconnect-timer
