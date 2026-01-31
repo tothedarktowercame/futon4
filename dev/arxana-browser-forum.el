@@ -466,11 +466,10 @@ When nil, derive from `arxana-forum-server`."
 
 (defun arxana-browser--forum-format ()
   [("Thread" 12 t)
-   ("Title" 0 t)
-   ("Author" 14 t)
-   ("Posts" 7 nil)
-   ("Updated" 20 t)
-   ("Tags" 0 nil)])
+   ("Title" 55 t)
+   ("Author" 12 t)
+   ("Posts" 5 nil)
+   ("Updated" 17 t)])
 
 (defun arxana-browser--forum-row (item)
   (let ((thread-id (or (plist-get item :thread-id) ""))
@@ -478,14 +477,12 @@ When nil, derive from `arxana-forum-server`."
         (author (or (plist-get item :author) ""))
         (count (number-to-string (or (plist-get item :count) 0)))
         (updated (or (plist-get item :updated) ""))
-        (tags (or (plist-get item :tags) ""))
         (pinned? (plist-get item :pinned?)))
     (vector (if pinned? (concat "*" thread-id) thread-id)
-            title
-            author
+            (arxana-forum--truncate title 55)
+            (arxana-forum--truncate author 12)
             count
-            updated
-            tags)))
+            (arxana-forum--truncate updated 17))))
 
 (defun arxana-browser--forum-items ()
   (condition-case err
