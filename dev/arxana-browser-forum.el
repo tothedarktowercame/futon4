@@ -507,11 +507,16 @@ When nil, derive from `arxana-forum-server`."
 
 (defun arxana-forum-open-thread (item)
   "Open a forum thread ITEM in the forum stream buffer."
-  (let ((thread-id (plist-get item :thread-id))
-        (label (or (plist-get item :label) (plist-get item :thread-id))))
-    (unless thread-id
+  (let* ((thread-id (or (plist-get item :thread-id)
+                        (arxana-forum--get item :thread/id)
+                        (arxana-forum--get item :thread-id)))
+         (label (or (plist-get item :label)
+                    (arxana-forum--get item :thread/title)
+                    (arxana-forum--get item :thread/id)
+                    thread-id)))
+    (unless (and thread-id (not (string-empty-p (format "%s" thread-id))))
       (user-error "No thread id found"))
-    (arxana-forum-stream-connect thread-id)
+    (arxana-forum-stream-connect (format "%s" thread-id))
     (message "Opened forum thread %s (%s)" thread-id label)))
 
 ;; =============================================================================
