@@ -19,6 +19,31 @@
   "Face for assistant timeline blocks."
   :group 'arxana-lab)
 
+(defface arxana-lab-psr-face
+  '((t :background "#2b1e24" :foreground "#e0a0c0"))
+  "Face for PSR (pattern selection) blocks."
+  :group 'arxana-lab)
+
+(defface arxana-lab-pur-face
+  '((t :background "#1e2b24" :foreground "#a0e0c0"))
+  "Face for PUR (pattern use) blocks."
+  :group 'arxana-lab)
+
+(defface arxana-lab-aif-face
+  '((t :background "#24241e" :foreground "#e0e0a0"))
+  "Face for AIF summary blocks."
+  :group 'arxana-lab)
+
+(defface arxana-lab-code-face
+  '((t :background "#1e1e2b" :foreground "#a0c0e0"))
+  "Face for code edit blocks."
+  :group 'arxana-lab)
+
+(defface arxana-lab-hyperlink-face
+  '((t :foreground "dodger blue" :underline t))
+  "Face for clickable hyperlinks."
+  :group 'arxana-lab)
+
 (defcustom arxana-lab-root nil
   "Root directory containing the lab notebook (e.g., <repo>/lab)."
   :type '(choice (const :tag "Auto-detect" nil)
@@ -289,6 +314,138 @@
           (insert "\n"))
         (insert "\n")))))
 
+;; =============================================================================
+;; Hyperlink support
+;; =============================================================================
+
+(defvar arxana-lab-pattern-browser-function nil
+  "Function to browse a pattern by ID. Called with pattern-id string.")
+
+(defvar arxana-lab-code-browser-function #'find-file-other-window
+  "Function to browse code. Called with file path string.")
+
+(defun arxana-lab--make-pattern-link (pattern-id)
+  "Create a clickable link for PATTERN-ID."
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mouse-1]
+      (lambda () (interactive)
+        (arxana-lab--browse-pattern pattern-id)))
+    (define-key map (kbd "RET")
+      (lambda () (interactive)
+        (arxana-lab--browse-pattern pattern-id)))
+    (propertize (format "[[pattern:%s]]" pattern-id)
+                'face 'arxana-lab-hyperlink-face
+                'mouse-face 'highlight
+                'keymap map
+                'help-echo (format "Browse pattern: %s" pattern-id)
+                'arxana-pattern-id pattern-id)))
+
+(defun arxana-lab--make-code-link (file-path &optional function-name)
+  "Create a clickable link for FILE-PATH, optionally to FUNCTION-NAME."
+  (let ((map (make-sparse-keymap))
+        (display (if function-name
+                     (format "[[code:%s::%s]]" file-path function-name)
+                   (format "[[code:%s]]" file-path))))
+    (define-key map [mouse-1]
+      (lambda () (interactive)
+        (arxana-lab--browse-code file-path function-name)))
+    (define-key map (kbd "RET")
+      (lambda () (interactive)
+        (arxana-lab--browse-code file-path function-name)))
+    (propertize display
+                'face 'arxana-lab-hyperlink-face
+                'mouse-face 'highlight
+                'keymap map
+                'help-echo (format "Open: %s%s" file-path
+                                   (if function-name (format " at %s" function-name) ""))
+                'arxana-file-path file-path
+                'arxana-function function-name)))
+
+(defun arxana-lab--browse-pattern (pattern-id)
+  "Browse PATTERN-ID using configured browser function."
+  (if arxana-lab-pattern-browser-function
+      (funcall arxana-lab-pattern-browser-function pattern-id)
+    (message "Pattern: %s (set arxana-lab-pattern-browser-function to enable navigation)"
+             pattern-id)))
+
+(defun arxana-lab--browse-code (file-path &optional function-name)
+  "Browse FILE-PATH, optionally jumping to FUNCTION-NAME."
+  (let ((full-path (if (file-name-absolute-p file-path)
+                       file-path
+                     ;; Try to find relative to common roots
+                     (or (locate-file file-path (list default-directory
+                                                       (expand-file-name "~/code/futon3/")
+                                                       (expand-file-name "~/code/")))
+                         file-path))))
+    (when (and full-path (file-exists-p full-path))
+      (funcall arxana-lab-code-browser-function full-path)
+      (when function-name
+        (goto-char (point-min))
+        (search-forward function-name nil t)))))
+
+;; =============================================================================
+;; Enhanced timeline for MUSN events
+;; =============================================================================
+
+(defun arxana-lab--role-face (role)
+  "Return face for event ROLE."
+  (pcase role
+    ("psr" 'arxana-lab-psr-face)
+    ("pur" 'arxana-lab-pur-face)
+    ("aif" 'arxana-lab-aif-face)
+    ("system" 'arxana-lab-code-face)
+    ("assistant" 'arxana-lab-assistant-face)
+    (_ nil)))
+
+(defun arxana-lab--insert-event-links (event)
+  "Insert hyperlinks for pattern-id and file references in EVENT."
+  (when-let ((pattern-id (plist-get event :pattern-id)))
+    (insert "  Pattern: " (arxana-lab--make-pattern-link pattern-id) "\n"))
+  (when-let ((file (plist-get event :file)))
+    (let ((func (plist-get event :function)))
+      (insert "  File: " (arxana-lab--make-code-link file func) "\n")))
+  ;; Candidates (for PSR)
+  (when-let ((candidates (plist-get event :candidates)))
+    (insert "  Candidates: ")
+    (insert (mapconcat #'arxana-lab--make-pattern-link candidates ", "))
+    (insert "\n"))
+  ;; Anchors (for PUR)
+  (when-let ((anchors (plist-get event :anchors)))
+    (dolist (anchor anchors)
+      (when-let ((ref (plist-get anchor :anchor/ref)))
+        (when-let ((file (plist-get ref :file)))
+          (insert "  Anchor: " (arxana-lab--make-code-link file (plist-get ref :fn)) "\n"))))))
+
+(defun arxana-lab--insert-musn-timeline (all-events)
+  "Insert timeline view for MUSN ALL-EVENTS with rich formatting."
+  (insert (format "* Event Timeline (%d events)\n\n" (length all-events)))
+  (dolist (event all-events)
+    (let* ((start (point))
+           (id (or (plist-get event :id) "?"))
+           (ts (or (plist-get event :timestamp) ""))
+           (role (or (plist-get event :role) "system"))
+           (event-type (or (plist-get event :event-type) "unknown"))
+           (text (or (plist-get event :text) ""))
+           (face (arxana-lab--role-face role)))
+      ;; Header
+      (insert (format "** [%s] %s\n" (upcase role) id))
+      (insert (format "   :PROPERTIES:\n   :TIMESTAMP: %s\n   :EVENT-TYPE: %s\n   :END:\n\n"
+                      ts event-type))
+      ;; Hyperlinks
+      (arxana-lab--insert-event-links event)
+      ;; Text content
+      (insert "\n")
+      (insert text)
+      (unless (string-suffix-p "\n" text)
+        (insert "\n"))
+      (insert "\n")
+      ;; Apply face overlay
+      (when face
+        (let ((ov (make-overlay start (point))))
+          (overlay-put ov 'face face)
+          (overlay-put ov 'priority 1)
+          (overlay-put ov 'evaporate t))))))
+
 (defun arxana-lab--insert-message-timeline (user-messages assistant-messages)
   (let* ((users (mapcar (lambda (msg) (arxana-lab--normalize-message msg "user"))
                         (or user-messages '())))
@@ -325,29 +482,53 @@
     (unless payload
       (user-error "Unable to read lab raw file"))
     (let* ((session (or (plist-get payload :lab/session-id) ""))
+           (agent (plist-get payload :lab/agent))
+           (source (plist-get payload :lab/source))
            (ts-start (plist-get payload :lab/timestamp-start))
            (ts-end (plist-get payload :lab/timestamp-end))
            (files (or (plist-get payload :lab/files-touched) '()))
            (trace (plist-get payload :lab/trace-path))
            (users (plist-get payload :lab/user-messages))
            (assistants (plist-get payload :lab/assistant-messages))
+           ;; MUSN-specific fields
+           (all-events (plist-get payload :lab/all-events))
+           (has-psr (plist-get payload :lab/has-psr))
+           (has-pur (plist-get payload :lab/has-pur))
+           (has-aif (plist-get payload :lab/has-aif))
+           (is-musn (string= source "musn/futon3"))
            (buf (get-buffer-create (format "*Lab:%s*" session))))
       (with-current-buffer buf
         (let ((inhibit-read-only t))
           (erase-buffer)
           (org-mode)
-          (insert (format "#+TITLE: Lab Session %s\n\n" session))
+          (insert (format "#+TITLE: Lab Session %s\n" session))
+          (when agent
+            (insert (format "#+SUBTITLE: Agent: %s\n" agent)))
+          (insert "\n")
+          ;; Summary
           (insert "* Summary\n")
           (arxana-lab--insert-kv "Session" session)
+          (when agent (arxana-lab--insert-kv "Agent" agent))
+          (when source (arxana-lab--insert-kv "Source" source))
           (arxana-lab--insert-kv "Start" ts-start)
           (arxana-lab--insert-kv "End" ts-end)
           (arxana-lab--insert-kv "Trace" trace)
+          ;; MUSN indicators
+          (when is-musn
+            (insert "\n** Pattern Activity\n")
+            (arxana-lab--insert-kv "Has PSR" (if has-psr "yes" "no"))
+            (arxana-lab--insert-kv "Has PUR" (if has-pur "yes" "no"))
+            (arxana-lab--insert-kv "Has AIF" (if has-aif "yes" "no")))
+          ;; Files with hyperlinks
           (when files
-            (insert "\n* Files touched\n")
+            (insert "\n* Files Touched\n")
             (dolist (file files)
-              (insert (format "- %s\n" file))))
+              (insert "- " (arxana-lab--make-code-link file) "\n")))
           (insert "\n")
-          (arxana-lab--insert-message-timeline users assistants)
+          ;; Timeline - use MUSN timeline if available
+          (if (and is-musn all-events)
+              (arxana-lab--insert-musn-timeline all-events)
+            (arxana-lab--insert-message-timeline users assistants))
           (goto-char (point-min))
           (view-mode 1)))
       (pop-to-buffer buf))))
@@ -386,6 +567,82 @@
       (if (string= kind "stubs")
           (arxana-lab-open-stub-viewer path)
         (arxana-lab--open-file path kind mode)))))
+
+;; =============================================================================
+;; Integration setup
+;; =============================================================================
+
+(defun arxana-lab-setup-hyperlinks ()
+  "Set up hyperlink handlers for Lab viewer.
+Call this after loading arxana-browser-patterns."
+  (interactive)
+  ;; Pattern browser - use arxana-browser-patterns if available
+  (when (fboundp 'arxana-browser-pattern-show)
+    (setq arxana-lab-pattern-browser-function
+          (lambda (pattern-id)
+            (arxana-browser-pattern-show pattern-id))))
+  ;; Code browser - default find-file is usually fine
+  (setq arxana-lab-code-browser-function #'find-file-other-window)
+  (message "Lab hyperlinks configured"))
+
+;;;###autoload
+(defun arxana-lab-browse-musn-session (session-id)
+  "Browse a MUSN session by SESSION-ID from the Lab."
+  (interactive "sSession ID: ")
+  (arxana-lab-browse-raw-session session-id))
+
+;;;###autoload
+(defun arxana-lab-browse-raw-session (session-id)
+  "Browse any raw session by SESSION-ID from the Lab."
+  (interactive "sSession ID: ")
+  (let* ((root (arxana-lab--locate-root))
+         (path (and root (expand-file-name (format "raw/%s.json" session-id) root))))
+    (if (and path (file-exists-p path))
+        (arxana-lab-open-raw-viewer path)
+      (user-error "Session not found in lab/raw: %s" session-id))))
+
+;; =============================================================================
+;; Claude Code live refresh
+;; =============================================================================
+
+(defvar arxana-lab-claude-jsonl-path nil
+  "Path to Claude Code JSONL file for live refresh.")
+
+(defvar arxana-lab-claude-import-script
+  "/home/joe/code/futon4/scripts/claude-jsonl-to-lab.clj"
+  "Path to Claude Code JSONL import script.")
+
+(defun arxana-lab-refresh-claude-session ()
+  "Re-import the current Claude Code session from JSONL and refresh view."
+  (interactive)
+  (unless arxana-lab-claude-jsonl-path
+    (setq arxana-lab-claude-jsonl-path
+          (read-file-name "Claude JSONL file: " "~/.claude/projects/")))
+  (let* ((session-id (or (and (string-match "\\*Lab:\\([^*]+\\)\\*" (buffer-name))
+                              (match-string 1 (buffer-name)))
+                         "current-futon3-session"))
+         (cmd (format "cd /home/joe/code/futon4 && bb %s %s %s"
+                      (shell-quote-argument arxana-lab-claude-import-script)
+                      (shell-quote-argument arxana-lab-claude-jsonl-path)
+                      (shell-quote-argument session-id))))
+    (message "Refreshing from JSONL...")
+    (shell-command cmd)
+    (arxana-lab-browse-raw-session session-id)
+    (message "Refreshed %s" session-id)))
+
+(defun arxana-lab-set-claude-jsonl (path)
+  "Set the Claude JSONL PATH for live refresh."
+  (interactive "fClaude JSONL file: ")
+  (setq arxana-lab-claude-jsonl-path path)
+  (message "Claude JSONL set to: %s" path))
+
+;; Add refresh binding to view-mode in Lab buffers
+(defun arxana-lab--setup-refresh-key ()
+  "Set up 'g' key for refresh in Lab buffers."
+  (when (string-prefix-p "*Lab:" (buffer-name))
+    (local-set-key (kbd "g") #'arxana-lab-refresh-claude-session)))
+
+(add-hook 'view-mode-hook #'arxana-lab--setup-refresh-key)
 
 (provide 'arxana-lab)
 
