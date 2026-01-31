@@ -460,7 +460,6 @@ When DISPLAY is non-nil, show the stream buffer."
   (arxana-forum-stream--start-ping-timer)
   (let* ((buf (arxana-forum-stream--get-buffer thread-id))
          (show (or display
-                   arxana-forum-stream-auto-focus
                    (called-interactively-p 'interactive))))
     (when show
       (pop-to-buffer buf))))
