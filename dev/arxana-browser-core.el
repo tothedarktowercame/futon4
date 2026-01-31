@@ -86,6 +86,18 @@
 (declare-function arxana-forum-compose-for-current-thread "arxana-browser-forum")
 (declare-function arxana-forum-disconnect "arxana-browser-forum")
 
+(declare-function arxana-browser--lab-menu-items "arxana-browser-lab")
+(declare-function arxana-browser--lab-menu-row "arxana-browser-lab" (item))
+(declare-function arxana-browser--lab-menu-format "arxana-browser-lab")
+(declare-function arxana-browser--lab-sessions-active-items "arxana-browser-lab")
+(declare-function arxana-browser--lab-sessions-active-row "arxana-browser-lab" (item))
+(declare-function arxana-browser--lab-sessions-active-format "arxana-browser-lab")
+(declare-function arxana-browser--lab-sessions-recent-items "arxana-browser-lab")
+(declare-function arxana-browser--lab-sessions-archived-items "arxana-browser-lab")
+(declare-function arxana-browser--lab-sessions-archived-row "arxana-browser-lab" (item))
+(declare-function arxana-browser--lab-sessions-archived-format "arxana-browser-lab")
+(declare-function arxana-browser-lab-open-session "arxana-browser-lab" (item))
+
 (declare-function arxana-media--items "arxana-media")
 (declare-function arxana-media--entries "arxana-media")
 (declare-function arxana-media--track-items "arxana-media" (filter))
@@ -276,8 +288,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
               :view 'forum)
         (list :type 'menu
               :label "Lab"
-              :description "Lab notebook sessions staged under data/logs/lab/."
-              :view 'lab)))
+              :description "Lab sessions (active and archived)."
+              :view 'lab-home)))
 
 (defun arxana-browser--code-root-items ()
   (list (list :type 'code-root
@@ -530,6 +542,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         ('docbook-recent (arxana-browser--docbook-items (plist-get context :book)))
         ('forum (arxana-browser--forum-items))
         ('forum-thread (arxana-browser--forum-thread-items context))
+        ('lab-home (arxana-browser--lab-menu-items))
+        ('lab-sessions-active (arxana-browser--lab-sessions-active-items))
+        ('lab-sessions-recent (arxana-browser--lab-sessions-recent-items))
+        ('lab-sessions-archived (arxana-browser--lab-sessions-archived-items))
         ('lab (arxana-browser--lab-items))
         ('lab-files (arxana-lab-file-items (plist-get context :kind)))
         ('media-projects (arxana-media--project-items (or (arxana-media--entries) '())))
@@ -665,6 +681,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
             ('docbook-recent #'arxana-browser--docbook-row)
             ('forum #'arxana-browser--forum-row)
             ('forum-thread #'arxana-browser--forum-thread-row)
+            ('lab-home #'arxana-browser--lab-menu-row)
+            ('lab-sessions-active #'arxana-browser--lab-sessions-active-row)
+            ('lab-sessions-recent #'arxana-browser--lab-sessions-active-row)
+            ('lab-sessions-archived #'arxana-browser--lab-sessions-archived-row)
             ('lab #'arxana-browser--lab-row)
             ('lab-files #'arxana-browser--lab-file-row)
            ('media-projects #'arxana-browser--info-row)
@@ -727,6 +747,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                         ('docbook-recent (arxana-browser--docbook-format))
                         ('forum (arxana-browser--forum-format))
                         ('forum-thread (arxana-browser--forum-thread-format))
+                        ('lab-home (arxana-browser--lab-menu-format))
+                        ('lab-sessions-active (arxana-browser--lab-sessions-active-format))
+                        ('lab-sessions-recent (arxana-browser--lab-sessions-active-format))
+                        ('lab-sessions-archived (arxana-browser--lab-sessions-archived-format))
                         ('lab (arxana-browser--lab-format))
                         ('lab-files (arxana-browser--lab-file-format))
                         ('media-projects (arxana-browser--info-format))
@@ -814,6 +838,12 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
          (arxana-browser--render)))
       ('forum-thread
        (arxana-forum-open-thread item))
+      ('lab-menu
+       (arxana-browser-lab-open-session item))
+      ('lab-session-active
+       (arxana-browser-lab-open-session item))
+      ('lab-session-archived
+       (arxana-browser-lab-open-session item))
       ('graph-type
        (if (fboundp 'arxana-browser-graph-open)
            (arxana-browser-graph-open item)
