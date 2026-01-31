@@ -101,6 +101,7 @@ Verify each supported persisted hyperlink type both works and is documented.
 5. Embedding cache (arxana/embedding-cache): if enabled, confirm it persists and
    is documented; if not enabled, note as explicitly unavailable.
 
+
 * Overrun
 
 Items deferred until after the basic checklist passes.

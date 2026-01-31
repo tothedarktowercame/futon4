@@ -39,6 +39,18 @@ Usage:
 ./bounce_vocal_banjo_bass_vocal2.sh t1.wav t2.wav t3.wav t4.wav out.wav
 ```
 
+## Basic mix (vocal + bass + harp + harp2)
+
+`bounce_vocal_bass_harp_harp2.sh` balances lead vocal with bass plus two
+harp overdubs (harp1 higher/trumpet-ish, harp2 lower/sax-ish) with mild
+stereo width.
+
+Usage:
+
+```sh
+./bounce_vocal_bass_harp_harp2.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
+```
+
 ## Basic mix (spoken word vocal + banjo + bass + accordion)
 
 `bounce_vocal_banjo_bass_accordion.sh` balances a spoken word vocal with
