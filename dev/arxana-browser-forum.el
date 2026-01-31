@@ -441,8 +441,9 @@ When nil, derive from `arxana-forum-server`."
     (setq arxana-forum-stream-auto-reconnect auto-reconnect))
   (setq arxana-forum-stream--websocket nil))
 
-(defun arxana-forum-stream-connect (thread-id)
-  "Open an append-only forum stream for THREAD-ID."
+(defun arxana-forum-stream-connect (thread-id &optional display)
+  "Open an append-only forum stream for THREAD-ID.
+When DISPLAY is non-nil, show the stream buffer."
   (interactive (list (read-string "Thread id: " arxana-forum-stream--current-thread-id)))
   (arxana-forum--require-websocket)
   (when (and arxana-forum-stream--websocket
@@ -457,11 +458,12 @@ When nil, derive from `arxana-forum-server`."
                           :on-close #'arxana-forum-stream--on-close
                           :on-error #'arxana-forum-stream--on-error)))
   (arxana-forum-stream--start-ping-timer)
-  (let ((buf (arxana-forum-stream--get-buffer thread-id)))
-    (if (or arxana-forum-stream-auto-focus
-            (called-interactively-p 'interactive))
-        (pop-to-buffer buf)
-      (display-buffer buf))))
+  (let* ((buf (arxana-forum-stream--get-buffer thread-id))
+         (show (or display
+                   arxana-forum-stream-auto-focus
+                   (called-interactively-p 'interactive))))
+    (when show
+      (pop-to-buffer buf))))
 
 (defun arxana-forum-stream-reconnect ()
   "Reconnect the current forum stream."
@@ -560,7 +562,7 @@ When nil, derive from `arxana-forum-server`."
                     thread-id)))
     (unless (and thread-id (not (string-empty-p (format "%s" thread-id))))
       (user-error "No thread id found"))
-    (arxana-forum-stream-connect (format "%s" thread-id))
+    (arxana-forum-stream-connect (format "%s" thread-id) t)
     (message "Opened forum thread %s (%s)" thread-id label)))
 
 ;; =============================================================================
