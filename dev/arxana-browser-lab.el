@@ -9,6 +9,7 @@
 (require 'cl-lib)
 (require 'json)
 (require 'url)
+(require 'url-parse)
 (require 'url-http)
 
 (require 'arxana-lab)
@@ -30,6 +31,12 @@
   (or (getenv "FUTON3_SERVER") "http://localhost:5050")
   "Futon3 HTTP server URL for fetching session lists."
   :type 'string
+  :group 'arxana-lab-sessions)
+
+(defcustom arxana-lab-sessions-servers nil
+  "List of Futon3 HTTP server URLs to query for session lists.
+When nil, uses `arxana-lab-sessions-server`."
+  :type '(repeat string)
   :group 'arxana-lab-sessions)
 
 (defcustom arxana-lab-sessions-request-timeout 10
@@ -54,20 +61,72 @@
             (json-read-from-string body)))
       (error nil))))
 
+(defun arxana-lab--session-servers ()
+  (let ((servers arxana-lab-sessions-servers))
+    (cond
+     ((and (listp servers) (seq servers)) servers)
+     ((stringp servers) (list servers))
+     ((and arxana-lab-sessions-server (stringp arxana-lab-sessions-server))
+      (list arxana-lab-sessions-server))
+     (t nil))))
+
+(defun arxana-lab--server-host (server)
+  (condition-case _err
+      (let* ((url (url-generic-parse-url server))
+             (host (url-host url))
+             (port (url-port url)))
+        (cond
+         ((and host port) (format "%s:%s" host port))
+         (host host)
+         (t server)))
+    (error server)))
+
+(defun arxana-lab--merge-sessions (sessions)
+  (seq-sort (lambda (a b)
+              (string> (or (plist-get a :modified) "")
+                       (or (plist-get b :modified) "")))
+            sessions))
+
+(defun arxana-lab--server->ws (server)
+  (let ((base (string-remove-suffix "/" (or server ""))))
+    (cond
+     ((string-prefix-p "wss://" base) base)
+     ((string-prefix-p "ws://" base) base)
+     ((string-prefix-p "https://" base)
+      (concat "wss://" (string-remove-prefix "https://" base)))
+     ((string-prefix-p "http://" base)
+      (concat "ws://" (string-remove-prefix "http://" base)))
+     (t base))))
+
 (defun arxana-lab--fetch-sessions (endpoint)
   "Fetch sessions from ENDPOINT (e.g., /fulab/lab/sessions/active)."
   (let* ((url-request-method "GET")
          (url-request-extra-headers '(("Accept" . "application/json")))
-         (url (concat (string-remove-suffix "/" arxana-lab-sessions-server) endpoint))
-         (buffer (url-retrieve-synchronously url t t arxana-lab-sessions-request-timeout)))
-    (unless buffer
-      (user-error "Failed to fetch sessions from %s" url))
-    (with-current-buffer buffer
-      (goto-char (point-min))
-      (re-search-forward "\n\n" nil 'move)
-      (let ((body (buffer-substring-no-properties (point) (point-max))))
-        (kill-buffer buffer)
-        (arxana-lab--parse-json body)))))
+         (servers (arxana-lab--session-servers))
+         (merged '()))
+    (unless servers
+      (user-error "No lab session servers configured"))
+    (dolist (server servers)
+      (let* ((url (concat (string-remove-suffix "/" server) endpoint))
+             (buffer (url-retrieve-synchronously url t t arxana-lab-sessions-request-timeout)))
+        (if (not buffer)
+            (message "[arxana-lab] Failed to fetch sessions from %s" url)
+          (with-current-buffer buffer
+            (goto-char (point-min))
+            (re-search-forward "\n\n" nil 'move)
+            (let* ((body (buffer-substring-no-properties (point) (point-max)))
+                   (payload (arxana-lab--parse-json body))
+                   (sessions (plist-get payload :sessions))
+                   (host (arxana-lab--server-host server)))
+              (kill-buffer buffer)
+              (when (listp sessions)
+                (setq merged
+                      (append merged
+                              (mapcar (lambda (s)
+                                        (append (if (listp s) s (list :id s))
+                                                (list :server server :host host)))
+                                      sessions)))))))))
+    (list :ok t :sessions (arxana-lab--merge-sessions merged))))
 
 (defun arxana-lab--truncate (text max-len)
   "Truncate TEXT to MAX-LEN characters."
@@ -84,11 +143,11 @@
   "Return the Lab sub-menu items."
   (list (list :type 'lab-menu
               :label "Active Sessions"
-              :description "Currently running Claude Code sessions"
+              :description "Currently running Codex/Claude sessions"
               :view 'lab-sessions-active)
         (list :type 'lab-menu
               :label "Recent Sessions"
-              :description "All sessions in ~/.claude/projects/"
+              :description "All sessions in ~/.claude/projects/ and ~/.codex/sessions/"
               :view 'lab-sessions-recent)
         (list :type 'lab-menu
               :label "Archived Sessions"
@@ -117,6 +176,7 @@
   "Column format for active sessions view."
   [("Session ID" 38 t)
    ("Project" 25 t)
+   ("Host" 22 t)
    ("Size" 8 nil)
    ("Active" 6 nil)
    ("Modified" 20 t)])
@@ -125,11 +185,13 @@
   "Row for active session ITEM."
   (let ((id (or (plist-get item :id) ""))
         (project (or (plist-get item :project) ""))
+        (host (or (plist-get item :host) ""))
         (size (format "%dkb" (or (plist-get item :size-kb) 0)))
         (active (if (plist-get item :active) "●" ""))
         (modified (or (plist-get item :modified) "")))
     (vector (arxana-lab--truncate id 36)
             (arxana-lab--truncate project 24)
+            (arxana-lab--truncate host 21)
             size
             active
             (arxana-lab--truncate modified 19))))
@@ -147,7 +209,7 @@
                     active-sessions)
           (list (list :type 'info
                       :label "No active sessions"
-                      :description "Start a Claude Code session to see it here"))))
+                      :description "Start a Codex or Claude session to see it here"))))
     (error
      (list (list :type 'info
                  :label "Failed to fetch sessions"
@@ -168,7 +230,7 @@
                     sessions)
           (list (list :type 'info
                       :label "No sessions found"
-                      :description "No Claude Code sessions in ~/.claude/projects/"))))
+                      :description "No Codex/Claude sessions detected on configured hosts"))))
     (error
      (list (list :type 'info
                  :label "Failed to fetch sessions"
@@ -181,15 +243,18 @@
 (defun arxana-browser--lab-sessions-archived-format ()
   "Column format for archived sessions view."
   [("Session ID" 40 t)
+   ("Host" 22 t)
    ("Size" 8 nil)
    ("Modified" 20 t)])
 
 (defun arxana-browser--lab-sessions-archived-row (item)
   "Row for archived session ITEM."
   (let ((id (or (plist-get item :id) ""))
+        (host (or (plist-get item :host) ""))
         (size (format "%dkb" (or (plist-get item :size-kb) 0)))
         (modified (or (plist-get item :modified) "")))
     (vector (arxana-lab--truncate id 38)
+            (arxana-lab--truncate host 21)
             size
             (arxana-lab--truncate modified 19))))
 
@@ -219,11 +284,15 @@
   (let ((path (plist-get item :path)))
     (unless path
       (user-error "No path for session"))
-    (if (featurep 'fuclient-claude-stream)
-        (fuclient-claude-stream-connect path)
-      (if (require 'fuclient-claude-stream nil t)
-          (fuclient-claude-stream-connect path)
-        (user-error "fuclient-claude-stream not available")))))
+    (let ((server (arxana-lab--server->ws
+                   (or (plist-get item :server) arxana-lab-sessions-server))))
+      (if (featurep 'fuclient-claude-stream)
+          (let ((fuclient-claude-stream-server server))
+            (fuclient-claude-stream-connect path))
+        (if (require 'fuclient-claude-stream nil t)
+            (let ((fuclient-claude-stream-server server))
+              (fuclient-claude-stream-connect path))
+          (user-error "fuclient-claude-stream not available"))))))
 
 (defun arxana-browser-lab-open-session (item)
   "Open a lab session ITEM - dispatch based on type."
