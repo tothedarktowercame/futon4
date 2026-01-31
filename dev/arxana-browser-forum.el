@@ -62,6 +62,11 @@ When nil, derive from `arxana-forum-server`."
   :type 'integer
   :group 'arxana-forum)
 
+(defcustom arxana-forum-stream-auto-focus nil
+  "When non-nil, focus the forum stream buffer on connect."
+  :type 'boolean
+  :group 'arxana-forum)
+
 (defvar arxana-forum-stream--buffer-prefix "*Arxana Forum*")
 (defvar arxana-forum-stream--websocket nil)
 (defvar arxana-forum-stream--current-thread-id nil)
@@ -381,7 +386,7 @@ When nil, derive from `arxana-forum-server`."
            (when (and arxana-forum-stream--websocket
                       (websocket-openp arxana-forum-stream--websocket))
              (websocket-send-text arxana-forum-stream--websocket
-                                  (json-encode (list :type "ping")))))))))
+                                  (json-encode (list :type "ping"))))))))
 
 (defun arxana-forum-stream--bootstrap (thread-id)
   (let* ((result (arxana-forum--fetch-thread thread-id))
@@ -439,7 +444,11 @@ When nil, derive from `arxana-forum-server`."
                           :on-close #'arxana-forum-stream--on-close
                           :on-error #'arxana-forum-stream--on-error)))
   (arxana-forum-stream--start-ping-timer)
-  (pop-to-buffer (arxana-forum-stream--get-buffer thread-id)))
+  (let ((buf (arxana-forum-stream--get-buffer thread-id)))
+    (if (or arxana-forum-stream-auto-focus
+            (called-interactively-p 'interactive))
+        (pop-to-buffer buf)
+      (display-buffer buf))))
 
 (defun arxana-forum-stream-reconnect ()
   "Reconnect the current forum stream."
@@ -514,7 +523,6 @@ When nil, derive from `arxana-forum-server`."
                     (arxana-forum--get item :thread/title)
                     (arxana-forum--get item :thread/id)
                     thread-id)))
-    (message "[forum] open-thread item=%S thread-id=%S label=%S" item thread-id label)
     (unless (and thread-id (not (string-empty-p (format "%s" thread-id))))
       (user-error "No thread id found"))
     (arxana-forum-stream-connect (format "%s" thread-id))
