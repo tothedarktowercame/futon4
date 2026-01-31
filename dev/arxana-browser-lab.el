@@ -294,12 +294,12 @@ HTTP 5050 -> ws 5056 (direct), HTTPS 5051 -> wss 5057 (nginx SSL termination)."
       (user-error "No path for session"))
     (let ((server (arxana-lab--server->ws
                    (or (plist-get item :server) arxana-lab-sessions-server))))
+      ;; Set server globally so reconnects work
+      (setq fuclient-claude-stream-server server)
       (if (featurep 'fuclient-claude-stream)
-          (let ((fuclient-claude-stream-server server))
-            (fuclient-claude-stream-connect path))
+          (fuclient-claude-stream-connect path)
         (if (require 'fuclient-claude-stream nil t)
-            (let ((fuclient-claude-stream-server server))
-              (fuclient-claude-stream-connect path))
+            (fuclient-claude-stream-connect path)
           (user-error "fuclient-claude-stream not available"))))))
 
 (defun arxana-browser-lab-open-session (item)
