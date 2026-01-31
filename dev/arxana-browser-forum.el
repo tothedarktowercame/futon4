@@ -482,6 +482,7 @@ When nil, derive from `arxana-forum-server`."
     (define-key map (kbd "c") #'arxana-forum-stream-clear)
     (define-key map (kbd "q") #'arxana-forum-stream-disconnect)
     (define-key map (kbd "<left>") #'arxana-forum-stream-back)
+    (define-key map (kbd "y") #'arxana-forum-stream-copy-location)
     (define-key map (kbd "C-c C-f") #'arxana-forum-compose-for-current-thread)
     map)
   "Keymap for `arxana-forum-stream-mode'.")
@@ -499,6 +500,16 @@ When nil, derive from `arxana-forum-server`."
             (pop-to-buffer browser)
           (message "Arxana browser buffer not found")))
     (goto-char (point-min))))
+
+(defun arxana-forum-stream-copy-location ()
+  "Copy a forum://THREAD-ID location for the current stream."
+  (interactive)
+  (let ((thread-id arxana-forum-stream--thread-id))
+    (unless thread-id
+      (user-error "No forum thread id available"))
+    (let ((loc (format "forum://%s" thread-id)))
+      (kill-new loc)
+      (message "Copied %s" loc))))
 
 ;; =============================================================================
 ;; Browser integration

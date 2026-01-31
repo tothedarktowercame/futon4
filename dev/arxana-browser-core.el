@@ -1055,6 +1055,13 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
     (when view
       (format "arxana://view/%s" view))))
 
+(defun arxana-browser--forum-location (item)
+  (let ((thread-id (or (plist-get item :thread-id)
+                       (and (fboundp 'arxana-forum--get)
+                            (arxana-forum--get item :thread/id)))))
+    (when thread-id
+      (format "forum://%s" thread-id))))
+
 (defun arxana-browser--copy-location ()
   "Copy a location identifier for the current browser item."
   (interactive)
@@ -1077,6 +1084,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                      (arxana-browser--collection-location item))
                     ((and item (eq (plist-get item :type) 'language))
                      (arxana-browser--language-location item))
+                    ((and item (eq (plist-get item :type) 'forum-thread))
+                     (arxana-browser--forum-location item))
                     (t nil))))
     (unless location
       (user-error "No location available for this item"))
