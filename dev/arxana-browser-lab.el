@@ -22,6 +22,7 @@
 (declare-function arxana-browser--render "arxana-browser-core")
 (declare-function fuclient-claude-stream-connect "fuclient-claude-stream")
 (declare-function arxana-browser-patterns--ensure-frame "arxana-browser-patterns")
+(declare-function arxana-lab-open-raw-payload "arxana-lab" (payload))
 
 (defgroup arxana-lab-sessions nil
   "Lab session browsing."
@@ -42,6 +43,14 @@ When nil, uses `arxana-lab-sessions-server`."
 (defcustom arxana-lab-sessions-request-timeout 10
   "Timeout in seconds for session list requests."
   :type 'integer
+  :group 'arxana-lab-sessions)
+
+(defcustom arxana-lab-futon1-server
+  (or (getenv "FUTON1_API_BASE")
+      (getenv "STACK_HUD_FUTON1_API_BASE")
+      "http://localhost:8080/api/alpha")
+  "Futon1 API base URL for archived lab sessions."
+  :type 'string
   :group 'arxana-lab-sessions)
 
 (defun arxana-lab--parse-json (body)
@@ -151,6 +160,27 @@ Otherwise, HTTP 5050 -> ws 5056, HTTPS 5051 -> wss 5057 (nginx SSL)."
                                       sessions)))))))))
     (list :ok t :sessions (arxana-lab--merge-sessions merged))))
 
+(defun arxana-lab--fetch-futon1 (endpoint)
+  "Fetch lab sessions from Futon1 ENDPOINT (e.g., /lab/sessions)."
+  (let* ((url-request-method "GET")
+         (url-request-extra-headers '(("Accept" . "application/json")))
+         (base (string-remove-suffix "/" arxana-lab-futon1-server))
+         (url (concat base endpoint))
+         (buffer (url-retrieve-synchronously url t t arxana-lab-sessions-request-timeout)))
+    (if (not buffer)
+        (list :ok nil :entries nil)
+      (with-current-buffer buffer
+        (goto-char (point-min))
+        (re-search-forward "\n\n" nil 'move)
+        (let* ((body (buffer-substring-no-properties (point) (point-max)))
+               (payload (arxana-lab--parse-json body)))
+          (kill-buffer buffer)
+          payload)))))
+
+(defun arxana-lab--fetch-futon1-session (session-id)
+  "Fetch a single Futon1 lab session by SESSION-ID."
+  (arxana-lab--fetch-futon1 (format "/lab/session/%s" session-id)))
+
 (defun arxana-lab--truncate (text max-len)
   "Truncate TEXT to MAX-LEN characters."
   (let ((value (or text "")))
@@ -173,8 +203,12 @@ Otherwise, HTTP 5050 -> ws 5056, HTTPS 5051 -> wss 5057 (nginx SSL)."
               :description "All sessions in ~/.claude/projects/ and ~/.codex/sessions/"
               :view 'lab-sessions-recent)
         (list :type 'lab-menu
-              :label "Archived Sessions"
+              :label "Raw Lab Logs"
               :description "Exported sessions in lab/raw"
+              :view 'lab-sessions-raw)
+        (list :type 'lab-menu
+              :label "Archived Sessions"
+              :description "Persisted lab sessions in Futon1"
               :view 'lab-sessions-archived)
         (list :type 'lab-menu
               :label "Lab Files"
@@ -260,18 +294,18 @@ Otherwise, HTTP 5050 -> ws 5056, HTTPS 5051 -> wss 5057 (nginx SSL)."
                  :description (format "Error: %s" (error-message-string err)))))))
 
 ;; =============================================================================
-;; Archived Sessions view
+;; Raw Lab Logs view (lab/raw)
 ;; =============================================================================
 
-(defun arxana-browser--lab-sessions-archived-format ()
-  "Column format for archived sessions view."
+(defun arxana-browser--lab-sessions-raw-format ()
+  "Column format for raw lab logs view."
   [("Session ID" 40 t)
    ("Host" 22 t)
    ("Size" 8 nil)
    ("Modified" 20 t)])
 
-(defun arxana-browser--lab-sessions-archived-row (item)
-  "Row for archived session ITEM."
+(defun arxana-browser--lab-sessions-raw-row (item)
+  "Row for raw lab log ITEM."
   (let ((id (or (plist-get item :id) ""))
         (host (or (plist-get item :host) ""))
         (size (format "%dkb" (or (plist-get item :size-kb) 0)))
@@ -281,21 +315,57 @@ Otherwise, HTTP 5050 -> ws 5056, HTTPS 5051 -> wss 5057 (nginx SSL)."
             size
             (arxana-lab--truncate modified 19))))
 
-(defun arxana-browser--lab-sessions-archived-items ()
-  "Fetch and return archived session items."
+(defun arxana-browser--lab-sessions-raw-items ()
+  "Fetch and return raw lab log items."
   (condition-case err
       (let* ((response (arxana-lab--fetch-sessions "/fulab/lab/sessions/archived"))
              (sessions (plist-get response :sessions)))
         (if sessions
             (mapcar (lambda (s)
-                      (append (list :type 'lab-session-archived) s))
+                      (append (list :type 'lab-session-raw) s))
                     sessions)
           (list (list :type 'info
-                      :label "No archived sessions"
+                      :label "No raw lab logs"
                       :description "Export sessions to lab/raw to see them here"))))
     (error
      (list (list :type 'info
-                 :label "Failed to fetch sessions"
+                 :label "Failed to fetch raw logs"
+                 :description (format "Error: %s" (error-message-string err)))))))
+
+;; =============================================================================
+;; Archived Sessions view (Futon1)
+;; =============================================================================
+
+(defun arxana-browser--lab-sessions-archived-format ()
+  "Column format for archived sessions view."
+  [("Session ID" 40 t)
+   ("Start" 20 t)
+   ("End" 20 t)])
+
+(defun arxana-browser--lab-sessions-archived-row (item)
+  "Row for archived session ITEM."
+  (let ((id (or (plist-get item :id) ""))
+        (start (or (plist-get item :timestamp-start) ""))
+        (end (or (plist-get item :timestamp-end) "")))
+    (vector (arxana-lab--truncate id 38)
+            (arxana-lab--truncate start 19)
+            (arxana-lab--truncate end 19))))
+
+(defun arxana-browser--lab-sessions-archived-items ()
+  "Fetch and return archived session items from Futon1."
+  (condition-case err
+      (let* ((response (arxana-lab--fetch-futon1 "/lab/sessions"))
+             (entries (plist-get response :entries)))
+        (if entries
+            (mapcar (lambda (s)
+                      (append (list :type 'lab-session-archived) s))
+                    entries)
+          (list (list :type 'info
+                      :label "No archived sessions"
+                      :description "No Futon1 lab sessions found"))))
+    (error
+     (list (list :type 'info
+                 :label "Failed to fetch archived sessions"
                  :description (format "Error: %s" (error-message-string err)))))))
 
 ;; =============================================================================
@@ -323,12 +393,18 @@ Otherwise, HTTP 5050 -> ws 5056, HTTPS 5051 -> wss 5057 (nginx SSL)."
     (pcase type
       ('lab-session-active
        (arxana-browser-lab-view-session item))
-      ('lab-session-archived
-       ;; For archived, could open the JSON or view if converted
+      ('lab-session-raw
        (let ((path (plist-get item :path)))
          (if path
-             (find-file path)
+             (arxana-lab-open-raw-viewer path)
            (user-error "No path for session"))))
+      ('lab-session-archived
+       (let* ((session-id (plist-get item :id))
+              (payload (arxana-lab--fetch-futon1-session session-id))
+              (doc (plist-get payload :doc)))
+         (if doc
+             (arxana-lab-open-raw-payload doc)
+           (user-error "No Futon1 data for session"))))
       ('lab-menu
        ;; Navigate to sub-view
        (let ((view (plist-get item :view))

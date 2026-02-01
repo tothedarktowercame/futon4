@@ -476,62 +476,66 @@
             (overlay-put ov 'priority 1)
             (overlay-put ov 'evaporate t)))))))
 
+(defun arxana-lab-open-raw-payload (payload)
+  "Open a readable lab notebook view for PAYLOAD."
+  (unless payload
+    (user-error "Unable to read lab payload"))
+  (let* ((session (or (plist-get payload :lab/session-id) ""))
+         (agent (plist-get payload :lab/agent))
+         (source (plist-get payload :lab/source))
+         (ts-start (plist-get payload :lab/timestamp-start))
+         (ts-end (plist-get payload :lab/timestamp-end))
+         (files (or (plist-get payload :lab/files-touched) '()))
+         (trace (plist-get payload :lab/trace-path))
+         (users (plist-get payload :lab/user-messages))
+         (assistants (plist-get payload :lab/assistant-messages))
+         ;; MUSN-specific fields
+         (all-events (plist-get payload :lab/all-events))
+         (has-psr (plist-get payload :lab/has-psr))
+         (has-pur (plist-get payload :lab/has-pur))
+         (has-aif (plist-get payload :lab/has-aif))
+         (is-musn (string= source "musn/futon3"))
+         (buf (get-buffer-create (format "*Lab:%s*" session))))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (org-mode)
+        (insert (format "#+TITLE: Lab Session %s\n" session))
+        (when agent
+          (insert (format "#+SUBTITLE: Agent: %s\n" agent)))
+        (insert "\n")
+        ;; Summary
+        (insert "* Summary\n")
+        (arxana-lab--insert-kv "Session" session)
+        (when agent (arxana-lab--insert-kv "Agent" agent))
+        (when source (arxana-lab--insert-kv "Source" source))
+        (arxana-lab--insert-kv "Start" ts-start)
+        (arxana-lab--insert-kv "End" ts-end)
+        (arxana-lab--insert-kv "Trace" trace)
+        ;; MUSN indicators
+        (when is-musn
+          (insert "\n** Pattern Activity\n")
+          (arxana-lab--insert-kv "Has PSR" (if has-psr "yes" "no"))
+          (arxana-lab--insert-kv "Has PUR" (if has-pur "yes" "no"))
+          (arxana-lab--insert-kv "Has AIF" (if has-aif "yes" "no")))
+        ;; Files with hyperlinks
+        (when files
+          (insert "\n* Files Touched\n")
+          (dolist (file files)
+            (insert "- " (arxana-lab--make-code-link file) "\n")))
+        (insert "\n")
+        ;; Timeline - use MUSN timeline if available
+        (if (and is-musn all-events)
+            (arxana-lab--insert-musn-timeline all-events)
+          (arxana-lab--insert-message-timeline users assistants))
+        (goto-char (point-min))
+        (view-mode 1)))
+    (pop-to-buffer buf)))
+
 (defun arxana-lab-open-raw-viewer (path)
   "Open a readable lab notebook view for the raw JSON PATH."
   (let ((payload (arxana-lab--read-json path)))
-    (unless payload
-      (user-error "Unable to read lab raw file"))
-    (let* ((session (or (plist-get payload :lab/session-id) ""))
-           (agent (plist-get payload :lab/agent))
-           (source (plist-get payload :lab/source))
-           (ts-start (plist-get payload :lab/timestamp-start))
-           (ts-end (plist-get payload :lab/timestamp-end))
-           (files (or (plist-get payload :lab/files-touched) '()))
-           (trace (plist-get payload :lab/trace-path))
-           (users (plist-get payload :lab/user-messages))
-           (assistants (plist-get payload :lab/assistant-messages))
-           ;; MUSN-specific fields
-           (all-events (plist-get payload :lab/all-events))
-           (has-psr (plist-get payload :lab/has-psr))
-           (has-pur (plist-get payload :lab/has-pur))
-           (has-aif (plist-get payload :lab/has-aif))
-           (is-musn (string= source "musn/futon3"))
-           (buf (get-buffer-create (format "*Lab:%s*" session))))
-      (with-current-buffer buf
-        (let ((inhibit-read-only t))
-          (erase-buffer)
-          (org-mode)
-          (insert (format "#+TITLE: Lab Session %s\n" session))
-          (when agent
-            (insert (format "#+SUBTITLE: Agent: %s\n" agent)))
-          (insert "\n")
-          ;; Summary
-          (insert "* Summary\n")
-          (arxana-lab--insert-kv "Session" session)
-          (when agent (arxana-lab--insert-kv "Agent" agent))
-          (when source (arxana-lab--insert-kv "Source" source))
-          (arxana-lab--insert-kv "Start" ts-start)
-          (arxana-lab--insert-kv "End" ts-end)
-          (arxana-lab--insert-kv "Trace" trace)
-          ;; MUSN indicators
-          (when is-musn
-            (insert "\n** Pattern Activity\n")
-            (arxana-lab--insert-kv "Has PSR" (if has-psr "yes" "no"))
-            (arxana-lab--insert-kv "Has PUR" (if has-pur "yes" "no"))
-            (arxana-lab--insert-kv "Has AIF" (if has-aif "yes" "no")))
-          ;; Files with hyperlinks
-          (when files
-            (insert "\n* Files Touched\n")
-            (dolist (file files)
-              (insert "- " (arxana-lab--make-code-link file) "\n")))
-          (insert "\n")
-          ;; Timeline - use MUSN timeline if available
-          (if (and is-musn all-events)
-              (arxana-lab--insert-musn-timeline all-events)
-            (arxana-lab--insert-message-timeline users assistants))
-          (goto-char (point-min))
-          (view-mode 1)))
-      (pop-to-buffer buf))))
+    (arxana-lab-open-raw-payload payload)))
 
 ;;;###autoload
 (defun arxana-lab-open-entry-object (entry)
