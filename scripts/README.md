@@ -84,6 +84,17 @@ Usage:
 ./bounce_vocal_vocal2_viola_accordion.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
 ```
 
+## Basic mix (vocal + vocal2 + bass + accordion)
+
+`bounce_vocal_vocal2_bass_accordion.sh` balances a lead vocal with a
+harmony vocal plus bass and accordion.
+
+Usage:
+
+```sh
+./bounce_vocal_vocal2_bass_accordion.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
+```
+
 ## Vocal-forward mix (dual vocals + banjo + bass + accordion)
 
 `bounce_vocals_banjo_bass_accordion_vocal_forward.sh` extends the banjo/bass

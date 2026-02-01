@@ -221,6 +221,9 @@
     ("vocal+vocal2+viola+accordion"
      :script "scripts/bounce_vocal_vocal2_viola_accordion.sh"
      :instruments ("vocal" "vocal2" "viola" "accordion"))
+    ("vocal+vocal2+bass+accordion"
+     :script "scripts/bounce_vocal_vocal2_bass_accordion.sh"
+     :instruments ("vocal" "vocal2" "bass" "accordion"))
     ("vocal+bass+harp1+harp2"
      :script "scripts/bounce_vocal_bass_harp_harp2.sh"
      :instruments ("vocal" "bass" "harp1" "harp2"))
