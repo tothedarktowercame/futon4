@@ -1,4 +1,14 @@
-# Futon4 / Arxana reanimation
+# futon4 — Arxana Hypertext Client
+
+futon4 is the hypertext layer of the futon stack. It revives the classic Arxana
+system—a scholium-based document network where any text span can link to any
+other with typed annotations (scholia). The Emacs client reads from and writes
+to futon1's XTDB store, making documents, links, and annotations persistent.
+
+> **Stack context**: futon4 stores scholia/links in futon1 and displays patterns
+> from futon3. See `../futon0/README.md` for the full stack diagram.
+
+---
 
 This repository hosts the active rewrite of the classic Arxana Emacs client.
 Code lives in `dev/`, while documentation now lives in XTDB; filesystem docs
