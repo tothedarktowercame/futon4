@@ -51,6 +51,17 @@ Usage:
 ./bounce_vocal_bass_harp_harp2.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
 ```
 
+## Basic mix (vocal + bass arco, with optional FX)
+
+`bounce_vocal_bass_arco_fx.sh` is a 2-track mix for vocals plus arco bass.
+Set `FX` to `reverb`, `distort`, `both`, or `none` (defaults to `reverb`).
+
+Usage:
+
+```sh
+FX=reverb ./bounce_vocal_bass_arco_fx.sh t1.wav t2.wav out.wav [out.mp3]
+```
+
 ## Basic mix (spoken word vocal + banjo + bass + accordion)
 
 `bounce_vocal_banjo_bass_accordion.sh` balances a spoken word vocal with
@@ -93,6 +104,17 @@ Usage:
 
 ```sh
 ./bounce_vocal_vocal2_bass_accordion.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
+```
+
+## Basic mix (vocal + vocal2 + bass + harp)
+
+`bounce_vocal_vocal2_bass_harp.sh` balances a lead vocal with a harmony
+vocal plus bass and harp.
+
+Usage:
+
+```sh
+./bounce_vocal_vocal2_bass_harp.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
 ```
 
 ## Vocal-forward mix (dual vocals + banjo + bass + accordion)

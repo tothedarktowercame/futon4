@@ -192,7 +192,7 @@
          (string-match-p "mpv\\'" arxana-media--playback-player)) 'mpv)
    (t nil)))
 
-(defcustom arxana-media-publications-root (expand-file-name "~/code/storage/publications/")
+(defcustom arxana-media-publications-root (expand-file-name "~/joe-homepage/music/")
   "Directory used as a holding place for publication exports."
   :type 'directory
   :group 'arxana-media)
@@ -224,9 +224,16 @@
     ("vocal+vocal2+bass+accordion"
      :script "scripts/bounce_vocal_vocal2_bass_accordion.sh"
      :instruments ("vocal" "vocal2" "bass" "accordion"))
+    ("vocal+vocal2+bass+harp"
+     :script "scripts/bounce_vocal_vocal2_bass_harp.sh"
+     :instruments ("vocal" "vocal2" "bass" "harmonica"))
     ("vocal+bass+harp1+harp2"
      :script "scripts/bounce_vocal_bass_harp_harp2.sh"
      :instruments ("vocal" "bass" "harp1" "harp2"))
+    ("vocal+bass-arco"
+     :script "scripts/bounce_vocal_bass_arco_fx.sh"
+     :instruments ("vocal" "bass")
+     :instrument-aliases (("arco" . "bass")))
     ("vocal-forward+banjo+bass+harp"
      :script "scripts/bounce_vocal_banjo_bass_harp_vocal_forward.sh"
      :instruments ("vocal" "banjo" "bass" "harmonica"))
@@ -287,6 +294,11 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
   :type 'string
   :group 'arxana-media)
 
+(defcustom arxana-media-publication-tracks-file "tracks.json"
+  "Filename used to store per-publication track metadata inside an EP directory."
+  :type 'string
+  :group 'arxana-media)
+
 (defcustom arxana-media-duration-program (or (executable-find "ffprobe") nil)
   "Program used to probe audio duration (e.g., ffprobe)."
   :type '(choice (const :tag "None" nil)
@@ -341,6 +353,11 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
 
 (defcustom arxana-media-lyrics-auto-hash-limit (* 25 1024 1024)
   "Max file size (bytes) to auto-hash for lyrics indicators."
+  :type 'integer
+  :group 'arxana-media)
+
+(defcustom arxana-media-lyrics-quick-hash-bytes 8192
+  "Bytes to read from start and end of file for quick hash."
   :type 'integer
   :group 'arxana-media)
 
@@ -488,8 +505,36 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
     (insert-file-contents-literally path)
     (secure-hash 'sha256 (current-buffer))))
 
+(defun arxana-media--file-quick-hash (path &optional bytes)
+  "Return a quick hash for PATH based on size + head/tail slices."
+  (let* ((attrs (and path (file-attributes path)))
+         (size (and attrs (file-attribute-size attrs)))
+         (slice (or bytes arxana-media-lyrics-quick-hash-bytes)))
+    (unless (and size (numberp size) (>= size 0))
+      (user-error "Could not determine file size for %s" path))
+    (let ((coding-system-for-read 'binary)
+          (prefix (encode-coding-string (format "%d:" size) 'utf-8))
+          (head (with-temp-buffer
+                  (set-buffer-multibyte nil)
+                  (if (<= size (* 2 slice))
+                      (insert-file-contents-literally path)
+                    (insert-file-contents-literally path nil 0 slice))
+                  (buffer-string)))
+          (tail (when (> size (* 2 slice))
+                  (with-temp-buffer
+                    (set-buffer-multibyte nil)
+                    (insert-file-contents-literally path nil (- size slice) size)
+                    (buffer-string)))))
+      (with-temp-buffer
+        (set-buffer-multibyte nil)
+        (insert prefix)
+        (insert head)
+        (when tail
+          (insert tail))
+        (secure-hash 'sha256 (current-buffer))))))
+
 (defun arxana-media--misc-sha256 (path)
-  "Return the SHA256 for PATH with a small cache keyed by mtime."
+  "Return the quick hash for PATH with a small cache keyed by mtime."
   (let* ((attrs (and path (file-attributes path)))
          (mtime (and attrs (file-attribute-modification-time attrs)))
          (cached (and path (gethash path arxana-media--misc-sha-cache)))
@@ -501,7 +546,7 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
         (message "[arxana-media] Hashing %s (%.1f MB)..."
                  (file-name-nondirectory path)
                  (/ size 1048576.0)))
-      (let ((sha (arxana-media--file-sha256 path)))
+      (let ((sha (arxana-media--file-quick-hash path)))
         (when path
           (puthash path (cons mtime sha) arxana-media--misc-sha-cache))
         (when notify
@@ -516,9 +561,7 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
            (cached (gethash path arxana-media--misc-sha-cache)))
       (cond
        (cached (cdr cached))
-       ((and size (<= size arxana-media-lyrics-auto-hash-limit))
-        (arxana-media--misc-sha256 path))
-       (t nil)))))
+       (t (arxana-media--misc-sha256 path))))))
 
 (defun arxana-media--track-title (item)
   (let ((type (plist-get item :type)))
@@ -616,6 +659,13 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
         data-source
         "")))
 
+(defun arxana-media--lyrics-fallback-id (entity-id)
+  "Return a fallback lyrics entity id for ENTITY-ID, if any."
+  (when (and (stringp entity-id)
+             (string-prefix-p "arxana/media-lyrics/misc/" entity-id))
+    (concat "arxana/media-lyrics/zoom/"
+            (string-remove-prefix "arxana/media-lyrics/misc/" entity-id))))
+
 (defun arxana-media--maybe-fix-utf8 (text)
   "Fix common UTF-8-as-Latin-1 mojibake when needed."
   (if (and (stringp text)
@@ -640,11 +690,43 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
                  (fallback-text (arxana-media--maybe-fix-utf8 (or fallback-lyrics ""))))
             (when (and (stringp fallback-text) (> (length fallback-text) 0))
               (setq text fallback-text))))))
+    (when (and (string-empty-p text) (stringp entity-id))
+      (let ((fallback-id (arxana-media--lyrics-fallback-id entity-id)))
+        (when fallback-id
+          (let* ((fallback (ignore-errors (arxana-store-fetch-entity fallback-id)))
+                 (fallback-entity (and (listp fallback) (alist-get :entity fallback)))
+                 (fallback-lyrics (arxana-media--entity-source fallback-entity))
+                 (fallback-text (arxana-media--maybe-fix-utf8 (or fallback-lyrics ""))))
+            (when (and (stringp fallback-text) (> (length fallback-text) 0))
+              (setq text fallback-text)
+              (puthash fallback-id t arxana-media--lyrics-cache))))))
     (when (and (stringp entity-id) (not (string-empty-p entity-id)))
       (puthash entity-id (if (string-empty-p text) 'none t) arxana-media--lyrics-cache))
     text))
 
 (defvar-local arxana-media--lyrics-context nil)
+
+(defun arxana-media--track-payload (item title)
+  (let* ((type (plist-get item :type))
+         (entry (plist-get item :entry))
+         (path (plist-get item :path))
+         (sha (ignore-errors (arxana-media--track-sha item)))
+         (entity-id (ignore-errors (arxana-media--track-entity-id item)))
+         (source (if (eq type 'media-track) "zoom" "misc"))
+         (props (delq nil
+                      (list (when path (cons 'media/path path))
+                            (when (and entry (plist-get entry :project_path))
+                              (cons 'media/project-path (plist-get entry :project_path)))
+                            (when (and entry (plist-get entry :project_folder))
+                              (cons 'media/project-folder (plist-get entry :project_folder)))
+                            (cons 'media/source source)))))
+    (when entity-id
+      (delq nil (list (cons 'id entity-id)
+                      (cons 'name title)
+                      (cons 'type "arxana/media-track")
+                      (cons 'external-id entity-id)
+                      (when sha (cons 'media/sha256 sha))
+                      (when props (cons 'props props)))))))
 
 (defun arxana-media--store-track-entity (item title)
   "Upsert ITEM into Futon with TITLE when sync is enabled."
@@ -699,6 +781,50 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
   (add-hook 'after-change-functions #'arxana-media--lyrics-refresh-region nil t)
   (arxana-media--lyrics-apply-chord-faces (point-min) (point-max)))
 
+(defcustom arxana-media-lyrics-journal-file
+  (expand-file-name "../data/logs/lyrics-journal.log"
+                    (file-name-directory (or load-file-name buffer-file-name)))
+  "Append-only journal for lyrics edits (for recovery if writes fail)."
+  :type 'file
+  :group 'arxana-media)
+
+(defun arxana-media--journal-lyrics (context lyrics)
+  (condition-case _err
+      (let* ((log-file arxana-media-lyrics-journal-file)
+             (dir (file-name-directory log-file))
+             (entry (list :ts (format-time-string "%Y-%m-%d %H:%M:%S %z")
+                          :title (plist-get context :title)
+                          :path (plist-get context :path)
+                          :entity-id (plist-get context :entity-id)
+                          :lyrics-id (plist-get context :lyrics-entity-id)
+                          :sha (let ((item (plist-get context :item)))
+                                 (and item (arxana-media--track-sha item)))
+                          :lyrics lyrics)))
+        (make-directory dir t)
+        (with-temp-buffer
+          (pp entry (current-buffer))
+          (insert "\n")
+          (append-to-file (point-min) (point-max) log-file)))
+    (error nil)))
+
+(defun arxana-media--assert-store-ok (response context)
+  (unless (and response (arxana-store--response-ok-p response))
+    (let ((err (and response (alist-get :error response))))
+      (user-error "%s failed: %s" context (or err "Unknown Futon error"))))
+  (let ((invariants (and response (alist-get :invariants response))))
+    (when (and (listp invariants) (alist-get :warning? invariants))
+      (message "Warning: %s"
+               (or (alist-get :warning invariants)
+                   "Model invariants failed")))))
+
+(defun arxana-media--verify-lyrics-write (lyrics-id sha lyrics)
+  (let* ((response (arxana-store-fetch-entity lyrics-id))
+         (entity (and (listp response) (alist-get :entity response)))
+         (stored-sha (and (listp entity) (alist-get :media/sha256 entity)))
+         (stored-source (arxana-media--entity-source entity)))
+    (unless (and entity (string= stored-sha sha) (string= (or stored-source "") lyrics))
+      (user-error "Lyrics verification failed; write not durable"))))
+
 (defun arxana-media-lyrics-save ()
   "Save lyrics in the current buffer to XTDB."
   (interactive)
@@ -718,16 +844,25 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
          (entry (plist-get context :entry))
          (lyrics (string-trim-right (buffer-string)))
          (lyrics-name (format "%s (lyrics)" title)))
-    (arxana-media--store-track-entity item title)
-    (arxana-store-ensure-entity :id lyrics-id
-                                :name lyrics-name
-                                :type "arxana/media-lyrics"
-                                :external-id lyrics-id
-                                :media/sha256 sha
-                                :entity/source lyrics)
-    (arxana-store-create-relation :src entity-id
-                                  :dst lyrics-id
-                                  :label ":media/lyrics")
+    (arxana-media--journal-lyrics context lyrics)
+    (unless sha
+      (user-error "No media SHA available for %s" title))
+    (let* ((track (arxana-media--track-payload item title))
+           (lyrics-payload (delq nil (list (cons 'id lyrics-id)
+                                           (cons 'name lyrics-name)
+                                           (cons 'type "arxana/media-lyrics")
+                                           (cons 'external-id lyrics-id)
+                                           (cons 'media/sha256 sha)
+                                           (cons 'source lyrics)
+                                           (cons 'entity/source lyrics))))
+           (response (arxana-store-upsert-media-lyrics
+                      :track track
+                      :lyrics lyrics-payload
+                      :relation (list (cons 'type ":media/lyrics")
+                                      (cons 'src entity-id)
+                                      (cons 'dst lyrics-id)))))
+      (arxana-media--assert-store-ok response "Saving lyrics bundle"))
+    (arxana-media--verify-lyrics-write lyrics-id sha lyrics)
     (puthash lyrics-id (not (string-empty-p lyrics)) arxana-media--lyrics-cache)
     (when (fboundp 'arxana-browser--render)
       (arxana-browser--render))
@@ -755,16 +890,25 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
            (lyrics (string-trim-right (or source ""))))
       (unless (and lyrics (> (length lyrics) 0))
         (user-error "No lyrics text found in %s" source-id))
-      (arxana-media--store-track-entity item title)
-      (arxana-store-ensure-entity :id target-lyrics-id
-                                  :name (format "%s (lyrics)" title)
-                                  :type "arxana/media-lyrics"
-                                  :external-id target-lyrics-id
-                                  :media/sha256 sha
-                                  :entity/source lyrics)
-      (arxana-store-create-relation :src target-entity-id
-                                    :dst target-lyrics-id
-                                    :label ":media/lyrics")
+      (arxana-media--journal-lyrics context lyrics)
+      (unless sha
+        (user-error "No media SHA available for %s" title))
+      (let* ((track (arxana-media--track-payload item title))
+             (lyrics-payload (delq nil (list (cons 'id target-lyrics-id)
+                                             (cons 'name (format "%s (lyrics)" title))
+                                             (cons 'type "arxana/media-lyrics")
+                                             (cons 'external-id target-lyrics-id)
+                                             (cons 'media/sha256 sha)
+                                             (cons 'source lyrics)
+                                             (cons 'entity/source lyrics))))
+             (response (arxana-store-upsert-media-lyrics
+                        :track track
+                        :lyrics lyrics-payload
+                        :relation (list (cons 'type ":media/lyrics")
+                                        (cons 'src target-entity-id)
+                                        (cons 'dst target-lyrics-id)))))
+        (arxana-media--assert-store-ok response "Saving lyrics bundle"))
+      (arxana-media--verify-lyrics-write target-lyrics-id sha lyrics)
       (puthash target-lyrics-id t arxana-media--lyrics-cache)
       (when (fboundp 'arxana-browser--render)
         (arxana-browser--render))
@@ -945,8 +1089,20 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
         (arxana-browser--render))
       (message "Refreshed lyrics indicator for %s" lyrics-id))))
 
+(defun arxana-media-lyrics-refresh-buffer ()
+  "Clear the lyrics cache for the current buffer and rerender."
+  (interactive)
+  (clrhash arxana-media--lyrics-cache)
+  (when (fboundp 'arxana-browser--render)
+    (arxana-browser--render))
+  (message "Refreshed lyrics indicators for current buffer"))
+
 (defun arxana-media--publication-metadata-path (directory)
   (expand-file-name arxana-media-publication-metadata-file
+                    (file-name-as-directory directory)))
+
+(defun arxana-media--publication-tracks-path (directory)
+  (expand-file-name arxana-media-publication-tracks-file
                     (file-name-as-directory directory)))
 
 (defun arxana-media--read-publication-metadata (directory)
@@ -969,6 +1125,15 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
       (insert (json-encode payload))
       (insert "\n"))))
 
+(defun arxana-media--write-publication-tracks (directory tracks)
+  (let* ((path (arxana-media--publication-tracks-path directory))
+         (payload (list :updated_at (float-time (current-time))
+                        :tracks (vconcat tracks))))
+    (make-directory (file-name-directory path) t)
+    (with-temp-file path
+      (insert (json-encode payload))
+      (insert "\n"))))
+
 (defun arxana-media--publication-directories ()
   (let ((root (file-name-as-directory (expand-file-name arxana-media-publications-root))))
     (when (file-directory-p root)
@@ -979,6 +1144,778 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
           (and (file-directory-p path)
                (not (member (file-name-nondirectory (directory-file-name path)) '("." "..")))))
         (directory-files root t nil t))))))
+
+(defconst arxana-media--publications-index-html
+  "<!doctype html>
+<html lang=\"en\">
+<head>
+  <meta charset=\"utf-8\" />
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
+  <title>Music</title>
+  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\" />
+  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin />
+  <link href=\"https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Space+Grotesk:wght@300;400;500;600;700&display=swap\" rel=\"stylesheet\" />
+  <style>
+    :root {
+      --ink: #14110f;
+      --ink-soft: #1e1a17;
+      --sand: #f7f1e6;
+      --sand-soft: #d8cdbc;
+      --ember: #f97316;
+      --moss: #14b8a6;
+      --shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+      --radius-lg: 20px;
+      --radius-pill: 999px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: \"Space Grotesk\", system-ui, sans-serif;
+      color: var(--sand);
+      background: radial-gradient(circle at 20% 10%, rgba(249, 115, 22, 0.15), transparent 45%),
+                  radial-gradient(circle at 80% 0%, rgba(20, 184, 166, 0.15), transparent 40%),
+                  linear-gradient(180deg, #0f0c0a 0%, #15110e 40%, #0b0908 100%);
+      min-height: 100vh;
+      padding: 32px 18px 48px;
+      display: flex;
+      justify-content: center;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .page {
+      width: min(1000px, 100%);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    header {
+      display: grid;
+      gap: 12px;
+      text-align: left;
+    }
+
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.26em;
+      font-size: 0.68rem;
+      color: var(--moss);
+      font-weight: 600;
+    }
+
+    h1 {
+      font-family: \"DM Serif Display\", serif;
+      font-size: clamp(2.4rem, 6vw, 3.8rem);
+      margin: 0;
+      letter-spacing: 0.02em;
+    }
+
+    header p {
+      margin: 0;
+      color: var(--sand-soft);
+      max-width: 620px;
+      line-height: 1.6;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(clamp(160px, 20vw, 220px), clamp(160px, 20vw, 220px)));
+      gap: 18px;
+      justify-content: start;
+    }
+
+    .card {
+      background: linear-gradient(140deg, rgba(30, 26, 23, 0.85), rgba(12, 10, 9, 0.95));
+      border-radius: 18px;
+      padding: 16px;
+      border: 1px solid rgba(247, 241, 230, 0.1);
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 14px;
+    }
+
+    .cover {
+      position: relative;
+      width: 100%;
+      padding-top: 100%;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid rgba(247, 241, 230, 0.12);
+      background: linear-gradient(135deg, rgba(249, 115, 22, 0.28), rgba(20, 184, 166, 0.2));
+    }
+
+    .cover::before {
+      content: \"\";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 20% 20%, rgba(247, 241, 230, 0.18), transparent 55%),
+                  radial-gradient(circle at 80% 80%, rgba(20, 184, 166, 0.18), transparent 55%);
+      opacity: 0.9;
+    }
+
+    .cover::after {
+      content: \"EP\";
+      position: absolute;
+      right: 12px;
+      bottom: 10px;
+      font-size: 0.7rem;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: rgba(247, 241, 230, 0.6);
+    }
+
+    .card h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .card .meta {
+      color: var(--sand-soft);
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .card .cta {
+      color: var(--sand);
+      border-color: rgba(20, 184, 166, 0.6);
+    }
+
+    .fade-up {
+      opacity: 0;
+      transform: translateY(12px);
+      animation: fadeUp 0.7s ease forwards;
+    }
+
+    .fade-delay-1 { animation-delay: 0.1s; }
+    .fade-delay-2 { animation-delay: 0.2s; }
+    .fade-delay-3 { animation-delay: 0.3s; }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <main class=\"page\">
+    <header class=\"fade-up\">
+      <div class=\"eyebrow\">Music</div>
+      <h1>EPs & Releases</h1>
+      <p>Curated listening pages with embedded lyrics and session context.</p>
+    </header>
+    <section id=\"list\" class=\"grid fade-up fade-delay-1\"></section>
+  </main>
+  <script>
+    fetch('publications.json')
+      .then(r => r.json())
+      .then(data => {
+        const list = document.getElementById('list');
+        (data.publications || []).forEach(pub => {
+        const card = document.createElement('article');
+        card.className = 'card';
+        const cover = document.createElement('div');
+        cover.className = 'cover';
+        const title = document.createElement('h2');
+        title.textContent = pub.name || pub.slug;
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.textContent = `${pub.count} track${pub.count === 1 ? '' : 's'}`;
+        card.appendChild(cover);
+        card.appendChild(title);
+        card.appendChild(meta);
+        list.appendChild(card);
+        });
+      });
+  </script>
+</body>
+</html>
+")
+
+(defconst arxana-media--publications-player-html
+  "<!doctype html>
+<html lang=\"en\">
+<head>
+  <meta charset=\"utf-8\" />
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
+  <title>EP Player</title>
+  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\" />
+  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin />
+  <link href=\"https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Space+Grotesk:wght@300;400;500;600;700&display=swap\" rel=\"stylesheet\" />
+  <style>
+    :root {
+      --ink: #14110f;
+      --ink-soft: #1e1a17;
+      --sand: #f7f1e6;
+      --sand-soft: #d8cdbc;
+      --ember: #f97316;
+      --moss: #14b8a6;
+      --shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+      --radius-lg: 20px;
+      --radius-pill: 999px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: \"Space Grotesk\", system-ui, sans-serif;
+      color: var(--sand);
+      background: radial-gradient(circle at 20% 10%, rgba(249, 115, 22, 0.15), transparent 45%),
+                  radial-gradient(circle at 80% 0%, rgba(20, 184, 166, 0.15), transparent 40%),
+                  linear-gradient(180deg, #0f0c0a 0%, #15110e 40%, #0b0908 100%);
+      min-height: 100vh;
+      padding: 32px 18px 48px;
+      display: flex;
+      justify-content: center;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    .back { color: var(--sand-soft); font-size: 0.9rem; }
+
+    .page {
+      width: min(960px, 100%);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    header {
+      display: grid;
+      gap: 14px;
+      text-align: left;
+    }
+
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.26em;
+      font-size: 0.68rem;
+      color: var(--moss);
+      font-weight: 600;
+    }
+
+    h1 {
+      font-family: \"DM Serif Display\", serif;
+      font-size: clamp(2.2rem, 5vw, 3.6rem);
+      margin: 0;
+      letter-spacing: 0.02em;
+    }
+
+    header p {
+      margin: 0;
+      color: var(--sand-soft);
+      max-width: 560px;
+      line-height: 1.6;
+    }
+
+    .hero-card {
+      background: linear-gradient(140deg, rgba(30, 26, 23, 0.85), rgba(12, 10, 9, 0.95));
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(247, 241, 230, 0.1);
+      display: grid;
+      gap: 18px;
+    }
+
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .pill {
+      border: 1px solid rgba(247, 241, 230, 0.2);
+      border-radius: var(--radius-pill);
+      padding: 6px 12px;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--sand-soft);
+    }
+
+    .pill.link {
+      color: var(--sand);
+      border-color: rgba(20, 184, 166, 0.6);
+    }
+
+    .volume-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 10px;
+      margin-left: auto;
+    }
+
+    .volume-pill label {
+      font-size: 0.62rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--sand-soft);
+    }
+
+    .volume-pill input[type=\"range\"] {
+      width: 120px;
+      accent-color: var(--moss);
+      cursor: pointer;
+    }
+
+    .now-playing {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(20, 15, 13, 0.8);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      border: 1px solid rgba(247, 241, 230, 0.08);
+    }
+
+    .now-playing .label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--ember);
+      font-weight: 600;
+    }
+
+    .now-playing .title {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .now-playing .sub {
+      color: var(--sand-soft);
+      font-size: 0.85rem;
+    }
+
+    .now-progress {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.75rem;
+      color: var(--sand-soft);
+    }
+
+    .now-progress .time {
+      min-width: 36px;
+      text-align: center;
+      letter-spacing: 0.04em;
+    }
+
+    .progress-bar-wrap {
+      flex: 1;
+      height: 6px;
+      border-radius: var(--radius-pill);
+      background: rgba(12, 10, 9, 0.9);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0%;
+      background: linear-gradient(90deg, var(--ember), var(--moss));
+      transition: width 0.1s linear;
+    }
+
+    .tracklist {
+      display: grid;
+      gap: 12px;
+    }
+
+    .track {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 16px;
+      align-items: center;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: rgba(20, 15, 13, 0.75);
+      border: 1px solid rgba(247, 241, 230, 0.08);
+    }
+
+    .track button {
+      background: rgba(12, 10, 9, 0.9);
+      color: var(--sand);
+      border: 1px solid rgba(247, 241, 230, 0.3);
+      padding: 8px 14px;
+      border-radius: var(--radius-pill);
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      box-shadow: inset 0 0 0 1px rgba(247, 241, 230, 0.05);
+    }
+
+    .track button.is-playing {
+      background: linear-gradient(135deg, #5eead4, #14b8a6);
+      color: #0b1714;
+      border-color: transparent;
+      box-shadow: 0 10px 25px rgba(20, 184, 166, 0.35);
+    }
+
+    .track-title { font-weight: 600; }
+
+    .track-note {
+      color: var(--sand-soft);
+      font-size: 0.85rem;
+    }
+
+    .track audio { display: none; }
+
+    .split {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .lyrics-panel { grid-column: span 2; }
+
+    .panel {
+      background: rgba(20, 15, 13, 0.75);
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid rgba(247, 241, 230, 0.08);
+    }
+
+    .panel h3 {
+      margin: 0 0 8px;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--moss);
+    }
+
+    .panel ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 6px;
+      color: var(--sand-soft);
+      font-size: 0.9rem;
+    }
+
+    .lyrics {
+      white-space: pre-wrap;
+      line-height: 1.6;
+      color: var(--sand-soft);
+      font-size: 0.92rem;
+      min-height: 120px;
+    }
+
+    .fade-up {
+      opacity: 0;
+      transform: translateY(12px);
+      animation: fadeUp 0.7s ease forwards;
+    }
+
+    .fade-delay-1 { animation-delay: 0.1s; }
+    .fade-delay-2 { animation-delay: 0.2s; }
+    .fade-delay-3 { animation-delay: 0.3s; }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 700px) {
+      .track {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        align-items: flex-start;
+      }
+
+      .track button { width: fit-content; }
+
+      .now-playing {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .now-progress { width: 100%; }
+
+      .lyrics-panel { grid-column: auto; }
+    }
+  </style>
+</head>
+<body>
+  <main class=\"page\">
+    <a class=\"back\" href=\"index.html\">&larr; Back</a>
+    <header class=\"fade-up\">
+      <div class=\"eyebrow\" id=\"ep-label\">Music / EP</div>
+      <h1 id=\"ep-title\">EP</h1>
+      <p id=\"ep-desc\">Select a track to start listening and display lyrics.</p>
+    </header>
+
+    <section class=\"hero-card fade-up fade-delay-1\">
+      <div class=\"meta-row\">
+        <div class=\"pill\" id=\"ep-slug\">EP</div>
+        <div class=\"pill\" id=\"ep-count\">0 tracks</div>
+        <a class=\"pill link\" id=\"ep-url\" href=\"#\" target=\"_blank\" rel=\"noopener\" style=\"display:none;\">Link</a>
+        <div class=\"pill volume-pill\">
+          <label for=\"volume-slider\">Volume</label>
+          <input id=\"volume-slider\" type=\"range\" min=\"0\" max=\"1\" step=\"0.01\" value=\"0.85\" />
+        </div>
+      </div>
+
+      <div class=\"now-playing\" id=\"now-playing\">
+        <div>
+          <div class=\"label\">Now Playing</div>
+          <div class=\"title\" id=\"now-playing-title\">Pick a track to start</div>
+          <div class=\"sub\" id=\"now-playing-sub\"></div>
+        </div>
+        <div class=\"now-progress\" aria-live=\"polite\">
+          <div class=\"time\" id=\"current-time\">0:00</div>
+          <div class=\"progress-bar-wrap\" id=\"progress-wrap\">
+            <div class=\"progress-bar\" id=\"progress-bar\"></div>
+          </div>
+          <div class=\"time\" id=\"duration-time\">0:00</div>
+        </div>
+      </div>
+
+      <div class=\"tracklist\" id=\"tracklist\"></div>
+    </section>
+
+    <section class=\"split\">
+      <div class=\"panel fade-up fade-delay-2\">
+        <h3>Notes</h3>
+        <ul id=\"ep-notes\">
+          <li>Use the track buttons to play or pause audio.</li>
+          <li>Lyrics appear on the right panel for the selected track.</li>
+        </ul>
+      </div>
+      <div class=\"panel fade-up fade-delay-2 lyrics-panel\">
+        <h3>Lyrics</h3>
+        <div class=\"lyrics\" id=\"lyrics-panel\">Select a track to show lyrics.</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const slug = params.get('ep');
+    const tracklistEl = document.getElementById('tracklist');
+    const nowTitle = document.getElementById('now-playing-title');
+    const nowSub = document.getElementById('now-playing-sub');
+    const lyricsPanel = document.getElementById('lyrics-panel');
+    const currentTimeEl = document.getElementById('current-time');
+    const durationEl = document.getElementById('duration-time');
+    const progressBar = document.getElementById('progress-bar');
+    const volumeSlider = document.getElementById('volume-slider');
+    const epTitle = document.getElementById('ep-title');
+    const epSlug = document.getElementById('ep-slug');
+    const epCount = document.getElementById('ep-count');
+    const epUrl = document.getElementById('ep-url');
+
+    if (!slug) {
+      epTitle.textContent = 'No EP selected';
+      tracklistEl.textContent = '';
+    }
+
+    const trackRows = [];
+    let currentAudio = null;
+
+    function formatTime(seconds) {
+      if (!Number.isFinite(seconds)) return '0:00';
+      const total = Math.max(0, Math.floor(seconds));
+      const mins = Math.floor(total / 60);
+      const secs = total % 60;
+      return `${mins}:${String(secs).padStart(2, '0')}`;
+    }
+
+    function stopAllTracks() {
+      trackRows.forEach((row) => {
+        if (!row.audio.paused) {
+          row.audio.pause();
+        }
+        row.audio.currentTime = 0;
+        row.button.textContent = 'Play';
+        row.button.classList.remove('is-playing');
+      });
+      currentAudio = null;
+      nowTitle.textContent = 'Pick a track to start';
+      nowSub.textContent = '';
+      if (lyricsPanel) {
+        lyricsPanel.textContent = 'Select a track to show lyrics.';
+      }
+      if (currentTimeEl) currentTimeEl.textContent = '0:00';
+      if (durationEl) durationEl.textContent = '0:00';
+      if (progressBar) progressBar.style.width = '0%';
+    }
+
+    function playTrackAt(index) {
+      const row = trackRows[index];
+      if (!row) return;
+      stopAllTracks();
+      row.audio.play();
+      row.button.textContent = 'Pause';
+      row.button.classList.add('is-playing');
+      nowTitle.textContent = row.title || 'Untitled';
+      nowSub.textContent = row.note || '';
+      if (lyricsPanel) {
+        lyricsPanel.textContent = row.lyrics || 'No lyrics available.';
+      }
+      currentAudio = row.audio;
+    }
+
+    function addTrackRow(track, idx) {
+      const row = document.createElement('div');
+      row.className = 'track';
+      row.dataset.trackTitle = track.title || track.file || 'Untitled';
+      row.dataset.trackNote = track.note || '';
+      row.dataset.trackLyrics = track.lyrics || '';
+
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = 'Play';
+
+      const info = document.createElement('div');
+      const titleEl = document.createElement('div');
+      titleEl.className = 'track-title';
+      titleEl.textContent = `${String(idx + 1).padStart(2, '0')}. ${row.dataset.trackTitle}`;
+      const noteEl = document.createElement('div');
+      noteEl.className = 'track-note';
+      noteEl.textContent = row.dataset.trackNote || '';
+      info.appendChild(titleEl);
+      info.appendChild(noteEl);
+
+      const durationEl = document.createElement('div');
+      durationEl.className = 'track-note';
+      durationEl.textContent = '--:--';
+
+      const audio = document.createElement('audio');
+      audio.src = `${slug}/${track.file}`;
+      audio.preload = 'none';
+
+      button.addEventListener('click', () => {
+        if (!audio.paused) {
+          stopAllTracks();
+          return;
+        }
+        const index = trackRows.findIndex((item) => item.audio === audio);
+        playTrackAt(index);
+      });
+
+      audio.addEventListener('ended', () => {
+        const index = trackRows.findIndex((item) => item.audio === audio);
+        const nextIndex = index + 1;
+        if (nextIndex < trackRows.length) {
+          playTrackAt(nextIndex);
+        } else {
+          stopAllTracks();
+        }
+      });
+
+      audio.addEventListener('timeupdate', () => {
+        if (audio !== currentAudio) return;
+        if (!currentTimeEl || !durationEl || !progressBar) return;
+        currentTimeEl.textContent = formatTime(audio.currentTime);
+        const dur = audio.duration;
+        durationEl.textContent = formatTime(dur);
+        if (!Number.isFinite(dur) || dur <= 0) {
+          progressBar.style.width = '0%';
+          return;
+        }
+        const pct = (audio.currentTime / dur) * 100;
+        progressBar.style.width = `${pct}%`;
+      });
+
+      audio.addEventListener('loadedmetadata', () => {
+        durationEl.textContent = formatTime(audio.duration);
+      });
+
+      if (volumeSlider) {
+        audio.volume = parseFloat(volumeSlider.value || '0.85');
+      }
+
+      row.appendChild(button);
+      row.appendChild(info);
+      row.appendChild(durationEl);
+      row.appendChild(audio);
+      tracklistEl.appendChild(row);
+
+      trackRows.push({
+        audio,
+        button,
+        title: row.dataset.trackTitle,
+        note: row.dataset.trackNote,
+        lyrics: row.dataset.trackLyrics
+      });
+    }
+
+    if (slug) {
+      epSlug.textContent = slug;
+      fetch(`${slug}/publication.json`)
+        .then(r => r.json())
+        .then(meta => {
+          epTitle.textContent = meta.name || slug;
+          if (meta.url) {
+            epUrl.href = meta.url;
+            epUrl.textContent = 'Link';
+            epUrl.style.display = 'inline-flex';
+          }
+        })
+        .catch(() => {});
+
+      fetch(`${slug}/tracks.json`)
+        .then(r => r.json())
+        .then(data => {
+          const tracks = data.tracks || [];
+          epCount.textContent = `${tracks.length} track${tracks.length === 1 ? '' : 's'}`;
+          tracks.forEach((track, idx) => addTrackRow(track, idx));
+        });
+    }
+
+    if (volumeSlider) {
+      volumeSlider.addEventListener('input', () => {
+        const level = parseFloat(volumeSlider.value || '0.85');
+        trackRows.forEach((row) => {
+          row.audio.volume = level;
+        });
+      });
+    }
+  </script>
+</body>
+</html>
+")
+
+(defun arxana-media--write-publications-index ()
+  (let* ((root (file-name-as-directory (expand-file-name arxana-media-publications-root)))
+         (dirs (or (arxana-media--publication-directories) '()))
+         (publications
+          (vconcat
+           (mapcar (lambda (dir)
+                     (let* ((slug (file-name-nondirectory (directory-file-name dir)))
+                            (meta (arxana-media--read-publication-metadata dir))
+                            (name (and (listp meta) (plist-get meta :name)))
+                            (url (and (listp meta) (plist-get meta :url)))
+                            (tracks (arxana-media--publication-audio-files dir)))
+                       (list :slug slug
+                             :name (or name slug)
+                             :url url
+                             :count (length tracks))))
+                   dirs)))
+         (index-path (expand-file-name "index.html" root))
+         (player-path (expand-file-name "player.html" root))
+         (list-path (expand-file-name "publications.json" root)))
+    (make-directory root t)
+    (with-temp-file index-path
+      (insert arxana-media--publications-index-html))
+    (with-temp-file player-path
+      (insert arxana-media--publications-player-html))
+    (with-temp-file list-path
+      (insert (json-encode (list :updated_at (float-time (current-time))
+                                 :publications publications)))
+      (insert "\n"))))
 
 (defun arxana-media--ep-staging-directories ()
   (let ((root (file-name-as-directory (expand-file-name arxana-media-ep-staging-root))))
@@ -1868,6 +2805,15 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
              (entity (and (listp response) (alist-get :entity response)))
              (lyrics (arxana-media--entity-source entity))
              (present (and (stringp lyrics) (not (string-empty-p lyrics)))))
+        (when (and (not present) (stringp lyrics-id))
+          (let ((fallback-id (arxana-media--lyrics-fallback-id lyrics-id)))
+            (when fallback-id
+              (let* ((fallback (ignore-errors (arxana-store-fetch-entity fallback-id)))
+                     (fallback-entity (and (listp fallback) (alist-get :entity fallback)))
+                     (fallback-lyrics (arxana-media--entity-source fallback-entity)))
+                (when (and (stringp fallback-lyrics) (not (string-empty-p fallback-lyrics)))
+                  (setq present t)
+                  (puthash fallback-id t arxana-media--lyrics-cache))))))
         (puthash lyrics-id (if present t 'none) arxana-media--lyrics-cache)
         present)))))
 
@@ -2480,12 +3426,18 @@ When URL is provided, write it to the publication metadata."
    (let* ((pub-name (read-string "Publication name: "))
           (pub-url (read-string "Publication URL (optional): ")))
      (list pub-name pub-url)))
-  (let* ((entries (arxana-media--marked-track-entries-in-context)))
-    (unless entries
+  (let* ((items (arxana-media--marked-items-in-context))
+         (entries (arxana-media--marked-track-entries-in-context))
+         (pub-items (seq-filter (lambda (item)
+                                  (memq (plist-get item :type)
+                                        '(media-publication-track media-misc-track)))
+                                items)))
+    (unless (or entries pub-items)
       (user-error "No marked tracks"))
     (let* ((slug (arxana-media--slug name))
            (tag (concat arxana-media-publication-tag-prefix slug))
-           (dest-dir (file-name-as-directory (expand-file-name slug arxana-media-publications-root))))
+           (dest-dir (file-name-as-directory (expand-file-name slug arxana-media-publications-root)))
+           (tracks nil))
       (make-directory dest-dir t)
       (dolist (entry entries)
         (let* ((path (arxana-media--track-export-path entry))
@@ -2496,36 +3448,88 @@ When URL is provided, write it to the publication metadata."
           (unless path
             (user-error "No readable media file found for %s" title))
           (copy-file path dest t)
-          (when (arxana-store-sync-enabled-p)
-            (let* ((source-item (list :type 'media-track :entry entry))
-                   (source-lyrics-id (ignore-errors (arxana-media--lyrics-entity-id source-item)))
-                   (source-lyrics (and source-lyrics-id
-                                       (string-trim-right
-                                        (or (arxana-media--fetch-lyrics source-lyrics-id) "")))))
-              (when (and (stringp source-lyrics)
-                         (not (string-empty-p source-lyrics)))
-                (let* ((dest-item (list :type 'media-publication-track :path dest))
-                       (dest-entity-id (ignore-errors (arxana-media--track-entity-id dest-item)))
-                       (dest-lyrics-id (ignore-errors (arxana-media--lyrics-entity-id dest-item)))
-                       (dest-sha (ignore-errors (arxana-media--track-sha dest-item))))
-                  (when (and dest-entity-id dest-lyrics-id)
-                    (arxana-media--store-track-entity dest-item title)
-                    (arxana-store-ensure-entity :id dest-lyrics-id
-                                                :name (format "%s (lyrics)" title)
-                                                :type "arxana/media-lyrics"
-                                                :external-id dest-lyrics-id
-                                                :media/sha256 dest-sha
-                                                :entity/source source-lyrics)
-                    (arxana-store-create-relation :src dest-entity-id
-                                                  :dst dest-lyrics-id
-                                                  :label ":media/lyrics")
-                    (puthash dest-lyrics-id t arxana-media--lyrics-cache))))))))
+          (let* ((source-item (list :type 'media-track :entry entry))
+                 (source-lyrics-id (ignore-errors (arxana-media--lyrics-entity-id source-item)))
+                 (source-lyrics (and (arxana-store-sync-enabled-p)
+                                     source-lyrics-id
+                                     (string-trim-right
+                                      (or (arxana-media--fetch-lyrics source-lyrics-id) "")))))
+            (push (list :file (file-name-nondirectory dest)
+                        :title title
+                        :lyrics (and (stringp source-lyrics)
+                                     (not (string-empty-p source-lyrics))
+                                     source-lyrics))
+                  tracks)
+            (when (and (arxana-store-sync-enabled-p)
+                       (stringp source-lyrics)
+                       (not (string-empty-p source-lyrics)))
+              (let* ((dest-item (list :type 'media-publication-track :path dest))
+                     (dest-entity-id (ignore-errors (arxana-media--track-entity-id dest-item)))
+                     (dest-lyrics-id (ignore-errors (arxana-media--lyrics-entity-id dest-item)))
+                     (dest-sha (ignore-errors (arxana-media--track-sha dest-item))))
+                (when (and dest-entity-id dest-lyrics-id)
+                  (arxana-media--store-track-entity dest-item title)
+                  (arxana-store-ensure-entity :id dest-lyrics-id
+                                              :name (format "%s (lyrics)" title)
+                                              :type "arxana/media-lyrics"
+                                              :external-id dest-lyrics-id
+                                              :media/sha256 dest-sha
+                                              :entity/source source-lyrics)
+                  (arxana-store-create-relation :src dest-entity-id
+                                                :dst dest-lyrics-id
+                                                :label ":media/lyrics")
+                  (puthash dest-lyrics-id t arxana-media--lyrics-cache)))))))
+      (dolist (item pub-items)
+        (let* ((path (plist-get item :path))
+               (title (or (plist-get item :label)
+                          (and path (file-name-base path))
+                          "track"))
+               (dest (and path (expand-file-name (file-name-nondirectory path) dest-dir))))
+          (unless (and path (file-readable-p path))
+            (user-error "No readable media file found for %s" title))
+          (copy-file path dest t)
+          (let* ((source-item (list :type 'media-publication-track :path path))
+                 (source-lyrics-id (ignore-errors (arxana-media--lyrics-entity-id source-item)))
+                 (source-lyrics (and (arxana-store-sync-enabled-p)
+                                     source-lyrics-id
+                                     (string-trim-right
+                                      (or (arxana-media--fetch-lyrics source-lyrics-id) "")))))
+            (push (list :file (file-name-nondirectory dest)
+                        :title title
+                        :lyrics (and (stringp source-lyrics)
+                                     (not (string-empty-p source-lyrics))
+                                     source-lyrics))
+                  tracks)
+            (when (and (arxana-store-sync-enabled-p)
+                       (stringp source-lyrics)
+                       (not (string-empty-p source-lyrics)))
+              (let* ((dest-item (list :type 'media-publication-track :path dest))
+                     (dest-entity-id (ignore-errors (arxana-media--track-entity-id dest-item)))
+                     (dest-lyrics-id (ignore-errors (arxana-media--lyrics-entity-id dest-item)))
+                     (dest-sha (ignore-errors (arxana-media--track-sha dest-item))))
+                (when (and dest-entity-id dest-lyrics-id)
+                  (arxana-media--store-track-entity dest-item title)
+                  (arxana-store-ensure-entity :id dest-lyrics-id
+                                              :name (format "%s (lyrics)" title)
+                                              :type "arxana/media-lyrics"
+                                              :external-id dest-lyrics-id
+                                              :media/sha256 dest-sha
+                                              :entity/source source-lyrics)
+                  (arxana-store-create-relation :src dest-entity-id
+                                                :dst dest-lyrics-id
+                                                :label ":media/lyrics")
+                  (puthash dest-lyrics-id t arxana-media--lyrics-cache)))))))
       (when (and url (stringp url) (not (string-empty-p url)))
         (arxana-media--write-publication-metadata dest-dir name url))
-      (arxana-media--tag-entries entries tag)
+      (arxana-media--write-publication-tracks dest-dir (nreverse tracks))
+      (arxana-media--write-publications-index)
+      (when (seq entries)
+        (arxana-media--tag-entries entries tag))
       (setq arxana-media--catalog nil
             arxana-media--catalog-mtime nil)
-      (message "Published %d track(s) to %s (tag %s)" (length entries) dest-dir tag)
+      (message "Published %d track(s) to %s%s"
+               (length tracks) dest-dir
+               (if (seq entries) (format " (tag %s)" tag) ""))
       (arxana-browser--render))))
 
 (defun arxana-media--publication-at-point ()
@@ -2547,6 +3551,7 @@ When URL is provided, write it to the publication metadata."
       (user-error "URL cannot be empty"))
     (arxana-media--write-publication-metadata dir (or label "") url)
     (message "Updated URL for %s" label)
+    (arxana-media--write-publications-index)
     (arxana-browser--render)))
 
 (defun arxana-media-open-publication-url ()

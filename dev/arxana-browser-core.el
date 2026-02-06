@@ -1122,6 +1122,12 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                           (plist-get context :label))
                      (format "arxana://view/media-ep-staging-%s"
                              (arxana-browser--location-token (plist-get context :label))))
+                    ((and context (eq (plist-get context :view) 'media-publication)
+                          (plist-get context :label))
+                     (format "arxana://media/publication/%s"
+                             (arxana-browser--location-token (plist-get context :label))))
+                    ((and context (eq (plist-get context :view) 'media-publications))
+                     "arxana://media/publications")
                     ((and context (symbolp (plist-get context :view))
                           (string-prefix-p "media-" (symbol-name (plist-get context :view))))
                      (format "arxana://view/%s" (plist-get context :view)))
@@ -1292,6 +1298,7 @@ returning to the top-level list."
     (define-key map (kbd "C-c C-f") #'arxana-forum-compose-for-current-thread)
     (define-key map (kbd "B") #'arxana-browser-code-select-docbook)
     (define-key map (kbd "C-c C-l") #'arxana-media-lyrics-refresh-at-point)
+    (define-key map (kbd "C-c C-r") #'arxana-media-lyrics-refresh-buffer)
     (define-key map (kbd "C-c C-L") #'arxana-media-lyrics-adopt-entity-at-point)
     (define-key map (kbd "<left>") #'arxana-browser--up)
     (define-key map (kbd "q") #'quit-window)

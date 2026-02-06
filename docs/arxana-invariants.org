@@ -1,0 +1,9 @@
+#+TITLE: Arxana UI Invariants
+#+AUTHOR: Futon4 / Arxana team
+#+OPTIONS: toc:nil num:t
+
+* Window/Frame invariants
+- No new frames are created by default during Arxana browsing actions.
+- A new focal buffer replaces the previous focal buffer in the same frame.
+- The previous focal buffer is considered to be "left" of the new focal buffer (off-screen in the navigation stack).
+- Ancillary buffers (scholia, lists, support panes) do not become focal automatically.

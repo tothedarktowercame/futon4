@@ -56,6 +56,13 @@
                     (file-name-directory (or load-file-name buffer-file-name)))
   "Log file for invariant failures returned by Futon.")
 
+(defcustom arxana-store-failures-log-file
+  (expand-file-name "../data/logs/arxana-store-failures.log"
+                    (file-name-directory (or load-file-name buffer-file-name)))
+  "Log file for failed Futon write requests."
+  :type 'file
+  :group 'arxana-store)
+
 (defun arxana-store-clear-error ()
   "Clear `arxana-store-last-error'."
   (setq arxana-store-last-error nil
@@ -98,6 +105,9 @@
                                       :context context)
         arxana-store-last-failure (list :request arxana-store-last-request
                                         :error arxana-store-last-error))
+  (when (arxana-store--ingest-request-p arxana-store-last-request)
+    (arxana-store--log-failure :request arxana-store-last-request
+                               :error arxana-store-last-error))
   (message "[arxana-store] %s" detail)
   nil)
 
@@ -181,6 +191,20 @@
             (insert "#+end_src\n\n")
             (append-to-file (point-min) (point-max) log-file)))
       (error nil))))
+
+(defun arxana-store--log-failure (&rest fields)
+  "Append a failure entry with FIELDS to `arxana-store-failures-log-file'."
+  (condition-case _err
+      (let* ((log-file arxana-store-failures-log-file)
+             (dir (file-name-directory log-file))
+             (timestamp (format-time-string "%Y-%m-%d %H:%M:%S %z")))
+        (make-directory dir t)
+        (with-temp-buffer
+          (insert "* " timestamp " Futon write failure\n")
+          (pp fields (current-buffer))
+          (insert "\n\n")
+          (append-to-file (point-min) (point-max) log-file)))
+    (error nil)))
 
 (defcustom arxana-store-show-ingest-error-buffer t
   "When non-nil, show a buffer for ingest errors returned by Futon."
@@ -311,6 +335,8 @@ already encoded query string (without the leading ?)."
                           (arxana-store--log-invariants-failure body)
                           (when (and (not (arxana-store--response-ok-p body))
                                      (arxana-store--ingest-request-p arxana-store-last-request))
+                            (arxana-store--log-failure :request arxana-store-last-request
+                                                       :response body)
                             (arxana-store--show-ingest-error body))
                           body)
                       (arxana-store--record-error 'protocol "Failed to parse Futon JSON" target)))))))
@@ -376,6 +402,8 @@ already encoded query string (without the leading ?)."
            (when (and result
                       (not (arxana-store--response-ok-p result))
                       (arxana-store--ingest-request-p arxana-store-last-request))
+             (arxana-store--log-failure :request arxana-store-last-request
+                                        :response result)
              (arxana-store--show-ingest-error result))
            (when (functionp callback)
              (funcall callback result status))))
@@ -425,7 +453,8 @@ string. MEDIA/SHA256 is stored at the top level when provided. Signals a
 user error when NAME is missing."
   (unless name
     (user-error "Entity name is required"))
-  (let* ((payload (delq nil (list (cons 'name name)
+  (let* ((source (or source entity/source))
+         (payload (delq nil (list (cons 'name name)
                                   (when type
                                     (cons 'type (if (keywordp type)
                                                     (symbol-name type)
@@ -441,6 +470,15 @@ user error when NAME is missing."
                                   (when media/sha256 (cons 'media/sha256 media/sha256))
                                   (when props (cons 'props props))))))
     (arxana-store--request "POST" "/entity" payload)))
+
+(cl-defun arxana-store-upsert-media-lyrics (&key track lyrics relation)
+  "Atomically upsert TRACK, LYRICS, and their relation."
+  (unless (and track lyrics)
+    (user-error "Track and lyrics payloads are required"))
+  (let* ((payload (delq nil (list (cons 'track track)
+                                  (cons 'lyrics lyrics)
+                                  (when relation (cons 'relation relation))))))
+    (arxana-store--request "POST" "/media/lyrics" payload)))
 
 (defun arxana-store--relation-payload (src-id dst-id label extra-props &optional type)
   (let ((props (cons (cons 'label (or label "")) (or extra-props '()))))
