@@ -131,14 +131,21 @@
     (when text
       (let* ((entry-id (file-name-base path))
              (entry-id (or (gethash "ENTRY_ID" props) entry-id))
-             (doc-id entry-id)
-             (declared (gethash "DOC_ID" props))
+             (declared-doc-id (gethash "DOC_ID" props))
+             (doc-id (or declared-doc-id
+                         (when (and (stringp entry-id)
+                                    (string-match "\\`\\(.+\\)::" entry-id))
+                           (match-string 1 entry-id))
+                         entry-id))
              (version (gethash "VERSION" props))
              (outline (gethash "OUTLINE_PATH" props))
              (path-string (gethash "PATH_STRING" props)))
-        (when (and declared (not (string= declared entry-id)))
-          (message "[arxana-docbook] Ignoring DOC_ID %s (expected %s) in %s"
-                   declared entry-id (file-name-nondirectory path)))
+        (when (and declared-doc-id
+                   (not (or (string= declared-doc-id doc-id)
+                            (string= declared-doc-id entry-id)
+                            (string-prefix-p (concat declared-doc-id "::") entry-id))))
+          (message "[arxana-docbook] DOC_ID %s does not match entry-id %s in %s"
+                   declared-doc-id entry-id (file-name-nondirectory path)))
         (list :book book
               :doc-id doc-id
               :entry-id entry-id
