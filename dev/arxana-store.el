@@ -36,6 +36,16 @@
   :type 'integer
   :group 'arxana-store)
 
+(defcustom arxana-store-health-probe-timeout 0.4
+  "Seconds to wait when probing Futon health for UI status indicators."
+  :type 'number
+  :group 'arxana-store)
+
+(defcustom arxana-store-health-probe-ttl 2.0
+  "Seconds to cache Futon health probe results."
+  :type 'number
+  :group 'arxana-store)
+
 (defconst arxana-store--snapshot-scopes '("all" "latest")
   "Valid snapshot scope identifiers for Futon/XTDB backups.")
 
@@ -114,6 +124,57 @@
 (defun arxana-store--base-url ()
   (or (and (boundp 'futon4-base-url) futon4-base-url)
       (error "futon4-base-url is not set")))
+
+(defvar arxana-store--health-cache nil
+  "Cached Futon health probe, as a plist {:ts float :status symbol}.
+
+Status is one of:
+- :ok (reachable)
+- :down (unreachable)
+- :disabled (sync disabled / no base URL).")
+
+(defun arxana-store--root-base (base)
+  "Strip /api[/alpha] from BASE when present."
+  (let* ((base (replace-regexp-in-string "/+$" "" (or base "")))
+         ;; /api, /api/alpha, and url-encoded alpha variants
+         (root (replace-regexp-in-string "/api\\(?:/alpha\\|/%ce%b1\\|/%CE%B1\\)?\\'" "" base)))
+    (if (string-empty-p root) base root)))
+
+(defun arxana-store-remote-status (&optional force)
+  "Return :ok when Futon is reachable, :down when it is not, :disabled otherwise.
+
+This is a lightweight probe intended for UI banners/indicators, not as an
+authoritative guarantee for write availability."
+  (cond
+   ((not (arxana-store-sync-enabled-p)) :disabled)
+   ((not (and (boundp 'futon4-base-url) (stringp futon4-base-url) (not (string-empty-p futon4-base-url))))
+    :disabled)
+   (t
+    (let* ((now (float-time))
+           (cached-ts (plist-get arxana-store--health-cache :ts))
+           (cached-status (plist-get arxana-store--health-cache :status)))
+      (if (and (not force)
+               (numberp cached-ts)
+               cached-status
+               (< (- now cached-ts) arxana-store-health-probe-ttl))
+          cached-status
+        (let* ((root (arxana-store--root-base (arxana-store--base-url)))
+               (url (concat root "/health"))
+               (url-request-method "GET")
+               (url-request-extra-headers '(("Accept" . "application/edn")))
+               (status :down))
+          (condition-case _err
+              (let ((buf (url-retrieve-synchronously url t t arxana-store-health-probe-timeout)))
+                (when (buffer-live-p buf)
+                  (unwind-protect
+                      (with-current-buffer buf
+                        (when (and (boundp 'url-http-response-status)
+                                   (= url-http-response-status 200))
+                          (setq status :ok)))
+                    (kill-buffer buf))))
+            (error (setq status :down)))
+          (setq arxana-store--health-cache (list :ts now :status status))
+          status))))))
 
 (defun arxana-store--normalize-base (base)
   (let* ((base (string-remove-suffix "/" (or base ""))))

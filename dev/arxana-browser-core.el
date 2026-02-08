@@ -342,76 +342,94 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
     (user-error "arxana-browser-code is unavailable")))
 
 (defun arxana-browser--header-line (context total)
-  (cond
-   ((not context)
-    (format "Futon4 browser menu (%d entries). RET/right selects, LEFT/b returns."
-            total))
-   ((eq (plist-get context :view) 'patterns)
-    (let ((base (format "Pattern languages & collections (%d entries). RET/right opens, LEFT/b backs up, I imports, E/e edit collections, +/- reorder, A adds a root, g refreshes."
-                        total)))
-      (if (arxana-store-sync-enabled-p)
-          base
-        (concat base " [sync disabled: showing filesystem only]"))))
-   ((eq (plist-get context :view) 'code)
-    (let ((book (and (boundp 'arxana-browser-code-docbook)
-                     arxana-browser-code-docbook)))
-      (format "Code browser — docbook: %s (B selects). LEFT/b returns."
-              (or book "unknown"))))
-   ((eq (plist-get context :view) 'code-root)
-    "Code browser — select a Futon. LEFT/b returns.")
-   ((eq (plist-get context :view) 'graph)
-    "Graph types — browse /types from Futon. RET/right shows details. LEFT/b returns.")
-   ((eq (plist-get context :view) 'media)
-    "Media library — pick All tracks, a status, or Projects to drill into recorder projects. LEFT/b returns.")
-   ((eq (plist-get context :view) 'media-projects)
-    "Media projects — select a recorder project to list its tracks. LEFT/b returns.")
-   ((eq (plist-get context :view) 'media-publications)
-    "Media publications — select an EP folder to browse its exported tracks. LEFT/b returns.")
-   ((eq (plist-get context :view) 'media-publication)
-    "Publication tracks — RET plays, p plays, s stops. LEFT/b returns.")
-   ((eq (plist-get context :view) 'docbook)
-    (let ((line (format "Doc books — select a book, then Contents or Recent. %s. LEFT/b returns."
-                        (arxana-docbook--source-brief))))
-      (arxana-browser--docbook-header line nil)))
-   ((eq (plist-get context :view) 'docbook-book)
-    (let* ((book (plist-get context :book))
-           (line (format "Doc book views — pick Contents or Recent. %s. LEFT/b returns."
-                         (arxana-docbook--source-brief book))))
-      (arxana-browser--docbook-header line book)))
-   ((eq (plist-get context :view) 'docbook-contents)
-    (let* ((book (plist-get context :book))
-           (dirty (arxana-browser--docbook-contents-dirty-p book))
-           (prefix (if dirty "[dirty] " ""))
-           (line (format "%sDoc book contents — RET opens heading; C-c C-s syncs order; %s. LEFT/b returns."
-                         prefix
-                         (arxana-docbook--source-brief book))))
-      (arxana-browser--docbook-header line book dirty)))
-   ((eq (plist-get context :view) 'docbook-section)
-    (let* ((book (plist-get context :book))
-           (line (format "Doc book section — RET opens entry; %s. LEFT/b returns."
-                         (arxana-docbook--source-brief book))))
-      (arxana-browser--docbook-header line book)))
-   ((eq (plist-get context :view) 'docbook-recent)
-    (let* ((book (plist-get context :book))
-           (line (format "Doc book recent entries — RET opens entry; %s. LEFT/b returns."
-                         (arxana-docbook--source-brief book))))
-      (arxana-browser--docbook-header line book)))
-   ((eq (plist-get context :view) 'lab)
-    "Lab notebook — RET stub; v trace, r raw, d draft. LEFT/b returns.")
-   ((eq (plist-get context :view) 'lab-files)
-    (format "Lab files (%s) — RET opens file. LEFT/b returns."
-            (or (plist-get context :label) "lab")))
-   ((plist-get context :media-filter)
-    (let* ((label (or (plist-get context :label) "Tracks"))
-           (count (plist-get context :count)))
-      (format "%s — %s. LEFT/b returns."
-              label
-              (if (numberp count)
-                  (format "%d track%s" count (if (= count 1) "" "s"))
-                (format "%d entries" total)))))
-   (t
-    (let ((title (or (plist-get context :title) (plist-get context :label))))
-      (format "%s — RET/right opens pattern, LEFT/b returns." title)))))
+  (let* ((store-status (when (and (require 'arxana-store nil t)
+                                  (fboundp 'arxana-store-remote-status))
+                         (arxana-store-remote-status)))
+         (store-suffix
+          (pcase store-status
+            (:down " [Futon API down: storage unavailable]")
+            (:disabled " [sync disabled: showing filesystem only]")
+            (_ ""))))
+    (cond
+     ((not context)
+      (format "Futon4 browser menu (%d entries). RET/right selects, LEFT/b returns."
+              total))
+     ((eq (plist-get context :view) 'patterns)
+      (let ((base (format "Pattern languages & collections (%d entries). RET/right opens, LEFT/b backs up, I imports, E/e edit collections, +/- reorder, A adds a root, g refreshes."
+                          total)))
+        (concat base store-suffix)))
+     ((eq (plist-get context :view) 'code)
+      (let ((book (and (boundp 'arxana-browser-code-docbook)
+                       arxana-browser-code-docbook)))
+        (format "Code browser — docbook: %s (B selects). LEFT/b returns."
+                (or book "unknown"))))
+     ((eq (plist-get context :view) 'code-root)
+      "Code browser — select a Futon. LEFT/b returns.")
+     ((eq (plist-get context :view) 'graph)
+      (concat "Graph types — browse /types from Futon. RET/right shows details. LEFT/b returns."
+              store-suffix))
+     ((eq (plist-get context :view) 'media)
+      (concat "Media library — pick All tracks, a status, or Projects to drill into recorder projects. LEFT/b returns."
+              store-suffix))
+     ((eq (plist-get context :view) 'media-projects)
+      (concat "Media projects — select a recorder project to list its tracks. LEFT/b returns."
+              store-suffix))
+     ((eq (plist-get context :view) 'media-publications)
+      (concat "Media publications — select an EP folder to browse its exported tracks. LEFT/b returns."
+              store-suffix))
+     ((eq (plist-get context :view) 'media-publication)
+      (concat "Publication tracks — RET plays, p plays, s stops. LEFT/b returns."
+              store-suffix))
+     ((eq (plist-get context :view) 'media-ep-staging)
+      (concat "EP staging — select an EP folder to browse its exported tracks. LEFT/b returns."
+              store-suffix))
+     ((eq (plist-get context :view) 'media-ep-staging-ep)
+      (concat "EP staging tracks — RET plays, p plays, s stops. LEFT/b returns."
+              store-suffix))
+     ((eq (plist-get context :view) 'docbook)
+      (let ((line (format "Doc books — select a book, then Contents or Recent. %s. LEFT/b returns."
+                          (arxana-docbook--source-brief))))
+        (arxana-browser--docbook-header line nil)))
+     ((eq (plist-get context :view) 'docbook-book)
+      (let* ((book (plist-get context :book))
+             (line (format "Doc book views — pick Contents or Recent. %s. LEFT/b returns."
+                           (arxana-docbook--source-brief book))))
+        (arxana-browser--docbook-header line book)))
+     ((eq (plist-get context :view) 'docbook-contents)
+      (let* ((book (plist-get context :book))
+             (dirty (arxana-browser--docbook-contents-dirty-p book))
+             (prefix (if dirty "[dirty] " ""))
+             (line (format "%sDoc book contents — RET opens heading; C-c C-s syncs order; %s. LEFT/b returns."
+                           prefix
+                           (arxana-docbook--source-brief book))))
+        (arxana-browser--docbook-header line book dirty)))
+     ((eq (plist-get context :view) 'docbook-section)
+      (let* ((book (plist-get context :book))
+             (line (format "Doc book section — RET opens entry; %s. LEFT/b returns."
+                           (arxana-docbook--source-brief book))))
+        (arxana-browser--docbook-header line book)))
+     ((eq (plist-get context :view) 'docbook-recent)
+      (let* ((book (plist-get context :book))
+             (line (format "Doc book recent entries — RET opens entry; %s. LEFT/b returns."
+                           (arxana-docbook--source-brief book))))
+        (arxana-browser--docbook-header line book)))
+     ((eq (plist-get context :view) 'lab)
+      (concat "Lab notebook — RET stub; v trace, r raw, d draft. LEFT/b returns."
+              store-suffix))
+     ((eq (plist-get context :view) 'lab-files)
+      (format "Lab files (%s) — RET opens file. LEFT/b returns."
+              (or (plist-get context :label) "lab")))
+     ((plist-get context :media-filter)
+      (let* ((label (or (plist-get context :label) "Tracks"))
+             (count (plist-get context :count)))
+        (format "%s — %s. LEFT/b returns."
+                label
+                (if (numberp count)
+                    (format "%d track%s" count (if (= count 1) "" "s"))
+                  (format "%d entries" total)))))
+     (t
+      (let ((title (or (plist-get context :title) (plist-get context :label))))
+        (format "%s — RET/right opens pattern, LEFT/b returns." title))))))
 
 (defun arxana-browser--docbook-header (line &optional book dirty)
   (let* ((book (or book "futon4"))

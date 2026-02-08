@@ -2800,6 +2800,13 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
     (cond
      ((not (eq cached 'unset)) (eq cached t))
      ((not (arxana-store-sync-enabled-p)) nil)
+     ((and (require 'arxana-store nil t)
+           (fboundp 'arxana-store-remote-status)
+           (eq (arxana-store-remote-status) :down))
+      ;; When Futon is down, we treat lyrics status as unknown rather than absent.
+      ;; Cache a sentinel so callers can render a distinct indicator.
+      (puthash lyrics-id 'down arxana-media--lyrics-cache)
+      nil)
      (t
       (let* ((response (ignore-errors (arxana-store-fetch-entity lyrics-id)))
              (entity (and (listp response) (alist-get :entity response)))
@@ -2824,20 +2831,23 @@ When nil, use a \"bounces\" directory under `arxana-media-misc-root`."
 
 (defun arxana-media--lyrics-indicator (item)
   (condition-case nil
-      (pcase (plist-get item :type)
-        ('media-publication-track
-         (let* ((path (plist-get item :path))
-                (sha (arxana-media--lyrics-indicator-sha item path))
-                (lyrics-id (and sha (format "arxana/media-lyrics/misc/%s" sha))))
-           (if (and lyrics-id (arxana-media--lyrics-present-p lyrics-id)) "L" " ")))
-        ('media-misc-track
-         (let* ((path (plist-get item :path))
-                (sha (arxana-media--lyrics-indicator-sha item path))
-                (lyrics-id (and sha (format "arxana/media-lyrics/misc/%s" sha))))
-           (if (and lyrics-id (arxana-media--lyrics-present-p lyrics-id)) "L" " ")))
-        (_
-         (let ((lyrics-id (arxana-media--lyrics-entity-id item)))
-           (if (and lyrics-id (arxana-media--lyrics-present-p lyrics-id)) "L" " "))))
+      (let* ((lyrics-id
+              (pcase (plist-get item :type)
+                ('media-publication-track
+                 (let* ((path (plist-get item :path))
+                        (sha (arxana-media--lyrics-indicator-sha item path)))
+                   (and sha (format "arxana/media-lyrics/misc/%s" sha))))
+                ('media-misc-track
+                 (let* ((path (plist-get item :path))
+                        (sha (arxana-media--lyrics-indicator-sha item path)))
+                   (and sha (format "arxana/media-lyrics/misc/%s" sha))))
+                (_ (arxana-media--lyrics-entity-id item))))
+             (present (and lyrics-id (arxana-media--lyrics-present-p lyrics-id)))
+             (cached (and lyrics-id (gethash lyrics-id arxana-media--lyrics-cache 'unset))))
+        (cond
+         (present "L")
+         ((eq cached 'down) "?")
+         (t " ")))
     (error " ")))
 
 (defun arxana-media--track-row (item)
