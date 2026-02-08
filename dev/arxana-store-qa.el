@@ -87,6 +87,15 @@
       (arxana-store-qa--assert resp "relations-batch returned nil (see arxana-store-last-error)")
       (arxana-store-qa--ok "relations-batch"))
 
+    ;; Hyperedge write (exercises /hyperedge).
+    (let ((resp (arxana-store--post-hyperedge
+                 "arxana/hyperedge"
+                 "arxana/qa-hx"
+                 (list a-id b-id)
+                 (list (cons 'qa t)))))
+      (arxana-store-qa--assert resp "hyperedge returned nil (see arxana-store-last-error)")
+      (arxana-store-qa--ok "hyperedge"))
+
     ;; Media lyrics upsert + verify read-back durability contract.
     ;; Use a synthetic misc sha so we don't depend on local files.
     (let* ((sha (make-string 64 ?a))
@@ -120,6 +129,14 @@
         (arxana-store-qa--assert (string= stored-source lyrics)
                                  "lyrics :source mismatch (len %d vs %d)" (length stored-source) (length lyrics)))
       (arxana-store-qa--ok "media/lyrics upsert + readback"))
+
+    ;; Snapshot save/restore (exercises /snapshot and /snapshot/restore).
+    (let* ((snap (arxana-store-save-snapshot "latest" (format "qa-%s" suffix))))
+      (arxana-store-qa--assert snap "snapshot returned nil (see arxana-store-last-error)")
+      (arxana-store-qa--ok "snapshot save")
+      (let ((restore (arxana-store-restore-snapshot nil "latest")))
+        (arxana-store-qa--assert restore "snapshot restore returned nil (see arxana-store-last-error)")
+        (arxana-store-qa--ok "snapshot restore")))
 
     (arxana-store-qa--ok "all checks passed")
     (kill-emacs 0)))
