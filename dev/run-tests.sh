@@ -19,6 +19,8 @@ TEST_FILES=(
   arxana-export-test.el
   arxana-saving-test.el
   arxana-browse-test.el
+  arxana-browser-hypergraph-test.el
+  arxana-check-parens-test.el
   arxana-docbook-order-test.el
   arxana-docbook-redirect-test.el
   arxana-docbook-checkout-test.el

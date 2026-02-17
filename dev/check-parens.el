@@ -181,13 +181,13 @@ Return nil if the file is fully readable, or a plist with details on failure."
           ;; Unknown flag: ignore rather than fail hard in batch.
           nil)
          (t
-          (push a files))))))
+          (push a files)))))
     (setq files (nreverse files))
     (list :files files
           :strategy strategy
           :json json-out
           :context context-lines
-          :no-defaults no-defaults))
+          :no-defaults no-defaults)))
 
 (defun arxana-check-parens-run (&optional files strategy context-lines no-defaults)
   "Check FILES (list of paths). Return nil on success, or plist on first error.

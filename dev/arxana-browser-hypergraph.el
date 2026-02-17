@@ -9,6 +9,12 @@
 (require 'browse-url)
 (require 'org)
 (require 'subr-x)
+(require 'url)
+(require 'url-http)
+(require 'url-util)
+
+(declare-function futon-hud-service-render "hud-service"
+                  (buffer render-fn &optional options))
 
 (defgroup arxana-browser-hypergraph nil
   "Local hypergraph browser helpers for Arxana."
@@ -36,6 +42,42 @@
   (expand-file-name "arxana-hypergraph" temporary-file-directory)
   "Directory where generated hypergraph HTML views are written."
   :type 'directory
+  :group 'arxana-browser-hypergraph)
+
+(defcustom arxana-browser-hypergraph-hud-auto-open t
+  "When non-nil, show a side HUD when opening Arxana hypergraph glasses."
+  :type 'boolean
+  :group 'arxana-browser-hypergraph)
+
+(defcustom arxana-browser-hypergraph-hud-buffer-name "*Arxana Hypergraph HUD*"
+  "Buffer name for the Arxana hypergraph HUD."
+  :type 'string
+  :group 'arxana-browser-hypergraph)
+
+(defcustom arxana-browser-hypergraph-hud-window-width 0.36
+  "Width of the hypergraph HUD side window."
+  :type 'number
+  :group 'arxana-browser-hypergraph)
+
+(defcustom arxana-browser-hypergraph-hud-planetmath-corpus "planetmath"
+  "Encyclopedia corpus to query for HUD definitions."
+  :type 'string
+  :group 'arxana-browser-hypergraph)
+
+(defcustom arxana-browser-hypergraph-hud-max-definitions 3
+  "Maximum number of PlanetMath entries shown in the HUD."
+  :type 'integer
+  :group 'arxana-browser-hypergraph)
+
+(defcustom arxana-browser-hypergraph-hud-request-timeout 2
+  "Timeout in seconds for HUD encyclopedia requests."
+  :type 'integer
+  :group 'arxana-browser-hypergraph)
+
+(defcustom arxana-browser-hypergraph-hud-encyclopedia-server
+  (or (getenv "FUTON3_SERVER") "http://localhost:5050")
+  "Futon HTTP server URL for HUD encyclopedia lookups."
+  :type 'string
   :group 'arxana-browser-hypergraph)
 
 (defun arxana-browser-hypergraph--repo-root ()
@@ -137,15 +179,37 @@
 (defvar-local arxana-browser-hypergraph--active-peer-key nil
   "Current peer key under point in the current glasses buffer.")
 
+(defvar-local arxana-browser-hypergraph--hud-context nil
+  "Per-buffer hypergraph context used by the HUD.")
+
+(defvar-local arxana-browser-hypergraph--hud-last-focus nil
+  "Last focus descriptor rendered in the HUD.")
+
+(defvar arxana-browser-hypergraph--hud-window nil
+  "Window currently used by the hypergraph HUD.")
+
+(defvar arxana-browser-hypergraph--planetmath-index nil
+  "Cached PlanetMath index for HUD lookups.")
+
+(defvar arxana-browser-hypergraph--planetmath-index-error nil
+  "Last PlanetMath index fetch error message.")
+
+(defvar arxana-browser-hypergraph--planetmath-entry-cache (make-hash-table :test 'equal)
+  "Cache of PlanetMath entry detail payloads by entry id.")
+
 (define-derived-mode arxana-browser-hypergraph-glasses-mode org-mode "Arxana-Hypergraph"
   "Arxana-native hypergraph glasses buffer."
   (setq-local truncate-lines nil)
   (setq-local arxana-browser-hypergraph--peer-overlays nil)
   (setq-local arxana-browser-hypergraph--active-peer-key nil)
+  (setq-local arxana-browser-hypergraph--hud-context nil)
+  (setq-local arxana-browser-hypergraph--hud-last-focus nil)
   (add-hook 'post-command-hook
             #'arxana-browser-hypergraph--peer-highlight-at-point
             nil
-            t))
+            t)
+  (when arxana-browser-hypergraph-hud-auto-open
+    (arxana-browser-hypergraph-hud-follow-mode 1)))
 
 (defun arxana-browser-hypergraph--as-string (value)
   (cond
@@ -373,6 +437,14 @@
                       (arxana-browser-hypergraph--get node 'type))
                      "post")
         (push node posts)))))
+
+(defun arxana-browser-hypergraph--nodes-of-type (nodes node-type)
+  (let (out)
+    (dolist (node nodes (nreverse out))
+      (when (string= (arxana-browser-hypergraph--as-string
+                      (arxana-browser-hypergraph--get node 'type))
+                     node-type)
+        (push node out)))))
 
 (defun arxana-browser-hypergraph--post-rank (post)
   (let ((subtype (arxana-browser-hypergraph--as-string
@@ -749,6 +821,428 @@
       (when peer-key
         (arxana-browser-hypergraph--highlight-peer-key peer-key)))))
 
+(defun arxana-browser-hypergraph--normalize-term-key (value)
+  (let* ((text (downcase (arxana-browser-hypergraph--as-string value)))
+         (text (string-remove-prefix "term:" text))
+         (text (replace-regexp-in-string "[^[:alnum:]]+" "" text)))
+    (if (string-empty-p text) "-" text)))
+
+(defun arxana-browser-hypergraph--hud-parse-json (body)
+  (when (and body (stringp body) (not (string-empty-p body)))
+    (condition-case nil
+        (if (fboundp 'json-parse-string)
+            (json-parse-string body
+                               :object-type 'alist
+                               :array-type 'list
+                               :null-object nil
+                               :false-object nil)
+          (let ((json-object-type 'alist)
+                (json-array-type 'list)
+                (json-false nil)
+                (json-null nil))
+            (json-read-from-string body)))
+      (error nil))))
+
+(defun arxana-browser-hypergraph--hud-fetch-json (endpoint)
+  (let* ((url-request-method "GET")
+         (url-request-extra-headers '(("Accept" . "application/json")))
+         (url (concat (string-remove-suffix "/"
+                                            arxana-browser-hypergraph-hud-encyclopedia-server)
+                      endpoint))
+         (buffer (url-retrieve-synchronously
+                  url
+                  t
+                  t
+                  arxana-browser-hypergraph-hud-request-timeout)))
+    (unless buffer
+      (error "HUD request failed for %s" url))
+    (with-current-buffer buffer
+      (goto-char (point-min))
+      (re-search-forward "\n\n" nil 'move)
+      (let ((body (buffer-substring-no-properties (point) (point-max))))
+        (kill-buffer buffer)
+        (or (arxana-browser-hypergraph--hud-parse-json body)
+            (error "HUD parse failed for %s" url))))))
+
+(defun arxana-browser-hypergraph-reset-planetmath-cache ()
+  "Clear cached PlanetMath HUD lookups."
+  (interactive)
+  (setq arxana-browser-hypergraph--planetmath-index nil)
+  (setq arxana-browser-hypergraph--planetmath-index-error nil)
+  (setq arxana-browser-hypergraph--planetmath-entry-cache (make-hash-table :test 'equal))
+  (message "Arxana hypergraph HUD PlanetMath cache cleared."))
+
+(defun arxana-browser-hypergraph--planetmath-index ()
+  (unless (or arxana-browser-hypergraph--planetmath-index
+              arxana-browser-hypergraph--planetmath-index-error)
+    (condition-case err
+        (let* ((response (arxana-browser-hypergraph--hud-fetch-json
+                          (format "/fulab/encyclopedia/%s/entries?limit=2000"
+                                  arxana-browser-hypergraph-hud-planetmath-corpus)))
+               (entries (arxana-browser-hypergraph--safe-list
+                         (arxana-browser-hypergraph--get response 'entries)))
+               (index (make-hash-table :test 'equal)))
+          (dolist (entry entries)
+            (let* ((entry-id (arxana-browser-hypergraph--as-string
+                              (arxana-browser-hypergraph--get entry 'entry/id)))
+                   (title (arxana-browser-hypergraph--as-string
+                           (arxana-browser-hypergraph--get entry 'entry/title)))
+                   (defines (arxana-browser-hypergraph--safe-list
+                             (arxana-browser-hypergraph--get entry 'entry/defines)))
+                   (tail (car (last (split-string entry-id "/" t))))
+                   (keys (delete-dups
+                          (delq nil
+                                (list (arxana-browser-hypergraph--normalize-term-key entry-id)
+                                      (arxana-browser-hypergraph--normalize-term-key title)
+                                      (arxana-browser-hypergraph--normalize-term-key tail))))))
+              (dolist (name defines)
+                (let ((key (arxana-browser-hypergraph--normalize-term-key name)))
+                  (unless (string= key "-")
+                    (push key keys))))
+              (dolist (key keys)
+                (unless (string= key "-")
+                  (arxana-browser-hypergraph--hash-push index key entry)))))
+          (setq arxana-browser-hypergraph--planetmath-index index))
+      (error
+       (setq arxana-browser-hypergraph--planetmath-index-error
+             (error-message-string err)))))
+  arxana-browser-hypergraph--planetmath-index)
+
+(defun arxana-browser-hypergraph--planetmath-entry (entry-id)
+  (or (gethash entry-id arxana-browser-hypergraph--planetmath-entry-cache)
+      (let ((entry nil))
+        (condition-case nil
+            (let ((response (arxana-browser-hypergraph--hud-fetch-json
+                             (format "/fulab/encyclopedia/%s/entry/%s"
+                                     arxana-browser-hypergraph-hud-planetmath-corpus
+                                     (url-hexify-string entry-id)))))
+              (setq entry (arxana-browser-hypergraph--get response 'entry)))
+          (error
+           (setq entry nil)))
+        (puthash entry-id entry arxana-browser-hypergraph--planetmath-entry-cache)
+        entry)))
+
+(defun arxana-browser-hypergraph--focus-planetmath-candidates (focus)
+  (let ((kind (plist-get focus :kind))
+        (id (arxana-browser-hypergraph--as-string (plist-get focus :id)))
+        (label (arxana-browser-hypergraph--as-string (plist-get focus :label)))
+        (surface (arxana-browser-hypergraph--as-string (plist-get focus :surface)))
+        out)
+    (when (eq kind 'mention)
+      (push label out)
+      (push surface out)
+      (push (string-remove-prefix "term:" id) out)
+      (push (car (last (split-string id "[:/]" t))) out))
+    (delete-dups
+     (delq nil
+           (mapcar (lambda (candidate)
+                     (let ((text (string-trim (arxana-browser-hypergraph--as-string candidate))))
+                       (unless (string-empty-p text) text)))
+                   out)))))
+
+(defun arxana-browser-hypergraph--planetmath-lookup (focus)
+  (let ((candidates (arxana-browser-hypergraph--focus-planetmath-candidates focus))
+        (index (arxana-browser-hypergraph--planetmath-index))
+        (seen (make-hash-table :test 'equal))
+        (rows nil))
+    (when index
+      (dolist (candidate candidates)
+        (let* ((key (arxana-browser-hypergraph--normalize-term-key candidate))
+               (entries (gethash key index)))
+          (dolist (entry entries)
+            (let* ((entry-id (arxana-browser-hypergraph--as-string
+                              (arxana-browser-hypergraph--get entry 'entry/id)))
+                   (detail (and (not (string-empty-p entry-id))
+                                (arxana-browser-hypergraph--planetmath-entry entry-id)))
+                   (payload (or detail entry))
+                   (title (arxana-browser-hypergraph--as-string
+                           (or (arxana-browser-hypergraph--get payload 'entry/title)
+                               entry-id))))
+              (unless (or (string-empty-p entry-id) (gethash entry-id seen))
+                (puthash entry-id t seen)
+                (push (list :id entry-id
+                            :title title
+                            :type (arxana-browser-hypergraph--as-string
+                                   (arxana-browser-hypergraph--get payload 'entry/type))
+                            :defines (arxana-browser-hypergraph--safe-list
+                                      (arxana-browser-hypergraph--get payload 'entry/defines))
+                            :body (arxana-browser-hypergraph--as-string
+                                   (arxana-browser-hypergraph--get payload 'entry/body)))
+                      rows)))))))
+    (let ((sorted (sort rows
+                        (lambda (a b)
+                          (string< (plist-get a :title) (plist-get b :title))))))
+      (if (> (length sorted) arxana-browser-hypergraph-hud-max-definitions)
+          (arxana-browser-hypergraph--take
+           sorted
+           arxana-browser-hypergraph-hud-max-definitions)
+        sorted))))
+
+(defun arxana-browser-hypergraph--hud-focus-at-point ()
+  (let* ((kind (arxana-browser-hypergraph--point-prop 'arxana-hypergraph-kind))
+         (peer-key (arxana-browser-hypergraph--point-prop 'arxana-peer-key))
+         (post-id (arxana-browser-hypergraph--point-prop 'arxana-hypergraph-post-id))
+         (id (arxana-browser-hypergraph--point-prop 'arxana-hypergraph-id))
+         (label (or (arxana-browser-hypergraph--point-prop 'arxana-hypergraph-label)
+                    (arxana-browser-hypergraph--point-prop 'arxana-hypergraph-latex)))
+         (surface (arxana-browser-hypergraph--point-prop 'arxana-hypergraph-surface))
+         (sexp (arxana-browser-hypergraph--point-prop 'arxana-hypergraph-sexp)))
+    (when (or kind peer-key post-id)
+      (list :kind kind
+            :source-buffer (current-buffer)
+            :peer-key peer-key
+            :post-id post-id
+            :id id
+            :label label
+            :surface surface
+            :sexp sexp))))
+
+(defun arxana-browser-hypergraph--peer-summary (peer-key &optional source-buffer)
+  (with-current-buffer (or source-buffer (current-buffer))
+    (let ((pos (point-min))
+          (count 0)
+          (posts (make-hash-table :test 'equal)))
+      (while (< pos (point-max))
+        (let* ((next (or (next-single-property-change pos 'arxana-peer-key nil (point-max))
+                         (point-max)))
+               (value (get-text-property pos 'arxana-peer-key)))
+          (when (and value (equal value peer-key) (< pos next))
+            (setq count (1+ count))
+            (let ((post-id (arxana-browser-hypergraph--as-string
+                            (get-text-property pos 'arxana-hypergraph-post-id))))
+              (unless (string-empty-p post-id)
+                (puthash post-id (1+ (gethash post-id posts 0)) posts))))
+          (setq pos (if (> next pos) next (1+ pos)))))
+      (let (post-rows)
+        (maphash (lambda (post-id n)
+                   (push (cons post-id n) post-rows))
+                 posts)
+        (setq post-rows (sort post-rows (lambda (a b)
+                                          (if (= (cdr a) (cdr b))
+                                              (string< (car a) (car b))
+                                            (> (cdr a) (cdr b))))))
+        (list :count count :posts post-rows)))))
+
+(defun arxana-browser-hypergraph--scope-post-id (scope-node-id)
+  (let ((text (arxana-browser-hypergraph--as-string scope-node-id)))
+    (if (string-match "\\`\\([^:]+\\):scope" text)
+        (match-string 1 text)
+      text)))
+
+(defun arxana-browser-hypergraph--scope-bindings-for-token (token &optional source-buffer)
+  (let* ((needle (arxana-browser-hypergraph--normalize-peer-token token))
+         (scope-nodes (with-current-buffer (or source-buffer (current-buffer))
+                        (plist-get arxana-browser-hypergraph--hud-context :scope-nodes)))
+         (rows nil))
+    (dolist (scope-node scope-nodes)
+      (let* ((node-id (arxana-browser-hypergraph--as-string
+                       (arxana-browser-hypergraph--get scope-node 'id)))
+             (post-id (arxana-browser-hypergraph--scope-post-id node-id))
+             (subtype (arxana-browser-hypergraph--tail-token
+                       (arxana-browser-hypergraph--as-string
+                        (arxana-browser-hypergraph--get scope-node 'subtype))))
+             (attrs (arxana-browser-hypergraph--get scope-node 'attrs))
+             (ends (arxana-browser-hypergraph--safe-list
+                    (arxana-browser-hypergraph--get attrs 'ends)))
+             (symbol nil)
+             (description nil))
+        (dolist (entry ends)
+          (let* ((role (arxana-browser-hypergraph--as-string
+                        (arxana-browser-hypergraph--get entry 'role)))
+                 (raw (or (arxana-browser-hypergraph--get entry 'latex)
+                          (arxana-browser-hypergraph--get entry 'text)))
+                 (value (arxana-browser-hypergraph--as-string raw)))
+            (cond
+             ((and (member role '("symbol" "variable")) (not symbol))
+              (setq symbol value))
+             ((and (member role '("description" "domain")) (not description))
+              (setq description value)))))
+        (when (and symbol
+                   (string= (arxana-browser-hypergraph--normalize-peer-token symbol)
+                            needle))
+          (push (list :post-id post-id
+                      :subtype subtype
+                      :symbol symbol
+                      :description description)
+                rows))))
+    (nreverse rows)))
+
+(defun arxana-browser-hypergraph--hud-format-kind (kind)
+  (pcase kind
+    ('expression "expression")
+    ('mention "mention")
+    ('scope "scope opener")
+    ('discourse "discourse mark")
+    ('subexpr-operator "operator token")
+    ('subexpr-variable "variable token")
+    (_ "none")))
+
+(defun arxana-browser-hypergraph--hud-insert-focus (focus)
+  (insert "Focus\n")
+  (if (not focus)
+      (insert "  Move point onto a highlighted token to inspect it.\n\n")
+    (insert (format "  kind: %s\n"
+                    (arxana-browser-hypergraph--hud-format-kind
+                     (plist-get focus :kind))))
+    (when-let ((label (plist-get focus :label)))
+      (insert (format "  label: %s\n" label)))
+    (when-let ((id (plist-get focus :id)))
+      (insert (format "  id: %s\n" id)))
+    (when-let ((post-id (plist-get focus :post-id)))
+      (insert (format "  post: %s\n" post-id)))
+    (when-let ((sexp (plist-get focus :sexp)))
+      (unless (string-empty-p (arxana-browser-hypergraph--as-string sexp))
+        (insert (format "  s-expr: %s\n" sexp))))
+    (insert "\n")))
+
+(defun arxana-browser-hypergraph--hud-insert-planetmath (focus)
+  (insert "PlanetMath\n")
+  (if (not (eq (plist-get focus :kind) 'mention))
+      (insert "  Cursor is not on a term mention.\n\n")
+    (let ((rows (arxana-browser-hypergraph--planetmath-lookup focus)))
+      (cond
+       (rows
+        (dolist (row rows)
+          (let* ((title (arxana-browser-hypergraph--as-string
+                         (plist-get row :title)))
+                 (entry-id (arxana-browser-hypergraph--as-string
+                            (plist-get row :id)))
+                 (etype (arxana-browser-hypergraph--as-string
+                         (plist-get row :type)))
+                 (defines (plist-get row :defines))
+                 (body (arxana-browser-hypergraph--as-string
+                        (plist-get row :body)))
+                 (snippet (truncate-string-to-width
+                           (arxana-browser-hypergraph--html-to-text body)
+                           140 nil nil t)))
+            (insert (format "  - %s (%s)\n" title entry-id))
+            (unless (string-empty-p etype)
+              (insert (format "    type: %s\n" etype)))
+            (when defines
+              (insert (format "    defines: %s\n"
+                              (mapconcat #'arxana-browser-hypergraph--as-string
+                                         defines
+                                         ", "))))
+            (unless (string-empty-p snippet)
+              (insert (format "    %s\n" snippet)))))
+        (insert "\n"))
+       (arxana-browser-hypergraph--planetmath-index-error
+        (insert (format "  lookup unavailable: %s\n\n"
+                        arxana-browser-hypergraph--planetmath-index-error)))
+       (t
+        (insert "  no matching definitions found in current corpus.\n\n"))))))
+
+(defun arxana-browser-hypergraph--hud-insert-thread-variables (focus source-buffer)
+  (insert "Thread-Local Variables\n")
+  (let ((peer-key (plist-get focus :peer-key)))
+    (if (not peer-key)
+        (insert "  no peer identity at point.\n\n")
+      (let* ((summary (arxana-browser-hypergraph--peer-summary peer-key source-buffer))
+             (count (plist-get summary :count))
+             (posts (plist-get summary :posts))
+             (kind (plist-get focus :kind)))
+        (insert (format "  peer-key: %s\n" peer-key))
+        (insert (format "  occurrences: %d\n" count))
+        (insert (format "  semantics: %s\n"
+                        (if (eq kind 'subexpr-variable)
+                            "similar syntactic role"
+                          "strict shared identity")))
+        (if posts
+            (insert (format "  posts: %s\n"
+                            (mapconcat
+                             (lambda (row) (format "%s(%d)" (car row) (cdr row)))
+                             posts
+                             ", ")))
+          (insert "  posts: none\n"))
+        (if (eq kind 'subexpr-variable)
+            (let ((bindings (arxana-browser-hypergraph--scope-bindings-for-token
+                             (arxana-browser-hypergraph--as-string
+                              (plist-get focus :label))
+                             source-buffer)))
+              (if bindings
+                  (progn
+                    (insert "  scope bindings:\n")
+                    (dolist (row bindings)
+                      (insert (format "    - %s [%s] %s%s\n"
+                                      (plist-get row :post-id)
+                                      (plist-get row :subtype)
+                                      (plist-get row :symbol)
+                                      (if (string-empty-p (arxana-browser-hypergraph--as-string
+                                                           (plist-get row :description)))
+                                          ""
+                                        (format " : %s" (plist-get row :description)))))))
+                (insert "  scope bindings: none for this token\n")))
+          (insert "  scope bindings: n/a (not a variable token)\n"))
+        (insert "\n")))))
+
+(defun arxana-browser-hypergraph--hud-render-content (focus source-buffer)
+  (insert "Hypergraph HUD\n\n")
+  (arxana-browser-hypergraph--hud-insert-focus focus)
+  (arxana-browser-hypergraph--hud-insert-planetmath focus)
+  (arxana-browser-hypergraph--hud-insert-thread-variables focus source-buffer))
+
+(defun arxana-browser-hypergraph-hud-render (&optional focus)
+  "Render a side-by-side HUD for current hypergraph FOCUS."
+  (let* ((focus (or focus (arxana-browser-hypergraph--hud-focus-at-point)))
+         (source-buffer (or (plist-get focus :source-buffer) (current-buffer))))
+    (unless (fboundp 'futon-hud-service-render)
+      (require 'hud-service nil t))
+    (if (fboundp 'futon-hud-service-render)
+        (futon-hud-service-render
+         arxana-browser-hypergraph-hud-buffer-name
+         (lambda (_buf _win)
+           (arxana-browser-hypergraph--hud-render-content focus source-buffer))
+         (list :mode 'special-mode
+               :truncate-lines t
+               :side 'right
+               :window-width arxana-browser-hypergraph-hud-window-width))
+      (let* ((buf (get-buffer-create arxana-browser-hypergraph-hud-buffer-name))
+             (win (display-buffer-in-side-window
+                   buf
+                   `((side . right)
+                     (slot . 0)
+                     (window-width . ,arxana-browser-hypergraph-hud-window-width)))))
+        (when (window-live-p win)
+          (set-window-dedicated-p win t)
+          (set-window-parameter win 'futon-hud-owner t))
+        (with-current-buffer buf
+          (let ((inhibit-read-only t))
+            (erase-buffer)
+            (special-mode)
+            (setq-local truncate-lines t)
+            (arxana-browser-hypergraph--hud-render-content focus source-buffer)))))
+    (setq arxana-browser-hypergraph--hud-window
+          (get-buffer-window arxana-browser-hypergraph-hud-buffer-name nil))))
+
+(defun arxana-browser-hypergraph-hud-hide ()
+  "Hide the hypergraph HUD side window."
+  (interactive)
+  (when (window-live-p arxana-browser-hypergraph--hud-window)
+    (let ((win arxana-browser-hypergraph--hud-window))
+      (set-window-parameter win 'futon-hud-owner nil)
+      (set-window-dedicated-p win nil)
+      (delete-window win)))
+  (setq arxana-browser-hypergraph--hud-window nil))
+
+(defun arxana-browser-hypergraph--hud-post-command ()
+  (let ((focus (arxana-browser-hypergraph--hud-focus-at-point)))
+    (unless (equal focus arxana-browser-hypergraph--hud-last-focus)
+      (setq arxana-browser-hypergraph--hud-last-focus focus)
+      (arxana-browser-hypergraph-hud-render focus))))
+
+(define-minor-mode arxana-browser-hypergraph-hud-follow-mode
+  "Show a side-by-side hypergraph HUD that follows point."
+  :lighter " HG-HUD"
+  (if arxana-browser-hypergraph-hud-follow-mode
+      (progn
+        (add-hook 'post-command-hook #'arxana-browser-hypergraph--hud-post-command nil t)
+        (add-hook 'kill-buffer-hook #'arxana-browser-hypergraph-hud-hide nil t)
+        (arxana-browser-hypergraph-hud-render))
+    (remove-hook 'post-command-hook #'arxana-browser-hypergraph--hud-post-command t)
+    (remove-hook 'kill-buffer-hook #'arxana-browser-hypergraph-hud-hide t)
+    (setq-local arxana-browser-hypergraph--hud-last-focus nil)
+    (arxana-browser-hypergraph-hud-hide)))
+
 (defun arxana-browser-hypergraph--normalize-peer-token (value)
   (let* ((text (downcase (arxana-browser-hypergraph--as-string value)))
          (text (string-remove-prefix "$" text))
@@ -997,12 +1491,14 @@
     (while (re-search-forward "\\\\[[:alpha:]]+" end t)
       (let* ((mstart (match-beginning 0))
              (mend (match-end 0))
-             (token (buffer-substring-no-properties mstart mend)))
+             (token (buffer-substring-no-properties mstart mend))
+             (post-id (get-text-property mstart 'arxana-hypergraph-post-id)))
         (add-text-properties
          mstart mend
          (list 'arxana-hypergraph-kind 'subexpr-operator
                'arxana-hypergraph-id token
                'arxana-hypergraph-label token
+               'arxana-hypergraph-post-id post-id
                'arxana-peer-key (format "subexpr:op:%s" token)
                'arxana-peer-face 'arxana-browser-hypergraph-subexpr-operator-face
                'mouse-face 'highlight
@@ -1022,12 +1518,14 @@
                        (not next-word)
                        (not escaped))
               (let* ((token (buffer-substring-no-properties pos (1+ pos)))
-                     (norm (downcase token)))
+                     (norm (downcase token))
+                     (post-id (get-text-property pos 'arxana-hypergraph-post-id)))
                 (add-text-properties
                  pos (1+ pos)
                  (list 'arxana-hypergraph-kind 'subexpr-variable
                        'arxana-hypergraph-id token
                        'arxana-hypergraph-label token
+                       'arxana-hypergraph-post-id post-id
                        'arxana-peer-key (format "subexpr:var:%s" norm)
                        'arxana-peer-face 'arxana-browser-hypergraph-subexpr-variable-face
                        'mouse-face 'highlight
@@ -1051,6 +1549,9 @@
         (mention-cursor (make-hash-table :test 'equal))
         (disc-cursor (make-hash-table :test 'equal))
         (expr-latex-map (make-hash-table :test 'equal)))
+    (add-text-properties
+     start end
+     (list 'arxana-hypergraph-post-id post-id))
     (dolist (row (or (gethash post-id surface-by-post) '()))
       (let* ((node (plist-get row :node))
              (attrs (arxana-browser-hypergraph--get node 'attrs))
@@ -1066,6 +1567,7 @@
                           'arxana-hypergraph-id node-id
                           'arxana-hypergraph-latex latex
                           'arxana-hypergraph-sexp sexp
+                          'arxana-hypergraph-post-id post-id
                           'arxana-peer-key peer-key
                           'arxana-peer-face 'arxana-browser-hypergraph-peer-face
                           'face 'arxana-browser-hypergraph-expression-face
@@ -1100,6 +1602,7 @@
              (props (list 'arxana-hypergraph-kind 'scope
                           'arxana-hypergraph-id role
                           'arxana-hypergraph-label role
+                          'arxana-hypergraph-post-id post-id
                           'face 'arxana-browser-hypergraph-scope-face
                           'font-lock-face 'arxana-browser-hypergraph-scope-face
                           'mouse-face 'highlight
@@ -1121,13 +1624,15 @@
                          (arxana-browser-hypergraph--get node 'subtype)
                          term-id)))
              (peer-key (format "term:%s"
-                               (arxana-browser-hypergraph--normalize-peer-token
+                               (arxana-browser-hypergraph--normalize-term-key
                                 (if (string-empty-p term-id) label term-id)))))
         (arxana-browser-hypergraph--mark-next
          start end surface
          (list 'arxana-hypergraph-kind 'mention
                'arxana-hypergraph-id term-id
                'arxana-hypergraph-label label
+               'arxana-hypergraph-surface surface
+               'arxana-hypergraph-post-id post-id
                'arxana-peer-key peer-key
                'arxana-peer-face 'arxana-browser-hypergraph-peer-face
                'face 'arxana-browser-hypergraph-mention-face
@@ -1147,6 +1652,7 @@
          (list 'arxana-hypergraph-kind 'discourse
                'arxana-hypergraph-id role
                'arxana-hypergraph-label match
+               'arxana-hypergraph-post-id post-id
                'face 'arxana-browser-hypergraph-discourse-face
                'font-lock-face 'arxana-browser-hypergraph-discourse-face
                'help-echo (format "Discourse %s: %s" role match))
@@ -1263,7 +1769,19 @@
         (org-show-all)
         (visual-line-mode 1)
         (read-only-mode 1)
-        (view-mode 1)))
+        (view-mode 1)
+        (setq-local arxana-browser-hypergraph--hud-context
+                    (list :dataset (or (plist-get item :label) "")
+                          :path path
+                          :thread thread
+                          :nodes nodes
+                          :edges edges
+                          :scope-nodes (arxana-browser-hypergraph--nodes-of-type
+                                        nodes
+                                        "scope")))
+        (setq-local arxana-browser-hypergraph--hud-last-focus nil)
+        (when arxana-browser-hypergraph-hud-follow-mode
+          (arxana-browser-hypergraph-hud-render))))
     (display-buffer buf)))
 
 (defun arxana-browser-hypergraph--html-document (item raw-json raw-thread-json)

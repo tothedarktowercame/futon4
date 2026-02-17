@@ -27,6 +27,10 @@
 (declare-function arxana-browser-graph-format "arxana-browser-graph")
 (declare-function arxana-browser-graph-row "arxana-browser-graph")
 (declare-function arxana-browser-graph-open "arxana-browser-graph")
+(declare-function arxana-browser-hypergraph-items "arxana-browser-hypergraph")
+(declare-function arxana-browser-hypergraph-format "arxana-browser-hypergraph")
+(declare-function arxana-browser-hypergraph-row "arxana-browser-hypergraph")
+(declare-function arxana-browser-hypergraph-open "arxana-browser-hypergraph")
 
 (declare-function arxana-browser-patterns--language-index-by-path "arxana-browser-patterns" (language-rows))
 (declare-function arxana-browser-patterns--filesystem-collection-items "arxana-browser-patterns" (&optional language-index))
@@ -287,6 +291,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
               :description "Explore Futon graph types."
               :view 'graph)
         (list :type 'menu
+              :label "Hypergraphs"
+              :description "Inspect local hypergraph JSON datasets."
+              :view 'hypergraph)
+        (list :type 'menu
               :label "Media"
               :description "Zoom/Napster media library prototype."
               :view 'media)
@@ -334,6 +342,13 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                 :label "Graph unavailable"
                 :description "Load arxana-browser-graph.el for /types."))))
 
+(defun arxana-browser--hypergraph-items ()
+  (if (require 'arxana-browser-hypergraph nil t)
+      (arxana-browser-hypergraph-items)
+    (list (list :type 'info
+                :label "Hypergraph viewer unavailable"
+                :description "Load arxana-browser-hypergraph.el for local JSON datasets."))))
+
 (defun arxana-browser-code-select-docbook ()
   "Select the docbook used for code docs in the browser."
   (interactive)
@@ -368,6 +383,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
      ((eq (plist-get context :view) 'graph)
       (concat "Graph types — browse /types from Futon. RET/right shows details. LEFT/b returns."
               store-suffix))
+     ((eq (plist-get context :view) 'hypergraph)
+      "Hypergraph viewer — inspect local JSON datasets. RET/right shows details. LEFT/b returns.")
      ((eq (plist-get context :view) 'media)
       (concat "Media library — pick All tracks, a status, or Projects to drill into recorder projects. LEFT/b returns."
               store-suffix))
@@ -568,6 +585,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         ('code-root (arxana-browser--code-root-items))
         ('code (arxana-browser--code-items))
         ('graph (arxana-browser--graph-items))
+        ('hypergraph (arxana-browser--hypergraph-items))
         ('media (arxana-media--items))
         ('docbook (arxana-browser--docbook-books))
         ('docbook-book (arxana-browser--docbook-book-items (plist-get context :book)))
@@ -710,6 +728,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
             ('graph (if (fboundp 'arxana-browser-graph-row)
                         #'arxana-browser-graph-row
                       #'arxana-browser--info-row))
+            ('hypergraph (if (fboundp 'arxana-browser-hypergraph-row)
+                             #'arxana-browser-hypergraph-row
+                           #'arxana-browser--info-row))
             ('media #'arxana-browser--info-row)
             ('docbook #'arxana-browser--info-row)
             ('docbook-book #'arxana-browser--info-row)
@@ -779,6 +800,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                         ('graph (if (fboundp 'arxana-browser-graph-format)
                                     (arxana-browser-graph-format)
                                   (arxana-browser--info-format)))
+                        ('hypergraph (if (fboundp 'arxana-browser-hypergraph-format)
+                                         (arxana-browser-hypergraph-format)
+                                       (arxana-browser--info-format)))
                         ('media (arxana-browser--info-format))
                         ('docbook (arxana-browser--info-format))
                         ('docbook-book (arxana-browser--info-format))
@@ -895,6 +919,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
        (if (fboundp 'arxana-browser-graph-open)
            (arxana-browser-graph-open item)
          (message "Graph type: %s" (or (plist-get item :label) "?"))))
+      ('hypergraph-source
+       (if (fboundp 'arxana-browser-hypergraph-open)
+           (arxana-browser-hypergraph-open item)
+         (message "Hypergraph source: %s" (or (plist-get item :label) "?"))))
       ('media-publication
        (let ((path (plist-get item :path)))
          (unless (and path (file-directory-p path))
@@ -1100,6 +1128,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                           (string-prefix-p "media-" (symbol-name type)))
                      (arxana-browser--media-location item))
                     ((and item (eq (plist-get item :type) 'code-file))
+                     (let ((path (plist-get item :path)))
+                       (when path (format "file://%s" (expand-file-name path)))))
+                    ((and item (eq (plist-get item :type) 'hypergraph-source))
                      (let ((path (plist-get item :path)))
                        (when path (format "file://%s" (expand-file-name path)))))
                     ((and item (eq (plist-get item :type) 'pattern))
