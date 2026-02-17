@@ -195,6 +195,14 @@ Otherwise, HTTP 5050 -> ws 5056, HTTPS 5051 -> wss 5057 (nginx SSL)."
 (defun arxana-browser--lab-menu-items ()
   "Return the Lab sub-menu items."
   (list (list :type 'lab-menu
+              :label "Evidence Timeline"
+              :description "Evidence landscape entries (PSRs, PURs, PARs)"
+              :view 'evidence-timeline)
+        (list :type 'lab-menu
+              :label "Evidence by Session"
+              :description "Evidence grouped by session ID"
+              :view 'evidence-sessions)
+        (list :type 'lab-menu
               :label "Active Sessions"
               :description "Currently running Codex/Claude sessions"
               :view 'lab-sessions-active)
@@ -513,6 +521,160 @@ Otherwise, HTTP 5050 -> ws 5056, HTTPS 5051 -> wss 5057 (nginx SSL)."
     (unless entry
       (user-error "No lab entry at point"))
     (arxana-lab-open-draft-object entry)))
+
+;; =============================================================================
+;; Evidence landscape views
+;; =============================================================================
+
+(defun arxana-browser--evidence-fetch (params)
+  "Fetch evidence entries from Futon1a. PARAMS is an alist of query params."
+  (let* ((url-request-method "GET")
+         (url-request-extra-headers '(("Accept" . "application/json")))
+         (base (string-remove-suffix "/" arxana-lab-futon1-server))
+         (query-string (mapconcat (lambda (pair)
+                                    (format "%s=%s"
+                                            (url-hexify-string (car pair))
+                                            (url-hexify-string (cdr pair))))
+                                  (seq-filter #'cdr params) "&"))
+         (url (if (string-empty-p query-string)
+                  (concat base "/evidence")
+                (concat base "/evidence?" query-string)))
+         (buffer (url-retrieve-synchronously url t t arxana-lab-sessions-request-timeout)))
+    (if (not buffer)
+        (list :entries nil)
+      (with-current-buffer buffer
+        (goto-char (point-min))
+        (re-search-forward "\n\n" nil 'move)
+        (let* ((body (buffer-substring-no-properties (point) (point-max)))
+               (payload (arxana-lab--parse-json body)))
+          (kill-buffer buffer)
+          (or payload (list :entries nil)))))))
+
+;; -- Evidence Timeline view --
+
+(defun arxana-browser--evidence-timeline-format ()
+  "Column format for evidence timeline view."
+  [("Time" 20 t)
+   ("Type" 10 t)
+   ("Claim" 12 t)
+   ("Author" 14 t)
+   ("Subject" 0 nil)])
+
+(defun arxana-browser--evidence-timeline-row (item)
+  "Row for evidence timeline ITEM."
+  (let ((at (or (plist-get item :evidence/at) ""))
+        (etype (or (plist-get item :evidence/type) ""))
+        (claim (or (plist-get item :evidence/claim-type) ""))
+        (author (or (plist-get item :evidence/author) ""))
+        (subject (plist-get item :evidence/subject)))
+    (vector (arxana-lab--truncate at 19)
+            (arxana-lab--truncate (format "%s" etype) 9)
+            (arxana-lab--truncate (format "%s" claim) 11)
+            (arxana-lab--truncate author 13)
+            (if (and (listp subject) (plist-get subject :ref/type))
+                (format "%s:%s"
+                        (or (plist-get subject :ref/type) "?")
+                        (or (plist-get subject :ref/id) "?"))
+              ""))))
+
+(defun arxana-browser--evidence-timeline-items ()
+  "Fetch and return evidence timeline items."
+  (condition-case err
+      (let* ((response (arxana-browser--evidence-fetch
+                        (list (cons "limit" "100"))))
+             (entries (plist-get response :entries)))
+        (if entries
+            (mapcar (lambda (e)
+                      (append (list :type 'evidence-entry) e))
+                    entries)
+          (list (list :type 'info
+                      :label "No evidence entries"
+                      :description "Append evidence via futon3c to see entries here"))))
+    (error
+     (list (list :type 'info
+                 :label "Failed to fetch evidence"
+                 :description (format "Error: %s" (error-message-string err)))))))
+
+;; -- Evidence Sessions view --
+
+(defun arxana-browser--evidence-sessions-format ()
+  "Column format for evidence sessions view."
+  [("Session" 38 t)
+   ("Entries" 8 t)
+   ("Types" 30 nil)
+   ("Latest" 20 t)])
+
+(defun arxana-browser--evidence-sessions-row (item)
+  "Row for evidence session ITEM."
+  (let ((session-id (or (plist-get item :session-id) "(no session)"))
+        (count (or (plist-get item :entry-count) 0))
+        (types (or (plist-get item :type-summary) ""))
+        (latest (or (plist-get item :latest-at) "")))
+    (vector (arxana-lab--truncate session-id 37)
+            (format "%d" count)
+            (arxana-lab--truncate types 29)
+            (arxana-lab--truncate latest 19))))
+
+(defun arxana-browser--evidence-sessions-items ()
+  "Fetch evidence and group by session-id."
+  (condition-case err
+      (let* ((response (arxana-browser--evidence-fetch
+                        (list (cons "limit" "500"))))
+             (entries (or (plist-get response :entries) '()))
+             (groups (make-hash-table :test 'equal)))
+        ;; Group entries by session-id
+        (dolist (e entries)
+          (let* ((sid (or (plist-get e :evidence/session-id) "(no session)"))
+                 (existing (gethash sid groups)))
+            (puthash sid (cons e existing) groups)))
+        ;; Build session summary items
+        (let ((items '()))
+          (maphash
+           (lambda (sid group-entries)
+             (let* ((count (length group-entries))
+                    (types (seq-uniq (mapcar (lambda (e)
+                                              (format "%s" (or (plist-get e :evidence/type) "?")))
+                                            group-entries)))
+                    (latest (car (seq-sort (lambda (a b)
+                                            (string> (or (plist-get a :evidence/at) "")
+                                                     (or (plist-get b :evidence/at) "")))
+                                          group-entries))))
+               (push (list :type 'evidence-session
+                           :session-id sid
+                           :entry-count count
+                           :type-summary (mapconcat #'identity types ", ")
+                           :latest-at (or (plist-get latest :evidence/at) ""))
+                     items)))
+           groups)
+          (if items
+              (seq-sort (lambda (a b)
+                          (string> (or (plist-get a :latest-at) "")
+                                   (or (plist-get b :latest-at) "")))
+                        items)
+            (list (list :type 'info
+                        :label "No evidence sessions"
+                        :description "No session-tagged evidence found")))))
+    (error
+     (list (list :type 'info
+                 :label "Failed to fetch evidence"
+                 :description (format "Error: %s" (error-message-string err)))))))
+
+;; -- Evidence visit actions --
+
+(defun arxana-browser-evidence-open-entry (item)
+  "Open a single evidence ITEM in the detail viewer."
+  (arxana-lab-open-evidence-entry item))
+
+(defun arxana-browser-evidence-open-session (item)
+  "Open evidence timeline filtered by session from ITEM."
+  (let* ((session-id (plist-get item :session-id))
+         (response (arxana-browser--evidence-fetch
+                    (list (cons "session-id" session-id)
+                          (cons "limit" "200"))))
+         (entries (plist-get response :entries)))
+    (if entries
+        (arxana-lab-open-evidence-timeline entries session-id)
+      (user-error "No evidence entries for session %s" session-id))))
 
 (provide 'arxana-browser-lab)
 ;;; arxana-browser-lab.el ends here

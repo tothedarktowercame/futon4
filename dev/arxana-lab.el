@@ -648,6 +648,214 @@ Call this after loading arxana-browser-patterns."
 
 (add-hook 'view-mode-hook #'arxana-lab--setup-refresh-key)
 
+;; =============================================================================
+;; Evidence landscape rendering
+;; =============================================================================
+
+(defface arxana-lab-forum-face
+  '((t :background "#1e2b1e" :foreground "#a0e0a0"))
+  "Face for forum-post evidence blocks."
+  :group 'arxana-lab)
+
+(defface arxana-lab-coordination-face
+  '((t :background "#1e1e24" :foreground "#c0c0d0"))
+  "Face for coordination evidence blocks."
+  :group 'arxana-lab)
+
+(defun arxana-lab--evidence-type-face (etype)
+  "Return face for evidence type ETYPE (keyword or string)."
+  (let ((type-str (if (symbolp etype) (symbol-name etype) (or etype ""))))
+    ;; Strip leading colon from keyword names
+    (when (string-prefix-p ":" type-str)
+      (setq type-str (substring type-str 1)))
+    (pcase type-str
+      ("pattern-selection" 'arxana-lab-psr-face)
+      ("pattern-outcome" 'arxana-lab-pur-face)
+      ("reflection" 'arxana-lab-assistant-face)
+      ("gate-traversal" 'arxana-lab-code-face)
+      ("conjecture" 'arxana-lab-aif-face)
+      ("forum-post" 'arxana-lab-forum-face)
+      ("coordination" 'arxana-lab-coordination-face)
+      (_ nil))))
+
+(defun arxana-lab--evidence-type-label (etype)
+  "Return a short display label for evidence type ETYPE."
+  (let ((type-str (if (symbolp etype) (symbol-name etype) (or etype ""))))
+    (when (string-prefix-p ":" type-str)
+      (setq type-str (substring type-str 1)))
+    (pcase type-str
+      ("pattern-selection" "PSR")
+      ("pattern-outcome" "PUR")
+      ("reflection" "PAR")
+      ("gate-traversal" "GATE")
+      ("coordination" "COORD")
+      ("forum-post" "FORUM")
+      ("mode-transition" "MODE")
+      ("presence-event" "PRESENCE")
+      ("correction" "CORRECTION")
+      ("conjecture" "CONJECTURE")
+      (_ (upcase type-str)))))
+
+(defun arxana-lab--make-evidence-link (evidence-id)
+  "Create a clickable link for EVIDENCE-ID."
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mouse-1]
+      (lambda () (interactive)
+        (arxana-lab--browse-evidence evidence-id)))
+    (define-key map (kbd "RET")
+      (lambda () (interactive)
+        (arxana-lab--browse-evidence evidence-id)))
+    (propertize (format "[[evidence:%s]]" evidence-id)
+                'face 'arxana-lab-hyperlink-face
+                'mouse-face 'highlight
+                'keymap map
+                'help-echo (format "Browse evidence: %s" evidence-id)
+                'arxana-evidence-id evidence-id)))
+
+(defvar arxana-lab-evidence-browser-function nil
+  "Function to browse an evidence entry by ID. Called with evidence-id string.")
+
+(defun arxana-lab--browse-evidence (evidence-id)
+  "Browse EVIDENCE-ID using configured browser function or fetch+display."
+  (if arxana-lab-evidence-browser-function
+      (funcall arxana-lab-evidence-browser-function evidence-id)
+    (message "Evidence: %s (set arxana-lab-evidence-browser-function to enable)"
+             evidence-id)))
+
+(defun arxana-lab--insert-evidence-links (entry)
+  "Insert hyperlinks for pattern-id and references in evidence ENTRY."
+  (when-let ((pattern-id (plist-get entry :evidence/pattern-id)))
+    (insert "  Pattern: " (arxana-lab--make-pattern-link pattern-id) "\n"))
+  (when-let ((reply-to (plist-get entry :evidence/in-reply-to)))
+    (insert "  In-Reply-To: " (arxana-lab--make-evidence-link reply-to) "\n"))
+  (when-let ((fork-of (plist-get entry :evidence/fork-of)))
+    (insert "  Fork-Of: " (arxana-lab--make-evidence-link fork-of) "\n"))
+  (when-let ((session-id (plist-get entry :evidence/session-id)))
+    (insert (format "  Session: %s\n" session-id))))
+
+(defun arxana-lab--format-evidence-body (body)
+  "Format evidence BODY for display. Handles maps, strings, and other types."
+  (cond
+   ((stringp body) body)
+   ((and (listp body) (plist-get body :text))
+    (plist-get body :text))
+   ((listp body)
+    (format "%S" body))
+   (t (format "%s" (or body "")))))
+
+(defun arxana-lab--format-subject (subject)
+  "Format an ArtifactRef SUBJECT for display."
+  (if (and (listp subject) (plist-get subject :ref/type))
+      (format "%s:%s"
+              (or (plist-get subject :ref/type) "?")
+              (or (plist-get subject :ref/id) "?"))
+    (format "%s" (or subject ""))))
+
+;;;###autoload
+(defun arxana-lab-open-evidence-entry (entry)
+  "Open a readable view for a single evidence ENTRY (plist)."
+  (unless entry
+    (user-error "No evidence entry"))
+  (let* ((eid (or (plist-get entry :evidence/id) "?"))
+         (etype (plist-get entry :evidence/type))
+         (claim (plist-get entry :evidence/claim-type))
+         (author (or (plist-get entry :evidence/author) "?"))
+         (at (or (plist-get entry :evidence/at) ""))
+         (body (plist-get entry :evidence/body))
+         (tags (plist-get entry :evidence/tags))
+         (subject (plist-get entry :evidence/subject))
+         (type-label (arxana-lab--evidence-type-label etype))
+         (face (arxana-lab--evidence-type-face etype))
+         (buf (get-buffer-create (format "*Evidence:%s*" eid))))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (org-mode)
+        (insert (format "#+TITLE: Evidence %s [%s]\n" eid type-label))
+        (insert (format "#+SUBTITLE: %s by %s\n\n" (or claim "") author))
+        ;; Summary
+        (insert "* Summary\n")
+        (arxana-lab--insert-kv "ID" eid)
+        (arxana-lab--insert-kv "Type" (format "%s" (or etype "")))
+        (arxana-lab--insert-kv "Claim" (format "%s" (or claim "")))
+        (arxana-lab--insert-kv "Author" author)
+        (arxana-lab--insert-kv "Time" at)
+        (arxana-lab--insert-kv "Subject" (arxana-lab--format-subject subject))
+        (when tags
+          (arxana-lab--insert-kv "Tags" (mapconcat (lambda (tag) (format "%s" tag)) tags ", ")))
+        (when (plist-get entry :evidence/conjecture?)
+          (arxana-lab--insert-kv "Conjecture" "yes"))
+        (when (plist-get entry :evidence/ephemeral?)
+          (arxana-lab--insert-kv "Ephemeral" "yes"))
+        ;; Links
+        (insert "\n")
+        (arxana-lab--insert-evidence-links entry)
+        ;; Body
+        (insert "\n* Body\n\n")
+        (let ((start (point))
+              (text (arxana-lab--format-evidence-body body)))
+          (insert text)
+          (unless (string-suffix-p "\n" text)
+            (insert "\n"))
+          (when face
+            (let ((ov (make-overlay start (point))))
+              (overlay-put ov 'face face)
+              (overlay-put ov 'priority 1)
+              (overlay-put ov 'evaporate t))))
+        (insert "\n")
+        (goto-char (point-min))
+        (view-mode 1)))
+    (pop-to-buffer buf)))
+
+;;;###autoload
+(defun arxana-lab-open-evidence-timeline (entries &optional title)
+  "Open a timeline view for evidence ENTRIES (list of plists).
+Optional TITLE for the buffer."
+  (unless entries
+    (user-error "No evidence entries"))
+  (let ((buf (get-buffer-create (format "*Evidence:%s*" (or title "timeline")))))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (org-mode)
+        (insert (format "#+TITLE: Evidence Timeline\n"))
+        (insert (format "#+SUBTITLE: %d entries\n\n" (length entries)))
+        (insert (format "* Evidence Timeline (%d entries)\n\n" (length entries)))
+        (dolist (entry entries)
+          (let* ((start (point))
+                 (eid (or (plist-get entry :evidence/id) "?"))
+                 (etype (plist-get entry :evidence/type))
+                 (claim (plist-get entry :evidence/claim-type))
+                 (author (or (plist-get entry :evidence/author) "?"))
+                 (at (or (plist-get entry :evidence/at) ""))
+                 (body (plist-get entry :evidence/body))
+                 (reply-to (plist-get entry :evidence/in-reply-to))
+                 (type-label (arxana-lab--evidence-type-label etype))
+                 (face (arxana-lab--evidence-type-face etype))
+                 (indent (if reply-to "  ↳ " "")))
+            ;; Header
+            (insert (format "** %s[%s] %s — %s\n" indent type-label author eid))
+            (insert (format "   :PROPERTIES:\n   :TIMESTAMP: %s\n   :TYPE: %s\n   :CLAIM: %s\n   :END:\n\n"
+                            at (or etype "") (or claim "")))
+            ;; Links
+            (arxana-lab--insert-evidence-links entry)
+            ;; Body
+            (insert "\n")
+            (let ((text (arxana-lab--format-evidence-body body)))
+              (insert text)
+              (unless (string-suffix-p "\n" text)
+                (insert "\n")))
+            (insert "\n")
+            ;; Apply face overlay
+            (when face
+              (let ((ov (make-overlay start (point))))
+                (overlay-put ov 'face face)
+                (overlay-put ov 'priority 1)
+                (overlay-put ov 'evaporate t)))))
+        (goto-char (point-min))
+        (view-mode 1)))
+    (pop-to-buffer buf)))
+
 (provide 'arxana-lab)
 
 ;;; arxana-lab.el ends here

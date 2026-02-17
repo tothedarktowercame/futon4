@@ -101,6 +101,14 @@
 (declare-function arxana-browser--lab-sessions-archived-row "arxana-browser-lab" (item))
 (declare-function arxana-browser--lab-sessions-archived-format "arxana-browser-lab")
 (declare-function arxana-browser-lab-open-session "arxana-browser-lab" (item))
+(declare-function arxana-browser--evidence-timeline-items "arxana-browser-lab")
+(declare-function arxana-browser--evidence-timeline-row "arxana-browser-lab" (item))
+(declare-function arxana-browser--evidence-timeline-format "arxana-browser-lab")
+(declare-function arxana-browser--evidence-sessions-items "arxana-browser-lab")
+(declare-function arxana-browser--evidence-sessions-row "arxana-browser-lab" (item))
+(declare-function arxana-browser--evidence-sessions-format "arxana-browser-lab")
+(declare-function arxana-browser-evidence-open-entry "arxana-browser-lab" (item))
+(declare-function arxana-browser-evidence-open-session "arxana-browser-lab" (item))
 
 (declare-function arxana-browser--encyclopedia-items "arxana-browser-encyclopedia")
 (declare-function arxana-browser--encyclopedia-row "arxana-browser-encyclopedia" (item))
@@ -598,6 +606,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         ('lab-sessions-recent (arxana-browser--lab-sessions-recent-items))
         ('lab-sessions-raw (arxana-browser--lab-sessions-raw-items))
         ('lab-sessions-archived (arxana-browser--lab-sessions-archived-items))
+        ('evidence-timeline (arxana-browser--evidence-timeline-items))
+        ('evidence-sessions (arxana-browser--evidence-sessions-items))
         ('lab (arxana-browser--lab-items))
         ('encyclopedia (arxana-browser--encyclopedia-items))
         ('encyclopedia-entries (arxana-browser--encyclopedia-entries-items context))
@@ -743,6 +753,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
             ('lab-sessions-recent #'arxana-browser--lab-sessions-active-row)
             ('lab-sessions-raw #'arxana-browser--lab-sessions-raw-row)
             ('lab-sessions-archived #'arxana-browser--lab-sessions-archived-row)
+            ('evidence-timeline #'arxana-browser--evidence-timeline-row)
+            ('evidence-sessions #'arxana-browser--evidence-sessions-row)
             ('lab #'arxana-browser--lab-row)
             ('encyclopedia #'arxana-browser--encyclopedia-row)
             ('encyclopedia-entries #'arxana-browser--encyclopedia-entries-row)
@@ -815,6 +827,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                         ('lab-sessions-recent (arxana-browser--lab-sessions-active-format))
                         ('lab-sessions-raw (arxana-browser--lab-sessions-raw-format))
                         ('lab-sessions-archived (arxana-browser--lab-sessions-archived-format))
+                        ('evidence-timeline (arxana-browser--evidence-timeline-format))
+                        ('evidence-sessions (arxana-browser--evidence-sessions-format))
                         ('lab (arxana-browser--lab-format))
                         ('encyclopedia (arxana-browser--encyclopedia-format))
                         ('encyclopedia-entries (arxana-browser--encyclopedia-entries-format))
@@ -911,6 +925,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
        (arxana-browser-lab-open-session item))
       ('lab-session-archived
        (arxana-browser-lab-open-session item))
+      ('evidence-entry
+       (arxana-browser-evidence-open-entry item))
+      ('evidence-session
+       (arxana-browser-evidence-open-session item))
       ('encyclopedia-corpus
        (arxana-browser-encyclopedia-open-corpus item))
       ('encyclopedia-entry
