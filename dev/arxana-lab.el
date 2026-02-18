@@ -644,7 +644,17 @@ Call this after loading arxana-browser-patterns."
 (defun arxana-lab--setup-refresh-key ()
   "Set up 'g' key for refresh in Lab buffers."
   (when (string-prefix-p "*Lab:" (buffer-name))
-    (local-set-key (kbd "g") #'arxana-lab-refresh-claude-session)))
+    (local-set-key (kbd "g") #'arxana-lab-refresh-claude-session))
+  ;; Evidence detail buffer: C for reply chain
+  (when (string-prefix-p "*Evidence:" (buffer-name))
+    (local-set-key (kbd "C")
+      (lambda () (interactive)
+        (let ((eid (and (string-match "\\*Evidence:\\([^*]+\\)\\*" (buffer-name))
+                        (match-string 1 (buffer-name)))))
+          (when eid
+            (if (fboundp 'arxana-browser-lab--browse-evidence-chain)
+                (arxana-browser-lab--browse-evidence-chain eid)
+              (message "Load arxana-browser-lab for chain viewing"))))))))
 
 (add-hook 'view-mode-hook #'arxana-lab--setup-refresh-key)
 
@@ -743,6 +753,243 @@ Call this after loading arxana-browser-patterns."
     (format "%S" body))
    (t (format "%s" (or body "")))))
 
+(defun arxana-lab--plist-keys (plist)
+  "Return a list of keys from PLIST."
+  (let ((keys '())
+        (p plist))
+    (while p
+      (push (car p) keys)
+      (setq p (cddr p)))
+    (nreverse keys)))
+
+(defun arxana-lab--truncate-str (text max-len)
+  "Truncate TEXT to MAX-LEN characters, adding ellipsis if needed."
+  (let ((value (or text "")))
+    (if (> (length value) max-len)
+        (concat (substring value 0 (max 0 (- max-len 1))) "…")
+      value)))
+
+(defun arxana-lab--evidence-body-preview (body etype)
+  "Return a one-line preview string (max ~60 chars) for evidence BODY.
+ETYPE is the evidence type keyword or string."
+  (cond
+   ;; PSR: "query → selected"
+   ((and (listp body) (plist-get body :query))
+    (let ((q (format "%s" (plist-get body :query)))
+          (s (plist-get body :selected)))
+      (arxana-lab--truncate-str
+       (if s (format "%s → %s" q s) q) 60)))
+   ;; PUR: "outcome: actions"
+   ((and (listp body) (plist-get body :outcome))
+    (let ((outcome (format "%s" (plist-get body :outcome)))
+          (actions (plist-get body :actions)))
+      (arxana-lab--truncate-str
+       (if actions (format "%s: %s" outcome actions) outcome) 60)))
+   ;; PAR: first what_went_well item
+   ((and (listp body) (plist-get body :what_went_well))
+    (let ((items (plist-get body :what_went_well)))
+      (arxana-lab--truncate-str
+       (if (and (listp items) (car items))
+           (format "%s" (car items))
+         "review") 60)))
+   ;; Peripheral step: "tool(args)"
+   ((and (listp body) (plist-get body :tool))
+    (let ((tool (format "%s" (plist-get body :tool)))
+          (args (plist-get body :args)))
+      (arxana-lab--truncate-str
+       (if args (format "%s(%s)" tool args) tool) 60)))
+   ;; Peripheral stop: fruit
+   ((and (listp body) (plist-get body :fruit))
+    (arxana-lab--truncate-str (format "%s" (plist-get body :fruit)) 60))
+   ;; Generic map: first key:value
+   ((and (listp body) (car body) (keywordp (car body)))
+    (let ((k (car body))
+          (v (cadr body)))
+      (arxana-lab--truncate-str (format "%s: %s" k v) 60)))
+   ;; String body
+   ((stringp body)
+    (arxana-lab--truncate-str (replace-regexp-in-string "\n" " " body) 60))
+   ;; Fallback
+   (t "")))
+
+(defun arxana-lab--insert-map-body (body)
+  "Insert a generic map BODY as formatted key-value pairs."
+  (let ((keys (arxana-lab--plist-keys body)))
+    (dolist (key keys)
+      (let ((val (plist-get body key)))
+        (cond
+         ;; List of non-keyword items
+         ((and (listp val) val (not (keywordp (car val))))
+          (insert (format "- *%s*:\n" key))
+          (dolist (item val)
+            (insert (format "  - %s\n" item))))
+         ;; Nested plist
+         ((and (listp val) val (keywordp (car val)))
+          (insert (format "- *%s*:\n" key))
+          (let ((inner-keys (arxana-lab--plist-keys val)))
+            (dolist (ik inner-keys)
+              (insert (format "  - %s: %s\n" ik (plist-get val ik))))))
+         ;; Simple value
+         (t
+          (arxana-lab--insert-kv (format "%s" key) (format "%s" val))))))))
+
+(defun arxana-lab--insert-psr-body (body)
+  "Insert a PSR (pattern selection) BODY with structured formatting."
+  (insert "** Pattern Selection\n\n")
+  (when-let ((query (plist-get body :query)))
+    (arxana-lab--insert-kv "Query" (format "%s" query)))
+  (when-let ((selected (plist-get body :selected)))
+    (insert "- Selected: " (arxana-lab--make-pattern-link (format "%s" selected)) "\n"))
+  (when-let ((sigil (plist-get body :sigil)))
+    (arxana-lab--insert-kv "Sigil" (format "%s" sigil)))
+  (when-let ((confidence (plist-get body :confidence)))
+    (arxana-lab--insert-kv "Confidence" (format "%s" confidence)))
+  (when-let ((rationale (plist-get body :rationale)))
+    (insert "\n*** Rationale\n" (format "%s" rationale) "\n"))
+  (when-let ((candidates (plist-get body :candidates)))
+    (insert "\n*** Candidates\n")
+    (dolist (c (if (listp candidates) candidates (list candidates)))
+      (insert "- " (arxana-lab--make-pattern-link (format "%s" c)) "\n"))))
+
+(defun arxana-lab--insert-pur-body (body)
+  "Insert a PUR (pattern outcome) BODY with structured formatting."
+  (insert "** Pattern Outcome\n\n")
+  (when-let ((outcome (plist-get body :outcome)))
+    (arxana-lab--insert-kv "Outcome" (format "%s" outcome)))
+  (when-let ((actions (plist-get body :actions)))
+    (if (and (listp actions) (not (keywordp (car actions))))
+        (progn
+          (insert "- Actions:\n")
+          (dolist (a actions)
+            (insert (format "  - %s\n" a))))
+      (arxana-lab--insert-kv "Actions" (format "%s" actions))))
+  (when-let ((expected (plist-get body :expected)))
+    (arxana-lab--insert-kv "Expected" (format "%s" expected)))
+  (when-let ((actual (plist-get body :actual)))
+    (arxana-lab--insert-kv "Actual" (format "%s" actual)))
+  (when-let ((pred-error (plist-get body :prediction-error)))
+    (arxana-lab--insert-kv "Prediction Error" (format "%s" pred-error)))
+  (when-let ((notes (plist-get body :notes)))
+    (insert "\n*** Notes\n" (format "%s" notes) "\n")))
+
+(defun arxana-lab--insert-par-body (body)
+  "Insert a PAR (post-action review) BODY with structured formatting."
+  (insert "** Post-Action Review\n\n")
+  (when-let ((patterns (plist-get body :patterns_used)))
+    (insert "*** Patterns Used\n")
+    (dolist (p (if (listp patterns) patterns (list patterns)))
+      (insert "- " (arxana-lab--make-pattern-link (format "%s" p)) "\n"))
+    (insert "\n"))
+  (when-let ((well (plist-get body :what_went_well)))
+    (insert "*** What Went Well\n")
+    (dolist (item (if (listp well) well (list well)))
+      (insert (format "- %s\n" item)))
+    (insert "\n"))
+  (when-let ((improve (plist-get body :what_could_improve)))
+    (insert "*** What Could Improve\n")
+    (dolist (item (if (listp improve) improve (list improve)))
+      (insert (format "- %s\n" item)))
+    (insert "\n"))
+  (when-let ((errors (plist-get body :prediction_errors)))
+    (insert "*** Prediction Errors\n")
+    (dolist (item (if (listp errors) errors (list errors)))
+      (insert (format "- %s\n" item)))
+    (insert "\n"))
+  (when-let ((suggestions (plist-get body :suggestions)))
+    (insert "*** Suggestions\n")
+    (dolist (item (if (listp suggestions) suggestions (list suggestions)))
+      (insert (format "- %s\n" item)))
+    (insert "\n"))
+  (when-let ((commits (plist-get body :commits)))
+    (insert "*** Commits\n")
+    (dolist (c (if (listp commits) commits (list commits)))
+      (insert (format "- %s\n" c)))
+    (insert "\n"))
+  (when-let ((files (plist-get body :files_touched)))
+    (insert "*** Files Touched\n")
+    (dolist (f (if (listp files) files (list files)))
+      (insert "- " (arxana-lab--make-code-link (format "%s" f)) "\n"))
+    (insert "\n")))
+
+(defun arxana-lab--insert-peripheral-body (body)
+  "Insert a peripheral evidence BODY with structured formatting."
+  (let ((peripheral (plist-get body :peripheral))
+        (event (plist-get body :event)))
+    (insert (format "** Peripheral: %s [%s]\n\n"
+                    (or peripheral "?")
+                    (or event "?")))
+    (let ((event-str (format "%s" (or event ""))))
+      (cond
+       ((string= event-str "start")
+        (arxana-lab--insert-kv "Peripheral" (format "%s" peripheral))
+        (arxana-lab--insert-kv "Event" "start")
+        (when-let ((sid (plist-get body :session-id)))
+          (arxana-lab--insert-kv "Session" (format "%s" sid))))
+       ((string= event-str "step")
+        (when-let ((tool (plist-get body :tool)))
+          (arxana-lab--insert-kv "Tool" (format "%s" tool)))
+        (when-let ((args (plist-get body :args)))
+          (insert "\n*** Arguments\n")
+          (if (and (listp args) (keywordp (car args)))
+              (arxana-lab--insert-map-body args)
+            (insert (format "%s\n" args)))
+          (insert "\n"))
+        (when-let ((result (plist-get body :result)))
+          (insert "*** Result\n")
+          (if (and (listp result) (keywordp (car result)))
+              (arxana-lab--insert-map-body result)
+            (insert (format "%s\n" result)))
+          (insert "\n")))
+       ((string= event-str "stop")
+        (when-let ((fruit (plist-get body :fruit)))
+          (insert "*** Fruit\n")
+          (if (and (listp fruit) (keywordp (car fruit)))
+              (arxana-lab--insert-map-body fruit)
+            (insert (format "%s\n" fruit)))
+          (insert "\n"))
+        (when-let ((reason (plist-get body :reason)))
+          (arxana-lab--insert-kv "Reason" (format "%s" reason))))
+       (t
+        (arxana-lab--insert-map-body body))))))
+
+(defun arxana-lab--insert-evidence-body (body etype)
+  "Insert formatted evidence BODY into current buffer.
+ETYPE is the evidence type keyword or string.  Dispatches to
+type-specific renderers for known types, falls back to generic
+map rendering."
+  (let ((type-str (if (symbolp etype) (symbol-name etype) (or etype ""))))
+    (when (string-prefix-p ":" type-str)
+      (setq type-str (substring type-str 1)))
+    (cond
+     ;; String body
+     ((stringp body) (insert body))
+     ;; Not a plist
+     ((not (and (listp body) body (keywordp (car body))))
+      (insert (format "%s" (or body ""))))
+     ;; PSR by type
+     ((string= type-str "pattern-selection")
+      (arxana-lab--insert-psr-body body))
+     ;; PUR by type
+     ((string= type-str "pattern-outcome")
+      (arxana-lab--insert-pur-body body))
+     ;; PAR by type
+     ((string= type-str "reflection")
+      (arxana-lab--insert-par-body body))
+     ;; Peripheral events by body shape
+     ((plist-get body :peripheral)
+      (arxana-lab--insert-peripheral-body body))
+     ;; PSR by body shape (fallback)
+     ((and (plist-get body :query) (plist-get body :selected))
+      (arxana-lab--insert-psr-body body))
+     ;; PUR by body shape (fallback)
+     ((and (plist-get body :outcome) (not (plist-get body :what_went_well)))
+      (arxana-lab--insert-pur-body body))
+     ;; PAR by body shape (fallback)
+     ((plist-get body :what_went_well)
+      (arxana-lab--insert-par-body body))
+     ;; Generic map
+     (t (arxana-lab--insert-map-body body)))))
+
 (defun arxana-lab--format-subject (subject)
   "Format an ArtifactRef SUBJECT for display."
   (if (and (listp subject) (plist-get subject :ref/type))
@@ -792,10 +1039,9 @@ Call this after loading arxana-browser-patterns."
         (arxana-lab--insert-evidence-links entry)
         ;; Body
         (insert "\n* Body\n\n")
-        (let ((start (point))
-              (text (arxana-lab--format-evidence-body body)))
-          (insert text)
-          (unless (string-suffix-p "\n" text)
+        (let ((start (point)))
+          (arxana-lab--insert-evidence-body body etype)
+          (unless (eq (char-before) ?\n)
             (insert "\n"))
           (when face
             (let ((ov (make-overlay start (point))))
@@ -841,10 +1087,9 @@ Optional TITLE for the buffer."
             (arxana-lab--insert-evidence-links entry)
             ;; Body
             (insert "\n")
-            (let ((text (arxana-lab--format-evidence-body body)))
-              (insert text)
-              (unless (string-suffix-p "\n" text)
-                (insert "\n")))
+            (arxana-lab--insert-evidence-body body etype)
+            (unless (eq (char-before) ?\n)
+              (insert "\n"))
             (insert "\n")
             ;; Apply face overlay
             (when face

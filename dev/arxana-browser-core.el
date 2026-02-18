@@ -109,6 +109,12 @@
 (declare-function arxana-browser--evidence-sessions-format "arxana-browser-lab")
 (declare-function arxana-browser-evidence-open-entry "arxana-browser-lab" (item))
 (declare-function arxana-browser-evidence-open-session "arxana-browser-lab" (item))
+(declare-function arxana-browser-evidence-filter-by-type "arxana-browser-lab")
+(declare-function arxana-browser-evidence-filter-by-author "arxana-browser-lab")
+(declare-function arxana-browser-evidence-clear-filter "arxana-browser-lab")
+(declare-function arxana-browser--evidence-fetch-single "arxana-browser-lab" (evidence-id))
+(declare-function arxana-browser-lab--browse-evidence-entry "arxana-browser-lab" (evidence-id))
+(declare-function arxana-browser-lab--browse-evidence-chain "arxana-browser-lab" (evidence-id))
 
 (declare-function arxana-browser--encyclopedia-items "arxana-browser-encyclopedia")
 (declare-function arxana-browser--encyclopedia-row "arxana-browser-encyclopedia" (item))
@@ -438,6 +444,17 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
              (line (format "Doc book recent entries — RET opens entry; %s. LEFT/b returns."
                            (arxana-docbook--source-brief book))))
         (arxana-browser--docbook-header line book)))
+     ((eq (plist-get context :view) 'evidence-timeline)
+      (let ((filter-desc (if (and (boundp 'arxana-browser--evidence-filter)
+                                  arxana-browser--evidence-filter)
+                             (format " [filter: %s]"
+                                     (mapconcat (lambda (p) (format "%s=%s" (car p) (cdr p)))
+                                                arxana-browser--evidence-filter ", "))
+                           "")))
+        (format "Evidence timeline%s — F to filter, g to refresh. LEFT/b returns."
+                filter-desc)))
+     ((eq (plist-get context :view) 'evidence-sessions)
+      "Evidence by session — RET opens session timeline. LEFT/b returns.")
      ((eq (plist-get context :view) 'lab)
       (concat "Lab notebook — RET stub; v trace, r raw, d draft. LEFT/b returns."
               store-suffix))
@@ -1292,6 +1309,15 @@ returning to the top-level list."
   (arxana-browser--require-patterns)
   (call-interactively #'arxana-browser-patterns-add-collection-root))
 
+(defun arxana-browser--evidence-filter ()
+  "Filter evidence entries (only works in evidence timeline view)."
+  (interactive)
+  (arxana-browser--ensure-context)
+  (let ((context (car arxana-browser--stack)))
+    (if (and context (eq (plist-get context :view) 'evidence-timeline))
+        (call-interactively #'arxana-browser-evidence-filter-by-type)
+      (user-error "Filtering is only available in Evidence Timeline view"))))
+
 (defun arxana-browser--make-mode-map ()
   (let ((map (make-sparse-keymap)))
     (when (and (boundp 'tabulated-list-mode-map)
@@ -1364,6 +1390,7 @@ returning to the top-level list."
     (define-key map (kbd "C-c C-s") #'arxana-browser-docbook-sync-order)
     (define-key map (kbd "C-c C-f") #'arxana-forum-compose-for-current-thread)
     (define-key map (kbd "B") #'arxana-browser-code-select-docbook)
+    (define-key map (kbd "F") #'arxana-browser--evidence-filter)
     (define-key map (kbd "C-c C-l") #'arxana-media-lyrics-refresh-at-point)
     (define-key map (kbd "C-c C-r") #'arxana-media-lyrics-refresh-buffer)
     (define-key map (kbd "C-c C-L") #'arxana-media-lyrics-adopt-entity-at-point)
@@ -1379,8 +1406,10 @@ returning to the top-level list."
   "Rebuild the mode map if it was unbound by a reload."
   (if (not (boundp 'arxana-browser-mode-map))
       (setq arxana-browser-mode-map (arxana-browser--make-mode-map))
-    (let ((binding (lookup-key arxana-browser-mode-map (kbd "f"))))
-      (unless (eq binding #'arxana-browser--copy-file-path)
+    (let ((binding (lookup-key arxana-browser-mode-map (kbd "f")))
+          (fbinding (lookup-key arxana-browser-mode-map (kbd "F"))))
+      (unless (and (eq binding #'arxana-browser--copy-file-path)
+                   (eq fbinding #'arxana-browser--evidence-filter))
         (setq arxana-browser-mode-map (arxana-browser--make-mode-map)))))
   (when (and (boundp 'arxana-browser-mode-map)
              (null (lookup-key arxana-browser-mode-map (kbd "B"))))

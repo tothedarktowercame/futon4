@@ -550,27 +550,39 @@ Otherwise, HTTP 5050 -> ws 5056, HTTPS 5051 -> wss 5057 (nginx SSL)."
           (kill-buffer buffer)
           (or payload (list :entries nil)))))))
 
+(defvar-local arxana-browser--evidence-filter nil
+  "Current evidence filter parameters (alist of query params).")
+
 ;; -- Evidence Timeline view --
 
 (defun arxana-browser--evidence-timeline-format ()
   "Column format for evidence timeline view."
-  [("Time" 20 t)
-   ("Type" 10 t)
-   ("Claim" 12 t)
-   ("Author" 14 t)
+  [("Time" 18 t)
+   ("Type" 7 t)
+   ("Author" 12 t)
+   ("↳" 2 nil)
+   ("Preview" 30 nil)
    ("Subject" 0 nil)])
 
 (defun arxana-browser--evidence-timeline-row (item)
   "Row for evidence timeline ITEM."
-  (let ((at (or (plist-get item :evidence/at) ""))
-        (etype (or (plist-get item :evidence/type) ""))
-        (claim (or (plist-get item :evidence/claim-type) ""))
-        (author (or (plist-get item :evidence/author) ""))
-        (subject (plist-get item :evidence/subject)))
-    (vector (arxana-lab--truncate at 19)
-            (arxana-lab--truncate (format "%s" etype) 9)
-            (arxana-lab--truncate (format "%s" claim) 11)
-            (arxana-lab--truncate author 13)
+  (let* ((at (or (plist-get item :evidence/at) ""))
+         (etype (plist-get item :evidence/type))
+         (author (or (plist-get item :evidence/author) ""))
+         (body (plist-get item :evidence/body))
+         (reply-to (plist-get item :evidence/in-reply-to))
+         (subject (plist-get item :evidence/subject))
+         (type-label (arxana-lab--evidence-type-label etype))
+         (type-face (arxana-lab--evidence-type-face etype))
+         (type-display (if type-face
+                           (propertize type-label 'face type-face)
+                         type-label))
+         (preview (arxana-lab--evidence-body-preview body etype)))
+    (vector (arxana-lab--truncate at 17)
+            type-display
+            (arxana-lab--truncate author 11)
+            (if reply-to "↳" "")
+            (arxana-lab--truncate preview 29)
             (if (and (listp subject) (plist-get subject :ref/type))
                 (format "%s:%s"
                         (or (plist-get subject :ref/type) "?")
@@ -578,10 +590,12 @@ Otherwise, HTTP 5050 -> ws 5056, HTTPS 5051 -> wss 5057 (nginx SSL)."
               ""))))
 
 (defun arxana-browser--evidence-timeline-items ()
-  "Fetch and return evidence timeline items."
+  "Fetch and return evidence timeline items.
+Applies `arxana-browser--evidence-filter' when set."
   (condition-case err
-      (let* ((response (arxana-browser--evidence-fetch
-                        (list (cons "limit" "100"))))
+      (let* ((params (append (list (cons "limit" "100"))
+                             (or arxana-browser--evidence-filter '())))
+             (response (arxana-browser--evidence-fetch params))
              (entries (plist-get response :entries)))
         (if entries
             (mapcar (lambda (e)
@@ -675,6 +689,93 @@ Otherwise, HTTP 5050 -> ws 5056, HTTPS 5051 -> wss 5057 (nginx SSL)."
     (if entries
         (arxana-lab-open-evidence-timeline entries session-id)
       (user-error "No evidence entries for session %s" session-id))))
+
+;; =============================================================================
+;; Evidence link navigation
+;; =============================================================================
+
+(defun arxana-browser--evidence-fetch-single (evidence-id)
+  "Fetch a single evidence entry by EVIDENCE-ID from Futon1a."
+  (let* ((url-request-method "GET")
+         (url-request-extra-headers '(("Accept" . "application/json")))
+         (base (string-remove-suffix "/" arxana-lab-futon1-server))
+         (url (concat base "/evidence/" (url-hexify-string evidence-id)))
+         (buffer (url-retrieve-synchronously url t t arxana-lab-sessions-request-timeout)))
+    (if (not buffer)
+        nil
+      (with-current-buffer buffer
+        (goto-char (point-min))
+        (re-search-forward "\n\n" nil 'move)
+        (let* ((body (buffer-substring-no-properties (point) (point-max)))
+               (payload (arxana-lab--parse-json body)))
+          (kill-buffer buffer)
+          (plist-get payload :entry))))))
+
+(defun arxana-browser-lab--browse-evidence-entry (evidence-id)
+  "Fetch evidence entry by EVIDENCE-ID and display in detail viewer."
+  (let ((entry (arxana-browser--evidence-fetch-single evidence-id)))
+    (if entry
+        (arxana-lab-open-evidence-entry entry)
+      (user-error "Could not fetch evidence entry: %s" evidence-id))))
+
+(defun arxana-browser-lab--browse-evidence-chain (evidence-id)
+  "Fetch and display the reply chain for EVIDENCE-ID."
+  (interactive
+   (list (or (get-text-property (point) 'arxana-evidence-id)
+             (read-string "Evidence ID: "))))
+  (let* ((url-request-method "GET")
+         (url-request-extra-headers '(("Accept" . "application/json")))
+         (base (string-remove-suffix "/" arxana-lab-futon1-server))
+         (url (concat base "/evidence/" (url-hexify-string evidence-id) "/chain"))
+         (buffer (url-retrieve-synchronously url t t arxana-lab-sessions-request-timeout)))
+    (if (not buffer)
+        (user-error "Could not fetch chain for %s" evidence-id)
+      (with-current-buffer buffer
+        (goto-char (point-min))
+        (re-search-forward "\n\n" nil 'move)
+        (let* ((body (buffer-substring-no-properties (point) (point-max)))
+               (payload (arxana-lab--parse-json body))
+               (entries (plist-get payload :entries)))
+          (kill-buffer buffer)
+          (if entries
+              (arxana-lab-open-evidence-timeline entries (format "chain:%s" evidence-id))
+            (user-error "No chain entries for %s" evidence-id)))))))
+
+;; Wire evidence link navigation at load time
+(setq arxana-lab-evidence-browser-function #'arxana-browser-lab--browse-evidence-entry)
+
+;; =============================================================================
+;; Evidence filtering
+;; =============================================================================
+
+(defun arxana-browser-evidence-filter-by-type ()
+  "Filter evidence timeline by type."
+  (interactive)
+  (let* ((types '("(all)" "pattern-selection" "pattern-outcome" "reflection"
+                  "gate-traversal" "coordination" "forum-post" "mode-transition"
+                  "presence-event" "correction" "conjecture"))
+         (choice (completing-read "Filter by type: " types nil t)))
+    (setq arxana-browser--evidence-filter
+          (if (string= choice "(all)")
+              nil
+            (list (cons "type" choice))))
+    (arxana-browser--render)))
+
+(defun arxana-browser-evidence-filter-by-author ()
+  "Filter evidence timeline by author."
+  (interactive)
+  (let ((author (read-string "Filter by author: ")))
+    (setq arxana-browser--evidence-filter
+          (if (string-empty-p author)
+              nil
+            (list (cons "author" author))))
+    (arxana-browser--render)))
+
+(defun arxana-browser-evidence-clear-filter ()
+  "Clear evidence timeline filter."
+  (interactive)
+  (setq arxana-browser--evidence-filter nil)
+  (arxana-browser--render))
 
 (provide 'arxana-browser-lab)
 ;;; arxana-browser-lab.el ends here
