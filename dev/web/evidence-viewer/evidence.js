@@ -17,6 +17,7 @@ let livePaused = false;
 let liveRefreshFn = null;
 const liveControls = { container: null, dot: null, label: null, toggle: null };
 let detailRowEl = null;
+let themeToggleEl = null;
 let openDetailId = null;
 
 // -- DOM helpers --
@@ -666,10 +667,27 @@ function scrollToLatest() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+function initThemeToggle() {
+  const saved = localStorage.getItem('evidence-theme');
+  const initial = saved === 'light' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = initial;
+  themeToggleEl = $('#theme-toggle');
+  if (themeToggleEl) {
+    themeToggleEl.textContent = initial === 'light' ? '☀️' : '◑';
+    themeToggleEl.onclick = () => {
+      const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+      document.documentElement.dataset.theme = next;
+      localStorage.setItem('evidence-theme', next);
+      themeToggleEl.textContent = next === 'light' ? '☀️' : '◑';
+    };
+  }
+}
+
 // -- Init --
 
 export function init() {
   initFilters();
+  initThemeToggle();
   initLiveControls();
   initNav();
   window.addEventListener('hashchange', route);
