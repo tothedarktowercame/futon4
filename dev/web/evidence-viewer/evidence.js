@@ -8,13 +8,18 @@ import {
 
 // -- State --
 
+const FILTER_KEYS = ['type', 'author'];
+
 let currentFilters = {};
 let refreshTimer = null;
+const filterEls = { type: null, author: null };
+let livePaused = false;
+let liveRefreshFn = null;
+const liveControls = { container: null, dot: null, label: null, toggle: null };
 
 // -- DOM helpers --
 
 const $ = (sel) => document.querySelector(sel);
-const $$ = (sel) => document.querySelectorAll(sel);
 
 function replaceView(html) {
   const main = $('#view');
@@ -44,26 +49,159 @@ function showFilters(show) {
   if (el) el.style.display = show ? '' : 'none';
 }
 
+function parseHashParts() {
+  let raw = location.hash || '';
+  if (raw.startsWith('#')) raw = raw.slice(1);
+  raw = raw || '/evidence';
+  if (!raw.startsWith('/')) raw = `/${raw}`;
+  const [pathPartRaw, queryString = ''] = raw.split('?');
+  const pathPart = pathPartRaw || '/evidence';
+  const parts = pathPart.split('/').filter(Boolean);
+  return { pathPart, parts, queryString };
+}
+
+function filtersFromQuery(queryString = '') {
+  const params = new URLSearchParams(queryString);
+  const result = {};
+  for (const key of FILTER_KEYS) {
+    const value = params.get(key);
+    if (value) result[key] = value;
+  }
+  return result;
+}
+
+function filtersToQuery(filters = currentFilters) {
+  const params = new URLSearchParams();
+  for (const key of FILTER_KEYS) {
+    const value = filters[key];
+    if (value) params.set(key, value);
+  }
+  return params.toString();
+}
+
+function updateFilterControls() {
+  if (filterEls.type) filterEls.type.value = currentFilters.type || '';
+  if (filterEls.author) filterEls.author.value = currentFilters.author || '';
+}
+
+function syncFiltersFromQuery(queryString) {
+  currentFilters = filtersFromQuery(queryString);
+  updateFilterControls();
+}
+
+function buildHashWithFilters(targetHash) {
+  const normalized = targetHash.startsWith('#') ? targetHash.slice(1) : targetHash;
+  const base = normalized ? (normalized.startsWith('/') ? normalized : `/${normalized}`) : '/evidence';
+  const query = filtersToQuery();
+  return query ? `#${base}?${query}` : `#${base}`;
+}
+
+function navigateWithFilters(targetHash) {
+  location.hash = buildHashWithFilters(targetHash);
+}
+
+function persistFiltersToHash() {
+  const { pathPart } = parseHashParts();
+  const target = pathPart || '/evidence';
+  const nextHash = buildHashWithFilters(target);
+  if (location.hash === nextHash) {
+    route();
+  } else {
+    location.hash = nextHash;
+  }
+}
+
+function wireNavLinks(root = document) {
+  if (!root) return;
+  const links = root.querySelectorAll('[data-nav]');
+  for (const link of links) {
+    if (link.dataset.navBound === 'true') continue;
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const target = link.dataset.nav || link.getAttribute('href') || '#/evidence';
+      navigateWithFilters(target);
+    });
+    link.dataset.navBound = 'true';
+  }
+}
+
+function setLiveIndicatorVisible(show) {
+  if (!liveControls.container) return;
+  liveControls.container.style.display = show ? 'flex' : 'none';
+}
+
+function updateLiveIndicatorUI() {
+  if (!liveControls.container) return;
+  const hasRefresh = typeof liveRefreshFn === 'function';
+  const active = hasRefresh && !livePaused;
+  if (liveControls.dot) {
+    liveControls.dot.classList.toggle('live', active);
+    liveControls.dot.classList.toggle('paused', !active);
+  }
+  if (liveControls.label) {
+    liveControls.label.textContent = active ? 'Live' : 'Paused';
+  }
+  if (liveControls.toggle) {
+    liveControls.toggle.textContent = livePaused ? '▶' : '⏸';
+    liveControls.toggle.setAttribute('aria-label', livePaused ? 'Resume live updates' : 'Pause live updates');
+    liveControls.toggle.setAttribute('aria-pressed', livePaused ? 'true' : 'false');
+    liveControls.toggle.disabled = !hasRefresh;
+  }
+  if (!hasRefresh) {
+    liveControls.container.style.display = 'none';
+  }
+}
+
+function restartLiveRefreshTimer() {
+  clearInterval(refreshTimer);
+  if (!livePaused && typeof liveRefreshFn === 'function') {
+    refreshTimer = setInterval(() => {
+      const result = liveRefreshFn();
+      if (result && typeof result.catch === 'function') {
+        result.catch(() => {});
+      }
+    }, 30000);
+  } else {
+    refreshTimer = null;
+  }
+  updateLiveIndicatorUI();
+}
+
+function configureLiveRefresh(fn) {
+  liveRefreshFn = fn;
+  setLiveIndicatorVisible(true);
+  restartLiveRefreshTimer();
+}
+
+function disableLiveRefresh() {
+  liveRefreshFn = null;
+  clearInterval(refreshTimer);
+  refreshTimer = null;
+  setLiveIndicatorVisible(false);
+  updateLiveIndicatorUI();
+}
+
 // -- Router --
 
 function route() {
-  clearInterval(refreshTimer);
-  const hash = (location.hash || '#/evidence').slice(1);
-  const parts = hash.split('/').filter(Boolean);
+  disableLiveRefresh();
+  const { parts, queryString } = parseHashParts();
+  syncFiltersFromQuery(queryString);
+  const primary = parts[0] || 'evidence';
 
-  if (parts[0] === 'evidence' && parts.length === 1) {
+  if (primary === 'evidence' && parts.length === 1) {
     showFilters(true);
     showDashboard();
-  } else if (parts[0] === 'evidence' && parts.length === 2) {
+  } else if (primary === 'evidence' && parts.length === 2) {
     showFilters(false);
     showEntryDetail(decodeURIComponent(parts[1]));
-  } else if (parts[0] === 'evidence' && parts.length === 3 && parts[2] === 'chain') {
+  } else if (primary === 'evidence' && parts.length === 3 && parts[2] === 'chain') {
     showFilters(false);
     showChainView(decodeURIComponent(parts[1]));
-  } else if (parts[0] === 'sessions' && parts.length === 1) {
+  } else if (primary === 'sessions' && parts.length === 1) {
     showFilters(false);
     showSessions();
-  } else if (parts[0] === 'sessions' && parts.length === 2) {
+  } else if (primary === 'sessions' && parts.length === 2) {
     showFilters(true);
     showSessionTimeline(decodeURIComponent(parts[1]));
   } else {
@@ -78,17 +216,15 @@ async function showDashboard() {
   setTitle('Evidence Landscape');
   setLoading();
   try {
-    const data = await fetchEvidence(currentFilters);
-    renderDashboard(data);
-    // Auto-refresh every 30s
-    refreshTimer = setInterval(async () => {
-      try {
-        const fresh = await fetchEvidence(currentFilters);
-        renderDashboard(fresh);
-      } catch (_) { /* silent refresh failure */ }
-    }, 30000);
+    const refresh = async () => {
+      const data = await fetchEvidence(currentFilters);
+      renderDashboard(data);
+    };
+    await refresh();
+    configureLiveRefresh(refresh);
   } catch (err) {
     setError(`Failed to load evidence: ${err.message}`);
+    disableLiveRefresh();
   }
 }
 
@@ -121,7 +257,7 @@ function renderDashboard(data) {
     row.className = 'evidence-row';
     const id = eget(entry, 'id');
     row.dataset.id = id;
-    row.onclick = () => { location.hash = `#/evidence/${encodeURIComponent(id)}`; };
+    row.onclick = () => { navigateWithFilters(`#/evidence/${encodeURIComponent(id)}`); };
 
     const type = eget(entry, 'type');
     const tclass = typeClass(type);
@@ -156,10 +292,11 @@ async function showEntryDetail(id) {
     const entry = await fetchEntry(id);
     replaceView(`
       <nav class="detail-nav">
-        <a href="#/evidence" class="back-link">\u2190 Back to timeline</a>
+        <a href="#/evidence" data-nav="#/evidence" class="back-link">\u2190 Back to timeline</a>
       </nav>
       ${renderDetail(entry)}
     `);
+    wireNavLinks($('#view'));
   } catch (err) {
     setError(`Failed to load entry: ${err.message}`);
   }
@@ -175,12 +312,13 @@ async function showChainView(id) {
     const chain = data.chain || [];
     replaceView(`
       <nav class="detail-nav">
-        <a href="#/evidence/${encodeURIComponent(id)}" class="back-link">\u2190 Back to entry</a>
-        <a href="#/evidence" class="back-link">\u2190 Timeline</a>
+        <a href="#/evidence/${encodeURIComponent(id)}" data-nav="#/evidence/${encodeURIComponent(id)}" class="back-link">\u2190 Back to entry</a>
+        <a href="#/evidence" data-nav="#/evidence" class="back-link">\u2190 Timeline</a>
       </nav>
       <h2 class="chain-title">Reply chain (${chain.length} entries)</h2>
       ${renderChain(chain, id)}
     `);
+    wireNavLinks($('#view'));
   } catch (err) {
     setError(`Failed to load chain: ${err.message}`);
   }
@@ -229,7 +367,7 @@ async function showSessions() {
     for (const [sid, sentries] of sorted) {
       const row = document.createElement('tr');
       row.className = 'evidence-row';
-      row.onclick = () => { location.hash = `#/sessions/${encodeURIComponent(sid)}`; };
+      row.onclick = () => { navigateWithFilters(`#/sessions/${encodeURIComponent(sid)}`); };
 
       // Type summary
       const typeCounts = {};
@@ -262,30 +400,36 @@ async function showSessions() {
 
 async function showSessionTimeline(sessionId) {
   setTitle(`Session: ${truncStr(sessionId, 30)}`);
-  // Override filters temporarily
-  const saved = { ...currentFilters };
-  currentFilters['session-id'] = sessionId;
   setLoading();
   try {
-    const data = await fetchEvidence(currentFilters);
     replaceView('');
     const nav = document.createElement('nav');
     nav.className = 'detail-nav';
-    nav.innerHTML = `<a href="#/sessions" class="back-link">\u2190 Back to sessions</a>
-      <a href="#/evidence" class="back-link">\u2190 Timeline</a>`;
+    nav.innerHTML = `<a href="#/sessions" data-nav="#/sessions" class="back-link">\u2190 Back to sessions</a>
+      <a href="#/evidence" data-nav="#/evidence" class="back-link">\u2190 Timeline</a>`;
     $('#view').appendChild(nav);
+    wireNavLinks(nav);
 
     const container = document.createElement('div');
-    renderDashboardInto(container, data);
     $('#view').appendChild(container);
+
+    const refresh = async () => {
+      const filters = { ...currentFilters, 'session-id': sessionId };
+      const data = await fetchEvidence(filters);
+      renderDashboardInto(container, data);
+    };
+
+    await refresh();
+    configureLiveRefresh(refresh);
   } catch (err) {
     setError(`Failed to load session: ${err.message}`);
-  } finally {
-    currentFilters = saved;
+    disableLiveRefresh();
   }
 }
 
 function renderDashboardInto(container, data) {
+  if (!container) return;
+  container.innerHTML = '';
   const { entries = [] } = data;
   const table = document.createElement('table');
   table.className = 'evidence-table';
@@ -303,7 +447,7 @@ function renderDashboardInto(container, data) {
     row.className = 'evidence-row';
     const id = eget(entry, 'id');
     row.dataset.id = id;
-    row.onclick = () => { location.hash = `#/evidence/${encodeURIComponent(id)}`; };
+    row.onclick = () => { navigateWithFilters(`#/evidence/${encodeURIComponent(id)}`); };
     const type = eget(entry, 'type');
     const tclass = typeClass(type);
     const inReplyTo = eget(entry, 'in-reply-to');
@@ -324,50 +468,67 @@ function renderDashboardInto(container, data) {
 // -- Filters --
 
 function initFilters() {
-  const typeSelect = $('#filter-type');
-  const authorInput = $('#filter-author');
+  filterEls.type = $('#filter-type');
+  filterEls.author = $('#filter-author');
   const clearBtn = $('#filter-clear');
 
-  if (typeSelect) {
-    typeSelect.onchange = () => {
-      const v = typeSelect.value;
+  if (filterEls.type) {
+    filterEls.type.onchange = () => {
+      const v = filterEls.type.value;
       if (v) currentFilters.type = v;
       else delete currentFilters.type;
-      route();
+      persistFiltersToHash();
     };
   }
-  if (authorInput) {
+  if (filterEls.author) {
     let debounce;
-    authorInput.oninput = () => {
+    filterEls.author.oninput = () => {
       clearTimeout(debounce);
       debounce = setTimeout(() => {
-        const v = authorInput.value.trim();
+        const v = filterEls.author.value.trim();
         if (v) currentFilters.author = v;
         else delete currentFilters.author;
-        route();
+        persistFiltersToHash();
       }, 400);
     };
   }
   if (clearBtn) {
     clearBtn.onclick = () => {
       currentFilters = {};
-      if (typeSelect) typeSelect.value = '';
-      if (authorInput) authorInput.value = '';
-      route();
+      updateFilterControls();
+      persistFiltersToHash();
     };
   }
+}
+
+function initLiveControls() {
+  liveControls.container = $('#live-tail');
+  liveControls.dot = $('#live-dot');
+  liveControls.label = $('#live-label');
+  liveControls.toggle = $('#live-toggle');
+
+  if (liveControls.toggle) {
+    liveControls.toggle.onclick = () => {
+      livePaused = !livePaused;
+      restartLiveRefreshTimer();
+      if (!livePaused && typeof liveRefreshFn === 'function') {
+        scrollToLatest();
+        const result = liveRefreshFn();
+        if (result && typeof result.catch === 'function') {
+          result.catch(() => {});
+        }
+      }
+    };
+  }
+
+  setLiveIndicatorVisible(false);
+  updateLiveIndicatorUI();
 }
 
 // -- Navigation --
 
 function initNav() {
-  const links = $$('[data-nav]');
-  for (const link of links) {
-    link.onclick = (e) => {
-      e.preventDefault();
-      location.hash = link.dataset.nav;
-    };
-  }
+  wireNavLinks(document);
 }
 
 // -- Helpers --
@@ -387,10 +548,15 @@ function esc(s) {
     .replace(/"/g, '&quot;');
 }
 
+function scrollToLatest() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 // -- Init --
 
 export function init() {
   initFilters();
+  initLiveControls();
   initNav();
   window.addEventListener('hashchange', route);
   route();
