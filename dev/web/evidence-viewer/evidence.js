@@ -16,6 +16,8 @@ const filterEls = { type: null, author: null };
 let livePaused = false;
 let liveRefreshFn = null;
 const liveControls = { container: null, dot: null, label: null, toggle: null };
+let detailRowEl = null;
+let openDetailId = null;
 
 // -- DOM helpers --
 
@@ -181,10 +183,93 @@ function disableLiveRefresh() {
   updateLiveIndicatorUI();
 }
 
+function closeInlineDetail() {
+  if (detailRowEl && detailRowEl.parentNode) {
+    detailRowEl.parentNode.removeChild(detailRowEl);
+  }
+  detailRowEl = null;
+  openDetailId = null;
+}
+
+function toggleInlineDetail(row, entryId) {
+  if (!row) return;
+  if (openDetailId === entryId) {
+    closeInlineDetail();
+  } else {
+    openInlineDetail(row, entryId);
+  }
+}
+
+function openInlineDetail(row, entryId, { preserve = false, autoScroll = true } = {}) {
+  if (!preserve) {
+    closeInlineDetail();
+  } else if (detailRowEl && detailRowEl.parentNode) {
+    detailRowEl.parentNode.removeChild(detailRowEl);
+    detailRowEl = null;
+  } else {
+    detailRowEl = null;
+  }
+  openDetailId = entryId;
+  const detailRow = document.createElement('tr');
+  detailRow.className = 'evidence-detail-row';
+  const detailCell = document.createElement('td');
+  const table = row.closest('table');
+  const columnCount = row.children.length || table?.querySelectorAll('thead th').length || 6;
+  detailCell.colSpan = columnCount;
+  const card = document.createElement('div');
+  card.className = 'inline-card';
+  card.innerHTML = '<p class="loading">Loading entry...</p>';
+  detailCell.appendChild(card);
+  detailRow.appendChild(detailCell);
+  row.insertAdjacentElement('afterend', detailRow);
+  detailRowEl = detailRow;
+  if (autoScroll) {
+    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  renderInlineDetail(card, entryId);
+}
+
+async function renderInlineDetail(container, entryId) {
+  try {
+    const entry = await fetchEntry(entryId);
+    if (openDetailId !== entryId || !container) return;
+    const detailHtml = renderDetail(entry);
+    const footer = `<div class="detail-nav inline-detail-footer"><a data-nav="#/evidence/${encodeURIComponent(entryId)}" class="back-link">Open full detail \u2192</a></div>`;
+    container.innerHTML = detailHtml + footer;
+    decorateInlineLinks(container);
+  } catch (err) {
+    if (openDetailId === entryId && container) {
+      container.innerHTML = `<p class="error">Failed to load entry: ${esc(err?.message || err)}</p>`;
+    }
+  }
+}
+
+function decorateInlineLinks(root) {
+  if (!root) return;
+  root.querySelectorAll('a[href^="#/"]').forEach((anchor) => {
+    if (!anchor.dataset.nav) {
+      anchor.dataset.nav = anchor.getAttribute('href');
+    }
+  });
+  wireNavLinks(root);
+}
+
+function reopenInlineDetail(root, entryId) {
+  if (!entryId || !root) return;
+  const safeId = cssEscape(entryId);
+  const targetRow = root.querySelector(`tr[data-id="${safeId}"]`);
+  if (targetRow) {
+    openInlineDetail(targetRow, entryId, { preserve: true, autoScroll: false });
+  } else {
+    closeInlineDetail();
+  }
+}
+
 // -- Router --
 
 function route() {
   disableLiveRefresh();
+  closeInlineDetail();
   const { parts, queryString } = parseHashParts();
   syncFiltersFromQuery(queryString);
   const primary = parts[0] || 'evidence';
@@ -216,9 +301,11 @@ async function showDashboard() {
   setTitle('Evidence Landscape');
   setLoading();
   try {
+    let firstLoad = true;
     const refresh = async () => {
       const data = await fetchEvidence(currentFilters);
-      renderDashboard(data);
+      renderDashboard(data, { preserveDetail: !firstLoad });
+      firstLoad = false;
     };
     await refresh();
     configureLiveRefresh(refresh);
@@ -228,7 +315,13 @@ async function showDashboard() {
   }
 }
 
-function renderDashboard(data) {
+function renderDashboard(data, { preserveDetail = false } = {}) {
+  const previousDetailId = preserveDetail ? openDetailId : null;
+  if (!preserveDetail) {
+    closeInlineDetail();
+  } else {
+    detailRowEl = null;
+  }
   const { entries = [], count = 0 } = data;
 
   if (entries.length === 0) {
@@ -257,7 +350,7 @@ function renderDashboard(data) {
     row.className = 'evidence-row';
     const id = eget(entry, 'id');
     row.dataset.id = id;
-    row.onclick = () => { navigateWithFilters(`#/evidence/${encodeURIComponent(id)}`); };
+    row.onclick = () => toggleInlineDetail(row, id);
 
     const type = eget(entry, 'type');
     const tclass = typeClass(type);
@@ -275,6 +368,9 @@ function renderDashboard(data) {
   }
   table.appendChild(tbody);
   replaceView(table);
+  if (preserveDetail && previousDetailId) {
+    reopenInlineDetail(table, previousDetailId);
+  }
   updateCount(count);
 }
 
@@ -413,10 +509,12 @@ async function showSessionTimeline(sessionId) {
     const container = document.createElement('div');
     $('#view').appendChild(container);
 
+    let firstLoad = true;
     const refresh = async () => {
       const filters = { ...currentFilters, 'session-id': sessionId };
       const data = await fetchEvidence(filters);
-      renderDashboardInto(container, data);
+      renderDashboardInto(container, data, { preserveDetail: !firstLoad });
+      firstLoad = false;
     };
 
     await refresh();
@@ -427,8 +525,14 @@ async function showSessionTimeline(sessionId) {
   }
 }
 
-function renderDashboardInto(container, data) {
+function renderDashboardInto(container, data, { preserveDetail = false } = {}) {
   if (!container) return;
+  const previousDetailId = preserveDetail ? openDetailId : null;
+  if (!preserveDetail) {
+    closeInlineDetail();
+  } else {
+    detailRowEl = null;
+  }
   container.innerHTML = '';
   const { entries = [] } = data;
   const table = document.createElement('table');
@@ -447,7 +551,7 @@ function renderDashboardInto(container, data) {
     row.className = 'evidence-row';
     const id = eget(entry, 'id');
     row.dataset.id = id;
-    row.onclick = () => { navigateWithFilters(`#/evidence/${encodeURIComponent(id)}`); };
+    row.onclick = () => toggleInlineDetail(row, id);
     const type = eget(entry, 'type');
     const tclass = typeClass(type);
     const inReplyTo = eget(entry, 'in-reply-to');
@@ -463,6 +567,9 @@ function renderDashboardInto(container, data) {
   }
   table.appendChild(tbody);
   container.appendChild(table);
+  if (preserveDetail && previousDetailId) {
+    reopenInlineDetail(container, previousDetailId);
+  }
 }
 
 // -- Filters --
@@ -546,6 +653,13 @@ function esc(s) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+function cssEscape(value) {
+  if (window.CSS && typeof window.CSS.escape === 'function') {
+    return window.CSS.escape(value);
+  }
+  return String(value).replace(/"/g, '\\"');
 }
 
 function scrollToLatest() {
