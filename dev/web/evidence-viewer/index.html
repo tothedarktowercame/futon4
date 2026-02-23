@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Evidence Landscape</title>
+  <style>
+    /* -- Reset & Base -- */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      /* Base theme — matches Scribe Notebook + Arxana */
+      --bg-primary: #1a1a2e;
+      --bg-secondary: #16213e;
+      --bg-tertiary: #0f1525;
+      --text-primary: #eaeaea;
+      --text-secondary: #a0a0a0;
+      --text-muted: #6a6a8a;
+      --border-color: #2a2a4a;
+      --border-light: #3a3a5a;
+      --link-color: #6ec1e4;
+      --link-hover: #89ddff;
+      --font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Menlo', 'Consolas', monospace;
+      --font-sans: system-ui, -apple-system, sans-serif;
+
+      /* Evidence type colors — from arxana-lab.el faces */
+      --psr-bg: #2b1e24; --psr-fg: #e0a0c0;
+      --pur-bg: #1e2b24; --pur-fg: #a0e0c0;
+      --par-bg: #1e242b; --par-fg: #c0d0e0;
+      --gate-bg: #1e1e2b; --gate-fg: #a0c0e0;
+      --coord-bg: #1e1e24; --coord-fg: #c0c0d0;
+      --forum-bg: #1e2b1e; --forum-fg: #a0e0a0;
+      --mode-bg: #24241e; --mode-fg: #d0d0a0;
+      --presence-bg: #1e2424; --presence-fg: #a0d0d0;
+      --corr-bg: #2b1e1e; --corr-fg: #e0a0a0;
+      --conj-bg: #24241e; --conj-fg: #e0e0a0;
+      --default-bg: #1e1e1e; --default-fg: #c0c0c0;
+    }
+
+    html, body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    a { color: var(--link-color); text-decoration: none; }
+    a:hover { color: var(--link-hover); text-decoration: underline; }
+
+    .mono { font-family: var(--font-mono); font-size: 13px; }
+
+    /* -- Layout -- */
+    #app {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px 24px;
+    }
+
+    /* -- Header -- */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0 16px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    h1 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: 0.02em;
+    }
+
+    nav.main-nav {
+      display: flex;
+      gap: 4px;
+    }
+    nav.main-nav a {
+      padding: 4px 10px;
+      border-radius: 4px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      transition: background 0.15s, color 0.15s;
+    }
+    nav.main-nav a:hover {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+
+    #entry-count {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    /* -- Filter bar -- */
+    #filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      margin-bottom: 12px;
+    }
+
+    #filter-bar label {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    #filter-bar select,
+    #filter-bar input {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+    #filter-bar select:focus,
+    #filter-bar input:focus {
+      outline: none;
+      border-color: var(--link-color);
+    }
+
+    #filter-clear {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    #filter-clear:hover { color: var(--text-primary); border-color: var(--border-light); }
+
+    /* -- Evidence table -- */
+    .evidence-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .evidence-table thead th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+
+    .col-time { width: 160px; }
+    .col-type { width: 70px; }
+    .col-author { width: 110px; }
+    .col-reply { width: 24px; text-align: center; }
+    .col-preview { width: 280px; }
+    .col-subject { /* flex remainder */ }
+
+    .evidence-row {
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .evidence-row:hover { background: var(--bg-secondary); }
+
+    .evidence-row td {
+      padding: 5px 8px;
+      border-bottom: 1px solid var(--bg-secondary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
+    }
+
+    .evidence-row .col-reply {
+      text-align: center;
+      color: var(--text-muted);
+    }
+
+    .evidence-row .col-preview {
+      color: var(--text-secondary);
+    }
+
+    .evidence-row .col-subject {
+      color: var(--text-muted);
+    }
+
+    /* -- Type badges -- */
+    .type-badge {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .type-psr { background: var(--psr-bg); color: var(--psr-fg); }
+    .type-pur { background: var(--pur-bg); color: var(--pur-fg); }
+    .type-par { background: var(--par-bg); color: var(--par-fg); }
+    .type-gate { background: var(--gate-bg); color: var(--gate-fg); }
+    .type-coord { background: var(--coord-bg); color: var(--coord-fg); }
+    .type-forum { background: var(--forum-bg); color: var(--forum-fg); }
+    .type-mode { background: var(--mode-bg); color: var(--mode-fg); }
+    .type-presence { background: var(--presence-bg); color: var(--presence-fg); }
+    .type-corr { background: var(--corr-bg); color: var(--corr-fg); }
+    .type-conj { background: var(--conj-bg); color: var(--conj-fg); }
+    .type-default { background: var(--default-bg); color: var(--default-fg); }
+
+    /* -- Detail view -- */
+    .detail-nav {
+      display: flex;
+      gap: 16px;
+      padding: 8px 0 16px;
+    }
+    .back-link { font-size: 13px; }
+
+    .detail-view { max-width: 800px; }
+
+    .detail-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 16px;
+    }
+    .detail-header .type-badge { font-size: 13px; padding: 2px 8px; }
+    .claim-label { color: var(--text-secondary); font-size: 14px; }
+    .detail-author { color: var(--text-muted); font-size: 13px; }
+    .flag {
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 3px;
+      background: var(--bg-secondary);
+      color: var(--text-muted);
+    }
+    .flag.ephemeral { border: 1px solid var(--border-light); }
+
+    .detail-view section { margin-bottom: 20px; }
+    .detail-view h3 {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 8px;
+    }
+
+    .summary-fields, .body-fields {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 2px 12px;
+    }
+    .summary-fields dt, .body-fields dt {
+      color: var(--text-muted);
+      font-size: 12px;
+      padding: 3px 0;
+    }
+    .summary-fields dd, .body-fields dd {
+      font-size: 13px;
+      padding: 3px 0;
+      word-break: break-word;
+    }
+    .body-fields dd ul {
+      list-style: none;
+      padding: 0;
+    }
+    .body-fields dd ul li {
+      padding: 2px 0;
+      border-bottom: 1px solid var(--bg-secondary);
+    }
+    .body-fields dd ul li:last-child { border: none; }
+    .body-fields dd pre {
+      background: var(--bg-tertiary);
+      padding: 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .body-content {
+      padding: 12px;
+      border-radius: 6px;
+      background: var(--bg-secondary);
+    }
+
+    .evidence-link {
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    .chain-link {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 13px;
+    }
+
+    /* -- Chain view -- */
+    .chain-title { font-size: 15px; margin-bottom: 12px; }
+
+    .chain-view { padding: 8px 0; }
+    .chain-entry {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .chain-connector {
+      width: 24px;
+      flex-shrink: 0;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      text-align: right;
+    }
+    .chain-card {
+      flex: 1;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 6px 10px;
+      transition: border-color 0.15s;
+    }
+    .chain-card:hover { border-color: var(--border-light); }
+    .chain-current .chain-card { border-color: var(--link-color); }
+
+    .chain-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+    .chain-author { color: var(--text-secondary); }
+    .chain-time { color: var(--text-muted); font-family: var(--font-mono); }
+    .chain-detail-link { font-size: 11px; margin-left: auto; }
+    .chain-preview {
+      color: var(--text-secondary);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    /* -- Sessions table -- */
+    .sessions-table .col-session { width: 300px; }
+
+    /* -- States -- */
+    .loading {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 48px 0;
+      font-size: 14px;
+    }
+    .error {
+      text-align: center;
+      color: var(--corr-fg);
+      background: var(--corr-bg);
+      padding: 16px;
+      border-radius: 6px;
+      margin: 24px 0;
+    }
+    .empty-state {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 48px 0;
+    }
+    .empty-state .hint { font-size: 12px; margin-top: 8px; }
+    .empty { color: var(--text-muted); font-style: italic; }
+
+    /* -- Responsive -- */
+    @media (max-width: 800px) {
+      #app { padding: 12px 16px; }
+      .col-preview, .col-subject { display: none; }
+      .summary-fields, .body-fields { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <div class="header-left">
+        <h1 id="view-title">Evidence Landscape</h1>
+        <nav class="main-nav">
+          <a href="#/evidence" data-nav="#/evidence">Timeline</a>
+          <a href="#/sessions" data-nav="#/sessions">Sessions</a>
+        </nav>
+      </div>
+      <span id="entry-count" class="mono"></span>
+    </header>
+
+    <div id="filter-bar">
+      <label for="filter-type">Type</label>
+      <select id="filter-type">
+        <option value="">All types</option>
+        <option value="pattern-selection">PSR</option>
+        <option value="pattern-outcome">PUR</option>
+        <option value="reflection">PAR</option>
+        <option value="gate-traversal">GATE</option>
+        <option value="coordination">COORD</option>
+        <option value="forum-post">FORUM</option>
+        <option value="mode-transition">MODE</option>
+        <option value="presence-event">PRESENCE</option>
+        <option value="correction">CORRECTION</option>
+        <option value="conjecture">CONJECTURE</option>
+      </select>
+
+      <label for="filter-author">Author</label>
+      <input id="filter-author" type="text" placeholder="filter by author" size="16">
+
+      <button id="filter-clear">Clear</button>
+    </div>
+
+    <main id="view">
+      <div class="loading">Loading...</div>
+    </main>
+  </div>
+
+  <script type="module" src="./evidence.js"></script>
+</body>
+</html>
