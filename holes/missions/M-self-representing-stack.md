@@ -46,6 +46,11 @@ are not in the hypergraph. Arxana browses documents. It does not yet browse
 the *system's self-representation* — the structure that Mission Control
 computes but nobody navigates.
 
+For this mission, "code" does not mean file paths alone. Strategic claims must
+bottom out in the existing Clojure reflection layer (namespace/var metadata and
+source location), just as Arxana's human-facing code docs already bottom out on
+functions.
+
 ## Theoretical Anchoring
 
 ### Higgins' Self-Discrepancy Theory
@@ -89,6 +94,17 @@ the code that implements it. The difference is that today these live in
 evidence entries (XTDB documents) and are browsed as a flat timeline. They
 should be browsable as *edges in the hypergraph* — attached to the things
 they annotate.
+
+### Reflection-Bottomed Strategic Scholia
+
+Arxana already has a human-facing path from docs to code symbols. The strategic
+scholium layer must use the same discipline: every claim about runtime behavior
+or implementation status should resolve to a concrete Clojure target
+(`ns/symbol`, file, line, arglists, doc), not only to a prose paragraph.
+
+This keeps the self-representation honest. If a strategic claim cannot be
+grounded to reflection data, it is a hypothesis, not evidence. The mission
+therefore closes at the reflection layer, not at markdown or docbook text.
 
 ### Narrative Over Annotation
 
@@ -136,7 +152,11 @@ From Arxana, an agent or human can navigate:
 ```
 devmap component → missions addressing it → evidence trail → code files
     ↑                                                           |
-    └───── patterns used (PURs) ← pattern library ←────────────┘
+    |                                                           v
+    └───── patterns used (PURs) ← pattern library ← ns/var reflection anchor
+                                                            |
+                                                            v
+                                                       source form
 ```
 
 Each arrow is a typed hyperedge in the Arxana graph. The types come from
@@ -175,6 +195,18 @@ book: the system itself. Chapters are repos (futon3c, futon5, futon4, ...);
 sections are prototypes; annotations are evidence. The "book" is always
 current because it reads from the evidence store, not from static docs.
 
+### 6. Reflection-Grounded Claim Surfaces
+
+Strategic scholia gain a required reflection envelope for code claims:
+
+- `:reflection/ns` and `:reflection/symbol` (canonical target)
+- `:reflection/file` and `:reflection/line` (jump target)
+- `:reflection/arglists` and `:reflection/doc` (interface intent)
+- `:reflection/resolved-at` (staleness checks over time)
+
+The envelope is derived through existing Clojure runtime reflection surfaces,
+not a separate duplicate registry.
+
 ## Scope In
 
 - Ingest Mission Control portfolio reviews as Arxana hyperedges
@@ -185,6 +217,9 @@ current because it reads from the evidence store, not from static docs.
 - Build a narrative trail view for completed missions
 - Extend `arxana-store.el` if needed for new query patterns
 - Extend `arxana-browser-lab.el` for tension browsing
+- Attach reflection envelopes to strategic scholia that target code
+- Add a reflection-resolution step using existing Clojure eval/reflection
+  surfaces (Drawbridge and/or in-process REPL helpers)
 
 ## Scope Out
 
@@ -196,6 +231,8 @@ current because it reads from the evidence store, not from static docs.
   what to do about them
 - Visualization beyond Emacs — Arxana is an Emacs tool; web views are a
   different mission
+- Building a brand-new reflection service or schema fork; this mission uses
+  existing Clojure reflection surfaces
 
 ## Derivation Path
 
@@ -213,6 +250,10 @@ Survey the existing connection points:
 - What is the shape of devmap prototypes in `futon3/holes/*.devmap`?
 - How does Arxana's three-tier link model map to MC artifacts?
 - What evidence entries exist in the store today? (Query futon1a)
+- What reflection payload can we reliably obtain for a target var
+  (`ns/symbol`, file, line, arglists, doc)?
+- Which existing runtime surfaces are authoritative for this in practice
+  (`futon3c/src/repl/http.clj`, `futon3/src/f2/repl.clj`)?
 
 ### 3. DERIVE
 
@@ -223,6 +264,8 @@ Design the hyperedge types for system self-representation:
 - `:hx/type :tension` — discrepancy between ideal and actual
 - `:hx/type :narrative-step` — evidence entry → next evidence entry in trail
 - `:hx/type :pattern-use` — PUR evidence → pattern from library
+- `:hx/type :about-var` — strategic claim → concrete Clojure var
+- `:hx/type :reflection-snapshot` — var → reflection envelope at time T
 
 Design the browser views:
 - Tension browser (new, built on `arxana-browser-lab.el`)
@@ -235,6 +278,8 @@ Justify the design with IF/HOWEVER/THEN/BECAUSE for each major decision:
 - Why hyperedges rather than flat links?
 - Why extend existing Arxana modules rather than new ones?
 - Why read from MC output rather than reimplementing MC in Emacs?
+- Why claims must bottom out on vars/reflection metadata rather than only files
+  or prose docs?
 
 ### 5. VERIFY
 
@@ -243,6 +288,9 @@ Justify the design with IF/HOWEVER/THEN/BECAUSE for each major decision:
 - Narrative trail for a completed mission (e.g., M-mission-control) is
   navigable end-to-end
 - Evidence timeline shows MC artifacts as linked structure, not flat list
+- For at least one completed mission, strategic claims resolve to live
+  Clojure vars with file/line jump and arglists/doc metadata
+- Stale or unresolved reflection anchors are surfaced as tensions
 
 ### 6. INSTANTIATE
 
@@ -250,6 +298,9 @@ Justify the design with IF/HOWEVER/THEN/BECAUSE for each major decision:
 - Produce the first system book chapter (futon3c)
 - Run a tension discovery session: browse gaps, identify one, propose
   a new mission from it — closing the discovery loop
+- Demonstrate one full path:
+  war-bulletin claim → mission edge → evidence chain → var reflection anchor
+  → source form
 
 ## Source Material
 
@@ -264,9 +315,12 @@ Justify the design with IF/HOWEVER/THEN/BECAUSE for each major decision:
 | `futon4/dev/arxana-store.el` | Storage bridge API (entity, relation, hyperedge) |
 | `futon4/dev/arxana-browser-lab.el` | Evidence timeline viewer |
 | `futon4/dev/arxana-browser-hypergraph.el` | Local hypergraph viewer |
+| `futon4/dev/arxana-browser-code.el` | Existing symbol-level code/doc bottom-out behavior |
 | `futon4/dev/arxana-links.el` | Three-tier link persistence model |
 | `futon4/dev/arxana-derivation.el` | Inclusion/transclusion previews |
 | `futon4/dev/arxana-scholium.el` | Scholium authoring |
+| `futon3c/src/repl/http.clj` | Existing Drawbridge + `/eval` runtime reflection/eval surface |
+| `futon3/src/f2/repl.clj` | SAFE/ADMIN evaluator and reflection-adjacent Clojure access |
 
 ## Relationship to Other Missions
 
@@ -292,3 +346,5 @@ Justify the design with IF/HOWEVER/THEN/BECAUSE for each major decision:
 4. Narrative trail for one completed mission is navigable end-to-end
 5. One new mission is discovered by browsing tensions (closing the loop)
 6. Evidence queryable via `tag=system-representation` or similar
+7. At least one strategic scholium chain is reflection-grounded end-to-end
+   (`claim -> var -> source`) and fails loudly when the var target disappears
