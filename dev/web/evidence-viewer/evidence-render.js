@@ -302,6 +302,63 @@ export function renderChain(chain, currentId) {
   </div>`;
 }
 
+// -- Thread rendering --
+
+const TRANSPORT_LABELS = {
+  'emacs-codex-repl': 'Codex REPL',
+  'emacs-chat': 'Claude Chat',
+  'irc': 'IRC',
+};
+
+export function transportLabel(transport) {
+  if (!transport) return 'System';
+  return TRANSPORT_LABELS[transport] || transport;
+}
+
+export function transportClass(transport) {
+  if (!transport) return 'transport-system';
+  if (transport.includes('codex')) return 'transport-codex';
+  if (transport.includes('chat') || transport.includes('claude')) return 'transport-claude';
+  if (transport.includes('irc')) return 'transport-irc';
+  return 'transport-system';
+}
+
+export function relativeTime(isoString) {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffHr = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHr / 24);
+
+  if (diffMin < 1) return 'just now';
+  if (diffMin < 60) return `${diffMin} min ago`;
+  if (diffHr < 24) return `${diffHr} hr ago`;
+  if (diffDay < 7) return `${diffDay}d ago`;
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+export function renderThreadCard(thread) {
+  const label = transportLabel(thread.transport);
+  const tclass = transportClass(thread.transport);
+  const participants = thread.participants.join(', ') || 'unknown';
+  const turnLabel = thread.turnCount > 0
+    ? `${thread.turnCount} turns`
+    : `${thread.entryCount} entries`;
+  const time = relativeTime(thread.lastAt);
+  const preview = thread.lastMessage ? truncStr(thread.lastMessage, 120) : '';
+
+  return `
+    <div class="thread-card-header">
+      <span class="transport-badge ${tclass}">${esc(label)}</span>
+      <span class="thread-participants">${esc(participants)}</span>
+    </div>
+    <div class="thread-card-summary">${esc(turnLabel)} \u00b7 ${esc(time)}</div>
+    ${preview ? `<div class="thread-card-preview">${esc(preview)}</div>` : ''}
+  `;
+}
+
 // -- HTML escaping --
 
 function esc(s) {

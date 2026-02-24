@@ -3,7 +3,7 @@ import { fetchEvidence, fetchEntry, fetchChain } from './evidence-api.js';
 import {
   eget, typeLabel, typeClass, claimLabel, formatSubject,
   bodyPreview, formatTime, formatTimeShort, formatTags,
-  renderDetail, renderChain
+  renderDetail, renderChain, renderThreadCard
 } from './evidence-render.js';
 
 // -- State --
@@ -277,6 +277,9 @@ function route() {
 
   if (primary === 'evidence' && parts.length === 1) {
     showFilters(true);
+    showThreads();
+  } else if (primary === 'timeline' && parts.length === 1) {
+    showFilters(true);
     showDashboard();
   } else if (primary === 'evidence' && parts.length === 2) {
     showFilters(false);
@@ -292,7 +295,7 @@ function route() {
     showSessionTimeline(decodeURIComponent(parts[1]));
   } else {
     showFilters(true);
-    showDashboard();
+    showThreads();
   }
 }
 
@@ -378,6 +381,130 @@ function renderDashboard(data, { preserveDetail = false } = {}) {
 function updateCount(n) {
   const el = $('#entry-count');
   if (el) el.textContent = n != null ? `${n} entries` : '';
+}
+
+// -- Thread view --
+
+function groupIntoThreads(entries) {
+  const sessionMap = new Map();
+  const orphans = [];
+
+  for (const entry of entries) {
+    const sid = eget(entry, 'session-id');
+    if (!sid) {
+      orphans.push(entry);
+      continue;
+    }
+    if (!sessionMap.has(sid)) {
+      sessionMap.set(sid, []);
+    }
+    sessionMap.get(sid).push(entry);
+  }
+
+  const threads = [];
+  for (const [sid, sentries] of sessionMap) {
+    const participants = new Set();
+    let transport = null;
+    let turnCount = 0;
+    let lastMessage = '';
+
+    for (const e of sentries) {
+      const author = eget(e, 'author');
+      if (author) participants.add(author);
+
+      const body = eget(e, 'body');
+      if (!transport && body?.transport) {
+        transport = body.transport;
+      }
+
+      if (body?.event === 'chat-turn') {
+        turnCount++;
+        if (!lastMessage && body.text) lastMessage = body.text;
+      }
+    }
+
+    // Entries come newest-first from API
+    const lastAt = sentries.length > 0 ? eget(sentries[0], 'at') : null;
+    const firstAt = sentries.length > 0 ? eget(sentries[sentries.length - 1], 'at') : null;
+
+    threads.push({
+      sessionId: sid,
+      participants: [...participants],
+      transport,
+      entryCount: sentries.length,
+      turnCount,
+      firstAt,
+      lastAt,
+      lastMessage
+    });
+  }
+
+  // Sort threads by latest entry (newest first)
+  threads.sort((a, b) => (b.lastAt || '').localeCompare(a.lastAt || ''));
+
+  // Add system events card if any orphans
+  if (orphans.length > 0) {
+    threads.push({
+      sessionId: null,
+      participants: [...new Set(orphans.map(e => eget(e, 'author')).filter(Boolean))],
+      transport: null,
+      entryCount: orphans.length,
+      turnCount: 0,
+      firstAt: orphans.length > 0 ? eget(orphans[orphans.length - 1], 'at') : null,
+      lastAt: orphans.length > 0 ? eget(orphans[0], 'at') : null,
+      lastMessage: ''
+    });
+  }
+
+  return threads;
+}
+
+async function showThreads() {
+  setTitle('Evidence Landscape');
+  setLoading();
+  try {
+    let firstLoad = true;
+    const refresh = async () => {
+      const data = await fetchEvidence({ ...currentFilters, limit: 1000 });
+      const threads = groupIntoThreads(data.entries || []);
+      renderThreadList(threads, data.count || 0);
+      firstLoad = false;
+    };
+    await refresh();
+    configureLiveRefresh(refresh);
+  } catch (err) {
+    setError(`Failed to load evidence: ${err.message}`);
+    disableLiveRefresh();
+  }
+}
+
+function renderThreadList(threads, totalCount) {
+  if (threads.length === 0) {
+    replaceView(`<div class="empty-state">
+      <p>No threads found.</p>
+      <p class="hint">Evidence is emitted by peripherals during agent sessions.</p>
+    </div>`);
+    updateCount(0);
+    return;
+  }
+
+  const container = document.createElement('div');
+  container.className = 'thread-list';
+
+  for (const thread of threads) {
+    const card = document.createElement('div');
+    card.className = 'thread-card';
+    if (thread.sessionId) {
+      card.onclick = () => {
+        navigateWithFilters(`#/sessions/${encodeURIComponent(thread.sessionId)}`);
+      };
+    }
+    card.innerHTML = renderThreadCard(thread);
+    container.appendChild(card);
+  }
+
+  replaceView(container);
+  updateCount(totalCount);
 }
 
 // -- Detail view --
