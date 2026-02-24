@@ -1,7 +1,7 @@
 # Mission: The Self-Representing Stack
 
 **Date:** 2026-02-22
-**Status:** IDENTIFY
+**Status:** DERIVE + ARGUE complete (2026-02-24), ready for VERIFY
 **Blocked by:** None (Arxana operational, evidence landscape operational,
 Mission Control operational)
 **Owner:** futon4 (Arxana), with dependencies on futon3c (Mission Control),
@@ -52,6 +52,63 @@ source location), just as Arxana's human-facing code docs already bottom out on
 functions.
 
 ## Theoretical Anchoring
+
+### The Stack as One AIF+ Organism
+
+(Added 2026-02-24, conversation between Joe and Claude.)
+
+The strongest resolution of the "too much to hold in my head" problem:
+represent the entire futon stack as a single futon5 AIF+ diagram.
+
+Each repo is a subsystem with a timescale and a role:
+
+| Subsystem | AIF Role | Timescale |
+|-----------|----------|-----------|
+| futon7 | Markov blanket (external world boundary) | boundary |
+| futon0 | Human-organism coupling surface | social |
+| futon3c | Social loop (real-time coordination) | social (seconds) |
+| futon3b | Task loop + Baldwin cycle (gate pipeline + library evolution) | fast + glacial |
+| futon3a | Interoception (pattern library query, internal state sensing) | on-demand |
+| futon1a | Memory (evidence store, XTDB) | persistent |
+| futon4 | Self-model (Arxana, reflexivity, navigable self-representation) | reflective |
+| futon5 | Generative model (wiring diagrams, AIF+ formalism — not yet active) | structural |
+
+**Nesting, not containment.** In AIF, blankets nest and compose. Whether
+Joe is "inside" or "outside" the stack is not a metaphysical commitment
+— it's answered differently depending on what you're analyzing. For
+coding agents, the stack is the game map. For the stack as a whole, the
+map is approximated by GitHub (repos, issues, PRs, adjacent projects,
+other people's work). Same structure at different scales.
+
+**futon3a as interoception, not perception.** futon3a queries the pattern
+library — the organism sensing its own structural repertoire ("what
+patterns do I have available?"). External perception (what's happening
+in the world, what users want, what other systems are doing) arrives
+through futon7.
+
+**futon5 as generative model.** Currently holds *descriptions* of wiring
+(the three exotypes). Not yet wired as active inference — it specifies
+but does not yet generate predictions or drive inference. The stack-level
+diagram would be the first instance where futon5 describes *itself as
+part of the organism it specifies*.
+
+**futon7 as existential infrastructure.** Joe's "vitality" (futon0 term)
+is currently essential to the stack developing further — a single point
+of failure. Rob collaborates on futon6 but collaboration isn't
+redundancy. futon7 resolves this by giving the stack more than one
+channel to the world: other people, other systems, other sources of
+vitality. This isn't about making Joe dispensable — it's about the stack
+being robust enough that Joe's role shifts from bottleneck to participant.
+
+**Dependency ordering.** The stack can't present itself to the world
+(futon7) if it can't represent itself to itself (futon4). The self-model
+is prerequisite to the Markov blanket being useful. But futon7 work can
+start in parallel because the SPOF problem is urgent.
+
+**Stack-wide consideration:** The stack-level AIF+ diagram belongs in
+futon5. This mission (M-self-representing-stack, futon4) is about making
+that diagram *navigable* via Arxana. futon5 defines the structure; futon4
+makes it browsable; futon7 is the Markov blanket the diagram specifies.
 
 ### Higgins' Self-Discrepancy Theory
 
@@ -122,6 +179,87 @@ The self-representing stack explains its own story. The ports — what
 composes with what, what depends on what — become obvious to anyone who
 follows the narrative. "Lost in La Mancha" before "The Man Who Killed
 Don Quixote" — the failures are load-bearing structure.
+
+### Hyperedges as Frozen Dynamics
+
+(Added 2026-02-24, conversation between Joe and Claude.)
+
+A hyperedge is not a list. The distinction matters at every level:
+
+- **List/set** — membership only. `#{p1 p2 p3}` says "these together."
+- **Frame/slot** — membership + named roles. GOFAI, JSON schemas.
+- **Hyperedge** — membership + roles + topology. How endpoints connect
+  *through* the edge, not just *at* it.
+- **Wiring diagram** — hyperedges composed with port discipline and
+  timescale constraints. The futon5 exotypes live here.
+
+A hyperedge is like a frozen function — not a lambda (stateless, sequential)
+but more like a Petri net or tangled program graph: places, transitions,
+tokens, firing rules, all captured in the structure but not currently
+executing. You can inspect, browse, and reason about the dynamics before
+(or without) activating them.
+
+This connects to Ted Nelson's transclusion, which Joe generalized to
+**'clusion**: "do some things to those things and then do something with
+the result." Nelson's transclusion is the degenerate case (one operation:
+copy; one source; one destination). 'Clusion is the general case: gather
+from multiple sources, transform, compose. The CS parallel is monadic
+bind — chaining operations in a context — but richer, because the dynamics
+are concurrent, not sequential. Forces in a pattern don't resolve in order;
+they're in tension *simultaneously*, and the pattern is the resolution of
+that concurrent tension.
+
+**Consequence for Arxana:** The `props` map on a hyperedge isn't just
+metadata — it carries the dynamics that make the connection meaningful.
+A tension hyperedge doesn't just say "these three things are connected";
+it captures *why* there's a tension (what forces pull in what directions,
+what's missing, what contradicts what). A collection hyperedge doesn't
+just enumerate members; it captures what the members *do together* — the
+'clusion that relates them.
+
+The futon5 wiring diagrams are already at this level: a `social-exotype`
+isn't a list of components, it's a topology where S-presence feeds
+S-dispatch feeds S-invoke, with invariants constraining valid configurations.
+Arxana's hyperedges should reference these diagrams, not replicate their
+structure — the hyperedge points into the dynamics, it doesn't flatten
+them into a membership list.
+
+### Homoiconicity and Self-Representing Hypergraphs
+
+EDN lives inside Clojure (data literals), and Clojure lives inside EDN
+(quoted forms as inspectable structure). The frozen/molten distinction is
+a phase transition, not a type boundary: `eval` thaws data into computation,
+`quote` freezes computation into data. Same substance, different temperature.
+
+This makes the "frozen dynamics" in hyperedge props *literally executable*
+— not a metaphor. A 'clusion pipeline can be quoted Clojure forms in EDN,
+browsable in Arxana as structure, evaluable via Drawbridge as computation.
+
+**Self-representing hypergraphs.** Following the futon1a pattern: futon1a
+doesn't just enforce invariants, it *exposes them* — any agent can query
+an API endpoint and get a machine-readable answer to "what rules does this
+store enforce?" Plus README-archivist documents how to create new invariants.
+The system teaches you how to extend it.
+
+The same pattern applies to hypergraphs. "What edge types exist?" "What
+are valid endpoint configurations?" "What 'clusion does this edge perform?"
+— all queryable. The hypergraph explains its own structure, and provides
+the equivalent of README-archivist for extending that structure with new
+types, new relations, new collection patterns.
+
+**Forces as computation.** Tension hyperedges don't just *represent* forces
+— with enough frozen dynamics in their structure, they *effectively are*
+forces. The force vectors, severity, direction of pull are all evaluable.
+This makes "high curvature" computable: query the hypergraph for where
+tensions concentrate, where unresolved forces accumulate, where the graph
+needs to relax. The answer comes from evaluating the frozen dynamics, not
+from reading a dashboard and making a judgment call.
+
+This is active inference applied to the stack itself. Free energy
+minimization IS tension relaxation. The system computes its own strain
+and proposes relaxation — new missions, refactoring, pattern application.
+The self-representing hypergraph isn't a static self-portrait; it's a
+nervous system.
 
 ### Tension-Driven Mission Discovery
 
@@ -242,44 +380,384 @@ The mission proposal. Names the gap, anchors the theory, scopes the work.
 
 ### 2. MAP
 
-Survey the existing connection points:
+Survey completed 2026-02-24 (Claude + Joe session).
 
-- What does `arxana-store.el` already support for hyperedge creation?
-- What does `arxana-browser-lab.el` already show from the evidence timeline?
-- What is the exact shape of MC's `build-portfolio-review` output?
-- What is the shape of devmap prototypes in `futon3/holes/*.devmap`?
-- How does Arxana's three-tier link model map to MC artifacts?
-- What evidence entries exist in the store today? (Query futon1a)
-- What reflection payload can we reliably obtain for a target var
-  (`ns/symbol`, file, line, arglists, doc)?
-- Which existing runtime surfaces are authoritative for this in practice
-  (`futon3c/src/repl/http.clj`, `futon3/src/f2/repl.clj`)?
+**Q1: What does `arxana-store.el` support for hyperedge creation?**
+
+Fully implemented. `arxana-store--post-hyperedge` POSTs to `/hyperedge` with
+`hx/type` and `hx/endpoints` (arbitrary list of entity IDs). Binary relations
+via `/relation` also work. Batch creation via `/relations/batch`. The write
+transport layer is ready — but no higher-level module ever calls the hyperedge
+path. It is plumbed but unused.
+
+**Q2: What does `arxana-browser-lab.el` show from the evidence timeline?**
+
+Reads evidence entries from futon1a via `GET /evidence`. Filters by type and
+author. Tabulated list display, individual entry viewer, reply chain follower.
+Groups by session-id (client-side). Known evidence types: `pattern-selection`,
+`pattern-outcome`, `reflection`, `gate-traversal`, `coordination`, `forum-post`,
+`mode-transition`, `presence-event`, `correction`, `conjecture`. Purely a viewer
+— no hyperedge creation, no connection to the three-tier link model.
+
+**Q3: What is the exact shape of MC's `build-portfolio-review`?**
+
+```clojure
+{:portfolio/missions         [MissionEntry...]
+ :portfolio/devmap-summaries [DevmapSummary...]
+ :portfolio/coverage         [CoverageEntry...]
+ :portfolio/mana             ManaSnapshot
+ :portfolio/summary          "42 missions (12 complete, ...)"
+ :portfolio/gaps             ["devmap/Component -- no mission" ...]
+ :portfolio/actionable       ["mission-id (in-progress) [repo]" ...]}
+```
+
+Each `CoverageEntry` has `:coverage/uncovered` — a vector of component IDs
+with no mission. This is the tension data Arxana needs to make navigable.
+Exposed via `POST /api/alpha/mission-control {"action":"review"}`.
+
+**Q4: What is the shape of devmap prototypes?**
+
+88 prototypes across 9 `.devmap` files in `futon3/holes/`. These are flexiarg
+format — the same DSL that Arxana already represents for `futon3/library`
+patterns. Devmaps are a different flavour of design pattern, not a different
+format. Key structural handles per prototype: `! instantiated-by: Prototype N
+— Title [sigils]`, `:maturity` (stub/greenfield/active/settled), `:depends-on
+[futonN/PK ...]`, `evidence[path/to/artifact]`, `:success-criteria pass[...]
+fail[...]`, `:owner`, `:psr-example`, `:pur-template`.
+
+Arxana's existing flexiarg handling should extend to devmaps with small changes
+(devmap-specific fields like `:maturity`, `:depends-on`, `:success-criteria`).
+
+**Q5: How does the three-tier link model map to MC artifacts?**
+
+Currently: no connection at all. The three-tier model (strategies → voiced
+links → anchored scholia) operates on code↔doc links. Evidence entries from
+MC are in a completely separate world. This gap is precisely what the mission
+fills — MC artifacts need to become hyperedge endpoints, and the tension
+browser needs to surface the connections the link model currently ignores.
+
+**Q6: What evidence entries exist in the store today?**
+
+Queryable via `GET /api/alpha/evidence`. Each entry has `:evidence/subject
+{:ref/type :ref/id}`, `:evidence/type`, `:evidence/claim-type`,
+`:evidence/in-reply-to` (threading), `:evidence/tags`. MC steps emit entries
+tagged `[:peripheral :mission-control :step]` with body containing the full
+tool result. Backfill entries tagged `[:mission :backfill :snapshot]`.
+
+Note: tag-based query is NOT in `EvidenceQuery` — it's a post-filter in the
+HTTP handler only. Adding `:query/tags` to the query schema would be a small
+but useful enhancement.
+
+**Q7: What reflection payload can we reliably obtain?**
+
+Already live and deployed at `GET /api/alpha/reflect/var/:ns/:var`. Returns
+a `ReflectionEnvelope`:
+
+```clojure
+{:reflection/ns          symbol
+ :reflection/symbol      symbol
+ :reflection/file        string
+ :reflection/line        int
+ :reflection/arglists    (([args...]) ...)
+ :reflection/doc         string
+ :reflection/resolved-at Instant
+ :reflection/private?    bool
+ :reflection/macro?      bool
+ :reflection/dynamic?    bool}
+```
+
+Plus namespace listing (`/reflect/namespaces`), dependency graph
+(`/reflect/deps/:ns`), and Java class reflection (`/reflect/java/:class`).
+This is exactly the shape proposed in the mission doc for reflection-grounded
+strategic scholia — it already exists and is authoritative.
+
+**Q8: Which runtime surfaces are authoritative?**
+
+- `futon3c/src/repl/http.clj` — Drawbridge `/eval` endpoint. POST raw Clojure
+  code, authenticated via `x-admin-token` header. Can call any function in the
+  running JVM.
+- `futon3c/src/futon3c/reflection/` — `core.clj` (list-namespaces, reflect-ns,
+  reflect-var, reflect-deps) and `envelope.clj` (ReflectionEnvelope shape).
+- HTTP reflection endpoints at `/api/alpha/reflect/*` — live, no auth needed.
+
+**MAP Summary: What's Ready vs What's Missing**
+
+Ready (no new code needed):
+- Hyperedge write path (arxana-store)
+- Evidence read path (browser-lab, HTTP API)
+- MC portfolio review with coverage/gaps (HTTP API)
+- Reflection envelopes with file/line/arglists/doc (HTTP API)
+- Flexiarg representation in Arxana (for devmap ingestion)
+
+Missing (the actual DERIVE/INSTANTIATE work):
+1. Hyperedge read path in Emacs — no `fetch-hyperedge` or `load-hyperedges`
+2. Evidence → hyperedge bridge — converting MC artifacts to hyperedge endpoints
+3. Devmap flavour support in flexiarg handling (small extension)
+4. Tension browser view (new UI or extension of browser-lab)
+5. Narrative trail view (per-mission evidence story)
+6. Tag-based query in EvidenceQuery (small schema extension)
 
 ### 3. DERIVE
 
-Design the hyperedge types for system self-representation:
+Started 2026-02-24 (Claude + Joe session). Inline IF/HOWEVER/THEN/BECAUSE
+justifications accompany each design decision. The consolidated ARGUE
+synthesis follows the DERIVE section.
 
-- `:hx/type :covers` — mission → devmap component
-- `:hx/type :evidences` — evidence entry → mission or prototype
-- `:hx/type :tension` — discrepancy between ideal and actual
-- `:hx/type :narrative-step` — evidence entry → next evidence entry in trail
-- `:hx/type :pattern-use` — PUR evidence → pattern from library
-- `:hx/type :about-var` — strategic claim → concrete Clojure var
-- `:hx/type :reflection-snapshot` — var → reflection envelope at time T
+#### Endpoint Entity Types
 
-Design the browser views:
-- Tension browser (new, built on `arxana-browser-lab.el`)
-- Narrative trail (extension to evidence timeline)
-- System book (extension to docbook)
+The hypergraph connects things. These are the things:
+
+| Entity Type | Identity | Source | Already in XTDB? |
+|---|---|---|---|
+| Mission | `mission:<id>` | MC inventory, M-*.md files | As evidence subject refs |
+| Devmap | `devmap:<futonN>` | `futon3/holes/*.devmap` | No — needs ingestion |
+| Prototype | `prototype:<futonN/PK>` | Inside devmap files | No — needs ingestion |
+| Component | `component:<devmap>/<id>` | futon5 wiring EDN | No — needs ingestion |
+| Evidence entry | `e-<uuid>` | Evidence store | Yes |
+| Pattern | `pattern:<id>` | `library/**/*.flexiarg` | As evidence refs |
+| Clojure var | `var:<ns>/<symbol>` | Reflection API | No — created on demand |
+| Repo/Subsystem | `repo:<futonN>` | Stack-level diagram | No — needs creation |
+
+**IF** some endpoints already exist as evidence subject refs (`{:ref/type
+:mission :ref/id "M-xxx"}`) **HOWEVER** these are embedded in evidence
+entries, not first-class navigable entities **THEN** we create Arxana entities
+for missions, prototypes, and components so they can be hyperedge endpoints
+**BECAUSE** you can't browse *to* something that doesn't have an entity ID.
+
+Devmaps and prototypes are flexiarg — Arxana already represents flexiarg
+patterns from the library. Devmaps are a different flavour of design pattern,
+so extending existing flexiarg handling to cover devmap-specific fields
+(`:maturity`, `:depends-on`, `:success-criteria`) is a small change.
+
+#### Hyperedge and Relation Types
+
+**Design decision: relations (binary) vs hyperedges (n-ary)**
+
+**IF** most connections are binary (mission covers component, evidence
+evidences mission, PUR references pattern) **HOWEVER** some connections are
+genuinely n-ary (a tension involves ideal + actual + gap; a narrative step
+connects evidence, mission, and pattern in context) **THEN** use binary
+relations as the default and reserve hyperedges for genuinely n-ary
+connections **BECAUSE** binary relations are simpler to create, query, and
+render, and `arxana-store-create-relation` is already well-exercised while
+`arxana-store--post-hyperedge` has no callers yet.
+
+**Binary relations** (type field on Arxana relation):
+
+```
+type: "covers"
+  src: mission:<id>        dst: component:<devmap>/<id>
+  props: { coverage-source: "mc-review", reviewed-at: "<ISO>" }
+```
+MC's `compute-coverage` produces the data. One relation per (mission,
+component) pair. Created from portfolio review output.
+
+```
+type: "evidences"
+  src: e-<uuid>            dst: mission:<id> | prototype:<futonN/PK>
+  props: { evidence-type: "...", claim-type: "..." }
+```
+Reifies the `:evidence/subject` ref as a navigable relation. Created by
+scanning existing evidence entries and matching subject refs to entities.
+
+```
+type: "pattern-use"
+  src: e-<uuid>            dst: pattern:<id>
+  props: { outcome: "success|partial|fail" }
+```
+Reifies `:evidence/pattern-id` from PUR entries as a navigable relation.
+
+```
+type: "narrative-step"
+  src: e-<uuid>            dst: e-<uuid>
+  props: { mission: "<id>", step-index: N }
+```
+Sequential ordering within a mission's evidence trail. Supplements
+`:evidence/in-reply-to` (which is per-thread, not per-mission-narrative).
+
+```
+type: "about-var"
+  src: <scholium-or-claim-id>   dst: var:<ns>/<symbol>
+  props: { :reflection/file, :reflection/line, :reflection/resolved-at }
+```
+Grounds a strategic claim to a concrete Clojure var. The reflection envelope
+fields are copied into props at creation time. If the var later moves or
+disappears, `resolved-at` becomes stale — the tension browser surfaces this.
+
+**IF** voiced links already connect code symbols to doc paragraphs
+**HOWEVER** `about-var` connects *claims* (scholia, evidence, mission
+assertions) to code symbols, which is a different direction **THEN** this
+is a new relation type, not an extension of voiced links **BECAUSE** the
+source is a strategic claim, not a doc paragraph.
+
+**Hyperedges** (n-ary, using `hx/type`):
+
+```
+hx/type: "tension"
+  endpoints: [component:<devmap>/<id>,   ;; the ideal (what should exist)
+              mission:<id> | nil,         ;; the mission addressing it (or absent)
+              e-<uuid> | nil]             ;; latest evidence (or absent)
+  props: { tension-type: "uncovered|stale|unmet|contradictory",
+           detected-at: "<ISO>",
+           detected-by: "mc-review|tension-scan",
+           summary: "S-dispatch has no mission" }
+```
+A tension is genuinely n-ary: it connects an aspiration (component/prototype),
+the work addressing it (mission, possibly absent), and the evidence trail.
+When a component has no mission, the second endpoint is nil — the absence IS
+the tension.
+
+**IF** we could model tensions as binary (component → gap-marker)
+**HOWEVER** the whole point is navigability across layers — from gap to
+mission to evidence to code **THEN** the tension hyperedge connects all
+relevant layers in one browsable structure **BECAUSE** the user needs to
+see the full context when pointing at a tension, not chase binary links.
+
+```
+hx/type: "reflection-snapshot"
+  endpoints: [var:<ns>/<symbol>,
+              <claim-or-scholium-id>]
+  props: { :reflection/ns, :reflection/symbol, :reflection/file,
+           :reflection/line, :reflection/arglists, :reflection/doc,
+           :reflection/resolved-at }
+```
+A timestamped assertion about a var's state. Created when a strategic claim
+is first grounded to reflection data. Re-verified periodically — if the var
+moves or the signature changes, the snapshot becomes stale and a tension is
+generated.
+
+**IF** this could be an entity (like a scholium) rather than a hyperedge
+**HOWEVER** it connects two things (the var identity and the claim that
+references it) with temporal metadata **THEN** hyperedge is the right
+shape **BECAUSE** the snapshot is about the *relationship* between claim
+and var at a point in time, not about either endpoint alone.
+
+```
+hx/type: "collection"
+  endpoints: [<member-id>, <member-id>, ...]   ;; n members
+  props: { collection-type: "informed-by|forces|family-resemblance|...",
+           label: "patterns that informed M-mission-control",
+           owner: mission:<id> | pattern:<id> | ... }
+```
+A collection groups entities that share a family resemblance or contribute
+to a common context. Examples: "patterns that informed this mission" (a list
+of pattern refs), "forces in a tension" (the n-ary forces in pattern theory
+that create the tension a pattern resolves). Unlike binary relations, the
+membership is genuinely n-ary and the set itself is meaningful — you want to
+browse "what informed this?" as a group, not chase individual links.
+
+**IF** collections could be modeled as multiple binary relations (mission
+→ pattern, mission → pattern, ...) **HOWEVER** the *set* carries meaning
+that individual members don't — "these five patterns together informed this
+mission" is different from five independent "uses pattern" relations
+**THEN** a collection hyperedge preserves the grouping as a first-class
+browsable structure **BECAUSE** in pattern theory, forces are n-ary (a
+design pattern resolves tensions among *multiple* forces simultaneously),
+and "family resemblance" (Wittgenstein) is inherently about the group, not
+pairwise similarity.
+
+#### Browser Views
+
+**Tension browser** — new view in `arxana-browser-lab.el` or a companion
+module. Reads tension hyperedges, displays as a navigable list grouped by
+`tension-type`. Each tension is clickable → expands to show the connected
+endpoints (component, mission, evidence). Actions: "propose mission" from
+an uncovered component, "view evidence" for a stale prototype.
+
+Data source: tension hyperedges, created by running MC's `compute-coverage`
++ `find-gaps` and converting the output to hyperedges. Can also be generated
+by periodic "tension scan" that checks reflection-snapshot staleness.
+
+**IF** we could reuse `arxana-browser-lab.el` directly **HOWEVER** the
+evidence timeline is entry-centric (one row per entry) while tensions are
+connection-centric (one row per gap) **THEN** the tension browser is a new
+view, but it reuses the same infrastructure (tabulated-list-mode, HTTP
+fetch, entity display) **BECAUSE** the data shape is different but the
+rendering machinery is the same.
+
+**Narrative trail** — extension to evidence timeline. Given a mission ID,
+fetch all evidence entries with that mission as subject, follow
+`narrative-step` relations to order them, render as a scrollable story.
+Each entry shows: timestamp, author, type, and body summary. System events
+(PSR/PUR/PAR) are compact; chat turns are expanded. Code blocks link to
+source via `about-var` relations.
+
+**IF** the evidence timeline already shows entries **HOWEVER** it shows
+them as a flat list sorted by time, not as a per-mission story **THEN**
+narrative trail adds mission-scoped filtering and `narrative-step` ordering
+**BECAUSE** the story of how a mission was completed is the structure
+that new contributors (human or agent) need to understand the system.
+
+**System book** — extension to docbook integration. One "chapter" per repo
+(futon0–futon7). Sections are prototypes from devmaps. Annotations are
+evidence entries reified as scholia. The book is navigable in Arxana's
+existing docbook browser. Content is generated from devmap ingestion +
+evidence queries, not hand-authored.
+
+**IF** we could write a static book **HOWEVER** the system changes
+constantly — prototypes gain maturity, evidence accumulates, tensions
+appear and resolve **THEN** the book is generated on demand from the
+hypergraph, not authored as prose **BECAUSE** a static book becomes
+stale the moment it's written; a generated book is always current.
 
 ### 4. ARGUE
 
-Justify the design with IF/HOWEVER/THEN/BECAUSE for each major decision:
-- Why hyperedges rather than flat links?
-- Why extend existing Arxana modules rather than new ones?
-- Why read from MC output rather than reimplementing MC in Emacs?
-- Why claims must bottom out on vars/reflection metadata rather than only files
-  or prose docs?
+**Synthesis informed by:** `gauntlet/world-is-hypergraph` [🌐/界],
+`futon-theory/reverse-morphogenesis` [🔁/←], `math-informal/parametric-
+tension-dissolution` [🔀/巽], `f6/self-play-loop` [♻️/遊],
+`futon-theory/futonic-logic` [象/香/鹽], devmap P11 (System Self-Description)
+[🔃/本].
+
+The futon stack is not a system that needs a separate self-model bolted on
+— it IS a hypergraph that agents already inhabit (`world-is-hypergraph`).
+Documents, code, missions, evidence, and patterns are all nodes; scholia,
+dependencies, coverage relations, and presence traces are all edges. The
+task is not to build a representation of the world but to make the world
+legible to its own inhabitants. When an agent says "I found the multiplex
+function in drawbridge/core.clj," the phenomenology is identical to "I
+found the vase on the dresser" (ALFWorld evidence, 2026-02-13). The
+hypergraph is the game; Arxana is the browser that makes it playable.
+
+The design above introduces three categories of structure — binary relations
+for the common cases (covers, evidences, pattern-use, narrative-step,
+about-var), hyperedges for genuinely n-ary connections (tensions, reflection
+snapshots, collections), and browser views that render both. This follows
+the parametric-tension-dissolution discipline: the tension between "simple
+queryable relations" and "rich navigable structure" is dissolved by using
+binary relations where the connection is binary and hyperedges where it
+isn't, rather than forcing everything into one shape. The tension is
+structural, not aesthetic — flattening a tension hyperedge into binary
+pairs loses the simultaneous force field that makes it a tension.
+
+Hyperedges are frozen dynamics, not frozen lists. A tension hyperedge
+carries its force vectors (what pulls where, what's missing, what
+contradicts what) as evaluable structure — Clojure forms inside EDN,
+thawable via `eval`, browsable via Arxana. This makes "high curvature"
+(accumulated unresolved tension) a computable property of the graph, not a
+human judgment. The system can feel where it hurts. This is active inference
+applied reflexively: free energy minimization IS tension relaxation, and the
+hypergraph IS the nervous system that computes the strain.
+
+The reflexivity loop that P11 describes ("a semantic network that includes a
+model of itself") closes here. Following the futon1a pattern — where
+invariants are not just enforced but queryable, and README-archivist
+documents how to create new ones — the hypergraph should expose its own
+structure via API: "what edge types exist?", "what are valid endpoint
+configurations?", "what 'clusion does this edge perform?" The self-play
+pattern (`f6/self-play-loop`) confirms the architecture: the graph that
+agents improve IS the graph they query. When MC runs a portfolio review, it
+emits evidence; that evidence becomes a hyperedge; the tension browser
+surfaces it; a human or agent proposes a new mission; that mission's
+evidence feeds back. The loop writes itself.
+
+The reverse-morphogenesis pattern (`←`) grounds the epistemology: given the
+stack's current form (what exists) and its desired form (what devmaps
+specify), infer the constraints that would make the current form stable
+under development pressure. Those constraints are the tensions. They aren't
+bugs to fix — they're the structural information that tells you where the
+system wants to go next. The self-representing stack doesn't just show you
+what exists; it shows you what the existing form *implies* about what should
+come next.
 
 ### 5. VERIFY
 
