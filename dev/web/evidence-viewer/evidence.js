@@ -1,10 +1,10 @@
 // evidence.js — Main application: routing, views, filters.
-import { fetchEvidence, fetchEntry, fetchChain } from './evidence-api.js?v=4';
+import { fetchEvidence, fetchEntry, fetchChain } from './evidence-api.js?v=5';
 import {
   eget, typeLabel, typeClass, claimLabel, formatSubject,
   bodyPreview, formatTime, formatTimeShort, formatTags,
-  renderDetail, renderChain, renderThreadCard, renderNotebook
-} from './evidence-render.js?v=4';
+  renderDetail, renderChain, renderThreadCard, renderNotebook, renderWall
+} from './evidence-render.js?v=5';
 
 // -- State --
 
@@ -278,6 +278,9 @@ function route() {
   if (primary === 'evidence' && parts.length === 1) {
     showFilters(true);
     showThreads();
+  } else if (primary === 'wall' && parts.length === 1) {
+    showFilters(true);
+    showWall();
   } else if (primary === 'timeline' && parts.length === 1) {
     showFilters(true);
     showDashboard();
@@ -505,6 +508,54 @@ function renderThreadList(threads, totalCount) {
 
   replaceView(container);
   updateCount(totalCount);
+}
+
+// -- Wall view --
+
+async function showWall() {
+  setTitle('Wall');
+  setLoading();
+  try {
+    replaceView('');
+    const container = document.createElement('div');
+    $('#view').appendChild(container);
+
+    // Event delegation for system event expansion (same as notebook)
+    container.addEventListener('click', async (e) => {
+      const eventEl = e.target.closest('.system-event');
+      if (!eventEl) return;
+      const id = eventEl.dataset.id;
+      if (!id) return;
+      const existing = eventEl.nextElementSibling;
+      if (existing && existing.classList.contains('system-event-detail')) {
+        existing.remove();
+        return;
+      }
+      const detail = document.createElement('div');
+      detail.className = 'system-event-detail';
+      detail.innerHTML = '<p class="loading">Loading...</p>';
+      eventEl.insertAdjacentElement('afterend', detail);
+      try {
+        const entry = await fetchEntry(id);
+        detail.innerHTML = renderDetail(entry);
+        wireNavLinks(detail);
+      } catch (err) {
+        detail.innerHTML = `<p class="error">Failed to load entry</p>`;
+      }
+    });
+
+    const refresh = async () => {
+      const data = await fetchEvidence({ ...currentFilters, limit: 200 });
+      container.innerHTML = renderWall(data.entries || []);
+      updateCount(data.count || 0);
+    };
+
+    await refresh();
+    configureLiveRefresh(refresh);
+  } catch (err) {
+    setError(`Failed to load evidence: ${err.message}`);
+    disableLiveRefresh();
+  }
 }
 
 // -- Detail view --

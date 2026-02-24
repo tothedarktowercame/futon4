@@ -445,6 +445,60 @@ export function renderNotebook(entries) {
   return html;
 }
 
+export function renderWall(entries) {
+  if (!entries || entries.length === 0) {
+    return '<div class="empty-state"><p>No entries yet.</p></div>';
+  }
+
+  // Sort oldest-first for reading order
+  const sorted = [...entries].sort((a, b) => {
+    const atA = eget(a, 'at') || '';
+    const atB = eget(b, 'at') || '';
+    return atA.localeCompare(atB);
+  });
+
+  let html = '<div class="notebook wall">';
+
+  for (const entry of sorted) {
+    const body = eget(entry, 'body');
+    const isChatTurn = isChatMessage(body);
+
+    if (isChatTurn) {
+      const author = eget(entry, 'author') || body.role || 'unknown';
+      const text = body.text || '';
+      const at = eget(entry, 'at');
+      const aclass = authorClass(author);
+      const transport = body.transport;
+      const tLabel = transportLabel(transport);
+      const tClass = transportClass(transport);
+
+      html += `<div class="chat-message ${aclass}">
+        <div class="message-meta">
+          <span class="message-author ${aclass}">${esc(author)}</span>
+          <span class="transport-badge ${tClass} transport-badge-sm">${esc(tLabel)}</span>
+          <span class="message-time">${esc(formatTimeShort(at))}</span>
+        </div>
+        <div class="message-text">${formatMessageText(text)}</div>
+      </div>`;
+    } else {
+      const type = eget(entry, 'type');
+      const tclass = typeClass(type);
+      const at = eget(entry, 'at');
+      const preview = bodyPreview(body, type, 60);
+      const id = eget(entry, 'id');
+
+      html += `<div class="system-event" data-id="${esc(id || '')}">
+        <span class="system-event-time">${esc(formatTimeShort(at))}</span>
+        <span class="type-badge ${tclass}">${esc(typeLabel(type))}</span>
+        <span class="system-event-preview">${esc(preview)}</span>
+      </div>`;
+    }
+  }
+
+  html += '</div>';
+  return html;
+}
+
 function formatMessageText(text) {
   if (!text) return '';
   let html = esc(text);
