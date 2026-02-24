@@ -1,10 +1,10 @@
 // evidence.js — Main application: routing, views, filters.
-import { fetchEvidence, fetchEntry, fetchChain } from './evidence-api.js?v=2';
+import { fetchEvidence, fetchEntry, fetchChain } from './evidence-api.js?v=3';
 import {
   eget, typeLabel, typeClass, claimLabel, formatSubject,
   bodyPreview, formatTime, formatTimeShort, formatTags,
   renderDetail, renderChain, renderThreadCard, renderNotebook
-} from './evidence-render.js?v=2';
+} from './evidence-render.js?v=3';
 
 // -- State --
 

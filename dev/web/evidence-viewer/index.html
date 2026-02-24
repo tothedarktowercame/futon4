@@ -599,15 +599,17 @@
       border-left: 3px solid transparent;
     }
 
-    .message-user {
-      background: var(--bg-secondary);
-      border-left-color: var(--link-color);
-    }
+    /* Author colors: joe=green, codex=pink, claude=blue */
+    .author-joe { border-left-color: var(--pur-fg); }
+    .author-joe.message-author, .author-joe > .message-meta .message-author { color: var(--pur-fg); }
 
-    .message-assistant {
-      background: var(--bg-secondary);
-      border-left-color: var(--pur-fg);
-    }
+    .author-codex { border-left-color: var(--psr-fg); }
+    .author-codex.message-author, .author-codex > .message-meta .message-author { color: var(--psr-fg); }
+
+    .author-claude { border-left-color: var(--par-fg); }
+    .author-claude.message-author, .author-claude > .message-meta .message-author { color: var(--par-fg); }
+
+    .author-default { border-left-color: var(--text-muted); }
 
     .message-meta {
       display: flex;
@@ -761,6 +763,6 @@
     </main>
   </div>
 
-  <script type="module" src="./evidence.js?v=2"></script>
+  <script type="module" src="./evidence.js?v=3"></script>
 </body>
 </html>

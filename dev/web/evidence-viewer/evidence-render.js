@@ -361,6 +361,14 @@ export function renderThreadCard(thread) {
 
 // -- Notebook rendering --
 
+function authorClass(author) {
+  const name = (author || '').toLowerCase();
+  if (name === 'joe') return 'author-joe';
+  if (name === 'codex') return 'author-codex';
+  if (name === 'claude') return 'author-claude';
+  return 'author-default';
+}
+
 export function renderNotebook(entries) {
   if (!entries || entries.length === 0) {
     return '<div class="empty-state"><p>No entries in this session.</p></div>';
@@ -404,11 +412,11 @@ export function renderNotebook(entries) {
       const author = eget(entry, 'author') || role;
       const text = body.text || '';
       const at = eget(entry, 'at');
-      const roleClass = role === 'user' ? 'message-user' : 'message-assistant';
+      const aclass = authorClass(author);
 
-      html += `<div class="chat-message ${roleClass}">
+      html += `<div class="chat-message ${aclass}">
         <div class="message-meta">
-          <span class="message-author">${esc(author)}</span>
+          <span class="message-author ${aclass}">${esc(author)}</span>
           <span class="message-time">${esc(formatTimeShort(at))}</span>
         </div>
         <div class="message-text">${formatMessageText(text)}</div>
