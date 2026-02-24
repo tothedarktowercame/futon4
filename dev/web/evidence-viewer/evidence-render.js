@@ -361,11 +361,15 @@ export function renderThreadCard(thread) {
 
 // -- Notebook rendering --
 
+function isChatMessage(body) {
+  return body?.text && typeof body.text === 'string';
+}
+
 function authorClass(author) {
   const name = (author || '').toLowerCase();
   if (name === 'joe') return 'author-joe';
-  if (name === 'codex') return 'author-codex';
-  if (name === 'claude') return 'author-claude';
+  if (name === 'codex' || name.startsWith('codex-')) return 'author-codex';
+  if (name === 'claude' || name.startsWith('claude-')) return 'author-claude';
   return 'author-default';
 }
 
@@ -405,7 +409,7 @@ export function renderNotebook(entries) {
 
   for (const entry of sorted) {
     const body = eget(entry, 'body');
-    const isChatTurn = body?.event === 'chat-turn';
+    const isChatTurn = isChatMessage(body);
 
     if (isChatTurn) {
       const role = body.role || 'unknown';

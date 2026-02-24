@@ -1,10 +1,10 @@
 // evidence.js — Main application: routing, views, filters.
-import { fetchEvidence, fetchEntry, fetchChain } from './evidence-api.js?v=3';
+import { fetchEvidence, fetchEntry, fetchChain } from './evidence-api.js?v=4';
 import {
   eget, typeLabel, typeClass, claimLabel, formatSubject,
   bodyPreview, formatTime, formatTimeShort, formatTags,
   renderDetail, renderChain, renderThreadCard, renderNotebook
-} from './evidence-render.js?v=3';
+} from './evidence-render.js?v=4';
 
 // -- State --
 
@@ -417,9 +417,9 @@ function groupIntoThreads(entries) {
         transport = body.transport;
       }
 
-      if (body?.event === 'chat-turn') {
+      if (body?.text && typeof body.text === 'string') {
         turnCount++;
-        if (!lastMessage && body.text) lastMessage = body.text;
+        if (!lastMessage) lastMessage = body.text;
       }
     }
 
