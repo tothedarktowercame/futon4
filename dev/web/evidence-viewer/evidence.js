@@ -3,7 +3,7 @@ import { fetchEvidence, fetchEntry, fetchChain } from './evidence-api.js';
 import {
   eget, typeLabel, typeClass, claimLabel, formatSubject,
   bodyPreview, formatTime, formatTimeShort, formatTags,
-  renderDetail, renderChain, renderThreadCard
+  renderDetail, renderChain, renderThreadCard, renderNotebook
 } from './evidence-render.js';
 
 // -- State --
@@ -629,20 +629,45 @@ async function showSessionTimeline(sessionId) {
     replaceView('');
     const nav = document.createElement('nav');
     nav.className = 'detail-nav';
-    nav.innerHTML = `<a href="#/sessions" data-nav="#/sessions" class="back-link">\u2190 Back to sessions</a>
-      <a href="#/evidence" data-nav="#/evidence" class="back-link">\u2190 Timeline</a>`;
+    nav.innerHTML = `<a href="#/evidence" data-nav="#/evidence" class="back-link">\u2190 Back to threads</a>`;
     $('#view').appendChild(nav);
     wireNavLinks(nav);
 
     const container = document.createElement('div');
     $('#view').appendChild(container);
 
-    let firstLoad = true;
+    // Event delegation for system event expansion
+    container.addEventListener('click', async (e) => {
+      const eventEl = e.target.closest('.system-event');
+      if (!eventEl) return;
+      const id = eventEl.dataset.id;
+      if (!id) return;
+
+      // Toggle: if detail already open, close it
+      const existing = eventEl.nextElementSibling;
+      if (existing && existing.classList.contains('system-event-detail')) {
+        existing.remove();
+        return;
+      }
+
+      const detail = document.createElement('div');
+      detail.className = 'system-event-detail';
+      detail.innerHTML = '<p class="loading">Loading...</p>';
+      eventEl.insertAdjacentElement('afterend', detail);
+
+      try {
+        const entry = await fetchEntry(id);
+        detail.innerHTML = renderDetail(entry);
+        wireNavLinks(detail);
+      } catch (err) {
+        detail.innerHTML = `<p class="error">Failed to load entry</p>`;
+      }
+    });
+
     const refresh = async () => {
       const filters = { ...currentFilters, 'session-id': sessionId };
       const data = await fetchEvidence(filters);
-      renderDashboardInto(container, data, { preserveDetail: !firstLoad });
-      firstLoad = false;
+      container.innerHTML = renderNotebook(data.entries || []);
     };
 
     await refresh();

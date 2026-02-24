@@ -565,6 +565,131 @@
     .transport-irc { background: var(--psr-bg); color: var(--psr-fg); }
     .transport-system { background: var(--default-bg); color: var(--default-fg); }
 
+    /* -- Notebook view -- */
+    .notebook {
+      max-width: 800px;
+    }
+
+    .notebook-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0 16px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .notebook-participants {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .notebook-timerange {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .chat-message {
+      padding: 10px 14px;
+      margin-bottom: 6px;
+      border-radius: 6px;
+      border-left: 3px solid transparent;
+    }
+
+    .message-user {
+      background: var(--bg-secondary);
+      border-left-color: var(--link-color);
+    }
+
+    .message-assistant {
+      background: var(--bg-secondary);
+      border-left-color: var(--pur-fg);
+    }
+
+    .message-meta {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .message-author {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .message-time {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .message-text {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text-primary);
+      word-break: break-word;
+    }
+
+    .message-text pre.message-code {
+      background: var(--bg-tertiary);
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      margin: 6px 0;
+    }
+
+    .message-text code {
+      background: var(--bg-tertiary);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    .system-event {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 12px;
+      margin: 4px 0;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background 0.1s;
+    }
+    .system-event:hover {
+      background: var(--bg-secondary);
+    }
+
+    .system-event-time {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+
+    .system-event-preview {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .system-event-detail {
+      margin: 4px 0 8px 24px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: 6px;
+      border-left: 2px solid var(--border-light);
+    }
+
     /* -- Responsive -- */
     @media (max-width: 800px) {
       #app { padding: 12px 16px; }

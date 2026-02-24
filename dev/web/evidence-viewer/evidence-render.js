@@ -359,6 +359,92 @@ export function renderThreadCard(thread) {
   `;
 }
 
+// -- Notebook rendering --
+
+export function renderNotebook(entries) {
+  if (!entries || entries.length === 0) {
+    return '<div class="empty-state"><p>No entries in this session.</p></div>';
+  }
+
+  // Sort oldest-first for reading order
+  const sorted = [...entries].sort((a, b) => {
+    const atA = eget(a, 'at') || '';
+    const atB = eget(b, 'at') || '';
+    return atA.localeCompare(atB);
+  });
+
+  // Build thread header
+  const participants = new Set();
+  let transport = null;
+  for (const e of sorted) {
+    const author = eget(e, 'author');
+    if (author) participants.add(author);
+    const body = eget(e, 'body');
+    if (!transport && body?.transport) transport = body.transport;
+  }
+
+  const firstAt = eget(sorted[0], 'at');
+  const lastAt = eget(sorted[sorted.length - 1], 'at');
+  const tLabel = transportLabel(transport);
+  const tClass = transportClass(transport);
+
+  let html = '<div class="notebook">';
+  html += `<div class="notebook-header">
+    <span class="transport-badge ${tClass}">${esc(tLabel)}</span>
+    <span class="notebook-participants">${esc([...participants].join(', '))}</span>
+    <span class="notebook-timerange">${esc(formatTime(firstAt))} \u2014 ${esc(formatTime(lastAt))}</span>
+  </div>`;
+
+  for (const entry of sorted) {
+    const body = eget(entry, 'body');
+    const isChatTurn = body?.event === 'chat-turn';
+
+    if (isChatTurn) {
+      const role = body.role || 'unknown';
+      const author = eget(entry, 'author') || role;
+      const text = body.text || '';
+      const at = eget(entry, 'at');
+      const roleClass = role === 'user' ? 'message-user' : 'message-assistant';
+
+      html += `<div class="chat-message ${roleClass}">
+        <div class="message-meta">
+          <span class="message-author">${esc(author)}</span>
+          <span class="message-time">${esc(formatTimeShort(at))}</span>
+        </div>
+        <div class="message-text">${formatMessageText(text)}</div>
+      </div>`;
+    } else {
+      // System event — compact inline marker
+      const type = eget(entry, 'type');
+      const tclass = typeClass(type);
+      const at = eget(entry, 'at');
+      const preview = bodyPreview(body, type, 60);
+      const id = eget(entry, 'id');
+
+      html += `<div class="system-event" data-id="${esc(id || '')}">
+        <span class="system-event-time">${esc(formatTimeShort(at))}</span>
+        <span class="type-badge ${tclass}">${esc(typeLabel(type))}</span>
+        <span class="system-event-preview">${esc(preview)}</span>
+      </div>`;
+    }
+  }
+
+  html += '</div>';
+  return html;
+}
+
+function formatMessageText(text) {
+  if (!text) return '';
+  let html = esc(text);
+  // Code blocks: ```...``` → <pre>
+  html = html.replace(/```([^`]*?)```/gs, '<pre class="message-code">$1</pre>');
+  // Inline code: `...` → <code>
+  html = html.replace(/`([^`]+?)`/g, '<code>$1</code>');
+  // Line breaks
+  html = html.replace(/\n/g, '<br>');
+  return html;
+}
+
 // -- HTML escaping --
 
 function esc(s) {
