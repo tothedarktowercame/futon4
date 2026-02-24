@@ -678,53 +678,6 @@ async function showSessionTimeline(sessionId) {
   }
 }
 
-function renderDashboardInto(container, data, { preserveDetail = false } = {}) {
-  if (!container) return;
-  const previousDetailId = preserveDetail ? openDetailId : null;
-  if (!preserveDetail) {
-    closeInlineDetail();
-  } else {
-    detailRowEl = null;
-  }
-  container.innerHTML = '';
-  const { entries = [] } = data;
-  const table = document.createElement('table');
-  table.className = 'evidence-table';
-  table.innerHTML = `<thead><tr>
-    <th class="col-time">Time</th>
-    <th class="col-type">Type</th>
-    <th class="col-author">Author</th>
-    <th class="col-reply">\u21b3</th>
-    <th class="col-preview">Preview</th>
-    <th class="col-subject">Subject</th>
-  </tr></thead>`;
-  const tbody = document.createElement('tbody');
-  for (const entry of entries) {
-    const row = document.createElement('tr');
-    row.className = 'evidence-row';
-    const id = eget(entry, 'id');
-    row.dataset.id = id;
-    row.onclick = () => toggleInlineDetail(row, id);
-    const type = eget(entry, 'type');
-    const tclass = typeClass(type);
-    const inReplyTo = eget(entry, 'in-reply-to');
-    row.innerHTML = `
-      <td class="col-time mono">${esc(formatTime(eget(entry, 'at')))}</td>
-      <td class="col-type"><span class="type-badge ${tclass}">${esc(typeLabel(type))}</span></td>
-      <td class="col-author">${esc(truncStr(eget(entry, 'author') || '', 12))}</td>
-      <td class="col-reply">${inReplyTo ? '\u21b3' : ''}</td>
-      <td class="col-preview">${esc(bodyPreview(eget(entry, 'body'), type))}</td>
-      <td class="col-subject mono">${esc(formatSubject(eget(entry, 'subject')))}</td>
-    `;
-    tbody.appendChild(row);
-  }
-  table.appendChild(tbody);
-  container.appendChild(table);
-  if (preserveDetail && previousDetailId) {
-    reopenInlineDetail(container, previousDetailId);
-  }
-}
-
 // -- Filters --
 
 function initFilters() {

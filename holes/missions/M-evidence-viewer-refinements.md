@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-25
 **Draft:** 2 (Claude revision of Codex draft 1)
-**Status:** IDENTIFY → MAP
+**Status:** Complete (EV-0 through EV-6 done, thread/notebook UI shipped, 2026-02-24)
 **Blocked by:** None (WS-backed evidence stream online)
 **Owner:** futon4 (Arxana), partnering with futon3c Mission Control + futon1a evidence store
 
