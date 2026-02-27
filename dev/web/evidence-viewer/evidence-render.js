@@ -511,6 +511,86 @@ function formatMessageText(text) {
   return html;
 }
 
+// -- Mission rendering --
+
+const MISSION_STATUS_ORDER = [
+  'instantiate', 'verify', 'derive', 'argue', 'map', 'identify', 'complete', 'blocked'
+];
+
+function missionStatusClass(status) {
+  if (!status) return 'mission-status-default';
+  const s = String(status).toLowerCase().replace(/^:/, '');
+  const known = ['complete', 'instantiate', 'verify', 'derive', 'identify', 'map', 'argue', 'blocked'];
+  return known.includes(s) ? `mission-status-${s}` : 'mission-status-default';
+}
+
+export function renderMissionCard(entry) {
+  const body = eget(entry, 'body') || {};
+  const id = body['mission/id'] || eget(entry, 'subject')?.['ref/id'] || '?';
+  const status = body['mission/status'] || body['mission/raw-status'] || '?';
+  const repo = body['mission/repo'] || '';
+  const date = body['mission/date'] || '';
+  const blockedBy = body['mission/blocked-by'];
+  const evidenceId = eget(entry, 'id');
+
+  const statusClean = String(status).replace(/^:/, '');
+  const sclass = missionStatusClass(status);
+
+  let meta = '';
+  if (repo) meta += `<span>${esc(repo)}</span>`;
+  if (date) meta += `<span>${esc(date)}</span>`;
+  if (blockedBy) meta += `<span>blocked by: ${esc(String(blockedBy))}</span>`;
+
+  return `<div class="mission-card" data-evidence-id="${esc(evidenceId || '')}">
+    <span class="mission-id">${esc(String(id))}</span>
+    <span class="mission-status-badge ${sclass}">${esc(statusClean)}</span>
+    <span class="mission-meta">${meta}</span>
+  </div>`;
+}
+
+export function groupMissionsByStatus(entries) {
+  const groups = new Map();
+  for (const entry of entries) {
+    const body = eget(entry, 'body') || {};
+    const status = String(body['mission/status'] || body['mission/raw-status'] || 'unknown').replace(/^:/, '').toLowerCase();
+    if (!groups.has(status)) groups.set(status, []);
+    groups.get(status).push(entry);
+  }
+
+  // Sort groups by MISSION_STATUS_ORDER, unknown statuses at end
+  const sorted = [...groups.entries()].sort((a, b) => {
+    const ai = MISSION_STATUS_ORDER.indexOf(a[0]);
+    const bi = MISSION_STATUS_ORDER.indexOf(b[0]);
+    return (ai === -1 ? 100 : ai) - (bi === -1 ? 100 : bi);
+  });
+
+  return sorted;
+}
+
+// -- Todo rendering --
+
+export function renderTodoItem(entry, isDone = false) {
+  const body = eget(entry, 'body') || {};
+  const text = body.text || body[':text'] || JSON.stringify(body);
+  const author = eget(entry, 'author') || '';
+  const at = eget(entry, 'at');
+  const subject = eget(entry, 'subject');
+  const todoId = subject?.['ref/id'] || '';
+  const shortId = todoId.replace(/^todo-/, '').slice(0, 8);
+
+  return `<div class="todo-item ${isDone ? 'todo-done' : ''}">
+    <div class="todo-check">${isDone ? '\u2713' : ''}</div>
+    <div class="todo-content">
+      <div class="todo-text">${esc(String(text))}</div>
+      <div class="todo-meta">
+        <span class="todo-id">#${esc(shortId)}</span>
+        ${author ? `<span>${esc(author)}</span>` : ''}
+        ${at ? `<span>${esc(relativeTime(at))}</span>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
 // -- HTML escaping --
 
 function esc(s) {

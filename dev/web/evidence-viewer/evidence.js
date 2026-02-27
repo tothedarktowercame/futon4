@@ -1,10 +1,11 @@
 // evidence.js — Main application: routing, views, filters.
-import { fetchEvidence, fetchEntry, fetchChain } from './evidence-api.js?v=5';
+import { fetchEvidence, fetchEntry, fetchChain } from './evidence-api.js?v=6';
 import {
   eget, typeLabel, typeClass, claimLabel, formatSubject,
   bodyPreview, formatTime, formatTimeShort, formatTags,
-  renderDetail, renderChain, renderThreadCard, renderNotebook, renderWall
-} from './evidence-render.js?v=5';
+  renderDetail, renderChain, renderThreadCard, renderNotebook, renderWall,
+  renderMissionCard, groupMissionsByStatus, renderTodoItem
+} from './evidence-render.js?v=6';
 
 // -- State --
 
@@ -290,6 +291,12 @@ function route() {
   } else if (primary === 'evidence' && parts.length === 3 && parts[2] === 'chain') {
     showFilters(false);
     showChainView(decodeURIComponent(parts[1]));
+  } else if (primary === 'missions' && parts.length === 1) {
+    showFilters(false);
+    showMissions();
+  } else if (primary === 'todos' && parts.length === 1) {
+    showFilters(false);
+    showTodos();
   } else if (primary === 'sessions' && parts.length === 1) {
     showFilters(false);
     showSessions();
@@ -727,6 +734,169 @@ async function showSessionTimeline(sessionId) {
     setError(`Failed to load session: ${err.message}`);
     disableLiveRefresh();
   }
+}
+
+// -- Missions view --
+
+async function showMissions() {
+  setTitle('Missions');
+  setLoading();
+  try {
+    let firstLoad = true;
+    const refresh = async () => {
+      const data = await fetchEvidence({
+        tag: 'mission,backfill',
+        'claim-type': 'observation',
+        limit: 500
+      });
+      renderMissions(data.entries || []);
+      firstLoad = false;
+    };
+    await refresh();
+    configureLiveRefresh(refresh);
+  } catch (err) {
+    setError(`Failed to load missions: ${err.message}`);
+    disableLiveRefresh();
+  }
+}
+
+function renderMissions(entries) {
+  if (entries.length === 0) {
+    replaceView(`<div class="empty-state">
+      <p>No mission entries found.</p>
+      <p class="hint">Run a mission-control backfill to populate mission evidence.</p>
+    </div>`);
+    updateCount(0);
+    return;
+  }
+
+  const groups = groupMissionsByStatus(entries);
+  const container = document.createElement('div');
+  container.className = 'mission-view';
+
+  // Summary bar
+  const summary = document.createElement('div');
+  summary.className = 'mission-summary';
+  summary.innerHTML = groups.map(([status, items]) =>
+    `<span class="mission-summary-stat"><strong>${items.length}</strong> ${esc(status)}</span>`
+  ).join('');
+  container.appendChild(summary);
+
+  // Grouped mission cards
+  for (const [status, items] of groups) {
+    const group = document.createElement('div');
+    group.innerHTML = `<div class="mission-group-header">
+      <h2>${esc(status)}</h2>
+      <span class="mission-group-count">${items.length}</span>
+    </div>`;
+    const list = document.createElement('div');
+    list.className = 'mission-group-items';
+    for (const entry of items) {
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = renderMissionCard(entry);
+      const card = wrapper.firstElementChild;
+      const evidenceId = eget(entry, 'id');
+      if (evidenceId) {
+        card.onclick = () => {
+          navigateWithFilters(`#/evidence/${encodeURIComponent(evidenceId)}`);
+        };
+      }
+      list.appendChild(card);
+    }
+    group.appendChild(list);
+    container.appendChild(group);
+  }
+
+  replaceView(container);
+  updateCount(entries.length);
+}
+
+// -- Todos view --
+
+async function showTodos() {
+  setTitle('Todos');
+  setLoading();
+  try {
+    let firstLoad = true;
+    const refresh = async () => {
+      const [pendingData, doneData] = await Promise.all([
+        fetchEvidence({ tag: 'todo,pending', 'claim-type': 'goal', limit: 200 }),
+        fetchEvidence({ tag: 'todo,done', 'claim-type': 'conclusion', limit: 200 })
+      ]);
+
+      const pending = pendingData.entries || [];
+      const doneEntries = doneData.entries || [];
+
+      // Build set of completed todo IDs
+      const doneIds = new Set();
+      for (const e of doneEntries) {
+        const subject = eget(e, 'subject');
+        if (subject) doneIds.add(subject['ref/id']);
+      }
+
+      // Split pending into active vs done
+      const active = pending.filter(e => {
+        const subject = eget(e, 'subject');
+        return !subject || !doneIds.has(subject['ref/id']);
+      });
+      const completed = pending.filter(e => {
+        const subject = eget(e, 'subject');
+        return subject && doneIds.has(subject['ref/id']);
+      });
+
+      renderTodos(active, completed);
+      firstLoad = false;
+    };
+    await refresh();
+    configureLiveRefresh(refresh);
+  } catch (err) {
+    setError(`Failed to load todos: ${err.message}`);
+    disableLiveRefresh();
+  }
+}
+
+function renderTodos(active, completed) {
+  const container = document.createElement('div');
+  container.className = 'todo-view';
+
+  if (active.length === 0 && completed.length === 0) {
+    container.innerHTML = `<div class="empty-state">
+      <p>No todos found.</p>
+      <p class="hint">Add todos via IRC: !todo add Fix the parser</p>
+    </div>`;
+    replaceView(container);
+    updateCount(0);
+    return;
+  }
+
+  // Active todos
+  if (active.length > 0) {
+    container.innerHTML += `<div class="todo-section-header">Pending (${active.length})</div>`;
+    const list = document.createElement('div');
+    list.className = 'todo-list';
+    // Sort oldest first
+    const sorted = [...active].sort((a, b) =>
+      (eget(a, 'at') || '').localeCompare(eget(b, 'at') || '')
+    );
+    for (const entry of sorted) {
+      list.innerHTML += renderTodoItem(entry, false);
+    }
+    container.appendChild(list);
+  }
+
+  // Completed todos
+  if (completed.length > 0) {
+    container.innerHTML += `<div class="todo-section-header">Done (${completed.length})</div>`;
+    const list = document.createElement('div');
+    list.className = 'todo-list';
+    for (const entry of completed) {
+      list.innerHTML += renderTodoItem(entry, true);
+    }
+    container.appendChild(list);
+  }
+
+  replaceView(container);
+  updateCount(active.length + completed.length);
 }
 
 // -- Filters --

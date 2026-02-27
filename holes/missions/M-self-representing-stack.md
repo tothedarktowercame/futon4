@@ -826,3 +826,154 @@ come next.
 6. Evidence queryable via `tag=system-representation` or similar
 7. At least one strategic scholium chain is reflection-grounded end-to-end
    (`claim -> var -> source`) and fails loudly when the var target disappears
+
+## Sensor Grounding: Portfolio Inference Channels
+
+(Added 2026-02-27, conversation between Joe and Claude.)
+
+This mission produces outputs that feed back into portfolio inference's
+observation surface (`futon3c/src/futon3c/portfolio/observe.clj`). The
+feedback path closes the loop: portfolio inference recommends actions →
+self-representing stack makes the portfolio navigable → better observations
+→ better recommendations.
+
+### Direct Channel Feeds
+
+| Output | Channel | Mechanism |
+|--------|---------|-----------|
+| Tension hyperedge count | `:gap-count` | Tension count replaces/augments mc-coverage gap count; more precise than heuristic component matching |
+| Tension staleness (avg age of unresolved tensions) | `:review-age` | Stale tensions indicate the self-image is outdated; supplements days-since-last-review |
+| Cross-layer navigation completeness | `:coverage-pct` | Browsable paths (devmap → mission → evidence → code) / total possible paths; replaces heuristic substring coverage |
+| Narrative trail coverage | `:pattern-reuse` | Completed narrative trails that reuse evidence patterns; currently a placeholder (0.0) |
+
+### Indirect Channel Effects
+
+| Output | Channel | Effect |
+|--------|---------|--------|
+| Tension browser surfaces blocked missions | `:blocked-ratio` | Human/agent acts on surfaced blocks → unblocks missions |
+| Narrative trails make evidence navigable | `:evidence-velocity` | More efficient evidence discovery → higher useful evidence production |
+| Self-documenting entry points reduce onboarding friction | `:stall-count` | New agents find their way faster → fewer stalled missions |
+| Reflection-grounded claims enable var-level audit | `:dependency-depth` | Accurate dependency tracking via reflection snapshots → better chain computation |
+
+### Future Channel: Tension Density
+
+When VERIFY/INSTANTIATE completes, a new observation channel candidate:
+
+- **`:tension-density`** — ratio of unresolved tensions to total hyperedges
+- Feeds urgency: high tension density → pressure toward BUILD mode
+- Low tension density → system is relaxed → MAINTAIN mode
+- Requires: tension hyperedge count is computable from Arxana XTDB queries
+- This would extend the current 15-channel surface to 16
+
+### Curvature as Free Energy
+
+The mission doc (§Homoiconicity) states: "free energy minimization IS
+tension relaxation." This is literally true in the portfolio inference
+loop: prediction error (PE) across channels IS the free energy. When
+tension hyperedges carry evaluable force vectors (frozen dynamics in
+props), the tension count and severity can be computed from the hypergraph
+and fed directly as observation data — making free energy computation
+grounded in navigable structure rather than heuristic approximation.
+
+The self-representing stack doesn't just make the portfolio *visible*;
+it makes the portfolio inference *accurate*. Without it, the AIF loop
+operates on heuristic sensors (substring matching for coverage, gap count
+for spinoff pressure). With it, the sensors are grounded in typed
+hyperedges with explicit endpoints — the observation surface becomes the
+hypergraph itself.
+
+## Basecamp: VERIFY Preparation
+
+(Added 2026-02-27, Claude + Joe session. Portfolio inference tuning complete,
+system transitioned from CONSOLIDATE to BUILD mode.)
+
+### Readiness Status
+
+| Item | Status | Notes |
+|------|--------|-------|
+| Arxana XTDB backend | Running | futon4 Arxana operational |
+| Hyperedge write path | Ready | `arxana-store--post-hyperedge` plumbed, unused |
+| Evidence store | Running | futon1a on :7071, queryable |
+| MC portfolio review | Running | futon3c on :7070, `build-portfolio-review` |
+| Reflection API | Running | `/api/alpha/reflect/var/:ns/:var` live |
+| Flexiarg representation | Ready | Arxana already handles library patterns |
+| Portfolio AIF loop | Running | BUILD mode, 15-channel surface, all sensors healthy |
+| Hyperedge read path | **Missing** | No `fetch-hyperedge` in Emacs |
+| Evidence → hyperedge bridge | **Missing** | Core VERIFY work |
+| Tag-based evidence query | **Planned** | E-1 below |
+| Tension export API | **Planned** | E-2 below |
+| Per-mission evidence backfill | **Planned** | E-3 below |
+
+### Phase 0: futon3c-side Enablers
+
+Before the futon4-side VERIFY work begins, three futon3c enablers prepare
+the data surface that Arxana will ingest. These exercise the portfolio
+inference tuning and give Arxana structured data instead of string-based gaps.
+
+**E-1: Tag-based evidence query (schema-level)**
+
+Move tag filtering from HTTP post-filter into the store layer. Currently tags
+are parsed from `?tag=mission,backfill` in the HTTP handler and applied after
+`query*` returns all results. After E-1, `EvidenceQuery` includes `:query/tags`
+and all backends (Atom, XTDB, HTTP proxy) filter natively.
+
+Files: `shapes.clj` (schema), `backend.clj` (filter logic), `http_backend.clj`
+(proxy passthrough), `http.clj` (simplified handler).
+
+**E-2: Tension export endpoint**
+
+`GET /api/alpha/mc/tensions` returns structured tension data pre-shaped for
+Arxana hyperedge creation. Each tension is a typed map:
+
+```
+{:tension/type       :uncovered-component | :blocked-mission | :structural-invalid
+ :tension/devmap     :social-exotype
+ :tension/component  :S-dispatch
+ :tension/mission    nil                    ;; nil = the tension
+ :tension/detected-at "2026-02-27T..."
+ :tension/summary    "social-exotype/S-dispatch — no mission"}
+```
+
+This replaces MC's current string-based `find-gaps` output with navigable
+structure. The Arxana bridge (futon4-side) converts each TensionEntry into
+a tension hyperedge with typed endpoints.
+
+Files: `mission_control_backend.clj` (new `build-tension-export`),
+`mission_control_shapes.clj` (TensionEntry shape), `http.clj` (route).
+
+**E-3: Backfill endpoint**
+
+`POST /api/alpha/mc/backfill` triggers `backfill-inventory` against the live
+evidence store. Creates ~72 per-mission evidence entries tagged
+`[:mission :backfill :snapshot]`, one per scanned mission. These entries give
+every mission a queryable presence in the evidence landscape — including
+M-self-representing-stack itself.
+
+After backfill, Arxana can query `?tag=mission,backfill` (using E-1) to
+discover all missions, then create entities and binary relations for them.
+
+### Phase 1: futon4-side VERIFY (after enablers)
+
+With structured tension data and per-mission evidence available via HTTP,
+the VERIFY checklist becomes concrete wiring in Emacs Lisp:
+
+1. **Hyperedge round-trip** — call `arxana-store--post-hyperedge` with a
+   tension from `/api/alpha/mc/tensions`, retrieve it, confirm structure.
+2. **Tension browser** — new view in `arxana-browser-lab.el` that fetches
+   `/api/alpha/mc/tensions` and renders as navigable tabulated-list.
+3. **Narrative trail** — fetch evidence by `?subject-id=<mission>&tag=backfill`,
+   follow `:evidence/in-reply-to` chains, render per-mission story.
+4. **Reflection grounding** — for M-mission-control (complete), resolve
+   `build-portfolio-review` via `/api/alpha/reflect/var/futon3c.peripheral.mission-control-backend/build-portfolio-review`,
+   create `about-var` relation linking claim to source.
+5. **Staleness detection** — re-resolve reflection snapshots, surface any
+   where `:reflection/resolved-at` is stale as tensions.
+
+### Decision Log
+
+| Decision | Rationale |
+|----------|-----------|
+| Start from futon3c enablers, not futon4 UI | Exercises portfolio inference tuning; gives Arxana structured data instead of screen-scraping string gaps |
+| Tag query at store level, not just HTTP | All backends benefit; HttpBackend proxy to futon1a passes tags through |
+| Tension export as separate endpoint | Distinct from `mc-review` (which returns the full portfolio); tensions are the specific data Arxana's hyperedges need |
+| Backfill as on-demand endpoint, not startup | Explicit, repeatable, auditable; idempotent via deterministic IDs |
