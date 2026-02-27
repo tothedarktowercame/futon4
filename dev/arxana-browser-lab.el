@@ -223,6 +223,10 @@ Otherwise, HTTP 5050 -> ws 5056, HTTPS 5051 -> wss 5057 (nginx SSL)."
               :description "Discrepancies between ideal and actual (devmap gaps)"
               :view 'tensions)
         (list :type 'lab-menu
+              :label "Devmaps"
+              :description "Architectural prototypes (wiring diagrams, exotypes)"
+              :view 'devmaps)
+        (list :type 'lab-menu
               :label "Lab Files"
               :description "Browse raw/stubs/drafts files"
               :view 'lab)))
@@ -936,6 +940,123 @@ Applies `arxana-browser--evidence-filter' when set."
     (display-buffer buf)))
 
 ;; =============================================================================
+;; Devmap browser view
+;; =============================================================================
+
+(defface arxana-lab-devmap-active-face
+  '((t :foreground "#61afef"))
+  "Face for active devmaps."
+  :group 'arxana-lab)
+
+(defface arxana-lab-devmap-complete-face
+  '((t :foreground "#98c379"))
+  "Face for complete devmaps."
+  :group 'arxana-lab)
+
+(defun arxana-browser--devmaps-format ()
+  "Column format for devmaps view."
+  [("State" 9 t)
+   ("Devmap" 28 t)
+   ("Comps" 6 t)
+   ("Edges" 6 t)
+   ("I/O" 6 nil)
+   ("Valid" 6 nil)])
+
+(defun arxana-browser--devmaps-row (item)
+  "Row for devmap ITEM."
+  (let* ((dm-id (plist-get item :devmap/id))
+         (name (if (keywordp dm-id)
+                   (substring (symbol-name dm-id) 1)
+                 (format "%s" dm-id)))
+         (state (plist-get item :devmap/state))
+         (state-str (if (keywordp state)
+                        (substring (symbol-name state) 1)
+                      (format "%s" state)))
+         (face (cond
+                ((string= state-str "complete") 'arxana-lab-devmap-complete-face)
+                ((string= state-str "active") 'arxana-lab-devmap-active-face)
+                (t 'default)))
+         (comp-count (or (plist-get item :devmap/component-count) 0))
+         (edge-count (or (plist-get item :devmap/edge-count) 0))
+         (in-count (or (plist-get item :devmap/input-count) 0))
+         (out-count (or (plist-get item :devmap/output-count) 0))
+         (valid (plist-get item :devmap/all-valid)))
+    (vector (propertize (upcase state-str) 'face face)
+            name
+            (format "%d" comp-count)
+            (format "%d" edge-count)
+            (format "%d/%d" in-count out-count)
+            (if valid "ok" "FAIL"))))
+
+(defun arxana-browser--devmaps-items ()
+  "Fetch devmap summaries from futon3c Mission Control."
+  (condition-case err
+      (let ((devmaps (arxana-browser--fetch-devmap-summaries)))
+        (if devmaps
+            (mapcar (lambda (dm)
+                      (append (list :type 'devmap-entry) dm))
+                    devmaps)
+          (list (list :type 'info
+                      :label "No devmaps found"
+                      :description "futon5/data/missions/ may be empty"))))
+    (error
+     (list (list :type 'info
+                 :label "Failed to fetch devmaps"
+                 :description (format "Error: %s" (error-message-string err)))))))
+
+(defun arxana-browser-devmap-open-entry (item)
+  "Open detail view for a devmap ITEM."
+  (let* ((buf-name "*Devmap Detail*")
+         (dm-id (plist-get item :devmap/id))
+         (name (if (keywordp dm-id)
+                   (substring (symbol-name dm-id) 1)
+                 (format "%s" dm-id)))
+         (state (plist-get item :devmap/state))
+         (components (plist-get item :devmap/components))
+         (comp-count (or (plist-get item :devmap/component-count) 0))
+         (edge-count (or (plist-get item :devmap/edge-count) 0))
+         (in-count (or (plist-get item :devmap/input-count) 0))
+         (out-count (or (plist-get item :devmap/output-count) 0))
+         (valid (plist-get item :devmap/all-valid))
+         (failed (plist-get item :devmap/failed-checks))
+         (buf (get-buffer-create buf-name)))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert (format "Devmap: %s\n" name))
+        (insert (make-string 60 ?=) "\n\n")
+        (insert (format "  State:       %s\n" (if (keywordp state)
+                                                   (substring (symbol-name state) 1)
+                                                 state)))
+        (insert (format "  Components:  %d\n" comp-count))
+        (insert (format "  Edges:       %d\n" edge-count))
+        (insert (format "  Inputs:      %d\n" in-count))
+        (insert (format "  Outputs:     %d\n" out-count))
+        (insert (format "  Valid:       %s\n" (if valid "yes" "NO")))
+        (when (and failed (> (length failed) 0))
+          (insert (format "  Failures:    %s\n" failed)))
+        (insert "\nComponents:\n")
+        (insert (make-string 40 ?-) "\n")
+        (dolist (c components)
+          (let ((cid (plist-get c :component/id))
+                (cname (plist-get c :component/name)))
+            (insert (format "  %s  %s\n"
+                            (if (keywordp cid)
+                                (substring (symbol-name cid) 1)
+                              (format "%s" cid))
+                            (or cname "")))))
+        (insert "\n[i] Ingest as hyperedge  [q] Quit\n")
+        (goto-char (point-min))
+        (local-set-key (kbd "q") #'quit-window)
+        (local-set-key (kbd "i")
+                       (lambda ()
+                         (interactive)
+                         (let ((resp (arxana-browser-ingest-devmap-as-hyperedge item)))
+                           (message (if resp "Devmap ingested as hyperedge" "Ingestion failed")))))
+        (view-mode 1)))
+    (display-buffer buf)))
+
+;; =============================================================================
 ;; Narrative trail view (per-mission evidence story)
 ;; =============================================================================
 
@@ -993,11 +1114,13 @@ Applies `arxana-browser--evidence-filter' when set."
 (defun arxana-browser-open-narrative-trail (mission-id)
   "Open a narrative trail for MISSION-ID in the browser."
   (interactive (list (read-string "Mission ID: ")))
-  (setq arxana-browser--stack
-        (cons (list :view 'narrative-trail
-                    :label (format "Trail: %s" mission-id)
-                    :mission-id mission-id)
-              arxana-browser--stack))
+  (let ((buffer (get-buffer-create arxana-browser--buffer)))
+    (with-current-buffer buffer
+      (setq arxana-browser--stack
+            (cons (list :view 'narrative-trail
+                        :label (format "Trail: %s" mission-id)
+                        :mission-id mission-id)
+                  arxana-browser--stack))))
   (arxana-browser--render))
 
 ;; =============================================================================
@@ -1059,6 +1182,94 @@ Returns a summary plist with :created and :failed counts."
       (when (called-interactively-p 'interactive)
         (message msg))
       (list :created created :failed failed :total (length tensions)))))
+
+;; =============================================================================
+;; Devmap → Hyperedge ingestion bridge
+;; =============================================================================
+
+(defun arxana-browser--futon3c-post (endpoint payload)
+  "POST PAYLOAD to ENDPOINT on the futon3c server. Returns parsed JSON plist."
+  (let* ((url-request-method "POST")
+         (url-request-extra-headers '(("Accept" . "application/json")
+                                      ("Content-Type" . "application/json")))
+         (url-request-data (encode-coding-string (json-encode payload) 'utf-8))
+         (base (string-remove-suffix "/" arxana-lab-futon3c-server))
+         (url (concat base endpoint))
+         (buffer (url-retrieve-synchronously url t t arxana-lab-sessions-request-timeout)))
+    (if (not buffer)
+        nil
+      (with-current-buffer buffer
+        (goto-char (point-min))
+        (re-search-forward "\n\n" nil 'move)
+        (let* ((body (buffer-substring-no-properties (point) (point-max)))
+               (result (arxana-lab--parse-json body)))
+          (kill-buffer buffer)
+          result)))))
+
+(defun arxana-browser--fetch-devmap-summaries ()
+  "Fetch devmap summaries from futon3c via mission-control review.
+Returns a list of devmap plists."
+  (let* ((result (arxana-browser--futon3c-post
+                  "/mission-control"
+                  '((action . "review"))))
+         (lr (plist-get result :last-result))
+         (review (plist-get lr :result)))
+    (plist-get review :portfolio/devmap-summaries)))
+
+(defun arxana-browser-ingest-devmap-as-hyperedge (devmap)
+  "Create an Arxana hyperedge from a DEVMAP summary.
+Posts to futon1a via `arxana-store--post-hyperedge'.
+Returns the response or nil on error."
+  (let* ((dm-id (plist-get devmap :devmap/id))
+         (dm-name (if (keywordp dm-id)
+                      (substring (symbol-name dm-id) 1)
+                    (format "%s" dm-id)))
+         (state (plist-get devmap :devmap/state))
+         (comp-count (plist-get devmap :devmap/component-count))
+         (edge-count (plist-get devmap :devmap/edge-count))
+         (input-count (plist-get devmap :devmap/input-count))
+         (output-count (plist-get devmap :devmap/output-count))
+         (all-valid (plist-get devmap :devmap/all-valid))
+         (components (plist-get devmap :devmap/components))
+         ;; Build endpoints: devmap ID + each component
+         (endpoints (cons (format "devmap:%s" dm-name)
+                          (mapcar (lambda (c)
+                                    (let ((cid (plist-get c :component/id)))
+                                      (format "component:%s/%s"
+                                              dm-name
+                                              (if (keywordp cid)
+                                                  (substring (symbol-name cid) 1)
+                                                (format "%s" cid)))))
+                                  components)))
+         (props (list (cons 'state (if (keywordp state)
+                                       (substring (symbol-name state) 1)
+                                     (format "%s" state)))
+                      (cons 'component-count comp-count)
+                      (cons 'edge-count edge-count)
+                      (cons 'input-count input-count)
+                      (cons 'output-count output-count)
+                      (cons 'all-valid (if all-valid "true" "false")))))
+    (arxana-store--post-hyperedge "devmap" "devmap/prototype" endpoints props)))
+
+(defun arxana-browser-ingest-all-devmaps ()
+  "Fetch all devmap summaries from futon3c and ingest as Arxana hyperedges.
+Returns a summary plist with :created and :failed counts."
+  (interactive)
+  (let* ((devmaps (arxana-browser--fetch-devmap-summaries))
+         (created 0)
+         (failed 0))
+    (dolist (dm devmaps)
+      (condition-case _err
+          (let ((resp (arxana-browser-ingest-devmap-as-hyperedge dm)))
+            (if resp
+                (setq created (1+ created))
+              (setq failed (1+ failed))))
+        (error (setq failed (1+ failed)))))
+    (let ((msg (format "Devmap ingestion: %d created, %d failed (of %d)"
+                       created failed (length devmaps))))
+      (when (called-interactively-p 'interactive)
+        (message msg))
+      (list :created created :failed failed :total (length devmaps)))))
 
 ;; =============================================================================
 ;; Reflection grounding — about-var relations

@@ -626,6 +626,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         ('evidence-timeline (arxana-browser--evidence-timeline-items))
         ('evidence-sessions (arxana-browser--evidence-sessions-items))
         ('tensions (arxana-browser--tensions-items))
+        ('devmaps (arxana-browser--devmaps-items))
         ('narrative-trail (arxana-browser--narrative-trail-items
                            (plist-get context :mission-id)))
         ('lab (arxana-browser--lab-items))
@@ -776,6 +777,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
             ('evidence-timeline #'arxana-browser--evidence-timeline-row)
             ('evidence-sessions #'arxana-browser--evidence-sessions-row)
             ('tensions #'arxana-browser--tensions-row)
+            ('devmaps #'arxana-browser--devmaps-row)
             ('narrative-trail #'arxana-browser--narrative-trail-row)
             ('lab #'arxana-browser--lab-row)
             ('encyclopedia #'arxana-browser--encyclopedia-row)
@@ -852,6 +854,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                         ('evidence-timeline (arxana-browser--evidence-timeline-format))
                         ('evidence-sessions (arxana-browser--evidence-sessions-format))
                         ('tensions (arxana-browser--tensions-format))
+                        ('devmaps (arxana-browser--devmaps-format))
                         ('narrative-trail (arxana-browser--narrative-trail-format))
                         ('lab (arxana-browser--lab-format))
                         ('encyclopedia (arxana-browser--encyclopedia-format))
@@ -955,6 +958,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
        (arxana-browser-evidence-open-session item))
       ('tension-entry
        (arxana-browser-tension-open-entry item))
+      ('devmap-entry
+       (arxana-browser-devmap-open-entry item))
       ('encyclopedia-corpus
        (arxana-browser-encyclopedia-open-corpus item))
       ('encyclopedia-entry

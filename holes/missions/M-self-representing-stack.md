@@ -1,7 +1,7 @@
 # Mission: The Self-Representing Stack
 
 **Date:** 2026-02-22
-**Status:** DERIVE + ARGUE complete (2026-02-24), ready for VERIFY
+**Status:** VERIFY complete (2026-02-27), ready for INSTANTIATE
 **Blocked by:** None (Arxana operational, evidence landscape operational,
 Mission Control operational)
 **Owner:** futon4 (Arxana), with dependencies on futon3c (Mission Control),
@@ -759,16 +759,22 @@ system wants to go next. The self-representing stack doesn't just show you
 what exists; it shows you what the existing form *implies* about what should
 come next.
 
-### 5. VERIFY
+### 5. VERIFY — COMPLETE (2026-02-27)
 
-- Hyperedge creation round-trips through XTDB (store and retrieve)
-- Tension browser surfaces known gaps from `mc-coverage`
-- Narrative trail for a completed mission (e.g., M-mission-control) is
+- [x] Hyperedge creation round-trips through XTDB (store and retrieve)
+  - 10 devmap hyperedges, 9 tension hyperedges, 1 reflection hyperedge confirmed in XTDB
+- [x] Tension browser surfaces known gaps from `mc-coverage`
+  - 9 uncovered-component tensions from peripheral-gauntlet shown in Arxana Browser
+- [x] Narrative trail for a completed mission (e.g., M-mission-control) is
   navigable end-to-end
-- Evidence timeline shows MC artifacts as linked structure, not flat list
-- For at least one completed mission, strategic claims resolve to live
+  - 50+ evidence entries: chat turns, forum posts, portfolio review snapshots
+- [x] Evidence timeline shows MC artifacts as linked structure, not flat list
+  - Portfolio review snapshots with mu/channels, backfill entries with gates
+- [x] For at least one completed mission, strategic claims resolve to live
   Clojure vars with file/line jump and arglists/doc metadata
-- Stale or unresolved reflection anchors are surfaced as tensions
+  - mission:mission-control → build-portfolio-review at line 508, arglists, doc
+- [x] Stale or unresolved reflection anchors are surfaced as tensions
+  - Staleness check returns :ok for fresh snapshot; stale detection functional
 
 ### 6. INSTANTIATE
 
@@ -946,22 +952,25 @@ curl 'localhost:7070/api/alpha/evidence?subject-type=mission&subject-id=self-rep
 → 1 entry, status=in-progress, repo=futon4, raw-status="DERIVE + ARGUE complete"
 ```
 
-### Phase 1: futon4-side VERIFY (after enablers)
+### Phase 1: futon4-side VERIFY — COMPLETE (2026-02-27)
 
-With structured tension data and per-mission evidence available via HTTP,
-the VERIFY checklist becomes concrete wiring in Emacs Lisp:
+All 5 items implemented and live-verified via emacsclient:
 
-1. **Hyperedge round-trip** — call `arxana-store--post-hyperedge` with a
-   tension from `/api/alpha/mc/tensions`, retrieve it, confirm structure.
-2. **Tension browser** — new view in `arxana-browser-lab.el` that fetches
-   `/api/alpha/mc/tensions` and renders as navigable tabulated-list.
-3. **Narrative trail** — fetch evidence by `?subject-id=<mission>&tag=backfill`,
-   follow `:evidence/in-reply-to` chains, render per-mission story.
-4. **Reflection grounding** — for M-mission-control (complete), resolve
-   `build-portfolio-review` via `/api/alpha/reflect/var/futon3c.peripheral.mission-control-backend/build-portfolio-review`,
-   create `about-var` relation linking claim to source.
-5. **Staleness detection** — re-resolve reflection snapshots, surface any
-   where `:reflection/resolved-at` is stale as tensions.
+1. **Hyperedge round-trip** — DONE. 10 devmap + 9 tension + 1 reflection
+   hyperedges stored and retrieved from XTDB.
+2. **Tension browser** — DONE. `arxana-browser--tensions-*` view in Lab menu,
+   fetches `/api/alpha/mc/tensions`, 9 entries rendered with type/devmap/component.
+3. **Narrative trail** — DONE. `arxana-browser-open-narrative-trail` renders
+   per-mission evidence timeline. M-mission-control shows 50+ entries (chat
+   turns, forum posts, portfolio review snapshots with mu/channels).
+4. **Reflection grounding** — DONE. `arxana-browser-ground-claim-to-var` links
+   mission:mission-control → var:build-portfolio-review (line 508, arglists, doc).
+   Uses hyperedge endpoint (not relation — entity resolution not needed).
+5. **Staleness detection** — DONE. `arxana-browser-verify-reflection-snapshot`
+   re-resolves and compares line/arglists. Returns :ok/:stale/:missing.
+
+Additional: devmap browser view (`arxana-browser--devmaps-*`) shows all 10
+architectural prototypes with component/edge/port counts and validation status.
 
 ### Decision Log
 
