@@ -1,0 +1,19 @@
+#+TITLE: src/futon3/musn/fulab.clj
+:PROPERTIES:
+:DOC_ID: futon3-55e838e93d1e
+:ENTRY_ID: futon3-55e838e93d1e::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / Core runtime / src/futon3/musn/fulab.clj
+:PATH_STRING: Dev docs / Core runtime / src/futon3/musn/fulab.clj
+:END:
+
+* Context
+This module builds Fulab-friendly PSR/PUR records for MUSN sessions. The
+helpers produce anchors (`turn-anchor`, `pattern-action-anchor`) and the
+standard forecast block used to justify selections. `build-psr` collects
+candidates, rejections, certificates, and optional reasons into a PSR payload.
+`build-pur` builds the parallel use record with the traceability fields.
+
+`summary-event` wraps AIF summary results into the lab event format used by the
+service layer. The service uses these helpers to keep traceability payloads
+consistent across HTTP and lab exports.

@@ -1,0 +1,19 @@
+#+TITLE: src/futon3/musn/logic.clj
+:PROPERTIES:
+:DOC_ID: futon3-8324cb89abb2
+:ENTRY_ID: futon3-8324cb89abb2::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / Core runtime / src/futon3/musn/logic.clj
+:PATH_STRING: Dev docs / Core runtime / src/futon3/musn/logic.clj
+:END:
+
+* Context
+`futon3.musn.logic` is the core.logic kernel that encodes MUSN admissibility
+rules. `build-db` translates the state/action into a logic database of facts
+(plan present, selection present, action cost, off-trail exceeded), then
+`check-action` and `check-turn-end` compute obligations like
+`:missing-plan`, `:missing-selection`, or `:no-write`.
+
+The router interprets these obligations to warn or halt a turn, while the
+`logic` payload in the result preserves a witness trace for audit.
+Separating the constraints here keeps policy reasoning pure and testable.

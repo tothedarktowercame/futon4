@@ -1,0 +1,26 @@
+#+TITLE: src/f2/transport.clj
+:PROPERTIES:
+:DOC_ID: futon3-315426c3839e
+:ENTRY_ID: futon3-315426c3839e::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / Core runtime / src/f2/transport.clj
+:PATH_STRING: Dev docs / Core runtime / src/f2/transport.clj
+:END:
+
+* Context
+`f2.transport` is the HTTP/WebSocket transport for MUSN clients. It maintains
+connected client state, a rolling history buffer, and a shared router instance.
+Incoming frames are parsed (`process-raw`), dispatched via `dispatch-message`,
+and replies are sent on the client channel. The transport handles hello/event
+frames, command evaluation, chat message relay, and the workday/check flows
+that bridge into Futon1.
+
+The HTTP handler exposes `/musn/ws` for WebSocket clients, `/musn/ingest` for
+NDJSON ingestion, and `/fulab/hud/format` to format HUD payloads. `handle-eval`
+wraps `f2.repl` with timeouts and audits history, while `handle-workday` and
+`handle-check` record structured workday/check entries and forward them to the
+Futon1 bridge.
+
+`start!` runs the http-kit server and updates the configured port. The module
+also tracks run IDs and proof IDs so downstream logs stay correlated with the
+session history.

@@ -1,0 +1,17 @@
+#+TITLE: dev/arxana-test-support.el
+:PROPERTIES:
+:DOC_ID: futon4-bd19d57b7b90
+:ENTRY_ID: futon4-bd19d57b7b90-48017dd1900f
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/arxana-test-support.el
+:PATH_STRING: Dev docs / dev/arxana-test-support.el
+:REPLACES: 
+:END:
+
+* Context
+- arxana-test--locate-tangled: Computes a best-effort filesystem path to the generated arxana-tangled.el by checking multiple candidate locations relative to either an explicit arxana-root-directory or the current default-directory. Designed for test harness flexibility, it abstracts over repo-root versus subtree execution and returns the first existing path or nil if none are found.
+- arxana-test--ensure-tangled-loaded: Ensures the tangled Arxana sources are loaded into the Emacs session for tests. It checks for the arxana-tangled feature, locates the file via arxana-test--locate-tangled, and load-fileâs it if necessary. Fails fast with a clear error when tangling is unavailable, guiding developers toward proper setup.
+- provide (arxana-test-support): Publishes the arxana-test-support feature for require-based inclusion in ERT suites and other dev tooling. This formalizes the module boundary so test files can depend on shared loading and path-resolution helpers without duplicating logic or hardcoding repository layouts.
+- require (cl-lib): Declares a dependency on cl-lib to support Common Lispâstyle utilities, notably cl-loop, used in path candidate selection. This ensures consistent iteration and early-return semantics across Emacs versions, making the test-support helpers portable and reliable within diverse development environments.
+- featurep check for arxana-tangled: Integrates with Emacsâ feature system to avoid redundant loading of the tangled sources. By keying off the arxana-tangled feature symbol, the test support code cooperates with the wider Arxana load lifecycle and respects prior initialization performed by other dev or test entry points.
+

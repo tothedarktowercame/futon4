@@ -1,0 +1,28 @@
+#+TITLE: src/futon3/musn/service.clj
+:PROPERTIES:
+:DOC_ID: futon3-eca59edc3e9e
+:ENTRY_ID: futon3-eca59edc3e9e::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / Core runtime / src/futon3/musn/service.clj
+:PATH_STRING: Dev docs / Core runtime / src/futon3/musn/service.clj
+:END:
+
+* Context
+`futon3.musn.service` is the session registry and persistence wrapper for the
+router. `ensure-session!` builds session entries (state atom, policy, lab root)
+and wires in the AIF engine, tau cache, fulab state, and mana ledger. Each
+`turn-*` function delegates validation and state changes to the router, then
+persists an append-only log plus a snapshot in `lab/musn/` so sessions can be
+replayed or resumed after a crash.
+
+The service enriches the turn lifecycle with AIF scoring and Fulab trace
+artifacts. `turn-start!` computes candidate uncertainty, `turn-select!` emits
+PSR and AIF summaries, and `turn-use!` emits PUR plus belief updates. Mana
+accounting is handled alongside AIF updates so cost/restore deltas are
+persistent and visible to clients.
+
+This module is also where lab events are written (`append-lab-event!`) and
+session metadata is mirrored into `lab/sessions/<sid>.edn` via
+`futon3.fulab.pattern-competence`. `turn-end!` includes special handling for
+idempotent repeats and inferred PURs when actions were taken without an
+explicit use record.

@@ -1,0 +1,19 @@
+#+TITLE: src/f2/musn.clj
+:PROPERTIES:
+:DOC_ID: futon3-dae6849e52e2
+:ENTRY_ID: futon3-dae6849e52e2::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / Core runtime / src/f2/musn.clj
+:PATH_STRING: Dev docs / Core runtime / src/f2/musn.clj
+:END:
+
+* Context
+`f2.musn` is the entry point that wires the transport and UI runtimes together.
+It assembles configuration from env vars (Futon1 bridge, drawbridge settings),
+creates the shared state map, and starts `f2.transport` and `f2.ui` on their
+respective ports. The returned state contains client/history atoms and the
+adapter registry used by the router.
+
+`start!` returns the initialized state and stores stop handles in `runtime`,
+while `stop!` shuts down transport/UI/drawbridge. `ingest-demo!` is a small
+helper to replay demo NDJSON into the transport pipeline.

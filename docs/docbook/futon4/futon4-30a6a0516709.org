@@ -1,0 +1,17 @@
+#+TITLE: dev/docbook-toc-export.el
+:PROPERTIES:
+:DOC_ID: futon4-30a6a0516709
+:ENTRY_ID: futon4-30a6a0516709-559319d0d450
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/docbook-toc-export.el
+:PATH_STRING: Dev docs / dev/docbook-toc-export.el
+:REPLACES: 
+:END:
+
+* Context
+- arxana-docbook-export-toc: Batch-oriented entry point that parses spine2.org into an Org AST, extracts all headlines, and emits a JSON array of TOC nodes. It resolves project roots, defaults book and paths, computes per-heading metadata (IDs, titles, outline paths, levels), ensures output directories exist, writes dev/logs/books/<book>/toc.json, and logs a summary message for tooling consumption.
+- arxana-docbook--heading-outline: Walks upward from a headline element through its parents to collect the full hierarchical outline. It returns an ordered list of raw heading titles without text properties, forming the canonical outline path used for display strings, hierarchical context, and stable ID derivation across exports.
+- arxana-docbook--doc-id: Generates a stable, deterministic document identifier per heading by hashing the book name and outline path. It accepts either a list or string path, normalizes it, computes a SHA1 digest, and returns a concise book-prefixed ID suitable for browser linking and cache-friendly TOC synchronization.
+- arxana-docbook--slug: Normalizes arbitrary text into a URL-friendly slug by lowercasing, replacing non-alphanumeric runs with hyphens, collapsing duplicates, and trimming edges. Although not currently wired into the exporter, it provides a reusable utility for future TOC URLs, anchors, or human-readable identifiers.
+- provide (docbook-toc-export): Declares the feature symbol for this module, enabling reliable require-based integration in batch and interactive contexts. This supports reuse by other tooling, ensures load ordering, and complements the noninteractive auto-run behavior so the exporter can function as a standalone script or a library.
+

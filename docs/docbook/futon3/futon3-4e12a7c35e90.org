@@ -1,0 +1,20 @@
+#+TITLE: src/futon3/tatami_schema.clj
+:PROPERTIES:
+:DOC_ID: futon3-4e12a7c35e90
+:ENTRY_ID: futon3-4e12a7c35e90::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / Tatami / src/futon3/tatami_schema.clj
+:PATH_STRING: Dev docs / Tatami / src/futon3/tatami_schema.clj
+:END:
+
+* Context
+`futon3.tatami-schema` normalizes Tatami events and defines Malli schemas for
+AIF-related payloads. `new-event` assigns IDs, timestamps, and derives futon
+tags from prototypes so downstream logging stays consistent. It also enforces
+default activity and felt-state vocabularies, mapping unknown values to safe
+fallbacks.
+
+The AIF schemas and `validate-aif-*` helpers provide structured validation for
+belief state, observation vectors, precision registries, and G-term
+provenance. These are intended for tooling that wants to attach quantitative
+AIF diagnostics to Tatami events.

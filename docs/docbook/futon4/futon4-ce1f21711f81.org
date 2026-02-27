@@ -1,0 +1,17 @@
+#+TITLE: dev/arxana-derivation.el
+:PROPERTIES:
+:DOC_ID: futon4-ce1f21711f81
+:ENTRY_ID: futon4-ce1f21711f81-3e4da6ce613e
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/arxana-derivation.el
+:PATH_STRING: Dev docs / dev/arxana-derivation.el
+:REPLACES: 
+:END:
+
+* Context
+- arxana-derivation--build-items: Walks rendered scholia to extract `derives-from` metadata and construct normalized preview plists. Each item captures source/target names, buffer ranges, snippet text, character length, derivative kind (inclusion/transclusion/identification), stable preview keys, and optional Futon article IDs. This function defines the core data shape consumed by both preview rendering and highlight overlay installation.
+- arxana-derivation--collect-previews: Entry point run after markup completes; gathers derivation preview items for the current Scholium Display render. It resolves the rendering target buffer, builds preview items from `raw-scholia`, resets cached render state, and immediately applies highlights. This function bridges upstream scholia processing with downstream UI features and maintains buffer-local preview caches.
+- arxana-derivation--apply-highlights: Installs and refreshes overlay-based highlights for inclusion, transclusion, and identification passages in a target buffer. It clears prior overlays, consults user customization flags, bounds ranges safely to the buffer, assigns faces and priorities, and tracks overlays buffer-locally. This is the primary integration point between derivation metadata and visible inline emphasis.
+- arxana-derivation-preview-refresh: Interactive command that re-renders the entire derivation preview block in the current buffer. It safely handles read-only/view-mode buffers, preserves point with markers, and delegates to the renderer to rebuild collapsible preview content. Used after toggling preview state to keep the display synchronized with stored expansion preferences.
+- arxana-derivation--render-hook: Hook function attached to `scholia-display-extras-hook` that injects the derivation preview block into the Scholium Display buffer. It ensures previews appear as an auxiliary section without modifying the main rendering pipeline, completing the integration that surfaces derivation audits inline for readers.
+

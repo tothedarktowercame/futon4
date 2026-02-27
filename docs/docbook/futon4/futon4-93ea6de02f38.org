@@ -1,0 +1,17 @@
+#+TITLE: dev/arxana-docbook.el
+:PROPERTIES:
+:DOC_ID: futon4-93ea6de02f38
+:ENTRY_ID: futon4-93ea6de02f38-cdf361608787
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/arxana-docbook.el
+:PATH_STRING: Dev docs / dev/arxana-docbook.el
+:REPLACES: 
+:END:
+
+* Context
+- arxana-docbook-browse: Interactive entry point that selects a doc book (defaulting to futon4), initializes a tabulated-list browser buffer, sets the active book, probes available data sources, and populates entries. Integrates with filesystem discovery under dev/logs/books, optional remote API usage, and configures header-line status. Serves as the primary UI for browsing docbook entries inside Emacs.
+- arxana-docbook--refresh: Core data refresh routine for the browser mode that probes remote storage and filesystem availability, selects the effective data source, fetches recent entries accordingly, normalizes them into tabulated-list rows, and updates mode-line and header-line state. Central integration point between probing logic, data acquisition, and the tabulated-list UI.
+- arxana-docbook--probe-storage: Probes the Futon remote docbook API for a given book, issuing an HTTP request to fetch contents metadata and returning a status plist describing reachability, sync state, and heading counts. Encapsulates remote availability logic, error handling, and status classification used to decide between storage, filesystem, or ephemeral state sources.
+- arxana-docbook-open-book: Builds a compiled, read-only Org buffer that merges TOC structure with available entries for an entire book. Renders headings, base entries, lab-draft additions, and fallback descendant content, preserving separation from source artifacts while inserting navigable source links. Acts as a higher-level âcompiled viewâ distinct from the tabulated browser.
+- arxana-docbook--render-entry: Renders a single docbook entry into a dedicated Org buffer, resolving related entries by doc-id, selecting the latest non-lab version, and generating a contextual view. Integrates navigation state, TOC ordering, two-pane layout with optional source file buffer, and function-jump support to bridge documentation and underlying code.
+

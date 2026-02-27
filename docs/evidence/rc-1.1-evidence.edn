@@ -1,0 +1,330 @@
+{:meta
+ {:title "Release Candidate 1.1 evidence map"
+  :scope [:futon0 :futon1 :futon2 :futon3 :futon4]
+  :status :draft
+  :notes "Evidence entries are defeasible; use counterevidence when docs conflict."}
+ :futons
+ {:futon0
+  {:claims
+   [{:id :futon0/stack-hud-surface
+     :statement "Stack HUD provides the Futon0 surface via a dedicated frame and context buffer."
+     :status :supported
+     :confidence :high
+     :evidence
+     [{:path "futon0/contrib/stack-hud.el"
+       :excerpt "defcustom my-chatgpt-shell-stack-frame-name \"Stack HUD\""
+       :note "Dedicated Stack HUD frame name."}
+      {:path "futon0/contrib/stack-hud.el"
+       :excerpt "defconst my-chatgpt-shell-stack-buffer-name \"*Stack Context*\""
+       :note "Stack context buffer."}]}
+
+    {:id :futon0/vitality-scanner
+     :statement "Vitality scanner summarizes filesystem activity and Tatami gaps for the Stack HUD."
+     :status :supported
+     :confidence :high
+     :evidence
+     [{:path "futon4/docs/docbook/futon0/futon0-3158c09682ff.org"
+       :excerpt "The vitality scanner is a Clojure helper ... summarizes recent filesystem activity and Tatami gaps for the Stack HUD."
+       :note "Overview section."}]}
+
+    {:id :futon0/vitality-json-snapshots
+     :statement "Vitality telemetry is stored as periodic JSON snapshots (not real-time state)."
+     :status :supported
+     :confidence :high
+     :evidence
+     [{:path "futon0/README.md"
+       :excerpt "The vitality JSON data stores are a practical prototype for now; revisit this later for real-time, concurrent state management instead of periodic JSON snapshots."
+       :note "Vitality scanner stub section."}]}
+
+    {:id :futon0/voice-typing-toggle-issue
+     :statement "Voice typing toggle sometimes opens *Tatami Context* and needs tracing/logging."
+     :status :contested
+     :confidence :low
+     :evidence
+     [{:path "futon0/README.md"
+       :excerpt "TODO: Trace why toggling voice typing sometimes opens *Tatami Context* and log the initiating command so it can be suppressed."
+       :note "Voice typing bridge section."}]
+     :notes "User reports this issue is no longer observed; README likely stale."}
+
+    {:id :futon0/stack-hud-logging
+     :statement "Stack HUD snapshots are logged over time (daily JSONL + compacted summaries)."
+     :status :supported
+     :confidence :high
+     :evidence
+     [{:path "futon0/contrib/stack-hud.el"
+       :excerpt "defcustom stack-hud-log-dir \"/home/joe/code/storage/futon0/vitality/stack-hud\""
+       :note "Log directory for HUD snapshots."}
+      {:path "futon0/contrib/stack-hud.el"
+       :excerpt "defun stack-hud-log-snapshot (stack) \"Append a Stack HUD snapshot and compact the previous day on date rollover.\""
+       :note "Snapshot logging and compaction."}]}]}
+
+ :futon1
+  {:claims
+   [{:id :futon1/mandate-storage
+     :statement "Futon1 is a deterministic chat demo stack focused on storage/durability with an NLP pipeline, in-memory graph, and append-only persistence."
+     :status :supported
+     :confidence :high
+     :evidence
+     [{:path "futon1/README.md"
+       :excerpt "futon1 is a collection of deterministic chat demos that showcase a tiered NLP stack, an in-memory knowledge graph, and an append-only persistence layer."
+       :note "Opening summary."}
+      {:path "futon1/README.md"
+       :excerpt "Futon1's mandate is primarily storage and durability"
+       :note "Mandate statement."}]}
+
+    {:id :futon1/xtdb-mirroring
+     :statement "Datascript mirrors mutations into XTDB; sessions hydrate from XTDB on boot with fallback to legacy log + snapshot."
+     :status :supported
+     :confidence :high
+     :evidence
+     [{:path "futon1/README.md"
+       :excerpt "The Datascript cache mirrors every mutation into XTDB. On boot the session hydrates from XT so salience metadata ... is ready before focus headers are generated; if XT is disabled it falls back to the legacy event log + snapshot."
+       :note "Persistence section."}]}
+
+    {:id :futon1/entrypoints
+     :statement "Interactive entry point is apps/demo; HTTP API server is available via apps/api or clojure -M:api."
+     :status :supported
+     :confidence :high
+     :evidence
+     [{:path "futon1/README.md"
+       :excerpt "The current interactive entry point is the apps/demo wrapper around the apps/client session runner."
+       :note "Entry point."}
+      {:path "futon1/README.md"
+       :excerpt "External clients should talk to the API module rather than the demo CLI. From the repository root run clojure -M:api"
+       :note "API server section."}]}
+
+    {:id :futon1/test-timeouts
+     :statement "Test runner can time out on slower disks or sandboxed environments due to subprocesses."
+     :status :contested
+     :confidence :low
+     :evidence
+     [{:path "futon1/LIMITATIONS.md"
+       :excerpt "clojure -M:test -m cognitect.test-runner shells out ... On slower disks or in sandboxed environments those subprocesses can outlive the default watchdog"
+       :note "Test runner timeouts."}]
+     :notes "User reports not seeing timeouts recently; README may be stale."}
+
+    {:id :futon1/rocksdb-locks
+     :statement "Running multiple processes against the same data dir can cause RocksDB lock errors."
+     :status :supported
+     :confidence :high
+     :evidence
+     [{:path "futon1/LIMITATIONS.md"
+       :excerpt "Running multiple Futon processes against the same BASIC_CHAT_DATA_DIR triggers RocksDB lock errors."
+       :note "RocksDB lock contention."}]}
+
+    {:id :futon1/questions-treated-as-assertions
+     :statement "Open-world ingest treats questions as assertions; no question-to-Datalog mapping yet."
+     :status :supported
+     :confidence :high
+     :evidence
+     [{:path "futon1/LIMITATIONS.md"
+       :excerpt "The ingest pipeline currently treats questions as normal assertions ... There is no question->Datalog mapping yet."
+       :note "Typed relations section."}]}
+
+    {:id :futon1/devmap-doc-gaps
+     :statement "NLP interface, graph-memory module, and config surfaces are functional but unevenly documented; tests do not cover all entry points; API contracts and naming conventions show drift."
+     :status :contested
+     :confidence :low
+     :evidence
+     [{:path "futon3/holes/futon1.devmap"
+       :excerpt "The NLP interface, graph-memory module, and configuration surfaces are functional but unevenly documented, and their tests do not yet cover all intended entry points. The HTTP API provides a stable interaction surface, though endpoint contracts and data shapes remain scattered across READMEs. Naming, configuration conventions, and module boundaries show mild drift"
+       :note "@state summary."}]
+     :notes "User believes this devmap @state is stale; need current counterevidence or update devmap."}]}]}
+
+ :futon2
+  {:claims
+   [{:id :futon2/aif-sim
+     :statement "Futon2 runs an Active Inference ant war simulation comparing AIF-driven agents against the classic ruleset, with optional Futon3-derived cyber-ants."
+     :status :supported
+     :confidence :high
+     :evidence
+     [{:path "futon2/README.md"
+       :excerpt "An experiment in active inference ants battling the classic Rich Hickey ruleset."
+       :note "Opening summary."}
+      {:path "futon2/README.md"
+       :excerpt "You can now swap the classic faction for Futon3-derived cyber-ants."
+       :note "Cyber-AIF armies section."}]}
+
+    {:id :futon2/obs-vector-abi
+     :statement "Observation vector ABI lists 14 keys; the observation map includes extra keys omitted from the vector."
+     :status :supported
+     :confidence :medium
+     :evidence
+     [{:path "futon2/README.md"
+       :excerpt "Observation vector ordering (the sense->vector ABI): [:food :pher :food-trace :pher-trace :home-prox :enemy-prox :h :ingest :friendly-home :trail-grad :novelty :dist-home :reserve-home :cargo]"
+       :note "Observation vector list."}
+      {:path "futon2/README.md"
+       :excerpt "Note: the observation map also carries :hunger, :recent-gather, and :white? keys; the vector ABI intentionally omits those extras."
+       :note "Observation map note."}]
+     :notes "User not fully certain; evidence from README only."}
+
+    {:id :futon2/tests
+     :statement "Unit tests exist via clj -M:test and cover observation, predictive coding, policy selection, world bootstrapping, and run-loop sanity."
+     :status :supported
+     :confidence :high
+     :evidence
+     [{:path "futon2/README.md"
+       :excerpt "Covers observation, predictive coding, policy selection, world bootstrapping, and run-loop sanity checks."
+       :note "Unit tests section."}]}
+
+    {:id :futon2/devmap-aif-loop
+     :statement "Ant sim and AIF loop run end-to-end; observation property tests are strong; hunger/tau goldens and policy goldens are recorded; gaps remain in formal semantics docs and white-space tests."
+     :status :supported
+     :confidence :medium
+     :evidence
+     [{:path "futon3/holes/futon2.devmap"
+       :excerpt "Ant sim + AIF loop run end-to-end ... Observation property tests strong (440+ iterations). Hunger/tau goldens recorded (6 scenarios). Policy goldens recorded (5 scenarios). Gaps: formal semantics docs ... white-space tests missing."
+       :note "@state summary."}]}]}
+
+ :futon3
+  {:claims
+   [{:id :futon3/transport
+     :statement "Futon3 provides a WebSocket/HTTP transport with optional SAFE/ADMIN REPL modes."
+     :status :supported
+     :confidence :high
+     :evidence
+     [{:path "futon3/README.md"
+       :excerpt "The transport provides a battle-tested ingest path plus an optional multi-user REPL (SAFE via SCI, ADMIN via tokenized unsafe eval)"
+       :note "Opening summary."}]}
+     :notes "User notes QA testing still needed."}
+
+    {:id :futon3/repl-off-by-default
+     :statement "REPL is off by default; SAFE or ADMIN modes require configuration."
+     :status :supported
+     :confidence :high
+     :evidence
+     [{:path "futon3/README.md"
+       :excerpt "The REPL is OFF by default. Start the system with a config override to expose SAFE mode"
+       :note "REPL section."}]}
+
+    {:id :futon3/pattern-store
+     :statement "A working pattern store exists in Futon3 with catalog data, loader, and tests."
+     :status :supported
+     :confidence :medium
+     :evidence
+     [{:path "futon3/holes/futon3.devmap"
+       :excerpt "We have a basic working version of the store in futon1, including ingest. resources/pattern_store.edn, src/futon3/pattern_store.clj, and test/pattern_store_test.clj keep the catalog synced"
+       :note "Prototype 1 evidence."}]} 
+
+    {:id :futon3/devmap-state
+     :statement "Transport runs reliably, events are logged, patterns can be checked, and Tatami sessions feed structured evidence downstream; remaining work includes tighter coupling from Tatami evidence into pattern updates plus storage linkage and clearer histories."
+     :status :supported
+     :confidence :medium
+     :evidence
+     [{:path "futon3/holes/futon3.devmap"
+       :excerpt "Transport runs reliably, events are logged, patterns can be checked, and Tatami sessions already feed structured evidence into the system. ... What remains is strengthening these links -- tying checks into storage, producing clearer histories, and building the stable interfaces"
+       :note "@state summary."}]}]}
+
+ :futon4
+  {:claims
+   [{:id :futon4/arxana-rewrite
+     :statement "Futon4 hosts the active Arxana Emacs client rewrite; code in dev/ and tests in test/."
+     :status :supported
+     :confidence :high
+     :evidence
+     [{:path "futon4/README.md"
+       :excerpt "This repository hosts the active rewrite of the classic Arxana Emacs client. Code lives in dev/, while documentation now lives in XTDB"
+       :note "Opening summary."}
+      {:path "futon4/README.md"
+       :excerpt "dev/ -- Emacs Lisp for the Prototype 1 client plus the run-tests.sh helper. test/ -- ERT suites"
+       :note "Repository map."}]}
+
+    {:id :futon4/tests
+     :statement "dev/run-tests.sh runs the ERT suites; storage-facing paths should be verified against a live XTDB-backed instance."
+     :status :supported
+     :confidence :high
+     :evidence
+     [{:path "futon4/README.md"
+       :excerpt "dev/run-tests.sh boots Emacs in batch mode and runs the suites under test/."
+       :note "Testing section."}
+      {:path "futon4/README.md"
+       :excerpt "Storage-facing code paths should be verified against a live XTDB-backed instance"
+       :note "Testing section."}]}
+
+    {:id :futon4/qa-in-progress
+     :statement "System is in QA now."
+     :status :reported
+     :confidence :medium
+     :evidence
+     [{:source "user-report"
+       :note "User reports system is in QA."}]}
+
+    {:id :futon4/transclusion-wip
+     :statement "Transclusion UX is WIP."
+     :status :reported
+     :confidence :medium
+     :evidence
+     [{:source "user-report"
+       :note "User reports transclusion UX is WIP and expected to complete soon."}]}
+
+    {:id :futon4/import-pending
+     :statement "Import does not work yet."
+     :status :reported
+     :confidence :medium
+     :evidence
+     [{:source "user-report"
+       :note "User reports import is not yet working."}]}
+
+    {:id :futon4/export-working
+     :statement "Export to standard formats works."
+     :status :reported
+     :confidence :medium
+     :evidence
+     [{:source "user-report"
+       :note "User reports export works."}]}
+
+    {:id :futon4/devmap-state
+     :statement "Arxana reanimation through M4 is working; inclusion/transclusion UX, modern import/export shims, and QA/release prep remain open."
+     :status :contested
+     :confidence :low
+     :evidence
+     [{:path "futon3/holes/futon4.devmap"
+       :excerpt "Arxana reanimation through M4 is working (storage bridge, browsing, relations) while inclusion/transclusion UX, modern import/export shims, and QA/release prep remain open."
+       :note "@state summary."}]
+     :notes "User reports reanimation plan is checked off and system is in QA; devmap @state likely stale."}
+
+    {:id :futon4/reanimation-plan-inclusion-ux
+     :statement "Reanimation plan marks inclusion/transclusion UX as complete (visual differentiation, toggles, docs/tests)."
+     :status :contested
+     :confidence :low
+     :evidence
+     [{:path "futon4/docs/reanimation-plan.org"
+       :excerpt "** M5A 1 Inclusion/Transclusion UX [3/3]
+- [X] Visually differentiate included vs. transcluded regions in the main article buffer.
+- [X] Provide toggle commands to highlight each derivative type independently.
+- [X] Document the visual affordances and add a regression test covering both styles."
+       :note "M5A checklist."}]
+     :notes "User reports transclusion UX is WIP and expected to complete soon; plan currently ahead of reality."}
+
+    {:id :futon4/reanimation-plan-import-export
+     :statement "Reanimation plan marks import/export helpers and export targets as complete, with tests for arxana-import/arxana-export."
+     :status :contested
+     :confidence :low
+     :evidence
+     [{:path "futon4/docs/reanimation-plan.org"
+       :excerpt "- [X] Create import/export shims for modern doc formats.
+...
+- [X] Import/export helpers (`arxana-import`, `arxana-articles-export`).
+  - Tests: `test/arxana-import-test.el`, `test/arxana-export-test.el`."
+       :note "M5 + Doc sync tracker."}
+      {:path "futon4/docs/reanimation-plan.org"
+       :excerpt "- [X] Define canonical export targets (Markdown/HTML/PDF) for non-Emacs readers.
+- [X] Build an export command to render manuals from XTDB (or a snapshot mirror)."
+       :note "M7 checklist."}]
+     :notes "User reports export works but import does not yet; plan likely stale for import status."}
+
+    {:id :futon4/reanimation-plan-qa
+     :statement "Reanimation plan shows QA & release prep at 3/4 with QA/compat/test support modules still open and release tag pending."
+     :status :supported
+     :confidence :medium
+     :evidence
+     [{:path "futon4/docs/reanimation-plan.org"
+       :excerpt "** M6 1 QA & Release Prep [3/4]
+- [X] Grow the ERT suite (unit, integration, CLI smoke).
+- [X] Document test instructions + CI hooks.
+- [X] Provide contributor guide (coding style, doc sync, testing).
+...
+- [ ] QA/compat/test support modules.
+** M9 1 Release tag [0/1]
+- [ ] Tag a revived release with reproducible steps."
+       :note "M6/M9 checklist."}]}]}}}

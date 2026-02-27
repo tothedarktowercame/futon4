@@ -1,0 +1,17 @@
+#+TITLE: dev/arxana-saving.el
+:PROPERTIES:
+:DOC_ID: futon4-6f4796f21f0b
+:ENTRY_ID: futon4-6f4796f21f0b-09ff15d50aaf
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/arxana-saving.el
+:PATH_STRING: Dev docs / dev/arxana-saving.el
+:REPLACES: 
+:END:
+
+* Context
+- arxana-saving--fallback-scopes: Constant listing default snapshot scopes ("all" and "latest") used when the snapshot store helpers are unavailable. It provides a minimal, predictable completion set for prompting users, ensuring save/restore commands remain usable even if the newer arxana-store APIs are missing or not yet loaded.
+- arxana-saving--prompt-scope: Reads a snapshot scope with a prompt and default, abstracting over interactive and noninteractive use. In batch or programmatic contexts it silently returns the default. When available, it delegates to arxana-storeâs richer scope prompt; otherwise it falls back to completing-read over predefined scopes, maintaining compatibility across configurations.
+- arxana-saving--snapshot-enabled-p: Predicate that decides whether save operations should be redirected to snapshot-based behavior. It checks that Futon sync is enabled via futon4-enable-sync and that the snapshot save function is defined. This central gate cleanly separates legacy file-based saving from snapshot-backed saving at runtime.
+- arxana-saving--wrap-save-all: Around-advice wrapper for save-all-scholia that transparently switches saving to Futon snapshots when enabled. It prompts for scope and optional label, invokes arxana-store-save-snapshot, extracts a snapshot ID if possible, and reports status to the user. When snapshots are disabled, it delegates unchanged to the original save-all implementation.
+- arxana-saving--wrap-read-scholia: Around-advice wrapper for read-scholia-file that treats the filepath argument as a snapshot ID when sync is enabled. It prompts for a restore scope and calls arxana-store-restore-snapshot instead of reading from disk. If snapshot restore is unavailable, it cleanly falls back to the legacy file-based reader.
+

@@ -1,0 +1,22 @@
+#+TITLE: src/futon3/learn_or_act.clj
+:PROPERTIES:
+:DOC_ID: futon3-95703141b0d5
+:ENTRY_ID: futon3-95703141b0d5::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / Patterns & hints / src/futon3/learn_or_act.clj
+:PATH_STRING: Dev docs / Patterns & hints / src/futon3/learn_or_act.clj
+:END:
+
+* Context
+`futon3.learn-or-act` orchestrates the decision when no obvious pattern fits.
+It wraps the hint search, evaluates scores against thresholds, and either
+returns a clean match, a clarification question, or a gap/stub declaration.
+
+The triage loop (`triage-passes`) perturbs the query, hops via analogical
+sigils, and patches representation details to try to lift a "maybe" into a
+strong match. When that fails, `build-gap` and `build-stub` record a new gap in
+`gap-store` and generate a suggested stub with first moves and success
+criteria.
+
+`decide` is the public entry point; it emits the full response envelope
+including candidates, fruits/paramitas, and any gap/stub artifacts.

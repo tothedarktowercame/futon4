@@ -1,0 +1,17 @@
+#+TITLE: src/futon3/pattern_store.clj
+:PROPERTIES:
+:DOC_ID: futon3-e9dec013551d
+:ENTRY_ID: futon3-e9dec013551d::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / Patterns & hints / src/futon3/pattern_store.clj
+:PATH_STRING: Dev docs / Patterns & hints / src/futon3/pattern_store.clj
+:END:
+
+* Context
+`futon3.pattern-store` is a legacy filesystem cache for pattern entries. It
+loads `resources/pattern_store.edn` once into a delayed atom and serves read
+queries (`entries`, `pattern-by-id`, `by-futon`). The module is intentionally
+read-only; Futon1/XTDB is the canonical store now.
+
+`status-summary` is a small convenience for aggregating pattern counts by
+status for quick health checks.

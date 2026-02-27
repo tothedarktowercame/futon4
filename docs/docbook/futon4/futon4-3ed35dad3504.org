@@ -1,0 +1,17 @@
+#+TITLE: dev/arxana-scholium.el
+:PROPERTIES:
+:DOC_ID: futon4-3ed35dad3504
+:ENTRY_ID: futon4-3ed35dad3504-e97c8da00fe2
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/arxana-scholium.el
+:PATH_STRING: Dev docs / dev/arxana-scholium.el
+:REPLACES: 
+:END:
+
+* Context
+- defgroup arxana-scholium: Defines the customization group that houses all scholium authoring helpers, integrating them into the broader `arxana` customization hierarchy. This group provides a stable namespace and user-facing entry point for configuring scholium-related commands and variables, signaling that the fileâs purpose is interactive authoring support rather than core publishing or rendering logic.
+- defvar new-scholium-name: Declares the global variable used to store the current or last-used scholium name during authoring. It acts as shared state between interactive prompts and underlying scholium creation commands, enabling name reuse across invocations and compatibility with the historical `new-scholium-mode` workflow expected by existing scholium tooling.
+- defvar new-scholium-about: Holds the normalized âaboutâ metadata for a scholium in the shape expected by legacy scholium machinery. This variable is populated by helper functions before invoking `make-scholium`, serving as the primary integration point where modern wrappers adapt user intent into the data structure consumed by the classic scholium publishing pipeline.
+- defun arxana-scholium--compose-about: Internal helper that transforms a TARGET into the canonical scholium âaboutâ format and immediately triggers scholium creation. By wrapping TARGET in the nested list structure required by legacy code and calling `make-scholium`, it bridges modern command usage with historical expectations, centralizing data normalization in a single, reusable function.
+- defun arxana-scholium-compose: Autoloaded interactive command that opens a scholium buffer using `new-scholium-mode`, optionally prompting for a name. It ensures required support functions exist, sets the scholium name, invokes `make-scholium`, and guides the user through the publish flow. This function is the primary user-facing entry point for scholium authoring.
+

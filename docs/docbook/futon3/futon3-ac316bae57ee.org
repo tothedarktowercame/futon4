@@ -1,0 +1,21 @@
+#+TITLE: src/f2/router.clj
+:PROPERTIES:
+:DOC_ID: futon3-ac316bae57ee
+:ENTRY_ID: futon3-ac316bae57ee::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / Core runtime / src/f2/router.clj
+:PATH_STRING: Dev docs / Core runtime / src/f2/router.clj
+:END:
+
+* Context
+`f2.router` validates transport envelopes and dispatches them to the Futon
+adapters. It loads Malli schemas from `resources/f2/schemas.edn`, enforces
+protocol revision and rate limits, and provides idempotent replies via the
+`msg-id` cache. Every handler returns a normalized reply map for the transport
+layer to emit.
+
+The router mediates between three adapter families: Futon1 (event ingest,
+export), Futon3 (scenario run/status), and hypertext (HX). `handle-*` functions
+validate payloads, call the appropriate adapter, and standardize the ACK
+payloads. HX handlers bind audit context so the link validation logs capture
+session/run context.

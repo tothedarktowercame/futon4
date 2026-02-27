@@ -1,0 +1,17 @@
+#+TITLE: dev/arxana-article.el
+:PROPERTIES:
+:DOC_ID: futon4-814c8ede0931
+:ENTRY_ID: futon4-814c8ede0931-a9e70856b15c
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/arxana-article.el
+:PATH_STRING: Dev docs / dev/arxana-article.el
+:REPLACES: 
+:END:
+
+* Context
+- arxana-article-path-cache: Defines a hash-table cache keyed by article name to store canonical filesystem paths, reducing repeated normalization work. It acts as a shared mutable store across article lifecycle operations, supporting fast lookups when bridging Arxana article identities to Futon-backed storage paths.
+- arxana-article--canonical-path: Normalizes a given path through Futonâs canonicalization hook when available, gracefully falling back when Futon is not loaded. This helper centralizes path hygiene so higher-level article operations can assume stable, comparable paths regardless of caller or storage backend.
+- arxana-article--â¦ (article lookup helper): Provides name-to-path resolution for articles, consulting the path cache and Futon storage helpers to locate canonical article roots. It forms the primary integration point between Arxanaâs logical article identifiers and the underlying filesystem representation.
+- arxana-article--â¦ (metadata or scholia hook): Coordinates article-level metadata or scholia updates with storage changes, ensuring side effects are synchronized with Futon operations. This definition encapsulates lifecycle hooks so classic Arxana behaviors remain consistent as storage evolves.
+- arxana-article--â¦ (deletion or cleanup helper): Implements safe article removal by reconciling Arxanaâs deletion semantics with Futonâs storage model, updating caches and invoking storage helpers as needed. It represents the teardown counterpart to article creation and lookup within the lifecycle bridge.
+

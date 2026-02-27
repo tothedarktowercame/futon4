@@ -1,0 +1,24 @@
+#+TITLE: src/futon3/hx/logic.clj
+:PROPERTIES:
+:DOC_ID: futon3-453c9bf0616a
+:ENTRY_ID: futon3-453c9bf0616a::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / HX / src/futon3/hx/logic.clj
+:PATH_STRING: Dev docs / HX / src/futon3/hx/logic.clj
+:END:
+
+* Context
+`futon3.hx.logic` is the core.logic admissibility engine for hypertext steps.
+It projects the current store state into logic facts (artifacts, anchors,
+links, allowed link types) and then checks each step kind for required fields,
+obligations, and policy constraints.
+
+Beyond basic CRUD checks, this module also validates PSR/PUR payloads. It
+verifies anchors resolve against session events, certificates are well-formed,
+forecast and rejection structures are complete, and AIF G-term provenance is
+well structured. These checks are surfaced as validator results so callers can
+understand which traceability requirements failed.
+
+`check-step` is the single entry point; it dispatches to the correct
+rule-specific checker and returns a structured witness containing facts,
+errors, and obligations.

@@ -51,8 +51,12 @@
   (let* ((suffix (arxana-store-qa--rand-suffix))
          (a-name (format "qa/entity-a/%s" suffix))
          (b-name (format "qa/entity-b/%s" suffix))
-         (a (arxana-store-ensure-entity :name a-name :type "thing" :source "qa"))
-         (b (arxana-store-ensure-entity :name b-name :type "thing" :source "qa"))
+         (a (arxana-store-assert-ok
+             (arxana-store-ensure-entity :name a-name :type "thing" :source "qa")
+             (format "QA ensure entity %s" a-name)))
+         (b (arxana-store-assert-ok
+             (arxana-store-ensure-entity :name b-name :type "thing" :source "qa")
+             (format "QA ensure entity %s" b-name)))
          (a-entity (and (listp a) (alist-get :entity a)))
          (b-entity (and (listp b) (alist-get :entity b)))
          (a-id (and (listp a-entity) (alist-get :id a-entity)))
@@ -62,17 +66,21 @@
     (arxana-store-qa--ok "ensure-entity: %s %s" a-id b-id)
 
     ;; Single relation write (label in props -> provenance note).
-    (let* ((rel (arxana-store-create-relation :src a-id :dst b-id
-                                              :type "arxana/scholium"
-                                              :label (format "qa-label-%s" suffix)
-                                              :props (list (cons 'label (format "qa-label-%s" suffix))
-                                                           (cons 'qa t)))))
-      (arxana-store-qa--assert rel "create-relation returned nil (see arxana-store-last-error)")
+    (let* ((rel (arxana-store-assert-ok
+                 (arxana-store-create-relation :src a-id :dst b-id
+                                               :type "arxana/scholium"
+                                               :label (format "qa-label-%s" suffix)
+                                               :props (list (cons 'label (format "qa-label-%s" suffix))
+                                                            (cons 'qa t)))
+                 "QA create relation")))
+      (arxana-store-qa--assert rel "create-relation returned nil")
       (arxana-store-qa--ok "create-relation"))
 
     ;; Batch relation write (exercises /relations/batch).
     (let* ((c-name (format "qa/entity-c/%s" suffix))
-           (c (arxana-store-ensure-entity :name c-name :type "thing" :source "qa"))
+           (c (arxana-store-assert-ok
+               (arxana-store-ensure-entity :name c-name :type "thing" :source "qa")
+               (format "QA ensure entity %s" c-name)))
            (c-entity (and (listp c) (alist-get :entity c)))
            (c-id (and (listp c-entity) (alist-get :id c-entity)))
            (rels (list (list (cons 'type "arxana/scholium")
@@ -83,17 +91,21 @@
                              (cons 'src b-id)
                              (cons 'dst c-id)
                              (cons 'props (list (cons 'label "qa-batch-2"))))))
-           (resp (arxana-store-create-relations-batch rels)))
-      (arxana-store-qa--assert resp "relations-batch returned nil (see arxana-store-last-error)")
+           (resp (arxana-store-assert-ok
+                  (arxana-store-create-relations-batch rels)
+                  "QA relations batch")))
+      (arxana-store-qa--assert resp "relations-batch returned nil")
       (arxana-store-qa--ok "relations-batch"))
 
     ;; Hyperedge write (exercises /hyperedge).
-    (let ((resp (arxana-store--post-hyperedge
-                 "arxana/hyperedge"
-                 "arxana/qa-hx"
-                 (list a-id b-id)
-                 (list (cons 'qa t)))))
-      (arxana-store-qa--assert resp "hyperedge returned nil (see arxana-store-last-error)")
+    (let ((resp (arxana-store-assert-ok
+                 (arxana-store--post-hyperedge
+                  "arxana/hyperedge"
+                  "arxana/qa-hx"
+                  (list a-id b-id)
+                  (list (cons 'qa t)))
+                 "QA hyperedge")))
+      (arxana-store-qa--assert resp "hyperedge returned nil")
       (arxana-store-qa--ok "hyperedge"))
 
     ;; Media lyrics upsert + verify read-back durability contract.
@@ -114,12 +126,14 @@
                                  (cons 'media/sha256 sha)
                                  (cons 'source lyrics)
                                  (cons 'entity/source lyrics)))
-           (_resp (arxana-store-upsert-media-lyrics
-                   :track track
-                   :lyrics lyrics-payload
-                   :relation (list (cons 'type ":media/lyrics")
-                                   (cons 'src track-id)
-                                   (cons 'dst lyrics-id))))
+           (_resp (arxana-store-assert-ok
+                   (arxana-store-upsert-media-lyrics
+                    :track track
+                    :lyrics lyrics-payload
+                    :relation (list (cons 'type ":media/lyrics")
+                                    (cons 'src track-id)
+                                    (cons 'dst lyrics-id)))
+                   "QA media lyrics upsert"))
            (entity (arxana-store-qa--fetch-entity-or-nil lyrics-id)))
       (arxana-store-qa--assert entity "lyrics entity not readable after write: %s" lyrics-id)
       (let ((stored-sha (alist-get :media/sha256 entity))
@@ -131,11 +145,15 @@
       (arxana-store-qa--ok "media/lyrics upsert + readback"))
 
     ;; Snapshot save/restore (exercises /snapshot and /snapshot/restore).
-    (let* ((snap (arxana-store-save-snapshot "latest" (format "qa-%s" suffix))))
-      (arxana-store-qa--assert snap "snapshot returned nil (see arxana-store-last-error)")
+    (let* ((snap (arxana-store-assert-ok
+                  (arxana-store-save-snapshot "latest" (format "qa-%s" suffix))
+                  "QA snapshot save")))
+      (arxana-store-qa--assert snap "snapshot returned nil")
       (arxana-store-qa--ok "snapshot save")
-      (let ((restore (arxana-store-restore-snapshot nil "latest")))
-        (arxana-store-qa--assert restore "snapshot restore returned nil (see arxana-store-last-error)")
+      (let ((restore (arxana-store-assert-ok
+                      (arxana-store-restore-snapshot nil "latest")
+                      "QA snapshot restore")))
+        (arxana-store-qa--assert restore "snapshot restore returned nil")
         (arxana-store-qa--ok "snapshot restore")))
 
     (arxana-store-qa--ok "all checks passed")

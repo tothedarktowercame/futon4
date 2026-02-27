@@ -1,0 +1,19 @@
+#+TITLE: dev/arxana-lab.el
+:PROPERTIES:
+:DOC_ID: futon4-1b9aa8d1796a
+:ENTRY_ID: futon4-1b9aa8d1796a-25492c3c4526
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/arxana-lab.el
+:PATH_STRING: Dev docs / dev/arxana-lab.el
+:REPLACES: 
+:END:
+
+* Context
+- arxana-lab-root: Customizable lab notebook root; set this when browsing lab
+  entries stored outside the current repo (for example, a futon3 `lab/`
+  directory).
+- arxana-lab--locate-root: Resolves the lab notebook root directory by honoring the customizable arxana-lab-root or auto-detecting a parent directory containing a âlabâ folder. It derives a base path from the current file, buffer, or default directory, integrates with Emacsâ locate-dominating-file, and normalizes the result to the concrete lab/ path used throughout the browser.
+- arxana-lab-entries: Collects and returns structured lab entry objects derived from JSON files under lab/raw. It locates the root, enumerates raw JSON files, parses each into a plist containing session metadata and related paths, drops unreadable entries, and sorts the resulting list by descending start timestamp, forming the primary index used by higher-level UI commands.
+- arxana-lab-file-items: Produces lightweight file item descriptors for browsing non-entry artifacts such as raw logs, stubs, and drafts. Given a kind symbol, it scans the corresponding subdirectory, filters regular files, and returns plists with labels, paths, modification times, and kind tags, enabling generic file pickers and unified open behavior across artifact types.
+- arxana-lab-open-stub-viewer: Opens a human-readable Org-mode view of a stub file that may embed summaries inside JSON or fenced org blocks. It applies multiple extraction strategiesâJSON parsing, regex fallbacks, escape decoding, and raw org detectionâto recover meaningful content, preserves org headers when present, reports failures diagnostically, and presents the result in a read-only viewer buffer.
+- arxana-lab-open-raw-viewer: Renders a raw lab session JSON file as a structured Org-mode notebook view. It parses session metadata, touched files, and user/assistant messages, inserts a summary section, and builds a chronological message timeline with assistant messages visually highlighted. The function integrates JSON decoding, org presentation, and overlay styling to support interactive inspection.

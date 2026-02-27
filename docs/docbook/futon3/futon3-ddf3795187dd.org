@@ -1,0 +1,18 @@
+#+TITLE: src/futon3/trail_bridge.clj
+:PROPERTIES:
+:DOC_ID: futon3-ddf3795187dd
+:ENTRY_ID: futon3-ddf3795187dd::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / Tatami / src/futon3/trail_bridge.clj
+:PATH_STRING: Dev docs / Tatami / src/futon3/trail_bridge.clj
+:END:
+
+* Context
+`futon3.trail-bridge` publishes Tatami trail entries to Futon1 when the bridge
+is enabled. It assembles a normalized payload (session id, turn id, timestamp,
+patterns, fruits/paramitas, cues, embedding) and POSTs it to the Futon1
+`/trails` endpoint with the configured profile header.
+
+The helper functions normalize timestamps and IDs so entries can arrive from
+multiple sources (`:clock`, `:msg-id`, `:turn-id`). `publish!` is intentionally
+fire-and-forget: HTTP errors are logged to stdout but do not throw.

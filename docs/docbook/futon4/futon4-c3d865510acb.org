@@ -1,0 +1,17 @@
+#+TITLE: dev/debug-fold-props.el
+:PROPERTIES:
+:DOC_ID: futon4-c3d865510acb
+:ENTRY_ID: futon4-c3d865510acb-475896664835
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/debug-fold-props.el
+:PATH_STRING: Dev docs / dev/debug-fold-props.el
+:REPLACES: 
+:END:
+
+* Context
+- provide 'flexiarg: Declares the flexiarg feature after loading the contrib implementation, making this debug script act as a minimal integration shim so other code can `(require 'flexiarg)` during development without installing the package formally.
+- arxana-flexiarg-collection-mode: Activates the core Arxana flexiarg collection minor/major mode inside a temporary buffer, establishing syntax, overlays, and analysis hooks needed to parse and visualize flexiarg documents during debugging.
+- arxana-flexiarg--prepare-buffer: Initializes the temp buffer with a specific `.flexiarg` document path, triggering parsing and metadata/context overlay construction; this is the primary entry point for loading real documents into the analysis pipeline.
+- arxana-flexiarg-show-conclusions: Renders computed conclusions from the prepared flexiarg document, exercising the presentation layer that turns internal argument structures into user-visible overlays.
+- overlay-get (metadata/context overlays): Inspects the `display` property of the first metadata and context overlays, logging their rendered forms to messages; this validates fold/display behavior and is the core diagnostic check performed by this script.
+

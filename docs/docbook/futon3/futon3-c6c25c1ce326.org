@@ -1,0 +1,17 @@
+#+TITLE: src/f2/semantics.clj
+:PROPERTIES:
+:DOC_ID: futon3-c6c25c1ce326
+:ENTRY_ID: futon3-c6c25c1ce326::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / Core runtime / src/f2/semantics.clj
+:PATH_STRING: Dev docs / Core runtime / src/f2/semantics.clj
+:END:
+
+* Context
+`f2.semantics` is a small analytics layer over transport history. It surfaces
+shared outputs across clients (`suggest-links`), instantiates naive pattern
+templates from recent client entries (`instantiate-pattern`), and provides a
+basic churn check (`check-consistency`) for noisy clients.
+
+The functions are intentionally lightweight and operate purely on the in-memory
+history vector so the UI can compute insights without reaching into storage.

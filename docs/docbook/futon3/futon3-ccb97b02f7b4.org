@@ -1,0 +1,18 @@
+#+TITLE: src/futon3/hx/store.clj
+:PROPERTIES:
+:DOC_ID: futon3-ccb97b02f7b4
+:ENTRY_ID: futon3-ccb97b02f7b4::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / HX / src/futon3/hx/store.clj
+:PATH_STRING: Dev docs / HX / src/futon3/hx/store.clj
+:END:
+
+* Context
+`futon3.hx.store` keeps the in-memory hypertext state plus an append-only log
+on disk. `append-entry!` applies a change to the atoms (artifacts, anchors,
+links) and writes the entry to `futon3/logs/hypertext.edn`. `load-log!` can
+replay the log into a fresh state on startup or for diagnostics.
+
+The store is intentionally simple: it does not enforce validation, only apply
+operations and persist them. All invariants are enforced in `hx.logic` and
+`hx.validate` before calls reach the store.

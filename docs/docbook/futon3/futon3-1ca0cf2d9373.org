@@ -1,0 +1,18 @@
+#+TITLE: src/f2/repl.clj
+:PROPERTIES:
+:DOC_ID: futon3-1ca0cf2d9373
+:ENTRY_ID: futon3-1ca0cf2d9373::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / Core runtime / src/f2/repl.clj
+:PATH_STRING: Dev docs / Core runtime / src/f2/repl.clj
+:END:
+
+* Context
+This module provides SAFE (SCI) and ADMIN evaluators for the transport REPL.
+The SAFE evaluator runs in a locked-down namespace with an explicit allowlist
+of core and set operations, while a deny list blocks eval, ns manipulation, and
+stateful constructs. ADMIN mode uses `load-string` but is gated by a token and
+remote address allowlist.
+
+`execute` enforces request shape, maximum code/result size, and mode gating.
+The transport wraps it with timeouts and records the result into history.

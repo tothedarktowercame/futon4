@@ -12,6 +12,7 @@
 
 (declare-function arxana-store-save-snapshot "arxana-store" (&optional scope label))
 (declare-function arxana-store-restore-snapshot "arxana-store" (&optional snapshot-id scope))
+(declare-function arxana-store-assert-ok "arxana-store" (response context))
 (declare-function arxana-store--snapshot-scope-prompt "arxana-store" (&optional prompt default))
 (declare-function arxana-store--snapshot-id-from-response "arxana-store" (response))
 
@@ -57,6 +58,7 @@ from the caller (SCOPE is only present when invoked programmatically)."
              (label (or (and noninteractive filename)
                         (arxana-saving--prompt-label)))
              (response (arxana-store-save-snapshot scope label))
+             (_ (arxana-store-assert-ok response (format "Saving snapshot (%s)" scope)))
              (id (when (fboundp 'arxana-store--snapshot-id-from-response)
                    (arxana-store--snapshot-id-from-response response))))
         (message "Saved Futon snapshot scope=%s id=%s"
@@ -69,8 +71,9 @@ ORIG-FN is the original implementation; FILEPATH is treated as a
 snapshot id when syncing is enabled."
   (if (arxana-saving--restore-enabled-p)
       (let* ((snapshot-id (unless (string-empty-p filepath) filepath))
-             (scope (or scope (arxana-saving--prompt-scope "Restore scope (all/latest): " "all"))))
-        (arxana-store-restore-snapshot snapshot-id scope))
+             (scope (or scope (arxana-saving--prompt-scope "Restore scope (all/latest): " "all")))
+             (response (arxana-store-restore-snapshot snapshot-id scope)))
+        (arxana-store-assert-ok response (format "Restoring snapshot (%s)" scope)))
     (apply orig-fn (list filepath))))
 
 (unless (fboundp 'save-all-scholia)

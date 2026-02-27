@@ -12,6 +12,7 @@
 
 (declare-function arxana-store-create-relations-batch "arxana-store" (&rest args))
 (declare-function arxana-store-create-relations-batch-async "arxana-store" (&rest args))
+(declare-function arxana-store-assert-ok "arxana-store" (response context))
 (declare-function arxana-store-sync-enabled-p "arxana-store" ())
 (declare-function arxana-store-ego "arxana-store" (&rest args))
 
@@ -171,7 +172,9 @@
   (unless (arxana-store-sync-enabled-p)
     (user-error "Futon sync disabled; enable sync before persisting Org links"))
   (when relations
-    (arxana-store-create-relations-batch relations)))
+    (arxana-store-assert-ok
+     (arxana-store-create-relations-batch relations)
+     (format "Persisting %d org pattern relation(s)" (length relations)))))
 
 (defun arxana-org-links--persist-relations-async (relations callback)
   "Persist RELATIONS asynchronously and invoke CALLBACK with (RESPONSE STATUS)."

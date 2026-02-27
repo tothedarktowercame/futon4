@@ -1,0 +1,17 @@
+#+TITLE: dev/arxana-import.el
+:PROPERTIES:
+:DOC_ID: futon4-98b2944978aa
+:ENTRY_ID: futon4-98b2944978aa-4af6cb28ac7d
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/arxana-import.el
+:PATH_STRING: Dev docs / dev/arxana-import.el
+:REPLACES: 
+:END:
+
+* Context
+- arxana-import--read-file-contents: Reads an entire file from disk into a single string using a temporary buffer. This is the lowest-level I/O helper for the import pipeline, abstracting file access so higher-level functions can operate purely on strings. It assumes the file exists and is readable, and does not perform decoding, validation, or Org-specific parsing itself.
+- arxana-import--org-title-from-string: Scans a string containing Org-mode text and extracts the value of a #+TITLE keyword when present. The search is case-insensitive and only considers the first matching title directive. It returns a trimmed string or nil, enabling higher-level logic to prefer explicit Org metadata over filenames when naming imported articles.
+- arxana-import--derive-name: Determines a stable article name by combining file metadata and content inspection. It prefers an Org #+TITLE extracted from the file text, falling back to the fileâs base name or final path component. This function centralizes naming policy so imports produce consistent identifiers even when Org metadata is missing or incomplete.
+- arxana-import-org-file: Imports a single Org file into Arxanaâs article graph and, via store hooks, into XTDB. It reads file contents, derives an article name, creates a scholium node with Org type metadata, and optionally ensures a backing store record with a canonicalized path. It is interactive, reports progress, and returns the article name.
+- arxana-import-org-directory: Batch-imports all Org files in a directory, optionally recursing into subdirectories. It discovers candidate files, sequentially imports each via arxana-import-org-file, counts successful imports, and reports a summary message. This function defines the main entry point for bulk ingestion workflows and directory-based knowledge synchronization.
+

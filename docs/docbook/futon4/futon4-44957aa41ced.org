@@ -1,0 +1,17 @@
+#+TITLE: dev/arxana-inclusion.el
+:PROPERTIES:
+:DOC_ID: futon4-44957aa41ced
+:ENTRY_ID: futon4-44957aa41ced-1a42fc931946
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/arxana-inclusion.el
+:PATH_STRING: Dev docs / dev/arxana-inclusion.el
+:REPLACES: 
+:END:
+
+* Context
+- arxana-inclusion--require-article: Validates that an article NAME is registered by calling a provided LOOKUP function, returning the resolved article object or signaling a user-error. Errors include the CALLER name and actionable guidance to register the article first, preventing silent nil insertions and making legacy include/transclude failures explicit and debuggable.
+- include-article: Rebound at runtime (after arxana-tangled loads) to a wrapped version that enforces article existence checks before executing the original behavior. The wrapper integrates arxana-inclusionâs guard logic transparently, preserving the original commandâs interface while ensuring missing or unregistered articles raise clear, user-facing errors.
+- transclude-article: Similarly rebound after arxana-tangled loads to a guarded wrapper that validates referenced articles before transclusion. This ensures legacy transclude workflows fail loudly and consistently when articles are unknown, aligning behavior with inclusion safeguards and avoiding silent insertion of empty or nil content.
+- with-eval-after-load arxana-tangled: Establishes deferred integration so that wrapping only occurs once arxana-tangled is available and the target commands are defined. This avoids load-order issues, conditionally applies guards based on function availability, and keeps arxana-inclusion decoupled from the core implementation until integration time.
+- provide arxana-inclusion: Publishes the feature symbol for this module, enabling other parts of the system to require it reliably. This marks the inclusion-guard layer as a distinct, loadable unit responsible for enforcing registration checks around legacy include and transclude commands.
+

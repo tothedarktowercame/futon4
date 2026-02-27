@@ -1,0 +1,17 @@
+#+TITLE: dev/check-parens.el
+:PROPERTIES:
+:DOC_ID: futon4-d87d00425195
+:ENTRY_ID: futon4-d87d00425195-ea2eec3874b2
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/check-parens.el
+:PATH_STRING: Dev docs / dev/check-parens.el
+:REPLACES: 
+:END:
+
+* Context
+- arxana-check-parens--pos->linecol: Utility that converts a buffer position into a 1-based (LINE . COL) pair. It temporarily moves point to the given position and queries Emacsâs line and column functions. This normalization is used for user-facing diagnostics so batch output can be consumed by editors, CI logs, or other tooling expecting conventional line/column locations.
+- arxana-check-parens--check-buffer: Core validator that loads a file into a temporary buffer, enables Emacs Lisp syntax rules, and runs `check-parens`. On success it returns nil; on failure it catches the error and returns a plist containing file path, raw position, derived line/column, and a human-readable message. This isolates parsing, error capture, and reporting into one reusable unit.
+- arxana-check-parens--file-list: Determines which files to validate in batch mode. It parses `command-line-args-left`, honoring `--` as an option separator and ignoring flags, and falls back to discovering all `.el` files under `dev/` and `test/` when no explicit paths are given. This provides flexible CLI integration while supporting sensible defaults for CI runs.
+- arxana-check-parens-run: Orchestrates validation across a list of files, either explicitly provided or discovered via the file-list helper. It processes files sequentially and short-circuits on the first detected problem, returning either nil for success or the error plist from the failing file. This function is the programmatic entry point suitable for reuse beyond the CLI.
+- arxana-check-parens-cli: Batch-oriented entry point intended to be invoked via `emacs --batch`. It runs the checker, prints a concise single-line status or error report with file, line, column, and message, and exits Emacs with status code 0 on success or 1 on failure. This definition integrates the checker cleanly into scripts and CI pipelines.
+

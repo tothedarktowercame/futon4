@@ -1,0 +1,17 @@
+#+TITLE: dev/spine2-export.el
+:PROPERTIES:
+:DOC_ID: futon4-08da0778560b
+:ENTRY_ID: futon4-08da0778560b-2dc877507264
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/spine2-export.el
+:PATH_STRING: Dev docs / dev/spine2-export.el
+:REPLACES: 
+:END:
+
+* Context
+- arxana-spine2-root-directory: Caches the repository root directory containing spine2.org to avoid repeated filesystem searches. It is populated lazily by helper functions and reused across exports, ensuring consistent path resolution for inputs and outputs. This variable underpins all location-sensitive operations, including file discovery, relative links, and export artifact placement.
+- arxana-spine2--resolve-src-target: Determines whether an Org src block should be replaced by a code link by inspecting its :tangle header arguments. It normalizes boolean and string values, ignores non-tangled or explicitly disabled blocks, and computes default tangle targets when appropriate, integrating Org Babel metadata with export-time decisions.
+- arxana-spine2--code-link-src-block: Custom LaTeX translator for Org src blocks that replaces tangled blocks with a quoted âcode>â marker linking to the generated file. It suppresses large dev include expansions, falls back to standard LaTeX rendering when no tangle target exists, and serves as the core behavior enabling concise, link-based exports.
+- arxana-latex-code-links (derived backend): Defines a custom Org export backend derived from LaTeX that overrides src-block translation to use code-link placeholders. This backend integrates with Orgâs export pipeline, allowing selective behavior changes without altering the standard LaTeX backend, and is activated explicitly during specialized exports.
+- arxana-spine2--export: Orchestrates exporting spine2.org with a chosen backend to a specified output file. It ensures required Org and export dependencies are loaded, configures export options, injects pre-parsing hooks for code-link handling when needed, and performs a synchronous file-based export suitable for repeatable, scripted use.
+

@@ -1,0 +1,17 @@
+#+TITLE: dev/arxana-patterns.el
+:PROPERTIES:
+:DOC_ID: futon4-84dbf01f63a2
+:ENTRY_ID: futon4-84dbf01f63a2-560d20c95402
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/arxana-patterns.el
+:PATH_STRING: Dev docs / dev/arxana-patterns.el
+:REPLACES: 
+:END:
+
+* Context
+- arxana-patterns-open: Interactive entry point that fetches a Futon pattern by name via ego queries, resolves its entity, summary, and component graph, and renders the result into a dedicated Org buffer. The buffer includes header metadata, a bounded summary block, and hierarchical component sections, then enables Org mode and a minor view mode for syncing edits back to Futon.
+- arxana-patterns--fetch-pattern-data: Core data assembly function that ensures Futon sync, queries ego for a pattern entity, fetches canonical source text, discovers component links, resolves component entities (including parent relationships), computes nesting levels, and sorts components by declared order. Returns a normalized plist with pattern id, name, title, summary text, and a leveled, ordered component list for rendering.
+- arxana-flexiarg-collection-mode: Major mode derived from flexiarg-mode that supports editing multiple .flexiarg files in a single buffer with structural tracking. It guards edits to stay within source-file boundaries, manages overlays for hidden metadata and context blocks, integrates outline folding, provides save/revert commands to write back to original files, and enables cycling views focused on conclusions.
+- arxana-patterns-edit-collection: Opens an editor buffer for a filesystem collection of .flexiarg files, either selected from the browser or chosen interactively. It sorts files by declared @order metadata, prepares a combined buffer with per-file headers and tracked regions, activates arxana-flexiarg-collection-mode, and allows batch editing with safe persistence back to individual source files.
+- arxana-patterns-browse: Launches the main tabulated-list browser UI for Arxana patterns and related assets. It initializes navigation state and renders a hierarchical menu covering pattern languages, filesystem collections, docbooks, media, and lab data. The browser supports drilling into entries, importing collections into Futon, reordering patterns, editing collections, and opening rendered patterns.
+

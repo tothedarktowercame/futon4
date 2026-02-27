@@ -1,0 +1,17 @@
+#+TITLE: dev/test-overlay-outline.el
+:PROPERTIES:
+:DOC_ID: futon4-0e0cfd6ff43e
+:ENTRY_ID: futon4-0e0cfd6ff43e-d872a7c4a16c
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/test-overlay-outline.el
+:PATH_STRING: Dev docs / dev/test-overlay-outline.el
+:REPLACES: 
+:END:
+
+* Context
+- require: Loads the built-in outline library to ensure outline-mode and related functions are available. This establishes the dependency under test and signals that the file is validating interactions with core outline functionality rather than defining new APIs. It frames the file as a minimal reproduction or regression check for outline behavior with overlays.
+- with-temp-buffer: Creates an isolated temporary buffer for the test scenario, avoiding side effects on user buffers. The body sets up sample outline content, activates modes, and prints results. This structure clarifies the testâs scope as self-contained, deterministic, and intended for non-interactive evaluation or batch execution.
+- outline-mode: Enables outline minor mode in the temporary buffer, activating heading recognition and visibility controls. This is the primary integration point being exercised, as subsequent operations depend on outlineâs text properties and hiding logic interacting correctly with overlays and after-strings.
+- make-overlay: Constructs an overlay spanning the first line (the heading) and attaches an after-string payload. This models real-world usage where overlays add virtual text. The test specifically probes how such overlays behave when outline visibility changes, highlighting potential edge cases in display or buffer-string output.
+- outline-hide-sublevels: Invoked to collapse outline content below a given depth, triggering outlineâs hiding mechanics. Its interaction with the previously created overlay is the core behavior under test, validating whether overlay after-strings remain visible, move, or are suppressed when headings are folded.
+

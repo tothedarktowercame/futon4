@@ -79,6 +79,15 @@
 (declare-function arxana-browser--lab-open-trace "arxana-browser-lab")
 (declare-function arxana-browser--lab-open-raw "arxana-browser-lab")
 (declare-function arxana-browser--lab-open-draft "arxana-browser-lab")
+(declare-function arxana-browser--tensions-items "arxana-browser-lab")
+(declare-function arxana-browser--tensions-row "arxana-browser-lab" (item))
+(declare-function arxana-browser--tensions-format "arxana-browser-lab")
+(declare-function arxana-browser-tension-open-entry "arxana-browser-lab" (item))
+(declare-function arxana-browser--devmaps-items "arxana-browser-lab")
+(declare-function arxana-browser--devmaps-row "arxana-browser-lab" (item))
+(declare-function arxana-browser--devmaps-format "arxana-browser-lab")
+(declare-function arxana-browser-devmap-open-entry "arxana-browser-lab" (item))
+(declare-function arxana-browser--narrative-trail-items "arxana-browser-lab" (mission-id))
 
 (declare-function arxana-browser--forum-items "arxana-browser-forum")
 (declare-function arxana-browser--forum-row "arxana-browser-forum" (item))
@@ -127,6 +136,30 @@
 (declare-function arxana-browser--encyclopedia-entry-format "arxana-browser-encyclopedia")
 (declare-function arxana-browser-encyclopedia-open-corpus "arxana-browser-encyclopedia" (item))
 (declare-function arxana-browser-encyclopedia-open-entry "arxana-browser-encyclopedia" (item))
+
+(declare-function arxana-browser-evidence-menu-items "arxana-browser-evidence")
+(declare-function arxana-browser--evidence-timeline-items "arxana-browser-evidence")
+(declare-function arxana-browser--evidence-timeline-row "arxana-browser-evidence" (item))
+(declare-function arxana-browser--evidence-timeline-format "arxana-browser-evidence")
+(declare-function arxana-browser--evidence-sessions-items "arxana-browser-evidence")
+(declare-function arxana-browser--evidence-sessions-row "arxana-browser-evidence" (item))
+(declare-function arxana-browser--evidence-sessions-format "arxana-browser-evidence")
+(declare-function arxana-browser--evidence-session-items "arxana-browser-evidence" (context))
+(declare-function arxana-browser--evidence-threads-items "arxana-browser-evidence")
+(declare-function arxana-browser--evidence-threads-row "arxana-browser-evidence" (item))
+(declare-function arxana-browser--evidence-threads-format "arxana-browser-evidence")
+(declare-function arxana-browser--evidence-chain-items "arxana-browser-evidence" (context))
+(declare-function arxana-browser--evidence-chain-row "arxana-browser-evidence" (item))
+(declare-function arxana-browser--evidence-chain-format "arxana-browser-evidence")
+(declare-function arxana-browser--evidence-thread-reader-items "arxana-browser-evidence" (context))
+(declare-function arxana-browser--evidence-thread-reader-row "arxana-browser-evidence" (item))
+(declare-function arxana-browser--evidence-thread-reader-format "arxana-browser-evidence")
+(declare-function arxana-browser--evidence-entry-detail-items "arxana-browser-evidence" (context))
+(declare-function arxana-browser--evidence-entry-detail-row "arxana-browser-evidence" (item))
+(declare-function arxana-browser--evidence-entry-detail-format "arxana-browser-evidence")
+(declare-function arxana-browser-evidence-open-session "arxana-browser-evidence" (item))
+(declare-function arxana-browser-evidence-open-thread "arxana-browser-evidence" (item))
+(declare-function arxana-browser-evidence-open-entry "arxana-browser-evidence" (item))
 
 (declare-function arxana-media--items "arxana-media")
 (declare-function arxana-media--entries "arxana-media")
@@ -317,17 +350,20 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
               :description "Doc books (XTDB-backed)."
               :view 'docbook)
         (list :type 'menu
-              :label "Forum"
-              :description "Live forum threads (WebSocket updates)."
-              :view 'forum)
-        (list :type 'menu
-              :label "Lab"
-              :description "Lab sessions (active and archived)."
-              :view 'lab-home)
+              :label "Evidence"
+              :description "Evidence landscape views (timeline, sessions, threads)."
+              :view 'evidence-home)
         (list :type 'menu
               :label "Encyclopedia"
               :description "PlanetMath and other math reference content."
               :view 'encyclopedia)))
+
+(defun arxana-browser--evidence-menu-items ()
+  (if (require 'arxana-browser-evidence nil t)
+      (arxana-browser-evidence-menu-items)
+    (list (list :type 'info
+                :label "Evidence module unavailable"
+                :description "Load arxana-browser-evidence.el for evidence views."))))
 
 (defun arxana-browser--code-root-items ()
   (list (list :type 'code-root
@@ -444,6 +480,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
              (line (format "Doc book recent entries — RET opens entry; %s. LEFT/b returns."
                            (arxana-docbook--source-brief book))))
         (arxana-browser--docbook-header line book)))
+     ((eq (plist-get context :view) 'evidence-home)
+      (concat "Evidence landscape — choose timeline, session, or thread projections. LEFT/b returns."
+              store-suffix))
      ((eq (plist-get context :view) 'evidence-timeline)
       (let ((filter-desc (if (and (boundp 'arxana-browser--evidence-filter)
                                   arxana-browser--evidence-filter)
@@ -451,10 +490,27 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                                      (mapconcat (lambda (p) (format "%s=%s" (car p) (cdr p)))
                                                 arxana-browser--evidence-filter ", "))
                            "")))
-        (format "Evidence timeline%s — F to filter, g to refresh. LEFT/b returns."
-                filter-desc)))
+        (concat (format "Evidence timeline%s — RET opens entry details; F filters; g refreshes. LEFT/b returns."
+                        filter-desc)
+                store-suffix)))
      ((eq (plist-get context :view) 'evidence-sessions)
-      "Evidence by session — RET opens session timeline. LEFT/b returns.")
+      (concat "Evidence sessions — RET opens session timeline. LEFT/b returns."
+              store-suffix))
+     ((eq (plist-get context :view) 'evidence-session)
+      (concat "Evidence session — chronological entries for this session. RET opens entry details. LEFT/b returns."
+              store-suffix))
+     ((eq (plist-get context :view) 'evidence-threads)
+      (concat "Evidence threads — grouped by reply-chain root. RET opens thread reader. LEFT/b returns."
+              store-suffix))
+     ((eq (plist-get context :view) 'evidence-thread-reader)
+      (concat "Evidence thread reader — conversation-style thread view. RET opens entry details. LEFT/b returns."
+              store-suffix))
+     ((eq (plist-get context :view) 'evidence-thread)
+      (concat "Evidence chain — root-to-leaf reply lineage. LEFT/b returns."
+              store-suffix))
+     ((eq (plist-get context :view) 'evidence-entry-detail)
+      (concat "Evidence entry details — full metadata for the selected item. LEFT/b returns."
+              store-suffix))
      ((eq (plist-get context :view) 'lab)
       (concat "Lab notebook — RET stub; v trace, r raw, d draft. LEFT/b returns."
               store-suffix))
@@ -613,6 +669,28 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         ('hypergraph (arxana-browser--hypergraph-items))
         ('media (arxana-media--items))
         ('docbook (arxana-browser--docbook-books))
+        ('evidence-home (arxana-browser--evidence-menu-items))
+        ('evidence-timeline (if (require 'arxana-browser-evidence nil t)
+                                (arxana-browser--evidence-timeline-items)
+                              (arxana-browser--evidence-menu-items)))
+        ('evidence-sessions (if (require 'arxana-browser-evidence nil t)
+                                (arxana-browser--evidence-sessions-items)
+                              (arxana-browser--evidence-menu-items)))
+        ('evidence-session (if (require 'arxana-browser-evidence nil t)
+                               (arxana-browser--evidence-session-items context)
+                             (arxana-browser--evidence-menu-items)))
+        ('evidence-threads (if (require 'arxana-browser-evidence nil t)
+                               (arxana-browser--evidence-threads-items)
+                             (arxana-browser--evidence-menu-items)))
+        ('evidence-thread (if (require 'arxana-browser-evidence nil t)
+                              (arxana-browser--evidence-chain-items context)
+                            (arxana-browser--evidence-menu-items)))
+        ('evidence-thread-reader (if (require 'arxana-browser-evidence nil t)
+                                     (arxana-browser--evidence-thread-reader-items context)
+                                   (arxana-browser--evidence-menu-items)))
+        ('evidence-entry-detail (if (require 'arxana-browser-evidence nil t)
+                                    (arxana-browser--evidence-entry-detail-items context)
+                                  (arxana-browser--evidence-menu-items)))
         ('docbook-book (arxana-browser--docbook-book-items (plist-get context :book)))
         ('docbook-contents (arxana-browser--docbook-contents-items (plist-get context :book)))
         ('docbook-section (arxana-browser--docbook-section-items (plist-get context :book) context))
@@ -764,6 +842,28 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                            #'arxana-browser--info-row))
             ('media #'arxana-browser--info-row)
             ('docbook #'arxana-browser--info-row)
+            ('evidence-home #'arxana-browser--info-row)
+            ('evidence-timeline (if (fboundp 'arxana-browser--evidence-timeline-row)
+                                    #'arxana-browser--evidence-timeline-row
+                                  #'arxana-browser--info-row))
+            ('evidence-sessions (if (fboundp 'arxana-browser--evidence-sessions-row)
+                                    #'arxana-browser--evidence-sessions-row
+                                  #'arxana-browser--info-row))
+            ('evidence-session (if (fboundp 'arxana-browser--evidence-timeline-row)
+                                   #'arxana-browser--evidence-timeline-row
+                                 #'arxana-browser--info-row))
+            ('evidence-threads (if (fboundp 'arxana-browser--evidence-threads-row)
+                                   #'arxana-browser--evidence-threads-row
+                                 #'arxana-browser--info-row))
+            ('evidence-thread (if (fboundp 'arxana-browser--evidence-chain-row)
+                                  #'arxana-browser--evidence-chain-row
+                                #'arxana-browser--info-row))
+            ('evidence-thread-reader (if (fboundp 'arxana-browser--evidence-thread-reader-row)
+                                         #'arxana-browser--evidence-thread-reader-row
+                                       #'arxana-browser--info-row))
+            ('evidence-entry-detail (if (fboundp 'arxana-browser--evidence-entry-detail-row)
+                                        #'arxana-browser--evidence-entry-detail-row
+                                      #'arxana-browser--info-row))
             ('docbook-book #'arxana-browser--info-row)
             ('docbook-contents #'arxana-browser--docbook-contents-row)
             ('docbook-section #'arxana-browser--docbook-row)
@@ -841,6 +941,28 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                                        (arxana-browser--info-format)))
                         ('media (arxana-browser--info-format))
                         ('docbook (arxana-browser--info-format))
+                        ('evidence-home (arxana-browser--info-format))
+                        ('evidence-timeline (if (fboundp 'arxana-browser--evidence-timeline-format)
+                                                (arxana-browser--evidence-timeline-format)
+                                              (arxana-browser--info-format)))
+                        ('evidence-sessions (if (fboundp 'arxana-browser--evidence-sessions-format)
+                                                (arxana-browser--evidence-sessions-format)
+                                              (arxana-browser--info-format)))
+                        ('evidence-session (if (fboundp 'arxana-browser--evidence-timeline-format)
+                                               (arxana-browser--evidence-timeline-format)
+                                             (arxana-browser--info-format)))
+                        ('evidence-threads (if (fboundp 'arxana-browser--evidence-threads-format)
+                                               (arxana-browser--evidence-threads-format)
+                                             (arxana-browser--info-format)))
+                        ('evidence-thread (if (fboundp 'arxana-browser--evidence-chain-format)
+                                              (arxana-browser--evidence-chain-format)
+                                            (arxana-browser--info-format)))
+                        ('evidence-thread-reader (if (fboundp 'arxana-browser--evidence-thread-reader-format)
+                                                     (arxana-browser--evidence-thread-reader-format)
+                                                   (arxana-browser--info-format)))
+                        ('evidence-entry-detail (if (fboundp 'arxana-browser--evidence-entry-detail-format)
+                                                    (arxana-browser--evidence-entry-detail-format)
+                                                  (arxana-browser--info-format)))
                         ('docbook-book (arxana-browser--info-format))
                         ('docbook-contents (arxana-browser--docbook-contents-format))
                         ('docbook-section (arxana-browser--docbook-format))
@@ -952,14 +1074,30 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
        (arxana-browser-lab-open-session item))
       ('lab-session-archived
        (arxana-browser-lab-open-session item))
-      ('evidence-entry
-       (arxana-browser-evidence-open-entry item))
       ('evidence-session
-       (arxana-browser-evidence-open-session item))
+       (if (fboundp 'arxana-browser-evidence-open-session)
+           (arxana-browser-evidence-open-session item)
+         (message "Evidence module unavailable")))
+      ('evidence-thread
+       (if (fboundp 'arxana-browser-evidence-open-thread)
+           (arxana-browser-evidence-open-thread item)
+         (message "Evidence module unavailable")))
+      ('evidence-entry
+       (if (fboundp 'arxana-browser-evidence-open-entry)
+           (arxana-browser-evidence-open-entry item)
+         (message "Evidence module unavailable")))
+      ('evidence-turn
+       (if (fboundp 'arxana-browser-evidence-open-entry)
+           (arxana-browser-evidence-open-entry item)
+         (message "Evidence module unavailable")))
       ('tension-entry
-       (arxana-browser-tension-open-entry item))
+       (if (fboundp 'arxana-browser-tension-open-entry)
+           (arxana-browser-tension-open-entry item)
+         (message "Lab tension browser unavailable")))
       ('devmap-entry
-       (arxana-browser-devmap-open-entry item))
+       (if (fboundp 'arxana-browser-devmap-open-entry)
+           (arxana-browser-devmap-open-entry item)
+         (message "Lab devmap browser unavailable")))
       ('encyclopedia-corpus
        (arxana-browser-encyclopedia-open-corpus item))
       ('encyclopedia-entry

@@ -1,0 +1,17 @@
+#+TITLE: dev/bootstrap2.el
+:PROPERTIES:
+:DOC_ID: futon4-96a08ecec8b5
+:ENTRY_ID: futon4-96a08ecec8b5-095bfba9cbe9
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/bootstrap2.el
+:PATH_STRING: Dev docs / dev/bootstrap2.el
+:REPLACES: 
+:END:
+
+* Context
+- bootstrap2.el: Acts as a minimal entrypoint that loads dev/bootstrap.el relative to the current default-directory, ensuring developer bootstrap logic is executed without duplicating configuration; it relies on Emacsâ load semantics to resolve and evaluate the target file at startup or during interactive development.
+- bootstrap2.el: Provides an indirection layer for tooling and editors that expect a stable bootstrap filename, allowing dev/bootstrap.el to evolve while consumers reference this wrapper; integration hinges on expand-file-name to compute an absolute path before loading.
+- bootstrap2.el: Encapsulates environment setup by delegating all behavior to dev/bootstrap.el, making this file intentionally side-effectful and definition-free; its role is orchestration rather than declaring functions or variables.
+- bootstrap2.el: Enables reproducible developer setup by standardizing how the bootstrap code is invoked across machines and sessions, assuming default-directory points at the project root or a known subdirectory.
+- bootstrap2.el: Serves as a compatibility shim in development workflows, letting scripts or Emacs commands load a predictable file while centralizing actual bootstrap logic elsewhere, reducing duplication and maintenance overhead.
+

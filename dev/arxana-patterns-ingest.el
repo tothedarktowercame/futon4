@@ -67,6 +67,22 @@
   :type 'boolean
   :group 'arxana-patterns-ingest)
 
+(defun arxana-patterns-ingest--ensure-entity! (&rest spec)
+  "Ensure an entity with SPEC and fail fast on Futon write errors."
+  (let ((response (apply #'arxana-store-ensure-entity spec)))
+    (arxana-store-assert-ok
+     response
+     (format "Patterns ingest ensure entity %s"
+             (or (plist-get spec :name) "<unnamed>")))))
+
+(defun arxana-patterns-ingest--create-relation! (&rest args)
+  "Create relation with ARGS and fail fast on Futon write errors."
+  (let ((response (apply #'arxana-store-create-relation args)))
+    (arxana-store-assert-ok
+     response
+     (format "Patterns ingest create relation %s"
+             (or (plist-get args :label) "<unlabeled>")))))
+
 (defun arxana-patterns-ingest--edn-escape (text)
   (replace-regexp-in-string
    "\\\\" "\\\\\\\\"
@@ -197,7 +213,7 @@ VALUE may be a string like \"[🐜/基 ⚙️/形]\" or \"🐜/基 ⚙️/形\".
                 :external-id external
                 :source "futon3/sigil"))
          (_ (arxana-patterns-ingest--log-entity "ensure-sigil" spec))
-         (response (apply #'arxana-store-ensure-entity spec))
+         (response (apply #'arxana-patterns-ingest--ensure-entity! spec))
          (id (or (arxana-patterns-ingest--extract-id response)
                  (arxana-patterns-ingest--lookup-id name))))
     (list :id id :name name)))
@@ -212,9 +228,9 @@ VALUE may be a string like \"[🐜/基 ⚙️/形]\" or \"🐜/基 ⚙️/形\".
           (let* ((sig-entity (arxana-patterns-ingest--ensure-sigil sigil))
                  (sig-id (plist-get sig-entity :id)))
             (when (and sig-id (not (gethash sig-id existing)))
-              (arxana-store-create-relation :src pattern-id
-                                            :dst sig-id
-                                            :label ":pattern/has-sigil")
+              (arxana-patterns-ingest--create-relation! :src pattern-id
+                                                        :dst sig-id
+                                                        :label ":pattern/has-sigil")
               (puthash sig-id t existing))))))))
 
 (defun arxana-patterns-ingest--extract-id (node)
@@ -273,35 +289,35 @@ VALUE may be a string like \"[🐜/基 ⚙️/形]\" or \"🐜/基 ⚙️/形\".
 (defun arxana-patterns-ingest--ensure-tag (language-name language-id relation target-name target-type)
   "Ensure LANGUAGE-ID points at TARGET-NAME via RELATION."
   (when (and language-name language-id relation target-name)
-    (let* ((target-response (arxana-store-ensure-entity :name target-name
-                                                        :type target-type
-                                                        :source (format "%s classification" relation)
-                                                        :external-id target-name))
+    (let* ((target-response (arxana-patterns-ingest--ensure-entity! :name target-name
+                                                                     :type target-type
+                                                                     :source (format "%s classification" relation)
+                                                                     :external-id target-name))
            (target-id (or (arxana-patterns-ingest--extract-id target-response)
                           (arxana-patterns-ingest--lookup-id target-name)))
            (existing (arxana-patterns-ingest--existing-targets language-name relation)))
       (when (and target-id (not (gethash target-id existing)))
-        (arxana-store-create-relation :src language-id
-                                      :dst target-id
-                                      :label relation)
+        (arxana-patterns-ingest--create-relation! :src language-id
+                                                  :dst target-id
+                                                  :label relation)
         (puthash target-id t existing)))))
 
 (defun arxana-patterns-ingest--ensure-catalog-link (language-name language-id)
   "Ensure LANGUAGE-ID is reachable from the central catalog."
   (when (and language-name language-id)
     (let* ((catalog-name arxana-patterns-ingest-language-catalog-name)
-           (response (arxana-store-ensure-entity :name catalog-name
-                                                 :type "pattern/language-catalog"
-                                                 :source "Pattern languages"))
+           (response (arxana-patterns-ingest--ensure-entity! :name catalog-name
+                                                              :type "pattern/language-catalog"
+                                                              :source "Pattern languages"))
            (catalog-id (or (arxana-patterns-ingest--extract-id response)
                            (arxana-patterns-ingest--lookup-id catalog-name)))
            (existing (when catalog-id
                        (arxana-patterns-ingest--existing-targets
                         catalog-name arxana-patterns-ingest-language-catalog-relation))))
       (when (and catalog-id existing (not (gethash language-id existing)))
-        (arxana-store-create-relation :src catalog-id
-                                      :dst language-id
-                                      :label arxana-patterns-ingest-language-catalog-relation)
+        (arxana-patterns-ingest--create-relation! :src catalog-id
+                                                  :dst language-id
+                                                  :label arxana-patterns-ingest-language-catalog-relation)
         (puthash language-id t existing)))))
 
 (defun arxana-patterns-ingest--ego-outgoing (ego)
@@ -487,7 +503,7 @@ VALUE may be a string like \"[🐜/基 ⚙️/形]\" or \"🐜/基 ⚙️/形\".
                 :source (plist-get pattern :summary)
                 :external-id (plist-get pattern :title)))
          (_ (arxana-patterns-ingest--log-entity "ensure-pattern" spec))
-         (response (apply #'arxana-store-ensure-entity spec))
+         (response (apply #'arxana-patterns-ingest--ensure-entity! spec))
          (id (or (arxana-patterns-ingest--extract-id response)
                  (arxana-patterns-ingest--lookup-id (plist-get pattern :name)))))
     (arxana-patterns-ingest--ensure-sigil-links
@@ -504,14 +520,14 @@ VALUE may be a string like \"[🐜/基 ⚙️/形]\" or \"🐜/基 ⚙️/形\".
                 :source (plist-get component :text)
                 :external-id (plist-get component :label)))
          (_ (arxana-patterns-ingest--log-entity "ensure-component" spec))
-         (response (apply #'arxana-store-ensure-entity spec))
+         (response (apply #'arxana-patterns-ingest--ensure-entity! spec))
          (component-id (or (arxana-patterns-ingest--extract-id response)
                            (arxana-patterns-ingest--lookup-id component-name))))
     (when (and pattern-id component-id
                (or (not existing) (not (gethash component-id existing))))
-      (arxana-store-create-relation :src pattern-id
-                                    :dst component-id
-                                    :label ":pattern/includes")
+      (arxana-patterns-ingest--create-relation! :src pattern-id
+                                                :dst component-id
+                                                :label ":pattern/includes")
       (when existing
         (puthash component-id t existing)))
     component-id))
@@ -575,7 +591,7 @@ VALUE may be a string like \"[🐜/基 ⚙️/形]\" or \"🐜/基 ⚙️/形\".
                 :source summary
                 :external-id (or language-title language-name)))
          (_ (arxana-patterns-ingest--log-entity "ensure-language" spec))
-         (response (apply #'arxana-store-ensure-entity spec))
+         (response (apply #'arxana-patterns-ingest--ensure-entity! spec))
          (language-id (or (arxana-patterns-ingest--extract-id response)
                           (arxana-patterns-ingest--lookup-id language-name)))
          (existing (when language-id
@@ -590,10 +606,10 @@ VALUE may be a string like \"[🐜/基 ⚙️/形]\" or \"🐜/基 ⚙️/形\".
                for pid = (plist-get pattern :id)
                when (and pid (not (gethash pid existing)))
                do (progn
-                    (arxana-store-create-relation :src language-id
-                                                  :dst pid
-                                                  :label arxana-patterns-ingest-language-relation
-                                                  :props (list (cons 'order order)))
+                    (arxana-patterns-ingest--create-relation! :src language-id
+                                                              :dst pid
+                                                              :label arxana-patterns-ingest-language-relation
+                                                              :props (list (cons 'order order)))
                     (puthash pid t existing))))
       (arxana-patterns-ingest--ensure-tag language-name language-id
                                           arxana-patterns-ingest-language-source-relation

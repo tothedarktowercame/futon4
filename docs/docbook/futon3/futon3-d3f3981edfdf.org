@@ -1,0 +1,22 @@
+#+TITLE: src/f2/ui.clj
+:PROPERTIES:
+:DOC_ID: futon3-d3f3981edfdf
+:ENTRY_ID: futon3-d3f3981edfdf::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / Core runtime / src/f2/ui.clj
+:PATH_STRING: Dev docs / Core runtime / src/f2/ui.clj
+:END:
+
+* Context
+`f2.ui` exposes the HTTP UI surface for MUSN, Tatami, and the Codex/Claude
+session proxies. It provides read-only endpoints for sessions, practice
+summaries, HX artifacts/links, and live streams, plus write endpoints for
+Tatami logging, hints, and cues.
+
+The Codex/Claude handlers wrap the session managers in `f2.codex` and
+`f2.claude`, offering run/resume/cancel plus real-time WebSocket streams. The
+MUSN endpoints reuse transport state for clients/history, and the HX endpoints
+delegate to `futon3.hx.api` for CRUD and moderation operations.
+
+`export-scenario!` is a convenience endpoint that persists the transport
+history to `dev/scenario.edn` for downstream replay.

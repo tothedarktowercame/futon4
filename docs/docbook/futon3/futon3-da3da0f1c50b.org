@@ -1,0 +1,12 @@
+#+TITLE: Integration
+:PROPERTIES:
+:DOC_ID: futon3-da3da0f1c50b
+:ENTRY_ID: futon3-da3da0f1c50b
+:VERSION: org
+:OUTLINE_PATH: Integration
+:PATH_STRING: Integration
+:REPLACES:
+:END:
+
+* Overview
+Integration-facing telemetry and stack status reporting.

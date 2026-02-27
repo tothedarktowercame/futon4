@@ -343,15 +343,19 @@
 
 (defun arxana-docbook--ingest-entry-file (book path)
   (let* ((payload (arxana-docbook--stub-payload-from-file book path))
-         (path (format "/docs/%s/entry" book))
-         (resp (arxana-store--request "POST" path payload)))
-    (if (and resp (arxana-store--response-ok-p resp))
-        (list :ok? t :response resp)
-      (list :ok? nil
-            :response resp
-            :error (or arxana-store-last-error
-                       (and (listp resp) (alist-get :error resp))
-                       "Unknown ingest error")))))
+         (endpoint (format "/docs/%s/entry" book))
+         (resp (arxana-store--request "POST" endpoint payload)))
+    (condition-case err
+        (progn
+          (arxana-store-assert-ok resp (format "Docbook ingest %s" (file-name-nondirectory path)))
+          (list :ok? t :response resp))
+      (error
+       (list :ok? nil
+             :response resp
+             :error (or arxana-store-last-error
+                        (and (listp resp) (alist-get :error resp))
+                        (error-message-string err)
+                        "Unknown ingest error"))))))
 
 (defun arxana-docbook--ingest-error-buffer (book failures)
   (let ((buf (get-buffer-create "*Arxana Docbook Ingest*")))
@@ -430,20 +434,22 @@
          (book (cdr (assoc "book_id" payload)))
          (path (format "/docs/%s/entry" book))
          (resp (arxana-store--request "POST" path payload)))
-    (if (and resp (fboundp 'arxana-store--response-ok-p)
-             (arxana-store--response-ok-p resp))
+    (condition-case err
         (progn
+          (arxana-store-assert-ok resp (format "Docbook sync %s" book))
           (setq-local arxana-docbook--stub-last-sync-error nil)
           (arxana-docbook--stub-record-sync)
           (message "Docbook sync ok.")
           t)
-      (setq-local arxana-docbook--stub-last-sync-error
-                  (or (and (boundp 'arxana-store-last-error)
-                           (plist-get arxana-store-last-error :detail))
-                      (and (listp resp) (plist-get resp :error))
-                      "XTDB sync failed"))
-      (message "Docbook sync failed: %s" arxana-docbook--stub-last-sync-error)
-      nil))
+      (error
+       (setq-local arxana-docbook--stub-last-sync-error
+                   (or (and (boundp 'arxana-store-last-error)
+                            (plist-get arxana-store-last-error :detail))
+                       (and (listp resp) (plist-get resp :error))
+                       (error-message-string err)
+                       "XTDB sync failed"))
+       (message "Docbook sync failed: %s" arxana-docbook--stub-last-sync-error)
+       nil)))
   (arxana-docbook--update-stub-header))
 
 (defun arxana-docbook-stub-save-sync ()

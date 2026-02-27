@@ -1,0 +1,17 @@
+#+TITLE: dev/arxana-media.el
+:PROPERTIES:
+:DOC_ID: futon4-4007faedf8f3
+:ENTRY_ID: futon4-4007faedf8f3-22b1bb93f318
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/arxana-media.el
+:PATH_STRING: Dev docs / dev/arxana-media.el
+:REPLACES: 
+:END:
+
+* Context
+- arxana-media--entries: Loads and caches the Zoom media catalog from a JSON index, auto-detecting the path and reloading only when the file modification time changes. It normalizes each entry via arxana-media--normalize-entry and exposes a shared in-memory list used by all browsing, filtering, playback, tagging, and publication features, while emitting warnings when the catalog is missing or unreadable.
+- arxana-media-play-at-point: Interactive entry point for playback integration with the Futon browser. It resolves the media item at point, derives a readable title and playable file path, initializes a playback queue based on the current browser context, manages a playback token to avoid races, and spawns an external player process with optional autoplay chaining.
+- arxana-media--track-items: Core adapter that turns catalog entries into browser-visible media-track items. It filters entries by status or project, sorts them by recording time descending, and emits plists containing type, labels, project metadata, status, and SHA identifiers. This function bridges the raw catalog data model with the arxana-patterns browser UI.
+- arxana-media-publish-marked: High-level workflow for publication export. It gathers marked catalog entries, derives a slugged publication name, copies readable audio files into a publication directory, writes optional JSON metadata, tags entries via zoom_sync.py using a configurable prefix, invalidates the catalog cache, and refreshes the browser to reflect publication state.
+- arxana-media--retitle-track: Internal integration point for mutating catalog metadata through zoom_sync.py. It validates entry status, constructs command-line arguments keyed by SHA256, optionally scopes updates to a recorder root, executes the external script, and reports failures. This function enforces that only âholdâ items are retitled and keeps Emacs as a thin orchestrator.
+

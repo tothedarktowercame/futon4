@@ -1,0 +1,13 @@
+#+TITLE: Recent changes (futon4, pilot)
+:PROPERTIES:
+:DOC_ID: futon4-594f2da9d309
+:ENTRY_ID: 019b3805-41e7-77e3-9fff-fa186c2b5bd2-futon4-594f2da9d309
+:VERSION: lab-draft
+:OUTLINE_PATH: Recent changes (futon4, pilot)
+:PATH_STRING: Recent changes (futon4, pilot)
+:REPLACES: 
+:END:
+
+* Context
+- Lab session 019b3805-41e7-77e3-9fff-fa186c2b5bd2
+

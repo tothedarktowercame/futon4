@@ -31,6 +31,18 @@
                  string)
   :group 'arxana-store)
 
+(defcustom arxana-store-default-penholder
+  (let ((value (or (getenv "FUTON4_PENHOLDER")
+                   (getenv "FUTON1A_COMPAT_PENHOLDER"))))
+    (when (and (stringp value)
+               (not (string-empty-p (string-trim value))))
+      (string-trim value)))
+  "Optional penholder sent via the X-Penholder header on Futon requests.
+Set this to a penholder id allowed by futon1a Layer 3 authorization."
+  :type '(choice (const :tag "Unset" nil)
+                 string)
+  :group 'arxana-store)
+
 (defcustom arxana-store-request-timeout 10
   "Number of seconds to wait for Futon HTTP responses."
   :type 'integer
@@ -212,8 +224,9 @@ authoritative guarantee for write availability."
   (append (list '("Accept" . "application/json"))
           (when payload-p '(("Content-Type" . "application/json")))
           (when arxana-store-default-profile
-            (list (cons "X-Profile" arxana-store-default-profile)
-                  (cons "X-Penholder" arxana-store-default-profile)))))
+            (list (cons "X-Profile" arxana-store-default-profile)))
+          (when arxana-store-default-penholder
+            (list (cons "X-Penholder" arxana-store-default-penholder)))))
 
 (defun arxana-store--canonical-path (path)
   (if (and path (fboundp 'futon4--canonical-path))
@@ -231,8 +244,9 @@ authoritative guarantee for write availability."
 
 (defun arxana-store--log-invariants-failure (body)
   "Append BODY to the invariants log when Futon reports a failure."
-  (when (and (listp body)
-             (string= (alist-get :error body) "Model invariants failed"))
+  (let ((err (and (listp body) (alist-get :error body))))
+    (when (and (stringp err)
+               (string= err "Model invariants failed"))
     (condition-case _err
         (let* ((log-file arxana-store-invariants-log-file)
                (dir (file-name-directory log-file))
@@ -252,7 +266,7 @@ authoritative guarantee for write availability."
             (pp body (current-buffer))
             (insert "#+end_src\n\n")
             (append-to-file (point-min) (point-max) log-file)))
-      (error nil))))
+      (error nil)))))
 
 (defun arxana-store--log-failure (&rest fields)
   "Append a failure entry with FIELDS to `arxana-store-failures-log-file'."
@@ -283,6 +297,42 @@ authoritative guarantee for write availability."
        (let ((ok-entry (assoc :ok? body)))
          (or (null ok-entry)
              (cdr ok-entry)))))
+
+(defun arxana-store--error-reason-symbol (error-payload)
+  "Return a normalized reason symbol from ERROR-PAYLOAD when present."
+  (let ((reason (and (listp error-payload)
+                     (or (alist-get :reason error-payload)
+                         (alist-get 'reason error-payload)))))
+    (cond
+     ((symbolp reason) reason)
+     ((stringp reason) (intern reason))
+     (t nil))))
+
+(defun arxana-store--error-detail (response)
+  "Return a user-facing error detail string for RESPONSE."
+  (let* ((err (and (listp response) (alist-get :error response)))
+         (reason (arxana-store--error-reason-symbol err)))
+    (cond
+     ((stringp err) err)
+     ((eq reason 'missing-penholder)
+      (concat "missing-penholder (set arxana-store-default-penholder "
+              "or send X-Penholder header)"))
+     ((listp err) (format "%s" err))
+     ((plist-get arxana-store-last-error :detail)
+      (format "%s" (plist-get arxana-store-last-error :detail)))
+     (t "Unknown Futon error"))))
+
+(defun arxana-store-assert-ok (response context)
+  "Return RESPONSE when successful, else signal `user-error' with CONTEXT.
+CONTEXT should be a short operation description."
+  (unless (arxana-store--response-ok-p response)
+    (user-error "%s failed: %s" context (arxana-store--error-detail response)))
+  (let ((invariants (and (listp response) (alist-get :invariants response))))
+    (when (and (listp invariants) (alist-get :warning? invariants))
+      (message "Warning: %s"
+               (or (alist-get :warning invariants)
+                   "Model invariants failed"))))
+  response)
 
 (defun arxana-store--ingest-request-p (request)
   "Return non-nil if REQUEST looks like a write/ingest call."
@@ -504,7 +554,14 @@ already encoded query string (without the leading ?)."
    (t
     (let* ((canonical (when path (futon4--canonical-path path)))
            (id (futon4--article-id-for name canonical)))
-      (futon4-ensure-article-entity id name canonical spine nil props)
+      (let ((response (futon4-ensure-article-entity id name canonical spine nil props)))
+        (when (listp response)
+          (arxana-store-assert-ok response (format "Ensuring article %s" name))))
+      (let* ((verify (arxana-store-fetch-entity id))
+             (entity (and (listp verify) (alist-get :entity verify)))
+             (verified-id (and (listp entity) (alist-get :id entity))))
+        (unless (and (stringp verified-id) (string= verified-id id))
+          (user-error "Ensuring article %s failed: write not durable" name)))
       id))))
 
 (cl-defun arxana-store-ensure-entity (&key id name type source entity/source external-id seen-count pinned? last-seen props media/sha256)
@@ -614,7 +671,16 @@ RELATIONS is a list of relation payloads matching the /relation format."
   "Persist RELATIONS asynchronously and invoke CALLBACK with (RESPONSE STATUS)."
   (unless (and (listp relations) relations)
     (user-error "Provide a non-empty relations list"))
-  (arxana-store--request-async "POST" "/relations/batch" callback
+  (arxana-store--request-async "POST" "/relations/batch"
+                               (lambda (response status)
+                                 (let ((status (if (listp status) status '())))
+                                   (when (and (not (plist-get status :error))
+                                              (not (arxana-store--response-ok-p response)))
+                                     (setq status
+                                           (plist-put status :error
+                                                      (arxana-store--error-detail response))))
+                                   (when (functionp callback)
+                                     (funcall callback response status))))
                                (list (cons 'relations relations))))
 
 (defun arxana-store--stringify (value)

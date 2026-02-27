@@ -1,0 +1,24 @@
+#+TITLE: src/f2/claude.clj
+:PROPERTIES:
+:DOC_ID: futon3-bc82e641365f
+:ENTRY_ID: futon3-bc82e641365f::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / Core runtime / src/f2/claude.clj
+:PATH_STRING: Dev docs / Core runtime / src/f2/claude.clj
+:END:
+
+* Context
+`f2.claude` manages Claude CLI sessions and streams events for the UI. It
+spawns a subprocess inside a PTY (`script -c`) so tool approvals can be sent
+interactively, then parses stream-json output into structured events. Each
+session maintains a subscribers set, an event log for polling, and realtime
+stats for the HUD.
+
+Tool calls, tool results, assistant messages, and session outcomes are emitted
+through the event pipeline. Pending tool calls are tracked in
+`:pending-approvals` so `approve-tool-call!` and `deny-tool-call!` can inject
+"y"/"n" into the PTY and emit the appropriate audit events.
+
+The module also implements the Fulab clock-in/out protocol. It records
+pattern usage, artifacts, and docs written so downstream capture can persist a
+session trail into XTDB.

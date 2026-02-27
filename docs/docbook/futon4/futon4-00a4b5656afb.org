@@ -1,0 +1,17 @@
+#+TITLE: dev/debug-fold-output.el
+:PROPERTIES:
+:DOC_ID: futon4-00a4b5656afb
+:ENTRY_ID: futon4-00a4b5656afb-e6213cf635eb
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/debug-fold-output.el
+:PATH_STRING: Dev docs / dev/debug-fold-output.el
+:REPLACES: 
+:END:
+
+* Context
+- add-to-list: Extends Emacsâ load-path to include the local dev directory, ensuring that in-repo development files are discoverable without installation. This establishes the execution context for debugging by prioritizing local sources over installed packages, which is critical when iterating on flexiarg or related Arxana components.
+- load: Explicitly loads an external flexiarg.el from a contrib path, bypassing autoloads and package management. This guarantees the exact implementation under test is active, enabling reproducible debugging of folding behavior and buffer transformations tied to flexiarg, regardless of what versions might otherwise be present.
+- provide: Advertises the feature symbol flexiarg after loading, satisfying require dependencies elsewhere. This makes the debug script behave like a proper feature provider, allowing other code to rely on feature resolution and ensuring integration consistency during interactive or batch evaluation.
+- require: Pulls in arxana-patterns as a dependency, indicating that the debug scenario depends on pattern definitions or utilities from Arxana. This establishes the integration surface being exercised and ensures that flexiarg behavior is tested in a realistic environment with its pattern-matching support loaded.
+- with-temp-buffer: Encapsulates a complete, side-effect-free test workflow that initializes flexiarg collection mode, prepares a buffer from a .flexiarg document, invokes conclusion folding, and prints before/after snippets. This form defines the scriptâs core purpose: a minimal, inspectable harness for debugging fold output behavior.
+

@@ -1,0 +1,17 @@
+#+TITLE: dev/test-metadata-flag.el
+:PROPERTIES:
+:DOC_ID: futon4-bae9eb86474b
+:ENTRY_ID: futon4-bae9eb86474b-c5382d31ce59
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/test-metadata-flag.el
+:PATH_STRING: Dev docs / dev/test-metadata-flag.el
+:REPLACES: 
+:END:
+
+* Context
+- provide (feature 'flexiarg): Declares the flexiarg feature as provided after loading an external contrib file, allowing other modules to `(require 'flexiarg)` without direct path knowledge. This acts as a lightweight integration shim, ensuring downstream code sees the feature as satisfied even though the implementation is loaded from a local contrib path during testing.
+- arxana-flexiarg-collection-mode: Invoked inside a temporary buffer to initialize the major/minor mode responsible for flexiarg collection behavior. This sets up buffer-local state, hooks, and overlays expected by the Arxana flexiarg pipeline, ensuring subsequent preparation logic runs in a realistic mode context during this test harness.
+- arxana-flexiarg--prepare-buffer: Called with a list of flexiarg document paths to populate and analyze the temporary buffer. This function is responsible for loading content, parsing metadata, and constructing internal data structures such as overlays, making it the core entry point under test for metadata extraction behavior.
+- arxana-flexiarg--metadata-overlays: A dynamically populated internal variable inspected after buffer preparation to validate metadata handling. The test reports its length, using overlay count as a proxy for successful parsing and annotation, which helps verify that metadata flags in the flexiarg document are being recognized and materialized.
+- with-temp-buffer: Provides an isolated, ephemeral buffer environment for running the flexiarg mode and preparation logic without side effects. This ensures the test does not pollute user buffers or global state, making it suitable for automated or ad hoc validation of metadata-related behavior in the Arxana flexiarg workflow.
+

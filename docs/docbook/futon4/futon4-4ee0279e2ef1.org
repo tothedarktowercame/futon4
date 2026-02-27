@@ -1,0 +1,17 @@
+#+TITLE: dev/arxana-compat.el
+:PROPERTIES:
+:DOC_ID: futon4-4ee0279e2ef1
+:ENTRY_ID: futon4-4ee0279e2ef1-15ee8196afe4
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/arxana-compat.el
+:PATH_STRING: Dev docs / dev/arxana-compat.el
+:REPLACES: 
+:END:
+
+* Context
+- arxana-compat--orig-get-article: Holds the original `get-article` function object before any compatibility shimming occurs. This variable is used to preserve legacy behavior and enable safe delegation when the modern lookup path does not yield a result, ensuring reversibility and minimal disruption when interposing the new accessor logic.
+- arxana-compat--hash-article: Looks up an article by name in the modern `article-table` hash table when it exists and is valid. Returns a `(NAME . VALUE)` cons only when a non-nil value is found, providing a normalized result shape compatible with legacy expectations while cleanly short-circuiting if prerequisites are missing.
+- arxana-compat--get-article: Acts as the compatibility accessor that prefers the modern hash-table-backed article store and transparently falls back to the original `get-article` implementation. This function centralizes the precedence logic and ensures callers do not need to know whether data is sourced from modern or legacy storage.
+- with-eval-after-load 'arxana-tangled: Installs the compatibility shim once the core system is loaded by capturing the existing `get-article` symbol-function and redefining it to point at `arxana-compat--get-article`. This integration point ensures the override happens safely, only once, and without breaking load order assumptions.
+- provide 'arxana-compat: Declares the feature for Emacsâ require system, allowing other components to depend on the compatibility layer explicitly. This signals that legacy accessor interposition is available and active, enabling modular integration within the wider Arxana codebase.
+

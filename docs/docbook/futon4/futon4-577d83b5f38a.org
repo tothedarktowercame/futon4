@@ -1,0 +1,17 @@
+#+TITLE: dev/arxana-patterns-ingest.el
+:PROPERTIES:
+:DOC_ID: futon4-577d83b5f38a
+:ENTRY_ID: futon4-577d83b5f38a-60cc16671af9
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/arxana-patterns-ingest.el
+:PATH_STRING: Dev docs / dev/arxana-patterns-ingest.el
+:REPLACES: 
+:END:
+
+* Context
+- arxana-patterns-ingest--parse-flexiarg: Reads a single `.flexiarg` file and converts it into a structured plist with pattern name, optional title, summary, ordered components, and raw metadata. It recognizes `@` metadata directives and section headers, trims empty lines, slugifies section labels, derives a fallback name from the path if needed, and validates required identifiers.
+- arxana-patterns-ingest--ingest-file: Orchestrates ingestion of one parsed pattern into Futon by ensuring the pattern entity exists, discovering existing `:pattern/includes` links, creating or updating component entities, and wiring ordered component relations. Returns a minimal plist with the patternâs canonical name and resolved entity id for downstream language assembly.
+- arxana-patterns-ingest--ensure-language: Ensures a pattern-language entity exists, links it to an ordered list of pattern entities with order metadata, and applies classification tags for source and status. It also guarantees inclusion in a central language catalog, deduplicates existing relations via `/ego` lookups, and derives defaults from directory context when explicit metadata is absent.
+- arxana-patterns-ingest-directory: High-level interactive and programmatic entry point that ingests all `.flexiarg` files in a directory, sorted by modification time. It validates Futon sync, processes each file, optionally creates or updates a pattern-language wrapper, supports overriding language title and status, and reports ingestion results and language identifiers to the user.
+- arxana-patterns-list-languages: Interactive UI command that queries the catalog and `/ego` metadata to present a read-only summary buffer of known pattern languages. It displays language name, source classification, status classification, and pattern count, providing a lightweight browsing and validation surface for previously ingested libraries.
+

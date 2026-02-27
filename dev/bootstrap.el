@@ -147,7 +147,8 @@
 (defun arxana-reload-harder ()
   "Unload and reload dev modules to ensure updated definitions take effect."
   (interactive)
-  (let* ((dev-files '("dev/arxana-docbook.el"
+  (let* ((preserved (arxana--snapshot-variable-values arxana-reload-preserved-variables))
+         (dev-files '("dev/arxana-docbook.el"
                       "dev/arxana-docbook-ui.el"
                       "dev/arxana-docbook-checkout.el"
                       "dev/arxana-docbook-remote.el"
@@ -168,6 +169,7 @@
                       "dev/arxana-compat.el"
                       "dev/arxana-xtdb-browse.el"
                       "dev/arxana-media.el"
+                      "dev/arxana-browser-evidence.el"
                       "dev/arxana-browser-core.el"))
          (features '(arxana-docbook arxana-docbook-ui arxana-docbook-checkout
                      arxana-docbook-remote arxana-lab arxana-patterns
@@ -175,7 +177,7 @@
                      arxana-org-links arxana-relations arxana-browser arxana-derivation
                      arxana-saving arxana-inclusion arxana-import
                      arxana-articles-export arxana-compat arxana-xtdb-browse
-                     arxana-media arxana-browser-core)))
+                     arxana-media arxana-browser-evidence arxana-browser-core)))
     (dolist (feat features)
       (when (featurep feat)
         (ignore-errors (unload-feature feat t))))
@@ -184,7 +186,8 @@
         (when (file-readable-p path)
           (load-file path))))
     (arxana-load-dev)
-    (message "Reloaded dev/ modules (hard)")))
+    (arxana--restore-variable-values preserved)
+    (message "Reloaded dev/ modules (hard, preserved runtime settings)")))
 
 (defvar arxana--hot-reload-pending-render nil)
 (defvar arxana--hot-reload-pending-load nil)
@@ -236,6 +239,26 @@ Designed for integration with futon0/contrib hot reload hooks."
 
 (defalias 'arxana-build #'arxana-load)
 (defalias 'arxana-batch-build #'arxana-batch-load)
+
+(defconst arxana-reload-preserved-variables
+  '(futon4-enable-sync
+    futon4-base-url
+    arxana-store-default-penholder
+    arxana-store-default-profile
+    arxana-media-index-path)
+  "Runtime variables preserved across `arxana-reload-harder`.")
+
+(defun arxana--snapshot-variable-values (variables)
+  "Return VALUES for currently bound VARIABLES."
+  (let (snapshot)
+    (dolist (var variables (nreverse snapshot))
+      (when (boundp var)
+        (push (cons var (symbol-value var)) snapshot)))))
+
+(defun arxana--restore-variable-values (snapshot)
+  "Restore variable values from SNAPSHOT."
+  (dolist (entry snapshot)
+    (set (car entry) (cdr entry))))
 
 (provide 'arxana-bootstrap)
 

@@ -1,0 +1,20 @@
+#+TITLE: src/futon3/cue_embedding.clj
+:PROPERTIES:
+:DOC_ID: futon3-d06970e3800f
+:ENTRY_ID: futon3-d06970e3800f::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / Patterns & hints / src/futon3/cue_embedding.clj
+:PATH_STRING: Dev docs / Patterns & hints / src/futon3/cue_embedding.clj
+:END:
+
+* Context
+`futon3.cue-embedding` projects Tatami intent and sigil cues into fixed-length
+vectors. It tokenizes intent text, scores overlaps against pattern summaries,
+then derives fruit/paramita cues from the winning sigils. `embed-cues` converts
+those cue scores into ordered vectors so downstream systems can compare or
+store them consistently.
+
+When no explicit patterns exist, the module falls back to a local corpus of
+fruit/orb descriptions to synthesize minimal sigil candidates. `annotate-entry`
+is the public helper that attaches cue embeddings and intent cues onto a Tatami
+entry map.

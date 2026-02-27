@@ -1,0 +1,20 @@
+#+TITLE: src/futon3/musn/http.clj
+:PROPERTIES:
+:DOC_ID: futon3-09cb5cf65681
+:ENTRY_ID: futon3-09cb5cf65681::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / Core runtime / src/futon3/musn/http.clj
+:PATH_STRING: Dev docs / Core runtime / src/futon3/musn/http.clj
+:END:
+
+* Context
+This file is the HTTP adapter for the MUSN lifecycle. It parses JSON bodies,
+normalizes enum strings into keywords (`keywordize-enums`), and renders
+responses through `jsonable` so Instants are serialized as strings. The
+dispatcher is a thin `case` over the MUSN endpoints that calls the service
+functions.
+
+`handler` enforces POST-only for lifecycle endpoints, provides a `/health`
+probe, and logs `turn/end` calls to `MUSN_LOG` for auditability. `-main` binds
+the port from `MUSN_PORT` and runs the http-kit server, printing/logging the
+startup configuration.

@@ -40,6 +40,7 @@
 
 ;; Avoid autoload issues - these are loaded via bootstrap.el
 (declare-function arxana-store--request "arxana-store" (method path &optional payload query))
+(declare-function arxana-store-assert-ok "arxana-store" (response context))
 (declare-function arxana-store-sync-enabled-p "arxana-store" ())
 
 (defgroup arxana-links nil
@@ -219,6 +220,12 @@ When STRING-KEYS is non-nil, coerce keyword keys to strings."
           :type type
           :source (json-encode (arxana-links--jsonify entity)))))
 
+(defun arxana-links--persist-entity! (entity context)
+  "Persist ENTITY via /entity and fail fast on Futon write errors."
+  (let ((response (arxana-store--request "POST" "/entity"
+                                         (arxana-links--wrap-entity-payload entity))))
+    (arxana-store-assert-ok response context)))
+
 (defun arxana-links--unwrap-entity (entity)
   "Return ENTITY with :source decoded when present."
   (let* ((source (plist-get entity :source))
@@ -316,8 +323,7 @@ Returns the server response or nil on failure."
       (progn
         (message "[arxana-links] Cannot persist strategy: Futon sync disabled")
         nil)
-    (arxana-store--request "POST" "/entity"
-                           (arxana-links--wrap-entity-payload strategy))))
+    (arxana-links--persist-entity! strategy "Persisting link strategy")))
 
 (defun arxana-links-load-strategies (&optional type-filter)
   "Load all link strategies from Futon1.
@@ -389,17 +395,18 @@ STATUS is one of `arxana-links-status-values' (default :confirmed)."
       (progn
         (message "[arxana-links] Cannot persist link: Futon sync disabled")
         nil)
-    (arxana-store--request "POST" "/entity"
-                           (arxana-links--wrap-entity-payload link))))
+    (arxana-links--persist-entity! link "Persisting voiced link")))
 
 (defun arxana-links-suppress-link (link-id)
   "Mark link LINK-ID as suppressed (false positive)."
   (when (arxana-store-sync-enabled-p)
-    (arxana-store--request "POST" "/entity"
-                           (list :xt/id link-id
-                                 :status :suppressed
-                                 :suppressed-at (arxana-links--timestamp)
-                                 :suppressed-by user-login-name))))
+    (arxana-store-assert-ok
+     (arxana-store--request "POST" "/entity"
+                            (list :xt/id link-id
+                                  :status :suppressed
+                                  :suppressed-at (arxana-links--timestamp)
+                                  :suppressed-by user-login-name))
+     (format "Suppressing link %s" link-id))))
 
 (defun arxana-links-load-voiced-links (&optional strategy-id)
   "Load voiced links from Futon1.
@@ -481,8 +488,7 @@ SOURCE is :explicit (user marked) or :inferred (NLP detected)."
       (progn
         (message "[arxana-links] Cannot persist surface form: Futon sync disabled")
         nil)
-    (arxana-store--request "POST" "/entity"
-                           (arxana-links--wrap-entity-payload form))))
+    (arxana-links--persist-entity! form "Persisting surface form")))
 
 (defun arxana-links--context-doc ()
   "Return a stable doc identifier for the current buffer."
@@ -682,8 +688,7 @@ CONTENT-TYPE defaults to \"text/plain\"."
       (progn
         (message "[arxana-links] Cannot persist scholium: Futon sync disabled")
         nil)
-    (arxana-store--request "POST" "/entity"
-                           (arxana-links--wrap-entity-payload scholium))))
+    (arxana-links--persist-entity! scholium "Persisting scholium")))
 
 ;;;; =========================================================================
 ;;;; Anchor Re-finding (Resilience)
@@ -849,8 +854,7 @@ THRESHOLD is the minimum similarity score."
       (progn
         (message "[arxana-links] Cannot persist embedding cache: Futon sync disabled")
         nil)
-    (arxana-store--request "POST" "/entity"
-                           (arxana-links--wrap-entity-payload cache))))
+    (arxana-links--persist-entity! cache "Persisting embedding cache")))
 
 (defun arxana-links-load-embedding-cache (space)
   "Load embedding cache for SPACE from Futon1."

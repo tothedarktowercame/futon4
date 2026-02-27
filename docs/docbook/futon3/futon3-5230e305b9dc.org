@@ -1,0 +1,21 @@
+#+TITLE: src/futon3/tatami.clj
+:PROPERTIES:
+:DOC_ID: futon3-5230e305b9dc
+:ENTRY_ID: futon3-5230e305b9dc::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / Tatami / src/futon3/tatami.clj
+:PATH_STRING: Dev docs / Tatami / src/futon3/tatami.clj
+:END:
+
+* Context
+`futon3.tatami` is the interactive and programmatic logger for Tatami sessions.
+It maintains a current session atom plus a default selection (prototypes and
+intent), and provides `start-session`, `log-event`, and `close-session` as the
+programmatic API. The interactive `start`/`log`/`close` functions wrap the same
+logic with prompts.
+
+Events are normalized through `futon3.tatami-schema` and written via
+`futon3.tatami-store`. The module also derives fruit/paramita labels based on
+activity and felt-state, and `convolve` runs simple heuristics to detect
+candidate evidence for higher-level proofs. `status` aggregates the last 24
+hours and can include stack telemetry and current selection.

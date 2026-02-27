@@ -19,6 +19,7 @@
 (declare-function futon4--article-id-for "arxana-tangled" (name &optional path))
 (declare-function link-type-accessor "arxana-tangled" (link type))
 (declare-function arxana-store-save-snapshot "arxana-store" (&optional scope label))
+(declare-function arxana-store-assert-ok "arxana-store" (response context))
 (declare-function arxana-store--snapshot-scope-prompt "arxana-store" (&optional prompt default))
 (declare-function arxana-store--snapshot-id-from-response "arxana-store" (response))
 (declare-function arxana-store-sync-enabled-p "arxana-store" ())
@@ -90,6 +91,9 @@
         (when (string-empty-p label)
           (setq label nil))
         (let ((response (arxana-store-save-snapshot snapshot-scope label)))
+          (arxana-store-assert-ok
+           response
+           (format "Saving export snapshot (%s)" snapshot-scope))
           (when (fboundp 'arxana-store--snapshot-id-from-response)
             (setq snapshot-id
                   (arxana-store--snapshot-id-from-response response))))))

@@ -1,0 +1,17 @@
+#+TITLE: dev/arxana-relations.el
+:PROPERTIES:
+:DOC_ID: futon4-4ef22098f12c
+:ENTRY_ID: futon4-4ef22098f12c-ad29f5212c79
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/arxana-relations.el
+:PATH_STRING: Dev docs / dev/arxana-relations.el
+:REPLACES: 
+:END:
+
+* Context
+- arxana-relations-buffer-mode: Minor mode enabling relation browsing buffers with dedicated keybindings for refresh, provenance, and ID copying. It installs a custom revert-buffer-function so standard buffer refresh re-renders Futon relation data instead of reverting file contents, and cleans up buffer-local state when disabled. Serves as the primary integration point between rendered relation views and standard Emacs buffer workflows.
+- arxana-relations-context: Buffer-local plist storing metadata about the most recent Futon relation render, such as entity identifiers, relation type, and request parameters. This context is reused by refresh, provenance lookup, and copy commands to avoid recomputation and ensure commands operate on the exact dataset currently displayed, making relation buffers stateful and self-describing.
+- arxana-relations--render-ego: Renders Futon /ego relation responses into a structured, human-readable buffer view. It extracts entity names, types, and directional relationships from the response body, formats them into labeled sections, and inserts them using shared helpers. This function defines the canonical presentation for ego-centric relationship exploration inside Emacs.
+- arxana-relations--render-cooccur: Handles rendering of Futon /cooccur relation data, focusing on entities that frequently appear together. It transforms raw response bodies into ordered line items grouped under descriptive section headers, emphasizing counts or strengths where available. This renderer supports comparative analysis of related entities without requiring external tools or manual JSON inspection.
+- arxana-relations--render-tail: Renders Futon /tail relation results, typically representing downstream or trailing relationships from a source entity. It formats sparse or asymmetric data defensively, ensuring empty sections are explicit, and integrates with shared insertion helpers for consistent layout. Acts as a specialized renderer for less common but structurally distinct relation queries.
+

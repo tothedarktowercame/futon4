@@ -22,7 +22,11 @@
                                                  (cons 'name name)
                                                  (cons 'type "arxana/article")
                                                  (when combined (cons 'props combined))))))
-                   (push payload calls)))))
+                   (push payload calls))))
+              ((symbol-function 'arxana-store-fetch-entity)
+               (lambda (id)
+                 `((:entity . ((:id . ,id))))))
+      )
       (should (string= "id:canon:Test"
                        (arxana-store-ensure-article :name "Test" :path "Test")))
       (let ((payload (car calls)))
@@ -33,6 +37,18 @@
   (let ((futon4-enable-sync nil))
     (should-not (arxana-store-ensure-article :name "Test"))
     (should (eq (plist-get arxana-store-last-error :reason) 'disabled))))
+
+(ert-deftest arxana-store-ensure-article-fails-when-write-not-durable ()
+  (let ((futon4-enable-sync t))
+    (cl-letf (((symbol-function 'futon4--canonical-path)
+               (lambda (path) path))
+              ((symbol-function 'futon4--article-id-for)
+               (lambda (&rest _) "arxana:article:test"))
+              ((symbol-function 'futon4-ensure-article-entity)
+               (lambda (&rest _) '((:ok? . t))))
+              ((symbol-function 'arxana-store-fetch-entity)
+               (lambda (&rest _) nil)))
+      (should-error (arxana-store-ensure-article :name "Test")))))
 
 (ert-deftest arxana-store-request-parses-json ()
   (let ((futon4-enable-sync t)
@@ -48,6 +64,48 @@
                    buf))))
       (let ((body (arxana-store-fetch-entity "arxana:article:test")))
         (should (equal '((:entity (:id . "one"))) body))))))
+
+(ert-deftest arxana-store-request-handles-structured-error-payload ()
+  (let ((futon4-enable-sync t)
+        (futon4-base-url "http://example")
+        (arxana-store-last-error nil))
+    (cl-letf (((symbol-function 'url-retrieve-synchronously)
+               (lambda (&rest _)
+                 (let ((buf (generate-new-buffer " *arxana-store-test*")))
+                   (with-current-buffer buf
+                     (insert "HTTP/1.1 200 OK\r\n"
+                             "Content-Type: application/json\r\n\r\n"
+                             "{\"error\":{\"layer\":3,\"reason\":\"missing-penholder\",\"context\":null}}")
+                     (goto-char (point-min)))
+                   buf))))
+      (let ((body (arxana-store-fetch-entity "arxana:article:test")))
+        (should (equal (alist-get :layer (alist-get :error body)) 3))
+        (should (equal (alist-get :reason (alist-get :error body)) "missing-penholder"))
+        (should-not arxana-store-last-error)))))
+
+(ert-deftest arxana-store-assert-ok-returns-response-on-success ()
+  (let ((response '((:ok? . t) (:entity . ((:id . "x"))))))
+    (should (eq (arxana-store-assert-ok response "Ensuring entity") response))))
+
+(ert-deftest arxana-store-assert-ok-reports-missing-penholder ()
+  (let ((response '((:error (:layer . 3) (:reason . missing-penholder) (:context)))))
+    (let ((message-text
+           (condition-case err
+               (progn
+                 (arxana-store-assert-ok response "Publishing lyrics entity")
+                 nil)
+             (error (error-message-string err)))))
+      (should (string-match-p "missing-penholder" (or message-text "")))
+      (should (string-match-p "arxana-store-default-penholder" (or message-text ""))))))
+
+(ert-deftest arxana-store-default-headers-include-penholder ()
+  (let ((arxana-store-default-profile "dev")
+        (arxana-store-default-penholder "joe"))
+    (let ((headers (arxana-store--default-headers t)))
+      (should (equal (cdr (assoc "Accept" headers)) "application/json"))
+      (should (equal (cdr (assoc "Content-Type" headers)) "application/json"))
+      (should (equal (cdr (assoc "X-Profile" headers)) "dev"))
+      (should (equal (cdr (assoc "X-Penholder" headers)) "joe")))))
 
 (ert-deftest arxana-store-ensure-article-props ()
   (let ((futon4-enable-sync t)
@@ -65,7 +123,11 @@
                                                  (cons 'name name)
                                                  (cons 'type "arxana/article")
                                                  (when combined (cons 'props combined))))))
-                   (push payload calls)))))
+                   (push payload calls))))
+              ((symbol-function 'arxana-store-fetch-entity)
+               (lambda (_id)
+                 '((:entity . ((:id . "arxana:article:test"))))))
+      )
       (arxana-store-ensure-article :name "Test" :props '((status . "deleted")))
       (let* ((payload (car calls))
              (props (cdr (assoc 'props payload))))
@@ -128,6 +190,19 @@
   (let ((futon4-enable-sync nil))
     (should-not (arxana-store--post-relation "src" "dst"))
     (should (eq (plist-get arxana-store-last-error :reason) 'disabled))))
+
+(ert-deftest arxana-store-create-relations-batch-async-flags-response-errors ()
+  (let ((futon4-enable-sync t)
+        (seen nil))
+    (cl-letf (((symbol-function 'arxana-store--request-async)
+               (lambda (_method _path callback &optional _payload _query)
+                 (funcall callback '((:error . "boom")) nil)
+                 :ok)))
+      (arxana-store-create-relations-batch-async
+       '(((type . "arxana/scholium") (src . "a") (dst . "b")))
+       (lambda (_response status)
+         (setq seen status)))
+      (should (equal (plist-get seen :error) "boom")))))
 
 (ert-deftest arxana-store-post-hyperedge-builds-payload ()
   (let ((futon4-enable-sync t)

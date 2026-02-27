@@ -1,0 +1,13 @@
+#+TITLE: Browsing & relations
+:PROPERTIES:
+:DOC_ID: futon4-4b5b1df112b1
+:ENTRY_ID: 019b3805-41e7-77e3-9fff-fa186c2b5bd2-futon4-4b5b1df112b1
+:VERSION: lab-draft
+:OUTLINE_PATH: Browsing & relations
+:PATH_STRING: Browsing & relations
+:REPLACES: 
+:END:
+
+* Context
+- Lab session 019b3805-41e7-77e3-9fff-fa186c2b5bd2
+

@@ -1,0 +1,17 @@
+#+TITLE: dev/arxana-export.el
+:PROPERTIES:
+:DOC_ID: futon4-11eccb15d279
+:ENTRY_ID: futon4-11eccb15d279-456ec20d7c12
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/arxana-export.el
+:PATH_STRING: Dev docs / dev/arxana-export.el
+:REPLACES: 
+:END:
+
+* Context
+- arxana-article--labels-for: Declares an external helper that returns label metadata for a named article, used by exporters to annotate Org output with stable identifiers or tags. This declaration signals a dependency on the article model layer, allowing export code to enrich serialized Org content without directly coupling to article storage internals.
+- get-article: Declares access to the canonical article lookup in the tangled Arxana data layer. Export helpers rely on this to resolve article names into full article structures before extracting fields, ensuring exported Org files reflect the authoritative article state used by XTDB snapshots.
+- scholium-text: Declares a function that extracts the primary textual body of a scholium from an article record. Exporters use this accessor to populate Org sections with human-readable content, separating narrative text from metadata like names or relationships during bundle generation.
+- arxana-store-save-snapshot: Declares the entry point for persisting a snapshot of the current store, optionally scoped and labeled. The exporter integrates with this function to produce shareable XTDB-backed bundles, coordinating Org file writes with snapshot creation for portability and reproducibility.
+- arxana-store-sync-enabled-p: Declares a predicate indicating whether store synchronization is active. Export logic can consult this to adjust behavior when writing Org files or snapshots, avoiding assumptions about remote sync availability and supporting both offline and synchronized export workflows.
+

@@ -1,0 +1,18 @@
+#+TITLE: src/futon3/hx/validate.clj
+:PROPERTIES:
+:DOC_ID: futon3-972cf05dc1ba
+:ENTRY_ID: futon3-972cf05dc1ba::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / HX / src/futon3/hx/validate.clj
+:PATH_STRING: Dev docs / HX / src/futon3/hx/validate.clj
+:END:
+
+* Context
+`futon3.hx.validate` wraps the logic engine and logs validation outcomes into
+`futon3.logic-audit`. `structural-step` is the central helper; it runs
+`hx.logic/check-step`, records the result, and returns a minimal validation map
+for callers.
+
+The module also builds higher-level validation payloads for link suggestion
+flows. `self-validation` packages an agent's decision plus structural checks,
+while `peer-review` attaches a second sign-off for cross-agent review.

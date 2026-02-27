@@ -1,0 +1,25 @@
+#+TITLE: src/futon3/musn/router.clj
+:PROPERTIES:
+:DOC_ID: futon3-a5a2114eb31b
+:ENTRY_ID: futon3-a5a2114eb31b::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / Core runtime / src/futon3/musn/router.clj
+:PATH_STRING: Dev docs / Core runtime / src/futon3/musn/router.clj
+:END:
+
+* Context
+`futon3.musn.router` is the in-memory state machine for MUSN turns. It owns a
+session state map (turn number, selection, actions, trail counters, warnings)
+and exposes `handle-turn-*` functions that validate requests, mutate the state
+atom, and emit decision payloads like PSR, PUR, and pause hints.
+
+Trail accounting is handled locally (`bump-trail`, `off-trail-limit`,
+`allowed-pattern?`) so each action can be classified as on- or off-trail. The
+router uses `futon3.musn.logic` to compute obligations, then maps those
+obligations into warnings or halts via `apply-action-constraints` and
+`apply-turn-end-constraints`. When a halt is set, `pause-payload` emits a small
+backtrace (recent moves, trail) that callers can surface to the user.
+
+The module is deliberately pure with respect to IO. The service layer wraps it
+for persistence and AIF logging, and `logic-audit/record!` is called only when
+handlers emit a new logic result.

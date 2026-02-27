@@ -1,0 +1,444 @@
+[
+  {
+    "doc_id": "futon3-074dd9b89c98",
+    "title": "Core",
+    "outline_path": [
+      "Core"
+    ],
+    "path_string": "Core",
+    "level": 1
+  },
+  {
+    "doc_id": "futon3-69a5b99d9907",
+    "title": "MUSN system lifecycle",
+    "outline_path": [
+      "Core",
+      "MUSN system lifecycle"
+    ],
+    "path_string": "Core / MUSN system lifecycle",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3-e0c722708456",
+    "title": "REPL evaluators",
+    "outline_path": [
+      "Core",
+      "REPL evaluators"
+    ],
+    "path_string": "Core / REPL evaluators",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3-6d2eaabe279a",
+    "title": "Transport",
+    "outline_path": [
+      "Transport"
+    ],
+    "path_string": "Transport",
+    "level": 1
+  },
+  {
+    "doc_id": "futon3-9682d94bf2e4",
+    "title": "HTTP and WebSocket transport",
+    "outline_path": [
+      "Transport",
+      "HTTP and WebSocket transport"
+    ],
+    "path_string": "Transport / HTTP and WebSocket transport",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3-a873e81d0f6c",
+    "title": "API",
+    "outline_path": [
+      "API"
+    ],
+    "path_string": "API",
+    "level": 1
+  },
+  {
+    "doc_id": "futon3-f056d8a81559",
+    "title": "UI JSON facades",
+    "outline_path": [
+      "API",
+      "UI JSON facades"
+    ],
+    "path_string": "API / UI JSON facades",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3-302d12a5c3cf",
+    "title": "Tatami",
+    "outline_path": [
+      "Tatami"
+    ],
+    "path_string": "Tatami",
+    "level": 1
+  },
+  {
+    "doc_id": "futon3-574ad9c946f8",
+    "title": "Tatami session management",
+    "outline_path": [
+      "Tatami",
+      "Tatami session management"
+    ],
+    "path_string": "Tatami / Tatami session management",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3-9d5915a54bcc",
+    "title": "Tatami event store",
+    "outline_path": [
+      "Tatami",
+      "Tatami event store"
+    ],
+    "path_string": "Tatami / Tatami event store",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3-9ed92f64da17",
+    "title": "Patterns",
+    "outline_path": [
+      "Patterns"
+    ],
+    "path_string": "Patterns",
+    "level": 1
+  },
+  {
+    "doc_id": "futon3-b3603516f181",
+    "title": "Pattern hints system",
+    "outline_path": [
+      "Patterns",
+      "Pattern hints system"
+    ],
+    "path_string": "Patterns / Pattern hints system",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3-da3da0f1c50b",
+    "title": "Integration",
+    "outline_path": [
+      "Integration"
+    ],
+    "path_string": "Integration",
+    "level": 1
+  },
+  {
+    "doc_id": "futon3-7356d322d5aa",
+    "title": "Stack status telemetry",
+    "outline_path": [
+      "Integration",
+      "Stack status telemetry"
+    ],
+    "path_string": "Integration / Stack status telemetry",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3-0d4fc542168d",
+    "title": "src/futon3/musn/schema.clj",
+    "outline_path": [
+      "Dev docs",
+      "Core runtime",
+      "src/futon3/musn/schema.clj"
+    ],
+    "path_string": "Dev docs / Core runtime / src/futon3/musn/schema.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-a5a2114eb31b",
+    "title": "src/futon3/musn/router.clj",
+    "outline_path": [
+      "Dev docs",
+      "Core runtime",
+      "src/futon3/musn/router.clj"
+    ],
+    "path_string": "Dev docs / Core runtime / src/futon3/musn/router.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-eca59edc3e9e",
+    "title": "src/futon3/musn/service.clj",
+    "outline_path": [
+      "Dev docs",
+      "Core runtime",
+      "src/futon3/musn/service.clj"
+    ],
+    "path_string": "Dev docs / Core runtime / src/futon3/musn/service.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-09cb5cf65681",
+    "title": "src/futon3/musn/http.clj",
+    "outline_path": [
+      "Dev docs",
+      "Core runtime",
+      "src/futon3/musn/http.clj"
+    ],
+    "path_string": "Dev docs / Core runtime / src/futon3/musn/http.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-8324cb89abb2",
+    "title": "src/futon3/musn/logic.clj",
+    "outline_path": [
+      "Dev docs",
+      "Core runtime",
+      "src/futon3/musn/logic.clj"
+    ],
+    "path_string": "Dev docs / Core runtime / src/futon3/musn/logic.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-55e838e93d1e",
+    "title": "src/futon3/musn/fulab.clj",
+    "outline_path": [
+      "Dev docs",
+      "Core runtime",
+      "src/futon3/musn/fulab.clj"
+    ],
+    "path_string": "Dev docs / Core runtime / src/futon3/musn/fulab.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-dae6849e52e2",
+    "title": "src/f2/musn.clj",
+    "outline_path": [
+      "Dev docs",
+      "Core runtime",
+      "src/f2/musn.clj"
+    ],
+    "path_string": "Dev docs / Core runtime / src/f2/musn.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-ac316bae57ee",
+    "title": "src/f2/router.clj",
+    "outline_path": [
+      "Dev docs",
+      "Core runtime",
+      "src/f2/router.clj"
+    ],
+    "path_string": "Dev docs / Core runtime / src/f2/router.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-315426c3839e",
+    "title": "src/f2/transport.clj",
+    "outline_path": [
+      "Dev docs",
+      "Core runtime",
+      "src/f2/transport.clj"
+    ],
+    "path_string": "Dev docs / Core runtime / src/f2/transport.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-d3f3981edfdf",
+    "title": "src/f2/ui.clj",
+    "outline_path": [
+      "Dev docs",
+      "Core runtime",
+      "src/f2/ui.clj"
+    ],
+    "path_string": "Dev docs / Core runtime / src/f2/ui.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-1ca0cf2d9373",
+    "title": "src/f2/repl.clj",
+    "outline_path": [
+      "Dev docs",
+      "Core runtime",
+      "src/f2/repl.clj"
+    ],
+    "path_string": "Dev docs / Core runtime / src/f2/repl.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-bc82e641365f",
+    "title": "src/f2/claude.clj",
+    "outline_path": [
+      "Dev docs",
+      "Core runtime",
+      "src/f2/claude.clj"
+    ],
+    "path_string": "Dev docs / Core runtime / src/f2/claude.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-a489b5fff39f",
+    "title": "src/f2/codex.clj",
+    "outline_path": [
+      "Dev docs",
+      "Core runtime",
+      "src/f2/codex.clj"
+    ],
+    "path_string": "Dev docs / Core runtime / src/f2/codex.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-c6c25c1ce326",
+    "title": "src/f2/semantics.clj",
+    "outline_path": [
+      "Dev docs",
+      "Core runtime",
+      "src/f2/semantics.clj"
+    ],
+    "path_string": "Dev docs / Core runtime / src/f2/semantics.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-5230e305b9dc",
+    "title": "src/futon3/tatami.clj",
+    "outline_path": [
+      "Dev docs",
+      "Tatami",
+      "src/futon3/tatami.clj"
+    ],
+    "path_string": "Dev docs / Tatami / src/futon3/tatami.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-4e12a7c35e90",
+    "title": "src/futon3/tatami_schema.clj",
+    "outline_path": [
+      "Dev docs",
+      "Tatami",
+      "src/futon3/tatami_schema.clj"
+    ],
+    "path_string": "Dev docs / Tatami / src/futon3/tatami_schema.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-82263a2f5c2a",
+    "title": "src/futon3/tatami_store.clj",
+    "outline_path": [
+      "Dev docs",
+      "Tatami",
+      "src/futon3/tatami_store.clj"
+    ],
+    "path_string": "Dev docs / Tatami / src/futon3/tatami_store.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-ddf3795187dd",
+    "title": "src/futon3/trail_bridge.clj",
+    "outline_path": [
+      "Dev docs",
+      "Tatami",
+      "src/futon3/trail_bridge.clj"
+    ],
+    "path_string": "Dev docs / Tatami / src/futon3/trail_bridge.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-99feaf2a0db0",
+    "title": "src/futon3/hx/api.clj",
+    "outline_path": [
+      "Dev docs",
+      "HX",
+      "src/futon3/hx/api.clj"
+    ],
+    "path_string": "Dev docs / HX / src/futon3/hx/api.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-ccb97b02f7b4",
+    "title": "src/futon3/hx/store.clj",
+    "outline_path": [
+      "Dev docs",
+      "HX",
+      "src/futon3/hx/store.clj"
+    ],
+    "path_string": "Dev docs / HX / src/futon3/hx/store.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-453c9bf0616a",
+    "title": "src/futon3/hx/logic.clj",
+    "outline_path": [
+      "Dev docs",
+      "HX",
+      "src/futon3/hx/logic.clj"
+    ],
+    "path_string": "Dev docs / HX / src/futon3/hx/logic.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-972cf05dc1ba",
+    "title": "src/futon3/hx/validate.clj",
+    "outline_path": [
+      "Dev docs",
+      "HX",
+      "src/futon3/hx/validate.clj"
+    ],
+    "path_string": "Dev docs / HX / src/futon3/hx/validate.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-cebdbd364e35",
+    "title": "src/futon3/hx/link_types.clj",
+    "outline_path": [
+      "Dev docs",
+      "HX",
+      "src/futon3/hx/link_types.clj"
+    ],
+    "path_string": "Dev docs / HX / src/futon3/hx/link_types.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-e9dec013551d",
+    "title": "src/futon3/pattern_store.clj",
+    "outline_path": [
+      "Dev docs",
+      "Patterns & hints",
+      "src/futon3/pattern_store.clj"
+    ],
+    "path_string": "Dev docs / Patterns & hints / src/futon3/pattern_store.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-05d110fd514d",
+    "title": "src/futon3/pattern_hints.clj",
+    "outline_path": [
+      "Dev docs",
+      "Patterns & hints",
+      "src/futon3/pattern_hints.clj"
+    ],
+    "path_string": "Dev docs / Patterns & hints / src/futon3/pattern_hints.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-d06970e3800f",
+    "title": "src/futon3/cue_embedding.clj",
+    "outline_path": [
+      "Dev docs",
+      "Patterns & hints",
+      "src/futon3/cue_embedding.clj"
+    ],
+    "path_string": "Dev docs / Patterns & hints / src/futon3/cue_embedding.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-95703141b0d5",
+    "title": "src/futon3/learn_or_act.clj",
+    "outline_path": [
+      "Dev docs",
+      "Patterns & hints",
+      "src/futon3/learn_or_act.clj"
+    ],
+    "path_string": "Dev docs / Patterns & hints / src/futon3/learn_or_act.clj",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3-94c6fcfe166e",
+    "title": "src/futon3/glove_intent.clj",
+    "outline_path": [
+      "Dev docs",
+      "Patterns & hints",
+      "src/futon3/glove_intent.clj"
+    ],
+    "path_string": "Dev docs / Patterns & hints / src/futon3/glove_intent.clj",
+    "level": 3
+  }
+]

@@ -1,0 +1,22 @@
+#+TITLE: src/futon3/pattern_hints.clj
+:PROPERTIES:
+:DOC_ID: futon3-05d110fd514d
+:ENTRY_ID: futon3-05d110fd514d::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / Patterns & hints / src/futon3/pattern_hints.clj
+:PATH_STRING: Dev docs / Patterns & hints / src/futon3/pattern_hints.clj
+:END:
+
+* Context
+`futon3.pattern-hints` builds sigil- and embedding-based recommendations for
+patterns, fruits, and paramitas. It scans the flexiarg library and devmaps to
+collect pattern summaries and sigils, then scores candidates by emoji/hanzi
+distance against the target sigils.
+
+When embeddings are available, GloVe neighbors are merged with the sigil
+results to broaden the candidate set. `hints` is the primary entry point: it
+resolves target sigils from explicit sigils or prototypes, computes pattern
+candidates, and returns nearby fruit/paramita entries for UI display.
+
+The module also exposes helper collections (all patterns, fruit definitions,
+paramita definitions) that other components use for intent seeding.

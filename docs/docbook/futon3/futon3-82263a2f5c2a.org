@@ -1,0 +1,18 @@
+#+TITLE: src/futon3/tatami_store.clj
+:PROPERTIES:
+:DOC_ID: futon3-82263a2f5c2a
+:ENTRY_ID: futon3-82263a2f5c2a::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / Tatami / src/futon3/tatami_store.clj
+:PATH_STRING: Dev docs / Tatami / src/futon3/tatami_store.clj
+:END:
+
+* Context
+`futon3.tatami-store` is a local append-only store for Tatami events. It keeps
+an EDN log (`resources/tatami-events.edn`) and a JSONL mirror for external
+consumers. `append-event!` is synchronized with a lock so concurrent writes do
+not corrupt the log.
+
+`load-events` and `load-events-since` provide simple queries for recent
+activity. The JSON mirror is rewritten on first creation to match existing EDN
+entries, and `reset-events!` clears both logs for tests or clean starts.

@@ -1,0 +1,25 @@
+#+TITLE: src/f2/codex.clj
+:PROPERTIES:
+:DOC_ID: futon3-a489b5fff39f
+:ENTRY_ID: futon3-a489b5fff39f::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / Core runtime / src/f2/codex.clj
+:PATH_STRING: Dev docs / Core runtime / src/f2/codex.clj
+:END:
+
+* Context
+`f2.codex` is the Codex CLI session manager. It starts subprocesses with a
+Python wrapper (base64 prompt) so prompts are not mangled by the shell, and it
+wraps the command in a PTY when available to allow interactive approvals. The
+parser handles multiple event formats from the Codex stream, including
+response items, tool calls, and command execution events.
+
+Sessions track pending approvals, stats, artifacts, docs, and a persistent
+`events-log` for polling. `approve-tool-call!` and `deny-tool-call!` inject
+keystrokes into the PTY and emit tool audit events. The module also watches for
+explicit pattern action markers in assistant text and turns them into
+`:pattern/action` events.
+
+`resume-session!` reattaches to a previous CLI session id, with cwd safety
+checks and optional warnings. As in `f2.claude`, clock-in/out events and doc
+tracking are emitted for the Fulab capture pipeline.

@@ -1,0 +1,17 @@
+#+TITLE: dev/bootstrap.el
+:PROPERTIES:
+:DOC_ID: futon4-6608c683b71d
+:ENTRY_ID: futon4-6608c683b71d-bdc16242cd9a
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/bootstrap.el
+:PATH_STRING: Dev docs / dev/bootstrap.el
+:REPLACES: 
+:END:
+
+* Context
+- arxana-root-directory: Computes and exposes the absolute root directory of the Arxana checkout, resolving relative to the loaded bootstrap file, default-directory, or fallback context. This path anchors discovery of spine2.org, tangled output, and dev modules, and is also used to extend load-path for development. It centralizes filesystem assumptions so other bootstrap functions can remain location-agnostic.
+- arxana-allow-tangle: User-facing customization flag that gates whether tangling and rebuilding from Org sources is permitted. By default it is nil, enforcing a safer workflow where developers load dev/ sources directly. arxana-build checks this variable and signals a user-error unless explicitly enabled, making tangling an intentional, opt-in operation during development or CI.
+- arxana--ensure-version: Internal guard that enforces a minimum supported Emacs version before any substantive build or load occurs. It compares emacs-version against arxana-minimum-emacs-version and signals a hard error on mismatch. This provides an early, explicit failure mode that avoids subtle runtime incompatibilities later in the bootstrap or tangled code.
+- arxana-load-spine: Loads spine2.org via org-babel so that helper functions and file lists defined in the spine become available. It validates the spineâs existence, ensures all required Org, Babel, and networking dependencies are present, and suppresses confirmation prompts for evaluation. This function is the bridge between Org sources and executable Elisp.
+- arxana-build: Primary entry point that ensures a current tangled Elisp file exists and is loaded. It conditionally regenerates arxana-tangled.el based on timestamps or a force argument, loads the result, prefers dev/staging implementations, and opportunistically requires many Arxana subsystems. It integrates version checks, tangling policy, spine expansion, and module loading into one workflow.
+

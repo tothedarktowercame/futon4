@@ -1,0 +1,17 @@
+#+TITLE: dev/arxana-browse.el
+:PROPERTIES:
+:DOC_ID: futon4-68e6139bcfc9
+:ENTRY_ID: futon4-68e6139bcfc9-dc4953b661e6
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/arxana-browse.el
+:PATH_STRING: Dev docs / dev/arxana-browse.el
+:REPLACES: 
+:END:
+
+* Context
+- arxana-browse: Customization group that namespaces all Part VI browsing helpers under the broader Arxana configuration. It provides a user-facing entry point in Emacsâ customization system, signaling that the commands in this file are about navigation and discovery rather than content editing, and integrates legacy browsing workflows into the modern arxana-* command family.
+- arxana-browse--ensure: Internal guard function that validates the presence of a legacy browsing function before invocation. It checks whether a given symbol is fboundp and raises a clear user-error if not, guiding contributors to load development sources where tangling is enabled. This centralizes error handling for all wrapper commands.
+- arxana-browse-open-catalog: Interactive autoloaded command that opens the article catalog using legacy Part VI menus. With a prefix argument, it lists all articles; otherwise it shows the default subset. It delegates to article-menu-listing or article-menu-list-all-articles after validation, providing a stable modern entry point without exposing older function names.
+- arxana-browse-follow-link: Interactive wrapper that follows a reference or scholium at point in the current buffer. It ensures the legacy follow-reference-or-scholium function is available, then delegates navigation. This command bridges in-buffer navigation semantics from the old system into the arxana-browse namespace for consistent keybinding and discovery.
+- arxana-browse-history-back: Interactive navigation command that moves backward through the temporal article browsing history. It validates and calls the legacy sb-back function, preserving established history semantics while presenting them as part of the modern browsing API. This supports linear exploration workflows alongside catalog- and link-based navigation.
+

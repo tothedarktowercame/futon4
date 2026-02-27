@@ -1,0 +1,17 @@
+#+TITLE: dev/arxana-store.el
+:PROPERTIES:
+:DOC_ID: futon4-6f80c714bafa
+:ENTRY_ID: futon4-6f80c714bafa-94116d81ddc0
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/arxana-store.el
+:PATH_STRING: Dev docs / dev/arxana-store.el
+:REPLACES: 
+:END:
+
+* Context
+- arxana-store--request: Core HTTP bridge to Futon, handling sync enablement, URL construction, headers, JSON encoding/decoding, timeouts, and error capture. Accepts method, path, optional payload, and query string, returning parsed JSON alists. Records last response and structured errors, normalizes protocol failures, and integrates with legacy futon4 settings like base URL and canonical paths.
+- arxana-store-ensure-entity: High-level POST helper for Futonâs /entity endpoint that ensures an entity exists with the given name and optional metadata. Accepts keyword arguments mirroring Futonâs payload (type, ids, source, counts, pinning, timestamps), normalizes keyword types, validates required name, and delegates network behavior to arxana-store--request.
+- arxana-store-upsert-scholium: Interactive and programmatic helper to create or update a scholium relation between two articles by name. Resolves article names to Futon IDs via futon4 helpers, validates sync and inputs, posts a relation with an optional label, reports interactive success, and returns a plist describing the stored relation endpoints.
+- arxana-store-fetch-entity: Fetches a single entity by ID from Futon with optional version or as-of timestamp parameters. Builds encoded query strings, validates required identifiers, supports interactive prompting, and returns parsed JSON describing the entity state. Serves as the primary read path for entity inspection and historical lookup integration.
+- arxana-store-ego: Queries Futonâs /ego endpoint to retrieve an ego network centered on a named entity, optionally limited in size. Supports interactive defaults from the current article context, validates presence of a target name, encodes query parameters, and returns structured JSON suitable for graph or relationship analysis.
+

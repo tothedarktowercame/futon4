@@ -1,0 +1,20 @@
+#+TITLE: src/futon3/musn/schema.clj
+:PROPERTIES:
+:DOC_ID: futon3-0d4fc542168d
+:ENTRY_ID: futon3-0d4fc542168d::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / Core runtime / src/futon3/musn/schema.clj
+:PATH_STRING: Dev docs / Core runtime / src/futon3/musn/schema.clj
+:END:
+
+* Context
+This module defines the Malli schemas for the MUSN HTTP lifecycle. It codifies
+identifiers (`PatternId`, `Anchor`) and the request/response shapes for
+session creation and the turn flow (start/plan/select/action/use/evidence/end).
+The payloads include AIF and mana fields so the service can validate and round
+trip the scoring and resource bookkeeping fields.
+
+`registry` is the canonical lookup table for schema keywords, and `validator`
+returns a reusable Malli validator for higher layers. The HTTP adapter and
+router use these schemas as the first gate so that only well-formed requests
+reach the state machine.

@@ -1,0 +1,17 @@
+#+TITLE: dev/test-flexiarg-cycle.el
+:PROPERTIES:
+:DOC_ID: futon4-34bd35a70a3e
+:ENTRY_ID: futon4-34bd35a70a3e-9b42ca84c651
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/test-flexiarg-cycle.el
+:PATH_STRING: Dev docs / dev/test-flexiarg-cycle.el
+:REPLACES: 
+:END:
+
+* Context
+- with-temp-buffer test harness: Executes an isolated, non-interactive integration test that initializes flexiarg collection mode, prepares a buffer from a sample .flexiarg document, and drives the cycle state machine. It prints diagnostic output to standard output/messages, making the file suitable for manual or batch inspection rather than automated ERT-style assertions.
+- arxana-flexiarg--prepare-buffer invocation: Loads a real flexiarg document into the temporary buffer and initializes internal overlays and state. This exercises the document parsing and overlay setup paths as they would run in normal usage, ensuring metadata and context regions are created before any cycling occurs.
+- arxana-flexiarg-cycle-buffer sequencing: Calls the cycle command three times, logging arxana-flexiarg--cycle-state after each transition. This validates that cycling advances deterministically through expected stages and that repeated invocations update visibility and overlay properties consistently.
+- Overlay inspection logic: Locates representative metadata and context overlays, then inspects before-string/display placeholders, intangible flags, and text invisibility properties. This directly verifies how flexiarg encodes hidden or placeholder content using overlays and text properties, which is critical for correct editor interaction.
+- Outline visibility assertions: Searches for key marker strings in the buffer and checks outline-invisible-p at each cycle stage. This confirms that high-level structural sections become visible or hidden as intended across cycle states, integrating flexiarg behavior with Emacsâ outline invisibility mechanism.
+

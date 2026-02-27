@@ -1,0 +1,17 @@
+#+TITLE: dev/arxana-flexiarg-normalize.el
+:PROPERTIES:
+:DOC_ID: futon4-33f6424a20ca
+:ENTRY_ID: futon4-33f6424a20ca-fc55a7ecd940
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/arxana-flexiarg-normalize.el
+:PATH_STRING: Dev docs / dev/arxana-flexiarg-normalize.el
+:REPLACES: 
+:END:
+
+* Context
+- arxana-flexiarg--clause-regexp: Defines the canonical pattern for recognizing legacy simplified clause headings in flexiarg bodies, matching uppercase labels followed by a colon and inline text. This constant anchors the parserâs ability to detect IF/HOWEVER/THEN-style sections and is central to determining whether a buffer can be structurally rewritten into the canonical â! conclusionâ plus â+ CLAUSEâ format.
+- arxana-flexiarg--extract-clauses: Parses a flexiarg body string into an ordered list of (LABEL . TEXT) pairs by scanning for simplified clause headers and aggregating following lines. It normalizes labels to uppercase, preserves relative ordering, trims trailing whitespace, and ignores unrelated preamble content, providing a structured intermediate representation consumed by the canonical formatter.
+- arxana-flexiarg--build-body: Constructs the full canonical flexiarg body text from extracted clauses. It selects a summary for the â! conclusionâ section using THEN, CONCLUSION, or the first clause as fallback, inserts â[pending]â placeholders when content is empty, formats each clause with proper indentation, and returns a normalized string suitable for direct buffer replacement.
+- arxana-flexiarg--normalize-buffer: Orchestrates in-buffer normalization by splitting header and body, detecting already-canonical content, rewriting legacy alias headings, extracting simplified clauses, and rebuilding the canonical template. It performs destructive buffer edits only when applicable, signals user errors when no recognizable clauses exist, and reports whether any modifications were made.
+- arxana-flexiarg-normalize-file: Autoloaded entry point that normalizes a single `.flexiarg` file on disk using a temporary buffer and `arxana-flexiarg--normalize-buffer`. It supports a dry-run mode for reporting prospective changes without writing, integrates with interactive use, and returns status information used by higher-level batch operations.
+

@@ -1,0 +1,17 @@
+#+TITLE: src/futon3/hx/link_types.clj
+:PROPERTIES:
+:DOC_ID: futon3-cebdbd364e35
+:ENTRY_ID: futon3-cebdbd364e35::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / HX / src/futon3/hx/link_types.clj
+:PATH_STRING: Dev docs / HX / src/futon3/hx/link_types.clj
+:END:
+
+* Context
+`futon3.hx.link-types` is a small registry for allowed hypertext link types.
+It defaults to a local set, can refresh from a bundled EDN resource, and can
+optionally fetch the allowlist from Futon1. The cache records where the list
+came from and when it was last refreshed.
+
+`allowed-type?` is the predicate used by the HX API and logic layer to reject
+unknown link types before a link is persisted.

@@ -1,0 +1,19 @@
+#+TITLE: src/futon3/glove_intent.clj
+:PROPERTIES:
+:DOC_ID: futon3-94c6fcfe166e
+:ENTRY_ID: futon3-94c6fcfe166e::org
+:VERSION: org
+:OUTLINE_PATH: Dev docs / Patterns & hints / src/futon3/glove_intent.clj
+:PATH_STRING: Dev docs / Patterns & hints / src/futon3/glove_intent.clj
+:END:
+
+* Context
+`futon3.glove-intent` attaches intent-to-pattern distances using local GloVe
+vectors. It lazily loads the word vectors referenced by a tokenized intent or
+pattern summary, averages them into sentence vectors, and computes cosine
+similarity. When enabled (`FUTON3_GLOVE_INTENT`), the similarity/distance is
+added to each pattern candidate.
+
+This is an optional enrichment step used by `learn-or-act` to blend semantic
+similarity with sigil-based scoring. The cache keeps loaded tokens so repeated
+calls are cheaper.

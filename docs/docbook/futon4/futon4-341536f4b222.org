@@ -1,0 +1,17 @@
+#+TITLE: dev/arxana-xtdb-browse.el
+:PROPERTIES:
+:DOC_ID: futon4-341536f4b222
+:ENTRY_ID: futon4-341536f4b222-48ae29210131
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/arxana-xtdb-browse.el
+:PATH_STRING: Dev docs / dev/arxana-xtdb-browse.el
+:REPLACES: 
+:END:
+
+* Context
+- arxana-xtdb-browse-default-limit: User-customizable default number of relations fetched from XTDB when browsing. This value seeds buffer-local state and is used by interactive commands unless overridden. It integrates with the `/tail` API via `arxana-store-tail`, shaping the scale and performance of the browser UI and providing a consistent default across sessions.
+- arxana-xtdb--tail-rows: Normalizes heterogeneous `/tail` responses into a clean list of relation alists. It tolerates multiple payload shapes (`:tail`, `:relations`, `:links`, `:items`) and filters out non-relation data using a structural predicate. This function is the main compatibility layer insulating the UI from backend response variations.
+- arxana-xtdb--rows->entries: Transforms normalized relation rows into `tabulated-list` entries suitable for display. It extracts source, target, relation type, and last-seen metadata, formats human-readable entity labels, and preserves the original row as entry data. This bridges raw XTDB relations with Emacsâ tabular UI machinery.
+- arxana-xtdb-refresh: Core command that fetches fresh XTDB data and updates the browser buffer. It calls `arxana-store-tail`, caches the raw response for inspection, updates buffer-local limits, rebuilds tabulated entries, and refreshes the display. It also handles empty results gracefully and provides user feedback, serving as the main integration point with the datastore.
+- arxana-xtdb-browse: Autoloaded entry point that creates or reuses the XTDB browser buffer, enables the dedicated major mode, and triggers an initial refresh. It supports an optional interactive limit argument and manages buffer presentation. This function ties together mode setup, data retrieval, and user workflow into a single command.
+

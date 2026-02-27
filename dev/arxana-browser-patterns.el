@@ -1838,6 +1838,9 @@ are ignored for now."
                                                    :type "pattern/library"
                                                    :source summary
                                                    :external-id pattern-title))
+             (_ (arxana-store-assert-ok
+                 response
+                 (format "Saving pattern %s" (or pattern-name "<unnamed>"))))
              (resolved-id (or pattern-id
                               (arxana-patterns-ingest--extract-id response))))
         (setq pattern-id resolved-id)
@@ -1848,10 +1851,12 @@ are ignored for now."
               (cname (plist-get component :name))
               (ctext (plist-get component :text)))
           (when (and cid cname)
-            (arxana-store-ensure-entity :id cid
-                                        :name cname
-                                        :type "pattern/component"
-                                        :source ctext))))
+            (arxana-store-assert-ok
+             (arxana-store-ensure-entity :id cid
+                                         :name cname
+                                         :type "pattern/component"
+                                         :source ctext)
+             (format "Saving component %s" cname)))))
       (message "Synced %s (%d components)" pattern-name (length components)))))
 
 (defun arxana-browser-patterns--browser-pattern-row (item)
@@ -2014,10 +2019,12 @@ are ignored for now."
         (let ((pattern-id (arxana-browser-patterns--pattern-entry-id entry)))
           (unless pattern-id
             (user-error "Could not determine Futon id for pattern %s" (plist-get entry :label)))
-          (arxana-store-create-relation :src language-id
-                                        :dst pattern-id
-                                        :label arxana-browser-patterns-ingest-language-relation
-                                        :props (list (cons 'order n)))
+          (arxana-store-assert-ok
+           (arxana-store-create-relation :src language-id
+                                         :dst pattern-id
+                                         :label arxana-browser-patterns-ingest-language-relation
+                                         :props (list (cons 'order n)))
+           (format "Reordering pattern %s" (or (plist-get entry :label) pattern-id)))
           (setq updated (1+ updated)))
         (setq n (1+ n)))
       (message "Updated %d relations for %s" updated (plist-get language :label)))))
