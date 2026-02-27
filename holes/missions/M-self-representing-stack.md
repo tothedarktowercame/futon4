@@ -980,3 +980,96 @@ architectural prototypes with component/edge/port counts and validation status.
 | Tag query at store level, not just HTTP | All backends benefit; HttpBackend proxy to futon1a passes tags through |
 | Tension export as separate endpoint | Distinct from `mc-review` (which returns the full portfolio); tensions are the specific data Arxana's hyperedges need |
 | Backfill as on-demand endpoint, not startup | Explicit, repeatable, auditable; idempotent via deterministic IDs |
+| Hyperedge endpoint over relation endpoint | futon1a relation endpoint requires entity resolution (src/dst must be existing entities); hyperedge endpoint accepts arbitrary string endpoints — better for cross-layer references |
+| Point evidence fetcher at futon3c, not futon1a | futon3c has rich evidence (chat turns, portfolio snapshots); futon1a has only backfill entries; JSON vs EDN format also matters for Elisp parsing |
+
+## Checkpoint: VERIFY→INSTANTIATE Transition (2026-02-27)
+
+### What Was Built
+
+**futon3c (Clojure):**
+- E-1: Tag-based evidence query (`:query/tags` in all backends)
+- E-2: Tension export (`GET /api/alpha/mc/tensions`, 9 structured tensions)
+- E-3: Per-mission backfill (`POST /api/alpha/mc/backfill`, 73 missions)
+- Devmap export (`GET /api/alpha/mc/devmaps`, 10 structural summaries)
+
+**futon4 (Emacs Lisp):**
+- Tension browser view (Lab → Tensions, tabulated list with type/devmap/component)
+- Devmap browser view (Lab → Devmaps, 10 prototypes with state/components/edges)
+- Narrative trail (per-mission evidence timeline, 50+ entries for mission-control)
+- Tension → hyperedge ingestion (9 tension hyperedges in XTDB)
+- Devmap → hyperedge ingestion (10 devmap hyperedges in XTDB)
+- Reflection grounding (mission:mission-control → var:build-portfolio-review)
+- Staleness detection (re-resolve + compare line/arglists)
+
+**XTDB inventory:** 10 devmap + 9 tension + 1 reflection + 1 test = 21 hyperedges.
+
+### Key Architectural Discovery
+
+futon4's existing code→docs hypergraph was an elaborate working model: the
+*finder strategies* (symbol-as-term, filename-mention, surface-form-hybrid)
+are persisted to futon1a as entities, but the *computed links themselves*
+live only in Emacs hash tables. The `arxana-browser-code.el` persistence
+manifest explicitly lists three TODO items for persisting code→doc anchors.
+
+The self-representing stack just built the plumbing that makes those TODOs
+achievable: `arxana-store--post-hyperedge` can emit computed links as
+first-class XTDB facts. The finder strategies discover links; hyperedges
+persist them; XTDB makes them queryable.
+
+### Motivating Example: futon1a Invariant Drift
+
+The futon1 → futon1a port was believed to include store invariants (referential
+integrity, entity lifecycle constraints). It didn't — the invariants were not
+ported. This is exactly the kind of drift a self-representing stack prevents:
+a query like "which futon1 invariants have corresponding implementations in
+futon1a?" would have surfaced the gap immediately.
+
+This drift pattern is general: any claim about the system ("X was ported",
+"Y is covered by mission Z") that isn't grounded in navigable evidence will
+silently become false. The logic layer described below is the mechanism for
+making such claims evaluable rather than merely asserted.
+
+### Requirement: Three-Layer Logic Architecture
+
+To prevent :drift as the default state of persisted facts, each layer needs
+its own consistency reasoning:
+
+**Layer 1: reazon (Emacs / futon4)**
+- Scope: session-local, navigation-time reasoning
+- Role: "given what's on screen, what should I look at next?"
+- Examples:
+  - Link strategy evaluation: which finder rule produced this match?
+  - Staleness as a relation: `(stale? snapshot var)` instead of procedural check
+  - Navigation recommendations: tension + backlink context → relevant code symbol
+- Persistence: ephemeral (in-session only); results may trigger hyperedge writes
+
+**Layer 2: core.logic (Clojure / futon3c)**
+- Scope: portfolio-wide sensemaking
+- Role: "are the claims in the hypergraph consistent with current reality?"
+- Examples:
+  - Coverage as a relation: `(covers? mission-id component-id)` derivable from
+    devmap structure + mission inventory, not hardcoded in `component-coverage-annotations`
+  - Tension discovery: when `(covers? M C)` fails to hold, emit tension
+  - Invariant audit: `(ported? futon1-invariant futon1a-implementation)` — queryable
+  - Reflection consistency: re-derive `about-var` hyperedges from live var state
+- Persistence: derived facts written as hyperedges; stale derivations become tensions
+
+**Layer 3: XTDB queries (futon1a)**
+- Scope: ground truth integrity
+- Role: "does the stored graph satisfy basic structural invariants?"
+- Examples:
+  - Referential coherence: hyperedge endpoints should reference known entities
+    (not entity resolution — existence check)
+  - Temporal consistency: newer evidence should not contradict older evidence
+    without explicit retraction
+  - Completeness queries: "which devmap components have no covering hyperedge?"
+- Note: futon1a's invariants are currently minimal (penholder auth only).
+  The futon1 invariants that were not ported are themselves a first test case
+  for this layer.
+
+**Anti-drift contract:**
+- Emacs computes links → core.logic validates consistency → XTDB persists
+- Any persisted fact should be re-derivable by its layer's logic engine
+- When re-derivation fails, the fact becomes a tension (not silently stale)
+- Logic requirements are sketched per-domain as we go, not designed upfront
