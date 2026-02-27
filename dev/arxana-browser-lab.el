@@ -219,6 +219,10 @@ Otherwise, HTTP 5050 -> ws 5056, HTTPS 5051 -> wss 5057 (nginx SSL)."
               :description "Persisted lab sessions in Futon1"
               :view 'lab-sessions-archived)
         (list :type 'lab-menu
+              :label "Tensions"
+              :description "Discrepancies between ideal and actual (devmap gaps)"
+              :view 'tensions)
+        (list :type 'lab-menu
               :label "Lab Files"
               :description "Browse raw/stubs/drafts files"
               :view 'lab)))
@@ -421,6 +425,8 @@ Otherwise, HTTP 5050 -> ws 5056, HTTPS 5051 -> wss 5057 (nginx SSL)."
                (cons (list :view view :label label)
                      arxana-browser--stack))
          (arxana-browser--render)))
+      ('tension-entry
+       (arxana-browser-tension-open-entry item))
       (_
        (user-error "Unknown session type: %s" type)))))
 
@@ -776,6 +782,347 @@ Applies `arxana-browser--evidence-filter' when set."
   (interactive)
   (setq arxana-browser--evidence-filter nil)
   (arxana-browser--render))
+
+;; =============================================================================
+;; Futon3c server configuration
+;; =============================================================================
+
+(defcustom arxana-lab-futon3c-server
+  (or (getenv "FUTON3C_API_BASE")
+      "http://localhost:7070/api/alpha")
+  "Futon3c API base URL for mission control, tensions, and portfolio data."
+  :type 'string
+  :group 'arxana-lab-sessions)
+
+(defun arxana-browser--futon3c-fetch (endpoint)
+  "Fetch ENDPOINT from the futon3c server. Returns parsed JSON plist."
+  (let* ((url-request-method "GET")
+         (url-request-extra-headers '(("Accept" . "application/json")))
+         (base (string-remove-suffix "/" arxana-lab-futon3c-server))
+         (url (concat base endpoint))
+         (buffer (url-retrieve-synchronously url t t arxana-lab-sessions-request-timeout)))
+    (if (not buffer)
+        nil
+      (with-current-buffer buffer
+        (goto-char (point-min))
+        (re-search-forward "\n\n" nil 'move)
+        (let* ((body (buffer-substring-no-properties (point) (point-max)))
+               (payload (arxana-lab--parse-json body)))
+          (kill-buffer buffer)
+          payload)))))
+
+;; =============================================================================
+;; Tension browser view
+;; =============================================================================
+
+(defface arxana-lab-tension-uncovered-face
+  '((t :foreground "#e06c75"))
+  "Face for uncovered-component tensions."
+  :group 'arxana-lab)
+
+(defface arxana-lab-tension-blocked-face
+  '((t :foreground "#e5c07b"))
+  "Face for blocked-mission tensions."
+  :group 'arxana-lab)
+
+(defface arxana-lab-tension-structural-face
+  '((t :foreground "#c678dd"))
+  "Face for structural-invalid tensions."
+  :group 'arxana-lab)
+
+(defun arxana-browser--tension-type-face (tension-type)
+  "Return face for TENSION-TYPE keyword or string."
+  (let ((tt (if (keywordp tension-type)
+                (substring (symbol-name tension-type) 1)
+              (or tension-type ""))))
+    (cond
+     ((string= tt "uncovered-component") 'arxana-lab-tension-uncovered-face)
+     ((string= tt "blocked-mission") 'arxana-lab-tension-blocked-face)
+     ((string= tt "structural-invalid") 'arxana-lab-tension-structural-face)
+     (t 'default))))
+
+(defun arxana-browser--tension-type-label (tension-type)
+  "Short label for TENSION-TYPE."
+  (let ((tt (if (keywordp tension-type)
+                (substring (symbol-name tension-type) 1)
+              (or tension-type ""))))
+    (cond
+     ((string= tt "uncovered-component") "UNCOVER")
+     ((string= tt "blocked-mission") "BLOCKED")
+     ((string= tt "structural-invalid") "STRUCT")
+     (t (upcase (arxana-lab--truncate tt 7))))))
+
+(defun arxana-browser--tensions-format ()
+  "Column format for tensions view."
+  [("Type" 8 t)
+   ("Devmap" 22 t)
+   ("Component" 20 t)
+   ("Cov%" 5 t)
+   ("Summary" 0 nil)])
+
+(defun arxana-browser--tensions-row (item)
+  "Row for tension ITEM."
+  (let* ((ttype (or (plist-get item :tension/type) ""))
+         (devmap (or (plist-get item :tension/devmap) ""))
+         (component (or (plist-get item :tension/component) ""))
+         (coverage (plist-get item :tension/coverage-pct))
+         (summary (or (plist-get item :tension/summary) ""))
+         (label (arxana-browser--tension-type-label ttype))
+         (face (arxana-browser--tension-type-face ttype)))
+    (vector (propertize label 'face face)
+            (arxana-lab--truncate (if (keywordp devmap)
+                                      (substring (symbol-name devmap) 1)
+                                    (format "%s" devmap))
+                                  21)
+            (arxana-lab--truncate (if (keywordp component)
+                                      (substring (symbol-name component) 1)
+                                    (format "%s" component))
+                                  19)
+            (if coverage (format "%.0f" (* 100.0 coverage)) "")
+            (arxana-lab--truncate summary 60))))
+
+(defun arxana-browser--tensions-items ()
+  "Fetch tensions from futon3c Mission Control."
+  (condition-case err
+      (let* ((payload (arxana-browser--futon3c-fetch "/mc/tensions"))
+             (tensions (plist-get payload :tensions)))
+        (if tensions
+            (mapcar (lambda (t-entry)
+                      (append (list :type 'tension-entry) t-entry))
+                    tensions)
+          (list (list :type 'info
+                      :label "No tensions detected"
+                      :description "All devmap components are covered"))))
+    (error
+     (list (list :type 'info
+                 :label "Failed to fetch tensions"
+                 :description (format "Error: %s" (error-message-string err)))))))
+
+(defun arxana-browser-tension-open-entry (item)
+  "Open detail view for a tension ITEM."
+  (let* ((buf-name "*Tension Detail*")
+         (buf (get-buffer-create buf-name))
+         (ttype (plist-get item :tension/type))
+         (devmap (plist-get item :tension/devmap))
+         (component (plist-get item :tension/component))
+         (mission (plist-get item :tension/mission))
+         (blocked-by (plist-get item :tension/blocked-by))
+         (coverage (plist-get item :tension/coverage-pct))
+         (detected (plist-get item :tension/detected-at))
+         (summary (plist-get item :tension/summary)))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (org-mode)
+        (insert "* Tension: " (or (format "%s" summary) "?") "\n\n")
+        (insert (format "- Type :: %s\n" (or ttype "?")))
+        (when devmap
+          (insert (format "- Devmap :: %s\n" devmap)))
+        (when component
+          (insert (format "- Component :: %s\n" component)))
+        (when mission
+          (insert (format "- Mission :: %s\n" mission)))
+        (when blocked-by
+          (insert (format "- Blocked by :: %s\n" blocked-by)))
+        (when coverage
+          (insert (format "- Coverage :: %.0f%%\n" (* 100.0 coverage))))
+        (when detected
+          (insert (format "- Detected :: %s\n" detected)))
+        (insert "\n** Actions\n\n")
+        (insert "- [ ] Propose mission to address this tension\n")
+        (insert "- [ ] Investigate related evidence\n")
+        (insert "- [ ] Browse devmap prototype\n")
+        (view-mode 1)))
+    (display-buffer buf)))
+
+;; =============================================================================
+;; Narrative trail view (per-mission evidence story)
+;; =============================================================================
+
+(defun arxana-browser--narrative-trail-format ()
+  "Column format for narrative trail view."
+  [("Time" 18 t)
+   ("Type" 7 t)
+   ("Author" 12 t)
+   ("Gates" 8 nil)
+   ("Preview" 0 nil)])
+
+(defun arxana-browser--narrative-trail-row (item)
+  "Row for narrative trail ITEM."
+  (let* ((at (or (plist-get item :evidence/at) ""))
+         (etype (plist-get item :evidence/type))
+         (author (or (plist-get item :evidence/author) ""))
+         (body (plist-get item :evidence/body))
+         (gates (plist-get body :mission/gates))
+         (type-label (arxana-lab--evidence-type-label etype))
+         (type-face (arxana-lab--evidence-type-face etype))
+         (type-display (if type-face
+                           (propertize type-label 'face type-face)
+                         type-label))
+         (preview (arxana-lab--evidence-body-preview body etype))
+         (gates-str (if (and gates (plist-get gates :checked))
+                        (format "%d/%d"
+                                (plist-get gates :checked)
+                                (plist-get gates :total))
+                      "")))
+    (vector (arxana-lab--truncate at 17)
+            type-display
+            (arxana-lab--truncate author 11)
+            gates-str
+            (arxana-lab--truncate preview 50))))
+
+(defun arxana-browser--narrative-trail-items (mission-id)
+  "Fetch evidence entries for MISSION-ID as a narrative trail."
+  (condition-case err
+      (let* ((params (list (cons "subject-id" mission-id)
+                           (cons "limit" "200")))
+             (response (arxana-browser--evidence-fetch params))
+             (entries (plist-get response :entries)))
+        (if entries
+            (mapcar (lambda (e)
+                      (append (list :type 'evidence-entry) e))
+                    entries)
+          (list (list :type 'info
+                      :label (format "No evidence for mission %s" mission-id)
+                      :description "Backfill may not have been run yet"))))
+    (error
+     (list (list :type 'info
+                 :label "Failed to fetch narrative trail"
+                 :description (format "Error: %s" (error-message-string err)))))))
+
+(defun arxana-browser-open-narrative-trail (mission-id)
+  "Open a narrative trail for MISSION-ID in the browser."
+  (interactive (list (read-string "Mission ID: ")))
+  (setq arxana-browser--stack
+        (cons (list :view 'narrative-trail
+                    :label (format "Trail: %s" mission-id)
+                    :mission-id mission-id)
+              arxana-browser--stack))
+  (arxana-browser--render))
+
+;; =============================================================================
+;; Tension → Hyperedge ingestion bridge
+;; =============================================================================
+
+(defun arxana-browser-ingest-tension-as-hyperedge (tension)
+  "Create an Arxana hyperedge from a TENSION entry.
+Posts to futon1a via `arxana-store--post-hyperedge'.
+Returns the response or nil on error."
+  (let* ((ttype (plist-get tension :tension/type))
+         (devmap (plist-get tension :tension/devmap))
+         (component (plist-get tension :tension/component))
+         (mission (plist-get tension :tension/mission))
+         (summary (plist-get tension :tension/summary))
+         (detected (plist-get tension :tension/detected-at))
+         (hx-type (format "tension/%s"
+                          (if (keywordp ttype)
+                              (substring (symbol-name ttype) 1)
+                            (format "%s" ttype))))
+         (endpoints (delq nil
+                          (list (when devmap
+                                  (format "devmap:%s"
+                                          (if (keywordp devmap)
+                                              (substring (symbol-name devmap) 1)
+                                            devmap)))
+                                (when component
+                                  (format "component:%s/%s"
+                                          (if (keywordp devmap)
+                                              (substring (symbol-name devmap) 1)
+                                            devmap)
+                                          (if (keywordp component)
+                                              (substring (symbol-name component) 1)
+                                            component)))
+                                (when mission
+                                  (format "mission:%s" mission)))))
+         (props (delq nil
+                      (list (when summary (cons 'summary summary))
+                            (when detected (cons 'detected-at detected))))))
+    (arxana-store--post-hyperedge "tension" hx-type endpoints props)))
+
+(defun arxana-browser-ingest-all-tensions ()
+  "Fetch all tensions from futon3c and ingest as Arxana hyperedges.
+Returns a summary plist with :created and :failed counts."
+  (interactive)
+  (let* ((payload (arxana-browser--futon3c-fetch "/mc/tensions"))
+         (tensions (or (plist-get payload :tensions) '()))
+         (created 0)
+         (failed 0))
+    (dolist (t-entry tensions)
+      (condition-case _err
+          (let ((resp (arxana-browser-ingest-tension-as-hyperedge t-entry)))
+            (if resp
+                (setq created (1+ created))
+              (setq failed (1+ failed))))
+        (error (setq failed (1+ failed)))))
+    (let ((msg (format "Tension ingestion: %d created, %d failed (of %d)"
+                       created failed (length tensions))))
+      (when (called-interactively-p 'interactive)
+        (message msg))
+      (list :created created :failed failed :total (length tensions)))))
+
+;; =============================================================================
+;; Reflection grounding — about-var relations
+;; =============================================================================
+
+(defun arxana-browser--resolve-var (ns-name var-name)
+  "Resolve a Clojure var via futon3c reflection API.
+Returns a plist with :reflection/ns, :reflection/file, :reflection/line, etc.
+or nil if not found."
+  (let* ((endpoint (format "/reflect/var/%s/%s"
+                           (url-hexify-string ns-name)
+                           (url-hexify-string var-name)))
+         (payload (arxana-browser--futon3c-fetch endpoint)))
+    (when (and payload (plist-get payload :ok))
+      (plist-get payload :envelope))))
+
+(defun arxana-browser-ground-claim-to-var (claim-id ns-name var-name)
+  "Create an about-var relation from CLAIM-ID to var NS-NAME/VAR-NAME.
+Resolves the var via reflection API and stores the reflection envelope
+as relation props. Returns the relation response or nil."
+  (interactive
+   (list (read-string "Claim/evidence ID: ")
+         (read-string "Namespace: ")
+         (read-string "Var name: ")))
+  (let ((envelope (arxana-browser--resolve-var ns-name var-name)))
+    (unless envelope
+      (user-error "Could not resolve var %s/%s" ns-name var-name))
+    (let* ((var-id (format "var:%s/%s" ns-name var-name))
+           (props (list (cons 'reflection/ns (plist-get envelope :reflection/ns))
+                        (cons 'reflection/symbol (plist-get envelope :reflection/symbol))
+                        (cons 'reflection/file (plist-get envelope :reflection/file))
+                        (cons 'reflection/line (plist-get envelope :reflection/line))
+                        (cons 'reflection/arglists
+                              (format "%s" (or (plist-get envelope :reflection/arglists) "")))
+                        (cons 'reflection/doc
+                              (or (plist-get envelope :reflection/doc) ""))
+                        (cons 'reflection/resolved-at
+                              (format-time-string "%Y-%m-%dT%H:%M:%SZ" nil t))))
+           (resp (arxana-store-create-relation
+                  :src claim-id :dst var-id :type "about-var" :props props)))
+      (when (called-interactively-p 'interactive)
+        (message "Grounded %s → %s/%s (line %s)"
+                 claim-id ns-name var-name
+                 (or (plist-get envelope :reflection/line) "?")))
+      resp)))
+
+(defun arxana-browser-verify-reflection-snapshot (relation)
+  "Re-resolve a var from an about-var RELATION and check for staleness.
+RELATION is a plist with :props containing reflection/* fields.
+Returns :ok, :stale (signature changed), or :missing (var gone)."
+  (let* ((props (plist-get relation :props))
+         (ns-name (or (cdr (assq 'reflection/ns props)) ""))
+         (var-name (or (cdr (assq 'reflection/symbol props)) ""))
+         (old-line (cdr (assq 'reflection/line props)))
+         (old-arglists (cdr (assq 'reflection/arglists props))))
+    (let ((envelope (arxana-browser--resolve-var
+                     (format "%s" ns-name) (format "%s" var-name))))
+      (cond
+       ((not envelope) :missing)
+       ((or (not (equal old-line (plist-get envelope :reflection/line)))
+            (not (equal old-arglists
+                        (format "%s" (or (plist-get envelope :reflection/arglists) "")))))
+        :stale)
+       (t :ok)))))
 
 (provide 'arxana-browser-lab)
 ;;; arxana-browser-lab.el ends here

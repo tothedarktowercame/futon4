@@ -625,6 +625,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         ('lab-sessions-archived (arxana-browser--lab-sessions-archived-items))
         ('evidence-timeline (arxana-browser--evidence-timeline-items))
         ('evidence-sessions (arxana-browser--evidence-sessions-items))
+        ('tensions (arxana-browser--tensions-items))
+        ('narrative-trail (arxana-browser--narrative-trail-items
+                           (plist-get context :mission-id)))
         ('lab (arxana-browser--lab-items))
         ('encyclopedia (arxana-browser--encyclopedia-items))
         ('encyclopedia-entries (arxana-browser--encyclopedia-entries-items context))
@@ -772,6 +775,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
             ('lab-sessions-archived #'arxana-browser--lab-sessions-archived-row)
             ('evidence-timeline #'arxana-browser--evidence-timeline-row)
             ('evidence-sessions #'arxana-browser--evidence-sessions-row)
+            ('tensions #'arxana-browser--tensions-row)
+            ('narrative-trail #'arxana-browser--narrative-trail-row)
             ('lab #'arxana-browser--lab-row)
             ('encyclopedia #'arxana-browser--encyclopedia-row)
             ('encyclopedia-entries #'arxana-browser--encyclopedia-entries-row)
@@ -846,6 +851,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                         ('lab-sessions-archived (arxana-browser--lab-sessions-archived-format))
                         ('evidence-timeline (arxana-browser--evidence-timeline-format))
                         ('evidence-sessions (arxana-browser--evidence-sessions-format))
+                        ('tensions (arxana-browser--tensions-format))
+                        ('narrative-trail (arxana-browser--narrative-trail-format))
                         ('lab (arxana-browser--lab-format))
                         ('encyclopedia (arxana-browser--encyclopedia-format))
                         ('encyclopedia-entries (arxana-browser--encyclopedia-entries-format))
@@ -946,6 +953,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
        (arxana-browser-evidence-open-entry item))
       ('evidence-session
        (arxana-browser-evidence-open-session item))
+      ('tension-entry
+       (arxana-browser-tension-open-entry item))
       ('encyclopedia-corpus
        (arxana-browser-encyclopedia-open-corpus item))
       ('encyclopedia-entry

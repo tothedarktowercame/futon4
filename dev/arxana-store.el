@@ -650,6 +650,33 @@ RELATIONS is a list of relation payloads matching the /relation format."
       (funcall callback resp))
     resp))
 
+(defun arxana-store-fetch-hyperedge (id)
+  "Fetch a single hyperedge by ID from the store.
+Returns the parsed response or nil on error."
+  (unless id
+    (cl-return-from arxana-store-fetch-hyperedge
+      (arxana-store--record-error 'invalid "Missing hyperedge id" 'fetch-hyperedge)))
+  (arxana-store--request "GET"
+                         (format "/alpha/hyperedge/%s"
+                                 (arxana-store--encode-segment id))))
+
+(defun arxana-store-fetch-hyperedges (&rest args)
+  "Query hyperedges from the store.
+Keyword ARGS:
+  :type    — filter by hx/type (string)
+  :end     — filter by endpoint ID (string)
+  :limit   — max results (number, default 50)
+Returns the parsed response or nil on error."
+  (let* ((hx-type (plist-get args :type))
+         (end-id  (plist-get args :end))
+         (limit   (or (plist-get args :limit) 50))
+         (params  (delq nil
+                        (list (when hx-type (cons "type" hx-type))
+                              (when end-id  (cons "end" end-id))
+                              (cons "limit" (number-to-string limit)))))
+         (query   (arxana-store--query-string params)))
+    (arxana-store--request "GET" "/alpha/hyperedges" nil query)))
+
 (defun arxana-store-upsert-scholium (source target &optional label)
   (interactive
    (list (read-string "Source article: " (or (and (boundp 'name-of-current-article)

@@ -893,64 +893,58 @@ system transitioned from CONSOLIDATE to BUILD mode.)
 |------|--------|-------|
 | Arxana XTDB backend | Running | futon4 Arxana operational |
 | Hyperedge write path | Ready | `arxana-store--post-hyperedge` plumbed, unused |
-| Evidence store | Running | futon1a on :7071, queryable |
+| Evidence store | Running | futon1a on :7071, 73 mission entries backfilled |
 | MC portfolio review | Running | futon3c on :7070, `build-portfolio-review` |
-| Reflection API | Running | `/api/alpha/reflect/var/:ns/:var` live |
+| Reflection API | Running | `/api/alpha/reflect/var/:ns/:var` live, verified for `build-portfolio-review` |
 | Flexiarg representation | Ready | Arxana already handles library patterns |
 | Portfolio AIF loop | Running | BUILD mode, 15-channel surface, all sensors healthy |
-| Hyperedge read path | **Missing** | No `fetch-hyperedge` in Emacs |
-| Evidence → hyperedge bridge | **Missing** | Core VERIFY work |
-| Tag-based evidence query | **Planned** | E-1 below |
-| Tension export API | **Planned** | E-2 below |
-| Per-mission evidence backfill | **Planned** | E-3 below |
+| Tag-based evidence query | **Done** | E-1: `:query/tags` in EvidenceQuery, all backends |
+| Tension export API | **Done** | E-2: `GET /api/alpha/mc/tensions` — 9 structured tensions live |
+| Per-mission evidence backfill | **Done** | E-3: `POST /api/alpha/mc/backfill` — 73 missions, idempotent |
+| Hyperedge read path | **Missing** | No `fetch-hyperedge` in Emacs — Phase 1 futon4 work |
+| Evidence → hyperedge bridge | **Missing** | Core VERIFY work — Phase 1 futon4 work |
 
-### Phase 0: futon3c-side Enablers
+### Phase 0: futon3c-side Enablers (COMPLETE)
 
-Before the futon4-side VERIFY work begins, three futon3c enablers prepare
-the data surface that Arxana will ingest. These exercise the portfolio
-inference tuning and give Arxana structured data instead of string-based gaps.
+Three futon3c enablers preparing the data surface for Arxana ingestion.
+All implemented and verified live (2026-02-27).
 
-**E-1: Tag-based evidence query (schema-level)**
+**E-1: Tag-based evidence query (schema-level)** — DONE
 
-Move tag filtering from HTTP post-filter into the store layer. Currently tags
-are parsed from `?tag=mission,backfill` in the HTTP handler and applied after
-`query*` returns all results. After E-1, `EvidenceQuery` includes `:query/tags`
-and all backends (Atom, XTDB, HTTP proxy) filter natively.
+`:query/tags` added to `EvidenceQuery` schema. All backends (Atom, XTDB,
+HTTP proxy) filter natively. AND semantics: `?tag=mission,backfill` requires
+both tags present. HTTP handler simplified (tags removed from post-filter).
 
-Files: `shapes.clj` (schema), `backend.clj` (filter logic), `http_backend.clj`
-(proxy passthrough), `http.clj` (simplified handler).
+Files: `shapes.clj`, `backend.clj`, `http_backend.clj`, `http.clj`
 
-**E-2: Tension export endpoint**
+**E-2: Tension export endpoint** — DONE
 
-`GET /api/alpha/mc/tensions` returns structured tension data pre-shaped for
-Arxana hyperedge creation. Each tension is a typed map:
+`GET /api/alpha/mc/tensions` returns structured tension data. Live result:
+9 tensions (all `:uncovered-component` in peripheral-gauntlet and
+f3c-grounding-functor devmaps). Each entry shaped as:
 
 ```
-{:tension/type       :uncovered-component | :blocked-mission | :structural-invalid
- :tension/devmap     :social-exotype
- :tension/component  :S-dispatch
- :tension/mission    nil                    ;; nil = the tension
+{:tension/type       :uncovered-component
+ :tension/devmap     :peripheral-gauntlet
+ :tension/component  :C-arena
+ :tension/coverage-pct 0.0
  :tension/detected-at "2026-02-27T..."
- :tension/summary    "social-exotype/S-dispatch — no mission"}
+ :tension/summary    "peripheral-gauntlet/C-arena — no mission"}
 ```
 
-This replaces MC's current string-based `find-gaps` output with navigable
-structure. The Arxana bridge (futon4-side) converts each TensionEntry into
-a tension hyperedge with typed endpoints.
+Files: `mission_control_shapes.clj` (TensionEntry), `mission_control_backend.clj`
+(`build-tension-export`), `http.clj`
 
-Files: `mission_control_backend.clj` (new `build-tension-export`),
-`mission_control_shapes.clj` (TensionEntry shape), `http.clj` (route).
+**E-3: Backfill endpoint** — DONE
 
-**E-3: Backfill endpoint**
+`POST /api/alpha/mc/backfill` — 73 missions backfilled, idempotent (re-run:
+created=0, skipped=73). Each mission has a queryable evidence entry tagged
+`[:mission :backfill :snapshot]`, including M-self-representing-stack itself:
 
-`POST /api/alpha/mc/backfill` triggers `backfill-inventory` against the live
-evidence store. Creates ~72 per-mission evidence entries tagged
-`[:mission :backfill :snapshot]`, one per scanned mission. These entries give
-every mission a queryable presence in the evidence landscape — including
-M-self-representing-stack itself.
-
-After backfill, Arxana can query `?tag=mission,backfill` (using E-1) to
-discover all missions, then create entities and binary relations for them.
+```
+curl 'localhost:7070/api/alpha/evidence?subject-type=mission&subject-id=self-representing-stack'
+→ 1 entry, status=in-progress, repo=futon4, raw-status="DERIVE + ARGUE complete"
+```
 
 ### Phase 1: futon4-side VERIFY (after enablers)
 
