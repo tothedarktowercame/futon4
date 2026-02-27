@@ -212,7 +212,8 @@ authoritative guarantee for write availability."
   (append (list '("Accept" . "application/json"))
           (when payload-p '(("Content-Type" . "application/json")))
           (when arxana-store-default-profile
-            (list (cons "X-Profile" arxana-store-default-profile)))))
+            (list (cons "X-Profile" arxana-store-default-profile)
+                  (cons "X-Penholder" arxana-store-default-profile)))))
 
 (defun arxana-store--canonical-path (path)
   (if (and path (fboundp 'futon4--canonical-path))
@@ -657,7 +658,7 @@ Returns the parsed response or nil on error."
     (cl-return-from arxana-store-fetch-hyperedge
       (arxana-store--record-error 'invalid "Missing hyperedge id" 'fetch-hyperedge)))
   (arxana-store--request "GET"
-                         (format "/alpha/hyperedge/%s"
+                         (format "/hyperedge/%s"
                                  (arxana-store--encode-segment id))))
 
 (defun arxana-store-fetch-hyperedges (&rest args)
@@ -675,7 +676,7 @@ Returns the parsed response or nil on error."
                               (when end-id  (cons "end" end-id))
                               (cons "limit" (number-to-string limit)))))
          (query   (arxana-store--query-string params)))
-    (arxana-store--request "GET" "/alpha/hyperedges" nil query)))
+    (arxana-store--request "GET" "/hyperedges" nil query)))
 
 (defun arxana-store-upsert-scholium (source target &optional label)
   (interactive

@@ -1076,9 +1076,9 @@ or nil if not found."
       (plist-get payload :envelope))))
 
 (defun arxana-browser-ground-claim-to-var (claim-id ns-name var-name)
-  "Create an about-var relation from CLAIM-ID to var NS-NAME/VAR-NAME.
+  "Create an about-var hyperedge linking CLAIM-ID to var NS-NAME/VAR-NAME.
 Resolves the var via reflection API and stores the reflection envelope
-as relation props. Returns the relation response or nil."
+as hyperedge props. Returns the response or nil."
   (interactive
    (list (read-string "Claim/evidence ID: ")
          (read-string "Namespace: ")
@@ -1087,33 +1087,44 @@ as relation props. Returns the relation response or nil."
     (unless envelope
       (user-error "Could not resolve var %s/%s" ns-name var-name))
     (let* ((var-id (format "var:%s/%s" ns-name var-name))
-           (props (list (cons 'reflection/ns (plist-get envelope :reflection/ns))
-                        (cons 'reflection/symbol (plist-get envelope :reflection/symbol))
-                        (cons 'reflection/file (plist-get envelope :reflection/file))
-                        (cons 'reflection/line (plist-get envelope :reflection/line))
-                        (cons 'reflection/arglists
-                              (format "%s" (or (plist-get envelope :reflection/arglists) "")))
-                        (cons 'reflection/doc
-                              (or (plist-get envelope :reflection/doc) ""))
-                        (cons 'reflection/resolved-at
-                              (format-time-string "%Y-%m-%dT%H:%M:%SZ" nil t))))
-           (resp (arxana-store-create-relation
-                  :src claim-id :dst var-id :type "about-var" :props props)))
+           (props (delq nil
+                        (list (cons 'reflection/ns
+                                    (format "%s" (or (plist-get envelope :reflection/ns) "")))
+                              (cons 'reflection/symbol
+                                    (format "%s" (or (plist-get envelope :reflection/symbol) "")))
+                              (cons 'reflection/file
+                                    (or (plist-get envelope :reflection/file) ""))
+                              (cons 'reflection/line
+                                    (plist-get envelope :reflection/line))
+                              (cons 'reflection/arglists
+                                    (format "%s" (or (plist-get envelope :reflection/arglists) "")))
+                              (when (plist-get envelope :reflection/doc)
+                                (cons 'reflection/doc
+                                      (plist-get envelope :reflection/doc)))
+                              (cons 'resolved-at
+                                    (format-time-string "%Y-%m-%dT%H:%M:%SZ" nil t)))))
+           (resp (arxana-store--post-hyperedge
+                  "about-var" "reflection/about-var"
+                  (list claim-id var-id) props)))
       (when (called-interactively-p 'interactive)
         (message "Grounded %s → %s/%s (line %s)"
                  claim-id ns-name var-name
                  (or (plist-get envelope :reflection/line) "?")))
       resp)))
 
-(defun arxana-browser-verify-reflection-snapshot (relation)
-  "Re-resolve a var from an about-var RELATION and check for staleness.
-RELATION is a plist with :props containing reflection/* fields.
+(defun arxana-browser-verify-reflection-snapshot (hyperedge)
+  "Re-resolve a var from an about-var HYPEREDGE and check for staleness.
+HYPEREDGE is an alist with :hx/props containing reflection/* fields.
 Returns :ok, :stale (signature changed), or :missing (var gone)."
-  (let* ((props (plist-get relation :props))
-         (ns-name (or (cdr (assq 'reflection/ns props)) ""))
-         (var-name (or (cdr (assq 'reflection/symbol props)) ""))
-         (old-line (cdr (assq 'reflection/line props)))
-         (old-arglists (cdr (assq 'reflection/arglists props))))
+  (let* ((props (cdr (assq :hx/props hyperedge)))
+         (ns-name (or (cdr (assq :reflection/ns props))
+                      (cdr (assq 'reflection/ns props)) ""))
+         (var-name (or (cdr (assq :reflection/symbol props))
+                       (cdr (assq 'reflection/symbol props)) ""))
+         (old-line (or (cdr (assq :reflection/line props))
+                       (cdr (assq 'reflection/line props))))
+         (old-arglists (or (cdr (assq :reflection/arglists props))
+                           (cdr (assq 'reflection/arglists props)))))
     (let ((envelope (arxana-browser--resolve-var
                      (format "%s" ns-name) (format "%s" var-name))))
       (cond
