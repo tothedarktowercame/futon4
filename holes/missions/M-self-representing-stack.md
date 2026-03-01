@@ -1,7 +1,7 @@
 # Mission: The Self-Representing Stack
 
 **Date:** 2026-02-22
-**Status:** VERIFY complete (2026-02-27), ready for INSTANTIATE
+**Status:** COMPLETE (2026-03-01). Follow-on: system book chapter.
 **Blocked by:** None (Arxana operational, evidence landscape operational,
 Mission Control operational)
 **Owner:** futon4 (Arxana), with dependencies on futon3c (Mission Control),
@@ -1073,3 +1073,77 @@ its own consistency reasoning:
 - Any persisted fact should be re-derivable by its layer's logic engine
 - When re-derivation fails, the fact becomes a tension (not silently stale)
 - Logic requirements are sketched per-domain as we go, not designed upfront
+
+## Checkpoint: INSTANTIATE Complete (2026-03-01)
+
+### What Was Built
+
+**core.logic coverage/tension relations** (futon3c `ff9c769`):
+- 6 new relations: `devmapo`, `componento`, `coverso`, `hyperedgeo`,
+  `invarianto`, `implementedo`
+- 4 new queries: `query-uncovered-components`, `query-derived-tensions`,
+  `query-unported-invariants`, `query-consistency`
+- Anti-drift property verified: given test devmaps with uncovered components,
+  logic correctly derives tensions; given unported invariants, correctly
+  identifies gaps
+- 947 tests, 3366 assertions, 0 failures
+
+**Tension path tracing** (futon3c `85252b2`):
+- `trace-tension-path`: given a tension, traces through 6 typed gates
+  (devmap → component → coverage → evidence → reflection → source)
+- `trace-all-tensions`: batch trace of all current tensions
+- HTTP endpoint: `GET /api/alpha/mc/trace`
+- Gate output for peripheral-gauntlet tensions:
+  - `:devmap` `:pass` — devmap exists
+  - `:component` `:pass` — component exists in devmap
+  - `:coverage` `:gap` — 間: no covering mission
+  - `:evidence` `:pass` — parent mission has evidence
+  - `:reflection` `:blocked` — 関: no implementing code loaded
+  - `:source` `:blocked` — can't reach source without code
+
+**Vocabulary extension** (futon3 `111dd2b`):
+- 関 (seki/kan, gate-relation) added to futonic-logic.flexiarg
+- 間 + 関 grounded in actual usage (§4.9–4.11)
+- 無門関 composition: tension discovery = 間-reading composed with 関-traversal
+
+**Tension discovery session** (INSTANTIATE item 3):
+- 9 tensions surfaced from peripheral-gauntlet devmap
+- C-arena and C-tickle identified as actionable entry points
+- Live in Emacs `*Tension Detail*` buffer via Arxana tension browser
+
+**Full path demonstration** (INSTANTIATE item 4):
+- War bulletin claim ("real-time coordination")
+  → Devmap (peripheral-gauntlet)
+  → Tension (C-arena uncovered, 0%)
+  → Evidence (peripheral-gauntlet backfill)
+  → Var anchor (make-relay-bridge at irc.clj:398)
+  → Source form
+- Trace now replicable on demand via `trace-tension-path`
+
+### Completion Criteria — All Met
+
+1. ✅ MC portfolio reviews browsable as hyperedges (21 in XTDB)
+2. ✅ 3+ devmap prototypes navigable (10 devmaps, browser + API)
+3. ✅ Tension browser surfaces real discrepancies (9 tensions)
+4. ✅ Narrative trail navigable end-to-end (mission-control, 50+ entries)
+5. ✅ New mission discovered from tensions (C-arena, C-tickle)
+6. ✅ Evidence queryable by tag (`:query/tags` in all backends)
+7. ✅ Reflection-grounded scholium chain (mission:mission-control →
+   var:build-portfolio-review, staleness detection)
+
+### Deferred to Follow-On
+
+- **System book chapter** (INSTANTIATE item 2): producing a navigable Arxana
+  article for futon3c as a "chapter." Infrastructure is in place; the content
+  authoring is a separate effort.
+
+### Key Commits
+
+| Repo | Commit | What |
+|------|--------|------|
+| futon3c | `be4fb2e` | core.logic coverage/tension relations |
+| futon3c | `ff9c769` | coverage/tension relations (extended) |
+| futon3c | `85252b2` | trace-tension-path, replicable 間+関 discovery |
+| futon3 | `fc9deda` | 間 (honest-interval) in futonic-logic |
+| futon3 | `111dd2b` | 関 (gate-relation), 間+関 grounded in usage |
+| futon4 | `6e43fa3` | VERIFY→INSTANTIATE checkpoint |
