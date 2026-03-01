@@ -1,0 +1,21 @@
+#+TITLE: API Reference
+:PROPERTIES:
+:DOC_ID: futon3x-e86af9b6239f
+:ENTRY_ID: futon3x-e86af9b6239f::org
+:VERSION: org
+:OUTLINE_PATH: API Reference
+:PATH_STRING: API Reference
+:REPLACES:
+:END:
+
+* Context
+futon3c exposes a REST API on a configurable port (default 7070 on the Linode
+server). All endpoints documented here live under ~localhost:PORT~.
+
+The API surface serves three consumers: Arxana (futon4's Emacs interface, which
+ingests tensions and devmaps as hyperedges), portfolio inference (which reads its
+own state and emits evidence), and external agents (which register, invoke, and
+coordinate via IRC bridge relay).
+
+The entries in this section provide complete endpoint specifications with
+request/response shapes.

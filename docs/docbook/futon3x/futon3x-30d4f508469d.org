@@ -1,0 +1,71 @@
+#+TITLE: Reflection and evidence endpoints
+:PROPERTIES:
+:DOC_ID: futon3x-30d4f508469d
+:ENTRY_ID: futon3x-30d4f508469d::org
+:VERSION: org
+:OUTLINE_PATH: API Reference / Reflection and evidence endpoints
+:PATH_STRING: API Reference / Reflection and evidence endpoints
+:REPLACES:
+:END:
+
+* Reflection endpoints
+
+| Method | Path                              | Params          | Returns                         |
+|--------+-----------------------------------+-----------------+---------------------------------|
+| GET    | /api/alpha/reflect/namespaces     | ?pattern=X      | List loaded Clojure namespaces  |
+| GET    | /api/alpha/reflect/ns/:ns         | —               | Public vars in namespace        |
+| GET    | /api/alpha/reflect/ns/:ns/full    | —               | All vars (public + private)     |
+| GET    | /api/alpha/reflect/var/:ns/:var   | —               | Full reflection envelope        |
+| GET    | /api/alpha/reflect/deps/:ns       | —               | Namespace dependency graph      |
+| GET    | /api/alpha/reflect/java/:class    | —               | Java class reflection           |
+
+* Reflection envelope shape
+
+#+BEGIN_SRC clojure
+{:reflection/ns "namespace-string"
+ :reflection/symbol "var-name"
+ :reflection/file "relative/path.clj"
+ :reflection/line int
+ :reflection/arglists [[] ["arg1" "arg2"]]
+ :reflection/doc "docstring or nil"
+ :reflection/resolved-at "ISO-8601"
+ :reflection/private? boolean
+ :reflection/macro? boolean
+ :reflection/dynamic? boolean}
+#+END_SRC
+
+* Evidence endpoints
+
+| Method | Path                           | Params                                              | Returns              |
+|--------+--------------------------------+-----------------------------------------------------+----------------------|
+| GET    | /api/alpha/evidence            | limit, subject-type, subject-id, type, claim-type,  | Filtered entries     |
+|        |                                | tag, author, session-id, pattern-id, since           |                      |
+| GET    | /api/alpha/evidence/count      | (same filters)                                       | Count only           |
+| GET    | /api/alpha/evidence/:id        | —                                                    | Single entry         |
+| GET    | /api/alpha/evidence/:id/chain  | —                                                    | Ancestor reply chain |
+| POST   | /api/alpha/evidence            | body: evidence entry                                 | Created entry        |
+
+* Evidence entry shape
+
+#+BEGIN_SRC clojure
+{:evidence/id "e-uuid"
+ :evidence/subject {:ref/type :mission|:task|:thread|:session
+                    :ref/id "string"}
+ :evidence/type :coordination|:forum-post|:mission-snapshot|:portfolio-review
+ :evidence/claim-type :observation|:goal|:conclusion|:conjecture
+ :evidence/author "agent-id"
+ :evidence/at "ISO-8601"
+ :evidence/body {...}  ; payload varies by type
+ :evidence/tags [:tag1 :tag2]
+ :evidence/session-id "optional"
+ :evidence/in-reply-to "optional evidence-id"
+ :evidence/ephemeral? boolean
+ :evidence/conjecture? boolean}
+#+END_SRC
+
+Tag filtering uses AND semantics: ~?tag=mission,backfill~ requires both tags.
+
+* Implementation
+- Reflection: ~reflection/core.clj~, ~reflection/envelope.clj~
+- Evidence: ~evidence/backend.clj~ (Atom, XTDB, HTTP proxy backends)
+- Routes: ~http.clj~

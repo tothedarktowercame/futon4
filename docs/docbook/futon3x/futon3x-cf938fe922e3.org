@@ -1,0 +1,105 @@
+#+TITLE: The trace endpoint
+:PROPERTIES:
+:DOC_ID: futon3x-cf938fe922e3
+:ENTRY_ID: futon3x-cf938fe922e3::org
+:VERSION: org
+:OUTLINE_PATH: Mission Control / The trace endpoint
+:PATH_STRING: Mission Control / The trace endpoint
+:REPLACES:
+:END:
+
+* Context
+~GET /api/alpha/mc/trace~ traces every current tension through a 6-gate chain.
+Each gate checks one link in the path from structural claim to source code. The
+trace answers: "how far can we get from this tension before the chain breaks?"
+
+The six gates are:
+
+| Gate       | Checks                        | Pass means                      |
+|------------+-------------------------------+---------------------------------|
+| devmap     | Does the devmap exist?        | Structural skeleton is defined  |
+| component  | Does the component exist?     | The gap has a name and position |
+| coverage   | Is there a covering mission?  | Someone is addressing it        |
+| evidence   | Does the parent mission exist | Work has been attempted         |
+| reflection | Is there loaded Clojure code? | Implementation exists in JVM    |
+| source     | Can we reach file + line?     | Claim bottoms out at code       |
+
+A complete trace means a tension can be navigated from structural specification
+all the way to a line of source code. A gap at ~coverage~ means nobody is
+addressing the component (間: the honest interval). A block at ~reflection~
+means no code exists yet (関: the gate that hasn't been traversed).
+
+* Live output
+Captured 2026-03-01 from futon3c on port 7070.
+
+#+BEGIN_SRC sh
+curl -s localhost:7070/api/alpha/mc/trace | jq .
+#+END_SRC
+
+Summary (9 tensions, all from peripheral-gauntlet):
+
+#+BEGIN_SRC json
+{
+  "total": 9,
+  "complete": 0,
+  "blocked": 9,
+  "gap-count": 9,
+  "blocked-at": {
+    "reflection": 9
+  }
+}
+#+END_SRC
+
+One tension path (C-arena, Gate 0 of the peripheral gauntlet):
+
+#+BEGIN_SRC json
+{
+  "tension": {
+    "tension/type": "uncovered-component",
+    "tension/devmap": "peripheral-gauntlet",
+    "tension/component": "C-arena",
+    "tension/coverage-pct": 0.0,
+    "tension/summary": "peripheral-gauntlet/C-arena — no mission"
+  },
+  "gates": [
+    {"gate": "devmap",     "status": "pass",    "data": {"id": "peripheral-gauntlet", "state": "argue", "component-count": 9, "edge-count": 32}},
+    {"gate": "component",  "status": "pass",    "data": {"id": "C-arena", "name": "Gate 0: Arena", "devmap": "peripheral-gauntlet"}},
+    {"gate": "coverage",   "status": "gap",     "data": {"component": "C-arena", "missions": [], "tension-type": "uncovered-component"}},
+    {"gate": "evidence",   "status": "pass",    "data": {"missions": [{"id": "peripheral-gauntlet", "status": "unknown", "repo": "futon3c"}]}},
+    {"gate": "reflection", "status": "blocked", "data": {"ns": null, "candidate-namespaces": [], "vars": null}},
+    {"gate": "source",     "status": "blocked", "data": null}
+  ],
+  "complete?": false,
+  "blocked-at": "reflection",
+  "gap-at": "coverage"
+}
+#+END_SRC
+
+Reading the trace:
+
+- *devmap: pass* — peripheral-gauntlet exists with 9 components and 32 edges
+- *component: pass* — C-arena is Gate 0 in the devmap
+- *coverage: gap* — no mission covers C-arena (間: the honest interval)
+- *evidence: pass* — the peripheral-gauntlet mission itself has evidence
+- *reflection: blocked* — no Clojure namespace matching "arena" is loaded (関)
+- *source: blocked* — can't reach source without loaded code
+
+When someone writes code for C-arena (the IRC arena for agent registration), the
+reflection gate will flip to ~:pass~ and the trace will complete. The 関 that is
+currently blocked IS the work to be done.
+
+Optional: filter to a single devmap:
+
+#+BEGIN_SRC sh
+curl -s "localhost:7070/api/alpha/mc/trace?devmap=peripheral-gauntlet" | jq .summary
+#+END_SRC
+
+* Implementation
+- Route handler: ~futon3c/src/futon3c/transport/http.clj~ (~handle-mc-trace~)
+- Backend: ~futon3c/src/futon3c/peripheral/mission_control_backend.clj~ line 820
+  (~trace-all-tensions~) and line 684 (~trace-tension-path~)
+- Also invocable from Clojure: ~(mcb/trace-all-tensions)~
+
+* Verification
+- 4 tests in ~mission_control_test.clj~ (lines 745-790)
+- 968 total tests pass including trace tests

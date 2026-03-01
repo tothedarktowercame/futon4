@@ -1,0 +1,59 @@
+#+TITLE: Ma plus seki: gap-reading and gate-traversal
+:PROPERTIES:
+:DOC_ID: futon3x-6cb20a8c1bda
+:ENTRY_ID: futon3x-6cb20a8c1bda::org
+:VERSION: org
+:OUTLINE_PATH: Self-Representing Stack / Ma plus seki: gap-reading and gate-traversal
+:PATH_STRING: Self-Representing Stack / Ma plus seki: gap-reading and gate-traversal
+:REPLACES:
+:END:
+
+* Context
+Two Japanese concepts from the futonic-logic vocabulary
+(~futon3/library/futon-theory/futonic-logic.flexiarg~) name what the tension
+discovery loop does.
+
+*間 (ma)* — honest interval. The structured space between components, perceived
+without premature filling. When the tension browser reports "peripheral-gauntlet
+/ C-arena has no mission," it is reading 間: the gap is structural, not empty.
+It has a devmap, a gate position, dependencies. Reading it honestly (not filling
+it with assumptions) produces the correct next action. The futon1 to futon1a
+invariant drift — where "entity-lifecycle and referential-integrity were not
+ported" — is an example of 間 perceived too late: the gap was filled with the
+false assumption "it was ported."
+
+*関 (seki/kan)* — gate, barrier, typed connection. Each gate in the peripheral
+gauntlet is a 関. Each ~pldb/db-rel~ in core.logic is a 関. Each typed port in
+a mission-interface-signature is a 関. The concept names the structural fact
+that components are related through constraints, not mere adjacency.
+
+*間 + 関 = 無門関 (mumonkan, the gateless gate).* Tension discovery is the
+composition: read the gap honestly (間), then traverse the gate structure (関)
+to find what the gap implies. The "gateless gate" is not the absence of gates —
+it is the perception that the gate dissolves when the interval is honestly read.
+
+The tension "C-arena has no mission" IS the gate: traversing it (proposing the
+mission, tracing the path) is how it opens. The barrier and the path are the
+same structure seen from different sides of 間.
+
+In operational terms:
+
+- ~query-uncovered-components~ (core.logic, ~portfolio/logic.clj~) reads 間
+  relationally — finds components where no covering mission exists
+- ~trace-tension-path~ (futon3c, ~mission_control_backend.clj~) traverses the
+  chain of 関 from tension to source — devmap, component, coverage, evidence,
+  reflection, source
+- The composition of these two operations IS the self-representing stack's
+  discovery loop
+
+The A7-precondition in the futonic-logic spec requires that an agent must
+perceive-間 before testing for composition (鹵 and 皿). This is not a
+philosophical flourish — it is a real gate: if you skip gap-reading and jump
+straight to "what should we build?", you get the futon1a invariant drift problem
+where unported invariants are assumed to be ported.
+
+* Verification
+- ~futonic-logic.flexiarg~ §4.9–4.11 documents the grounding
+- ~futon3c/src/futon3c/portfolio/logic.clj~ lines 290-301: anti-drift comment
+- ~futon3c/src/futon3c/peripheral/mission_control_backend.clj~: ~trace-tension-path~
+- futon3 commit ~111dd2b~: 関 added; futon3 commit ~fc9deda~: 間 added

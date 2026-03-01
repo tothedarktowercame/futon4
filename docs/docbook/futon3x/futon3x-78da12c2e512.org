@@ -1,0 +1,23 @@
+#+TITLE: Self-Representing Stack
+:PROPERTIES:
+:DOC_ID: futon3x-78da12c2e512
+:ENTRY_ID: futon3x-78da12c2e512::org
+:VERSION: org
+:OUTLINE_PATH: Self-Representing Stack
+:PATH_STRING: Self-Representing Stack
+:REPLACES:
+:END:
+
+* Context
+The self-representing stack is the capability that lets the futon system describe
+its own structure at every level. From a strategic claim in a war bulletin, you
+can trace through devmaps, tensions, evidence entries, reflection envelopes, and
+arrive at a specific Clojure var in a specific file at a specific line number.
+
+This is what distinguishes the futon3x system from the old futon3 HX mockup.
+The mockup could validate asserted links. The self-representing stack derives
+structural facts from the live system and traces them to ground truth.
+
+The entries in this section demonstrate the complete chain: reflection grounding,
+evidence navigation, the full end-to-end trace, and the theoretical framework
+(間 + 関) that names what the trace does.

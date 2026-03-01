@@ -1,0 +1,24 @@
+#+TITLE: Mission Control
+:PROPERTIES:
+:DOC_ID: futon3x-478946a2811e
+:ENTRY_ID: futon3x-478946a2811e::org
+:VERSION: org
+:OUTLINE_PATH: Mission Control
+:PATH_STRING: Mission Control
+:REPLACES:
+:END:
+
+* Context
+Mission Control is the operational surface of futon3c. It scans mission files
+across 7 repos (~16 repos in the full stack), reads devmap wiring diagrams from
+futon5, computes coverage of devmap components against the mission inventory, and
+discovers tensions — structural mismatches between what the devmaps specify and
+what missions address.
+
+All Mission Control operations are read-only with respect to external systems.
+It observes the portfolio; it does not modify it. The data it produces feeds
+two consumers: portfolio inference (which uses it as an observation surface)
+and Arxana (which makes it navigable as hyperedges).
+
+The entries in this section demonstrate Mission Control's API with live output
+from a running futon3c instance.

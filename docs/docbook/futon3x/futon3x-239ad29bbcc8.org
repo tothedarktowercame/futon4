@@ -1,0 +1,105 @@
+#+TITLE: Full path trace: war bulletin to source
+:PROPERTIES:
+:DOC_ID: futon3x-239ad29bbcc8
+:ENTRY_ID: futon3x-239ad29bbcc8::org
+:VERSION: org
+:OUTLINE_PATH: Self-Representing Stack / Full path trace: war bulletin to source
+:PATH_STRING: Self-Representing Stack / Full path trace: war bulletin to source
+:REPLACES:
+:END:
+
+* Context
+This entry demonstrates the complete self-representing stack in action: starting
+from a strategic claim and tracing all the way down to source code. Each step
+uses a different API endpoint; together they show that the system can navigate
+its own structure end-to-end.
+
+* The trace
+
+*Step 1: The claim.* War bulletin 3 states that futon3c provides "real-time
+coordination." The peripheral-gauntlet devmap specifies what coordination
+requires: 9 components from Gate 0 (C-arena: agent registration in IRC) through
+Gate 7, plus a watchdog (C-tickle).
+
+*Step 2: The devmap.*
+
+#+BEGIN_SRC sh
+curl -s localhost:7070/api/alpha/mc/devmaps | jq '.devmaps[] | select(.["devmap/id"]=="peripheral-gauntlet") | {id: .["devmap/id"], components: .["devmap/component-count"], edges: .["devmap/edge-count"]}'
+#+END_SRC
+
+#+BEGIN_SRC json
+{"id": "peripheral-gauntlet", "components": 9, "edges": 32}
+#+END_SRC
+
+*Step 3: The tension.* C-arena is uncovered — no mission addresses it:
+
+#+BEGIN_SRC sh
+curl -s localhost:7070/api/alpha/mc/tensions | jq '.tensions[] | select(.["tension/component"]=="C-arena")'
+#+END_SRC
+
+#+BEGIN_SRC json
+{
+  "tension/type": "uncovered-component",
+  "tension/devmap": "peripheral-gauntlet",
+  "tension/component": "C-arena",
+  "tension/coverage-pct": 0.0,
+  "tension/summary": "peripheral-gauntlet/C-arena — no mission"
+}
+#+END_SRC
+
+*Step 4: The gate chain.* Trace C-arena through all 6 gates:
+
+#+BEGIN_SRC sh
+curl -s "localhost:7070/api/alpha/mc/trace?devmap=peripheral-gauntlet" | jq '.paths[] | select(.tension["tension/component"]=="C-arena") | .gates[] | {gate, status}'
+#+END_SRC
+
+#+BEGIN_SRC json
+{"gate": "devmap",     "status": "pass"}
+{"gate": "component",  "status": "pass"}
+{"gate": "coverage",   "status": "gap"}
+{"gate": "evidence",   "status": "pass"}
+{"gate": "reflection", "status": "blocked"}
+{"gate": "source",     "status": "blocked"}
+#+END_SRC
+
+*Step 5: The evidence.* The peripheral-gauntlet mission itself exists and has
+evidence — but C-arena specifically does not have a covering mission:
+
+#+BEGIN_SRC sh
+curl -s "localhost:7070/api/alpha/evidence?subject-type=mission&subject-id=peripheral-gauntlet&limit=1" | jq '.entries[0] | {type: .["evidence/type"], status: .["evidence/body"].status}'
+#+END_SRC
+
+*Step 6: The partial implementation.* Although C-arena has no dedicated mission,
+the IRC relay bridge partially addresses it. Reflection shows the relevant var:
+
+#+BEGIN_SRC sh
+curl -s localhost:7070/api/alpha/reflect/var/futon3c.transport.irc/make-relay-bridge | jq '.envelope | {symbol: .["reflection/symbol"], file: .["reflection/file"], line: .["reflection/line"]}'
+#+END_SRC
+
+#+BEGIN_SRC json
+{"symbol": "make-relay-bridge", "file": "futon3c/transport/irc.clj", "line": 398}
+#+END_SRC
+
+* Reading the trace
+
+#+BEGIN_SRC
+War bulletin claim: "real-time coordination" (futon3c's purpose)
+  -> Devmap: peripheral-gauntlet (wiring diagram, 9 components, 32 edges)
+    -> Tension: C-arena uncovered (0% coverage, no mission)
+      -> Evidence: peripheral-gauntlet mission exists (in-progress)
+        -> Var anchor: make-relay-bridge at irc.clj:398
+          -> Source: the IRC relay bridge code
+#+END_SRC
+
+The trace is complete in the sense that every link is navigable and grounded in
+live data. It is incomplete in the sense that C-arena needs more than the relay
+bridge — it needs agent registration in IRC channels, which is the gap the
+tension surfaces.
+
+The relay bridge exists (reflection gate would pass for it). But C-arena as a
+whole is uncovered (coverage gate is ~:gap~). The trace shows both what exists
+and what is missing — and the boundary between them is precise, not vague.
+
+This is what the self-representing stack makes possible: a strategic claim
+navigates through typed structure to ground truth, and the system can tell you
+exactly where the chain breaks.

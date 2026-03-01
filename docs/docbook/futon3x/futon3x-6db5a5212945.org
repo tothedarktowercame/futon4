@@ -1,0 +1,47 @@
+#+TITLE: Evidence backfill
+:PROPERTIES:
+:DOC_ID: futon3x-6db5a5212945
+:ENTRY_ID: futon3x-6db5a5212945::org
+:VERSION: org
+:OUTLINE_PATH: Mission Control / Evidence backfill
+:PATH_STRING: Mission Control / Evidence backfill
+:REPLACES:
+:END:
+
+* Context
+~POST /api/alpha/mc/backfill~ creates one evidence entry per scanned mission in
+the evidence store. Each entry is tagged ~[:mission :backfill :snapshot]~ and
+includes the mission's current status, repo, and raw status text.
+
+The operation is idempotent: deterministic IDs mean re-running backfill creates
+nothing new if the inventory hasn't changed. This is useful after adding new
+missions or updating mission status — run backfill to ensure the evidence
+landscape has an entry for every mission.
+
+* Live output
+#+BEGIN_SRC sh
+curl -s -X POST localhost:7070/api/alpha/mc/backfill | jq .
+#+END_SRC
+
+#+BEGIN_SRC json
+{
+  "ok": true,
+  "created": 0,
+  "skipped": 73,
+  "total": 73
+}
+#+END_SRC
+
+73 missions backfilled, all skipped (already exist from a previous run). The
+evidence entries are queryable:
+
+#+BEGIN_SRC sh
+curl -s "localhost:7070/api/alpha/evidence?subject-type=mission&subject-id=self-representing-stack&limit=1" | jq '.entries[0]'
+#+END_SRC
+
+Returns the backfill snapshot for M-self-representing-stack with its current
+status (COMPLETE), repo (futon4), and raw status text.
+
+* Implementation
+- Backend: ~mission_control_backend.clj~ (~backfill-inventory~)
+- Evidence shape: ~evidence/type: "mission-snapshot"~, tags ~[:mission :backfill :snapshot]~

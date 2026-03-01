@@ -1,0 +1,59 @@
+#+TITLE: The AIF loop: observe, perceive, affect, policy
+:PROPERTIES:
+:DOC_ID: futon3x-6574fb2919c0
+:ENTRY_ID: futon3x-6574fb2919c0::org
+:VERSION: org
+:OUTLINE_PATH: Portfolio Inference / The AIF loop: observe, perceive, affect, policy
+:PATH_STRING: Portfolio Inference / The AIF loop: observe, perceive, affect, policy
+:REPLACES:
+:END:
+
+* Context
+~POST /api/alpha/portfolio/step~ runs one complete AIF cycle. The loop:
+
+1. *Observe* — scan repos, compute mission inventory, coverage, evidence
+   velocity. Normalize to 15 channels (see "Belief state and mu channels").
+2. *Perceive* — compute prediction errors: expected channel values (from beliefs)
+   minus observed values. This is the free energy.
+3. *Affect* — update mode (BUILD/MAINTAIN/CONSOLIDATE) and precision weights
+   based on prediction errors. High coverage error sharpens coverage channels.
+4. *Policy* — rank candidate actions by expected free energy. Return the action
+   that minimizes surprise given current beliefs.
+
+The step emits evidence to the durable store, making the inference process
+itself part of the evidence landscape.
+
+* Live output
+Captured 2026-03-01 from futon3c on port 7070.
+
+#+BEGIN_SRC sh
+curl -s -X POST localhost:7070/api/alpha/portfolio/step | jq '{recommendation,action,diagnostics,abstain}'
+#+END_SRC
+
+#+BEGIN_SRC json
+{
+  "recommendation": "Portfolio Inference (step 1)\nMode: :BUILD | Urgency: 0.53 | tau: 1.40 | FE: 0.0826\nRecommendation: review\nTop actions:\n  review: G=-0.300  p=22.4%\n  wait: G=-0.160  p=20.2%\n  consolidate: G=-0.132  p=19.8%\n",
+  "action": "review",
+  "diagnostics": {
+    "mode": "BUILD",
+    "urgency": 0.533,
+    "tau": 1.402,
+    "free-energy": 0.083
+  },
+  "abstain": false
+}
+#+END_SRC
+
+The system recommends ~review~ with expected free energy G=-0.300 and 22.4%
+probability. The ~tau~ (confidence threshold) is 1.40 — when tau drops below 1.0,
+the system abstains rather than making low-confidence recommendations.
+
+The ~structure~ field (not shown above) includes the full portfolio: 72 missions,
+24 complete, 24 in-progress, 15 ready, with blocked pairs and critical path.
+
+* Implementation
+- Orchestrator: ~portfolio/core.clj~ (~portfolio-step!~)
+- Observe: ~portfolio/observe.clj~ — 15-channel sensor surface
+- Perceive: ~portfolio/perceive.clj~ — prediction error computation
+- Affect: ~portfolio/affect.clj~ — mode transitions, precision modulation
+- Policy: ~portfolio/policy.clj~ — action selection via EFE minimization

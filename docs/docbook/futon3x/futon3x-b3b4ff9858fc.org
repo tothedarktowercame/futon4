@@ -1,0 +1,62 @@
+#+TITLE: What the old HX was and why it was a mockup
+:PROPERTIES:
+:DOC_ID: futon3x-b3b4ff9858fc
+:ENTRY_ID: futon3x-b3b4ff9858fc::org
+:VERSION: org
+:OUTLINE_PATH: The Split / What the old HX was and why it was a mockup
+:PATH_STRING: The Split / What the old HX was and why it was a mockup
+:REPLACES:
+:END:
+
+* Context
+The HX subsystem in futon3 (~futon3/src/futon3/hx/~) was the first attempt at a
+self-describing hypertext layer. It had five modules:
+
+- ~store.clj~ — in-memory atoms (~artifacts~, ~anchors~, ~links~) with an
+  append-only EDN log at ~futon3/logs/hypertext.edn~
+- ~api.clj~ — CRUD facade: ~register-artifact!~, ~upsert-anchors!~,
+  ~suggest-link!~, ~accept-link!~, ~reject-link!~
+- ~link_types.clj~ — allowed link types: ~:uses~, ~:implements~, ~:refines~,
+  ~:related~, ~:defines~, ~:documents~, ~:applies-pattern~
+- ~logic.clj~ — core.logic admissibility engine that checked step kinds for
+  required fields, obligations, and PSR/PUR payload validity
+- ~validate.clj~ — structural + semantic validation
+
+The workflow was scripted: register artifacts (code files, devmaps), extract
+anchors (defn forms, devmap blocks), suggest links (static analysis + LLM),
+review candidates (accept/reject with rationale), validate (structural checks),
+and eventually commit to futon1a. Four scripts (~register_stack.clj~,
+~extract_anchors.clj~, ~suggest_links.clj~, ~review_links.clj~) drove the
+pipeline.
+
+It was a working mockup because:
+
+1. *Links were asserted, not derived.* An agent or human claimed "function A uses
+   function B" and the system validated the claim structurally. But the claim came
+   from the agent's understanding, not from structural analysis of the codebase.
+
+2. *Staged locally, never published.* Links accumulated in an in-memory atom
+   backed by a local EDN file. The pipeline to commit validated chains to futon1a
+   was specified (Phase 6-7 in ~hypertext-porcelain.md~) but never completed.
+
+3. *No derivation from state.* The system could not answer "what tensions exist
+   right now?" without someone running the full register/extract/suggest pipeline
+   and reviewing the output.
+
+4. *No anti-drift property.* A stored link could become stale (function deleted,
+   renamed, moved) and there was no mechanism to detect this automatically.
+
+The new system in futon3c replaces assertion with derivation:
+
+| Aspect               | Old HX (futon3)              | New (futon3c)                     |
+|----------------------+------------------------------+-----------------------------------|
+| What gets stored     | Claimed links (assertions)   | Derived tensions (structural)     |
+| How validated        | Accept/reject + logic checks | Re-derivation from current state  |
+| Where stored         | Local atoms + EDN log        | XTDB hyperedges via futon1a       |
+| Drift detection      | None (manual audit)          | Anti-drift: re-derive and compare |
+| Tension discovery    | Run scripts, review output   | ~GET /api/alpha/mc/tensions~      |
+| Evidence connection  | Not connected                | Evidence store with chain queries |
+| Reflection grounding | None                         | mission -> var -> source path     |
+
+The old HX docbook entries (~futon3-99feaf2a0db0~ through ~futon3-cebdbd364e35~)
+document the mockup in detail. This chapter documents what replaced it.

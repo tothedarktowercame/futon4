@@ -1,0 +1,65 @@
+#+TITLE: Scanning the portfolio
+:PROPERTIES:
+:DOC_ID: futon3x-987479a7c7cf
+:ENTRY_ID: futon3x-987479a7c7cf::org
+:VERSION: org
+:OUTLINE_PATH: Mission Control / Scanning the portfolio
+:PATH_STRING: Mission Control / Scanning the portfolio
+:REPLACES:
+:END:
+
+* Context
+The portfolio review is Mission Control's primary output. It scans mission files
+across repos, reads devmap wiring diagrams, computes coverage, and produces a
+structured assessment of the entire project state.
+
+~POST /api/alpha/mission-control~ with ~{"action": "review"}~ generates the
+review. The response includes:
+
+- *Mission inventory*: 72 missions across 7+ repos, with status
+  (complete/in-progress/ready/blocked/unknown)
+- *Devmap summaries*: structural prototypes with component/edge/port counts
+- *Coverage analysis*: which devmap components are addressed by which missions
+- *Gaps*: components with no covering mission
+- *Actionable items*: what can start given current dependencies
+
+The review is derived from filesystem state — it scans ~M-*.md~ files for
+status headers, parses checkbox gates (~[x]~ vs ~[ ]~), reads ~.devmap~ and
+~.edn~ files for wiring diagrams, and matches component names against mission
+titles using a 3-tier heuristic (exact match, substring, keyword overlap).
+
+* Live output
+Captured 2026-03-01 from futon3c on port 7070. Running a portfolio step shows
+the review integrated into the AIF loop:
+
+#+BEGIN_SRC sh
+curl -s -X POST localhost:7070/api/alpha/portfolio/step | jq .structure
+#+END_SRC
+
+#+BEGIN_SRC json
+{
+  "total": 72,
+  "by-status": {
+    "complete": 24,
+    "ready": 15,
+    "in-progress": 24,
+    "unknown": 9
+  },
+  "blocked-pairs": [
+    ["portfolio-inference", "mission-control"],
+    ["coupling-as-constraint", "tpg-coupling-evolution"],
+    ["coupling-as-constraint", "xor-coupling-probe"]
+  ],
+  "critical-path": [
+    {"mission": "portfolio-inference", "depth": 1},
+    {"mission": "coupling-as-constraint", "depth": 1}
+  ]
+}
+#+END_SRC
+
+72 missions total: 24 complete, 24 in-progress, 15 ready, 9 unknown. The
+critical path shows which missions are blocking the most downstream work.
+
+* Implementation
+- Backend: ~mission_control_backend.clj~ (~build-portfolio-review~, ~build-inventory~)
+- Coverage: ~compute-coverage~ with 3-tier substring heuristic

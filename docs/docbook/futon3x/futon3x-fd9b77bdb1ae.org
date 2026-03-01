@@ -1,0 +1,50 @@
+#+TITLE: Mode transitions and urgency
+:PROPERTIES:
+:DOC_ID: futon3x-fd9b77bdb1ae
+:ENTRY_ID: futon3x-fd9b77bdb1ae::org
+:VERSION: org
+:OUTLINE_PATH: Portfolio Inference / Mode transitions and urgency
+:PATH_STRING: Portfolio Inference / Mode transitions and urgency
+:REPLACES:
+:END:
+
+* Context
+The portfolio operates in one of three modes, with hysteresis to prevent
+oscillation:
+
+#+BEGIN_SRC
+              high coverage, low stall
+  BUILD ────────────────────────────────> MAINTAIN
+    ^                                        |
+    |   low coverage or high gaps            |   low activity
+    |                                        v
+    +─────────────────────── CONSOLIDATE <───+
+              high evidence velocity
+#+END_SRC
+
+*BUILD* — the system is actively growing. High-precision channels:
+~mission-complete-ratio~, ~coverage-pct~, ~blocked-ratio~. The system recommends
+starting new work, addressing gaps, unblocking missions.
+
+*MAINTAIN* — the system is mostly built. High-precision channels: ~stall-count~,
+~review-age~, ~evidence-velocity~. The system recommends reviewing stale
+missions, clearing old evidence, running heartbeat cycles.
+
+*CONSOLIDATE* — the system needs to absorb what it has. High-precision channels:
+~pattern-reuse~, ~unplanned-work-ratio~. The system recommends documenting
+patterns, writing PURs, reducing unplanned work.
+
+Urgency is a scalar (0.0 to 1.0) computed from free energy. High free energy
+(large prediction errors) produces high urgency. When urgency exceeds a
+threshold, the system recommends immediate action rather than waiting.
+
+The ~tau~ parameter controls abstention: when tau drops below 1.0, all
+recommendations carry low confidence and the system abstains rather than
+guessing. Tau rises when observations confirm predictions; it falls when
+the system is surprised.
+
+* Implementation
+- Mode transitions: ~portfolio/affect.clj~ (~update-mode~)
+- Precision profiles: ~portfolio/affect.clj~ (~mode-precision-profiles~)
+- Urgency computation: ~portfolio/perceive.clj~ (~compute-urgency~)
+- Tau update: ~portfolio/perceive.clj~ (~update-tau~)

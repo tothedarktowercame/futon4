@@ -1,0 +1,54 @@
+#+TITLE: Devmap structural summaries
+:PROPERTIES:
+:DOC_ID: futon3x-e5b37452cd5c
+:ENTRY_ID: futon3x-e5b37452cd5c::org
+:VERSION: org
+:OUTLINE_PATH: Mission Control / Devmap structural summaries
+:PATH_STRING: Mission Control / Devmap structural summaries
+:REPLACES:
+:END:
+
+* Context
+~GET /api/alpha/mc/devmaps~ returns structural summaries of all devmap
+prototypes. Devmaps are wiring diagrams from ~futon5/data/missions/*.edn~ and
+~futon3/holes/*.devmap~ that describe the intended architecture of each
+subsystem: components, edges between them, input/output ports.
+
+* Live output
+Captured 2026-03-01 from futon3c on port 7070.
+
+#+BEGIN_SRC sh
+curl -s localhost:7070/api/alpha/mc/devmaps | jq '.devmaps[0]'
+#+END_SRC
+
+#+BEGIN_SRC json
+{
+  "devmap/id": "evidence-landscape-exotype",
+  "devmap/state": "active",
+  "devmap/component-count": 5,
+  "devmap/edge-count": 20,
+  "devmap/input-count": 4,
+  "devmap/output-count": 4,
+  "devmap/all-valid": true,
+  "devmap/failed-checks": [],
+  "devmap/components": [
+    {"component/id": "E-store",    "component/name": "E-store: Evidence storage"},
+    {"component/id": "E-threads",  "component/name": "E-threads: Thread projection"},
+    {"component/id": "E-validate", "component/name": "E-validate: Evidence validation"},
+    {"component/id": "E-compact",  "component/name": "E-compact: Ephemeral compaction"},
+    {"component/id": "E-default",  "component/name": "Default mode (evidence landscape)"}
+  ]
+}
+#+END_SRC
+
+Each devmap includes validation status (~devmap/all-valid~, ~devmap/failed-checks~).
+The component list is what tension discovery compares against the mission
+inventory — an uncovered component here becomes a tension in the tensions
+endpoint.
+
+Arxana's devmap browser (~Lab > Devmaps~) fetches this endpoint and renders all
+prototypes with state, component count, edge count, and validation status.
+
+* Implementation
+- Backend: ~mission_control_backend.clj~ (~read-all-devmaps~)
+- Reads EDN files from futon5 and devmap files from futon3

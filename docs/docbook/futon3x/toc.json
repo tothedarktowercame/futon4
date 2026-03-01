@@ -1,0 +1,247 @@
+[
+  {
+    "doc_id": "futon3x-531e93bce93f",
+    "title": "The Split",
+    "outline_path": [
+      "The Split"
+    ],
+    "path_string": "The Split",
+    "level": 1
+  },
+  {
+    "doc_id": "futon3x-273ec059d0d3",
+    "title": "Why futon3 became three repos",
+    "outline_path": [
+      "The Split",
+      "Why futon3 became three repos"
+    ],
+    "path_string": "The Split / Why futon3 became three repos",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3x-ba6c67b2ae3a",
+    "title": "Three timescales, three organisms",
+    "outline_path": [
+      "The Split",
+      "Three timescales, three organisms"
+    ],
+    "path_string": "The Split / Three timescales, three organisms",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3x-b3b4ff9858fc",
+    "title": "What the old HX was and why it was a mockup",
+    "outline_path": [
+      "The Split",
+      "What the old HX was and why it was a mockup"
+    ],
+    "path_string": "The Split / What the old HX was and why it was a mockup",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3x-478946a2811e",
+    "title": "Mission Control",
+    "outline_path": [
+      "Mission Control"
+    ],
+    "path_string": "Mission Control",
+    "level": 1
+  },
+  {
+    "doc_id": "futon3x-987479a7c7cf",
+    "title": "Scanning the portfolio",
+    "outline_path": [
+      "Mission Control",
+      "Scanning the portfolio"
+    ],
+    "path_string": "Mission Control / Scanning the portfolio",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3x-e5b37452cd5c",
+    "title": "Devmap structural summaries",
+    "outline_path": [
+      "Mission Control",
+      "Devmap structural summaries"
+    ],
+    "path_string": "Mission Control / Devmap structural summaries",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3x-a8f7bcc00d6b",
+    "title": "Tension discovery",
+    "outline_path": [
+      "Mission Control",
+      "Tension discovery"
+    ],
+    "path_string": "Mission Control / Tension discovery",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3x-cf938fe922e3",
+    "title": "The trace endpoint",
+    "outline_path": [
+      "Mission Control",
+      "The trace endpoint"
+    ],
+    "path_string": "Mission Control / The trace endpoint",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3x-6db5a5212945",
+    "title": "Evidence backfill",
+    "outline_path": [
+      "Mission Control",
+      "Evidence backfill"
+    ],
+    "path_string": "Mission Control / Evidence backfill",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3x-127cf95f0639",
+    "title": "Portfolio Inference",
+    "outline_path": [
+      "Portfolio Inference"
+    ],
+    "path_string": "Portfolio Inference",
+    "level": 1
+  },
+  {
+    "doc_id": "futon3x-6574fb2919c0",
+    "title": "The AIF loop: observe, perceive, affect, policy",
+    "outline_path": [
+      "Portfolio Inference",
+      "The AIF loop: observe, perceive, affect, policy"
+    ],
+    "path_string": "Portfolio Inference / The AIF loop: observe, perceive, affect, policy",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3x-e0a05c41e757",
+    "title": "Belief state and mu channels",
+    "outline_path": [
+      "Portfolio Inference",
+      "Belief state and mu channels"
+    ],
+    "path_string": "Portfolio Inference / Belief state and mu channels",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3x-fd9b77bdb1ae",
+    "title": "Mode transitions and urgency",
+    "outline_path": [
+      "Portfolio Inference",
+      "Mode transitions and urgency"
+    ],
+    "path_string": "Portfolio Inference / Mode transitions and urgency",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3x-fe4f3b9b0092",
+    "title": "core.logic relations",
+    "outline_path": [
+      "Portfolio Inference",
+      "core.logic relations"
+    ],
+    "path_string": "Portfolio Inference / core.logic relations",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3x-78da12c2e512",
+    "title": "Self-Representing Stack",
+    "outline_path": [
+      "Self-Representing Stack"
+    ],
+    "path_string": "Self-Representing Stack",
+    "level": 1
+  },
+  {
+    "doc_id": "futon3x-ab4ce7f9fa08",
+    "title": "Reflection grounding: mission to var to source",
+    "outline_path": [
+      "Self-Representing Stack",
+      "Reflection grounding: mission to var to source"
+    ],
+    "path_string": "Self-Representing Stack / Reflection grounding: mission to var to source",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3x-8a21198c5457",
+    "title": "Evidence chain navigation",
+    "outline_path": [
+      "Self-Representing Stack",
+      "Evidence chain navigation"
+    ],
+    "path_string": "Self-Representing Stack / Evidence chain navigation",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3x-239ad29bbcc8",
+    "title": "Full path trace: war bulletin to source",
+    "outline_path": [
+      "Self-Representing Stack",
+      "Full path trace: war bulletin to source"
+    ],
+    "path_string": "Self-Representing Stack / Full path trace: war bulletin to source",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3x-6cb20a8c1bda",
+    "title": "Ma plus seki: gap-reading and gate-traversal",
+    "outline_path": [
+      "Self-Representing Stack",
+      "Ma plus seki: gap-reading and gate-traversal"
+    ],
+    "path_string": "Self-Representing Stack / Ma plus seki: gap-reading and gate-traversal",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3x-e86af9b6239f",
+    "title": "API Reference",
+    "outline_path": [
+      "API Reference"
+    ],
+    "path_string": "API Reference",
+    "level": 1
+  },
+  {
+    "doc_id": "futon3x-0405b3a37a8a",
+    "title": "Mission control endpoints",
+    "outline_path": [
+      "API Reference",
+      "Mission control endpoints"
+    ],
+    "path_string": "API Reference / Mission control endpoints",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3x-4730454d9f7e",
+    "title": "Portfolio inference endpoints",
+    "outline_path": [
+      "API Reference",
+      "Portfolio inference endpoints"
+    ],
+    "path_string": "API Reference / Portfolio inference endpoints",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3x-30d4f508469d",
+    "title": "Reflection and evidence endpoints",
+    "outline_path": [
+      "API Reference",
+      "Reflection and evidence endpoints"
+    ],
+    "path_string": "API Reference / Reflection and evidence endpoints",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3x-86edf031e8f6",
+    "title": "Multiplexed RPC",
+    "outline_path": [
+      "API Reference",
+      "Multiplexed RPC"
+    ],
+    "path_string": "API Reference / Multiplexed RPC",
+    "level": 2
+  }
+]

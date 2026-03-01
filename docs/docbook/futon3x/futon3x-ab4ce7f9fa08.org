@@ -1,0 +1,65 @@
+#+TITLE: Reflection grounding: mission to var to source
+:PROPERTIES:
+:DOC_ID: futon3x-ab4ce7f9fa08
+:ENTRY_ID: futon3x-ab4ce7f9fa08::org
+:VERSION: org
+:OUTLINE_PATH: Self-Representing Stack / Reflection grounding: mission to var to source
+:PATH_STRING: Self-Representing Stack / Reflection grounding: mission to var to source
+:REPLACES:
+:END:
+
+* Context
+The reflection API lets any strategic claim bottom out at a live Clojure var.
+~GET /api/alpha/reflect/var/:ns/:var~ returns a reflection envelope with the
+var's namespace, symbol, file, line number, arglists, docstring, and a
+~resolved-at~ timestamp.
+
+This is the bottom layer of the self-representing stack. A mission doc says
+"portfolio inference recommends actions." The reflection envelope proves it:
+~portfolio-step!~ exists at ~portfolio/core.clj~ line N, takes these arguments,
+has this docstring, and was resolved at this timestamp. If the function is
+deleted or moved, the staleness check catches it.
+
+* Live output
+Captured 2026-03-01 from futon3c on port 7070.
+
+#+BEGIN_SRC sh
+curl -s localhost:7070/api/alpha/reflect/var/futon3c.peripheral.mission-control-backend/trace-all-tensions | jq .envelope
+#+END_SRC
+
+#+BEGIN_SRC json
+{
+  "reflection/ns": "futon3c.peripheral.mission-control-backend",
+  "reflection/symbol": "trace-all-tensions",
+  "reflection/file": "futon3c/peripheral/mission_control_backend.clj",
+  "reflection/line": 820,
+  "reflection/arglists": [[], ["repos"]],
+  "reflection/doc": "Trace all current tensions through the gate chain.\n   Returns a summary with per-tension paths and aggregate stats.",
+  "reflection/resolved-at": "2026-03-01T22:49:41Z",
+  "reflection/private?": false,
+  "reflection/macro?": false,
+  "reflection/dynamic?": false
+}
+#+END_SRC
+
+The envelope tells us: ~trace-all-tensions~ lives at line 820, takes zero args
+(or an optional ~repos~ arg), and was resolved at 22:49:41 UTC. The ~resolved-at~
+timestamp enables staleness detection: if the source file has been modified after
+this timestamp, the reflection may be stale.
+
+Other reflection endpoints:
+
+- ~GET /api/alpha/reflect/namespaces~ — list loaded namespaces (with optional
+  pattern filter)
+- ~GET /api/alpha/reflect/ns/:ns~ — all public vars in a namespace
+- ~GET /api/alpha/reflect/ns/:ns/full~ — all vars including private
+- ~GET /api/alpha/reflect/deps/:ns~ — namespace dependency graph
+
+In Arxana, ~arxana-browser-ground-claim-to-var~ uses these endpoints to link a
+mission claim to a specific var, and ~arxana-browser-verify-reflection-snapshot~
+re-resolves to check for staleness.
+
+* Implementation
+- Reflection core: ~futon3c/src/futon3c/reflection/core.clj~ (~reflect-var~)
+- Envelope shape: ~futon3c/src/futon3c/reflection/envelope.clj~ (~ReflectionEnvelope~)
+- Route handler: ~http.clj~ (~handle-reflect-var~)

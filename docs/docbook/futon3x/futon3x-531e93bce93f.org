@@ -1,0 +1,20 @@
+#+TITLE: The Split
+:PROPERTIES:
+:DOC_ID: futon3x-531e93bce93f
+:ENTRY_ID: futon3x-531e93bce93f::org
+:VERSION: org
+:OUTLINE_PATH: The Split
+:PATH_STRING: The Split
+:REPLACES:
+:END:
+
+* Context
+futon3 was a monolith doing three jobs at three timescales. It held MUSN
+lifecycle management, pattern search and hints, tatami session stores, the HX
+hypertext system, real-time transport, agency coordination, and forum threads.
+Everything lived in one repo and one process.
+
+The existing futon3 docbook (44 entries) documents that monolith. This chapter
+documents what came after: the split into futon3a, futon3b, and futon3c, and the
+new capabilities that emerged — portfolio inference, tension discovery, and the
+self-representing stack.

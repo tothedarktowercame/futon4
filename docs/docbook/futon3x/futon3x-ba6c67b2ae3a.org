@@ -1,0 +1,42 @@
+#+TITLE: Three timescales, three organisms
+:PROPERTIES:
+:DOC_ID: futon3x-ba6c67b2ae3a
+:ENTRY_ID: futon3x-ba6c67b2ae3a::org
+:VERSION: org
+:OUTLINE_PATH: The Split / Three timescales, three organisms
+:PATH_STRING: The Split / Three timescales, three organisms
+:REPLACES:
+:END:
+
+* Context
+The three-futon split is grounded in the Active Inference Framework (AIF)
+timescale hierarchy from futon2's ant colony simulator. Each organism has its own
+perception-action loop at its own temporal grain:
+
+*futon3a* — the interoceptive surface. Pattern queries return in milliseconds.
+The compass searches, the notions index retrieves. No state, no side effects,
+no loop — pure infrastructure serving the other two organisms.
+
+*futon3b* — the task-level loop. An agent proposes work through gates (G5 to G0).
+Each gate checks a constraint: Does a PSR exist? Does the code compile? Do tests
+pass? Is the evidence chain complete? This operates at task timescale (hours to
+days) and glacial timescale (library evolution over weeks).
+
+*futon3c* — the social-timescale loop. Agents register, inhabit peripherals
+(chat, explore, edit, test, deploy, reflect), coordinate via IRC and forum
+threads, and maintain shared awareness in real time. This is where Mission
+Control, portfolio inference, the evidence landscape, and the tension discovery
+loop live.
+
+The interoperation points are typed:
+
+#+BEGIN_SRC
+  futon3a ──pattern-query──> futon3c (agents ask for relevant patterns)
+  futon3c ──work-product───> futon3b (agent output enters gate pipeline)
+  futon3b ──gate-result────> futon3c (pass/fail feeds back to agency)
+  futon3c ──evidence───────> futon1a (durable evidence store)
+  futon5  ──wiring-diagram─> futon3c (topology that MC reads)
+#+END_SRC
+
+Each organism can be deployed, tested, and evolved independently. A change to
+futon3a's search index does not require restarting futon3c's agent fleet.

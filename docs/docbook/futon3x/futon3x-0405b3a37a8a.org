@@ -1,0 +1,66 @@
+#+TITLE: Mission control endpoints
+:PROPERTIES:
+:DOC_ID: futon3x-0405b3a37a8a
+:ENTRY_ID: futon3x-0405b3a37a8a::org
+:VERSION: org
+:OUTLINE_PATH: API Reference / Mission control endpoints
+:PATH_STRING: API Reference / Mission control endpoints
+:REPLACES:
+:END:
+
+* Context
+
+| Method | Path                       | Params            | Returns                                |
+|--------+----------------------------+-------------------+----------------------------------------|
+| GET    | /api/alpha/mc/tensions     | —                 | Structured tension data for hyperedges |
+| GET    | /api/alpha/mc/devmaps      | —                 | Devmap structural summaries            |
+| GET    | /api/alpha/mc/trace        | ?devmap=X (opt)   | Tension gate chain traces + summary    |
+| POST   | /api/alpha/mc/backfill     | —                 | Per-mission evidence entries (idempot) |
+| GET    | /api/alpha/missions        | —                 | Cross-repo mission inventory           |
+| GET    | /api/alpha/missions/:id    | —                 | Single mission info + wiring           |
+
+* Tension entry shape
+
+#+BEGIN_SRC clojure
+{:tension/type       :uncovered-component  ; or :blocked-mission, :structural-invalid
+ :tension/devmap     :devmap-id
+ :tension/component  :component-id
+ :tension/coverage-pct 0.0
+ :tension/detected-at "ISO-8601"
+ :tension/summary    "devmap/component — description"}
+#+END_SRC
+
+* Trace response shape
+
+#+BEGIN_SRC clojure
+{:ok true
+ :paths [{:tension {...}
+          :gates [{:gate :devmap|:component|:coverage|:evidence|:reflection|:source
+                   :status :pass|:gap|:blocked
+                   :data {...}}]
+          :complete? boolean
+          :blocked-at keyword-or-nil
+          :gap-at keyword-or-nil}]
+ :summary {:total int, :complete int, :blocked int, :gap-count int
+           :blocked-at {gate-keyword count}}
+ :detected-at "ISO-8601"}
+#+END_SRC
+
+* Devmap summary shape
+
+#+BEGIN_SRC clojure
+{:devmap/id :keyword
+ :devmap/state :active|:draft|:argue|:derive
+ :devmap/component-count int
+ :devmap/edge-count int
+ :devmap/input-count int
+ :devmap/output-count int
+ :devmap/all-valid boolean
+ :devmap/failed-checks []
+ :devmap/components [{:component/id :keyword :component/name string}]}
+#+END_SRC
+
+* Implementation
+- Route handlers: ~http.clj~ (~handle-mc-tensions~, ~handle-mc-devmaps~,
+  ~handle-mc-trace~, ~handle-mc-backfill~)
+- Backend: ~mission_control_backend.clj~

@@ -1,0 +1,106 @@
+#+TITLE: Belief state and mu channels
+:PROPERTIES:
+:DOC_ID: futon3x-e0a05c41e757
+:ENTRY_ID: futon3x-e0a05c41e757::org
+:VERSION: org
+:OUTLINE_PATH: Portfolio Inference / Belief state and mu channels
+:PATH_STRING: Portfolio Inference / Belief state and mu channels
+:REPLACES:
+:END:
+
+* Context
+~GET /api/alpha/portfolio/state~ returns the current belief state: the mu vector
+(15 sensory channels), precision weights, mode, urgency, and inference step
+count.
+
+The 15 mu channels measure different aspects of portfolio health:
+
+| Channel                 | What it measures                              |
+|-------------------------+-----------------------------------------------|
+| mission-complete-ratio  | Fraction of missions marked complete          |
+| coverage-pct            | Devmap component coverage by missions         |
+| gap-count               | Number of uncovered components (normalized)   |
+| blocked-ratio           | Fraction of missions that are blocked         |
+| stall-count             | Missions with no recent activity              |
+| evidence-velocity       | Rate of new evidence entries                  |
+| review-age              | Days since last portfolio review              |
+| pattern-reuse           | Fraction of missions using library patterns   |
+| dependency-depth        | Max chain length in dependency graph          |
+| mana-available          | Resource availability (from nonstarter pool)  |
+| spinoff-pressure        | Ratio of spinoff proposals to active missions |
+| coverage-trajectory     | Is coverage improving or declining?           |
+| unplanned-work-ratio    | Fraction of work not tied to a mission        |
+| effort-prediction-error | Gap between bid and actual effort             |
+| bid-completion-rate     | Fraction of weekly bids completed             |
+
+Each channel has a precision weight (Pi-o) that determines how much the channel
+contributes to free energy computation. High-precision channels dominate the
+inference; low-precision channels are effectively ignored.
+
+* Live output
+Captured 2026-03-01 from futon3c on port 7070.
+
+#+BEGIN_SRC sh
+curl -s localhost:7070/api/alpha/portfolio/state | jq .state
+#+END_SRC
+
+#+BEGIN_SRC json
+{
+  "mu": {
+    "sens": {
+      "mission-complete-ratio": 0.5,
+      "coverage-pct": 0.5,
+      "gap-count": 0.5,
+      "blocked-ratio": 0.5,
+      "stall-count": 0.5,
+      "evidence-velocity": 0.5,
+      "review-age": 0.5,
+      "mana-available": 0.5,
+      "spinoff-pressure": 0.5,
+      "coverage-trajectory": 0.5,
+      "unplanned-work-ratio": 0.5,
+      "effort-prediction-error": 0.5,
+      "bid-completion-rate": 0.5,
+      "pattern-reuse": 0.5,
+      "dependency-depth": 0.5
+    },
+    "mode": "BUILD",
+    "urgency": 0.5
+  },
+  "prec": {
+    "Pi-o": {
+      "mission-complete-ratio": 1.0,
+      "coverage-pct": 1.0,
+      "gap-count": 0.9,
+      "blocked-ratio": 1.0,
+      "stall-count": 0.7,
+      "evidence-velocity": 0.5,
+      "review-age": 1.0,
+      "mana-available": 0.8,
+      "dependency-depth": 0.7,
+      "bid-completion-rate": 0.7,
+      "effort-prediction-error": 0.6,
+      "coverage-trajectory": 0.6,
+      "spinoff-pressure": 0.4,
+      "unplanned-work-ratio": 0.5,
+      "pattern-reuse": 0.3
+    },
+    "tau": 1.0
+  },
+  "mode": "BUILD",
+  "urgency": 0.5,
+  "tau": 1.0,
+  "step-count": 0
+}
+#+END_SRC
+
+All mu channels are at 0.5 (prior) because this is a fresh instance — no
+portfolio steps have run yet to update beliefs from observations. The precision
+weights show the mode-conditioned attention: in BUILD mode, ~mission-complete-ratio~,
+~coverage-pct~, ~blocked-ratio~, and ~review-age~ have the highest precision
+(1.0), while ~pattern-reuse~ and ~spinoff-pressure~ are attenuated (0.3, 0.4).
+
+* Implementation
+- State management: ~portfolio/core.clj~ (atoms holding mu and prec)
+- Channel definitions: ~portfolio/observe.clj~ (~default-channels~)
+- Precision weights: ~portfolio/affect.clj~ (~mode-precision-profiles~)

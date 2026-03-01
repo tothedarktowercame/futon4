@@ -1,0 +1,23 @@
+#+TITLE: Portfolio Inference
+:PROPERTIES:
+:DOC_ID: futon3x-127cf95f0639
+:ENTRY_ID: futon3x-127cf95f0639::org
+:VERSION: org
+:OUTLINE_PATH: Portfolio Inference
+:PATH_STRING: Portfolio Inference
+:REPLACES:
+:END:
+
+* Context
+Portfolio inference adapts the Active Inference Framework (AIF) from futon2's
+ant colony simulator to the problem of portfolio management. Where the ant
+simulation asks "which food source should I visit next?", portfolio inference
+asks "which mission should we work on next?"
+
+The loop runs: observe (scan repos, normalize to 15 channels) -> perceive
+(compute prediction errors against beliefs) -> affect (update mode and
+precision) -> policy (select action that minimizes expected free energy). Each
+step emits evidence to the durable store.
+
+The entries in this section demonstrate the AIF loop, the belief state, and the
+core.logic relations that encode structural knowledge about the portfolio.

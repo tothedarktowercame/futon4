@@ -1,0 +1,67 @@
+#+TITLE: Evidence chain navigation
+:PROPERTIES:
+:DOC_ID: futon3x-8a21198c5457
+:ENTRY_ID: futon3x-8a21198c5457::org
+:VERSION: org
+:OUTLINE_PATH: Self-Representing Stack / Evidence chain navigation
+:PATH_STRING: Self-Representing Stack / Evidence chain navigation
+:REPLACES:
+:END:
+
+* Context
+The evidence landscape stores every observation, claim, and coordination event
+as a queryable entry. Evidence entries form chains via ~in-reply-to~ links,
+creating navigable threads of reasoning.
+
+~GET /api/alpha/evidence~ accepts filters: ~subject-type~, ~subject-id~, ~type~,
+~claim-type~, ~tag~, ~author~, ~session-id~, ~since~, and ~limit~.
+
+* Live output
+Captured 2026-03-01 from futon3c on port 7070. 3016 evidence entries total.
+
+#+BEGIN_SRC sh
+curl -s "localhost:7070/api/alpha/evidence?subject-type=mission&limit=1" | jq '.entries[0]'
+#+END_SRC
+
+#+BEGIN_SRC json
+{
+  "evidence/id": "e-f8aaf5da-49f4-4366-ae70-30b374af2946",
+  "evidence/type": "coordination",
+  "evidence/claim-type": "observation",
+  "evidence/author": "claude-1",
+  "evidence/at": "2026-03-01T22:49:19Z",
+  "evidence/session-id": "eb0a0084-ce37-4270-9bec-077d6d646d52",
+  "evidence/subject": {
+    "ref/type": "session",
+    "ref/id": "eb0a0084-ce37-4270-9bec-077d6d646d52"
+  },
+  "evidence/tags": ["claude", "chat", "turn", "assistant"],
+  "evidence/body": {
+    "event": "chat-turn",
+    "transport": "emacs-futon3c-chat",
+    "role": "assistant",
+    "text": "Two repos with changes. Let me commit and push both..."
+  }
+}
+#+END_SRC
+
+The evidence shape includes:
+
+- ~evidence/subject~ — what this evidence is about (mission, thread, session)
+- ~evidence/type~ — coordination, forum-post, mission-snapshot, portfolio-review
+- ~evidence/claim-type~ — observation, goal, conclusion, conjecture
+- ~evidence/tags~ — queryable tags for filtering
+- ~evidence/body~ — the payload (chat text, portfolio snapshot, review data)
+
+Chain navigation: ~GET /api/alpha/evidence/:id/chain~ returns the ordered
+ancestor reply chain for any entry, following ~in-reply-to~ links backward.
+
+Tag-based filtering: ~GET /api/alpha/evidence?tag=mission,backfill~ returns
+entries tagged with both ~mission~ AND ~backfill~ (AND semantics). This is how
+Arxana's narrative trail view finds all evidence for a specific mission.
+
+* Implementation
+- Query: ~evidence/backend.clj~ (all backends support ~:query/tags~)
+- Chain: ~evidence/backend.clj~ (~fetch-chain~)
+- Write: ~POST /api/alpha/evidence~ appends one entry
+- Count: ~GET /api/alpha/evidence/count~ for efficient counting without payload

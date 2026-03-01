@@ -1,0 +1,68 @@
+#+TITLE: Multiplexed RPC
+:PROPERTIES:
+:DOC_ID: futon3x-86edf031e8f6
+:ENTRY_ID: futon3x-86edf031e8f6::org
+:VERSION: org
+:OUTLINE_PATH: API Reference / Multiplexed RPC
+:PATH_STRING: API Reference / Multiplexed RPC
+:REPLACES:
+:END:
+
+* Context
+~POST /api/alpha/mission-control~ is a multiplexed RPC endpoint. One URL, many
+actions. The ~action~ field in the request body dispatches to the appropriate
+handler.
+
+This pattern is used when the caller (typically Arxana's Emacs client) needs a
+session-aware, stateful interaction with Mission Control — starting a session,
+stepping through tools, running a review, and stopping.
+
+For read-only data export (tensions, devmaps, traces), use the dedicated GET
+endpoints instead (see "Mission control endpoints").
+
+* Actions
+
+| Action    | Body params                      | Returns                          |
+|-----------+----------------------------------+----------------------------------|
+| start     | ~{session-id?, author?}~         | New MC session                   |
+| stop      | ~{session-id, reason?}~          | Session stopped                  |
+| status    | —                                | Current MC status                |
+| sessions  | —                                | List all MC sessions             |
+| review    | ~{author, session-id, close?}~   | Full portfolio review            |
+| step      | ~{session-id, tool, args}~       | One tool step result             |
+| diff      | —                                | Diff last two portfolio reviews  |
+
+* Session workflow
+
+#+BEGIN_SRC sh
+# 1. Start a session
+curl -s -X POST localhost:7070/api/alpha/mission-control \
+  -H 'Content-Type: application/json' \
+  -d '{"action":"start","author":"joe"}'
+
+# 2. Step through tools
+curl -s -X POST localhost:7070/api/alpha/mission-control \
+  -H 'Content-Type: application/json' \
+  -d '{"action":"step","session-id":"<id>","tool":"mc-inventory","args":{}}'
+
+# 3. Run a review
+curl -s -X POST localhost:7070/api/alpha/mission-control \
+  -H 'Content-Type: application/json' \
+  -d '{"action":"review","session-id":"<id>","author":"joe"}'
+
+# 4. Stop the session
+curl -s -X POST localhost:7070/api/alpha/mission-control \
+  -H 'Content-Type: application/json' \
+  -d '{"action":"stop","session-id":"<id>"}'
+#+END_SRC
+
+* When to use which
+
+- *Multiplexed RPC*: interactive MC sessions (Arxana, agents stepping through
+  tools). Session state persists across calls.
+- *Dedicated GETs*: one-shot data export (tension browser, devmap ingestion,
+  trace capture). No session needed, stateless.
+
+* Implementation
+- Route handler: ~http.clj~ (~handle-mission-control~)
+- Session management: ~mission_control_backend.clj~

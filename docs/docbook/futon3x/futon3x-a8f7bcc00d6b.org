@@ -1,0 +1,72 @@
+#+TITLE: Tension discovery
+:PROPERTIES:
+:DOC_ID: futon3x-a8f7bcc00d6b
+:ENTRY_ID: futon3x-a8f7bcc00d6b::org
+:VERSION: org
+:OUTLINE_PATH: Mission Control / Tension discovery
+:PATH_STRING: Mission Control / Tension discovery
+:REPLACES:
+:END:
+
+* Context
+~GET /api/alpha/mc/tensions~ exports structured tension data. A tension is a
+structural mismatch between what the devmaps specify and what the mission
+inventory covers. Tensions are derived, not asserted — they come from comparing
+the devmap component list against the set of missions that address each
+component.
+
+Three tension types:
+
+- ~:uncovered-component~ — a devmap component has no covering mission
+- ~:blocked-mission~ — a mission can't run due to unmet dependencies
+- ~:structural-invalid~ — a devmap failed validation checks
+
+* Live output
+Captured 2026-03-01 from futon3c on port 7070.
+
+#+BEGIN_SRC sh
+curl -s localhost:7070/api/alpha/mc/tensions | jq '.tensions[:3]'
+#+END_SRC
+
+#+BEGIN_SRC json
+[
+  {
+    "tension/type": "uncovered-component",
+    "tension/devmap": "peripheral-gauntlet",
+    "tension/component": "C-arena",
+    "tension/coverage-pct": 0.0,
+    "tension/detected-at": "2026-03-01T22:49:39Z",
+    "tension/summary": "peripheral-gauntlet/C-arena — no mission"
+  },
+  {
+    "tension/type": "uncovered-component",
+    "tension/devmap": "peripheral-gauntlet",
+    "tension/component": "C-umwelt",
+    "tension/coverage-pct": 0.0,
+    "tension/detected-at": "2026-03-01T22:49:39Z",
+    "tension/summary": "peripheral-gauntlet/C-umwelt — no mission"
+  },
+  {
+    "tension/type": "uncovered-component",
+    "tension/devmap": "peripheral-gauntlet",
+    "tension/component": "C-musn",
+    "tension/coverage-pct": 0.0,
+    "tension/detected-at": "2026-03-01T22:49:39Z",
+    "tension/summary": "peripheral-gauntlet/C-musn — no mission"
+  }
+]
+#+END_SRC
+
+9 tensions total, all ~:uncovered-component~ in the peripheral-gauntlet devmap.
+The components form a gate pipeline (G0 through G7) plus a parallel watchdog
+(C-tickle). C-arena (Gate 0) and C-tickle are the two that can start immediately
+— C-arena is the infrastructure precondition (IRC bridge + agent registration)
+and C-tickle needs only Gate 0.
+
+This output is pre-shaped for hyperedge creation. Arxana's tension browser
+(~Lab > Tensions~) fetches this endpoint and renders each tension as a navigable
+entry in the Emacs tabulated list.
+
+* Implementation
+- Backend: ~mission_control_backend.clj~ (~build-tension-export~, line 614)
+- Shape: ~mission_control_shapes.clj~ (~TensionEntry~)

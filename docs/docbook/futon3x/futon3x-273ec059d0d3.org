@@ -1,0 +1,39 @@
+#+TITLE: Why futon3 became three repos
+:PROPERTIES:
+:DOC_ID: futon3x-273ec059d0d3
+:ENTRY_ID: futon3x-273ec059d0d3::org
+:VERSION: org
+:OUTLINE_PATH: The Split / Why futon3 became three repos
+:PATH_STRING: The Split / Why futon3 became three repos
+:REPLACES:
+:END:
+
+* Context
+futon3 accumulated concerns at three timescales that pulled in different
+directions. Pattern search needed to be fast and query-oriented. The gate
+pipeline for pattern-driven development operated at task and glacial timescales.
+Real-time coordination — agents talking to each other, peripherals, forum
+threads — needed social-timescale responsiveness.
+
+Running all three in one process meant changes to the pattern library could break
+agent routing. A failing test in the tatami store blocked deployment of an IRC
+bridge fix. The monolith's dependency graph was a tangle because everything could
+reach everything.
+
+The refactoring budded three focused organisms from the original:
+
+| Repo    | Concern                    | Timescale          | AIF Loop                              |
+|---------+----------------------------+--------------------+---------------------------------------|
+| futon3a | Pattern search + querying  | fast (query)       | Infrastructure (not a loop)           |
+| futon3b | Pattern-driven development | task + glacial     | L0 gate pipeline + L1 library         |
+| futon3c | Real-time coordination     | social (real-time) | Agency, peripherals, forum            |
+
+Each repo is a focused organism with distinct concerns and timescales. They
+interoperate through defined surfaces:
+
+- futon3c uses futon3a for pattern search (agents query the library)
+- futon3b gates validate futon3c work products (quality assurance)
+- futon3c agency routes to agents that submit through futon3b's pipeline
+
+futon3 itself persists as source material and the pattern library — it is not
+deprecated, but it is no longer the runtime.

@@ -1,0 +1,59 @@
+#+TITLE: core.logic relations
+:PROPERTIES:
+:DOC_ID: futon3x-fe4f3b9b0092
+:ENTRY_ID: futon3x-fe4f3b9b0092::org
+:VERSION: org
+:OUTLINE_PATH: Portfolio Inference / core.logic relations
+:PATH_STRING: Portfolio Inference / core.logic relations
+:REPLACES:
+:END:
+
+* Context
+~portfolio/logic.clj~ uses ~core.logic~ (pldb) to encode portfolio structure as
+relational facts. The base relations come from mission inventory:
+
+#+BEGIN_SRC clojure
+(pldb/db-rel missiono mid)             ; mission exists
+(pldb/db-rel statuso mid status)       ; mission has status
+(pldb/db-rel blocked-byo mid blocker)  ; mission blocked by another
+(pldb/db-rel repo-ofo mid repo)        ; mission lives in repo
+(pldb/db-rel evidenceo mid eid)        ; mission has evidence entry
+(pldb/db-rel patterno-used mid pid)    ; mission uses pattern
+(pldb/db-rel shapeso-defined mid)      ; mission has schema shapes
+(pldb/db-rel mana-fundedo mid)         ; mission has mana funding
+#+END_SRC
+
+The coverage/tension relations extend the base with structural facts:
+
+#+BEGIN_SRC clojure
+(pldb/db-rel devmapo dm-id)            ; devmap exists
+(pldb/db-rel componento dm-id comp-id) ; component in devmap
+(pldb/db-rel coverso mid comp-id)      ; mission covers component
+(pldb/db-rel hyperedgeo hx-id hx-type) ; hyperedge in XTDB
+(pldb/db-rel invarianto inv-id source) ; declared invariant
+(pldb/db-rel implementedo inv-id repo) ; invariant is implemented
+#+END_SRC
+
+The key derived query is ~adjacento~: a mission is adjacent (ready to start) if
+it is not complete, all its dependencies are complete, its shapes are defined,
+and it has mana funding. This is the "adjacent possible" computation.
+
+The anti-drift property (lines 290-301 in ~logic.clj~): any tension hyperedge in
+XTDB should be re-derivable by running ~query-derived-tensions~ against the
+current state. When re-derivation fails (the tension was resolved) or succeeds
+where no hyperedge exists (new tension), that is a consistency signal.
+
+Key queries:
+
+- ~query-uncovered-components~ — devmap components with no covering mission
+- ~query-derived-tensions~ — re-derive tensions from current state, compare
+  against stored hyperedges
+- ~query-unported-invariants~ — invariants declared in one repo but not
+  implemented in the target repo (the query that would have caught futon1a drift)
+- ~query-consistency~ — composite: if derived tensions match stored count,
+  ~:consistent~; otherwise ~:drifted~
+
+* Verification
+- 947 tests, 3366 assertions, 0 failures (including 4 coverage/tension tests)
+- Tests verify: uncovered components are correctly derived, tension count matches
+  expected, unported invariants are identified

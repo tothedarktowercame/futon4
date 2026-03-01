@@ -1,0 +1,63 @@
+#+TITLE: Portfolio inference endpoints
+:PROPERTIES:
+:DOC_ID: futon3x-4730454d9f7e
+:ENTRY_ID: futon3x-4730454d9f7e::org
+:VERSION: org
+:OUTLINE_PATH: API Reference / Portfolio inference endpoints
+:PATH_STRING: API Reference / Portfolio inference endpoints
+:REPLACES:
+:END:
+
+* Context
+
+| Method | Path                          | Body                              | Returns                        |
+|--------+-------------------------------+-----------------------------------+--------------------------------|
+| POST   | /api/alpha/portfolio/step     | ~{emit-evidence?: bool}~          | Recommendation + diagnostics   |
+| POST   | /api/alpha/portfolio/heartbeat| ~{bids?, clears?, modes?}~        | Weekly heartbeat result        |
+| GET    | /api/alpha/portfolio/state    | —                                 | Current belief state           |
+
+* Step response shape
+
+#+BEGIN_SRC clojure
+{:ok true
+ :recommendation "formatted string"
+ :action :review|:work-on|:consolidate|:wait|:unblock
+ :diagnostics {:mode :BUILD|:MAINTAIN|:CONSOLIDATE
+               :urgency float
+               :tau float
+               :free-energy float}
+ :abstain boolean  ; true when tau < 1.0
+ :structure {:total int
+             :by-status {:complete int :ready int :in-progress int :unknown int}
+             :adjacent [{:mission/id string}]
+             :blocked-pairs [[blocker blocked]]
+             :critical-path [{:mission string :depth int}]}}
+#+END_SRC
+
+* State response shape
+
+#+BEGIN_SRC clojure
+{:ok true
+ :state {:mu {:sens {channel-keyword float}  ; 15 channels, 0.0-1.0
+              :mode :BUILD|:MAINTAIN|:CONSOLIDATE
+              :urgency float}
+         :prec {:Pi-o {channel-keyword float}  ; precision weights
+                :tau float}                     ; confidence threshold
+         :mode keyword
+         :urgency float
+         :tau float
+         :step-count int
+         :pending nil-or-keyword}}
+#+END_SRC
+
+* Heartbeat body shape
+
+#+BEGIN_SRC clojure
+{:bids [{:mission-id string :effort-band :light|:medium|:heavy}]
+ :clears [{:mission-id string :effort-band :light|:medium|:heavy :outcome :done|:partial|:blocked}]
+ :modes {:target :BUILD|:MAINTAIN|:CONSOLIDATE}}
+#+END_SRC
+
+* Implementation
+- ~portfolio/core.clj~ (~portfolio-step!~, ~portfolio-heartbeat!~)
+- ~portfolio/heartbeat.clj~ (effort bands, prediction errors, futon5 API client)
