@@ -1,0 +1,27 @@
+#+TITLE: dev/REPLACE-FILE.el
+:PROPERTIES:
+:DOC_ID: futon4-REPLACE_DOC_ID
+:ENTRY_ID: futon4-REPLACE_DOC_ID-REPLACE_ENTRY_HASH
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/REPLACE-FILE.el
+:PATH_STRING: Dev docs / dev/REPLACE-FILE.el
+:SOURCE_PATH: dev/REPLACE-FILE.el
+:REPLACES:
+:END:
+
+* Context
+- REPLACE-primary-command: Interactive entry point for REPLACE-workflow. It
+  orchestrates REPLACE-core steps and is the main user-facing command for this
+  module.
+- REPLACE-core-builder: Builds the normalized data shape consumed by render and
+  storage layers. It resolves dependencies, validates inputs, and returns a
+  predictable plist/alist contract.
+- REPLACE-render-or-open: Converts core data into the user-visible buffer/view.
+  It handles empty states and preserves navigation context for follow-up
+  actions.
+- REPLACE-state-var: Buffer-local or global state used to cache REPLACE
+  metadata between refreshes. It exists to avoid redundant recomputation and to
+  keep UI behavior stable.
+- REPLACE-helper: Internal helper that encapsulates one high-risk or repeated
+  transformation used by the core builder/render path.
+

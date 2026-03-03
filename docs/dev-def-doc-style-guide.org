@@ -1,0 +1,86 @@
+#+TITLE: Futon4 Def-Doc Style Guide
+
+* Purpose
+This guide defines the required format for function-level developer docs used
+by Arxana Code Docs.
+
+Goal: when browsing a file in Arxana Code, `*Arxana Code Docs*` should show a
+compact, technical summary of the file's core definitions, not narrative
+chapter text.
+
+* Canonical shape
+Def-doc entries in `docs/docbook/futon4/` follow a strict shape:
+
+1. `#+TITLE: dev/<file>.el`
+2. Property drawer with:
+   - `:DOC_ID: <futon4-...>`
+   - `:ENTRY_ID: <...>`
+   - `:VERSION: def-doc`
+   - `:OUTLINE_PATH: Dev docs / dev/<file>.el`
+   - `:PATH_STRING: Dev docs / dev/<file>.el`
+3. A single `* Context` section.
+4. Bullet lines with one documented definition each:
+   - `- <symbol>: <what it does, how it integrates, and why it matters>`
+
+* Required metadata for matching
+To ensure Arxana Code Docs can map code files to doc entries:
+
+- Keep title exactly as repo-relative file path, e.g.:
+  - `#+TITLE: dev/arxana-browser-lab.el`
+- Keep `:VERSION: def-doc`.
+- Keep `:OUTLINE_PATH:` and `:PATH_STRING:` under `Dev docs / ...`.
+
+Optional explicit mapping fields (recommended):
+
+- `:SOURCE_PATH: dev/arxana-browser-lab.el`
+- `:FUNCTION_NAME: arxana-browser-ground-claim-to-var`
+
+Use `:FUNCTION_NAME:` only when the entry is intentionally centered on one
+definition. For file-level entries, prefer bullet coverage over a single
+function pointer.
+
+* Writing rules
+- Prefer definitions that are externally important, interactive entry points,
+  or core internal orchestration functions.
+- Write in present tense.
+- Keep each bullet to 1-3 sentences.
+- Include integration context:
+  - data flow
+  - major dependency
+  - user-visible effect
+- Document commands, helper functions, variables, and modes when they matter to
+  runtime behavior.
+
+Avoid:
+- narrative story text
+- API walkthrough prose
+- generic claims without naming concrete definitions
+- placeholder bullets like `...` in final entries
+
+* Recommended coverage per file
+- Small module: 4-8 bullets.
+- Medium/large module: 8-15 bullets.
+- Include at least:
+  - primary interactive command(s)
+  - primary data assembly function(s)
+  - render/open/dispatch function(s)
+  - one key state variable if behavior depends on it
+
+* Example bullet style
+Good:
+- `arxana-browser-code--docbook-matches: Resolves file-level and function-level
+  dev-doc entries for a code path, preferring explicit metadata and cached
+  indices, and returns deduplicated matches for the Code Docs pane.`
+
+Bad:
+- `arxana-browser-code--docbook-matches: Matches docs.`
+
+* Arxana Code Docs compatibility checklist
+Before considering a def-doc entry complete:
+
+1. Title matches `dev/<file>.el`.
+2. `:VERSION: def-doc` is present.
+3. `* Context` exists with `- symbol:` bullets.
+4. Bullet symbols appear in the target file.
+5. Opening the file in Arxana Code shows this entry in `* Matches`.
+
