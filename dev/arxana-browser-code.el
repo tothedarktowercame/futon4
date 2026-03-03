@@ -21,6 +21,7 @@
 (declare-function arxana-docbook--entry-content "arxana-docbook-core" (entry))
 (declare-function arxana-docbook--entry-function-name "arxana-docbook-core" (entry))
 (declare-function arxana-docbook--available-books "arxana-docbook-core")
+(declare-function arxana-docbook-open-uri "arxana-docbook-ui" (uri))
 
 (defgroup arxana-browser-code nil
   "Code browser helpers for Arxana."
@@ -742,17 +743,53 @@ Returns the active strategy, or nil if persistence is unavailable."
            (list :symbol (get-text-property (1- (point)) 'arxana-symbol)
                  :path (get-text-property (1- (point)) 'arxana-path)))))
 
+(defun arxana-browser-code--uri-at-point ()
+  "Return a docbook/arxana URI at point, or nil."
+  (or (when (fboundp 'org-element-context)
+        (let* ((context (org-element-context))
+               (type (org-element-type context)))
+          (when (eq type 'link)
+            (let ((raw (org-element-property :raw-link context)))
+              (when (and raw
+                         (or (string-prefix-p "docbook://" raw)
+                             (string-prefix-p "arxana://view/" raw)))
+                raw)))))
+      (let ((url (thing-at-point 'url t)))
+        (when (and (stringp url)
+                   (or (string-prefix-p "docbook://" url)
+                       (string-prefix-p "arxana://view/" url)))
+          url))
+      (save-excursion
+        (let* ((line (buffer-substring-no-properties
+                      (line-beginning-position)
+                      (line-end-position)))
+               (col (- (point) (line-beginning-position)))
+               (rx "\\(docbook://[^][(){}<>\"'[:space:]]+\\|arxana://view/[^][(){}<>\"'[:space:]]+\\)")
+               (found nil))
+          (while (and (not found) (string-match rx line))
+            (let ((start (match-beginning 1))
+                  (end (match-end 1))
+                  (match (match-string 1 line)))
+              (if (and (<= start col) (<= col end))
+                  (setq found match)
+                (setq line (substring line end))
+                (setq col (- col end)))))
+          found))))
+
 (defun arxana-browser-code-docs-activate ()
   "Activate the link at point, if any."
   (interactive)
   (let* ((props (arxana-browser-code--link-props-at-point))
          (symbol (plist-get props :symbol))
-         (path (plist-get props :path)))
+         (path (plist-get props :path))
+         (uri (arxana-browser-code--uri-at-point)))
     (cond
      ((and symbol path)
       (arxana-browser-code--open-symbol symbol path))
      (path
       (arxana-browser-code--open-path path))
+     ((and uri (fboundp 'arxana-docbook-open-uri))
+      (arxana-docbook-open-uri uri))
      ((fboundp 'org-open-at-point)
       (org-open-at-point)))))
 
