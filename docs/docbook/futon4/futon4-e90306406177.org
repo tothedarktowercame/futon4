@@ -1,0 +1,25 @@
+#+TITLE: dev/arxana-browser-lab.el
+:PROPERTIES:
+:DOC_ID: futon4-e90306406177
+:ENTRY_ID: futon4-e90306406177-3a1b2f9e7c4d
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/arxana-browser-lab.el
+:PATH_STRING: Dev docs / dev/arxana-browser-lab.el
+:SOURCE_PATH: dev/arxana-browser-lab.el
+:REPLACES:
+:END:
+
+* Context
+- arxana-lab--fetch-sessions: Fetches live session lists from one or more configured Futon3 servers, merges results, annotates each session with server/host metadata, and returns a normalized sorted payload for browser views.
+- arxana-browser--lab-menu-items: Defines the Lab sub-menu model used by Arxana Browser, wiring top-level entries (active sessions, archived sessions, tensions, devmaps, evidence views, and file browsing) to concrete view identifiers.
+- arxana-browser--lab-sessions-active-items: Produces browser items for currently active sessions by fetching remote session data, filtering by the active flag, and converting each session into a typed row payload for tabulated rendering.
+- arxana-browser-lab-open-session: Central dispatcher for lab session activation that routes active sessions to stream view, raw sessions to log viewer, archived sessions to Futon1 payload view, and menu rows to stack-based view navigation.
+- arxana-browser--evidence-fetch: Core HTTP fetch wrapper for evidence endpoints that composes query params, calls Futon1 evidence routes, and returns parsed payloads used by timeline, session grouping, and detail views.
+- arxana-browser--evidence-sessions-items: Groups evidence entries by session id and emits summarized per-session rows (count, type summary, latest timestamp), providing the "Evidence by Session" browser surface.
+- arxana-browser--futon3c-fetch: Shared Futon3c GET helper used by mission-control and reflection views, encapsulating endpoint composition, timeout behavior, and JSON decoding for tensions, devmaps, and reflection calls.
+- arxana-browser-ingest-tension-as-hyperedge: Converts a mission-control tension into a typed Arxana hyperedge payload (`tension/<type>`) with derived endpoints and properties, then persists it through the store bridge.
+- arxana-browser-ingest-devmap-as-hyperedge: Maps a devmap summary into a `devmap/prototype` hyperedge by constructing canonical devmap/component endpoints and structural properties for persistence in Futon1.
+- arxana-browser--resolve-var: Resolves a Clojure var through Futon3c reflection API and returns the reflection envelope used to anchor strategic claims to concrete source definitions.
+- arxana-browser-ground-claim-to-var: Creates an `about-var` hyperedge from a claim/evidence id to a reflected var id, persisting namespace, symbol, file, line, arglists, and resolution timestamp as grounding metadata.
+- arxana-browser-verify-reflection-snapshot: Re-resolves a stored about-var relation and compares key reflection fields (line and arglists) to classify the snapshot as `:ok`, `:stale`, or `:missing`.
+
