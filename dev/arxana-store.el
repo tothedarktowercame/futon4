@@ -15,8 +15,12 @@
 (require 'url)
 (require 'url-http)
 
-(defvar futon4-enable-sync nil
-  "Non-nil enables Futon sync operations.")
+(defvar futon4-enable-sync
+  (let ((value (getenv "FUTON4_ENABLE_SYNC")))
+    (and (stringp value)
+         (member (downcase (string-trim value)) '("1" "true" "yes" "on"))))
+  "Non-nil enables Futon sync operations.
+Set FUTON4_ENABLE_SYNC=1 in the environment to default this on.")
 
 (defvar futon4-base-url nil
   "Base URL for the Futon API (e.g., http://localhost:8080).")

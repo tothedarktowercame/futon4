@@ -20,7 +20,10 @@
 (declare-function arxana-docbook--remote-contents "arxana-docbook-remote" (book))
 (declare-function arxana-docbook--remote-heading "arxana-docbook-remote" (book doc-id))
 (declare-function arxana-docbook--normalize-remote-entry "arxana-docbook-remote" (entry))
+(declare-function arxana-docbook--remote-update-toc-order "arxana-docbook-remote" (book order))
+(declare-function arxana-docbook--probe-summary "arxana-docbook-remote" (&optional book))
 (declare-function arxana-docbook--toc-write-headings "arxana-docbook-toc" (book headings &optional order))
+(declare-function arxana-docbook--toc "arxana-docbook-toc" (book))
 (declare-function arxana-docbook--heading-title "arxana-docbook-toc" (heading))
 (declare-function arxana-docbook--heading-outline "arxana-docbook-toc" (heading))
 (declare-function arxana-docbook--toc-doc-id "arxana-docbook-toc" (heading))
@@ -281,6 +284,12 @@
 (defun arxana-docbook--stub-section (sections name)
   (gethash (downcase name) sections))
 
+(defun arxana-docbook--stub-outline-from-metadata (metadata)
+  (let ((raw (cdr (assoc "OUTLINE_PATH" metadata))))
+    (and raw
+         (not (string-empty-p raw))
+         (split-string raw " / " t))))
+
 (defun arxana-docbook--stub-payload-from-buffer ()
   (let* ((text (buffer-substring-no-properties (point-min) (point-max)))
          (metadata (arxana-docbook--stub-metadata text))
@@ -298,9 +307,13 @@
          (entry-id (or (cdr (assoc "ENTRY_ID" metadata))
                        arxana-docbook--stub-entry-id
                        (and buffer-file-name (file-name-base buffer-file-name))))
+         (metadata-outline (arxana-docbook--stub-outline-from-metadata metadata))
+         (metadata-path-string (cdr (assoc "PATH_STRING" metadata)))
          (heading (and book doc-id (arxana-docbook--heading-for-doc-id book doc-id)))
-         (outline (and heading (arxana-docbook--heading-outline heading)))
-         (path-string (or (and heading (arxana-docbook--heading-path-string heading))
+         (outline (or metadata-outline
+                      (and heading (arxana-docbook--heading-outline heading))))
+         (path-string (or metadata-path-string
+                          (and heading (arxana-docbook--heading-path-string heading))
                           (and outline (string-join outline " / "))
                           title))
          (entry-id (if (and entry-id doc-id (string= entry-id doc-id))
@@ -386,6 +399,22 @@
         (view-mode 1)))
     (display-buffer buf)))
 
+(defun arxana-docbook--sync-remote-order-from-local-toc (book)
+  "Sync local toc.json order for BOOK to remote storage when available."
+  (let* ((toc (ignore-errors (arxana-docbook--toc book)))
+         (order (and (listp toc)
+                     (delq nil (mapcar #'arxana-docbook--toc-doc-id toc)))))
+    (when (and (seq order) (arxana-docbook--remote-available-p book))
+      (let ((resp (arxana-docbook--remote-update-toc-order book order)))
+        (when (and (listp resp) (eq (plist-get resp :status) :ok))
+          (message "Docbook ingest: synced toc.json order for %s (%d headings)"
+                   book (length order))
+          t)
+        (unless (and (listp resp) (eq (plist-get resp :status) :ok))
+          (message "Docbook ingest: failed to sync toc.json order for %s: %s"
+                   book
+                   (or (plist-get resp :error) "unknown")))))))
+
 (defun arxana-docbook-ingest-book (&optional book)
   "Ingest all docbook entries for BOOK into Futon storage."
   (interactive
@@ -418,6 +447,7 @@
          (push (list :path path :error (error-message-string err)) failures))))
     (when (boundp 'arxana-docbook--storage-probe)
       (setq arxana-docbook--storage-probe nil))
+    (arxana-docbook--sync-remote-order-from-local-toc book)
     (when (seq failures)
       (arxana-docbook--ingest-error-buffer book (nreverse failures)))
     (message "Docbook ingest for %s finished: ok=%d failed=%d%s"
@@ -612,6 +642,35 @@
   (or (plist-get entry :doc-id)
       (plist-get entry :entry-id)))
 
+(defun arxana-docbook--local-book-has-content-p (book)
+  "Return non-nil when BOOK has local docbook artifacts to ingest."
+  (let* ((book-dir (arxana-docbook--book-dir book))
+         (toc-path (and book-dir (expand-file-name "toc.json" book-dir)))
+         (entries (and book-dir
+                       (file-directory-p book-dir)
+                       (directory-files book-dir nil "\\.org\\'" t))))
+    (and (file-directory-p (or book-dir ""))
+         (or (and toc-path (file-exists-p toc-path))
+             (seq entries)))))
+
+(defun arxana-docbook--bootstrap-remote-from-local (book)
+  "Attempt to bootstrap remote BOOK contents by ingesting local stubs.
+Return non-nil when an ingest attempt ran to completion."
+  (when (and (arxana-store-sync-enabled-p)
+             (arxana-docbook--local-book-has-content-p book))
+    (message "Docbook checkout: remote %s unavailable, ingesting local sources first..." book)
+    (condition-case err
+        (progn
+          (arxana-docbook-ingest-book book)
+          (when (boundp 'arxana-docbook--storage-probe)
+            (setq arxana-docbook--storage-probe nil))
+          t)
+      (error
+       (message "Docbook checkout bootstrap failed for %s: %s"
+                book
+                (error-message-string err))
+       nil))))
+
 (defun arxana-docbook--read-file-text (path)
   (when (and path (file-readable-p path))
     (with-temp-buffer
@@ -692,16 +751,25 @@ When REVIEW is non-nil, prompt before overwriting differing local files."
            (read-string "Doc book: " default))
          current-prefix-arg
          nil))
-  (unless (arxana-docbook--remote-available-p book)
-    (user-error "Docbook remote is unavailable; enable sync first"))
-  (let* ((headings (or (arxana-docbook--remote-contents book) '()))
+  (let* ((book (or (and book (not (string-empty-p book)) book) "futon4")))
+    (unless (arxana-docbook--remote-available-p book)
+      (arxana-docbook--bootstrap-remote-from-local book))
+    (unless (arxana-docbook--remote-available-p book)
+      (user-error "Docbook remote unavailable for %s (%s)"
+                  book
+                  (or (ignore-errors (arxana-docbook--probe-summary book))
+                      "enable sync and check futon4-base-url")))
+    (let* ((headings (or (arxana-docbook--remote-contents book) '()))
          (written 0)
          (skipped 0)
          (missing 0))
-    (unless headings
-      (user-error "No remote docbook headings found for %s" book))
-    (arxana-docbook--toc-write-headings book headings)
-    (dolist (heading headings)
+      (unless headings
+        (arxana-docbook--bootstrap-remote-from-local book)
+        (setq headings (or (arxana-docbook--remote-contents book) '())))
+      (unless headings
+        (user-error "No remote docbook headings found for %s" book))
+      (arxana-docbook--toc-write-headings book headings)
+      (dolist (heading headings)
         (let* ((entry (arxana-docbook--latest-entry-for-heading book heading))
                (result (and entry
                             (arxana-docbook--write-entry-files book heading entry force review))))
@@ -709,8 +777,8 @@ When REVIEW is non-nil, prompt before overwriting differing local files."
             (:written (cl-incf written))
             (:skipped (cl-incf skipped))
             (_ (cl-incf missing)))))
-    (message "Docbook checkout: %d written, %d skipped, %d missing" written skipped missing)
-    (list :written written :skipped skipped :missing missing)))
+      (message "Docbook checkout: %d written, %d skipped, %d missing" written skipped missing)
+      (list :written written :skipped skipped :missing missing))))
 
 ;;;###autoload
 (defun arxana-docbook-checkout-book-review (&optional book)

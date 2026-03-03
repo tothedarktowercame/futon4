@@ -24,6 +24,7 @@
 (declare-function arxana-links-edit-surface-form-at-point "arxana-links" ())
 (declare-function arxana-docbook--entry-doc-ids "arxana-docbook-toc" (book))
 (declare-function arxana-docbook--entry-source-path "arxana-docbook-core" (entry))
+(declare-function arxana-docbook--stub-path-for-doc "arxana-docbook-core" (book doc-id))
 (declare-function arxana-docbook--entry-version "arxana-docbook-core" (entry))
 (declare-function arxana-docbook--heading-for-doc-id "arxana-docbook-toc" (book doc-id))
 (declare-function arxana-docbook--heading-level "arxana-docbook-toc" (heading))
@@ -71,6 +72,8 @@
 (declare-function arxana-docbook--strip-stub-header "arxana-docbook-core" (text))
 (declare-function arxana-docbook--session-id-from-run "arxana-docbook-core" (run-id))
 (declare-function arxana-docbook-open-stub "arxana-docbook-checkout" (&optional entry))
+(declare-function arxana-docbook-ingest-book "arxana-docbook-checkout" (&optional book))
+(declare-function arxana-store-sync-enabled-p "arxana-store")
 (declare-function arxana-browser-code--file-symbols "arxana-browser-code" (path))
 (declare-function arxana-browser-code--find-symbol-path "arxana-browser-code" (symbol))
 (declare-function arxana-browser-code--open-symbol "arxana-browser-code" (symbol path))
@@ -592,6 +595,16 @@
   "When non-nil, open docbook URIs in the rendered entry view."
   :type 'boolean
   :group 'arxana-docbook)
+(defcustom arxana-docbook-auto-ingest-on-open t
+  "When non-nil, opening a docbook URI can auto-ingest missing remote docs."
+  :type 'boolean
+  :group 'arxana-docbook)
+(defcustom arxana-docbook-auto-ingest-cooldown-seconds 30
+  "Minimum seconds between auto-ingest attempts for the same docbook."
+  :type 'integer
+  :group 'arxana-docbook)
+(defvar arxana-docbook--auto-ingest-attempts (make-hash-table :test 'equal)
+  "Map of docbook ids to last auto-ingest attempt times (float-time seconds).")
 (defvar-local arxana-docbook--book nil
   "Current doc book identifier (e.g., futon4) for the browser buffer.")
 (defvar-local arxana-docbook--source :filesystem
@@ -973,16 +986,67 @@
           (unless found
             (forward-line 1))))
       found)))
+
+(defun arxana-docbook--auto-ingest-too-soon-p (book now)
+  (let ((last (gethash book arxana-docbook--auto-ingest-attempts)))
+    (and (numberp last)
+         (< (- now last) arxana-docbook-auto-ingest-cooldown-seconds))))
+
+(defun arxana-docbook--note-auto-ingest-attempt (book)
+  (puthash book (float-time) arxana-docbook--auto-ingest-attempts))
+
+(defun arxana-docbook--maybe-auto-ingest-doc (book doc-id &optional _entries)
+  (let* ((now (float-time))
+         (remote-enabled (and (fboundp 'arxana-docbook--remote-enabled-p)
+                              (arxana-docbook--remote-enabled-p)))
+         (remote-ready (ignore-errors (arxana-docbook--remote-available-p book)))
+         (sync-enabled (and (fboundp 'arxana-store-sync-enabled-p)
+                            (arxana-store-sync-enabled-p)))
+         (local-stub (ignore-errors (arxana-docbook--stub-path-for-doc book doc-id)))
+         (remote-doc (and remote-ready
+                          (ignore-errors (arxana-docbook--remote-heading book doc-id))))
+         (needs-ingest (and local-stub
+                            (null remote-doc))))
+    (when (and arxana-docbook-auto-ingest-on-open
+               remote-enabled
+               remote-ready
+               sync-enabled
+               needs-ingest
+               (fboundp 'arxana-docbook-ingest-book)
+               (not (arxana-docbook--auto-ingest-too-soon-p book now)))
+      (arxana-docbook--note-auto-ingest-attempt book)
+      (condition-case err
+          (progn
+            (message "Docbook open auto-ingest: syncing local stubs for %s..." book)
+            (arxana-docbook-ingest-book book)
+            t)
+        (error
+         (message "Docbook open auto-ingest failed for %s: %s"
+                  book (error-message-string err))
+         nil)))))
+
 (defun arxana-docbook--render-entry (entry &optional return-buffer return-entry-id)
   (let* ((book (plist-get entry :book))
          (doc-id (plist-get entry :doc-id))
          (buf (get-buffer-create arxana-docbook--entry-buffer))
          (entries (arxana-docbook--entries-for-doc book doc-id))
+         (_ingested (arxana-docbook--maybe-auto-ingest-doc book doc-id entries))
+         (entries (if _ingested
+                      (arxana-docbook--entries-for-doc book doc-id)
+                    entries))
+         (selected-entry (or (and (plist-get entry :entry-id)
+                                  (seq-find (lambda (candidate)
+                                              (equal (plist-get entry :entry-id)
+                                                     (plist-get candidate :entry-id)))
+                                            entries))
+                             (arxana-docbook--latest-non-lab entries)
+                             (car entries)
+                             entry))
          (heading (arxana-docbook--heading-for-doc-id book doc-id))
-         (base-title (or (plist-get entry :title)
+         (base-title (or (plist-get selected-entry :title)
                          (and heading (arxana-docbook--heading-title heading))
                          doc-id))
-         (function-name (arxana-docbook--entry-function-name entry))
+         (function-name (arxana-docbook--entry-function-name selected-entry))
          (title (if function-name
                     (format "%s — %s" function-name base-title)
                   base-title)))
@@ -995,8 +1059,8 @@
             (setq doc-ids (append doc-ids (list doc-id))))
           (setq arxana-docbook--entry-book book
                 arxana-docbook--entry-doc-id doc-id
-                arxana-docbook--entry-entry-id (plist-get entry :entry-id)
-                arxana-docbook--entry-current entry
+                arxana-docbook--entry-entry-id (plist-get selected-entry :entry-id)
+                arxana-docbook--entry-current selected-entry
                 arxana-docbook--entry-toc doc-ids
                 arxana-docbook--return-buffer return-buffer
                 arxana-docbook--return-doc-id doc-id
@@ -1005,10 +1069,10 @@
         (arxana-docbook--render-merged-heading book
                                                (list :doc-id doc-id :title base-title)
                                                entries)
-        (arxana-docbook--render-voiced-links entry)
-        (arxana-docbook--render-link-examples entry)
-        (arxana-docbook--linkify-symbols entry base-title)
-        (arxana-docbook--linkify-surface-forms entry)
+        (arxana-docbook--render-voiced-links selected-entry)
+        (arxana-docbook--render-link-examples selected-entry)
+        (arxana-docbook--linkify-symbols selected-entry base-title)
+        (arxana-docbook--linkify-surface-forms selected-entry)
         (goto-char (point-min))
         (org-show-all)
         (visual-line-mode 1)
@@ -1086,30 +1150,38 @@
            (entry-id (nth 2 parts)))
       (unless (and book doc-id)
         (user-error "Invalid docbook URI: %s" uri))
-    (let* ((root (arxana-docbook--locate-books-root))
-           (stub-path (and root doc-id
-                           (expand-file-name (format "%s.org" doc-id)
-                                             (expand-file-name book root))))
-           (entries (arxana-docbook--entries-for-doc book doc-id))
-           (local-stubs (seq-filter (lambda (e) (plist-get e :stub-path)) entries))
-           (pick-from (lambda (pool)
-                        (or (and entry-id
-                                 (seq-find (lambda (e)
-                                             (equal entry-id (plist-get e :entry-id)))
-                                           pool))
-                            (arxana-docbook--latest-non-lab pool)
-                            (car pool))))
-           (entry (or (funcall pick-from local-stubs)
-                      (funcall pick-from entries)
-                      (list :book book :doc-id doc-id))))
-        (if arxana-docbook-open-uri-prefer-render
-            (arxana-docbook--render-entry entry)
-          (if (and stub-path (file-readable-p stub-path))
-              (arxana-docbook-open-stub (plist-put (copy-sequence entry) :stub-path stub-path))
-            (if (and (plist-get entry :stub-path)
-                     (file-readable-p (plist-get entry :stub-path)))
-                (arxana-docbook-open-stub entry)
-              (arxana-docbook--render-entry entry))))))))
+      (let* ((root (arxana-docbook--locate-books-root))
+             (stub-path (and root doc-id
+                             (expand-file-name (format "%s.org" doc-id)
+                                               (expand-file-name book root))))
+             (entries (arxana-docbook--entries-for-doc book doc-id))
+             (_ingested (arxana-docbook--maybe-auto-ingest-doc book doc-id entries))
+             (entries (if _ingested
+                          (arxana-docbook--entries-for-doc book doc-id)
+                        entries))
+             (local-stubs (seq-filter (lambda (e) (plist-get e :stub-path)) entries))
+             (pick-from (lambda (pool)
+                          (or (and entry-id
+                                   (seq-find (lambda (e)
+                                               (equal entry-id (plist-get e :entry-id)))
+                                             pool))
+                              (arxana-docbook--latest-non-lab pool)
+                              (car pool))))
+             (entry (if arxana-docbook-open-uri-prefer-render
+                        (or (funcall pick-from entries)
+                            (funcall pick-from local-stubs)
+                            (list :book book :doc-id doc-id))
+                      (or (funcall pick-from local-stubs)
+                          (funcall pick-from entries)
+                          (list :book book :doc-id doc-id)))))
+          (if arxana-docbook-open-uri-prefer-render
+              (arxana-docbook--render-entry entry)
+            (if (and stub-path (file-readable-p stub-path))
+                (arxana-docbook-open-stub (plist-put (copy-sequence entry) :stub-path stub-path))
+              (if (and (plist-get entry :stub-path)
+                       (file-readable-p (plist-get entry :stub-path)))
+                  (arxana-docbook-open-stub entry)
+                (arxana-docbook--render-entry entry))))))))
 (defun arxana-docbook--view-raw (_entry)
   (user-error "Raw JSON cache is disabled; open the stub instead"))
 (defun arxana-docbook-open-entry ()

@@ -38,7 +38,9 @@ Notes:
 
 Docbook sync requires:
 - `futon4-enable-sync` set to non-nil.
-- `futon4-base-url` set (for example `http://localhost:8080`).
+- `futon4-base-url` set (for example `http://localhost:7071/api/alpha`).
+- `X-Penholder` available via `arxana-store-default-penholder`
+  (for example `"api"`).
 
 ## CLI ingest (alternative)
 
@@ -79,4 +81,3 @@ Re-ingest afterward.
 - Amber source markers indicate filesystem-only data; enable sync and ingest.
 - If ingest fails with `missing-heading`, check for orphan entries created
   before `ENTRY_ID` was disambiguated from `DOC_ID`.
-

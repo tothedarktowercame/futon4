@@ -29,8 +29,12 @@
 (declare-function arxana-browser--item-at-point "arxana-browser-core")
 (declare-function arxana-browser--ensure-context "arxana-browser-core")
 (declare-function arxana-docbook--entry-mtime "arxana-docbook-core" (entry))
+(declare-function arxana-docbook--locate-books-root "arxana-docbook-core")
 (declare-function arxana-docbook--normalize-timestamp "arxana-docbook-core" (value))
 (declare-function arxana-docbook--normalize-remote-entry "arxana-docbook-remote" (entry))
+(declare-function arxana-docbook--remote-enabled-p "arxana-docbook-remote")
+(declare-function arxana-docbook-ingest-book "arxana-docbook-checkout" (&optional book))
+(declare-function arxana-store-sync-enabled-p "arxana-store")
 
 (defface arxana-browser-docbook-latest-face
   '((t :foreground "#7fdc7f"))
@@ -86,6 +90,19 @@
   "When non-nil, preserve TOC order for docbook contents views and exports."
   :type 'boolean
   :group 'arxana-browser-docbook)
+
+(defcustom arxana-browser-docbook-auto-ingest-on-browse t
+  "When non-nil, auto-ingest local docbook stubs during browse when remote storage is incomplete."
+  :type 'boolean
+  :group 'arxana-browser-docbook)
+
+(defcustom arxana-browser-docbook-auto-ingest-cooldown-seconds 30
+  "Minimum seconds between auto-ingest attempts for the same docbook."
+  :type 'number
+  :group 'arxana-browser-docbook)
+
+(defvar arxana-browser--docbook-auto-ingest-attempts (make-hash-table :test 'equal)
+  "Map of docbook ids to last auto-ingest attempt times (float-time seconds).")
 
 (defvar-local arxana-browser--docbook-contents-order nil
   "Alist of docbook order overrides keyed by book.")
@@ -264,12 +281,18 @@
      ((listp latest) (arxana-docbook--normalize-remote-entry latest))
      (t nil))))
 
-(defun arxana-browser--docbook-entry-dirty-p (local-mtime remote-entry)
+(defun arxana-browser--docbook-entry-dirty-p (local-mtime remote-entry &optional remote-doc-present)
   (let ((remote-time (arxana-docbook--normalize-timestamp
                       (plist-get remote-entry :timestamp))))
     (and local-mtime
-         (or (not remote-time)
-             (time-less-p remote-time local-mtime)))))
+         (cond
+          ;; We only mark dirty when the remote timestamp is known and older.
+          ((and remote-entry remote-time)
+           (time-less-p remote-time local-mtime))
+          ;; If the doc exists remotely but latest metadata is missing, avoid false dirty.
+          (remote-doc-present nil)
+          ;; No remote doc: local content has not been ingested yet.
+          (t t)))))
 
 (defun arxana-browser--docbook-sync-order (book order &optional prompt)
   "Sync ORDER for BOOK to remote and/or filesystem toc.json."
@@ -689,62 +712,126 @@
               :description "List recent doc book entries."
               :book book)))
 
+(defun arxana-browser--docbook-auto-ingest-too-soon-p (book now)
+  (let ((last (gethash book arxana-browser--docbook-auto-ingest-attempts)))
+    (and (numberp last)
+         (< (- now last) arxana-browser-docbook-auto-ingest-cooldown-seconds))))
+
+(defun arxana-browser--docbook-note-auto-ingest-attempt (book)
+  (puthash book (float-time) arxana-browser--docbook-auto-ingest-attempts))
+
+(defun arxana-browser--docbook-local-book-has-stubs-p (book)
+  (let* ((root (arxana-docbook--locate-books-root))
+         (book-dir (and root (expand-file-name book root))))
+    (and book-dir
+         (file-directory-p book-dir)
+         (directory-files book-dir nil "\\.org\\'" t))))
+
+(defun arxana-browser--docbook-missing-remote-docs-p (book remote)
+  (let ((local-entries (ignore-errors (arxana-docbook-entries book))))
+    (when (and (listp remote) (listp local-entries) local-entries)
+      (let ((remote-doc-ids (make-hash-table :test 'equal))
+            (missing nil))
+        (dolist (heading remote)
+          (let ((doc-id (or (plist-get heading :doc-id) (plist-get heading :doc_id))))
+            (when doc-id
+              (puthash doc-id t remote-doc-ids))))
+        (dolist (entry local-entries)
+          (when-let* ((doc-id (plist-get entry :doc-id)))
+            (when (not (gethash doc-id remote-doc-ids))
+              (setq missing t))))
+        missing))))
+
+(defun arxana-browser--docbook-maybe-auto-ingest (book remote)
+  (let* ((now (float-time))
+         (remote-enabled (and (fboundp 'arxana-docbook--remote-enabled-p)
+                              (arxana-docbook--remote-enabled-p)))
+         (remote-ready (ignore-errors (arxana-docbook--remote-available-p book)))
+         (sync-enabled (and (fboundp 'arxana-store-sync-enabled-p)
+                            (arxana-store-sync-enabled-p)))
+         (needs-ingest (or (and remote-ready
+                                (null remote)
+                                (arxana-browser--docbook-local-book-has-stubs-p book))
+                           (arxana-browser--docbook-missing-remote-docs-p book remote))))
+    (when (and arxana-browser-docbook-auto-ingest-on-browse
+               remote-enabled
+               remote-ready
+               sync-enabled
+               needs-ingest
+               (fboundp 'arxana-docbook-ingest-book)
+               (not (arxana-browser--docbook-auto-ingest-too-soon-p book now)))
+      (arxana-browser--docbook-note-auto-ingest-attempt book)
+      (condition-case err
+          (progn
+            (message "Docbook browse auto-ingest: syncing local stubs for %s..." book)
+            (arxana-docbook-ingest-book book)
+            t)
+        (error
+         (message "Docbook browse auto-ingest failed for %s: %s"
+                  book (error-message-string err))
+         nil)))))
+
 (defun arxana-browser--docbook-contents-items (book)
   (let* ((remote-raw (when (arxana-docbook--remote-available-p book)
                        (ignore-errors (arxana-docbook--remote-contents book))))
-         (remote (and remote-raw (arxana-docbook--normalize-remote-toc remote-raw)))
-         (local-toc (or (arxana-docbook--toc book) '()))
-         (toc (or remote local-toc '()))
-         (toc-order (delq nil (mapcar #'arxana-docbook--toc-doc-id toc)))
-         (local-entries (when (and (not remote) (arxana-docbook--filesystem-available-p book))
-                          (ignore-errors (arxana-docbook-entries book))))
-         (recent-entries (when (and remote (arxana-docbook--remote-available-p book))
-                           (ignore-errors (arxana-docbook--remote-recent book))))
-         (entries-for-metrics (or recent-entries local-entries '()))
-         (local-docs (let ((table (make-hash-table :test 'equal)))
-                       (dolist (entry (or local-entries '()))
-                         (when-let* ((doc-id (plist-get entry :doc-id)))
-                           (puthash doc-id t table)))
-                       table))
-         (entry-map (let ((table (make-hash-table :test 'equal)))
-                      (dolist (entry entries-for-metrics)
-                        (when-let* ((doc-id (plist-get entry :doc-id)))
-                          (let* ((existing (gethash doc-id table))
-                                 (current-ts (plist-get entry :timestamp))
-                                 (existing-ts (plist-get existing :timestamp)))
-                            (when (or (null existing)
-                                      (string> (or current-ts "") (or existing-ts "")))
-                              (puthash doc-id entry table)))))
-                      table))
-         (latest-docs (when (and local-entries (listp local-entries))
-                        (let ((table (make-hash-table :test 'equal)))
-                          (dolist (entry local-entries)
-                            (when-let* ((doc-id (plist-get entry :doc-id)))
-                              (puthash doc-id t table)))
-                          table)))
-         (local-time-map (let ((table (make-hash-table :test 'equal)))
-                           (dolist (entry (or local-entries '()))
-                             (when-let* ((doc-id (plist-get entry :doc-id))
-                                         (mtime (arxana-browser--docbook-entry-local-mtime entry)))
-                               (let ((existing (gethash doc-id table)))
-                                 (when (or (not existing)
-                                           (time-less-p existing mtime))
-                                   (puthash doc-id mtime table)))))
-                           table))
-         (remote-map (when (and remote (listp remote))
-                       (let ((table (make-hash-table :test 'equal)))
-                         (dolist (h remote)
-                           (let ((doc-id (or (plist-get h :doc-id) (plist-get h :doc_id))))
-                             (when doc-id
-                               (puthash doc-id h table))))
-                         table)))
-         (toc-items
-          (if toc
-              (cl-loop for h in toc
+         (remote (and remote-raw (arxana-docbook--normalize-remote-toc remote-raw))))
+    (when (arxana-browser--docbook-maybe-auto-ingest book remote)
+      (setq remote-raw (when (arxana-docbook--remote-available-p book)
+                         (ignore-errors (arxana-docbook--remote-contents book))))
+      (setq remote (and remote-raw (arxana-docbook--normalize-remote-toc remote-raw))))
+    (let* ((local-toc (or (arxana-docbook--toc book) '()))
+           (toc (or remote local-toc '()))
+           (toc-order (delq nil (mapcar #'arxana-docbook--toc-doc-id toc)))
+           (local-entries (when (and (not remote) (arxana-docbook--filesystem-available-p book))
+                            (ignore-errors (arxana-docbook-entries book))))
+           (recent-entries (when (and remote (arxana-docbook--remote-available-p book))
+                             (ignore-errors (arxana-docbook--remote-recent book))))
+           (entries-for-metrics (or recent-entries local-entries '()))
+           (local-docs (let ((table (make-hash-table :test 'equal)))
+                         (dolist (entry (or local-entries '()))
+                           (when-let* ((doc-id (plist-get entry :doc-id)))
+                             (puthash doc-id t table)))
+                         table))
+           (entry-map (let ((table (make-hash-table :test 'equal)))
+                        (dolist (entry entries-for-metrics)
+                          (when-let* ((doc-id (plist-get entry :doc-id)))
+                            (let* ((existing (gethash doc-id table))
+                                   (current-ts (plist-get entry :timestamp))
+                                   (existing-ts (plist-get existing :timestamp)))
+                              (when (or (null existing)
+                                        (string> (or current-ts "") (or existing-ts "")))
+                                (puthash doc-id entry table)))))
+                        table))
+           (latest-docs (when (and local-entries (listp local-entries))
+                          (let ((table (make-hash-table :test 'equal)))
+                            (dolist (entry local-entries)
+                              (when-let* ((doc-id (plist-get entry :doc-id)))
+                                (puthash doc-id t table)))
+                            table)))
+           (local-time-map (let ((table (make-hash-table :test 'equal)))
+                             (dolist (entry (or local-entries '()))
+                               (when-let* ((doc-id (plist-get entry :doc-id))
+                                           (mtime (arxana-browser--docbook-entry-local-mtime entry)))
+                                 (let ((existing (gethash doc-id table)))
+                                   (when (or (not existing)
+                                             (time-less-p existing mtime))
+                                     (puthash doc-id mtime table)))))
+                             table))
+           (remote-map (when (and remote (listp remote))
+                         (let ((table (make-hash-table :test 'equal)))
+                           (dolist (h remote)
+                             (let ((doc-id (or (plist-get h :doc-id) (plist-get h :doc_id))))
+                               (when doc-id
+                                 (puthash doc-id h table))))
+                           table)))
+           (toc-items
+            (if toc
+                (cl-loop for h in toc
                          for idx from 0
                          collect
                          (let* ((doc-id (or (plist-get h :doc-id) (plist-get h :doc_id)))
                                 (remote-h (and remote-map doc-id (gethash doc-id remote-map)))
+                                (remote-doc-present (and remote-h t))
                                 (path-string (or (plist-get h :path_string) (plist-get h :path-string)))
                                 (latest (or (and remote-h (plist-get remote-h :latest))
                                             (plist-get h :latest)
@@ -753,7 +840,8 @@
                                                    (arxana-browser--docbook-latest-remote-entry remote-h)))
                                 (entry (and doc-id (gethash doc-id entry-map)))
                                 (local-mtime (and doc-id (gethash doc-id local-time-map)))
-                                (dirty (arxana-browser--docbook-entry-dirty-p local-mtime remote-entry))
+                                (dirty (arxana-browser--docbook-entry-dirty-p
+                                        local-mtime remote-entry remote-doc-present))
                                 (source (cond
                                          ((and remote-map doc-id (gethash doc-id remote-map)) :storage)
                                          ((and local-docs doc-id (gethash doc-id local-docs)) :filesystem)
@@ -773,101 +861,107 @@
                                  :coverage coverage
                                  :ratio ratio
                                  :toc-index idx)))
-            '()))
-         (toc-items (if (and toc-items arxana-browser-docbook-prefer-toc-order)
-                        toc-items
-                      (arxana-browser--docbook-group-items toc-items)))
-         (order (arxana-browser--docbook-contents-ensure-order book toc-items))
-         (toc-items (arxana-browser--docbook-contents-order-items toc-items order))
-         (toc-items (seq-filter (lambda (item)
-                                  (not (arxana-browser--docbook-contents-removed-p
-                                        book (plist-get item :doc-id))))
-                                toc-items))
-         (toc-docs (let ((table (make-hash-table :test 'equal)))
-                     (dolist (item toc-items)
-                       (when-let* ((doc-id (plist-get item :doc-id)))
-                         (puthash doc-id t table)))
-                     table))
-         (entry-headings
-          (cond
-           (remote
-            (delq nil
-                  (mapcar (lambda (entry)
-                            (let* ((heading (plist-get entry :heading))
-                                   (doc-id (or (plist-get heading :doc/id)
-                                               (plist-get heading :doc-id))))
-                              (when doc-id
-                                (list :doc-id doc-id
-                                      :title (or (plist-get heading :doc/title)
-                                                 (plist-get heading :doc/path_string)
-                                                 doc-id)
-                                      :outline (plist-get heading :doc/outline_path)
-                                      :path_string (plist-get heading :doc/path_string)
-                                      :level (plist-get heading :doc/level)))))
-                          (or recent-entries '()))))
-           (local-entries
-            (delq nil
-                  (mapcar (lambda (entry)
-                            (when-let* ((doc-id (plist-get entry :doc-id)))
-                              (let* ((outline (plist-get entry :outline))
-                                     (path-string (or (plist-get entry :path_string)
-                                                      (and outline (string-join outline " / ")))))
-                                (list :doc-id doc-id
-                                      :title (or (and outline (car outline)) doc-id)
-                                      :outline outline
-                                      :path_string path-string
-                                      :level (and outline (length outline))))))
-                          local-entries)))
-           (t '())))
-         (virtual-items
-          (seq-filter
-           (lambda (item)
-             (not (arxana-browser--docbook-contents-removed-p
-                   book (plist-get item :doc-id))))
-           (delq nil
-                 (mapcar
-                  (lambda (h)
-                    (let ((doc-id (plist-get h :doc-id)))
-                      (when (and doc-id (not (gethash doc-id toc-docs)))
-                        (let* ((title (or (plist-get h :title) doc-id))
-                               (outline (or (plist-get h :outline)
-                                            (list "Lab additions" title)))
-                               (path-str (or (plist-get h :path_string)
-                                             (string-join outline " / "))))
-                          (list :type 'docbook-heading
-                                :doc-id doc-id
-                                :title (format "%s (unindexed)" title)
-                                :outline outline
-                               :path_string path-str
-                               :level (or (plist-get h :level) 1)
-                               :latest t
-                               :dirty (and (gethash doc-id local-time-map) t)
-                               :virtual t
-                               :book book
-                               :source (cond
-                                        ((and remote-map doc-id (gethash doc-id remote-map)) :storage)
-                                        ((and local-docs doc-id (gethash doc-id local-docs)) :filesystem)
-                                        (t :state))
-                               :coverage (and (gethash doc-id entry-map)
-                                              (arxana-browser--docbook-entry-coverage
-                                               (gethash doc-id entry-map)))
-                                :ratio (and (gethash doc-id entry-map)
-                                            (arxana-browser--docbook-entry-ratio
-                                             (gethash doc-id entry-map))))))))
-                  entry-headings)))))
-    (when (or (not (equal arxana-browser--docbook-contents-book book))
-              (null arxana-browser--docbook-contents-synced-order))
-      (setq arxana-browser--docbook-contents-order-source nil)
-      (setq arxana-browser--docbook-contents-synced-order
-            (or toc-order order)))
-    (setq arxana-browser--docbook-contents-toc toc)
-    (setq arxana-browser--docbook-contents-view-items toc-items)
-    (setq arxana-browser--docbook-contents-book book)
-    (cond
-     ((or toc-items virtual-items) (append toc-items virtual-items))
-     (t (list (list :type 'info
-                    :label "No TOC found"
-                    :description (arxana-browser--docbook-unavailable-message book)))))))
+              '()))
+           (toc-items (if (and toc-items arxana-browser-docbook-prefer-toc-order)
+                          toc-items
+                        (arxana-browser--docbook-group-items toc-items)))
+           (order (arxana-browser--docbook-contents-ensure-order book toc-items))
+           (toc-items (arxana-browser--docbook-contents-order-items toc-items order))
+           (toc-items (seq-filter (lambda (item)
+                                    (not (arxana-browser--docbook-contents-removed-p
+                                          book (plist-get item :doc-id))))
+                                  toc-items))
+           (toc-docs (let ((table (make-hash-table :test 'equal)))
+                       (dolist (item toc-items)
+                         (when-let* ((doc-id (plist-get item :doc-id)))
+                           (puthash doc-id t table)))
+                       table))
+           (entry-headings
+            (cond
+             (remote
+              (delq nil
+                    (mapcar (lambda (entry)
+                              (let* ((heading (plist-get entry :heading))
+                                     (doc-id (or (plist-get heading :doc/id)
+                                                 (plist-get heading :doc-id))))
+                                (when doc-id
+                                  (list :doc-id doc-id
+                                        :title (or (plist-get heading :doc/title)
+                                                   (plist-get heading :doc/path_string)
+                                                   doc-id)
+                                        :outline (plist-get heading :doc/outline_path)
+                                        :path_string (plist-get heading :doc/path_string)
+                                        :level (plist-get heading :doc/level)))))
+                            (or recent-entries '()))))
+             (local-entries
+              (delq nil
+                    (mapcar (lambda (entry)
+                              (when-let* ((doc-id (plist-get entry :doc-id)))
+                                (let* ((outline (plist-get entry :outline))
+                                       (path-string (or (plist-get entry :path_string)
+                                                        (and outline (string-join outline " / ")))))
+                                  (list :doc-id doc-id
+                                        :title (or (and outline (car outline)) doc-id)
+                                        :outline outline
+                                        :path_string path-string
+                                        :level (and outline (length outline))))))
+                            local-entries)))
+             (t '())))
+           (virtual-items
+            (seq-filter
+             (lambda (item)
+               (not (arxana-browser--docbook-contents-removed-p
+                     book (plist-get item :doc-id))))
+             (delq nil
+                   (mapcar
+                    (lambda (h)
+                      (let ((doc-id (plist-get h :doc-id)))
+                        (when (and doc-id (not (gethash doc-id toc-docs)))
+                          (let* ((title (or (plist-get h :title) doc-id))
+                                 (outline (or (plist-get h :outline)
+                                              (list "Lab additions" title)))
+                                 (path-str (or (plist-get h :path_string)
+                                               (string-join outline " / ")))
+                                 (remote-h (and remote-map (gethash doc-id remote-map)))
+                                 (remote-doc-present (and remote-h t))
+                                 (remote-entry (and remote-h
+                                                    (arxana-browser--docbook-latest-remote-entry remote-h)))
+                                 (local-mtime (gethash doc-id local-time-map)))
+                            (list :type 'docbook-heading
+                                  :doc-id doc-id
+                                  :title (format "%s (unindexed)" title)
+                                  :outline outline
+                                  :path_string path-str
+                                  :level (or (plist-get h :level) 1)
+                                  :latest t
+                                  :dirty (arxana-browser--docbook-entry-dirty-p
+                                          local-mtime remote-entry remote-doc-present)
+                                  :virtual t
+                                  :book book
+                                  :source (cond
+                                           ((and remote-map doc-id (gethash doc-id remote-map)) :storage)
+                                           ((and local-docs doc-id (gethash doc-id local-docs)) :filesystem)
+                                           (t :state))
+                                  :coverage (and (gethash doc-id entry-map)
+                                                 (arxana-browser--docbook-entry-coverage
+                                                  (gethash doc-id entry-map)))
+                                  :ratio (and (gethash doc-id entry-map)
+                                              (arxana-browser--docbook-entry-ratio
+                                               (gethash doc-id entry-map))))))))
+                    entry-headings)))))
+      (when (or (not (equal arxana-browser--docbook-contents-book book))
+                (null arxana-browser--docbook-contents-synced-order))
+        (setq arxana-browser--docbook-contents-order-source nil)
+        (setq arxana-browser--docbook-contents-synced-order
+              (or toc-order order)))
+      (setq arxana-browser--docbook-contents-toc toc)
+      (setq arxana-browser--docbook-contents-view-items toc-items)
+      (setq arxana-browser--docbook-contents-book book)
+      (cond
+       ((or toc-items virtual-items) (append toc-items virtual-items))
+       (t (list (list :type 'info
+                      :label "No TOC found"
+                      :description (arxana-browser--docbook-unavailable-message book))))))))
 
 (defun arxana-browser--docbook-contents-context ()
   (let ((context (car arxana-browser--stack)))

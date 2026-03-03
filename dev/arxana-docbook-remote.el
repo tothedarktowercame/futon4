@@ -44,9 +44,28 @@
   "HTTP method used when updating remote docbook TOC order."
   :type 'string
   :group 'arxana-docbook)
+
+(defun arxana-docbook--remote-request-headers (&optional payload-p)
+  "Return default request headers for docbook remote calls."
+  (append '(("Accept" . "application/json"))
+          (when payload-p '(("Content-Type" . "application/json")))
+          (when (and (boundp 'arxana-store-default-profile)
+                     arxana-store-default-profile)
+            (list (cons "X-Profile" arxana-store-default-profile)))
+          (when (and (boundp 'arxana-store-default-penholder)
+                     arxana-store-default-penholder)
+            (list (cons "X-Penholder" arxana-store-default-penholder)))))
+
 (defun arxana-docbook--remote-base-url ()
   (when (and (boundp 'futon4-base-url) futon4-base-url)
-    (replace-regexp-in-string "/+$" "" futon4-base-url)))
+    (let ((base (replace-regexp-in-string "/+$" "" futon4-base-url)))
+      (cond
+       ((string-match-p "/api/alpha\\'" base) base)
+       ((or (string-match-p "/api/%ce%b1\\'" base)
+            (string-match-p "/api/%CE%B1\\'" base))
+        base)
+       ((string-match-p "/api\\'" base) (concat base "/alpha"))
+       (t (concat base "/api/alpha"))))))
 (defun arxana-docbook--sync-enabled-p ()
   (and (boundp 'futon4-enable-sync)
        futon4-enable-sync))
@@ -54,15 +73,30 @@
   (and arxana-docbook-remote-enabled
        (arxana-docbook--sync-enabled-p)
        (arxana-docbook--remote-base-url)))
+
+(defun arxana-docbook--storage-probe-current (&optional book force)
+  "Return cached storage probe for BOOK, refreshing stale states when needed."
+  (let* ((book (or book "futon4"))
+         (cached arxana-docbook--storage-probe)
+         (cached-book (plist-get cached :book))
+         (cached-status (plist-get cached :status))
+         (refresh (or force
+                      (null cached)
+                      (not (equal cached-book book))
+                      ;; Empty probes can become non-empty after ingest.
+                      (and (eq cached-status :empty)
+                           (arxana-docbook--remote-enabled-p))
+                      ;; Disabled/unreachable can become healthy after env/server changes.
+                      (and (memq cached-status '(:disabled :unreachable))
+                           (arxana-docbook--remote-enabled-p)))))
+    (if refresh
+        (setq arxana-docbook--storage-probe
+              (arxana-docbook--probe-storage book))
+      cached)))
+
 (defun arxana-docbook--remote-available-p (&optional book)
-  (let* ((probe (or arxana-docbook--storage-probe
-                    (arxana-docbook--probe-storage book)))
+  (let* ((probe (arxana-docbook--storage-probe-current book))
          (status (plist-get probe :status)))
-    (when (and (eq status :empty)
-               (arxana-docbook--remote-enabled-p))
-      (setq probe (arxana-docbook--probe-storage book))
-      (setq arxana-docbook--storage-probe probe)
-      (setq status (plist-get probe :status)))
     (memq status '(:ok :empty))))
 (defun arxana-docbook--http-response (path &optional method)
   "Return a plist with :status, :data, and :error for PATH."
@@ -70,6 +104,7 @@
         (method (or method "GET")))
     (when base
       (let* ((url-request-method method)
+             (url-request-extra-headers (arxana-docbook--remote-request-headers))
              (url (concat base path))
              (buf (url-retrieve-synchronously url t t 5)))
         (when (buffer-live-p buf)
@@ -93,22 +128,26 @@
   "Probe the remote docbook API for BOOK and return a status plist."
   (let ((book (or book "futon4")))
     (if (not (arxana-docbook--remote-enabled-p))
-        (list :status :disabled)
+        (list :status :disabled :book book)
       (let* ((path (format "/docs/%s/toc" book))
              (resp (arxana-docbook--http-response path))
              (status (plist-get resp :status))
              (data (plist-get resp :data)))
         (cond
-         ((null resp) (list :status :unreachable :error "No response"))
+         ((null resp) (list :status :unreachable :book book :error "No response"))
          ((and status (/= status 200))
           (list :status :unreachable
+                :book book
                 :status-code status
                 :error (plist-get resp :error)))
-         ((not data) (list :status :unreachable :error "No data"))
+         ((not data) (list :status :unreachable
+                           :book book
+                           :error (or (plist-get resp :error) "No data")))
          (t (let* ((headings (plist-get data :headings))
                    (count (length headings))
                    (state (if (> count 0) :ok :empty)))
               (list :status state
+                    :book book
                     :headings count
                     :contents data))))))))
 (defun arxana-docbook--probe-filesystem (&optional book)
@@ -122,8 +161,7 @@
      ((not (file-directory-p path)) (list :status :missing :path path))
      (t (list :status :ok :path path)))))
 (defun arxana-docbook--data-source (&optional book)
-  (let ((remote (or arxana-docbook--storage-probe
-                    (arxana-docbook--probe-storage book)))
+  (let ((remote (arxana-docbook--storage-probe-current book))
         (filesystem (or arxana-docbook--filesystem-probe
                         (arxana-docbook--probe-filesystem book))))
     (cond
@@ -132,8 +170,7 @@
      (t :state))))
 (defun arxana-docbook--source-label (&optional book source)
   (let* ((source (or source (arxana-docbook--data-source book)))
-         (storage-status (plist-get (or arxana-docbook--storage-probe
-                                        (arxana-docbook--probe-storage book))
+         (storage-status (plist-get (arxana-docbook--storage-probe-current book)
                                     :status))
          (filesystem-status (plist-get (or arxana-docbook--filesystem-probe
                                            (arxana-docbook--probe-filesystem book))
@@ -161,8 +198,7 @@
     (propertize (format "Source: %s" text) 'face face)))
 (defun arxana-docbook--source-brief (&optional book source)
   (let* ((source (or source (arxana-docbook--data-source book)))
-         (storage-status (plist-get (or arxana-docbook--storage-probe
-                                        (arxana-docbook--probe-storage book))
+         (storage-status (plist-get (arxana-docbook--storage-probe-current book)
                                     :status))
          (filesystem-status (plist-get (or arxana-docbook--filesystem-probe
                                            (arxana-docbook--probe-filesystem book))
@@ -181,8 +217,7 @@
                  (_ 'arxana-docbook-source-red))))
     (propertize (format "Src:%s" label) 'face face)))
 (defun arxana-docbook--probe-summary (&optional book)
-  (let* ((storage (or arxana-docbook--storage-probe
-                      (arxana-docbook--probe-storage book)))
+  (let* ((storage (arxana-docbook--storage-probe-current book))
          (filesystem (or arxana-docbook--filesystem-probe
                          (arxana-docbook--probe-filesystem book)))
          (storage-label (pcase (plist-get storage :status)
@@ -207,7 +242,7 @@
   (let ((base (arxana-docbook--remote-base-url)))
     (when base
       (let* ((url-request-method (or method "POST"))
-             (url-request-extra-headers '(("Content-Type" . "application/json")))
+             (url-request-extra-headers (arxana-docbook--remote-request-headers t))
              (url-request-data (and payload (encode-coding-string (json-encode payload) 'utf-8)))
              (url (concat base path))
              (buf (url-retrieve-synchronously url t t 5)))
