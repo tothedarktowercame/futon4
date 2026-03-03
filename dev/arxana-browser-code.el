@@ -114,6 +114,12 @@ When nil, defaults to <repo>/dev and <repo>/test."
   :type 'boolean
   :group 'arxana-browser-code)
 
+(defcustom arxana-browser-code-match-text-mentions nil
+  "When non-nil, allow loose text-mention matching for code docs.
+The default is nil so Arxana Code Docs stays function/file-level."
+  :type 'boolean
+  :group 'arxana-browser-code)
+
 (defcustom arxana-browser-code-frame-name "Arxana Code"
   "Frame name used for the code + docs split."
   :type 'string
@@ -460,15 +466,25 @@ Returns the active strategy, or nil if persistence is unavailable."
                              (file-name-nondirectory target))))))
 
 (defun arxana-browser-code--entry-matches-symbols-p (entry symbols filename)
-  (let ((text (arxana-browser-code--doc-text entry))
+  (let ((function (arxana-docbook--entry-function-name entry))
         (matched nil))
-    (when (and text filename
-               (string-match-p (regexp-quote filename) text))
-      (setq matched t))
-    (when (and (not matched) (listp symbols))
-      (dolist (sym symbols)
-        (when (and sym (arxana-browser-code--text-contains-symbol-p text sym))
-          (setq matched t))))
+    ;; Preferred: explicit function-level linkage.
+    (when (and function (listp symbols))
+      (setq matched (seq-some (lambda (sym)
+                                (and (stringp sym)
+                                     (string= sym function)))
+                              symbols)))
+    ;; Optional fallback: loose text/filename mentions.
+    (when (and (not matched)
+               arxana-browser-code-match-text-mentions)
+      (let ((text (arxana-browser-code--doc-text entry)))
+        (when (and text filename
+                   (string-match-p (regexp-quote filename) text))
+          (setq matched t))
+        (when (and (not matched) (listp symbols))
+          (dolist (sym symbols)
+            (when (and sym (arxana-browser-code--text-contains-symbol-p text sym))
+              (setq matched t))))))
     matched))
 
 (defun arxana-browser-code--docbook-entries ()
@@ -924,7 +940,10 @@ With prefix ACTIVATE, open the symbol after cycling."
                     (insert body "\n")
                   (insert "(No content available)\n"))
                 (setq preview-end (point))))
-          (insert "* Matches\n- (none)\n"))
+          (insert "* Matches\n- (none)\n")
+          (insert "  - No function/file-level docbook links were found for this file.\n")
+          (insert "  - Add :FUNCTION_NAME: and/or :SOURCE_PATH: in the entry properties,\n")
+          (insert "    or persist voiced links for symbol->doc mapping.\n"))
         (setq arxana-browser-code--doc-symbol-map
               (arxana-browser-code--index-docs path preview-start preview-end))
         (setq arxana-browser-code--doc-source-path path)

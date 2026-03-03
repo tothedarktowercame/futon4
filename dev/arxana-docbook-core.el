@@ -129,17 +129,21 @@
           (when (string-match "^:\\([A-Z0-9_]+\\):[ \t]*\\(.*\\)$" line)
             (puthash (match-string 1 line) (string-trim (match-string 2 line)) props))))))
     (when text
-      (let* ((entry-id (file-name-base path))
-             (entry-id (or (gethash "ENTRY_ID" props) entry-id))
-             (declared-doc-id (gethash "DOC_ID" props))
-             (doc-id (or declared-doc-id
-                         (when (and (stringp entry-id)
-                                    (string-match "\\`\\(.+\\)::" entry-id))
-                           (match-string 1 entry-id))
-                         entry-id))
-             (version (gethash "VERSION" props))
-             (outline (gethash "OUTLINE_PATH" props))
-             (path-string (gethash "PATH_STRING" props)))
+        (let* ((entry-id (file-name-base path))
+               (entry-id (or (gethash "ENTRY_ID" props) entry-id))
+               (declared-doc-id (gethash "DOC_ID" props))
+               (doc-id (or declared-doc-id
+                           (when (and (stringp entry-id)
+                                      (string-match "\\`\\(.+\\)::" entry-id))
+                             (match-string 1 entry-id))
+                           entry-id))
+               (version (gethash "VERSION" props))
+               (outline (gethash "OUTLINE_PATH" props))
+               (path-string (gethash "PATH_STRING" props))
+               (function-name (or (gethash "FUNCTION_NAME" props)
+                                  (gethash "FUNCTION" props)))
+               (source-path (or (gethash "SOURCE_PATH" props)
+                                (gethash "DOC_SOURCE_PATH" props))))
         (when (and declared-doc-id
                    (not (or (string= declared-doc-id doc-id)
                             (string= declared-doc-id entry-id)
@@ -151,6 +155,8 @@
               :entry-id entry-id
               :run-id entry-id
               :version version
+              :function-name function-name
+              :source-path source-path
               :timestamp timestamp
               :outline (and outline (split-string outline " / " t))
               :path-string path-string
