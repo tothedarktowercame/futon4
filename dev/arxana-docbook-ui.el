@@ -150,6 +150,12 @@
                         (get-text-property (1- (point)) 'arxana-path))
                    (and symbol
                         (arxana-docbook--find-symbol-path symbol)))))
+    (when (and path
+               (fboundp 'arxana-browser-code-set-docbook)
+               (boundp 'arxana-browser-code-docbook))
+      (when-let* ((book (arxana-docbook--book-for-source-path path)))
+        (unless (equal arxana-browser-code-docbook book)
+          (arxana-browser-code-set-docbook book))))
     (cond
      ((and symbol path (fboundp 'arxana-browser-code--open-symbol))
       (arxana-browser-code--open-symbol symbol path))
@@ -228,6 +234,23 @@
   (or (and (fboundp 'arxana-browser-code--find-symbol-path)
            (arxana-browser-code--find-symbol-path symbol))
       (arxana-docbook--find-symbol-path-fallback symbol)))
+
+(defun arxana-docbook--book-for-source-path (path)
+  "Infer docbook book name from absolute source PATH."
+  (when (and (stringp path) (file-name-absolute-p path))
+    (let* ((repo (locate-dominating-file path "dev"))
+           (book (and repo
+                      (file-name-nondirectory
+                       (directory-file-name repo))))
+           (book-dir (and repo book
+                          (expand-file-name
+                           (format "docs/docbook/%s" book) repo)))
+           (books (and (fboundp 'arxana-docbook--available-books)
+                       (arxana-docbook--available-books))))
+      (when (and (stringp book)
+                 (or (and (listp books) (member book books))
+                     (and book-dir (file-directory-p book-dir))))
+        book))))
 
 (defun arxana-docbook--symbol-link-face ()
   (if (facep 'arxana-docbook-symbol-link-face)
