@@ -146,10 +146,16 @@
   (interactive)
   (let* ((symbol (or (get-text-property (point) 'arxana-symbol)
                      (and (> (point) (point-min))
-                          (get-text-property (1- (point)) 'arxana-symbol))))
+                          (get-text-property (1- (point)) 'arxana-symbol))
+                     (thing-at-point 'symbol t)))
+         (symbol (and (stringp symbol)
+                      (substring-no-properties symbol)))
          (path (or (get-text-property (point) 'arxana-path)
                    (and (> (point) (point-min))
-                        (get-text-property (1- (point)) 'arxana-path)))))
+                        (get-text-property (1- (point)) 'arxana-path))
+                   (and symbol
+                        (string-prefix-p "arxana-" symbol)
+                        (arxana-docbook--find-symbol-path symbol)))))
     (cond
      ((and symbol path (fboundp 'arxana-browser-code--open-symbol))
       (arxana-browser-code--open-symbol symbol path))
@@ -160,6 +166,46 @@
      (t
       (user-error "No symbol link at point")))))
 
+(defun arxana-docbook--defun-regexp (symbol)
+  (concat "^[[:space:]]*(\\(defun\\|defmacro\\|defsubst\\|defvar\\|defvar-local\\|defcustom\\|defconst\\|define-derived-mode\\|define-minor-mode\\|defn\\|defn-\\)\\s-+"
+          (regexp-quote symbol)
+          "\\_>"))
+
+(defun arxana-docbook--symbol-in-file-p (symbol path)
+  (when (and symbol path (file-readable-p path))
+    (with-temp-buffer
+      (insert-file-contents path)
+      (goto-char (point-min))
+      (re-search-forward (arxana-docbook--defun-regexp symbol) nil t))))
+
+(defun arxana-docbook--repo-root-safe ()
+  "Return repository root even if core helpers are not loaded yet."
+  (or (and (fboundp 'arxana-docbook--repo-root)
+           (arxana-docbook--repo-root))
+      (locate-dominating-file default-directory "dev")
+      (let ((candidate (or load-file-name buffer-file-name)))
+        (when candidate
+          (expand-file-name ".." (file-name-directory candidate))))))
+
+(defun arxana-docbook--find-symbol-path-fallback (symbol)
+  (let ((repo (arxana-docbook--repo-root-safe)))
+    (when (and repo symbol)
+      (catch 'found
+        (dolist (subdir '("dev" "test"))
+          (let ((dir (expand-file-name subdir repo)))
+            (when (file-directory-p dir)
+              (dolist (path (directory-files-recursively
+                             dir "\\.\\(el\\|clj\\|cljc\\|cljs\\)\\'"))
+                (when (arxana-docbook--symbol-in-file-p symbol path)
+                  (throw 'found path))))))
+        nil))))
+
+(defun arxana-docbook--find-symbol-path (symbol)
+  "Return a path defining SYMBOL, or nil when unknown."
+  (or (and (fboundp 'arxana-browser-code--find-symbol-path)
+           (arxana-browser-code--find-symbol-path symbol))
+      (arxana-docbook--find-symbol-path-fallback symbol)))
+
 (defun arxana-docbook--symbol-link-face ()
   (if (facep 'arxana-docbook-symbol-link-face)
       'arxana-docbook-symbol-link-face
@@ -169,7 +215,7 @@
   "Ensure arxana-browser-code helpers are available."
   (or (featurep 'arxana-browser-code)
       (require 'arxana-browser-code nil t)
-      (let* ((repo (arxana-docbook--repo-root))
+      (let* ((repo (arxana-docbook--repo-root-safe))
              (path (and repo (expand-file-name "dev/arxana-browser-code.el" repo))))
         (when (and path (file-readable-p path))
           (load path t t)
@@ -1324,7 +1370,7 @@
   (let ((uri (arxana-docbook--uri-at-point)))
     (if uri
         (arxana-docbook-open-uri uri)
-      (user-error "No docbook:// or arxana://view URI at point"))))
+      (arxana-docbook-open-symbol-at-point))))
 
 (defvar arxana-docbook-entry-mode-map
   (let ((map (make-sparse-keymap)))
