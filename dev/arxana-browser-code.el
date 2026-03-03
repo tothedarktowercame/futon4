@@ -445,7 +445,10 @@ Returns the active strategy, or nil if persistence is unavailable."
 
 (defun arxana-browser-code--text-contains-symbol-p (text symbol)
   (when (and text symbol)
-    (string-match-p (concat "\\_<" (regexp-quote symbol) "\\_>") text)))
+    (string-match-p
+     (format "\\(?:\\`\\|[^[:alnum:]_-]\\)%s\\(?:\\'\\|[^[:alnum:]_-]\\)"
+             (regexp-quote symbol))
+     text)))
 
 (defun arxana-browser-code--entry-matches-path-p (entry target)
   (let* ((source (and entry (arxana-docbook--entry-source-path entry)))
@@ -471,6 +474,7 @@ Returns the active strategy, or nil if persistence is unavailable."
   (arxana-browser-code--profile
    "docbook-entries"
    (lambda ()
+     (arxana-browser-code--ensure-docbook)
      (let ((book arxana-browser-code-docbook))
        (if (and arxana-browser-code--docbook-entry-cache
                 (equal (plist-get arxana-browser-code--docbook-entry-cache :book) book))
