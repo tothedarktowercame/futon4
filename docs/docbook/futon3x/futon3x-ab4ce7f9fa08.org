@@ -8,17 +8,33 @@
 :REPLACES:
 :END:
 
-* Context
-The reflection API lets any strategic claim bottom out at a live Clojure var.
-~GET /api/alpha/reflect/var/:ns/:var~ returns a reflection envelope with the
-var's namespace, symbol, file, line number, arglists, docstring, and a
-~resolved-at~ timestamp.
+* Live UI demo (inside Emacs)
+Put point on any link below and press ~RET~ (or ~o~) to open it.
 
-This is the bottom layer of the self-representing stack. A mission doc says
-"portfolio inference recommends actions." The reflection envelope proves it:
-~portfolio-step!~ exists at ~portfolio/core.clj~ line N, takes these arguments,
-has this docstring, and was resolved at this timestamp. If the function is
-deleted or moved, the staleness check catches it.
+1. Start at the chapter root:
+   [[docbook://futon3x/futon3x-78da12c2e512][docbook://futon3x/futon3x-78da12c2e512]]
+2. Open the full claim-to-source trace:
+   [[docbook://futon3x/futon3x-239ad29bbcc8][docbook://futon3x/futon3x-239ad29bbcc8]]
+3. Jump to the API contract entry:
+   [[docbook://futon3x/futon3x-30d4f508469d][docbook://futon3x/futon3x-30d4f508469d]]
+4. Come back to this grounding entry:
+   [[docbook://futon3x/futon3x-ab4ce7f9fa08][docbook://futon3x/futon3x-ab4ce7f9fa08]]
+
+While viewing an entry:
+- ~M-n~ next entry in TOC order
+- ~M-p~ previous entry
+- ~M-y~ copy current ~docbook://...~ location
+- ~C-c C-s~ (or ~e~) open editable stub for this entry
+
+* Context
+Reflection is the bottom layer of the self-representing stack. It grounds a
+strategic claim in a live Clojure var.
+
+~GET /api/alpha/reflect/var/:ns/:var~ returns an envelope with namespace,
+symbol, file, line number, arglists, docstring, and ~resolved-at~ timestamp.
+
+This gives an anti-drift check: if the function moves or changes after
+~resolved-at~, the grounding can be flagged as stale.
 
 * Live output
 Captured 2026-03-01 from futon3c on port 7070.

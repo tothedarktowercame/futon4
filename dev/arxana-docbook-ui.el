@@ -1285,8 +1285,51 @@
         (goto-char (match-beginning 0))
         (beginning-of-line)))))
 
+(defun arxana-docbook--uri-at-point ()
+  "Return a docbook/arxana URI at point, or nil."
+  (or (when (fboundp 'org-element-context)
+        (let* ((context (org-element-context))
+               (type (org-element-type context)))
+          (when (eq type 'link)
+            (let ((raw (org-element-property :raw-link context)))
+              (when (and raw
+                         (or (string-prefix-p "docbook://" raw)
+                             (string-prefix-p "arxana://view/" raw)))
+                raw)))))
+      (let ((url (thing-at-point 'url t)))
+        (when (and (stringp url)
+                   (or (string-prefix-p "docbook://" url)
+                       (string-prefix-p "arxana://view/" url)))
+          url))
+      (save-excursion
+        (let* ((line (buffer-substring-no-properties
+                      (line-beginning-position)
+                      (line-end-position)))
+               (col (- (point) (line-beginning-position)))
+               (rx "\\(docbook://[^][(){}<>\"'[:space:]]+\\|arxana://view/[^][(){}<>\"'[:space:]]+\\)")
+               (found nil))
+          (while (and (not found) (string-match rx line))
+            (let ((start (match-beginning 1))
+                  (end (match-end 1))
+                  (match (match-string 1 line)))
+              (if (and (<= start col) (<= col end))
+                  (setq found match)
+                (setq line (substring line end))
+                (setq col (- col end)))))
+          found))))
+
+(defun arxana-docbook-open-uri-at-point ()
+  "Open docbook/arxana URI at point inside Arxana."
+  (interactive)
+  (let ((uri (arxana-docbook--uri-at-point)))
+    (if uri
+        (arxana-docbook-open-uri uri)
+      (user-error "No docbook:// or arxana://view URI at point"))))
+
 (defvar arxana-docbook-entry-mode-map
   (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "RET") #'arxana-docbook-open-uri-at-point)
+    (define-key map (kbd "o") #'arxana-docbook-open-uri-at-point)
     (define-key map (kbd "M-n") #'arxana-docbook-next-entry)
     (define-key map (kbd "M-p") #'arxana-docbook-prev-entry)
     (define-key map (kbd "M-y") #'arxana-docbook-copy-location)
