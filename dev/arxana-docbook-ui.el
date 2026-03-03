@@ -144,17 +144,11 @@
 (defun arxana-docbook-open-symbol-at-point ()
   "Open the symbol link at point, if any."
   (interactive)
-  (let* ((symbol (or (get-text-property (point) 'arxana-symbol)
-                     (and (> (point) (point-min))
-                          (get-text-property (1- (point)) 'arxana-symbol))
-                     (thing-at-point 'symbol t)))
-         (symbol (and (stringp symbol)
-                      (substring-no-properties symbol)))
+  (let* ((symbol (arxana-docbook--symbol-at-point))
          (path (or (get-text-property (point) 'arxana-path)
                    (and (> (point) (point-min))
                         (get-text-property (1- (point)) 'arxana-path))
                    (and symbol
-                        (string-prefix-p "arxana-" symbol)
                         (arxana-docbook--find-symbol-path symbol)))))
     (cond
      ((and symbol path (fboundp 'arxana-browser-code--open-symbol))
@@ -165,6 +159,35 @@
         (find-file path)))
      (t
       (user-error "No symbol link at point")))))
+
+(defun arxana-docbook--symbol-at-point ()
+  "Return an arxana symbol at point, or nil."
+  (or (let ((prop (or (get-text-property (point) 'arxana-symbol)
+                      (and (> (point) (point-min))
+                           (get-text-property (1- (point)) 'arxana-symbol)))))
+        (when (and (stringp prop)
+                   (string-match-p "\\`arxana-[A-Za-z0-9-]+\\'" prop))
+          (substring-no-properties prop)))
+      (let ((raw (thing-at-point 'symbol t)))
+        (when (and (stringp raw)
+                   (string-match-p "\\`arxana-[A-Za-z0-9-]+\\'" raw))
+          (substring-no-properties raw)))
+      (save-excursion
+        (let* ((line (buffer-substring-no-properties
+                      (line-beginning-position)
+                      (line-end-position)))
+               (col (- (point) (line-beginning-position)))
+               (rx "\\(arxana-[A-Za-z0-9-]+\\)")
+               (found nil))
+          (while (and (not found) (string-match rx line))
+            (let ((start (match-beginning 1))
+                  (end (match-end 1))
+                  (match (match-string 1 line)))
+              (if (and (<= start col) (<= col end))
+                  (setq found match)
+                (setq line (substring line end))
+                (setq col (- col end)))))
+          found))))
 
 (defun arxana-docbook--defun-regexp (symbol)
   (concat "^[[:space:]]*(\\(defun\\|defmacro\\|defsubst\\|defvar\\|defvar-local\\|defcustom\\|defconst\\|define-derived-mode\\|define-minor-mode\\|defn\\|defn-\\)\\s-+"
@@ -1370,13 +1393,14 @@
   (let ((uri (arxana-docbook--uri-at-point)))
     (if uri
         (arxana-docbook-open-uri uri)
-      (arxana-docbook-open-symbol-at-point))))
+      (if (arxana-docbook--symbol-at-point)
+          (arxana-docbook-open-symbol-at-point)
+        (user-error "No docbook URI or arxana symbol at point")))))
 
 (defvar arxana-docbook-entry-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "RET") #'arxana-docbook-open-uri-at-point)
     (define-key map (kbd "o") #'arxana-docbook-open-uri-at-point)
-    (define-key map (kbd "<right>") #'arxana-docbook-open-uri-at-point)
     (define-key map (kbd "M-n") #'arxana-docbook-next-entry)
     (define-key map (kbd "M-p") #'arxana-docbook-prev-entry)
     (define-key map (kbd "M-y") #'arxana-docbook-copy-location)
