@@ -1330,6 +1330,7 @@
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "RET") #'arxana-docbook-open-uri-at-point)
     (define-key map (kbd "o") #'arxana-docbook-open-uri-at-point)
+    (define-key map (kbd "<right>") #'arxana-docbook-open-uri-at-point)
     (define-key map (kbd "M-n") #'arxana-docbook-next-entry)
     (define-key map (kbd "M-p") #'arxana-docbook-prev-entry)
     (define-key map (kbd "M-y") #'arxana-docbook-copy-location)
