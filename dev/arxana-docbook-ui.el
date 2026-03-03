@@ -1073,6 +1073,8 @@
         (arxana-docbook--render-link-examples selected-entry)
         (arxana-docbook--linkify-symbols selected-entry base-title)
         (arxana-docbook--linkify-surface-forms selected-entry)
+        ;; Rendering a read-only view should not mark the buffer as locally dirty.
+        (set-buffer-modified-p nil)
         (goto-char (point-min))
         (org-show-all)
         (visual-line-mode 1)
