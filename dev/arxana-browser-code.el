@@ -692,6 +692,19 @@ Returns the active strategy, or nil if persistence is unavailable."
                 "-"))
           "?")))))
 
+(defun arxana-browser-code--preferred-doc-entry (entries path)
+  "Return the best primary entry from ENTRIES for code PATH."
+  (or (seq-find
+       (lambda (entry)
+         (and (string= (or (plist-get entry :version) "") "def-doc")
+              (arxana-browser-code--entry-matches-path-p entry path)))
+       entries)
+      (seq-find
+       (lambda (entry)
+         (string= (or (plist-get entry :version) "") "def-doc"))
+       entries)
+      (car entries)))
+
 (defun arxana-browser-code--one-line-doc (text)
   "Return a normalized one-line summary from doc TEXT."
   (let* ((flat (replace-regexp-in-string "[[:space:]\n\r]+" " " (or text "")))
@@ -724,15 +737,6 @@ Returns the active strategy, or nil if persistence is unavailable."
                           :summary summary)
                     items))))))
     (nreverse items)))
-
-(defun arxana-browser-code--symbol-line (path symbol)
-  "Return 1-based line number for SYMBOL definition in PATH, or nil."
-  (when (and path symbol (file-readable-p path))
-    (with-temp-buffer
-      (insert-file-contents path)
-      (goto-char (point-min))
-      (when (re-search-forward (arxana-browser-code--defun-regexp symbol) nil t)
-        (line-number-at-pos (match-beginning 0) t)))))
 
 (defun arxana-browser-code--def-doc-items (entries path)
   "Return deduplicated def-doc function items from ENTRIES for PATH."
@@ -1088,14 +1092,15 @@ With prefix ACTIVATE, open the symbol after cycling."
         (preview-start nil)
         (preview-end nil)
         (api-start nil)
-        (api-end nil))
+        (api-end nil)
+        (primary (arxana-browser-code--preferred-doc-entry entries path)))
     (with-current-buffer buf
       (let ((inhibit-read-only t))
         (erase-buffer)
         (org-mode)
         (insert (format "#+TITLE: Docs for %s\n\n" (file-name-nondirectory path)))
         (insert (format "- File: %s\n\n" (arxana-browser-code--relative-path path)))
-        (setq arxana-browser-code--doc-entry (car entries))
+        (setq arxana-browser-code--doc-entry primary)
         (setq arxana-browser-code--docbook-uri
               (when-let* ((doc-id (plist-get arxana-browser-code--doc-entry :doc-id)))
                 (format "docbook://%s/%s" arxana-browser-code-docbook doc-id)))
@@ -1114,36 +1119,39 @@ With prefix ACTIVATE, open the symbol after cycling."
           (insert "  - No function/file-level docbook links were found for this file.\n")
           (insert "  - Add :FUNCTION_NAME: and/or :SOURCE_PATH: in the entry properties,\n")
           (insert "    or persist voiced links for symbol->doc mapping.\n"))
-        (insert "\n* Function Docs\n")
         (setq api-start (point))
-        (let ((def-items (arxana-browser-code--def-doc-items entries path)))
-          (if (and def-items (listp def-items))
-              (dolist (item def-items)
-                (let* ((symbol (or (plist-get item :symbol) ""))
-                       (line (arxana-browser-code--symbol-line path symbol))
-                       (summary (or (plist-get item :summary) ""))
-                       (line-start (point)))
-                  (if line
-                      (insert (format "- %s (line %s): %s\n" symbol line summary))
-                    (insert (format "- %s: %s\n" symbol summary)))
-                  (add-text-properties
-                   line-start (line-end-position 0)
-                   (list 'arxana-symbol symbol
-                         'arxana-path path))))
-            (insert "- No def-doc function bullets found; falling back to source docstrings.\n")
-            (let ((items (arxana-browser-code--source-doc-items path)))
-              (if (and items (listp items))
-                  (dolist (item items)
+        (let* ((version (plist-get primary :version))
+               (body (and primary (ignore-errors (arxana-docbook--entry-content primary)))))
+          (if (and (stringp version)
+                   (string= version "def-doc")
+                   (stringp body)
+                   (not (string-empty-p (string-trim body))))
+              (insert "\n" body "\n")
+            (insert "\n* Function Docs\n")
+            (let ((def-items (arxana-browser-code--def-doc-items entries path)))
+              (if (and def-items (listp def-items))
+                  (dolist (item def-items)
                     (let* ((symbol (or (plist-get item :symbol) ""))
-                           (line (or (plist-get item :line) 0))
-                           (doc (or (plist-get item :doc) ""))
+                           (summary (or (plist-get item :summary) ""))
                            (line-start (point)))
-                      (insert (format "  - %s (line %s): %s\n" symbol line doc))
+                      (insert (format "- %s: %s\n" symbol summary))
                       (add-text-properties
                        line-start (line-end-position 0)
                        (list 'arxana-symbol symbol
                              'arxana-path path))))
-                (insert "  - (no source docstrings found)\n")))))
+                (insert "- No def-doc function bullets found; falling back to source docstrings.\n")
+                (let ((items (arxana-browser-code--source-doc-items path)))
+                  (if (and items (listp items))
+                      (dolist (item items)
+                        (let* ((symbol (or (plist-get item :symbol) ""))
+                               (doc (or (plist-get item :doc) ""))
+                               (line-start (point)))
+                          (insert (format "  - %s: %s\n" symbol doc))
+                          (add-text-properties
+                           line-start (line-end-position 0)
+                           (list 'arxana-symbol symbol
+                                 'arxana-path path))))
+                    (insert "  - (no source docstrings found)\n")))))))
         (setq api-end (point))
         (when (and entries arxana-browser-code-show-docbook-preview)
           (let* ((entry (car entries))
