@@ -99,6 +99,16 @@ When nil, defaults to <repo>/dev and <repo>/test."
   :type 'number
   :group 'arxana-browser-code)
 
+(defcustom arxana-browser-code-show-docbook-preview nil
+  "When non-nil, include full docbook preview text in code docs pane."
+  :type 'boolean
+  :group 'arxana-browser-code)
+
+(defcustom arxana-browser-code-source-doc-max 160
+  "Maximum length for one-line source docstring summaries."
+  :type 'integer
+  :group 'arxana-browser-code)
+
 (defcustom arxana-browser-code-profile nil
   "When non-nil, log slow steps in code->docs resolution."
   :type 'boolean
@@ -682,6 +692,134 @@ Returns the active strategy, or nil if persistence is unavailable."
                 "-"))
           "?")))))
 
+(defun arxana-browser-code--one-line-doc (text)
+  "Return a normalized one-line summary from doc TEXT."
+  (let* ((flat (replace-regexp-in-string "[[:space:]\n\r]+" " " (or text "")))
+         (trimmed (string-trim flat)))
+    (if (> (length trimmed) arxana-browser-code-source-doc-max)
+        (concat (substring trimmed 0 (max 0 (- arxana-browser-code-source-doc-max 3))) "...")
+      trimmed)))
+
+(defun arxana-browser-code--entry-context-items (entry)
+  "Extract `- symbol: summary' bullets from def-doc ENTRY context."
+  (let ((version (plist-get entry :version))
+        (text (arxana-browser-code--doc-text entry))
+        (items '()))
+    (when (and (stringp version)
+               (string= version "def-doc")
+               (stringp text))
+      (with-temp-buffer
+        (insert text)
+        (goto-char (point-min))
+        (while (re-search-forward
+                "^[[:space:]]*-[[:space:]]+`?\\([[:alnum:]-]+\\)`?:[[:space:]]*\\(.*\\)$"
+                nil t)
+          (let ((symbol (match-string 1))
+                (summary (string-trim (or (match-string 2) ""))))
+            (when (and (stringp symbol)
+                       (not (string-empty-p symbol))
+                       (stringp summary)
+                       (not (string-empty-p summary)))
+              (push (list :symbol symbol
+                          :summary summary)
+                    items))))))
+    (nreverse items)))
+
+(defun arxana-browser-code--symbol-line (path symbol)
+  "Return 1-based line number for SYMBOL definition in PATH, or nil."
+  (when (and path symbol (file-readable-p path))
+    (with-temp-buffer
+      (insert-file-contents path)
+      (goto-char (point-min))
+      (when (re-search-forward (arxana-browser-code--defun-regexp symbol) nil t)
+        (line-number-at-pos (match-beginning 0) t)))))
+
+(defun arxana-browser-code--def-doc-items (entries path)
+  "Return deduplicated def-doc function items from ENTRIES for PATH."
+  (let ((symbols (and path (arxana-browser-code--file-symbols path)))
+        (seen (make-hash-table :test 'equal))
+        (items '()))
+    (dolist (entry entries)
+      (dolist (item (arxana-browser-code--entry-context-items entry))
+        (let ((symbol (plist-get item :symbol)))
+          (when (and symbol
+                     (or (not symbols)
+                         (member symbol symbols))
+                     (not (gethash symbol seen)))
+            (puthash symbol t seen)
+            (push item items)))))
+    (nreverse items)))
+
+(defun arxana-browser-code--elisp-doc-item (form line)
+  "Return plist doc item for top-level elisp FORM at LINE, or nil."
+  (when (listp form)
+    (let ((head (car form)))
+      (pcase head
+        ((or 'defun 'defmacro 'defsubst 'cl-defun 'cl-defmacro)
+         (let ((name (nth 1 form))
+               (doc (nth 3 form)))
+           (when (and (symbolp name) (stringp doc))
+             (list :symbol (symbol-name name)
+                   :line line
+                   :doc (arxana-browser-code--one-line-doc doc)))))
+        ((or 'defvar 'defvar-local 'defconst)
+         (let* ((name (nth 1 form))
+                (v2 (nth 2 form))
+                (v3 (nth 3 form))
+                (doc (cond
+                      ((stringp v2) v2)
+                      ((stringp v3) v3)
+                      (t nil))))
+           (when (and (symbolp name) (stringp doc))
+             (list :symbol (symbol-name name)
+                   :line line
+                   :doc (arxana-browser-code--one-line-doc doc)))))
+        ('defcustom
+         (let ((name (nth 1 form))
+               (doc (nth 3 form)))
+           (when (and (symbolp name) (stringp doc))
+             (list :symbol (symbol-name name)
+                   :line line
+                   :doc (arxana-browser-code--one-line-doc doc)))))
+        ('define-minor-mode
+         (let ((name (nth 1 form))
+               (doc (nth 2 form)))
+           (when (and (symbolp name) (stringp doc))
+             (list :symbol (symbol-name name)
+                   :line line
+                   :doc (arxana-browser-code--one-line-doc doc)))))
+        ('define-derived-mode
+         (let ((name (nth 1 form))
+               (doc (nth 4 form)))
+           (when (and (symbolp name) (stringp doc))
+             (list :symbol (symbol-name name)
+                   :line line
+                   :doc (arxana-browser-code--one-line-doc doc)))))
+        (_ nil)))))
+
+(defun arxana-browser-code--source-doc-items (path)
+  "Extract top-level symbol doc summaries from PATH."
+  (when (and path
+             (stringp path)
+             (string-match-p "\\.el\\'" path)
+             (file-readable-p path))
+    (let ((items '()))
+      (with-temp-buffer
+        (insert-file-contents path)
+        (goto-char (point-min))
+        (condition-case nil
+            (while t
+              (skip-chars-forward " \t\r\n")
+              (let* ((start (point))
+                     (form (read (current-buffer)))
+                     (line (line-number-at-pos start t))
+                     (item (arxana-browser-code--elisp-doc-item form line)))
+                (when item
+                  (push item items))))
+          (end-of-file nil)
+          (error nil)))
+      (nreverse items))))
+
 (defun arxana-browser-code--defun-regexp (symbol)
   (concat "^[[:space:]]*(\\(defun\\|defmacro\\|defsubst\\|defvar\\|defvar-local\\|defcustom\\|defconst\\|define-derived-mode\\|define-minor-mode\\|defn\\|defn-\\)\\s-+"
           (regexp-quote symbol)
@@ -948,13 +1086,19 @@ With prefix ACTIVATE, open the symbol after cycling."
 (defun arxana-browser-code--render-docs (path entries)
   (let ((buf (get-buffer-create arxana-browser-code-docs-buffer))
         (preview-start nil)
-        (preview-end nil))
+        (preview-end nil)
+        (api-start nil)
+        (api-end nil))
     (with-current-buffer buf
       (let ((inhibit-read-only t))
         (erase-buffer)
         (org-mode)
         (insert (format "#+TITLE: Docs for %s\n\n" (file-name-nondirectory path)))
         (insert (format "- File: %s\n\n" (arxana-browser-code--relative-path path)))
+        (setq arxana-browser-code--doc-entry (car entries))
+        (setq arxana-browser-code--docbook-uri
+              (when-let* ((doc-id (plist-get arxana-browser-code--doc-entry :doc-id)))
+                (format "docbook://%s/%s" arxana-browser-code-docbook doc-id)))
         (if entries
             (progn
               (insert "* Matches\n")
@@ -965,35 +1109,67 @@ With prefix ACTIVATE, open the symbol after cycling."
                                  (format "docbook://%s/%s" arxana-browser-code-docbook doc-id))))
                   (insert (format "- %s\n" title))
                   (when uri
-                    (insert (format "  - %s\n" uri)))))
-              (let* ((entry (car entries))
-                     (title (arxana-browser-code--entry-title entry))
-                     (doc-id (plist-get entry :doc-id))
-                     (uri (and doc-id
-                               (format "docbook://%s/%s" arxana-browser-code-docbook doc-id)))
-                     (body (ignore-errors (arxana-docbook--entry-content entry))))
-                (setq arxana-browser-code--doc-entry entry)
-                (setq arxana-browser-code--docbook-uri uri)
-                (insert "\n* Doc Preview\n")
-                (insert (format "** %s\n" title))
-                (when uri
-                  (insert (format "- %s\n\n" uri)))
-                (setq preview-start (point))
-                (if (and body (> (length (string-trim body)) 0))
-                    (insert body "\n")
-                  (insert "(No content available)\n"))
-                (setq preview-end (point))))
+                    (insert (format "  - %s\n" uri))))))
           (insert "* Matches\n- (none)\n")
           (insert "  - No function/file-level docbook links were found for this file.\n")
           (insert "  - Add :FUNCTION_NAME: and/or :SOURCE_PATH: in the entry properties,\n")
           (insert "    or persist voiced links for symbol->doc mapping.\n"))
+        (insert "\n* Function Docs\n")
+        (setq api-start (point))
+        (let ((def-items (arxana-browser-code--def-doc-items entries path)))
+          (if (and def-items (listp def-items))
+              (dolist (item def-items)
+                (let* ((symbol (or (plist-get item :symbol) ""))
+                       (line (arxana-browser-code--symbol-line path symbol))
+                       (summary (or (plist-get item :summary) ""))
+                       (line-start (point)))
+                  (if line
+                      (insert (format "- %s (line %s): %s\n" symbol line summary))
+                    (insert (format "- %s: %s\n" symbol summary)))
+                  (add-text-properties
+                   line-start (line-end-position 0)
+                   (list 'arxana-symbol symbol
+                         'arxana-path path))))
+            (insert "- No def-doc function bullets found; falling back to source docstrings.\n")
+            (let ((items (arxana-browser-code--source-doc-items path)))
+              (if (and items (listp items))
+                  (dolist (item items)
+                    (let* ((symbol (or (plist-get item :symbol) ""))
+                           (line (or (plist-get item :line) 0))
+                           (doc (or (plist-get item :doc) ""))
+                           (line-start (point)))
+                      (insert (format "  - %s (line %s): %s\n" symbol line doc))
+                      (add-text-properties
+                       line-start (line-end-position 0)
+                       (list 'arxana-symbol symbol
+                             'arxana-path path))))
+                (insert "  - (no source docstrings found)\n")))))
+        (setq api-end (point))
+        (when (and entries arxana-browser-code-show-docbook-preview)
+          (let* ((entry (car entries))
+                 (title (arxana-browser-code--entry-title entry))
+                 (doc-id (plist-get entry :doc-id))
+                 (uri (and doc-id
+                           (format "docbook://%s/%s" arxana-browser-code-docbook doc-id)))
+                 (body (ignore-errors (arxana-docbook--entry-content entry))))
+            (insert "\n* Doc Preview\n")
+            (insert (format "** %s\n" title))
+            (when uri
+              (insert (format "- %s\n\n" uri)))
+            (setq preview-start (point))
+            (if (and body (> (length (string-trim body)) 0))
+                (insert body "\n")
+              (insert "(No content available)\n"))
+            (setq preview-end (point))))
         (setq arxana-browser-code--doc-symbol-map
-              (arxana-browser-code--index-docs path preview-start preview-end))
+              (arxana-browser-code--index-docs path api-start api-end))
         (setq arxana-browser-code--doc-source-path path)
         (setq arxana-browser-code--doc-last-symbol nil)
         (when (overlayp arxana-browser-code--doc-highlight-overlay)
           (delete-overlay arxana-browser-code--doc-highlight-overlay)
           (setq arxana-browser-code--doc-highlight-overlay nil)))
+      (when (and api-start api-end)
+        (arxana-browser-code--linkify-docs path entries api-start api-end))
       (when (and preview-start preview-end)
         (arxana-browser-code--linkify-docs path entries preview-start preview-end))
       (goto-char (point-min))
