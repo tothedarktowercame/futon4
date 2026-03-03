@@ -145,18 +145,11 @@
   "Open the symbol link at point, if any."
   (interactive)
   (let* ((symbol (arxana-docbook--symbol-at-point))
-         (book (or arxana-docbook--entry-book
-                   (get-text-property (point) 'arxana-docbook-book)))
          (path (or (get-text-property (point) 'arxana-path)
                    (and (> (point) (point-min))
                         (get-text-property (1- (point)) 'arxana-path))
                    (and symbol
                         (arxana-docbook--find-symbol-path symbol)))))
-    (when (and book
-               (fboundp 'arxana-browser-code-set-docbook)
-               (boundp 'arxana-browser-code-docbook)
-               (not (equal arxana-browser-code-docbook book)))
-      (arxana-browser-code-set-docbook book))
     (cond
      ((and symbol path (fboundp 'arxana-browser-code--open-symbol))
       (arxana-browser-code--open-symbol symbol path))

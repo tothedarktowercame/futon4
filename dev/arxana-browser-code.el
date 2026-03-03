@@ -446,6 +446,35 @@ Returns the active strategy, or nil if persistence is unavailable."
       (plist-get entry :doc/id)
       (plist-get entry :id)))
 
+(defun arxana-browser-code--entry-title-path (entry)
+  "Return a dev/test source path inferred from ENTRY title, if any."
+  (let ((title (arxana-browser-code--entry-title entry)))
+    (when (and (stringp title)
+               (string-match
+                "\\`\\(dev\\|test\\)/[^[:space:]]+\\.\\(el\\|clj\\|cljc\\|cljs\\|edn\\)\\'"
+                title))
+      title)))
+
+(defun arxana-browser-code--entry-def-doc-symbols (entry)
+  "Return explicit function symbols documented in def-doc ENTRY."
+  (let ((version (plist-get entry :version))
+        (text (arxana-browser-code--doc-text entry))
+        (symbols '()))
+    (when (and (stringp version)
+               (string= version "def-doc")
+               (stringp text))
+      (with-temp-buffer
+        (insert text)
+        (goto-char (point-min))
+        (while (re-search-forward
+                "^[[:space:]]*-[[:space:]]+`?\\([[:alnum:]-]+\\)`?:"
+                nil t)
+          (let ((sym (match-string 1)))
+            (when (and (stringp sym)
+                       (string-prefix-p "arxana-" sym))
+              (push sym symbols))))))
+    (delete-dups (nreverse symbols))))
+
 (defun arxana-browser-code--index-push (table key entry)
   (when (and table key entry)
     (puthash key (cons entry (gethash key table)) table)))
@@ -458,7 +487,8 @@ Returns the active strategy, or nil if persistence is unavailable."
      text)))
 
 (defun arxana-browser-code--entry-matches-path-p (entry target)
-  (let* ((source (and entry (arxana-docbook--entry-source-path entry)))
+  (let* ((source (or (and entry (arxana-docbook--entry-source-path entry))
+                     (arxana-browser-code--entry-title-path entry)))
          (source-path (arxana-browser-code--normalize-path source)))
     (or (and source-path (string= source-path target))
         (and source (string-suffix-p source target))
@@ -467,12 +497,19 @@ Returns the active strategy, or nil if persistence is unavailable."
 
 (defun arxana-browser-code--entry-matches-symbols-p (entry symbols filename)
   (let ((function (arxana-docbook--entry-function-name entry))
+        (def-doc-symbols (arxana-browser-code--entry-def-doc-symbols entry))
         (matched nil))
     ;; Preferred: explicit function-level linkage.
     (when (and function (listp symbols))
       (setq matched (seq-some (lambda (sym)
                                 (and (stringp sym)
                                      (string= sym function)))
+                              symbols)))
+    ;; Def-doc entries list documented symbols as bullets.
+    (when (and (not matched) def-doc-symbols (listp symbols))
+      (setq matched (seq-some (lambda (sym)
+                                (and (stringp sym)
+                                     (member sym def-doc-symbols)))
                               symbols)))
     ;; Optional fallback: loose text/filename mentions.
     (when (and (not matched)
@@ -519,23 +556,26 @@ Returns the active strategy, or nil if persistence is unavailable."
                (function-entries (make-hash-table :test 'equal))
                (text-entries (make-hash-table :test 'equal)))
            (dolist (entry (or (arxana-browser-code--docbook-entries) '()))
-             (let* ((source (arxana-docbook--entry-source-path entry))
+             (let* ((source (or (arxana-docbook--entry-source-path entry)
+                                (arxana-browser-code--entry-title-path entry)))
                     (normalized (and source (arxana-browser-code--normalize-path source)))
                     (basename (and source (file-name-nondirectory source)))
                     (function (arxana-docbook--entry-function-name entry))
+                    (functions (append (and (stringp function) (list function))
+                                       (arxana-browser-code--entry-def-doc-symbols entry)))
                     (raw-text (arxana-docbook--entry-raw-text entry)))
                (when normalized
                  (puthash normalized (1+ (gethash normalized path-index 0)) path-index))
                (when basename
                  (puthash basename (1+ (gethash basename basename-index 0)) basename-index))
-               (when (and function (stringp function))
-                 (puthash function (1+ (gethash function function-index 0)) function-index))
+               (dolist (fn functions)
+                 (puthash fn (1+ (gethash fn function-index 0)) function-index))
                (when normalized
                  (arxana-browser-code--index-push path-entries normalized entry))
                (when basename
                  (arxana-browser-code--index-push basename-entries basename entry))
-               (when (and function (stringp function))
-                 (arxana-browser-code--index-push function-entries function entry))
+               (dolist (fn functions)
+                 (arxana-browser-code--index-push function-entries fn entry))
                (when (and raw-text (stringp raw-text))
                  (let ((case-fold-search nil)
                        (pos 0)
@@ -589,9 +629,10 @@ Returns the active strategy, or nil if persistence is unavailable."
                  (dolist (entry (and (hash-table-p basename-entries)
                                      (gethash filename basename-entries)))
                    (add-entry entry))
-                 (dolist (entry (and (hash-table-p text-entries)
-                                     (gethash filename text-entries)))
-                   (add-entry entry)))
+                 (when arxana-browser-code-match-text-mentions
+                   (dolist (entry (and (hash-table-p text-entries)
+                                       (gethash filename text-entries)))
+                     (add-entry entry))))
                (when (and symbols function-entries)
                  (dolist (sym symbols)
                    (dolist (entry (and (hash-table-p function-entries)
@@ -618,7 +659,9 @@ Returns the active strategy, or nil if persistence is unavailable."
          (text-index (plist-get indices :text))
          (path-count (or (and path-index (gethash target path-index 0)) 0))
          (basename-count (or (and basename-index (gethash filename basename-index 0)) 0))
-         (text-count (or (and text-index (gethash filename text-index 0)) 0))
+         (text-count (if arxana-browser-code-match-text-mentions
+                         (or (and text-index (gethash filename text-index 0)) 0)
+                       0))
          (symbol-count (if (and symbols function-index)
                            (seq-some (lambda (sym)
                                        (> (gethash sym function-index 0) 0))
