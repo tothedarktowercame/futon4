@@ -110,6 +110,11 @@ When nil, defaults to <repo>/dev and <repo>/test."
   :type 'integer
   :group 'arxana-browser-code)
 
+(defcustom arxana-browser-code-docs-wrap-column 92
+  "Wrap column used for prose blocks in `*Arxana Code Docs*`."
+  :type 'integer
+  :group 'arxana-browser-code)
+
 (defcustom arxana-browser-code-profile nil
   "When non-nil, log slow steps in code->docs resolution."
   :type 'boolean
@@ -757,7 +762,7 @@ Returns the active strategy, or nil if persistence is unavailable."
 
 (defun arxana-browser-code--entry-context-items (entry)
   "Extract `- symbol: summary' bullets from def-doc ENTRY context."
-  (let ((version (plist-get entry :version))
+  (let ((version (arxana-browser-code--entry-version entry))
         (text (arxana-browser-code--doc-text entry))
         (items '()))
     (when (and (stringp version)
@@ -779,6 +784,30 @@ Returns the active strategy, or nil if persistence is unavailable."
                           :summary summary)
                     items))))))
     (nreverse items)))
+
+(defun arxana-browser-code--wrap-text (text &optional width)
+  "Wrap TEXT to WIDTH and return a trimmed string."
+  (with-temp-buffer
+    (insert (or text ""))
+    (setq fill-column (or width arxana-browser-code-docs-wrap-column))
+    (fill-region (point-min) (point-max))
+    (string-trim (buffer-string))))
+
+(defun arxana-browser-code--insert-context-items (path items)
+  "Insert readable context ITEM blocks for PATH."
+  (dolist (item items)
+    (let* ((symbol (or (plist-get item :symbol) ""))
+           (summary (or (plist-get item :summary) ""))
+           (wrapped (arxana-browser-code--wrap-text summary))
+           (line-start (point)))
+      (insert (format "- %s\n" symbol))
+      (add-text-properties
+       line-start (line-end-position 0)
+       (list 'arxana-symbol symbol
+             'arxana-path path))
+      (dolist (line (split-string wrapped "\n"))
+        (insert "  " line "\n"))
+      (insert "\n"))))
 
 (defun arxana-browser-code--def-doc-items (entries path)
   "Return deduplicated def-doc function items from ENTRIES for PATH."
@@ -1163,36 +1192,36 @@ With prefix ACTIVATE, open the symbol after cycling."
           (insert "    or persist voiced links for symbol->doc mapping.\n"))
         (setq api-start (point))
         (let* ((version (arxana-browser-code--entry-version primary))
-               (body (and primary (ignore-errors (arxana-docbook--entry-content primary)))))
+               (body (and primary (ignore-errors (arxana-docbook--entry-content primary))))
+               (primary-items (and primary
+                                   (arxana-browser-code--entry-context-items primary))))
           (if (and (stringp version)
                    (string= version "def-doc")
-                   (stringp body)
-                   (not (string-empty-p (string-trim body))))
-              (insert "\n" body "\n")
+                   (listp primary-items)
+                   primary-items)
+              (progn
+                (insert "\n* Context\n")
+                (arxana-browser-code--insert-context-items path primary-items))
             (insert "\n* Function Docs\n")
             (let ((def-items (arxana-browser-code--def-doc-items entries path)))
               (if (and def-items (listp def-items))
-                  (dolist (item def-items)
-                    (let* ((symbol (or (plist-get item :symbol) ""))
-                           (summary (or (plist-get item :summary) ""))
-                           (line-start (point)))
-                      (insert (format "- %s: %s\n" symbol summary))
-                      (add-text-properties
-                       line-start (line-end-position 0)
-                       (list 'arxana-symbol symbol
-                             'arxana-path path))))
+                  (arxana-browser-code--insert-context-items path def-items)
                 (insert "- No def-doc function bullets found; falling back to source docstrings.\n")
                 (let ((items (arxana-browser-code--source-doc-items path)))
                   (if (and items (listp items))
                       (dolist (item items)
                         (let* ((symbol (or (plist-get item :symbol) ""))
                                (doc (or (plist-get item :doc) ""))
+                               (wrapped (arxana-browser-code--wrap-text doc))
                                (line-start (point)))
-                          (insert (format "  - %s: %s\n" symbol doc))
+                          (insert (format "  - %s\n" symbol))
                           (add-text-properties
                            line-start (line-end-position 0)
                            (list 'arxana-symbol symbol
-                                 'arxana-path path))))
+                                 'arxana-path path))
+                          (dolist (line (split-string wrapped "\n"))
+                            (insert "    " line "\n"))
+                          (insert "\n")))
                     (insert "  - (no source docstrings found)\n")))))))
         (setq api-end (point))
         (when (and entries arxana-browser-code-show-docbook-preview)
