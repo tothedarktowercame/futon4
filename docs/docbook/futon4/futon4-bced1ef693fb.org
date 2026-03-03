@@ -1,5 +1,5 @@
 #+TITLE: Link-following & history
-:PROPERTIES::SYNCED_AT: 2026-01-10T13:12:19Z
+:PROPERTIES:
 :SYNCED_AT: 2026-01-10T13:57:11Z
 
 :DOC_ID: futon4-bced1ef693fb

@@ -1,5 +1,6 @@
 #+TITLE: dev/arxana-browser-lab.el
 :PROPERTIES:
+:SYNCED_AT: 2026-03-03T16:54:54Z
 :DOC_ID: futon4-e90306406177
 :ENTRY_ID: futon4-e90306406177-3a1b2f9e7c4d
 :VERSION: def-doc
@@ -22,4 +23,3 @@
 - arxana-browser--resolve-var: Resolves a Clojure var through Futon3c reflection API and returns the reflection envelope used to anchor strategic claims to concrete source definitions.
 - arxana-browser-ground-claim-to-var: Creates an `about-var` hyperedge from a claim/evidence id to a reflected var id, persisting namespace, symbol, file, line, arglists, and resolution timestamp as grounding metadata.
 - arxana-browser-verify-reflection-snapshot: Re-resolves a stored about-var relation and compares key reflection fields (line and arglists) to classify the snapshot as `:ok`, `:stale`, or `:missing`.
-

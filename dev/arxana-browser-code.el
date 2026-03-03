@@ -20,6 +20,7 @@
 (declare-function arxana-docbook--entry-raw-text "arxana-docbook-core" (entry))
 (declare-function arxana-docbook--entry-content "arxana-docbook-core" (entry))
 (declare-function arxana-docbook--entry-function-name "arxana-docbook-core" (entry))
+(declare-function arxana-docbook--entry-version "arxana-docbook-core" (entry))
 (declare-function arxana-docbook--available-books "arxana-docbook-core")
 (declare-function arxana-docbook-open-uri "arxana-docbook-ui" (uri))
 
@@ -465,9 +466,50 @@ Returns the active strategy, or nil if persistence is unavailable."
                 title))
       title)))
 
+(defun arxana-browser-code--entry-org-property (entry key)
+  "Extract Org property KEY from ENTRY raw text."
+  (let ((text (arxana-browser-code--doc-text entry))
+        (value nil))
+    (when (and (stringp text) (stringp key))
+      (with-temp-buffer
+        (insert text)
+        (goto-char (point-min))
+        (when (re-search-forward
+               (format "^:%s:[ \t]*\\(.*\\)$" (regexp-quote key))
+               nil t)
+          (setq value (string-trim (or (match-string 1) ""))))))
+    (unless (string-empty-p (or value ""))
+      value)))
+
+(defun arxana-browser-code--entry-version (entry)
+  "Return normalized version for ENTRY."
+  (or (and (fboundp 'arxana-docbook--entry-version)
+           (arxana-docbook--entry-version entry))
+      (plist-get entry :version)
+      (plist-get entry :doc/version)
+      (arxana-browser-code--entry-org-property entry "VERSION")))
+
+(defun arxana-browser-code--entry-source-path (entry)
+  "Return normalized source path for ENTRY."
+  (or (and (fboundp 'arxana-docbook--entry-source-path)
+           (arxana-docbook--entry-source-path entry))
+      (plist-get entry :source-path)
+      (plist-get entry :doc/source-path)
+      (arxana-browser-code--entry-org-property entry "SOURCE_PATH")
+      (arxana-browser-code--entry-org-property entry "DOC_SOURCE_PATH")))
+
+(defun arxana-browser-code--entry-function-name (entry)
+  "Return normalized function name for ENTRY."
+  (or (and (fboundp 'arxana-docbook--entry-function-name)
+           (arxana-docbook--entry-function-name entry))
+      (plist-get entry :function-name)
+      (plist-get entry :doc/function-name)
+      (arxana-browser-code--entry-org-property entry "FUNCTION_NAME")
+      (arxana-browser-code--entry-org-property entry "FUNCTION")))
+
 (defun arxana-browser-code--entry-def-doc-symbols (entry)
   "Return explicit function symbols documented in def-doc ENTRY."
-  (let ((version (plist-get entry :version))
+  (let ((version (arxana-browser-code--entry-version entry))
         (text (arxana-browser-code--doc-text entry))
         (symbols '()))
     (when (and (stringp version)
@@ -497,7 +539,7 @@ Returns the active strategy, or nil if persistence is unavailable."
      text)))
 
 (defun arxana-browser-code--entry-matches-path-p (entry target)
-  (let* ((source (or (and entry (arxana-docbook--entry-source-path entry))
+  (let* ((source (or (and entry (arxana-browser-code--entry-source-path entry))
                      (arxana-browser-code--entry-title-path entry)))
          (source-path (arxana-browser-code--normalize-path source)))
     (or (and source-path (string= source-path target))
@@ -506,7 +548,7 @@ Returns the active strategy, or nil if persistence is unavailable."
                              (file-name-nondirectory target))))))
 
 (defun arxana-browser-code--entry-matches-symbols-p (entry symbols filename)
-  (let ((function (arxana-docbook--entry-function-name entry))
+  (let ((function (arxana-browser-code--entry-function-name entry))
         (def-doc-symbols (arxana-browser-code--entry-def-doc-symbols entry))
         (matched nil))
     ;; Preferred: explicit function-level linkage.
@@ -566,11 +608,11 @@ Returns the active strategy, or nil if persistence is unavailable."
                (function-entries (make-hash-table :test 'equal))
                (text-entries (make-hash-table :test 'equal)))
            (dolist (entry (or (arxana-browser-code--docbook-entries) '()))
-             (let* ((source (or (arxana-docbook--entry-source-path entry)
+             (let* ((source (or (arxana-browser-code--entry-source-path entry)
                                 (arxana-browser-code--entry-title-path entry)))
                     (normalized (and source (arxana-browser-code--normalize-path source)))
                     (basename (and source (file-name-nondirectory source)))
-                    (function (arxana-docbook--entry-function-name entry))
+                    (function (arxana-browser-code--entry-function-name entry))
                     (functions (append (and (stringp function) (list function))
                                        (arxana-browser-code--entry-def-doc-symbols entry)))
                     (raw-text (arxana-docbook--entry-raw-text entry)))
@@ -696,12 +738,12 @@ Returns the active strategy, or nil if persistence is unavailable."
   "Return the best primary entry from ENTRIES for code PATH."
   (or (seq-find
        (lambda (entry)
-         (and (string= (or (plist-get entry :version) "") "def-doc")
+         (and (string= (or (arxana-browser-code--entry-version entry) "") "def-doc")
               (arxana-browser-code--entry-matches-path-p entry path)))
        entries)
       (seq-find
        (lambda (entry)
-         (string= (or (plist-get entry :version) "") "def-doc"))
+         (string= (or (arxana-browser-code--entry-version entry) "") "def-doc"))
        entries)
       (car entries)))
 
@@ -1120,7 +1162,7 @@ With prefix ACTIVATE, open the symbol after cycling."
           (insert "  - Add :FUNCTION_NAME: and/or :SOURCE_PATH: in the entry properties,\n")
           (insert "    or persist voiced links for symbol->doc mapping.\n"))
         (setq api-start (point))
-        (let* ((version (plist-get primary :version))
+        (let* ((version (arxana-browser-code--entry-version primary))
                (body (and primary (ignore-errors (arxana-docbook--entry-content primary)))))
           (if (and (stringp version)
                    (string= version "def-doc")

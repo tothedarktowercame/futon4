@@ -66,7 +66,7 @@
   (save-excursion
     (goto-char (point-min))
     (if (re-search-forward "^:PROPERTIES:" nil t)
-        (let ((start (point)))
+        (let ((start (line-beginning-position 2)))
           (if (re-search-forward (format "^:%s:[ \t]*\\(.*\\)$" key) nil t)
               (replace-match value t t nil 1)
             (goto-char start)
