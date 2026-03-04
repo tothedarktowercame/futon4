@@ -21,3 +21,8 @@ structural facts from the live system and traces them to ground truth.
 The entries in this section demonstrate the complete chain: reflection grounding,
 evidence navigation, the full end-to-end trace, and the theoretical framework
 (間 + 関) that names what the trace does.
+
+The three-column extension (docbook://futon3x/futon3x-5b802804c69b) generalizes
+self-representation to three simultaneous domains: math/knowledge, project/
+development, and code/reflection. Cross-column invariants detect when these
+views disagree, and violations are browsable in Arxana.

@@ -1,0 +1,79 @@
+#+TITLE: Three-Column Stack
+:PROPERTIES:
+:DOC_ID: futon3x-5b802804c69b
+:ENTRY_ID: futon3x-5b802804c69b::org
+:VERSION: org
+:OUTLINE_PATH: Self-Representing Stack / Three-Column Stack
+:PATH_STRING: Self-Representing Stack / Three-Column Stack
+:REPLACES:
+:END:
+
+* Context
+The self-representing stack (docbook://futon3x/futon3x-78da12c2e512) traces
+a single path: strategic claim to source code. But a system has more than
+one kind of structure to represent. The three-column stack extends
+self-representation to cover three domains simultaneously:
+
+- *Math/Knowledge* — mathematical content, proofs, definitions, argumentation
+- *Project/Development* — missions, devmaps, tensions, evidence, patterns
+- *Code/Reflection* — namespaces, vars, dependencies, entry points
+
+These three columns are projections of the same underlying structure through
+the AIF+ wiring diagram formalism (futon5). Each column captures a different
+timescale: code changes fast (phenotype), projects change at sprint pace
+(genotype), mathematical knowledge changes slowly (exotype).
+
+* What exists
+
+The three-column stack is stored as hyperedges in futon1a (XTDB). As of
+2026-03-04, the store contains 1,524+ hyperedges:
+
+| Column | Count | Entity types |
+|--------|-------|-------------|
+| Math | 153 | post, scope, expression, iatc, mention, discourse, surface |
+| Code | 1,162 | namespace, var, ns-contains-var, requires |
+| Project | 195 | devmap, component, devmap-contains, tension, tension-on, trace-path |
+| Invariants | 14+ | undocumented-entry-point, uncovered-component, ungrounded-definition |
+
+* Cross-column invariants
+
+The value of the three-column stack is not the data but the /invariants/ —
+structural rules that detect when the columns disagree:
+
+- *INV-1:* Undocumented entry points (Project+Code) — namespaces with no docstring
+- *INV-2:* Uncovered components (Project) — devmap components with no covering mission
+- *INV-3:* Orphan namespaces (Code+Code) — namespaces not required by any other
+- *INV-4:* Ungrounded definitions (Math+Math) — scopes with no argumentation edge
+
+Violations are stored as hyperedges and browsable in Arxana:
+=M-x arxana-browse= -> Violations.
+
+See docbook://futon3x/futon3x-1e14c482efcf for how invariant checking works.
+See docbook://futon3x/futon3x-af593a33a648 for the ingestion pipeline.
+
+* Relation to the full trace
+
+The three-column stack builds on the 6-gate trace chain
+(docbook://futon3x/futon3x-239ad29bbcc8). The trace shows a /single path/
+through the project column. The three-column stack adds the math and code
+columns as parallel surfaces — the same system viewed from three angles —
+and the invariants as cross-column consistency checks.
+
+* Navigation
+
+From Arxana Browser (=M-x arxana-browse=):
+- *Trace* — the 6-gate trace chain (project column)
+- *Violations* — cross-column invariant violations (all columns)
+- *Hypergraphs* — math column data (JSON-based)
+
+From the command line:
+#+BEGIN_SRC sh
+# Count hyperedges by type
+python3 futon4/scripts/ingest-three-columns.py --count
+
+# Run invariant checks
+python3 futon4/scripts/ingest-three-columns.py --invariants
+
+# Full re-ingestion
+python3 futon4/scripts/ingest-three-columns.py --all
+#+END_SRC

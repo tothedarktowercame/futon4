@@ -196,6 +196,38 @@
     "level": 2
   },
   {
+    "doc_id": "futon3x-5b802804c69b",
+    "title": "Three-Column Stack",
+    "outline_path": [
+      "Self-Representing Stack",
+      "Three-Column Stack"
+    ],
+    "path_string": "Self-Representing Stack / Three-Column Stack",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3x-1e14c482efcf",
+    "title": "Cross-column invariant checking",
+    "outline_path": [
+      "Self-Representing Stack",
+      "Three-Column Stack",
+      "Cross-column invariant checking"
+    ],
+    "path_string": "Self-Representing Stack / Three-Column Stack / Cross-column invariant checking",
+    "level": 3
+  },
+  {
+    "doc_id": "futon3x-af593a33a648",
+    "title": "Three-column ingestion pipeline",
+    "outline_path": [
+      "Self-Representing Stack",
+      "Three-Column Stack",
+      "Three-column ingestion pipeline"
+    ],
+    "path_string": "Self-Representing Stack / Three-Column Stack / Three-column ingestion pipeline",
+    "level": 3
+  },
+  {
     "doc_id": "futon3x-e86af9b6239f",
     "title": "API Reference",
     "outline_path": [

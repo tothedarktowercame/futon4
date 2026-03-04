@@ -1,8 +1,9 @@
 # Futonic Mission Lifecycle
 
 A futonic mission is a scoped unit of work that moves the stack from a
-known state to a better one. Missions follow a 6-phase derivation path
-that progresses from naming a gap to demonstrating a working result.
+known state to a better one. Missions follow a 7-phase derivation path
+that progresses from naming a gap to demonstrating a working result and
+documenting it in the living system.
 
 This document is a reusable reference — not specific to any mission.
 
@@ -132,13 +133,40 @@ Demonstrate the full loop in the real system.
 **Exit criterion:** A new person (human or agent) could reproduce the demo
 from the mission doc without help.
 
+### 7. DOCUMENT
+
+Make the mission's contribution navigable in the living documentation.
+
+- [ ] **Docbook entries:** Create or update docbook entries (futon3x or
+  appropriate book) that explain what was built, how to use it, and how it
+  connects to prior work. Entries should be self-contained — readable without
+  the mission doc.
+- [ ] **Cross-references:** Link new entries to existing docbook entries, trace
+  browser views, and other navigable surfaces. Use `docbook://` URIs for
+  intra-book links.
+- [ ] **Browser integration:** If the mission produced new browser views or
+  data, verify they appear in `M-x arxana-browse` and are reachable from
+  existing navigation paths (menu items, trace paths, etc.).
+- [ ] **Deferred-item tickets:** Any deferred items from INSTANTIATE that
+  warrant future missions should be noted in the documentation with enough
+  context for a new agent to pick them up.
+
+The DOCUMENT phase produces durable, navigable artifacts — not the mission doc
+itself (which is the working record), but the documentation that lives in the
+system's self-representing surface. The mission doc says what was done and why;
+the docbook entries say what exists and how to use it.
+
+**Exit criterion:** Someone browsing the docbook can discover what this mission
+built without knowing the mission exists. The documentation is findable via
+navigation, not just via grep.
+
 ## Mission Lifecycle States
 
 ```
-IDENTIFY → MAP → DERIVE → ARGUE → VERIFY → INSTANTIATE → COMPLETE
-                                                            ↓
-                                                        RE-OPENED
-                                                        (if gaps found)
+IDENTIFY → MAP → DERIVE → ARGUE → VERIFY → INSTANTIATE → DOCUMENT → COMPLETE
+                                                                        ↓
+                                                                    RE-OPENED
+                                                                    (if gaps found)
 ```
 
 A mission may also be:

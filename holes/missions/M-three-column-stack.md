@@ -1176,6 +1176,29 @@ answer: "what math reasoning is relevant to this project gap?"
 - AIF+ diagram validator integration (futon5)
 - Wiring diagram generation from cross-column invariant graph
 
+### 7. DOCUMENT
+
+Make the three-column stack discoverable in the living documentation.
+
+- [x] **Docbook entries:** Created 3 new futon3x entries:
+  - `futon3x-5b802804c69b` — "Three-Column Stack" (chapter entry: what it is,
+    what exists, how columns relate, navigation)
+  - `futon3x-1e14c482efcf` — "Cross-column invariant checking" (how invariants
+    work, current INV-1 through INV-4, the resolution loop, extending)
+  - `futon3x-af593a33a648` — "Three-column ingestion pipeline" (data sources,
+    usage, idempotency, identity patterns, verification)
+- [x] **Cross-references:** Updated chapter root (`futon3x-78da12c2e512`) to
+  reference the three-column extension. New entries link to each other via
+  `docbook://` URIs and to the existing trace demo (`futon3x-239ad29bbcc8`).
+- [x] **Browser integration:** Verified navigation paths:
+  - `M-x arxana-browse` → Violations (new view from VERIFY phase)
+  - `M-x arxana-browse` → Trace (existing, shows project column)
+  - `M-x arxana-browse` → Docs → futon3x → Self-Representing Stack → Three-Column Stack
+- [x] **Deferred-item tickets:** Documented in INSTANTIATE deferred items
+  and in the invariant-checking docbook entry (how to extend invariants).
+- [x] **Mission lifecycle updated:** Added DOCUMENT as phase 7 in
+  `holes/mission-lifecycle.md` with checklist and exit criterion.
+
 ## Source Material
 
 | Source | What We Take |
