@@ -1,0 +1,80 @@
+#+TITLE: Capability observation model
+:PROPERTIES:
+:DOC_ID: futon3x-ca55a07277fa
+:ENTRY_ID: futon3x-ca55a07277fa::org
+:VERSION: org
+:OUTLINE_PATH: FutonZero / Capability observation model
+:PATH_STRING: FutonZero / Capability observation model
+:REPLACES:
+:END:
+
+* The observation pipeline
+
+FutonZero's observation pipeline transforms raw data from two sources into
+typed FunctioningRecords:
+
+#+BEGIN_SRC
+futon1a hyperedges  ──→  HX type mapping  ──→  FunctioningRecord
+futon3c evidence    ──→  evidence type mapping ──→  FunctioningRecord
+#+END_SRC
+
+** Hyperedge observation (futon1a)
+
+Each hyperedge type in the three-column stack maps to a functioning type:
+
+| HX type | Functioning type | Column |
+|---------+-----------------+--------|
+| =math/post= | =math/post-created= | math |
+| =math/iatc= | =math/argumentation-linked= | math |
+| =code/namespace= | =code/namespace-created= | code |
+| =code/var= | =code/var-defined= | code |
+| =project/devmap= | =project/devmap-structured= | project |
+| =project/tension= | =project/tension-detected= | project |
+
+All hyperedge-derived records are attributed to agent "infrastructure"
+because batch-ingested HX cannot be reliably attributed to individual agents.
+
+** Evidence observation (futon3c)
+
+Evidence entries map via (evidence-type, claim-type) pairs:
+
+| Evidence type | Claim type | Functioning type |
+|---------------+------------+-----------------|
+| =pattern-selection= | =goal= | =discipline/psr-filed= |
+| =pattern-outcome= | =evidence= | =discipline/pur-filed= |
+| =reflection= | =conclusion= | =discipline/par-completed= |
+| =coordination= | =goal= | =project/session-started= |
+| =coordination= | =conclusion= | =project/session-completed= |
+| =correction= | =correction= | =discipline/correction-made= |
+
+Evidence-derived records carry the original =evidence/author= as agent attribution.
+
+* FunctioningRecord
+
+The core data structure:
+
+| Field | Type | Source |
+|-------+------+--------|
+| =id= | string (hash) | computed |
+| =agent= | string | evidence author or "infrastructure" |
+| =type= | string | mapped from HX type or evidence type |
+| =subject= | string | first HX endpoint or evidence subject |
+| =column= | keyword | derived from type prefix |
+| =timestamp= | ISO string | =created-at= or =evidence/at= |
+| =evidence-ref= | string | HX ID or evidence ID |
+| =session-id= | string | from evidence, nil for HX |
+| =conversion= | map or nil | filled at profile aggregation |
+
+* From functionings to capabilities
+
+FunctioningRecords are aggregated into FunctioningStats per type:
+
+- *Count:* total records of this type
+- *Sessions:* distinct session IDs (nil-safe)
+- *Reproducible?:* =sessions ≥ 2=
+- *First/last seen:* timestamp range
+
+The reproducibility threshold is the Sen distinction: a functioning achieved
+in only one session is an /achievement/ but not yet a /capability/. When the
+same type appears across two or more distinct sessions, the agent has
+demonstrated the real freedom to produce it.

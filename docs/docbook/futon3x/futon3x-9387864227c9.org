@@ -1,0 +1,102 @@
+#+TITLE: FutonZero — Capability Monitor
+:PROPERTIES:
+:DOC_ID: futon3x-9387864227c9
+:ENTRY_ID: futon3x-9387864227c9::org
+:VERSION: org
+:OUTLINE_PATH: FutonZero
+:PATH_STRING: FutonZero
+:REPLACES:
+:END:
+
+* What FutonZero is
+
+FutonZero is the futon stack's capability monitor. It reads the
+self-representing stack (docbook://futon3x/futon3x-78da12c2e512) and the
+three-column stack (docbook://futon3x/futon3x-5b802804c69b) to answer:
+
+- What can this agent do that it couldn't do before?
+- Are gains persisting, or do capabilities regress between sessions?
+- Is the agent developing discipline (PSR→PUR→PAR loops)?
+
+FutonZero is grounded in Amartya Sen's capability approach (/Development as
+Freedom/, 1999): capabilities are real freedoms to achieve valued
+functionings, not task scores or drill completion. It supersedes the earlier
+spaced-repetition design (M-futonzero-mvp.md).
+
+* Theoretical grounding
+
+| Concept | Source | FutonZero mapping |
+|---------+--------+-------------------|
+| Functioning | Sen 1999 | FunctioningRecord — observed agent activity, typed and timestamped |
+| Capability | Sen 1999 | Functioning reproducible in ≥2 sessions |
+| Conversion factor | Sen 1999 | ConversionContext — resources consumed per functioning |
+| Freedom expansion | Sen 1999 | New functioning types or strengthened reproducibility |
+| Baldwin cycle | futon-theory/baldwin-cycle | Explore/assimilate/canalize phases detected from trajectory |
+| Local gain persistence | futon-theory/local-gain-persistence | Reproducibility test across sessions |
+
+* Architecture
+
+FutonZero is a Babashka (Clojure) CLI tool that reads two data sources:
+
+- *futon1a* (port 7071) — XTDB hyperedge store (EDN responses)
+  Contains the three-column stack: math, code, project hyperedges
+- *futon3c* (port 7070) — Evidence store (JSON API)
+  Contains agent discipline evidence: PSR, PUR, PAR, coordination, corrections
+
+It writes /local artifacts only/ — no writes back to the stack (invariant D-I5).
+Reports are stored under =~/code/storage/futon0/futonzero/=.
+
+* Namespaces
+
+| Namespace | Purpose |
+|-----------+---------|
+| =futon0.futonzero.observe= | Query futon1a + futon3c → FunctioningRecords |
+| =futon0.futonzero.profile= | Aggregate into CapabilityProfile + DisciplineProfile |
+| =futon0.futonzero.trajectory= | Windowed delta, Baldwin phase, phase-appropriate warnings |
+| =futon0.futonzero.report= | Markdown + JSON report generation |
+| =futon0.futonzero.cli= | Command dispatch (observe, profile, trajectory, report, agents) |
+
+* Usage
+
+#+BEGIN_SRC sh
+cd ~/code/futon0/scripts
+
+# List all agents with evidence
+bb -cp . futonzero.clj agents --days 7
+
+# Observe current functionings for an agent
+bb -cp . futonzero.clj observe joe --days 7
+
+# Build capability profile
+bb -cp . futonzero.clj profile joe --days 7
+
+# Compute trajectory (baseline vs current window)
+bb -cp . futonzero.clj trajectory joe --days 7
+
+# Generate full report (alias for trajectory)
+bb -cp . futonzero.clj report joe --days 7
+#+END_SRC
+
+* Key distinctions
+
+- *Functioning vs capability:* A functioning is something an agent has done.
+  A capability is a functioning the agent can /reliably reproduce/ (≥2
+  sessions). FutonZero tracks both and reports the ratio.
+
+- *Freedom expansion vs regression:* The trajectory shows which functioning
+  types appeared, strengthened, weakened, or disappeared between windows.
+  This is Sen's core question: is the agent's freedom growing or shrinking?
+
+- *Baldwin phase contextualization:* Trajectory deltas are interpreted through
+  the Baldwin cycle. Regression during exploration is expected (trying new
+  things). Regression during assimilation is flagged with ⚠.
+
+* Related
+
+- Mission: =futon0/holes/missions/M-futonzero-capability.md=
+- Superseded: =futon0/holes/missions/M-futonzero-mvp.md=
+- Observation substrate: docbook://futon3x/futon3x-5b802804c69b (Three-Column Stack)
+- Self-representing stack: docbook://futon3x/futon3x-78da12c2e512
+- Capability theory: =futon0/docs/technote-jazz-night.md=
+- Pattern library: =futon3/library/futon-theory/baldwin-cycle.flexiarg=,
+  =futon3/library/futon-theory/local-gain-persistence.flexiarg=

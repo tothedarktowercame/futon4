@@ -1,0 +1,72 @@
+#+TITLE: Trajectory and Baldwin phase
+:PROPERTIES:
+:DOC_ID: futon3x-09f162038275
+:ENTRY_ID: futon3x-09f162038275::org
+:VERSION: org
+:OUTLINE_PATH: FutonZero / Trajectory and Baldwin phase
+:PATH_STRING: FutonZero / Trajectory and Baldwin phase
+:REPLACES:
+:END:
+
+* Trajectory computation
+
+A trajectory compares two time windows of equal length:
+
+- *Baseline window:* =now - 2N days= to =now - N days=
+- *Current window:* =now - N days= to =now=
+
+The trajectory delta captures:
+
+** Freedom expansion
+- *New functionings:* types present in current but absent from baseline
+- *Strengthened:* types that gained reproducibility (became capabilities)
+- =freedom-expansion= = count of new + strengthened
+
+** Freedom regression
+- *Lost functionings:* types present in baseline but absent from current
+- *Weakened:* types that lost reproducibility (ceased being capabilities)
+- =freedom-regression= = count of lost + weakened
+
+** Net freedom delta
+- =net-freedom-delta= = expansion − regression
+- Positive = agent's capability set is growing
+- Negative = agent is losing capabilities (may be expected during exploration)
+
+** Discipline delta
+Compares PSR, PUR, PAR counts and continuity ratio between windows.
+
+* Baldwin phase detection
+
+The Baldwin cycle (futon-theory/baldwin-cycle 🔃/三) has three phases:
+
+| Phase | Diversity rate | Reproducibility rate | Interpretation |
+|-------+----------------+---------------------+----------------|
+| Exploring | high (>0.3) | low (<0.5) | Trying many new things, few reproducible yet |
+| Assimilating | low (≤0.3) | moderate (0.3–0.7) | Consolidating gains, building reproducibility |
+| Canalizing | low (≤0.3) | high (>0.7) | Stable capability set, routinized |
+| Mixed | — | — | Neither exploration nor canalization dominant |
+
+** Rates
+
+- *Diversity rate:* proportion of current functioning types that are new
+  (not seen in baseline). High diversity = exploring.
+- *Reproducibility rate:* proportion of current functioning types that are
+  reproducible (≥2 sessions). High reproducibility = canalized.
+
+* Phase-appropriate warnings
+
+The Baldwin phase contextualizes the trajectory. Some patterns are expected
+at certain phases but concerning at others:
+
+| Pattern | During exploring | During assimilating | During canalizing |
+|---------+------------------+---------------------+-------------------|
+| Regression | expected | ⚠ concerning | ⚠⚠ alarming |
+| Weakening | expected | ⚠ concerning | ⚠⚠ alarming |
+| No new types | concerning | expected | expected |
+| Low reproducibility | expected | concerning | ⚠ alarming |
+
+When a phase-inappropriate pattern is detected, the trajectory report
+includes ⚠ warnings with specific details (which types were lost/weakened).
+
+This makes the Baldwin phase /not decorative/ — it directly affects how
+trajectory deltas are interpreted and reported.
