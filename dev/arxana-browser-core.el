@@ -71,6 +71,26 @@
 (declare-function arxana-browser-docbook-remove-marked "arxana-browser-docbook")
 (declare-function arxana-browser-docbook-hard-delete-marked "arxana-browser-docbook")
 
+(declare-function arxana-browser-trace-home-items "arxana-browser-trace")
+(declare-function arxana-browser-trace-home-format "arxana-browser-trace")
+(declare-function arxana-browser-trace-home-row "arxana-browser-trace" (item))
+(declare-function arxana-browser-trace-devmaps-items "arxana-browser-trace")
+(declare-function arxana-browser-trace-devmaps-format "arxana-browser-trace")
+(declare-function arxana-browser-trace-devmaps-row "arxana-browser-trace" (item))
+(declare-function arxana-browser-trace-all-tensions-items "arxana-browser-trace")
+(declare-function arxana-browser-trace-all-components-items "arxana-browser-trace")
+(declare-function arxana-browser-trace-all-components-format "arxana-browser-trace")
+(declare-function arxana-browser-trace-all-components-row "arxana-browser-trace" (item))
+(declare-function arxana-browser-trace-tensions-items "arxana-browser-trace" (context))
+(declare-function arxana-browser-trace-tensions-format "arxana-browser-trace")
+(declare-function arxana-browser-trace-tensions-row "arxana-browser-trace" (item))
+(declare-function arxana-browser-trace-gates-items "arxana-browser-trace" (context))
+(declare-function arxana-browser-trace-gates-format "arxana-browser-trace")
+(declare-function arxana-browser-trace-gates-row "arxana-browser-trace" (item))
+(declare-function arxana-browser-trace-visit-devmap "arxana-browser-trace" (item))
+(declare-function arxana-browser-trace-visit-tension "arxana-browser-trace" (item))
+(declare-function arxana-browser-trace-visit-gate "arxana-browser-trace" (item))
+
 (declare-function arxana-browser--lab-items "arxana-browser-lab")
 (declare-function arxana-browser--lab-row "arxana-browser-lab" (item))
 (declare-function arxana-browser--lab-file-row "arxana-browser-lab" (item))
@@ -356,7 +376,11 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         (list :type 'menu
               :label "Encyclopedia"
               :description "PlanetMath and other math reference content."
-              :view 'encyclopedia)))
+              :view 'encyclopedia)
+        (list :type 'menu
+              :label "Trace"
+              :description "Self-representing stack: trace tensions through gates to source."
+              :view 'trace-home)))
 
 (defun arxana-browser--evidence-menu-items ()
   (if (require 'arxana-browser-evidence nil t)
@@ -720,6 +744,30 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         ('media-misc (arxana-media--misc-items))
         ('media-misc-folder (arxana-media--misc-track-items (plist-get context :misc-path)))
         ('media-podcasts (arxana-media--podcast-items))
+        ('trace-home (if (require 'arxana-browser-trace nil t)
+                         (arxana-browser-trace-home-items)
+                       (list (list :type 'info :label "Trace module unavailable"
+                                   :description "Load arxana-browser-trace.el"))))
+        ('trace-devmaps (if (require 'arxana-browser-trace nil t)
+                            (arxana-browser-trace-devmaps-items)
+                          (list (list :type 'info :label "Trace module unavailable"
+                                      :description "Load arxana-browser-trace.el"))))
+        ('trace-all-tensions (if (require 'arxana-browser-trace nil t)
+                                 (arxana-browser-trace-all-tensions-items)
+                               (list (list :type 'info :label "Trace module unavailable"
+                                           :description "Load arxana-browser-trace.el"))))
+        ('trace-all-components (if (require 'arxana-browser-trace nil t)
+                                   (arxana-browser-trace-all-components-items)
+                                 (list (list :type 'info :label "Trace module unavailable"
+                                             :description "Load arxana-browser-trace.el"))))
+        ('trace-tensions (if (require 'arxana-browser-trace nil t)
+                             (arxana-browser-trace-tensions-items context)
+                           (list (list :type 'info :label "Trace module unavailable"
+                                       :description "Load arxana-browser-trace.el"))))
+        ('trace-gates (if (require 'arxana-browser-trace nil t)
+                          (arxana-browser-trace-gates-items context)
+                        (list (list :type 'info :label "Trace module unavailable"
+                                    :description "Load arxana-browser-trace.el"))))
         (_ (arxana-browser--menu-items))))
      (t
       (arxana-browser--require-patterns)
@@ -892,6 +940,24 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
             ('media-misc #'arxana-browser--info-row)
             ('media-misc-folder #'arxana-media--misc-track-row)
             ('media-podcasts #'arxana-media--podcast-row)
+            ('trace-home (if (fboundp 'arxana-browser-trace-home-row)
+                             #'arxana-browser-trace-home-row
+                           #'arxana-browser--menu-row))
+            ('trace-devmaps (if (fboundp 'arxana-browser-trace-devmaps-row)
+                                #'arxana-browser-trace-devmaps-row
+                              #'arxana-browser--info-row))
+            ('trace-all-tensions (if (fboundp 'arxana-browser-trace-tensions-row)
+                                     #'arxana-browser-trace-tensions-row
+                                   #'arxana-browser--info-row))
+            ('trace-all-components (if (fboundp 'arxana-browser-trace-all-components-row)
+                                       #'arxana-browser-trace-all-components-row
+                                     #'arxana-browser--info-row))
+            ('trace-tensions (if (fboundp 'arxana-browser-trace-tensions-row)
+                                 #'arxana-browser-trace-tensions-row
+                               #'arxana-browser--info-row))
+            ('trace-gates (if (fboundp 'arxana-browser-trace-gates-row)
+                              #'arxana-browser-trace-gates-row
+                            #'arxana-browser--info-row))
             (_ #'arxana-browser--menu-row)))
         (t (arxana-browser--require-patterns)
            #'arxana-browser-patterns--browser-pattern-row))))
@@ -991,6 +1057,24 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                         ('media-misc (arxana-browser--info-format))
                         ('media-misc-folder (arxana-media--misc-track-format))
                         ('media-podcasts (arxana-media--podcast-format))
+                        ('trace-home (if (fboundp 'arxana-browser-trace-home-format)
+                                         (arxana-browser-trace-home-format)
+                                       (arxana-browser--menu-format)))
+                        ('trace-devmaps (if (fboundp 'arxana-browser-trace-devmaps-format)
+                                            (arxana-browser-trace-devmaps-format)
+                                          (arxana-browser--info-format)))
+                        ('trace-all-tensions (if (fboundp 'arxana-browser-trace-tensions-format)
+                                                 (arxana-browser-trace-tensions-format)
+                                               (arxana-browser--info-format)))
+                        ('trace-all-components (if (fboundp 'arxana-browser-trace-all-components-format)
+                                                   (arxana-browser-trace-all-components-format)
+                                                 (arxana-browser--info-format)))
+                        ('trace-tensions (if (fboundp 'arxana-browser-trace-tensions-format)
+                                             (arxana-browser-trace-tensions-format)
+                                           (arxana-browser--info-format)))
+                        ('trace-gates (if (fboundp 'arxana-browser-trace-gates-format)
+                                          (arxana-browser-trace-gates-format)
+                                        (arxana-browser--info-format)))
                         (_ (arxana-browser--menu-format))))
                      ((eq (plist-get context :type) 'language)
                       (arxana-browser--pattern-format))
@@ -1098,6 +1182,18 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
        (if (fboundp 'arxana-browser-devmap-open-entry)
            (arxana-browser-devmap-open-entry item)
          (message "Lab devmap browser unavailable")))
+      ('trace-devmap
+       (if (fboundp 'arxana-browser-trace-visit-devmap)
+           (arxana-browser-trace-visit-devmap item)
+         (message "Trace module unavailable")))
+      ('trace-tension
+       (if (fboundp 'arxana-browser-trace-visit-tension)
+           (arxana-browser-trace-visit-tension item)
+         (message "Trace module unavailable")))
+      ('trace-gate
+       (if (fboundp 'arxana-browser-trace-visit-gate)
+           (arxana-browser-trace-visit-gate item)
+         (message "Trace module unavailable")))
       ('encyclopedia-corpus
        (arxana-browser-encyclopedia-open-corpus item))
       ('encyclopedia-entry

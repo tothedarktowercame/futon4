@@ -100,7 +100,14 @@
     (when (file-directory-p books-root)
       (setq arxana-docbook-books-root books-root)))
   ;; Prefer dev/staging implementations for interactive work during Phase 1.
-  (dolist (dev-file '("dev/arxana-docbook.el"
+  ;; Use `load` (not `require`) so files are re-read on subsequent
+  ;; `arxana-load` calls — `require` is a no-op for provided features.
+  (dolist (dev-file '("dev/arxana-store.el"
+                      "dev/arxana-docbook-core.el"
+                      "dev/arxana-docbook-remote.el"
+                      "dev/arxana-docbook-toc.el"
+                      "dev/arxana-docbook-checkout.el"
+                      "dev/arxana-docbook.el"
                       "dev/arxana-docbook-ui.el"
                       "dev/arxana-links.el"
                       "dev/arxana-org-links.el"
@@ -108,7 +115,8 @@
                       "dev/arxana-window-constraints.el"
                       "dev/arxana-scholium.el"
                       "dev/arxana-lab.el"
-                      "dev/arxana-patterns.el"))
+                      "dev/arxana-patterns.el"
+                      "dev/arxana-browser-trace.el"))
     (let ((path (expand-file-name dev-file arxana-root-directory)))
       (when (file-readable-p path)
         (arxana--profile-load
@@ -170,6 +178,7 @@
                       "dev/arxana-xtdb-browse.el"
                       "dev/arxana-media.el"
                       "dev/arxana-browser-evidence.el"
+                      "dev/arxana-browser-trace.el"
                       "dev/arxana-browser-core.el"))
          (features '(arxana-docbook arxana-docbook-ui arxana-docbook-checkout
                      arxana-docbook-remote arxana-lab arxana-patterns
@@ -177,7 +186,8 @@
                      arxana-org-links arxana-relations arxana-browser arxana-derivation
                      arxana-saving arxana-inclusion arxana-import
                      arxana-articles-export arxana-compat arxana-xtdb-browse
-                     arxana-media arxana-browser-evidence arxana-browser-core)))
+                     arxana-media arxana-browser-evidence arxana-browser-trace
+                     arxana-browser-core)))
     (dolist (feat features)
       (when (featurep feat)
         (ignore-errors (unload-feature feat t))))
