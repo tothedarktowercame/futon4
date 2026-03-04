@@ -1,11 +1,12 @@
 # Mission: The Three-Column Stack
 
 **Date:** 2026-03-03
-**Status:** IDENTIFY
+**Status:** MAP
 **Blocked by:** None (M-self-representing-stack proof of concept complete,
 futon1a hyperedge API operational, core.logic foundation in place)
-**Owner:** futon4 (Arxana), with dependencies on futon3c (Mission Control,
-core.logic), futon1a (hyperedge store), futon6 (math content)
+**Owner:** futon4 (Arxana), with dependencies on futon5 (AIF+ formalism,
+wiring diagrams), futon3c (Mission Control, core.logic), futon1a (hyperedge
+store), futon6 (math content, monograph)
 
 ## Motivation
 
@@ -77,6 +78,59 @@ have dispatch hierarchies. This topology is the code analog of math's scope/
 expression/term structure. It should be first-class in the hypergraph, not
 just a terminal annotation.
 
+### Theoretical Substrate: AIF+ Wiring Diagrams
+
+The three columns are not three separate databases with cross-links. They
+are three *projections* of the same underlying formalism: the AIF+ wiring
+diagram calculus defined in futon5 (`chapter0-aif-as-wiring-diagram.md`,
+`ct/mission.clj`).
+
+An AIF+ diagram is a typed directed graph with ports (inputs/outputs),
+components (boxes), and edges (wires), subject to six structural invariants:
+
+- **I1 (Boundary Integrity):** distinguishable inside/outside
+- **I2 (Observation-Action Asymmetry):** system must sense AND act
+- **I3 (Timescale Separation):** fast dynamics constrained by slow
+- **I4 (Preference Exogeneity):** fast actions cannot rewrite slow preferences
+  (wireheading test: no Action→Preference path without Environment)
+- **I5 (Model Adequacy):** internal structure tracks external structure
+- **I6 (Compositional Closure):** no single point of failure
+
+The futon5 mission validator already checks these on mission diagrams via
+graph traversal (`futon5/src/futon5/ct/mission.clj`, 1100+ lines). The
+same invariants apply structurally to each column:
+
+| Column | Components | Wires | Ports | I4 check |
+|--------|-----------|-------|-------|----------|
+| **Code** | Namespaces/modules | Dependency edges, type flows | Entry points (M-x, API, CLI) | Refactoring doesn't rewrite requirements |
+| **Math** | Claims, definitions, scopes | Inferential, conflict, preference edges | Premises, conclusions | FALSIFY-before-CONSTRUCT (Proof Peripheral) |
+| **Project** | Missions, components | Coverage, evidence, pattern-use edges | Inputs (preconditions), outputs (deliverables) | Already validated by futon5 |
+
+The First Proof Sprint monograph (futon6, Figure 22.1 "The Argument")
+demonstrates this concretely: raw git hashes feed evidence ledgers, which
+feed post-hoc pattern reconstruction, which feeds an explicit AIF graph.
+The monograph's conclusion identifies "the gap between post-hoc annotation
+and real-time capture" as a tooling gap, not a conceptual one. This mission
+builds the tooling.
+
+**Note on terminology:** The monograph uses "AIF" for Active Inference
+Framework throughout (see glossary in `intro-making-of.tex`), but the
+concrete node/edge typing (claim, conflict, preference, attacks, supports)
+is drawn from the Argument Interchange Framework (Chesñevar et al.). The
+two frameworks are complementary — Active Inference provides the
+control-theoretic loop (sense→infer→act), Argument Interchange provides the
+reasoning structure (claim→attack→support). A future revision of the
+monograph should clarify this dual usage.
+
+**Generalization via wiring diagrams:** A wiring diagram with certified
+invariants IS a proof of those invariants — the structure itself is the
+evidence (no separate "proof object" needed). This means:
+- A block of code with known entry points maps to a wiring diagram / flowchart
+- A set of definitions and lemmas maps to a wiring diagram
+- A set of business processes maps to a wiring diagram
+- Cross-column invariants become: "the three projections of the same
+  underlying diagram are consistent"
+
 ### Cross-Column Invariants: The Actual Product
 
 Individual columns are databases. Cross-column invariants are what make the
@@ -114,21 +168,40 @@ system a reasoning surface. Examples:
 - No circular namespace dependencies (or explicitly documented exceptions)
 - Every `defmethod` dispatch value corresponds to a known entity type
 
-These invariants are enforceable via core.logic on the Clojure side (Layer 2
-of the three-layer logic architecture from M-self-representing-stack). When an
-invariant fails, it emits a tension. The tension browser surfaces it. A human
-or agent proposes a fix. The fix emits evidence. The loop closes.
+These invariants are structurally grounded in the AIF+ formalism (I1–I6).
+Many can be checked as graph properties of wiring diagrams — e.g., I4
+(wireheading) is detectable by path traversal; I6 (compositional closure)
+by component removal analysis. On the Clojure side, enforcement uses
+core.logic (Layer 2 of M-self-representing-stack's three-layer logic
+architecture) and the futon5 mission validator. When an invariant fails, it
+emits a tension. The tension browser surfaces it. A human or agent proposes
+a fix. The fix emits evidence. The loop closes.
 
 ### Generalization Path
 
-The entity types, relation types, and invariant rules are parameterized —
-not hardcoded to futon.
+The underlying representation is the AIF+ wiring diagram, not a
+futon-specific schema. Each column instantiates the same diagram calculus:
 
-- `var:<ns>/<symbol>` works for any Clojure project
-- Java reflection (`/reflect/java/:class`) extends the same model to Java
-- `covers`, `evidences`, `about-var` work for any project with components
-  and missions
-- Post/scope/expression/term types work for any structured reasoning process
+- **Any Clojure project:** `var:<ns>/<symbol>` as components, dependency
+  edges as wires, entry points as ports → checked against I1–I6
+- **Any Java project:** Java reflection (`/reflect/java/:class`) extends the
+  same model with classes as components, method signatures as wire types
+- **Any structured reasoning process:** Post/scope/expression/term types map
+  to claims/definitions/inferences in any domain — the same wiring structure
+  that represents a mathematical proof represents a technical audit, a due
+  diligence process, or a business case analysis
+- **Any project with missions:** `covers`, `evidences`, `about-var` work for
+  any project with components and missions — futon5 already validates these
+  as wiring diagrams
+
+The futon5 wiring diagrams that regulate cellular automata runs are already
+a basic kind of "self-representing" computer program: they specify
+information flow (inputs→components→outputs) with typed edges and
+structural invariants. This mission generalizes them: given a block of code
+with known entry points, map it to a wiring diagram; given a set of
+definitions and lemmas, map it to a wiring diagram; given a set of business
+processes, map it to a wiring diagram. The AIF+ invariants (I1–I6) then
+apply uniformly.
 
 The futon stack is instance #1. Instance #2 is an external codebase or
 business process, demonstrating that the representation and reasoning
@@ -191,7 +264,7 @@ framework, scopes the work.
 - [x] Specify cross-column invariants (examples per column pair)
 - [x] State the generalization path (futon → any Clojure → any project)
 - [x] Scope in/out
-- [ ] Review with Joe — does the framing match the vision?
+- [x] Review with Joe — does the framing match the vision? (approved 2026-03-04)
 - [x] Identify any missing columns or invariant categories
   - Math↔Code omitted deliberately: math column represents proof *process*
     (not a math library), so direct math→code links are not yet motivated.
@@ -203,32 +276,137 @@ framework, scopes the work.
     round-trips (JSON→XTDB→read-back), demo loops (violation→tension→resolve),
     documentation deliverables (parameterized schema notes).
 
-### 2. MAP
+### 2. MAP (surveyed 2026-03-04)
 
 Survey the current state of all three columns.
 
-- [ ] **Q1 (math column schema):** Full attribute inventory per node/edge type
-  in `thread-633512-hypergraph.json`. Identity patterns. Any additional JSON
-  files beyond thread-633512. Catalog what `arxana-browser-hypergraph.el`
-  currently does with each type.
-- [ ] **Q2 (code column schema):** What the reflection API can produce today —
-  namespaces, vars, deps, protocols, defmethods. Complete attribute shapes.
-  What's queryable vs what needs new endpoints.
-- [ ] **Q3 (project column inventory):** 21 hyperedges now persisted in XTDB
-  (10 devmap, 9 tension, 1 reflection, 1 test — restored 2026-03-03). 73
-  mission backfill entries in evidence store. 9 tension entries via MC API.
-  10 devmap summaries. Inventory what can be re-ingested from existing APIs
-  without new work.
-- [ ] **Q4 (core.logic relations):** Assess `devmapo`, `componento`, `coverso`,
-  `hyperedgeo`, `invarianto`, `implementedo` — which are operational vs stubs,
-  what query patterns they support.
-- [ ] **Q5 (browser migration):** Gap analysis: what does
-  `arxana-browser-hypergraph.el` expect from JSON vs what futon1a's
-  `GET /hyperedges` returns? What adapter code is needed?
-- [ ] **Q6 (implicit invariants):** Survey existing linting rules, test coverage
-  requirements, naming conventions, CI checks. These are candidate
-  cross-column invariants that could be formalized.
-- [ ] **MAP summary:** What's ready, what's missing, what's the critical path.
+- [x] **Q1 (math column schema):**
+  - 82 nodes: 43 expressions, 19 terms, 16 posts, 4 scopes
+  - 99 edges: 43 surface, 26 mention, 15 iatc, 8 discourse, 4 scope,
+    3 categorical
+  - Node types have clear identity patterns: `{a|c|q}-<se_id>` for posts,
+    `expr:<parent>:<hash8>` for expressions, `term:<PascalCase>` for terms,
+    `<parent>:scope-<seq>` for scopes
+  - Expressions carry dual representation: `latex` (presentation) + `sexp`
+    (structure) — sexp enables symbolic reasoning
+  - Scope subtypes encode proof structure: bind/let, quant/universal,
+    quant/existential, constrain/where, env/theorem, assume/consider, etc.
+  - Browser (`arxana-browser-hypergraph.el`) has full rendering: 6 faces,
+    post-centric lens view, discourse/scope/mention/surface sections per post
+  - 105+ additional JSON files in futon6 (showcases, ct-validation golden set,
+    nlab-wiring, physics-se-classical)
+
+- [x] **Q2 (code column schema):**
+  - 6 reflection endpoints operational at `/api/alpha/reflect/*`:
+    - `GET /namespaces` — list + regex filter → `{ns, doc?, file?}`
+    - `GET /ns/:ns` — public vars → `{name, arglists, doc, file, line, private?, macro?, dynamic?}`
+    - `GET /ns/:ns/full` — public + private vars
+    - `GET /var/:ns/:var` — full ReflectionEnvelope (Malli-validated)
+    - `GET /deps/:ns` — `{requires, imports, required-by}`
+    - `GET /java/:class` — Java class reflection (bases, flags, members)
+  - **Gaps:** No protocol listing/enumeration, no defmethod dispatch tracking,
+    no multimethod hierarchy, no record/deftype fields, no source form retrieval
+  - Protocol flag declared in envelope schema but never populated
+  - 35+ tests in core_test.clj, tools wired into explore + mission-control
+    peripherals
+
+- [x] **Q3 (project column inventory):**
+  - 21 hyperedges in XTDB (restored 2026-03-03)
+  - 73 mission backfill evidence entries in evidence store
+  - **Re-ingestible without new code (Phase 1):** 9 tensions + 10 devmaps =
+    19 hyperedges via existing `arxana-browser-lab.el` functions
+  - **Trivial new endpoints (Phase 2):** 10 coverage + 30 doc-audit +
+    ~15 actionable + 1 mana = ~56 hyperedges
+  - **Needs infrastructure (Phase 3):** 150+ code reflection snapshots
+    (bulk var ingestion, requires scheduler)
+  - **Path to 200:** Phase 1+2 = ~96 hyperedges (project column alone).
+    Remaining ~100 from code reflections or math column ingestion
+  - 41 missions scannable across 7 repos, 10 devmap summaries with
+    component structure, coverage analysis computable on-the-fly
+
+- [x] **Q4 (core.logic relations):**
+  - **Operational (8):** missiono, statuso, blocked-byo, repo-ofo, evidenceo,
+    patterno-used, shapeso-defined, mana-fundedo — portfolio adjacency logic
+    works end-to-end (adjacent-possible, what-if, critical-path, clusters)
+  - **Stubs (6+):** devmapo, devmap-stateo, componento, coverso, hyperedgeo,
+    hx-endpointo — facts added but rarely/never queried
+  - **Empty (3):** invarianto, implementedo, annotatedo — defined in schema,
+    no data source, test-only
+  - **Only one tension type derived:** `uncovered-component` via
+    `query-derived-tensions`. No invariant violation checking, no cross-column
+    linking relations
+  - Framework supports the pattern (derive tensions from logic, compare to
+    stored hyperedges) but needs invariant population and check functions
+
+- [x] **Q5 (browser migration):**
+  - **Data model mismatch:** Browser expects `{nodes: [...], edges: [...]}`
+    from JSON file; futon1a returns hyperedges only (no node metadata)
+  - **Type system:** JSON uses strings (`"iatc"`), futon1a uses keywords
+    (`:link/refers-to`)
+  - **Attribute access:** JSON `edge.attrs.act` vs futon1a `:hx/props`
+  - **Thin adapter (1 day):** type conversion + props mapping → hyperedge
+    visualization works, but no node metadata preview
+  - **Full adapter (3–5 days):** entity fetching for node metadata, caching,
+    full parity with JSON-based experience
+
+- [x] **Q6 (implicit invariants):**
+  - **No conventional CI/linting/hooks** — no GitHub Actions, no clj-kondo,
+    no pre-commit hooks. BUT: futon5 already provides a structural checking
+    framework far more powerful than linting — the AIF+ diagram validator
+    checks 5 structural properties + 3 invariant properties (I3 timescale,
+    I4 exogeneity, I6 closure) on wiring diagrams via graph traversal
+  - **Rich documented invariants:** futon3c I-1 through I-5 (architectural),
+    R1–R10 (wiring contract), futon1a I0–I4 (layer-based), futon5 I1–I6
+    (AIF+ structural)
+  - **Machine-readable contracts:** `wiring-claims.edn` + `wiring-evidence.edn`
+    with commit-scoped evidence; futon5 mission `.edn` files with typed
+    ports/components/edges
+  - **Test coverage:** futon3c 1,052 tests / 2,954 assertions; futon1a
+    157 tests / 387 assertions; futon4 and futon0 have no tests
+  - **Candidate formalizations:** the futon5 diagram validator could be
+    extended to check cross-column invariants as wiring diagram properties;
+    additionally, docstring coverage (grep), no-subprocess-in-transport
+    (grep + test exists), no-futon3-deps (grep + test exists), namespace
+    hierarchy (regex), error attribution (static analysis)
+  - **Naming conventions:** `futon3c.{domain}.{subdomain}`, `verb-noun`
+    functions, Malli shape names capitalized, namespace docstrings reference
+    invariants
+
+- [x] **MAP summary:**
+
+  **What's ready:**
+  - Math column: rich schema with 181 entities (82 nodes + 99 edges),
+    browser rendering complete, identity patterns clear
+  - Project column: 21 hyperedges persisted, ingestion pipeline exists,
+    ~96 more achievable from existing APIs
+  - Code column: 6 reflection endpoints operational for ns/var/dep/Java
+  - core.logic: portfolio adjacency works, framework for tension derivation
+    in place
+  - Documented invariants: I-1 through I-5, R1–R10, I0–I4 already specified
+    in prose and partially in machine-readable claims
+
+  **What's missing:**
+  - Code column gaps: no protocol/defmethod/record reflection endpoints
+  - core.logic: invarianto/implementedo have no data source; only one
+    tension type (uncovered-component) can be derived
+  - Browser: adapter needed for futon1a migration (1–5 days)
+  - No conventional CI, but futon5 AIF+ validator provides structural
+    checking — needs to be connected to the hypergraph invariant framework
+  - Math→futon1a ingestion: not yet attempted
+  - Three-column→wiring-diagram mapping not yet formalized (the connection
+    between hypergraph entities and AIF+ diagram components/wires/ports)
+
+  **Critical path:**
+  1. **DERIVE schema** — entity/relation/hyperedge types for all three columns
+     (blocks everything else)
+  2. **Math ingestion** — port JSON to futon1a hyperedges (biggest count
+     contributor: 181 entities from one thread alone)
+  3. **Code reflection bulk snapshot** — ingest ns/var entities from live JVM
+     (150+ hyperedges)
+  4. **Invariant framework** — populate invarianto, implement check functions,
+     wire to tension generation
+  5. **Browser adapter** — thin adapter for futon1a reads (unblocks cross-
+     column navigation)
 
 ### 3. DERIVE
 
@@ -246,14 +424,28 @@ This is the core of the mission.
 
 ### 4. ARGUE
 
-Synthesis drawing on the theoretical anchoring from M-self-representing-stack
-(AIF+ organism, Higgins' self-discrepancy, reflexivity loop, frozen dynamics,
-homoiconicity) plus the commercial generalization argument.
+Synthesis drawing on the AIF+ wiring diagram formalism (futon5), the
+theoretical anchoring from M-self-representing-stack (Higgins'
+self-discrepancy, reflexivity loop, frozen dynamics, homoiconicity), the
+First Proof Sprint monograph (Figure 22.1, "The Argument"), plus the
+commercial generalization argument.
 
-- [ ] Why three columns and not two or four
-- [ ] Why cross-column invariants are the product (not the data)
-- [ ] How this generalizes beyond futon (the commercial argument)
+- [ ] Why three columns and not two or four — they are the three natural
+  projections of an AIF+ diagram (code=implementation, math=reasoning
+  structure, project=process flow)
+- [ ] Why AIF+ invariants (I1–I6) are the right structural language —
+  they apply to any viable system (code, proofs, business processes) and
+  are checkable as graph properties of wiring diagrams
+- [ ] Why cross-column invariants are the product (not the data) — the
+  three projections must be consistent; inconsistency is a tension
+- [ ] How wiring diagrams generalize beyond futon: code entry points as
+  ports, definitions/lemmas as components, business processes as flows —
+  same diagram calculus, same invariant checks
+- [ ] The monograph's thesis: "post-hoc → real-time" is a tooling gap, not
+  a conceptual one — this mission closes the gap
 - [ ] Pattern references (which futon3 patterns inform the design)
+- [ ] Clarify AIF dual usage: Active Inference (control loop) vs Argument
+  Interchange (reasoning structure) — complementary, not competing
 
 ### 5. VERIFY
 
@@ -288,6 +480,10 @@ math↔math, project↔math).
 | Source | What We Take |
 |--------|-------------|
 | M-self-representing-stack (this repo) | Proof of concept, theoretical anchoring, 21-hyperedge schema |
+| `futon5/docs/chapter0-aif-as-wiring-diagram.md` | AIF+ formalism, I1–I6 invariants, diagram calculus |
+| `futon5/src/futon5/ct/mission.clj` | Mission diagram validator (structural + invariant checks) |
+| `futon5/data/missions/*.edn` | 11+ wiring diagrams (missions, exotypes, agent loops) |
+| `futon6/data/first-proof/latex/part4-proof-patterns.tex` | "The Argument" synthesis (Figure 22.1), AIF graph examples |
 | `futon6/data/first-proof/thread-633512-hypergraph.json` | Math column entity/edge schema |
 | `futon6/data/showcases/hypergraph-showcase.json` | Additional math content samples |
 | `futon3c/src/futon3c/peripheral/mission_control_backend.clj` | Project column APIs |
@@ -306,6 +502,18 @@ math↔math, project↔math).
   mission provides the navigable, checkable representation that portfolio
   inference reasons about.
 - **M-mission-control** (futon3c, complete): Produces project-column data.
+- **M-diagram-composition** (futon5): Defines the pheno-geno-exo composition
+  rules for wiring diagrams. The three-column stack's cross-column invariants
+  are instances of composition checks (the three projections must be
+  consistent under the same AIF+ invariants).
+- **futon5 AIF+ formalism** (futon5): Provides the theoretical substrate.
+  The I1–I6 invariants, diagram validator, and wiring diagram calculus are
+  the structural language for this mission's cross-column invariants. The
+  futon5 wiring diagrams that regulate cellular automata runs are a
+  precedent for self-representing programs.
+- **First Proof Sprint monograph** (futon6): Demonstrates the application of
+  AIF+ typing to proof process (Figure 22.1). The monograph's gap
+  ("post-hoc → real-time") is what this mission's tooling addresses.
 - **futon7** (not yet a mission): External world boundary. The generalization
   of this mission's schema to external codebases and business processes is
   futon7 work.
