@@ -75,20 +75,30 @@ section alone, without needing to ask clarifying questions.
 
 Synthesize. Why is this design *right*, not just *workable*?
 
-- [ ] **Pattern references:** Which patterns from the library (futon3/library)
-  informed the design? How?
+- [ ] **Pattern cross-reference:** Search `futon3/library/` for patterns
+  relevant to the DERIVE design. For each pattern that applies, record:
+  which pattern, where it applies in the design, and how. This is a
+  structured survey, not a post-hoc decoration — patterns you discover
+  here may revise the DERIVE design.
 - [ ] **Theoretical coherence:** Does the design serve the theoretical
   anchoring from IDENTIFY? Or has the theory shifted?
 - [ ] **Trade-off summary:** What did we give up and why?
 - [ ] **Generalization notes:** Does this design work beyond the immediate
   context? What would need to change to apply it elsewhere?
+- [ ] **Plain-language argument:** After the technical synthesis, write
+  a short (3–5 sentence) version of the argument that uses no jargon.
+  If you can't explain it simply, the design may be more complex than
+  it needs to be. This also serves as the "elevator pitch" for the
+  mission's contribution.
 
-The ARGUE phase is short — typically a few paragraphs. Its purpose is to
-make the design defensible and to catch misalignments between theory and
-implementation before code is written.
+The ARGUE phase produces two things: the technical synthesis (pattern
+references, coherence checks, trade-offs) and the plain-language argument.
+Both are necessary. The technical synthesis makes the design defensible;
+the plain-language version makes it communicable.
 
 **Exit criterion:** The design feels *inevitable* given the constraints,
-not merely *possible*.
+not merely *possible*. And someone outside the project can understand
+what it does and why from the plain-language argument alone.
 
 ### 5. VERIFY
 

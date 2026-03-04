@@ -671,13 +671,14 @@ self-discrepancy, reflexivity loop, frozen dynamics, homoiconicity), the
 First Proof Sprint monograph (Figure 22.1, "The Argument"), plus the
 commercial generalization argument.
 
-- [x] Why three columns and not two or four
-- [x] Why AIF+ invariants (I1–I6) are the right structural language
-- [x] Why cross-column invariants are the product (not the data)
-- [x] How wiring diagrams generalize beyond futon
-- [x] The monograph's thesis: "post-hoc → real-time" is a tooling gap
-- [x] Pattern references
-- [x] Clarify AIF dual usage
+- [x] Why three columns and not two or four (§4.1)
+- [x] Why AIF+ invariants (I1–I6) are the right structural language (§4.2)
+- [x] Why cross-column invariants are the product (not the data) (§4.3)
+- [x] How wiring diagrams generalize beyond futon (§4.4)
+- [x] The monograph's thesis: "post-hoc → real-time" is a tooling gap (§4.5)
+- [x] Pattern cross-reference from futon3/library (§4.6)
+- [x] Clarify AIF dual usage (§4.7)
+- [x] Plain-language argument (§4.8)
 
 #### 4.1 Why Three Columns and Not Two or Four
 
@@ -885,6 +886,22 @@ The First Proof Sprint monograph uses "AIF" for Active Inference
 typing it describes (claim, conflict, preference, attacks, supports)
 is Argument Interchange. A future revision of the monograph should
 distinguish the two explicitly, as this mission does.
+
+#### 4.8 Plain-Language Argument
+
+We built a system that looks at itself from three angles: the code it's
+made of, the plans for what it should become, and the reasoning that
+justifies why it's built this way. When any two of these disagree — a
+plan says "done" but the code has no documentation, or a proof skips a
+step that should have been checked — the system notices and tells you.
+Fixing the disagreement produces evidence that the fix happened, which
+closes the loop.
+
+This works for our codebase, but the same trick works for any codebase,
+any structured reasoning process (a technical audit, a legal review, a
+business case), or any project where plans and reality need to stay in
+sync. The value isn't the database of facts about the system — it's the
+rules that catch when the facts don't add up.
 
 ### 5. VERIFY
 
