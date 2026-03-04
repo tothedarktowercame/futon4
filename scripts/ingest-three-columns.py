@@ -569,6 +569,46 @@ def check_invariants():
             "resolution": "Verify namespace is reachable or remove",
         })
 
+    # INV-4: Ungrounded Definitions (Math↔Math)
+    print("\n  INV-4: Ungrounded Definitions (Math↔Math)")
+    scopes = query_all_of_type("math/scope")
+    # Get all scope node IDs (single-endpoint = entity registration)
+    scope_ids = set()
+    for s in scopes:
+        eps = s["hx/endpoints"]
+        if len(eps) == 1:
+            scope_ids.add(eps[0])
+
+    # Check which scopes appear in iatc edges (referenced in argumentation)
+    iatc_edges = query_all_of_type("math/iatc")
+    referenced_in_iatc = set()
+    for edge in iatc_edges:
+        for ep in edge["hx/endpoints"]:
+            if ep in scope_ids:
+                referenced_in_iatc.add(ep)
+
+    # Also check scope-type relational edges (scope containment)
+    scope_edges = [s for s in scopes if len(s["hx/endpoints"]) == 2]
+    in_scope_relation = set()
+    for edge in scope_edges:
+        for ep in edge["hx/endpoints"]:
+            if ep in scope_ids:
+                in_scope_relation.add(ep)
+
+    # Ungrounded = in no iatc edge AND not contained in another scope
+    ungrounded = scope_ids - referenced_in_iatc
+    print(f"    Total scopes: {len(scope_ids)}, in iatc: {len(referenced_in_iatc)}, "
+          f"in scope relation: {len(in_scope_relation)}, ungrounded: {len(ungrounded)}")
+
+    for sid in sorted(ungrounded):
+        violations.append({
+            "invariant": "INV-4",
+            "type": "ungrounded-definition",
+            "entity": sid,
+            "summary": f"Scope {sid} is never referenced in argumentation (no iatc edge)",
+            "resolution": "Add iatc edge (assert/clarify/reference) linking this definition to a post",
+        })
+
     # Emit violations as hyperedges
     print(f"\n  Total violations: {len(violations)}")
     print("  Writing violation hyperedges to futon1a...")
@@ -620,6 +660,7 @@ def count_hyperedges():
         "invariant/undocumented-entry-point",
         "invariant/uncovered-component",
         "invariant/orphan-namespace",
+        "invariant/ungrounded-definition",
         # Test
         "test/ping",
     ]

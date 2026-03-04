@@ -1376,6 +1376,7 @@ Returns :ok, :stale (signature changed), or :missing (var gone)."
    ((string-match-p "INV-1" inv) 'arxana-violation-inv1-face)
    ((string-match-p "INV-2" inv) 'arxana-violation-inv2-face)
    ((string-match-p "INV-3" inv) 'arxana-violation-inv3-face)
+   ((string-match-p "INV-4" inv) 'arxana-violation-inv2-face)  ; reuse red for math
    (t 'default)))
 
 (defun arxana-browser--violations-row (item)
@@ -1403,7 +1404,8 @@ Returns :ok, :stale (signature changed), or :missing (var gone)."
         ;; Query each invariant type
         (dolist (inv-type '("invariant/undocumented-entry-point"
                             "invariant/uncovered-component"
-                            "invariant/orphan-namespace"))
+                            "invariant/orphan-namespace"
+                            "invariant/ungrounded-definition"))
           (let ((resp (arxana-store-fetch-hyperedges :type inv-type :limit 200)))
             (when resp
               (let ((hxs (cond
@@ -1455,7 +1457,11 @@ Returns :ok, :stale (signature changed), or :missing (var gone)."
          ((string-match-p "INV-3" inv)
           (insert "This namespace is not required by any other namespace in the\n")
           (insert "futon ecosystem. It may be dead code, or its integration point\n")
-          (insert "may be missing.\n")))
+          (insert "may be missing.\n"))
+         ((string-match-p "INV-4" inv)
+          (insert "This scope (definition/binding) is never referenced by an iatc\n")
+          (insert "(argumentation) edge. Add an iatc edge with act=reference to\n")
+          (insert "ground this definition in the argumentative structure.\n")))
         (insert "\n** Actions\n\n")
         (insert "- Press =q= to close this buffer\n")
         (when (string-match-p "^ns:" entity)
