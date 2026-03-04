@@ -479,6 +479,7 @@ math↔math, project↔math).
 
 | Source | What We Take |
 |--------|-------------|
+| `futon3/holes/holistic-argument-sketch.md` | Stack-level ARGUE seed: S1–S5, A1–A4, potentiality argument |
 | M-self-representing-stack (this repo) | Proof of concept, theoretical anchoring, 21-hyperedge schema |
 | `futon5/docs/chapter0-aif-as-wiring-diagram.md` | AIF+ formalism, I1–I6 invariants, diagram calculus |
 | `futon5/src/futon5/ct/mission.clj` | Mission diagram validator (structural + invariant checks) |
@@ -493,6 +494,43 @@ math↔math, project↔math).
 | `futon4/dev/arxana-browser-trace.el` | Project column browser (API-based) |
 | `futon4/dev/arxana-store.el` | Hyperedge read/write API |
 | `futon1a/src/futon1a/api/routes.clj` | Hyperedge HTTP endpoints |
+
+## Relationship to The Holistic Argument
+
+`futon3/holes/holistic-argument-sketch.md` is the seed of a stack-level
+ARGUE phase — "what the futon stack is on about, and why it should continue
+to exist." It identifies five support relations (S1–S5), four attack
+relations (A1–A4), and a five-step chain: work → proof → patterns →
+coordination → understanding → **argument** (the missing piece).
+
+This mission addresses several of its gaps directly:
+
+- **S5 (reflexive architecture is rare):** The three-column stack IS the
+  reflexive architecture — three projections of the system's own structure,
+  checkable against AIF+ invariants. Completing this mission instantiates S5.
+- **A4 (the explanation problem):** The three-column decomposition
+  (knowledge creation, development process, code) with AIF+ wiring diagrams
+  as the unifying substrate is a more legible framing than "Active
+  Inference-based reflexive development environment with flexiformal
+  proofwork..." — it gives people something concrete to point at.
+- **Step 4 → Step 5 (understanding → argument):** The holistic sketch notes
+  that M-self-representing-stack delivers step 4 (understanding) but step 5
+  (argument) is missing. Cross-column invariants are a form of argument:
+  they are structural claims about the system that can be checked, violated,
+  and resolved. The invariant→tension→resolve loop is machine-checkable
+  argumentation.
+
+What this mission does NOT address (for future work):
+- The entelechy framing (Driesch) — what organizing principle guides the
+  stack's morphogenesis. The AIF+ invariants (I1–I6) are candidates: they
+  constrain what forms are viable. The reverse morphogenesis vocabulary
+  (象/香/←, `futon6/holes/handoffs/question-asking-as-reverse-morphogenesis.md`)
+  applies: the stack's form (象) is observable in the three columns; the
+  entelechy is the ← reading (what constraints make this form stable).
+- The Agamben potentiality argument (not-not-doing) — already sketched,
+  needs integration with the evidence this mission produces.
+- The commercial argument (S4) — this mission builds the infrastructure;
+  the commercial case is a follow-on.
 
 ## Relationship to Other Missions
 
