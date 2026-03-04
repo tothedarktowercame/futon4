@@ -1,7 +1,7 @@
 # Mission: The Three-Column Stack
 
 **Date:** 2026-03-03
-**Status:** MAP
+**Status:** DERIVE
 **Blocked by:** None (M-self-representing-stack proof of concept complete,
 futon1a hyperedge API operational, core.logic foundation in place)
 **Owner:** futon4 (Arxana), with dependencies on futon5 (AIF+ formalism,
@@ -414,13 +414,254 @@ Entity types, relation types, hyperedge types, and invariant rules for all
 three columns. IF/HOWEVER/THEN/BECAUSE justifications for design decisions.
 This is the core of the mission.
 
-- [ ] Entity type table (all three columns, with identity patterns, source,
-  ingested/derived/authored)
-- [ ] Binary relation types (within-column and cross-column)
-- [ ] Hyperedge types (n-ary connections)
-- [ ] Invariant rules (at least 3 cross-column, with core.logic signatures)
-- [ ] Data flow: which systems produce which entities, how they reach futon1a
-- [ ] Browser view specifications (what views serve each column)
+- [x] Entity type table (§3.1 — 4 math, 6 project, 4 code entity types
+  with identity patterns, attributes, sources, ingestion paths)
+- [x] Binary relation types (§3.2 — 6 within-math, 4 within-project,
+  3 within-code, 5 cross-column)
+- [x] Hyperedge types (§3.3 — 5 existing + 4 new n-ary types)
+- [x] Invariant rules (§3.4 — 5 invariants: INV-1 through INV-5, spanning
+  Project↔Code, Math↔Math, Code↔Code, Project↔Math, with core.logic
+  signatures)
+- [x] Data flow (§3.5 — ASCII diagram + ingestion paths table, all
+  idempotent)
+- [x] Browser view specifications (§3.6 — 5 views: trace, hypergraph,
+  namespace explorer, invariant dashboard, cross-column navigator)
+
+#### 3.1 Entity Types
+
+**Math Column (ingested from futon6 JSON)**
+
+| Entity Type | Identity Pattern | Attributes | Source | Count (thread-633512) |
+|-------------|-----------------|------------|--------|----------------------|
+| `post` | `post:<site>/<se-id>` | subtype (question/answer/comment), score, is_accepted, parent, title, tags | futon6 JSON `nodes` | 16 |
+| `expression` | `expr:<parent-id>/<blake2b-8>` | latex, sexp, display | futon6 JSON `nodes` | 43 |
+| `scope` | `scope:<parent-id>/<seq>` | subtype (bind/let, quant/universal, constrain/where, env/theorem, assume/consider, …), match, ends (role-labeled bindings) | futon6 JSON `nodes` | 4 |
+| `term` | `term:<slug>` (e.g., `term:commutative-diagram`) | surface_forms (array) | futon6 JSON `nodes` | 19 |
+
+**Project Column (ingested from MC APIs + evidence store)**
+
+| Entity Type | Identity Pattern | Attributes | Source | Ingestion |
+|-------------|-----------------|------------|--------|-----------|
+| `mission` | `mission:<repo>/<id>` | status, date, blocked-by, gates, doc-audit | `build-inventory` (MC backend) | Backfill → evidence store |
+| `devmap` | `devmap:<id>` | state, component-count, edge-count, input/output ports, all-valid | `read-all-devmaps` (MC backend) | HX via `arxana-browser-lab.el` |
+| `component` | `component:<devmap>/<id>` | name, maturity (from devmap) | Extracted from devmap components | Derived (currently only HX endpoints) |
+| `tension` | `tension:<devmap>/<component>/<type>` | type (uncovered/blocked/structural), summary, detected-at, coverage-pct | `build-tension-export` (MC backend) | HX via `arxana-browser-lab.el` |
+| `evidence-entry` | `evidence:<id>` (UUID-based) | type, claim-type, author, body, tags, at, pattern-id, session-id | Evidence store (futon3c) | Already persisted |
+| `pattern` | `pattern:<namespace>/<name>` | rationale, hotwords, truth (sigil) | Pattern library (futon3/library/) | Authored |
+
+**Code Column (ingested from reflection API snapshots)**
+
+| Entity Type | Identity Pattern | Attributes | Source | Ingestion |
+|-------------|-----------------|------------|--------|-----------|
+| `namespace` | `ns:<symbol>` | doc, file | `GET /reflect/namespaces` | Snapshot → HX |
+| `var` | `var:<ns>/<symbol>` | arglists, doc, file, line, private?, macro?, dynamic? | `GET /reflect/ns/:ns` | Snapshot → HX |
+| `var-envelope` | `var:<ns>/<symbol>` (same, richer) | + resolved-at, tag | `GET /reflect/var/:ns/:var` (Malli-validated) | Snapshot → HX |
+| `java-class` | `java:<fqcn>` | bases, flags, members | `GET /reflect/java/:class` | Snapshot → HX |
+
+*Not yet queryable (needs new endpoints):* protocol, defmethod/multimethod,
+record/deftype. These are scoped out of the first pass — the existing 4
+code entity types are sufficient for the initial invariant framework.
+
+**IF** the code column needs protocol/defmethod entities for cross-column
+invariants (Code↔Code category: "every protocol has ≥1 implementation"),
+**HOWEVER** no reflection endpoints exist for these today,
+**THEN** implement protocol/multimethod reflection as a follow-on after the
+initial 200-hyperedge milestone is reached,
+**BECAUSE** the existing ns/var/dep entities are sufficient for the
+Project↔Code invariants (docstring coverage, PUR trail), which are
+higher priority.
+
+#### 3.2 Binary Relation Types
+
+**Within Math Column**
+
+| Relation | Endpoints | Attrs | Notes |
+|----------|----------|-------|-------|
+| `iatc` (illocutionary act) | post → post | act (assert, clarify, exemplify, challenge, query, agree, reference, reform) | Discourse structure — who says what to whom |
+| `mention` | post → term | surface (text span) | Term occurrences in posts |
+| `surface` | expression → post | position (char offset) | Maps math expressions to their text location |
+| `scope-binding` | scope → post | binding_type | Links binding context to the post it scopes |
+| `categorical` | post → (self) | concept (cat/equivalence, cat/limit, …), score | Category-theoretic annotations |
+| `discourse` | post → (self) | role (wire/port/label), dtype, match | Rhetorical structure signals |
+
+**Within Project Column**
+
+| Relation | Endpoints | Attrs | Notes |
+|----------|----------|-------|-------|
+| `covers` | mission → component | — | "This mission addresses this devmap component" |
+| `evidences` | evidence-entry → mission | claim-type | "This evidence supports/refutes this mission claim" |
+| `pattern-use` | mission → pattern | via (PSR/PUR id) | "This mission applied this pattern" |
+| `blocked-by` | mission → mission | — | Dependency chain |
+
+**Within Code Column**
+
+| Relation | Endpoints | Attrs | Notes |
+|----------|----------|-------|-------|
+| `requires` | namespace → namespace | — | Clojure ns requires |
+| `imports` | namespace → java-class | — | Clojure ns imports |
+| `defines` | namespace → var | — | "This ns contains this var" |
+
+**Cross-Column**
+
+| Relation | Endpoints | Category | Notes |
+|----------|----------|----------|-------|
+| `about-var` | {mission, tension, component} → var | Project↔Code | "This project entity references this code var" (existing: `reflection/about-var` HX type) |
+| `implements` | var → component | Project↔Code | "This var implements this devmap component" |
+| `entry-point` | var → {mission, devmap} | Project↔Code | "This var is a public entry point for this system" |
+| `capability-goal` | {mission, evidence-entry} → futonzero-goal | Project↔Math | "This work traces to a capability development goal" |
+| `discipline-gate` | evidence-entry → {proof-step, scope} | Project↔Math | "This evidence records a Proof Peripheral gate satisfaction" |
+
+#### 3.3 Hyperedge Types (n-ary)
+
+Binary relations (§3.2) use two endpoints. Hyperedges connect 3+
+endpoints or have richer internal structure:
+
+| HX Type | Endpoints | Props | Notes |
+|---------|----------|-------|-------|
+| `tension/uncovered-component` | [devmap, component, ?mission] | summary, detected-at, coverage-pct | Existing — 9 in XTDB |
+| `tension/blocked-mission` | [mission, blocker-mission] | summary, detected-at | Existing |
+| `tension/structural-invalid` | [devmap, failed-checks…] | summary, detected-at | Existing |
+| `devmap/prototype` | [devmap, component₁, component₂, …] | state, component-count, edge-count, all-valid | Existing — 10 in XTDB |
+| `reflection/about-var` | [claim-id, var] | reflection envelope fields | Existing — 1 in XTDB |
+| `trace/gate-chain` | [tension, gate₁-result, …, gate₆-result] | complete?, blocked-at | NEW: persists the 6-gate trace path |
+| `invariant/violation` | [invariant-id, violating-entity₁, …] | rule, message, detected-at | NEW: records an invariant check failure |
+| `math/thread` | [post₁, post₂, …, postₙ] | thread-id, site | NEW: groups all posts in a math thread |
+| `coverage/analysis` | [devmap, covered-comp₁, …, uncovered-comp₁, …] | total, covered-count, coverage-pct | NEW: snapshot of coverage state |
+
+#### 3.4 Invariant Rules
+
+Five cross-column invariants, with core.logic signatures. Each invariant
+is a relation that, when violated, emits a tension of type
+`invariant/violation`.
+
+**INV-1: Documented Entry Points** (Project↔Code)
+
+Every public var that serves as an entry point (M-x command, API endpoint,
+CLI subcommand) must have a non-nil docstring.
+
+```clojure
+(defn query-undocumented-entry-points [db]
+  (logic/run* [ns sym]
+    (entry-pointo db ns sym)        ;; var is marked as entry point
+    (varo db ns sym meta)           ;; var has reflection metadata
+    (== (:doc meta) nil)))          ;; docstring is nil
+```
+
+Tension emitted: `invariant/violation` with endpoints
+`[inv:documented-entry-points, var:<ns>/<sym>]`.
+
+**INV-2: PUR Trail Complete** (Project↔Code)
+
+Every mission with status `:complete` has at least one `pattern-use`
+relation (evidence that patterns were selected and outcomes recorded).
+
+```clojure
+(defn query-missions-without-pur [db]
+  (logic/run* [mid]
+    (missiono db mid)
+    (statuso db mid :complete)
+    (logic/nafc pattern-useo db mid _)))  ;; no pattern-use for this mission
+```
+
+Tension emitted: `invariant/violation` with endpoints
+`[inv:pur-trail-complete, mission:<repo>/<id>]`.
+
+**INV-3: Definition Reference Checked** (Math↔Math)
+
+Every proof step that introduces a definition (scope with subtype
+`bind/let` or `env/theorem`) has at least one `mention` edge linking
+to the term being defined.
+
+```clojure
+(defn query-ungrounded-definitions [db]
+  (logic/run* [scope-id]
+    (scopeo db scope-id attrs)
+    (membero (:subtype attrs) ["bind/let" "env/theorem"])
+    (logic/nafc scope-has-mentiono db scope-id _)))
+```
+
+Tension emitted: `invariant/violation` with endpoints
+`[inv:definition-reference, scope:<parent>/<seq>]`.
+
+**INV-4: No Circular Namespace Dependencies** (Code↔Code)
+
+The namespace dependency graph (from `requires` relations) must be
+acyclic, or cycles must be explicitly documented as exceptions.
+
+```clojure
+(defn query-circular-deps [db]
+  (logic/run* [ns1 ns2]
+    (requireso db ns1 ns2)
+    (reachable-viao db ns2 ns1)))    ;; ns2 transitively requires ns1
+```
+
+Tension emitted: `invariant/violation` with endpoints
+`[inv:no-circular-deps, ns:<ns1>, ns:<ns2>]`.
+
+**INV-5: FALSIFY Before CONSTRUCT** (Project↔Math)
+
+Mathematical work that produces results feeding into project decisions
+must have a recorded FALSIFY gate satisfaction (via the Proof Peripheral)
+before any CONSTRUCT evidence is recorded.
+
+```clojure
+(defn query-unfalsified-constructs [db]
+  (logic/run* [eid]
+    (evidence-entryo db eid attrs)
+    (== (:evidence/type attrs) :proof-construct)
+    (logic/nafc has-prior-falsifyo db eid)))
+```
+
+Tension emitted: `invariant/violation` with endpoints
+`[inv:falsify-before-construct, evidence:<id>]`.
+
+#### 3.5 Data Flow
+
+```
+futon6 JSON files ──────────────────────────────┐
+  (thread-633512-hypergraph.json, showcases)     │
+                                                 │  Math entities
+                                                 ▼
+                                           ┌──────────┐
+futon3c MC APIs ──────────────────────────▶│          │
+  GET /mc/tensions                         │          │
+  GET /mc/devmaps                          │ futon1a  │
+  POST /mc/backfill                        │  XTDB    │
+                                           │          │
+futon3c Reflection API ───────────────────▶│          │
+  GET /reflect/namespaces                  │          │
+  GET /reflect/ns/:ns                      └────┬─────┘
+  GET /reflect/var/:ns/:var                     │
+                                                │ GET /hyperedges
+futon3c core.logic ◀────────────────────────────┤
+  query-derived-tensions                        │
+  invariant checks (INV-1..5)                   │
+           │                                    │
+           ▼                                    ▼
+  tension generation ──────────────▶  arxana-browser (futon4)
+  invariant/violation HX                trace, hypergraph views
+```
+
+**Ingestion paths:**
+
+| Source | Mechanism | Destination | Idempotent? |
+|--------|-----------|-------------|-------------|
+| futon6 JSON | New: `arxana-store-ingest-math-thread` (Emacs) | futon1a HX | Yes (stable IDs from content hash) |
+| MC tensions | Existing: `arxana-browser-ingest-all-tensions` | futon1a HX | Yes (stable ID: `hx:tension/{endpoints}`) |
+| MC devmaps | Existing: `arxana-browser-ingest-all-devmaps` | futon1a HX | Yes (stable ID: `hx:devmap/{endpoints}`) |
+| MC backfill | Existing: `POST /mc/backfill` | Evidence store | Yes (duplicate ID check) |
+| Reflection snapshots | New: bulk `GET /reflect/ns/:ns` → HX per var | futon1a HX | Yes (stable ID: `var:<ns>/<sym>`) |
+| Invariant violations | New: core.logic check → `POST /hyperedge` | futon1a HX | Yes (stable ID from invariant+entity) |
+
+#### 3.6 Browser View Specifications
+
+| View | Column | Data Source | Entry Point | Navigation |
+|------|--------|------------|-------------|------------|
+| **Trace browser** (existing) | Project | `GET /mc/trace` | Arxana menu → Trace | Devmaps → tensions → 6-gate chain → source |
+| **Hypergraph browser** (existing, needs adapter) | Math | futon6 JSON → futon1a | Arxana menu → Encyclopedia | Posts → expressions/scopes/terms/discourse |
+| **Namespace explorer** (new) | Code | `GET /reflect/namespaces` + HX | Arxana menu → Code | Namespaces → vars → deps → detail |
+| **Invariant dashboard** (new) | Cross-column | `GET /hyperedges?type=invariant/violation` | Arxana menu → Invariants | Violations grouped by rule → entity detail → fix action |
+| **Cross-column navigator** (new) | All | HX endpoint traversal | Any entity → related entities | From a var, see missions that reference it; from a mission, see vars it covers; from a math term, see related patterns |
 
 ### 4. ARGUE
 
