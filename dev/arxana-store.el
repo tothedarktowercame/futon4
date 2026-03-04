@@ -22,8 +22,13 @@
   "Non-nil enables Futon sync operations.
 Set FUTON4_ENABLE_SYNC=1 in the environment to default this on.")
 
-(defvar futon4-base-url nil
-  "Base URL for the Futon API (e.g., http://localhost:8080).")
+(defvar futon4-base-url
+  (let ((value (getenv "FUTON4_BASE_URL")))
+    (when (and (stringp value)
+               (not (string-empty-p (string-trim value))))
+      (string-trim value)))
+  "Base URL for the Futon API (e.g., http://localhost:7071/api/alpha).
+Set FUTON4_BASE_URL in the environment to default this on.")
 
 (defgroup arxana-store nil
   "Futon storage bridge settings."
@@ -38,11 +43,13 @@ Set FUTON4_ENABLE_SYNC=1 in the environment to default this on.")
 (defcustom arxana-store-default-penholder
   (let ((value (or (getenv "FUTON4_PENHOLDER")
                    (getenv "FUTON1A_COMPAT_PENHOLDER"))))
-    (when (and (stringp value)
-               (not (string-empty-p (string-trim value))))
-      (string-trim value)))
-  "Optional penholder sent via the X-Penholder header on Futon requests.
-Set this to a penholder id allowed by futon1a Layer 3 authorization."
+    (if (and (stringp value)
+             (not (string-empty-p (string-trim value))))
+        (string-trim value)
+      "api"))
+  "Penholder sent via the X-Penholder header on Futon requests.
+Must be a penholder id allowed by futon1a Layer 3 authorization.
+Defaults to \"api\" which matches the futon3c dev setup."
   :type '(choice (const :tag "Unset" nil)
                  string)
   :group 'arxana-store)
@@ -697,7 +704,9 @@ RELATIONS is a list of relation payloads matching the /relation format."
 (defun arxana-store--hyperedge-payload (type hx-type endpoints props)
   (let ((clean (delq nil endpoints)))
     (delq nil
-          (list (when type (cons 'type (arxana-store--stringify type)))
+          (list (when arxana-store-default-penholder
+                  (cons 'penholder arxana-store-default-penholder))
+                (when type (cons 'type (arxana-store--stringify type)))
                 (when hx-type (cons 'hx/type (arxana-store--stringify hx-type)))
                 (cons 'hx/endpoints clean)
                 (when props (cons 'props props))))))
