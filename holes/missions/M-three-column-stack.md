@@ -1,7 +1,7 @@
 # Mission: The Three-Column Stack
 
 **Date:** 2026-03-03
-**Status:** DERIVE
+**Status:** ARGUE
 **Blocked by:** None (M-self-representing-stack proof of concept complete,
 futon1a hyperedge API operational, core.logic foundation in place)
 **Owner:** futon4 (Arxana), with dependencies on futon5 (AIF+ formalism,
@@ -671,22 +671,220 @@ self-discrepancy, reflexivity loop, frozen dynamics, homoiconicity), the
 First Proof Sprint monograph (Figure 22.1, "The Argument"), plus the
 commercial generalization argument.
 
-- [ ] Why three columns and not two or four — they are the three natural
-  projections of an AIF+ diagram (code=implementation, math=reasoning
-  structure, project=process flow)
-- [ ] Why AIF+ invariants (I1–I6) are the right structural language —
-  they apply to any viable system (code, proofs, business processes) and
-  are checkable as graph properties of wiring diagrams
-- [ ] Why cross-column invariants are the product (not the data) — the
-  three projections must be consistent; inconsistency is a tension
-- [ ] How wiring diagrams generalize beyond futon: code entry points as
-  ports, definitions/lemmas as components, business processes as flows —
-  same diagram calculus, same invariant checks
-- [ ] The monograph's thesis: "post-hoc → real-time" is a tooling gap, not
-  a conceptual one — this mission closes the gap
-- [ ] Pattern references (which futon3 patterns inform the design)
-- [ ] Clarify AIF dual usage: Active Inference (control loop) vs Argument
-  Interchange (reasoning structure) — complementary, not competing
+- [x] Why three columns and not two or four
+- [x] Why AIF+ invariants (I1–I6) are the right structural language
+- [x] Why cross-column invariants are the product (not the data)
+- [x] How wiring diagrams generalize beyond futon
+- [x] The monograph's thesis: "post-hoc → real-time" is a tooling gap
+- [x] Pattern references
+- [x] Clarify AIF dual usage
+
+#### 4.1 Why Three Columns and Not Two or Four
+
+**IF** a self-representing system needs to capture its own structure at
+multiple levels of abstraction,
+**HOWEVER** an undifferentiated graph of "everything about the system"
+would be unnavigable and uncheckable,
+**THEN** decompose into exactly three columns: what the system *does*
+(code), what the system *intends* (project), and what the system *knows*
+(knowledge creation),
+**BECAUSE** these correspond to the three aspects of any AIF+ wiring
+diagram: implementation (the boxes and their internals), process (the
+flow of information through the diagram over time), and reasoning (the
+argumentative structure that justifies why this diagram and not another).
+
+Two columns would conflate either process with implementation (losing the
+ability to ask "does the code match the plan?") or reasoning with process
+(losing the ability to ask "are we working on the right problem?"). Four
+or more columns would split one of these along an axis that doesn't
+correspond to a natural AIF+ projection — e.g., separating "tests" from
+"code" creates a column that is derivative of the code column, not
+independent of it.
+
+The three-column decomposition also matches the three timescales in the
+futon5 pheno-geno-exo composition (`M-diagram-composition.md`):
+
+| Column | Timescale | Composition role |
+|--------|-----------|-----------------|
+| Code | Fast (social/operational) | Phenotype — the observable behavior |
+| Project | Medium (task/sprint) | Genotype — the generative plan |
+| Math/Knowledge | Slow (glacial/library) | Exotype — the constraining theory |
+
+This is not coincidental. The AIF+ formalism requires timescale separation
+(I3) for viability. A system whose theory changes as fast as its code has
+no stable identity; a system whose code never changes relative to its plans
+is dead. The three columns instantiate the three timescale bands that I3
+requires.
+
+#### 4.2 Why AIF+ Invariants Are the Right Structural Language
+
+**IF** cross-column invariants need to be checkable, not just documented,
+**HOWEVER** ad hoc consistency rules (linting, grep patterns, CI scripts)
+are brittle and don't compose,
+**THEN** ground the invariants in the AIF+ formalism (I1–I6), which
+provides a compositional structural language for viability,
+**BECAUSE** the AIF+ invariants are graph properties of wiring diagrams
+that can be checked by traversal, and the futon5 mission validator
+already implements this for mission diagrams (1100+ lines, 5 structural
+checks + 3 invariant checks).
+
+The mapping from AIF+ invariants to cross-column checks:
+
+| AIF+ Invariant | Cross-Column Instance | Check Method |
+|---------------|----------------------|--------------|
+| I1 (Boundary) | Each column has distinct entity types with non-overlapping identity patterns | Schema validation |
+| I2 (Obs-Action Asymmetry) | The system both reads its own state (reflection) AND acts on it (tension resolution) | Trace loop completeness |
+| I3 (Timescale Separation) | Code changes faster than projects, projects faster than theory | Timestamp ordering on evidence |
+| I4 (Preference Exogeneity) | Invariants (slow) are not rewritable by code changes (fast) — no `--no-verify` | INV-5 (FALSIFY before CONSTRUCT); no bypass flags |
+| I5 (Model Adequacy) | The hypergraph representation tracks the actual system state | Round-trip verification (VERIFY phase) |
+| I6 (Compositional Closure) | Removing any one column degrades but doesn't crash the system | Each column functions independently |
+
+The key insight is **I4 applied to the stack itself**: the invariant rules
+(INV-1 through INV-5) are slow-timescale constraints. If the code column
+could modify or suppress invariant violations without going through the
+project column (i.e., without creating a tension, having a human review
+it, and recording evidence of resolution), that would be a wireheading
+violation — the system rewriting its own preferences. The
+invariant→tension→browse→act→resolve loop is the I4-compliant path.
+
+#### 4.3 Why Cross-Column Invariants Are the Product
+
+**IF** any system can store entities and relations (that's just a database),
+**HOWEVER** the value of a self-representing stack is not in the data but
+in the ability to reason about structural consistency,
+**THEN** the cross-column invariants — not the hyperedges — are the actual
+product,
+**BECAUSE** invariants are what distinguish a live, self-correcting system
+from a static knowledge graph.
+
+The holistic argument sketch (`futon3/holes/holistic-argument-sketch.md`)
+identifies a five-step chain: work → proof → patterns → coordination →
+understanding → **argument**. The first four steps produce data (code,
+evidence, patterns, devmaps). Step 5 — argument — is the claim that the
+data is *consistent* and that inconsistencies are *visible*. That claim
+is exactly what cross-column invariants provide.
+
+Concretely: 200 hyperedges in XTDB is infrastructure. The statement
+"every completed mission has a pattern-use record, and here are the three
+that don't" is a product. The first is a database; the second is an
+audit finding. The commercial value is in the second.
+
+#### 4.4 How Wiring Diagrams Generalize Beyond Futon
+
+**IF** the three-column schema is parameterized (entity types, relation
+types, and invariant rules are not hardcoded to futon),
+**HOWEVER** parameterization alone doesn't demonstrate generality,
+**THEN** show that the AIF+ wiring diagram mapping works for any system
+with entry points, information flow, and structural constraints,
+**BECAUSE** a wiring diagram with certified invariants IS a proof of
+those invariants — the structure itself is the evidence.
+
+Three generalization levels, each adding a domain:
+
+**Level 1: Any Clojure project.** Replace futon-specific entity IDs with
+the target project's namespaces and vars. The reflection API works
+unchanged. `var:<ns>/<sym>` is universal. INV-1 (documented entry points)
+and INV-4 (no circular deps) apply to any Clojure codebase. The only
+futon-specific part is which vars are marked as entry points — and that's
+a configuration, not a schema change.
+
+**Level 2: Any Java/JVM project.** The `GET /reflect/java/:class`
+endpoint already exists. Classes map to components, methods to wires,
+interfaces to ports. The same I1–I6 checks apply: boundary integrity
+(package boundaries), timescale separation (API stability vs
+implementation churn), compositional closure (no SPOF classes).
+
+**Level 3: Any structured reasoning or business process.** The math
+column's post/scope/expression/term types map to any domain where
+people make claims, introduce definitions, and draw inferences. A
+technical audit has findings (posts), scoping assumptions (scopes),
+quantitative evidence (expressions), and domain vocabulary (terms).
+A due diligence process has the same structure. The discourse edges
+(iatc: assert, challenge, clarify) are universal acts of reasoning.
+
+The futon5 wiring diagrams that regulate cellular automata runs are
+the precedent: they specify information flow with typed edges and
+structural invariants, and the same diagram calculus transferred from
+MetaCA to ants to agent loops. This mission applies the same transfer
+to the self-representing stack domain.
+
+#### 4.5 The Monograph's Thesis: Post-Hoc → Real-Time
+
+The First Proof Sprint monograph (futon6, Figure 22.1 "The Argument")
+demonstrates the problem and the solution in microcosm:
+
+**Problem:** The proof sprint produced valuable reasoning (layer switches,
+obstruction identification, strategy changes), but this reasoning was
+reconstructed post-hoc from git commit hashes. The argumentative structure
+(claim→conflict→preference→inference) was implicit in the temporal ordering
+but not represented explicitly.
+
+**Solution:** Three infrastructure pieces converge: Arxana (typed-edge
+graph substrate), the peripheral model (constrained execution environments
+where reflection is the only permitted action), and S-expression canonical
+form (argument structure and mathematical content coexist). The monograph's
+conclusion: "The distance from the present chapter to that system is a
+tooling gap, not a conceptual one."
+
+This mission closes the gap by building the tooling:
+- The typed-edge graph substrate → futon1a hyperedges with the §3.1 schema
+- The constrained execution environment → the Proof Peripheral's
+  FALSIFY-before-CONSTRUCT gate (INV-5)
+- The canonical form → hyperedge identity patterns with stable IDs
+- The real-time capture → ingestion paths (§3.5) that are idempotent and
+  repeatable, not one-shot post-hoc reconstruction
+
+The worked example in the monograph (Problem 6 as a 5-node AIF subgraph
+with typed edges) is directly representable in the §3.1 schema: each node
+is a `post` entity, each edge is an `iatc` relation with an act attribute
+(attacks, supports, preference). What the monograph described as future
+work, this mission implements.
+
+#### 4.6 Pattern References
+
+The following futon3 patterns inform the design of this mission:
+
+| Pattern | Where Applied | How |
+|---------|--------------|-----|
+| `realtime/authoritative-transcript` (R8) | Evidence store + hyperedge persistence | All ingestion is durable and append-only; the XTDB store is the authoritative record |
+| `realtime/loop-failure-signals` (R5) | Invariant violation → tension generation | A failed invariant is a loop failure signal; the tension is the signal |
+| `realtime/loop-recovery-actions` (R6) | Tension → browse → act → resolve | The recovery action is: surface the violation, let a human/agent fix it, record the fix as evidence |
+| `coordination/tension-before-code` | INV-1 through INV-5 defined before implementation | Invariant rules are specified in DERIVE, before any code is written in VERIFY |
+| `stack-coherence/evidence-chain-integrity` | Cross-column invariants link evidence to code to missions | INV-2 (PUR trail) ensures every completed mission has traceable pattern use |
+| `code-coherence/dead-code-hygiene` | INV-1 (documented entry points) | Undocumented entry points are the code-hygiene analog of dead code — present but invisible |
+
+#### 4.7 AIF Dual Usage: Active Inference and Argument Interchange
+
+The futon stack uses "AIF" in two senses that are complementary, not
+competing:
+
+**Active Inference Framework** (Friston, Parr & Pezzulo): The
+control-theoretic loop — sense → infer → act → evaluate. This is the
+engine. It drives the ant simulation (futon2), the agent coordination
+(futon3c), the portfolio inference (M-portfolio-inference), and the
+proof search strategy (Proof Peripheral). The AIF+ invariants (I1–I6)
+are properties of this loop.
+
+**Argument Interchange Framework** (Chesñevar, Reed et al.): The
+reasoning structure — claim → attack → support → preference. This is the
+content. It describes what the agents *say* as they operate the Active
+Inference loop: "I claim X" (node), "this evidence attacks X" (edge),
+"I prefer Y over X" (preference). The math column's `iatc` edges
+(assert, challenge, clarify, agree) are Argument Interchange types.
+
+The two frameworks compose naturally:
+- Active Inference provides the **process** (when to sense, when to act)
+- Argument Interchange provides the **structure** (what was claimed, what
+  was challenged, what was resolved)
+- The self-representing stack captures **both**: the process in the project
+  column (missions, evidence, tensions), the structure in the math column
+  (posts, discourse edges, scopes)
+
+The First Proof Sprint monograph uses "AIF" for Active Inference
+(see glossary in `intro-making-of.tex`) but the concrete node/edge
+typing it describes (claim, conflict, preference, attacks, supports)
+is Argument Interchange. A future revision of the monograph should
+distinguish the two explicitly, as this mission does.
 
 ### 5. VERIFY
 
