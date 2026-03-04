@@ -841,18 +841,117 @@ is a `post` entity, each edge is an `iatc` relation with an act attribute
 (attacks, supports, preference). What the monograph described as future
 work, this mission implements.
 
-#### 4.6 Pattern References
+#### 4.6 Pattern Cross-Reference (Structured Survey)
 
-The following futon3 patterns inform the design of this mission:
+A systematic search of `futon3/resources/sigils/patterns-index.tsv` (853
+patterns, 49 namespaces) against the DERIVE schema identified **82 relevant
+patterns** across 14 concern areas. The table below lists the architecturally
+significant patterns per concern area with the design element they inform.
+Full counts per area follow.
 
-| Pattern | Where Applied | How |
-|---------|--------------|-----|
-| `realtime/authoritative-transcript` (R8) | Evidence store + hyperedge persistence | All ingestion is durable and append-only; the XTDB store is the authoritative record |
-| `realtime/loop-failure-signals` (R5) | Invariant violation → tension generation | A failed invariant is a loop failure signal; the tension is the signal |
-| `realtime/loop-recovery-actions` (R6) | Tension → browse → act → resolve | The recovery action is: surface the violation, let a human/agent fix it, record the fix as evidence |
-| `coordination/tension-before-code` | INV-1 through INV-5 defined before implementation | Invariant rules are specified in DERIVE, before any code is written in VERIFY |
-| `stack-coherence/evidence-chain-integrity` | Cross-column invariants link evidence to code to missions | INV-2 (PUR trail) ensures every completed mission has traceable pattern use |
+**Cross-column invariants (25 patterns — largest concern area):**
+
+| Pattern | Design Element | Contribution |
+|---------|---------------|--------------|
+| `devmap-coherence/ifr-f1-dhammavicaya` | INV-1 (documented entry points) | Higher layers cannot inspect "the system model of me" without codified investigation — the invariant enforces this |
+| `stack-coherence/evidence-ledger` | INV-2 (PUR trail complete) | "Claims must cite reproducible proofs or they drift into fiction" — exactly what INV-2 checks |
 | `code-coherence/dead-code-hygiene` | INV-1 (documented entry points) | Undocumented entry points are the code-hygiene analog of dead code — present but invisible |
+| `stack-coherence/commit-intent-alignment` | §3.5 data flow (ingestion paths) | Commits and devmaps must reflect the same movement — cross-column sync |
+| `f1/p2` (Invariant Enforcement) | INV-1 through INV-5 | "A deterministic substrate is only trustworthy if invariants are actually enforced" |
+| `futon-stack/argument` | §4.3 (invariants as product) | "Coherence requires connection" — the one-line rationale for cross-column invariants |
+| `iching/hexagram-61-zhongfu` (Inner Truth) | I4 wireheading test | "Trust emerges when inner state and outward behavior match" — inner=invariants, outer=code |
+
+**Evidence trails & traceability (17 patterns):**
+
+| Pattern | Design Element | Contribution |
+|---------|---------------|--------------|
+| `agent/trail-enables-return` | Trace browser (§3.6 view 3) | "Trails convert ephemeral navigation into persistent structure" — the trace browser IS this |
+| `agent/evidence-over-assertion` | INV-2 (PUR trail) | "Evidence transforms output from 'trust me' to 'check this'" — PUR discipline |
+| `musn/use-requires-evidence` | PSR→PUR→evidence chain | "PSR→PUR→evidence is the backbone for logic checking and AIF scoring" |
+| `realtime/authoritative-transcript` | XTDB evidence store | All ingestion is durable and append-only; the store is the authoritative record |
+| `eight-gates/cai-pluck` (Pluck/Ground) | §3.2 cross-column relations | "Grounding transforms 'trust me' into 'check this'" — cross-column edges are grounding acts |
+
+**Active Inference / AIF (12 patterns):**
+
+| Pattern | Design Element | Contribution |
+|---------|---------------|--------------|
+| `aif/structured-observation-vector` | Code column entity types (§3.1) | "A stable observation vector is the prerequisite for meaningful precision control" — var envelopes ARE the observation vector |
+| `aif/evidence-precision-registry` | Invariant violation severity | "Making precision explicit turns trust into a tunable control surface" |
+| `aif/candidate-pattern-action-space` | Tension → resolution action | "Constraining the action space makes scoring meaningful rather than performative" |
+
+**Tension detection & discrepancy (11 patterns):**
+
+| Pattern | Design Element | Contribution |
+|---------|---------------|--------------|
+| `p4ng/tension-detection` | §3.3 invariant/violation hyperedge | "Making tensions visible is a prerequisite for productive negotiation" — the core principle |
+| `realtime/loop-failure-signals` | Invariant violation → tension | A failed invariant IS a loop failure signal; the tension is the signal |
+| `realtime/loop-recovery-actions` | Tension → browse → act → resolve | The recovery action: surface violation, let human/agent fix, record fix as evidence |
+| `math-informal/parametric-tension-dissolution` | INV-5 (FALSIFY before CONSTRUCT) | "When proof obligations conflict on a parameter, seek a construction that dissolves the tension" |
+| `devmap-coherence/prototype-alignment-tension` | §3.6 tension views | "Surfacing tensions and defining readiness windows keep prototypes testable" |
+
+**PSR/PUR discipline (11 patterns):**
+
+| Pattern | Design Element | Contribution |
+|---------|---------------|--------------|
+| `f3/p1` (PSR/PUR Foundation) | INV-2 (PUR trail complete) | "PSR/PUR discipline is the phenomenological instrument for pattern validation" |
+| `musn/selection-before-write` | Pattern→mission linkage | "PSR anchors edits to intent, enabling PUR validation and evidence linking" |
+| `realtime/structured-events-only` | §3.3 hyperedge schema | "Stable schema enables accurate parsing, dedupe, and audit trails" |
+
+**Wiring diagrams & composition (7 patterns):**
+
+| Pattern | Design Element | Contribution |
+|---------|---------------|--------------|
+| `futon-theory/mission-interface-signature` | §3.3 trace/gate-chain hyperedge | "Draw outputs first. Diagram catches gaps tables miss." — validates DERIVE completeness |
+| `f5/p2` (Wiring Diagram Semantics) | §4.4 generalization via wiring diagrams | "Wiring diagrams give patterns precise compositional meaning that transfers across domains" |
+| `f5/p4` (Wiring Transfer Validation) | §4.5 monograph gap closure | "Proven transfer validates the pattern approach" — MetaCA→ants→self-representing stack |
+
+**Timescale separation / four types (6 patterns):**
+
+| Pattern | Design Element | Contribution |
+|---------|---------------|--------------|
+| `futon-theory/four-types` | Three-column = pheno/geno/exo projection | "Genotype (internal), phenotype (observable), exotype (connectable), xenotype (transplantable)" — the column decomposition IS the first three types |
+| `futon-theory/interface-loop` | Cross-column invariants as interface | "Each layer interface hosts a Baldwin cycle. Interface serves as exotype constraint." — invariants are the interface |
+| `futon-theory/local-gain-persistence` | Evidence durability | "Any gain at interface must persist to genotype or be explicitly deleted. No ghost capabilities." |
+
+**Remaining concern areas (counts):**
+
+| Concern Area | Count | Key Patterns |
+|-------------|-------|-------------|
+| Stack coherence / devmap integrity | 13 | `staleness-scan`, `ready-blocked-triage`, `maturity-evidence-audit` |
+| Navigation / browsing | 10 | `f0/p4` (hypertext), `f4/p1` (Arxana), `portal/first-class-query-interface` |
+| Schema design / hypergraph | 9 | `f1/p3` (graph schema), `hdm/deep-storage-to-active-graph`, `sidecar/tri-store-separation` |
+| Loop closure / feedback | 9 | `p4ng/meta-reflection-loop`, `p4ng/feedback-rhythms`, `realtime/loop-success-signals` |
+| Unified stack architecture | 7 | `vsatlas/three-layer-architecture`, `vsatlas/isolarion-drift`, `repository-transition/identity-space` |
+| Mission structure | 7 | `futon-theory/mission-scoping`, `futon-theory/mission-dependency`, `p4ng/five-p-rhythm` |
+| Self-representation | 2 | `math-informal/the-diagonal-argument`, `futon-theory/four-types` |
+
+**DERIVE revisions prompted by survey:**
+
+1. **`futon-theory/mission-interface-signature`** says "draw outputs first" —
+   the §3.3 hyperedge types should be validated against this: what does each
+   invariant *output* (not just detect)? Added during VERIFY: each invariant
+   should emit a structured violation record, not just a boolean.
+
+2. **`futon-theory/four-types`** confirms the three-column = three-type mapping
+   but raises the question: where is the *xenotype* (transplantable) column?
+   Answer: the xenotype is the parameterized schema itself (§4.4) — the
+   portable structure that transfers to external projects. This is not a fourth
+   column but a meta-property of the three-column design.
+
+3. **`futon-theory/local-gain-persistence`** implies INV-2 (PUR trail) should
+   also check that evidence entries are *persisted* to futon1a, not just present
+   in memory. The VERIFY phase should confirm round-trip for PUR records.
+
+**Gap patterns (should exist, don't yet):**
+
+- **`stack-coherence/cross-column-invariant-registry`** — a canonical list of
+  which invariants exist, their status, and last-run results. No existing
+  pattern covers this; closest is `evidence-ledger`.
+- **`stack-coherence/column-entity-census`** — periodic count of entities per
+  column to detect drift (e.g., code column growing while project column stagnates).
+- **`aif/wireheading-detection`** — explicit pattern for I4 violations (the
+  system rewriting its own preferences). Currently described in this mission's
+  §4.2 but not codified as a reusable pattern.
 
 #### 4.7 AIF Dual Usage: Active Inference and Argument Interchange
 
