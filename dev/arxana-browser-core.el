@@ -380,7 +380,11 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         (list :type 'menu
               :label "Trace"
               :description "Self-representing stack: trace tensions through gates to source."
-              :view 'trace-home)))
+              :view 'trace-home)
+        (list :type 'menu
+              :label "Violations"
+              :description "Cross-column invariant violations from futon1a."
+              :view 'violations)))
 
 (defun arxana-browser--evidence-menu-items ()
   (if (require 'arxana-browser-evidence nil t)
@@ -728,6 +732,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         ('evidence-timeline (arxana-browser--evidence-timeline-items))
         ('evidence-sessions (arxana-browser--evidence-sessions-items))
         ('tensions (arxana-browser--tensions-items))
+        ('violations (arxana-browser--violations-items))
         ('devmaps (arxana-browser--devmaps-items))
         ('narrative-trail (arxana-browser--narrative-trail-items
                            (plist-get context :mission-id)))
@@ -925,6 +930,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
             ('evidence-timeline #'arxana-browser--evidence-timeline-row)
             ('evidence-sessions #'arxana-browser--evidence-sessions-row)
             ('tensions #'arxana-browser--tensions-row)
+            ('violations #'arxana-browser--violations-row)
             ('devmaps #'arxana-browser--devmaps-row)
             ('narrative-trail #'arxana-browser--narrative-trail-row)
             ('lab #'arxana-browser--lab-row)
@@ -1042,6 +1048,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                         ('evidence-timeline (arxana-browser--evidence-timeline-format))
                         ('evidence-sessions (arxana-browser--evidence-sessions-format))
                         ('tensions (arxana-browser--tensions-format))
+                        ('violations (arxana-browser--violations-format))
                         ('devmaps (arxana-browser--devmaps-format))
                         ('narrative-trail (arxana-browser--narrative-trail-format))
                         ('lab (arxana-browser--lab-format))
@@ -1178,6 +1185,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
        (if (fboundp 'arxana-browser-tension-open-entry)
            (arxana-browser-tension-open-entry item)
          (message "Lab tension browser unavailable")))
+      ('violation-entry
+       (if (fboundp 'arxana-browser-violation-open-entry)
+           (arxana-browser-violation-open-entry item)
+         (message "Lab violations browser unavailable")))
       ('devmap-entry
        (if (fboundp 'arxana-browser-devmap-open-entry)
            (arxana-browser-devmap-open-entry item)

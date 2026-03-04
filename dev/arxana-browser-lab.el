@@ -1346,5 +1346,123 @@ Returns :ok, :stale (signature changed), or :missing (var gone)."
         :stale)
        (t :ok)))))
 
+;;; --- Invariant Violations View ---
+
+(defface arxana-violation-inv1-face
+  '((t :foreground "#e5c07b" :weight bold))
+  "Face for INV-1 (undocumented) violations."
+  :group 'arxana-browser)
+
+(defface arxana-violation-inv2-face
+  '((t :foreground "#e06c75" :weight bold))
+  "Face for INV-2 (uncovered) violations."
+  :group 'arxana-browser)
+
+(defface arxana-violation-inv3-face
+  '((t :foreground "#61afef" :weight bold))
+  "Face for INV-3 (orphan) violations."
+  :group 'arxana-browser)
+
+(defun arxana-browser--violations-format ()
+  "Column format for violations view."
+  [("INV" 6 t)
+   ("Type" 28 t)
+   ("Entity" 40 t)
+   ("Resolution" 0 nil)])
+
+(defun arxana-browser--violation-face (inv)
+  "Return face for invariant INV string."
+  (cond
+   ((string-match-p "INV-1" inv) 'arxana-violation-inv1-face)
+   ((string-match-p "INV-2" inv) 'arxana-violation-inv2-face)
+   ((string-match-p "INV-3" inv) 'arxana-violation-inv3-face)
+   (t 'default)))
+
+(defun arxana-browser--violations-row (item)
+  "Row for violation ITEM."
+  (let* ((props (plist-get item :hx/props))
+         (inv (or (plist-get props :invariant)
+                  (format "%s" (or (plist-get item :invariant) ""))))
+         (vtype (or (plist-get props :summary)
+                    (format "%s" (or (plist-get item :hx/type) ""))))
+         (endpoints (plist-get item :hx/endpoints))
+         (entity (if endpoints
+                     (format "%s" (car endpoints))
+                   ""))
+         (resolution (or (plist-get props :resolution) ""))
+         (face (arxana-browser--violation-face inv)))
+    (vector (propertize inv 'face face)
+            (arxana-lab--truncate vtype 27)
+            (arxana-lab--truncate entity 39)
+            (arxana-lab--truncate resolution 50))))
+
+(defun arxana-browser--violations-items ()
+  "Fetch invariant violations from futon1a hyperedge store."
+  (condition-case err
+      (let ((all-violations nil))
+        ;; Query each invariant type
+        (dolist (inv-type '("invariant/undocumented-entry-point"
+                            "invariant/uncovered-component"
+                            "invariant/orphan-namespace"))
+          (let ((resp (arxana-store-fetch-hyperedges :type inv-type :limit 200)))
+            (when resp
+              (let ((hxs (cond
+                          ((and (listp resp) (plist-get resp :hyperedges))
+                           (plist-get resp :hyperedges))
+                          ((and (listp resp) (listp (car resp)))
+                           resp)
+                          (t nil))))
+                (dolist (hx hxs)
+                  (push (append (list :type 'violation-entry) hx) all-violations))))))
+        (if all-violations
+            (nreverse all-violations)
+          (list (list :type 'info
+                      :label "No violations"
+                      :description "All invariants passed — store may need refresh (run ingest-three-columns.py --invariants)"))))
+    (error
+     (list (list :type 'info
+                 :label "Failed to fetch violations"
+                 :description (format "Error: %s" (error-message-string err)))))))
+
+(defun arxana-browser-violation-open-entry (item)
+  "Open detail view for a violation ITEM."
+  (let* ((buf-name "*Violation Detail*")
+         (buf (get-buffer-create buf-name))
+         (props (plist-get item :hx/props))
+         (inv (or (plist-get props :invariant) "?"))
+         (summary (or (plist-get props :summary) "?"))
+         (resolution (or (plist-get props :resolution) "?"))
+         (endpoints (plist-get item :hx/endpoints))
+         (entity (if endpoints (format "%s" (car endpoints)) "?"))
+         (hx-id (or (plist-get item :hx/id) "?")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (org-mode)
+        (insert "* Violation: " summary "\n\n")
+        (insert (format "- Invariant :: %s\n" inv))
+        (insert (format "- Entity :: %s\n" entity))
+        (insert (format "- Hyperedge ID :: %s\n" hx-id))
+        (insert (format "- Resolution :: %s\n" resolution))
+        (insert "\n** Context\n\n")
+        (cond
+         ((string-match-p "INV-1" inv)
+          (insert "This namespace has no docstring. Add a ns docstring or mark\n")
+          (insert "the namespace as internal (non-entry-point).\n"))
+         ((string-match-p "INV-2" inv)
+          (insert "This devmap component has no covering mission. Create a mission\n")
+          (insert "that addresses this component, or annotate coverage explicitly.\n"))
+         ((string-match-p "INV-3" inv)
+          (insert "This namespace is not required by any other namespace in the\n")
+          (insert "futon ecosystem. It may be dead code, or its integration point\n")
+          (insert "may be missing.\n")))
+        (insert "\n** Actions\n\n")
+        (insert "- Press =q= to close this buffer\n")
+        (when (string-match-p "^ns:" entity)
+          (let ((ns-name (replace-regexp-in-string "^ns:" "" entity)))
+            (insert (format "- Open namespace: M-x cider-find-ns RET %s RET\n" ns-name))))
+        (goto-char (point-min))))
+    (pop-to-buffer buf)))
+
 (provide 'arxana-browser-lab)
 ;;; arxana-browser-lab.el ends here
