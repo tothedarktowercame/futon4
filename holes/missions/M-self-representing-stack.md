@@ -1,7 +1,7 @@
 # Mission: The Self-Representing Stack
 
 **Date:** 2026-02-22
-**Status:** COMPLETE (2026-03-01). Follow-on: system book chapter.
+**Status:** RE-OPENED (2026-03-03). Was COMPLETE (2026-03-01); see §Re-Opening below.
 **Blocked by:** None (Arxana operational, evidence landscape operational,
 Mission Control operational)
 **Owner:** futon4 (Arxana), with dependencies on futon3c (Mission Control),
@@ -1147,3 +1147,63 @@ its own consistency reasoning:
 | futon3 | `fc9deda` | 間 (honest-interval) in futonic-logic |
 | futon3 | `111dd2b` | 関 (gate-relation), 間+関 grounded in usage |
 | futon4 | `6e43fa3` | VERIFY→INSTANTIATE checkpoint |
+
+## Re-Opening: Proof of Concept, Not Finished Product (2026-03-03)
+
+**Decision:** Joe + Claude session, 2026-03-03. Re-opened after building the
+interactive trace browser (arxana-browser-trace.el) and discovering structural
+gaps.
+
+### Why This Isn't Complete
+
+The VERIFY/INSTANTIATE phase demonstrated that the plumbing works: hyperedges
+can be stored and retrieved, tensions can be traced through 6 gates, reflection
+envelopes ground claims to source code. But the 21 hyperedges created were a
+one-shot demo, not a self-representing stack. Three problems:
+
+**1. The data didn't persist.** The futon1a XTDB store currently contains zero
+hyperedges. The 21 created during VERIFY are gone — likely lost to a
+non-durable XTDB restart. A self-representing stack that forgets itself on
+reboot is not self-representing.
+
+**2. The model covers only one of three necessary columns.** The mission
+addressed project management → code bridging (devmaps, tensions, reflection
+envelopes). But the stack has three distinct representational domains:
+
+| Column | Content | Entity examples |
+|--------|---------|-----------------|
+| **Knowledge creation** (math) | Proofs, definitions, discourse | posts, scopes, expressions, terms |
+| **Development process** (project) | Missions, devmaps, coverage, tensions | missions, components, prototypes, evidence |
+| **Code itself** (reflection) | Namespaces, vars, deps, signatures | ns, var, protocol, defmethod |
+
+The mission treated code as a bottom-out target for project claims (`about-var`),
+not as a first-class navigable domain. Math content (futon6 hypergraph JSON)
+was never addressed at all. The existing `arxana-browser-hypergraph.el` reads
+local JSON files — it doesn't use futon1a.
+
+**3. No cross-column invariants.** The core.logic relations (`devmapo`,
+`componento`, `coverso`) operate within the project column. No invariants
+span columns — e.g., "every M-x entry point has a docstring" (project →
+code), "every mission traces to the patterns used" (project → project),
+"every proof step references the definition it relies on" (math → math).
+Cross-column invariants are the actual product of a self-representing stack.
+Without them, the hypergraph is a database, not a reasoning surface.
+
+### What This Mission Actually Produced
+
+A proof of concept demonstrating:
+- Hyperedge round-trip through futon1a (plumbing works)
+- Tension detection and 6-gate tracing (project column navigable)
+- Reflection grounding (project → code bottom-out works)
+- Staleness detection (temporal consistency checkable)
+- Interactive browser (arxana-browser-trace.el, 4 drill-down views)
+- core.logic relations (foundation for invariant enforcement)
+- Vocabulary (間 + 関 grounded in actual usage)
+
+### What Remains
+
+A follow-on mission (M-three-column-stack) takes this as its starting point
+and builds the actual self-representing stack: all three columns with
+first-class entity types, cross-column invariants enforced by core.logic,
+persistent data that survives restarts, and a schema general enough to
+represent external codebases and business processes — not just the futon stack.
