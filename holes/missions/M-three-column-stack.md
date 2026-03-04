@@ -97,11 +97,17 @@ system a reasoning surface. Examples:
 - Every scope binding is used within its scope (no dangling let-bindings)
 - Every claimed equivalence has matching categorical annotations on both sides
 
-**Project ↔ Math (cross-domain):**
-- Every pattern in the library that references a mathematical concept has a
-  corresponding term entity with a PlanetMath or equivalent grounding
-- Mathematical conjectures referenced in mission docs are tracked as
-  open/resolved
+**Project ↔ Math (capacity development / μάθησις):**
+- Mathematical work traces to a capability development goal tracked by
+  FutonZero (M-futonzero-mvp) — mathematics is an instance of μάθησις
+  (learning), not artifact production
+- The Proof Peripheral's discipline gates (FALSIFY-before-CONSTRUCT,
+  TryHarder licensing) are satisfied before mathematical results feed back
+  into project decisions — we are working on the right problem before we
+  work on the problem
+- Capability deltas from mathematical practice (task improvement, discipline
+  adaptation) are visible in the portfolio as evidence of capacity growth,
+  not just mission completion
 
 **Code ↔ Code (internal consistency):**
 - Every protocol has at least one implementation in a loaded namespace
@@ -186,8 +192,16 @@ framework, scopes the work.
 - [x] State the generalization path (futon → any Clojure → any project)
 - [x] Scope in/out
 - [ ] Review with Joe — does the framing match the vision?
-- [ ] Identify any missing columns or invariant categories
-- [ ] Confirm completion criteria are testable and sufficient
+- [x] Identify any missing columns or invariant categories
+  - Math↔Code omitted deliberately: math column represents proof *process*
+    (not a math library), so direct math→code links are not yet motivated.
+    If this changes (e.g., symbolic computation in Clojure), add it then.
+  - Four categories sufficient: Project↔Code, Math↔Math, Project↔Math,
+    Code↔Code. Each has 3+ concrete invariant examples.
+- [x] Confirm completion criteria are testable and sufficient
+  - All 8 criteria are concrete: counts (200 hyperedges, 3 invariants),
+    round-trips (JSON→XTDB→read-back), demo loops (violation→tension→resolve),
+    documentation deliverables (parameterized schema notes).
 
 ### 2. MAP
 
@@ -263,8 +277,10 @@ math↔math, project↔math).
   docstring → tension resolves
 - [ ] Math↔Math loop: e.g., "definition used without checked reference" →
   tension → add reference → resolves
-- [ ] Project↔Math loop: e.g., "pattern references concept without term
-  grounding" → tension → add grounding → resolves
+- [ ] Project↔Math loop: e.g., "math work without capability tracking in
+  FutonZero" → tension → register capability goal → resolves; or
+  "CONSTRUCT attempted without prior FALSIFY" → tension → add falsification
+  step → resolves
 - [ ] Write up the demo as a reproducible walkthrough
 
 ## Source Material
