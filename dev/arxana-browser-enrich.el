@@ -82,6 +82,12 @@
   "Face for dimmed/secondary text."
   :group 'arxana-enrich)
 
+;;; Utilities
+
+(defun arxana-enrich--vec-to-list (x)
+  "If X is a vector, convert to list. Otherwise return as-is."
+  (if (vectorp x) (append x nil) x))
+
 ;;; Internal state
 
 (defvar-local arxana-enrich--data nil
@@ -114,6 +120,11 @@ Returns parsed JSON as alist, or nil on error."
                         (error nil))))
           (kill-buffer buffer)
           (when (alist-get 'ok result)
+            ;; Coerce JSON arrays (vectors) to lists for dolist/length.
+            (dolist (key '(missions invariants tensions))
+              (let ((cell (assq key result)))
+                (when cell
+                  (setcdr cell (arxana-enrich--vec-to-list (cdr cell))))))
             result))))))
 
 ;;; Rendering
@@ -134,7 +145,9 @@ Returns parsed JSON as alist, or nil on error."
         (layer (alist-get 'enrichment-layer data))
         (var-count (alist-get 'var-count data))
         (missions (alist-get 'missions data))
+        (tensions (alist-get 'tensions data))
         (churn (alist-get 'churn data))
+        (complexity (alist-get 'complexity data))
         (invariants (alist-get 'invariants data)))
     ;; Header
     (arxana-enrich--insert-heading "── File Enrichment ──")
@@ -151,17 +164,42 @@ Returns parsed JSON as alist, or nil on error."
       (arxana-enrich--insert-list missions 'arxana-enrich-mission)
       (insert "\n"))
 
-    ;; Churn
-    (when churn
+    ;; Tensions
+    (when (and tensions (> (length tensions) 0))
+      (arxana-enrich--insert-heading "Tensions")
+      (dolist (ten tensions)
+        (let ((ten-type (alist-get 'type ten))
+              (summary (alist-get 'summary ten)))
+          (insert "  " (propertize (or ten-type "?") 'face 'arxana-enrich-tension)
+                  ": " (or summary "") "\n")))
+      (insert "\n"))
+
+    ;; Churn / Complexity
+    (when (or churn complexity)
       (arxana-enrich--insert-heading "Churn / Complexity")
-      (let ((commits (alist-get 'commits churn))
-            (score (alist-get 'score churn)))
-        (when commits
-          (insert "  commits: " (propertize (format "%s" commits)
-                                            'face 'arxana-enrich-count) "\n"))
-        (when score
-          (insert "  hotspot score: " (propertize (format "%s" score)
-                                                  'face 'arxana-enrich-count) "\n")))
+      (when churn
+        (let ((commits (alist-get 'commits churn))
+              (recent (alist-get 'commits-recent churn)))
+          (when commits
+            (insert "  commits: " (propertize (format "%s" commits)
+                                              'face 'arxana-enrich-count)
+                    (if (and recent (not (equal recent commits)))
+                        (format " (%s recent)" recent)
+                      "")
+                    "\n"))))
+      (when complexity
+        (let ((max-depth (alist-get 'max-depth complexity))
+              (mean-depth (alist-get 'mean-depth complexity))
+              (lines (alist-get 'lines complexity)))
+          (when max-depth
+            (insert "  max indent: " (propertize (format "%s" max-depth)
+                                                 'face 'arxana-enrich-count) "\n"))
+          (when mean-depth
+            (insert "  mean indent: " (propertize (format "%s" mean-depth)
+                                                  'face 'arxana-enrich-count) "\n"))
+          (when lines
+            (insert "  lines: " (propertize (format "%s" lines)
+                                            'face 'arxana-enrich-count) "\n"))))
       (insert "\n"))
 
     ;; Invariant violations
@@ -193,10 +231,10 @@ Returns parsed JSON as alist, or nil on error."
                                (symbol-name (car entry))
                              (format "%s" (car entry))))
                  (info (cdr entry))
-                 (missions (alist-get 'missions info))
-                 (patterns (alist-get 'patterns info))
+                 (missions (arxana-enrich--vec-to-list (alist-get 'missions info)))
+                 (patterns (arxana-enrich--vec-to-list (alist-get 'patterns info)))
                  (evidence-count (alist-get 'evidence-count info))
-                 (tensions (alist-get 'tensions info))
+                 (tensions (arxana-enrich--vec-to-list (alist-get 'tensions info)))
                  (has-data (or missions patterns evidence-count tensions)))
             (when has-data
               (insert (propertize sym-name 'face 'arxana-enrich-symbol) "\n")
