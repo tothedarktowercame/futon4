@@ -544,6 +544,98 @@ free for all other endpoints (`50ed259`).
 
 - **Interactive QA**: load `arxana-browser-enrich.el`, run `M-x arxana-enrich-file`
   on a live buffer, verify rendering in the side panel
-- **Churn data**: currently `null` — churn hyperedges are keyed by file path
-  (not namespace endpoint), so the endpoint-based query misses them. Needs
-  a secondary query by file path or a churn-specific lookup.
+- **Churn data**: ~~currently `null`~~ Fixed: file-endpoint lookup added
+  (`e0d1cbf`). Churn + complexity now render in the panel.
+- **Vector coercion**: Fixed — JSON arrays parsed as Emacs vectors; added
+  `arxana-enrich--vec-to-list` (`cb17e8f`).
+- **Tensions rendering**: Fixed — added tensions block to file summary.
+
+## Phase 5: Landscape Intelligence via Enrichment Graph
+
+### Motivation
+
+Phases 0-4 built the enrichment graph (5,367 hyperedges). Phase 2 made it
+queryable from Emacs. But so far, enrichment flows inward (external data into
+the graph). Phase 5 makes it flow *outward*: the graph informs what questions
+to ask about the external landscape.
+
+futon7 currently generates landscape probes (GitHub searches) from hand-crafted
+query strings. This works but doesn't adapt as the stack evolves. The enrichment
+graph already knows:
+- What patterns exist and what keywords they carry (L2: 702 patterns)
+- What missions are active and what domains they touch (L1: 59 missions)
+- What cross-futon dependencies exist (L5: 45 edges)
+
+These are the stack's *vocabulary for what it knows about*. Turning that
+vocabulary into landscape probes closes the loop: enrichment informs
+intelligence, intelligence informs what to enrich next.
+
+### Architecture
+
+```
+futon3b (pattern library query)     futon3a (entity graph)
+    |                                    |
+    | extract keywords/concepts          | store as entities + arrows
+    v                                    v
+futon7 (probe generation)  <---  walk outward via bridges
+    |
+    v
+futon7 (run probes + score leads)
+    |
+    v
+futon1a (persist lead data as hyperedges)
+```
+
+Three repos collaborate:
+
+1. **futon3b** — `futon3b.query.relations/patterns` enumerates all patterns
+   with their keywords. `search-texto` does federated search across patterns
+   and transcripts. The G3 gate (pattern reference) validates pattern
+   existence. This is the *query layer* over the pattern library.
+
+2. **futon3a** — Meme store (SQLite: entities, arrows, bridges, proposals).
+   Currently unpopulated. Phase 5 bootstraps it with entities extracted from
+   the pattern library keywords, then builds arrows between concepts. The
+   entity graph becomes the "concept map" that probe generation walks.
+
+3. **futon7** — Landscape intelligence. Currently has hand-crafted probes in
+   `probes.clj`. Phase 5 adds a `probe-gen.clj` that generates probes from
+   the entity graph: each cluster of connected entities → one probe query.
+   Leads are scored by alignment with the entity graph (replacing the current
+   keyword-matching approach in `report.clj`).
+
+### Deliverables
+
+1. **futon3a bootstrap script** — Seed the meme store with entities from
+   pattern library keywords. Build arrows from keyword co-occurrence within
+   patterns. ~700 patterns × ~5 keywords each = initial entity population.
+
+2. **futon7/probe-gen.clj** — Generate probe definitions from the entity
+   graph. Walk outward from stack-capability entities via arrows/bridges.
+   Each reachable cluster becomes a GitHub search query.
+
+3. **futon7 integration test** — Run generated probes, compare coverage
+   with hand-crafted probes. Generated probes should cover at least 80%
+   of what hand-crafted probes find, plus discover new areas.
+
+4. **Lead→hyperedge persistence** — Top leads written back to futon1a as
+   `landscape/lead` hyperedges, closing the enrichment loop.
+
+### Why This Matters
+
+This phase demonstrates that enrichment isn't just an introspection tool —
+it's an *intelligence amplifier*. The pattern library, originally created
+for proof discipline and code quality, turns out to be a vocabulary for
+market intelligence. The same keywords that guide proof architecture
+("construct-an-explicit-witness", "reduce-to-known-result") generate
+probes that find commercially active projects in related spaces.
+
+For a potential client, this is the pitch: "Your codebase already knows
+what it's good at. Let us extract that knowledge and use it to find
+opportunities." The futon stack eating its own dog food.
+
+### Dependencies
+
+- Phase 2 QA complete (browser working end-to-end)
+- futon3a meme store initialized (currently empty)
+- futon3b running or at least its query layer callable from bb
