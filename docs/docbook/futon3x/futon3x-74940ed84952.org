@@ -1,0 +1,21 @@
+#+TITLE: futon3.gate.pattern
+:PROPERTIES:
+:DOC_ID: futon3x-74940ed84952
+:ENTRY_ID: futon3x-74940ed84952::org
+:VERSION: org
+:OUTLINE_PATH: E2E Pipeline / Namespaces / futon3.gate.pattern
+:PATH_STRING: E2E Pipeline / Namespaces / futon3.gate.pattern
+:REPLACES:
+:END:
+
+* Context
+Pattern matching predicates used by gate pipeline stages. Provides the structural
+checks that determine whether a work product satisfies gate constraints — e.g.,
+whether a PSR references a valid pattern from the library, whether execution
+evidence has the required shape.
+
+Works with =futon3.gate.pipeline= to enforce the gate sequence. Patterns are
+resolved via futon3a's pattern index (patterns-index.tsv) through the federated
+search layer.
+
+Source: =futon3b/src/futon3/gate/pattern.clj=

@@ -1,0 +1,24 @@
+#+TITLE: meme.schema
+:PROPERTIES:
+:DOC_ID: futon3x-f570f21f04bd
+:ENTRY_ID: futon3x-f570f21f04bd::org
+:VERSION: org
+:OUTLINE_PATH: E2E Pipeline / Namespaces / meme.schema
+:PATH_STRING: E2E Pipeline / Namespaces / meme.schema
+:REPLACES:
+:END:
+
+* Context
+futon3a's foundational schema for the meme store (SQLite). Defines seven tables:
+artifacts, entities, aliases, mentions, arrows, proposals, promotions, and bridges.
+
+Key functions:
+- =db-path= — resolves MEME_DB_PATH or falls back to "meme.db"
+- =datasource= — creates JDBC datasource from path
+- =ensure-tables!= — idempotent DDL for all tables
+
+The meme store holds 1,221 entities and 5,216 arrows after bootstrap from
+patterns-index.tsv (M-futon3x-e2e L1). It serves as the substrate for the
+concepts API (futon3c) and probe generation (futon7).
+
+Source: =futon3a/src/meme/schema.clj=

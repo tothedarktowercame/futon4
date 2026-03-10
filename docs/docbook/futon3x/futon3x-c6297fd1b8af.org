@@ -1,0 +1,19 @@
+#+TITLE: sidecar.store
+:PROPERTIES:
+:DOC_ID: futon3x-c6297fd1b8af
+:ENTRY_ID: futon3x-c6297fd1b8af::org
+:VERSION: org
+:OUTLINE_PATH: E2E Pipeline / Namespaces / sidecar.store
+:PATH_STRING: E2E Pipeline / Namespaces / sidecar.store
+:REPLACES:
+:END:
+
+* Context
+Local metadata persistence layer for the futon3a sidecar. Stores pattern
+retrieval metadata, search session context, and compass navigation state
+outside the main meme store.
+
+Used by the notions search and compass features to maintain query context
+across invocations without polluting the canonical meme store.
+
+Source: =futon3a/src/sidecar/store.clj=

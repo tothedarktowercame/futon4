@@ -1,0 +1,19 @@
+#+TITLE: meme.bridge
+:PROPERTIES:
+:DOC_ID: futon3x-888455a5ea9a
+:ENTRY_ID: futon3x-888455a5ea9a::org
+:VERSION: org
+:OUTLINE_PATH: E2E Pipeline / Namespaces / meme.bridge
+:PATH_STRING: E2E Pipeline / Namespaces / meme.bridge
+:REPLACES:
+:END:
+
+* Context
+Bridge triples — warrants for sense-shift hops between meme entities. A bridge
+is a (source, target, warrant) triple where the warrant justifies why a
+conceptual shift from source to target is valid.
+
+Not heavily used in the current e2e pipeline but part of the meme store's
+design for supporting analogical reasoning across pattern domains.
+
+Source: =futon3a/src/meme/bridge.clj=

@@ -1,0 +1,22 @@
+#+TITLE: meme.arrow
+:PROPERTIES:
+:DOC_ID: futon3x-8174f8b285bd
+:ENTRY_ID: futon3x-8174f8b285bd::org
+:VERSION: org
+:OUTLINE_PATH: E2E Pipeline / Namespaces / meme.arrow
+:PATH_STRING: E2E Pipeline / Namespaces / meme.arrow
+:REPLACES:
+:END:
+
+* Context
+Kolmogorov arrows — typed semantic transforms between meme entities. Each arrow
+has source, target, mode (derivation, analogy, refinement), rationale, and
+confidence. The bootstrap generates two arrow types:
+
+- =derivation= arrows: concept ← pattern (the pattern's hotword produced this concept)
+- =analogy= arrows: concept ↔ concept (co-occur in ≥3 patterns, confidence 0.7)
+
+The 5,216 arrows form the concept graph that futon3c's =/api/alpha/concepts=
+endpoint serves and futon7 uses for probe generation.
+
+Source: =futon3a/src/meme/arrow.clj=

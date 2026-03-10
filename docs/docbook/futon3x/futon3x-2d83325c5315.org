@@ -1,0 +1,26 @@
+#+TITLE: futon3.gate.pipeline
+:PROPERTIES:
+:DOC_ID: futon3x-2d83325c5315
+:ENTRY_ID: futon3x-2d83325c5315::org
+:VERSION: org
+:OUTLINE_PATH: E2E Pipeline / Namespaces / futon3.gate.pipeline
+:PATH_STRING: E2E Pipeline / Namespaces / futon3.gate.pipeline
+:REPLACES:
+:END:
+
+* Context
+The gate pipeline composes five gates (G5→G0) into a validation chain for agent
+work products:
+
+- G5: Task authorization (is the agent assigned?)
+- G4: Pattern lookup (does a PSR exist for the chosen pattern?)
+- G3: Execution (did the agent actually run tools?)
+- G2: Validation (does the output pass structural checks?)
+- G1/G0: Evidence persistence (proof path written to store)
+
+The live gate run (L3) produced a 6-event proof path with a real PSR for
+=math-strategy/compose-independent-lemmas=. This validates that agent output
+flows from futon3c's real-time coordination through futon3b's quality
+assurance and into futon1a's durable evidence store.
+
+Source: =futon3b/src/futon3/gate/pipeline.clj=

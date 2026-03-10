@@ -1,0 +1,23 @@
+#+TITLE: futon3b.query.relations
+:PROPERTIES:
+:DOC_ID: futon3x-d8a8878b7236
+:ENTRY_ID: futon3x-d8a8878b7236::org
+:VERSION: org
+:OUTLINE_PATH: E2E Pipeline / Namespaces / futon3b.query.relations
+:PATH_STRING: E2E Pipeline / Namespaces / futon3b.query.relations
+:REPLACES:
+:END:
+
+* Context
+Federated search across three data sources via core.logic relations:
+
+- =patterno= — searches patterns-index.tsv (hotwords + name)
+- =memeo= — SQL LIKE search over meme.db entities (added for L2)
+- =transcripto= — searches session transcripts
+
+=search-texto= composes all three with fair-share allocation (limit/3 per source)
+to prevent any single source from dominating results. This is the key integration
+point where futon3a's meme store becomes queryable through futon3b's relational
+interface.
+
+Source: =futon3b/src/futon3b/query/relations.clj=
