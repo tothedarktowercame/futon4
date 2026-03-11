@@ -774,15 +774,37 @@ Returns the active strategy, or nil if persistence is unavailable."
         (while (re-search-forward
                 "^[[:space:]]*-[[:space:]]+`?\\([[:alnum:]-]+\\)`?:[[:space:]]*\\(.*\\)$"
                 nil t)
-          (let ((symbol (match-string 1))
-                (summary (string-trim (or (match-string 2) ""))))
-            (when (and (stringp symbol)
-                       (not (string-empty-p symbol))
-                       (stringp summary)
-                       (not (string-empty-p summary)))
-              (push (list :symbol symbol
-                          :summary summary)
-                    items))))))
+          (let* ((symbol (match-string 1))
+                 (summary-head (string-trim (or (match-string 2) "")))
+                 (parts (if (string-empty-p summary-head)
+                            '()
+                          (list summary-head))))
+            ;; Support wrapped summaries where continuation lines are indented.
+            (forward-line 1)
+            (while (and (not (eobp))
+                        (let ((line (buffer-substring-no-properties
+                                     (line-beginning-position)
+                                     (line-end-position))))
+                          (and (string-match-p "^[[:space:]]+" line)
+                               (not (string-match-p "^[[:space:]]*[-+*][[:space:]]" line))
+                               (not (string-match-p "^[[:space:]]*\\*+[[:space:]]" line)))))
+              (let ((line (string-trim
+                           (buffer-substring-no-properties
+                            (line-beginning-position)
+                            (line-end-position)))))
+                (unless (string-empty-p line)
+                  (push line parts)))
+              (forward-line 1))
+            (unless (eobp)
+              (beginning-of-line))
+            (let ((summary (string-join (nreverse parts) " ")))
+              (when (and (stringp symbol)
+                         (not (string-empty-p symbol))
+                         (stringp summary)
+                         (not (string-empty-p summary)))
+                (push (list :symbol symbol
+                            :summary summary)
+                      items)))))))
     (nreverse items)))
 
 (defun arxana-browser-code--wrap-text (text &optional width)

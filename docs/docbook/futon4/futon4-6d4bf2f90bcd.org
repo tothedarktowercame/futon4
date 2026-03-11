@@ -1,0 +1,58 @@
+#+TITLE: dev/arxana-window-constraints.el
+:PROPERTIES:
+:DOC_ID: futon4-6d4bf2f90bcd
+:ENTRY_ID: futon4-6d4bf2f90bcd-f8b2d19e3a01
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/arxana-window-constraints.el
+:PATH_STRING: Dev docs / dev/arxana-window-constraints.el
+:SOURCE_PATH: dev/arxana-window-constraints.el
+:REPLACES:
+:END:
+
+* Context
+- arxana-window-constraints-enable: Master gate for Reazon-backed layout
+  validation. When nil, public validators short-circuit and return success
+  without executing checks.
+
+- arxana-window-constraints-failure-action: Controls enforcement behavior for
+  failed layout invariants. Use `error` for hard gating, `message` for soft
+  warnings, or nil to suppress reporting.
+
+- arxana-window-constraints--ensure-reazon: Lazily loads Reazon and memoizes
+  load attempts. This avoids repeated require churn while still allowing
+  runtime fallback when Reazon is unavailable.
+
+- arxana-window-constraints--define-relations: Declares miniKanren relations
+  for window invariants including left/right ordering, dedicated windows,
+  side-window width checks, HUD ownership, and focal-window uniqueness.
+
+- arxana-window-constraints--window-info: Normalizes a live Emacs window into
+  a stable plist containing geometry, side parameters, dedication flags,
+  HUD ownership, and Arxana managed/focal state.
+
+- arxana-window-constraints--query: Executes Reazon goals with timeout
+  handling and converts exceptions into boolean outcomes so callers can apply
+  consistent failure reporting.
+
+- arxana-window-constraints-validate-scholium: Enforces the scholium layout
+  invariant that source remains left of display (with optional code pane for
+  docbook-backed views).
+
+- arxana-window-constraints-validate-code-docs: Verifies that Code Docs is in
+  the configured side window and within width tolerance, guarding the
+  code+docs split against layout drift.
+
+- arxana-window-constraints-validate-docbook-two-up: Checks docbook/source
+  two-up layout by requiring doc on the left and both windows dedicated.
+
+- arxana-window-constraints-validate-docbook-browser-left: Asserts
+  browser-left/docbook-right arrangement with docbook dedicated to preserve
+  predictable browse-entry ergonomics.
+
+- arxana-window-constraints-validate-patterns-hud: Validates HUD ownership
+  marker and expected width fraction to prevent orphaned or wrongly-sized
+  pattern HUD side panes.
+
+- arxana-window-constraints-validate-ui-focal: Enforces the top-level UI
+  invariant that exactly one managed window is focal and that it is leftmost
+  among managed windows.

@@ -1,0 +1,70 @@
+#+TITLE: dev/arxana-data-constraints.el
+:PROPERTIES:
+:DOC_ID: futon4-1b87e0cd5a42
+:ENTRY_ID: futon4-1b87e0cd5a42-94ab17d3ce66
+:VERSION: def-doc
+:OUTLINE_PATH: Dev docs / dev/arxana-data-constraints.el
+:PATH_STRING: Dev docs / dev/arxana-data-constraints.el
+:SOURCE_PATH: dev/arxana-data-constraints.el
+:REPLACES:
+:END:
+
+* Context
+- arxana-data-constraints-enable: Master gate for Reazon-backed data-shape
+  validation. When nil, public validators no-op so creation and persistence
+  paths remain permissive.
+
+- arxana-data-constraints-failure-action: Controls failure behavior for data
+  invariants. Use `error` to hard-stop invalid writes, or `message` for
+  observational mode.
+
+- arxana-data-constraints--ensure-reazon: Performs lazy Reazon loading and
+  memoizes load attempts so the module can degrade gracefully when Reazon is
+  absent.
+
+- arxana-data-constraints--strategy-ok-p: Encodes required link-strategy
+  checks including id/type fields, scope shape, finder validity, and
+  created-at timestamp presence.
+
+- arxana-data-constraints--voiced-link-ok-p: Validates voiced-link entities for
+  required endpoints and status membership so promoted links stay schema-safe.
+
+- arxana-data-constraints--surface-form-ok-p: Verifies surface-form entities
+  include required concept and lexical fields, preventing malformed writes.
+
+- arxana-data-constraints--hyperedge-ok-p: Ensures hyperedge requests provide
+  a usable type token and non-nil endpoint list before POST paths execute.
+
+- arxana-data-constraints--inclusion-ok-p: Guards inclusion/transclusion calls
+  by requiring non-empty article and caller identifiers.
+
+- arxana-data-constraints--flexiarg-span-ok-p: Enforces that edits remain
+  inside one source flexiarg file to prevent cross-file corruption.
+
+- arxana-data-constraints--bounce-ok-p: Validates media-bounce preconditions
+  including script executability, track/path consistency, expected-count
+  alignment, and absence of duplicate/ambiguous/unmatched assignments.
+
+- arxana-data-constraints--define-relations: Declares Reazon relations that
+  wrap each predicate into queryable goals consumed by public validators.
+
+- arxana-data-constraints-validate-strategy: Public gate for strategy creation
+  paths, typically invoked before persisting link strategies.
+
+- arxana-data-constraints-validate-voiced-link: Public gate for promoted
+  voiced-link payloads before storage calls.
+
+- arxana-data-constraints-validate-surface-form: Public gate for surface-form
+  payloads prior to persistence.
+
+- arxana-data-constraints-validate-hyperedge: Public gate for hyperedge calls,
+  used by store posting code to fail fast on malformed endpoint requests.
+
+- arxana-data-constraints-validate-inclusion: Public gate for include/transclude
+  input validation at command wrappers.
+
+- arxana-data-constraints-validate-flexiarg-span: Public guard used by
+  flexiarg edit hooks to reject cross-file edits in collection buffers.
+
+- arxana-data-constraints-validate-bounce: Public gate for media bounce
+  orchestration, validating assembled input state before process execution.

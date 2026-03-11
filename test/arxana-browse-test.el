@@ -1,7 +1,13 @@
 ;;; arxana-browse-test.el --- Tests for browsing helpers -*- lexical-binding: t; -*-
 
+(setq load-prefer-newer t)
+
 (require 'ert)
+(require 'cl-lib)
 (require 'arxana-browser-browse)
+(require 'arxana-browser-core)
+(require 'arxana-ui)
+(require 'arxana-window-constraints)
 
 (ert-deftest arxana-browse-open-catalog-defaults ()
   (let ((called nil))
@@ -44,6 +50,73 @@
       (setq displayed nil)
       (arxana-browse-parent-previous)
       (should (equal displayed "Intro")))))
+
+(ert-deftest arxana-ui-refresh-sets-window-scoped-focal ()
+  (let ((test-buffer (get-buffer-create " *arxana-ui-refresh-test*"))
+        (original-config (current-window-configuration)))
+    (unwind-protect
+        (progn
+          (delete-other-windows)
+          (set-window-buffer (selected-window) test-buffer)
+          (with-current-buffer test-buffer
+            (setq-local arxana-ui-managed t))
+          (let* ((left (selected-window))
+                 (right (split-window-right)))
+            (set-window-buffer right test-buffer)
+            (select-window left)
+            (arxana-ui-refresh)
+            (let* ((wins (window-list nil 'no-mini))
+                   (managed (cl-remove-if-not
+                             (lambda (win)
+                               (eq (window-parameter win 'arxana-ui-managed)
+                                   :managed))
+                             wins))
+                   (focal (cl-remove-if-not
+                           (lambda (win)
+                             (eq (window-parameter win 'arxana-ui-focal)
+                                 :focal))
+                           managed))
+                   (leftmost (apply #'min
+                                    (mapcar (lambda (win)
+                                              (car (window-edges win)))
+                                            managed))))
+              (should (= (length managed) 2))
+              (should (= (length focal) 1))
+              (should (= (car (window-edges (car focal))) leftmost)))))
+      (set-window-configuration original-config)
+      (when (buffer-live-p test-buffer)
+        (kill-buffer test-buffer)))))
+
+(ert-deftest arxana-window-constraints-defines-ui-focal-relation ()
+  (if (not (arxana-window-constraints--ensure-reazon))
+      (ert-skip "Reazon unavailable")
+    (let ((arxana-window-constraints--relations-defined nil))
+      (arxana-window-constraints--define-relations)
+      (should (fboundp 'arxana-window-constraints--ui-focal-layouto)))))
+
+(ert-deftest arxana-browser-b-dispatches-to-media-bounce ()
+  (let ((arxana-browser--stack (list (list :view 'media-publication)))
+        (bounce-called nil)
+        (docbook-called nil))
+    (cl-letf (((symbol-function 'arxana-media-bounce-marked)
+               (lambda () (setq bounce-called t)))
+              ((symbol-function 'arxana-browser-code-select-docbook)
+               (lambda () (setq docbook-called t))))
+      (arxana-browser--bounce-or-select-docbook)
+      (should bounce-called)
+      (should-not docbook-called))))
+
+(ert-deftest arxana-browser-b-dispatches-to-docbook-select-outside-media ()
+  (let ((arxana-browser--stack (list (list :view 'code)))
+        (bounce-called nil)
+        (docbook-called nil))
+    (cl-letf (((symbol-function 'arxana-media-bounce-marked)
+               (lambda () (setq bounce-called t)))
+              ((symbol-function 'arxana-browser-code-select-docbook)
+               (lambda () (setq docbook-called t))))
+      (arxana-browser--bounce-or-select-docbook)
+      (should docbook-called)
+      (should-not bounce-called))))
 
 (provide 'arxana-browse-test)
 ;;; arxana-browse-test.el ends here

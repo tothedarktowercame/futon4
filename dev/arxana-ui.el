@@ -111,12 +111,21 @@
                     (seq-find (lambda (win)
                                 (= (car (window-edges win)) min-left))
                               managed))
-                   (t nil))))
+                   (t nil)))
+           (focal-buffer (and focal (window-buffer focal))))
       (dolist (win wins)
-        (let ((buf (window-buffer win)))
+        (let* ((buf (window-buffer win))
+               (managedp (with-current-buffer buf arxana-ui-managed))
+               (focalp (and managedp (eq win focal))))
+          (set-window-parameter win 'arxana-ui-managed
+                                (if managedp :managed :unmanaged))
+          (set-window-parameter win 'arxana-ui-focal
+                                (if focalp :focal :ancillary))
           (with-current-buffer buf
-            (when arxana-ui-managed
-              (setq arxana-ui--focal (eq win focal))
+            (when managedp
+              ;; Header style is buffer-local, so duplicates of a managed buffer
+              ;; intentionally share focal styling with the focal window's buffer.
+              (setq arxana-ui--focal (eq buf focal-buffer))
               (force-mode-line-update))))))
       (when (fboundp 'arxana-window-constraints-validate-ui-focal)
         (arxana-window-constraints-validate-ui-focal frame))))

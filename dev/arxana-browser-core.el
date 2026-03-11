@@ -201,6 +201,7 @@
 (declare-function arxana-media--track-format "arxana-media")
 (declare-function arxana-media--publication-track-format "arxana-media")
 (declare-function arxana-media--misc-track-format "arxana-media")
+(declare-function arxana-media-bounce-marked "arxana-media")
 (declare-function arxana-media-bounce-or-up "arxana-media")
 (declare-function arxana-media-retitle-at-point "arxana-media")
 (declare-function arxana-media-play-at-point "arxana-media")
@@ -434,6 +435,20 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
       (call-interactively #'arxana-browser-code-set-docbook)
     (user-error "arxana-browser-code is unavailable")))
 
+(defun arxana-browser--bounce-or-select-docbook ()
+  "Use `B` as media bounce in media views, else code docbook selection."
+  (interactive)
+  (let* ((context (car arxana-browser--stack))
+         (media-context (or (plist-get context :media-filter)
+                            (memq (plist-get context :view)
+                                  '(media media-projects media-publications media-publication
+                                          media-ep-staging media-ep-staging-ep
+                                          media-misc media-misc-folder media-podcasts))
+                            (eq (plist-get context :type) 'media-category))))
+    (if media-context
+        (arxana-media-bounce-marked)
+      (arxana-browser-code-select-docbook))))
+
 (defun arxana-browser--header-line (context total)
   (let* ((store-status (when (and (require 'arxana-store nil t)
                                   (fboundp 'arxana-store-remote-status))
@@ -473,13 +488,13 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
       (concat "Media publications — select an EP folder to browse its exported tracks. LEFT/b returns."
               store-suffix))
      ((eq (plist-get context :view) 'media-publication)
-      (concat "Publication tracks — RET plays, p plays, s stops. LEFT/b returns."
+      (concat "Publication tracks — RET plays, p plays, s stops, B bounces marked tracks. LEFT/b returns."
               store-suffix))
      ((eq (plist-get context :view) 'media-ep-staging)
       (concat "EP staging — select an EP folder to browse its exported tracks. LEFT/b returns."
               store-suffix))
      ((eq (plist-get context :view) 'media-ep-staging-ep)
-      (concat "EP staging tracks — RET plays, p plays, s stops. LEFT/b returns."
+      (concat "EP staging tracks — RET plays, p plays, s stops, B bounces marked tracks. LEFT/b returns."
               store-suffix))
      ((eq (plist-get context :view) 'docbook)
       (let ((line (format "Doc books — select a book, then Contents or Recent. %s. LEFT/b returns."
@@ -548,7 +563,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
      ((plist-get context :media-filter)
       (let* ((label (or (plist-get context :label) "Tracks"))
              (count (plist-get context :count)))
-        (format "%s — %s. LEFT/b returns."
+        (format "%s — %s. B bounces marked tracks. LEFT/b returns."
                 label
                 (if (numberp count)
                     (format "%d track%s" count (if (= count 1) "" "s"))
@@ -1648,7 +1663,7 @@ returning to the top-level list."
     (define-key map (kbd "C-c C-p") #'arxana-browser-docbook-export-pdf)
     (define-key map (kbd "C-c C-s") #'arxana-browser-docbook-sync-order)
     (define-key map (kbd "C-c C-f") #'arxana-forum-compose-for-current-thread)
-    (define-key map (kbd "B") #'arxana-browser-code-select-docbook)
+    (define-key map (kbd "B") #'arxana-browser--bounce-or-select-docbook)
     (define-key map (kbd "F") #'arxana-browser--evidence-filter)
     (define-key map (kbd "C-c C-l") #'arxana-media-lyrics-refresh-at-point)
     (define-key map (kbd "C-c C-r") #'arxana-media-lyrics-refresh-buffer)
@@ -1672,7 +1687,7 @@ returning to the top-level list."
         (setq arxana-browser-mode-map (arxana-browser--make-mode-map)))))
   (when (and (boundp 'arxana-browser-mode-map)
              (null (lookup-key arxana-browser-mode-map (kbd "B"))))
-    (define-key arxana-browser-mode-map (kbd "B") #'arxana-browser-code-select-docbook))
+    (define-key arxana-browser-mode-map (kbd "B") #'arxana-browser--bounce-or-select-docbook))
   (when (boundp 'arxana-browser-mode-map)
     (let ((binding (lookup-key arxana-browser-mode-map (kbd "y"))))
       (unless (eq binding #'arxana-browser--copy-location)

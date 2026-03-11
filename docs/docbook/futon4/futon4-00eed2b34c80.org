@@ -45,6 +45,35 @@ Primary helpers in `dev/arxana-links.el`:
 - `arxana-links-load-*` (read)
 - `arxana-links--wrap-entity-payload` / `arxana-links--unwrap-entity` (encoding)
 
+* Runtime validation gates (Reazon)
+
+Futon4 includes optional client-side validation gates backed by Reazon.
+These guards run at key interactive and persistence entry points.
+
+- `arxana-window-constraints.el` validates layout invariants for docbook,
+  scholium, code-docs side panes, org hover panes, pattern HUD, and focal
+  window selection.
+- `arxana-data-constraints.el` validates link strategy shape, voiced link
+  shape, surface-form shape, hyperedge endpoints, inclusion inputs,
+  flexiarg edit spans, and media bounce preconditions.
+
+Default behavior in code is opt-in; enabling requires:
+
+- `arxana-window-constraints-enable = t`
+- `arxana-data-constraints-enable = t`
+
+To make them true gates, set failure actions to `error`:
+
+- `arxana-window-constraints-failure-action = 'error`
+- `arxana-data-constraints-failure-action = 'error`
+
+In this stack setup, those values are configured in
+`futon0/contrib/futon-config.el` under the Futon4 section so invariants are
+active by default when Arxana loads.
+
+These client-side gates complement (not replace) Futon1/Charon model
+invariants enforced server-side during ingest.
+
 * Authoring workflow
 
 Authoring is scholium-first with region selection:
@@ -56,4 +85,3 @@ Authoring is scholium-first with region selection:
 Anchors are resilient: a content hash plus contextual windows let Arxana re-find
 regions after minor edits. Surface forms and embeddings guide link suggestions
 and future automation.
-

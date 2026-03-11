@@ -92,7 +92,7 @@ Use `message' to warn, `error' to raise, or nil to ignore."
         (reazon-fresh (doc-ok source-ok)
           (arxana-window-constraints--dedicated-o docinfo t doc-ok)
           (arxana-window-constraints--dedicated-o sourceinfo t source-ok)
-          (reazon-== ok (and doc-ok source-ok)))))
+          (reazon-== ok (and doc-ok source-ok))))))
     (reazon-defrel arxana-window-constraints--docbook-browser-left-o
         (browserinfo docinfo ok)
       (reazon-conde
@@ -134,7 +134,7 @@ Use `message' to warn, `error' to raise, or nil to ignore."
           (arxana-window-constraints--window-buffero right display-buf)
           (arxana-window-constraints--left-ofo left mid)
           (arxana-window-constraints--left-ofo mid right)
-          (reazon-== ok t)))))))
+          (reazon-== ok t))))))
 
 (defun arxana-window-constraints--ensure-relations ()
   "Load Reazon and define relations if possible."
@@ -159,12 +159,24 @@ Use `message' to warn, `error' to raise, or nil to ignore."
          (top (nth 1 edges))
          (right (nth 2 edges))
          (bottom (nth 3 edges))
-         (managed nil)
-         (focal nil))
+         (managed-state (window-parameter win 'arxana-ui-managed))
+         (focal-state (window-parameter win 'arxana-ui-focal))
+         (managed (pcase managed-state
+                    (:managed t)
+                    (:unmanaged nil)
+                    (_ nil)))
+         (focal (pcase focal-state
+                  (:focal t)
+                  (:ancillary nil)
+                  (_ nil)))
+         (managed-from-window (memq managed-state '(:managed :unmanaged)))
+         (focal-from-window (memq focal-state '(:focal :ancillary))))
     (with-current-buffer buf
-      (when (boundp 'arxana-ui-managed)
+      (when (and (not managed-from-window)
+                 (boundp 'arxana-ui-managed))
         (setq managed arxana-ui-managed))
-      (when (boundp 'arxana-ui--focal)
+      (when (and (not focal-from-window)
+                 (boundp 'arxana-ui--focal))
         (setq focal arxana-ui--focal)))
     (list :window win
           :buffer buf
