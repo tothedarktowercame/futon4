@@ -51,6 +51,61 @@ Usage:
 ./bounce_vocal_bass_harp_harp2.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
 ```
 
+## Basic mix (vocal + piano + accordion + harmonica)
+
+`bounce_vocal_piano_accordion_harmonica.sh` balances lead vocal with a
+piano capture lane plus accordion and harmonica overdubs.
+
+Usage:
+
+```sh
+./bounce_vocal_piano_accordion_harmonica.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
+```
+
+## Vocal-forward mix (vocal + piano + accordion + harmonica)
+
+`bounce_vocal_piano_accordion_harmonica_vocal_forward.sh` keeps vocals
+forward with gentle presence EQ and sidechain-ducks the instrument bus.
+
+Usage:
+
+```sh
+./bounce_vocal_piano_accordion_harmonica_vocal_forward.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
+```
+
+## Vocal-forward mix (dual vocals + piano + harmonica)
+
+`bounce_vocal_vocal2_piano_harmonica_vocal_forward.sh` keeps both vocal leads
+forward and ducks piano/harmonica from a blended dual-vocal sidechain key.
+
+Usage:
+
+```sh
+./bounce_vocal_vocal2_piano_harmonica_vocal_forward.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
+```
+
+## Basic mix (vocal1 + vocal2 + piano + bass)
+
+`bounce_vocal_vocal2_piano_bass.sh` balances two vocal tracks against piano and
+bass for a straightforward four-stem bounce profile.
+
+Usage:
+
+```sh
+./bounce_vocal_vocal2_piano_bass.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
+```
+
+## Basic mix (vocal + guitar + piano + bass)
+
+`bounce_vocal_guitar_piano_bass.sh` balances lead vocal against guitar, piano,
+and bass for a clean four-track rhythm-section bounce profile.
+
+Usage:
+
+```sh
+./bounce_vocal_guitar_piano_bass.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
+```
+
 ## Basic mix (vocal + bass arco, with optional FX)
 
 `bounce_vocal_bass_arco_fx.sh` is a 2-track mix for vocals plus arco bass.

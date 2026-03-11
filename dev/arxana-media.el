@@ -287,7 +287,25 @@
      :instruments ("vocal" "vocal2" "banjo" "bass" "accordion")
      :track-count 5)
     ("vocal+bass+pbass+accordion" :script "scripts/bounce_vocal_bass_pbass_accordion.sh")
-    ("vocal-forward+bass+pbass+accordion" :script "scripts/bounce_vocal_bass_pbass_accordion_vocal_forward.sh")))
+    ("vocal-forward+bass+pbass+accordion" :script "scripts/bounce_vocal_bass_pbass_accordion_vocal_forward.sh")
+    ("vocal+piano+accordion+harmonica"
+     :script "scripts/bounce_vocal_piano_accordion_harmonica.sh"
+     :instruments ("vocal" "piano" "accordion" "harmonica"))
+    ("vocal-forward+piano+accordion+harmonica"
+     :script "scripts/bounce_vocal_piano_accordion_harmonica_vocal_forward.sh"
+     :instruments ("vocal" "piano" "accordion" "harmonica"))
+    ("vocal+guitar+piano+bass"
+     :script "scripts/bounce_vocal_guitar_piano_bass.sh"
+     :instruments ("vocal" "guitar" "piano" "bass"))
+    ("dual-vocal-forward+piano+harmonica"
+     :script "scripts/bounce_vocal_vocal2_piano_harmonica_vocal_forward.sh"
+     :instruments ("vocal" "vocal2" "piano" "harmonica"))
+    ("vocal1+vocal2+piano+bass"
+     :script "scripts/bounce_vocal_vocal2_piano_bass.sh"
+     :instruments ("vocal" "vocal2" "piano" "bass"))
+    ("vocal1+vocal2+piano+harmonica"
+     :script "scripts/bounce_vocal_vocal2_piano_harmonica_vocal_forward.sh"
+     :instruments ("vocal" "vocal2" "piano" "harmonica"))))
 
 (defcustom arxana-media-bounce-profiles arxana-media--bounce-profiles-default
   "Profiles for multi-track bounce workflows.
@@ -306,6 +324,8 @@ Each entry is (PROFILE-NAME :script PATH [:instruments (\"vocal\" ...)])."
 (defcustom arxana-media-bounce-instrument-aliases
   '(("harmonic" . "harmonica")
     ("harp" . "harmonica")
+    ("gtr" . "guitar")
+    ("vocal1" . "vocal")
     ("vocals" . "vocal")
     ("vox" . "vocal"))
   "Aliases used when matching bounce instruments from filenames."
@@ -2835,21 +2855,27 @@ DIRECTORIES defaults to all publication directories. FETCH-FN defaults to
 (defun arxana-media--retitle-track (entry title)
   (let* ((sha (plist-get entry :sha256))
          (status (downcase (or (plist-get entry :status) "hold")))
-         (root (arxana-media--guess-recorder-root entry))
-         (args (append (arxana-media--zoom-sync-args
-                        "--title" (format "%s=%s" sha title)
-                        "--title-manifest-status" "hold")
-                       (when root (list "--source" root))))
-         (buf (get-buffer-create "*arxana-media*"))
-         (exit-code
-          (progn
-            (with-current-buffer buf
-              (let ((inhibit-read-only t))
-                (erase-buffer)))
-            (apply #'process-file (car args) nil buf nil (cdr args)))))
-    (unless (equal exit-code 0)
-      (user-error "zoom_sync.py failed (see *arxana-media* buffer)"))
-    (arxana-media--store-track-entity (list :type 'media-track :entry entry) title)
+         (current-title (or (plist-get entry :title)
+                            (plist-get entry :base_name)
+                            sha
+                            "track"))
+         (item (list :type 'media-track :entry entry)))
+    (unless (and (stringp sha) (not (string-empty-p sha)))
+      (user-error "Track entry has no :sha256"))
+    ;; Preflight Layer 3/penholder authorization before mutating local catalog state.
+    (arxana-media--store-track-entity item current-title)
+    (let* ((root (arxana-media--guess-recorder-root entry))
+           (args (append (arxana-media--zoom-sync-args
+                          "--title" (format "%s=%s" sha title)
+                          "--title-manifest-status" "hold")
+                         (when root (list "--source" root))))
+           (buf (get-buffer-create "*arxana-media*")))
+      (with-current-buffer buf
+        (let ((inhibit-read-only t))
+          (erase-buffer)))
+      (unless (equal (apply #'process-file (car args) nil buf nil (cdr args)) 0)
+        (user-error "zoom_sync.py failed (see *arxana-media* buffer)")))
+    (arxana-media--store-track-entity item title)
     (when (not (string= status "hold"))
       (message "[arxana-media] Note: retitled non-hold entry %s" sha))))
 
@@ -3308,6 +3334,16 @@ Only positive results are cached in `arxana-media--lyrics-cache`."
                 (file-name-nondirectory path)
               ""))))
 
+(defun arxana-media--update-mark-at-point (marked)
+  "Update current row mark indicator in-place for MARKED state.
+Return non-nil when the in-place update succeeds."
+  (and (fboundp 'tabulated-list-set-col)
+       (condition-case nil
+           (let ((inhibit-read-only t))
+             (tabulated-list-set-col 0 (if marked "*" " ") t)
+             t)
+         (error nil))))
+
 (defun arxana-media-toggle-mark-at-point ()
   (interactive)
   (let* ((item (arxana-browser--item-at-point)))
@@ -3317,10 +3353,12 @@ Only positive results are cached in `arxana-media--lyrics-cache`."
     (let* ((key (arxana-media--mark-key-for-item item)))
       (unless key
         (user-error "Track entry has no markable key"))
-      (if (arxana-media--marked-p key)
-          (remhash key arxana-media--marked)
-        (puthash key t arxana-media--marked))
-      (arxana-browser--render))))
+      (let ((marked (not (arxana-media--marked-p key))))
+        (if marked
+            (puthash key t arxana-media--marked)
+          (remhash key arxana-media--marked))
+        (unless (arxana-media--update-mark-at-point marked)
+          (arxana-browser--render))))))
 
 (defun arxana-media-unmark-all ()
   (interactive)
@@ -3619,6 +3657,7 @@ Only positive results are cached in `arxana-media--lyrics-cache`."
           path))))
 
 (defun arxana-media--bounce-profile-choice ()
+  (arxana-media--ensure-bounce-profiles)
   (let* ((choices (mapcar #'car arxana-media-bounce-profiles))
          (choice (completing-read "Bounce profile: " choices nil t)))
     (assoc choice arxana-media-bounce-profiles)))

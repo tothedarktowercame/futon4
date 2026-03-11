@@ -38,19 +38,20 @@ ffmpeg -hide_banner -y \
     [v2]asplit=2[v2_sc_src][v2_mix_src];
     [v1_sc_src]pan=mono|c0=c0[v1_sc];
     [v2_sc_src]pan=mono|c0=c0[v2_sc];
-    [v1_sc][v2_sc]amix=inputs=2:normalize=0[vox_sc];
+    [v1_sc][v2_sc]amix=inputs=2:duration=longest:normalize=0[vox_sc];
+    [vox_sc]apad[vox_sc_pad];
     [v1_mix_src]pan=stereo|c0=c0|c1=0*c0[v1L];
     [v2_mix_src]pan=stereo|c0=0*c0|c1=c0[v2R];
-    [v1L][v2R]amix=inputs=2:normalize=0[vox_mix];
+    [v1L][v2R]amix=inputs=2:duration=longest:normalize=0[vox_mix];
     [2:a]highpass=f=120,acompressor=threshold=-22dB:ratio=2:attack=15:release=180,
          volume=0.95,pan=stereo|c0=c0|c1=0*c0[bL];
     [3:a]highpass=f=40,lowpass=f=5000,acompressor=threshold=-18dB:ratio=2.5:attack=25:release=250,
          volume=1.05,pan=stereo|c0=c0|c1=c0[ba];
     [4:a]highpass=f=200,acompressor=threshold=-22dB:ratio=2:attack=10:release=150,
          volume=0.85,pan=stereo|c0=0*c0|c1=c0[aR];
-    [bL][ba][aR]amix=inputs=3:normalize=0[inst];
-    [inst][vox_sc]sidechaincompress=threshold=0.05:ratio=6:attack=15:release=300:makeup=1[duck];
-    [vox_mix][duck]amix=inputs=2:normalize=0[m];
+    [bL][ba][aR]amix=inputs=3:duration=longest:normalize=0[inst];
+    [inst][vox_sc_pad]sidechaincompress=threshold=0.05:ratio=6:attack=15:release=300:makeup=1[duck];
+    [vox_mix][duck]amix=inputs=2:duration=longest:normalize=0[m];
     [m]alimiter=limit=-1.5dB,aresample=48000
   " \
   -c:a pcm_s16le "$rough"

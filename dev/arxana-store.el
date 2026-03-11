@@ -319,15 +319,30 @@ authoritative guarantee for write availability."
      ((stringp reason) (intern reason))
      (t nil))))
 
+(defun arxana-store--error-context (error-payload)
+  "Return normalized error context from ERROR-PAYLOAD when present."
+  (and (listp error-payload)
+       (or (alist-get :context error-payload)
+           (alist-get 'context error-payload))))
+
 (defun arxana-store--error-detail (response)
   "Return a user-facing error detail string for RESPONSE."
   (let* ((err (and (listp response) (alist-get :error response)))
-         (reason (arxana-store--error-reason-symbol err)))
+         (reason (arxana-store--error-reason-symbol err))
+         (context (arxana-store--error-context err))
+         (penholder (and (listp context)
+                         (or (alist-get :penholder context)
+                             (alist-get 'penholder context)))))
     (cond
      ((stringp err) err)
      ((eq reason 'missing-penholder)
       (concat "missing-penholder (set arxana-store-default-penholder "
               "or send X-Penholder header)"))
+     ((eq reason 'forbidden)
+      (format "forbidden penholder%s (set arxana-store-default-penholder to an allowed id in FUTON1A_ALLOWED_PENHOLDERS)"
+              (if (and (stringp penholder) (not (string-empty-p penholder)))
+                  (format " %s" penholder)
+                "")))
      ((listp err) (format "%s" err))
      ((plist-get arxana-store-last-error :detail)
       (format "%s" (plist-get arxana-store-last-error :detail)))

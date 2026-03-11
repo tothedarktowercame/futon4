@@ -98,6 +98,20 @@
       (should (string-match-p "missing-penholder" (or message-text "")))
       (should (string-match-p "arxana-store-default-penholder" (or message-text ""))))))
 
+(ert-deftest arxana-store-assert-ok-reports-forbidden-penholder ()
+  (let ((response '((:error (:layer . 3)
+                           (:reason . forbidden)
+                           (:context (:penholder . "joe"))))))
+    (let ((message-text
+           (condition-case err
+               (progn
+                 (arxana-store-assert-ok response "Ensuring track entity")
+                 nil)
+             (error (error-message-string err)))))
+      (should (string-match-p "forbidden penholder joe" (or message-text "")))
+      (should (string-match-p "arxana-store-default-penholder" (or message-text "")))
+      (should (string-match-p "FUTON1A_ALLOWED_PENHOLDERS" (or message-text ""))))))
+
 (ert-deftest arxana-store-default-headers-include-penholder ()
   (let ((arxana-store-default-profile "dev")
         (arxana-store-default-penholder "joe"))
@@ -206,6 +220,7 @@
 
 (ert-deftest arxana-store-post-hyperedge-builds-payload ()
   (let ((futon4-enable-sync t)
+        (arxana-store-default-penholder "api")
         (captured nil))
     (cl-letf (((symbol-function 'arxana-store--request)
                (lambda (method path payload &optional query)
@@ -220,7 +235,8 @@
         (should (equal '((:hyperedge . t)) response))
         (should (equal captured
                        (list "POST" "/hyperedge"
-                             '((type . "arxana/derivation")
+                             '((penholder . "api")
+                               (type . "arxana/derivation")
                                (hx/type . ":hx/derives")
                                (hx/endpoints . (((role . ":role/source") (entity . "src"))
                                                 ((role . ":role/target") (entity . "dst"))))
