@@ -242,6 +242,216 @@ Otherwise, HTTP 5050 -> ws 5056, HTTPS 5051 -> wss 5057 (nginx SSL)."
           (or (plist-get item :description) "")))
 
 ;; =============================================================================
+;; Invariants browser
+;; =============================================================================
+
+(defcustom arxana-invariants-structural-law-inventory-path
+  "/home/joe/code/futon3c/docs/structural-law-inventory.sexp"
+  "Path to the structural-law inventory registry seed."
+  :type 'file
+  :group 'arxana-browser)
+
+(defun arxana-browser--invariants-menu-items ()
+  "Return the Invariants sub-menu items."
+  (list
+   (list :type 'invariants-menu
+         :label "Live Violations"
+         :description "Store-backed active invariant/violation hyperedges."
+         :view 'violations)
+   (list :type 'invariants-menu
+         :label "Candidate Queue"
+         :description "Registry-backed candidate invariant families from structural-law-inventory.sexp."
+         :view 'candidate-invariants)
+   (list :type 'info
+         :label "Interface split"
+         :description "Violations are live and store-backed; candidate invariants are inventory pressure, not active defects.")))
+
+(defun arxana-browser--invariants-menu-format ()
+  "Format for the Invariants menu view."
+  [("Option" 20 t)
+   ("Description" 0 nil)])
+
+(defun arxana-browser--invariants-menu-row (item)
+  "Row for Invariants menu ITEM."
+  (vector (or (plist-get item :label) "")
+          (or (plist-get item :description) "")))
+
+(defun arxana-browser--read-structural-law-inventory ()
+  "Read all top-level forms from the structural-law inventory file."
+  (when (file-readable-p arxana-invariants-structural-law-inventory-path)
+    (with-temp-buffer
+      (insert-file-contents arxana-invariants-structural-law-inventory-path)
+      (goto-char (point-min))
+      (let (forms)
+        (condition-case nil
+            (while t
+              (push (read (current-buffer)) forms))
+          (end-of-file nil))
+        (nreverse forms)))))
+
+(defun arxana-browser--sexp-find-first (tree head)
+  "Return the first subform in TREE whose car is HEAD."
+  (cond
+   ((not (consp tree)) nil)
+   ((eq (car tree) head) tree)
+   (t (or (arxana-browser--sexp-find-first (car tree) head)
+          (arxana-browser--sexp-find-first (cdr tree) head)))))
+
+(defun arxana-browser--sexp-find-all (tree head)
+  "Return all subforms in TREE whose car is HEAD."
+  (cond
+   ((not (consp tree)) nil)
+   ((eq (car tree) head)
+    (cons tree
+          (arxana-browser--sexp-find-all (cdr tree) head)))
+   (t (append (arxana-browser--sexp-find-all (car tree) head)
+              (arxana-browser--sexp-find-all (cdr tree) head)))))
+
+(defun arxana-browser--candidate-family-forms (inventory)
+  "Extract candidate family forms from INVENTORY."
+  (let* ((watchlist (arxana-browser--sexp-find-first inventory 'candidate-family-watchlist))
+         (body (cdr-safe watchlist))
+         (entries (if (and (= (length body) 1)
+                           (listp (car body)))
+                      (car body)
+                    body)))
+    (seq-filter (lambda (entry)
+                  (and (consp entry)
+                       (eq (car entry) 'family)))
+                entries)))
+
+(defun arxana-browser--candidate-family-definition-forms (inventory)
+  "Extract family forms from the top-level candidate-families section."
+  (let* ((section (arxana-browser--sexp-find-first inventory 'candidate-families))
+         (body (cdr-safe section))
+         (entries (if (and (= (length body) 1)
+                           (listp (car body)))
+                      (car body)
+                    body)))
+    (seq-filter (lambda (entry)
+                  (and (consp entry)
+                       (eq (car entry) 'family)))
+                entries)))
+
+(defun arxana-browser--repo-seed-devmap-forms (inventory)
+  "Extract all devmap forms from the inventory file.
+The current registry file has drifted into a multi-form shape, so we gather
+all `devmap` forms rather than assuming a single well-nested repo-seeds block."
+  (arxana-browser--sexp-find-all inventory 'devmap))
+
+(defun arxana-browser--candidate-invariant-entry-item
+    (invariant-id family-id source status summary origin)
+  "Build a concrete candidate invariant browser item."
+  (list :type 'candidate-invariant-entry
+        :label (or invariant-id "?")
+        :invariant (or invariant-id "?")
+        :family (or family-id "?")
+        :source (or source "?")
+        :status (or status "candidate")
+        :origin origin
+        :description (or summary "")
+        :note (or summary "")))
+
+(defun arxana-browser--candidate-invariant-items-from-family-form (family-form)
+  "Flatten candidate invariants from FAMILY-FORM."
+  (let* ((plist (cdr family-form))
+         (family-id (plist-get plist :id))
+         (family-name (and family-id (symbol-name family-id)))
+         (status (let ((raw (plist-get plist :status)))
+                   (if raw (symbol-name raw) "candidate")))
+         (source (format "family/%s" (or family-name "?")))
+         (invariants (seq-filter (lambda (entry)
+                                   (and (consp entry)
+                                        (eq (car entry) 'invariant)))
+                                 (plist-get plist :candidate-invariants))))
+    (mapcar
+     (lambda (entry)
+       (let* ((entry-plist (cdr entry))
+              (invariant-id (let ((raw (plist-get entry-plist :id)))
+                              (and raw (symbol-name raw))))
+              (summary (plist-get entry-plist :summary)))
+         (arxana-browser--candidate-invariant-entry-item
+          invariant-id family-name source status summary 'family-definition)))
+     invariants)))
+
+(defun arxana-browser--candidate-invariant-items-from-devmap-form (devmap-form)
+  "Flatten candidate invariants from repo-seed DEVMAP-FORM."
+  (let* ((plist (cdr devmap-form))
+         (devmap-id (plist-get plist :id))
+         (source (format "repo/%s" (if devmap-id (symbol-name devmap-id) "?")))
+         (invariants (seq-filter (lambda (entry)
+                                   (and (consp entry)
+                                        (eq (car entry) 'invariant)))
+                                 (plist-get plist :candidate-invariants))))
+    (mapcar
+     (lambda (entry)
+       (let* ((entry-plist (cdr entry))
+              (invariant-id (let ((raw (plist-get entry-plist :id)))
+                              (and raw (symbol-name raw))))
+              (family-id (let ((raw (plist-get entry-plist :family)))
+                           (and raw (symbol-name raw))))
+              (status (let ((raw (plist-get entry-plist :status)))
+                        (if raw (symbol-name raw) "candidate")))
+              (summary (plist-get entry-plist :summary)))
+         (arxana-browser--candidate-invariant-entry-item
+          invariant-id family-id source status summary 'repo-seed)))
+     invariants)))
+
+(defun arxana-browser--candidate-invariants-items ()
+  "Return concrete candidate invariant queue items from the registry seed."
+  (let* ((inventory (ignore-errors (arxana-browser--read-structural-law-inventory)))
+         (family-items (and inventory
+                            (mapcan #'arxana-browser--candidate-invariant-items-from-family-form
+                                    (arxana-browser--candidate-family-definition-forms inventory))))
+         (devmap-items (and inventory
+                            (mapcan #'arxana-browser--candidate-invariant-items-from-devmap-form
+                                    (arxana-browser--repo-seed-devmap-forms inventory))))
+         (items (append family-items devmap-items)))
+    (if items
+        (sort items (lambda (a b)
+                      (string< (or (plist-get a :invariant) "")
+                               (or (plist-get b :invariant) ""))))
+      (list (list :type 'info
+                  :label "No candidate invariant queue"
+                  :description "Could not read candidate-family-watchlist from structural-law-inventory.sexp.")))))
+
+(defun arxana-browser--candidate-invariants-format ()
+  "Column format for the candidate invariant queue."
+  [("Invariant" 30 t)
+   ("Family" 24 t)
+   ("Source" 16 t)
+   ("Note" 0 nil)])
+
+(defun arxana-browser--candidate-invariants-row (item)
+  "Row for candidate invariant ITEM."
+  (vector
+   (arxana-lab--truncate (or (plist-get item :invariant) "") 29)
+   (arxana-lab--truncate (or (plist-get item :family) "") 23)
+   (arxana-lab--truncate (or (plist-get item :source) "") 15)
+   (arxana-lab--truncate (or (plist-get item :note) "") 90)))
+
+(defun arxana-browser-candidate-invariant-open-entry (item)
+  "Open detail view for candidate invariant ITEM."
+  (let ((buf (get-buffer-create "*Invariant Candidate*")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (org-mode)
+        (insert "* Candidate Invariant: " (or (plist-get item :invariant) "?") "\n\n")
+        (insert (format "- Family :: %s\n" (or (plist-get item :family) "?")))
+        (insert (format "- Source :: %s\n" (or (plist-get item :source) "?")))
+        (insert (format "- Status :: %s\n" (or (plist-get item :status) "?")))
+        (insert (format "- Origin :: %s\n" (or (plist-get item :origin) "?")))
+        (insert "\n** Note\n\n")
+        (insert (or (plist-get item :note) ""))
+        (insert "\n\n** Interpretation\n\n")
+        (insert "This is a candidate invariant from the structural-law inventory,\n")
+        (insert "not a live violation. It names a concrete law-shaped pressure that\n")
+        (insert "may later become an always-on invariant, gate, or obligation source.\n")
+        (goto-char (point-min))))
+    (pop-to-buffer buf)))
+
+;; =============================================================================
 ;; Active Sessions view
 ;; =============================================================================
 
@@ -1363,12 +1573,114 @@ Returns :ok, :stale (signature changed), or :missing (var gone)."
   "Face for INV-3 (orphan) violations."
   :group 'arxana-browser)
 
+(defface arxana-violation-auto-fixable-face
+  '((t :foreground "#98c379" :weight bold))
+  "Face for auto-fixable structural-law violations."
+  :group 'arxana-browser)
+
+(defface arxana-violation-needs-review-face
+  '((t :foreground "#e5c07b" :weight bold))
+  "Face for needs-review structural-law violations."
+  :group 'arxana-browser)
+
+(defface arxana-violation-informational-face
+  '((t :foreground "#61afef"))
+  "Face for informational structural-law violations."
+  :group 'arxana-browser)
+
 (defun arxana-browser--violations-format ()
   "Column format for violations view."
-  [("INV" 6 t)
-   ("Type" 28 t)
-   ("Entity" 40 t)
-   ("Resolution" 0 nil)])
+  [("Rule" 28 t)
+   ("Domain" 12 t)
+   ("Entity" 36 t)
+   ("Action" 0 nil)])
+
+(defun arxana-browser--field (obj key)
+  "Return KEY from OBJ, handling both plists and alists."
+  (cond
+   ((null obj) nil)
+   ((and (listp obj) (keywordp (car obj)))
+    (plist-get obj key))
+   ((listp obj)
+    (alist-get key obj nil nil #'eq))
+   (t nil)))
+
+(defun arxana-browser--field-present-p (obj key)
+  "Return non-nil when OBJ explicitly contains KEY."
+  (cond
+   ((null obj) nil)
+   ((and (listp obj) (keywordp (car obj)))
+    (plist-member obj key))
+   ((listp obj)
+    (assq key obj))
+   (t nil)))
+
+(defun arxana-browser--violation-props (item)
+  "Return the props plist for violation ITEM."
+  (or (arxana-browser--field item :hx/props) '()))
+
+(defun arxana-browser--violation-endpoints (item)
+  "Return the endpoint vector for violation ITEM."
+  (or (arxana-browser--field item :hx/endpoints) '()))
+
+(defun arxana-browser--violation-rule (item)
+  "Return a display rule for violation ITEM."
+  (let* ((props (arxana-browser--violation-props item))
+         (rule (arxana-browser--field props :rule))
+         (family (arxana-browser--field props :family))
+         (legacy (arxana-browser--field props :invariant))
+         (endpoints (arxana-browser--violation-endpoints item))
+         (inv-endpoint (car endpoints)))
+    (cond
+     (legacy (format "%s" legacy))
+     ((and family rule) (format "%s/%s" family rule))
+     (rule (format "%s" rule))
+     ((and (stringp inv-endpoint) (string-prefix-p "inv:" inv-endpoint))
+      (substring inv-endpoint 4))
+     (t (format "%s" (or (arxana-browser--field item :hx/type) "?"))))))
+
+(defun arxana-browser--violation-domain (item)
+  "Return a display domain for violation ITEM."
+  (let* ((props (arxana-browser--violation-props item))
+         (domain (arxana-browser--field props :domain)))
+    (if domain
+        (format "%s" domain)
+      "legacy")))
+
+(defun arxana-browser--violation-entity (item)
+  "Return a display entity string for violation ITEM."
+  (let* ((endpoints (arxana-browser--violation-endpoints item))
+         (entity-eps (if (and endpoints
+                              (stringp (car endpoints))
+                              (string-prefix-p "inv:" (car endpoints)))
+                         (cdr endpoints)
+                       endpoints)))
+    (if entity-eps
+        (mapconcat (lambda (x) (format "%s" x)) entity-eps ", ")
+      "")))
+
+(defun arxana-browser--violation-action (item)
+  "Return an action/resolution string for violation ITEM."
+  (let* ((props (arxana-browser--violation-props item))
+         (label (arxana-browser--field props :label))
+         (resolution (arxana-browser--field props :resolution))
+         (message (arxana-browser--field props :message))
+         (actionability (arxana-browser--field props :actionability)))
+    (cond
+     (resolution (format "%s" resolution))
+     (label (format "%s" label))
+     (message (format "%s" message))
+     (actionability (format "%s" actionability))
+     (t ""))))
+
+(defun arxana-browser--violation-active-p (item)
+  "Return non-nil when violation ITEM should be shown as live."
+  (let* ((props (arxana-browser--violation-props item))
+         (state (arxana-browser--field props :state))
+         (active (arxana-browser--field props :active)))
+    (not (or (equal state "cleared")
+             (equal active "false")
+             (equal active :false)))))
 
 (defun arxana-browser--violation-face (inv)
   "Return face for invariant INV string."
@@ -1379,73 +1691,108 @@ Returns :ok, :stale (signature changed), or :missing (var gone)."
    ((string-match-p "INV-4" inv) 'arxana-violation-inv2-face)  ; reuse red for math
    (t 'default)))
 
+(defun arxana-browser--violation-display-face (item)
+  "Return the preferred face for violation ITEM."
+  (let* ((props (arxana-browser--violation-props item))
+         (actionability (let ((raw (arxana-browser--field props :actionability)))
+                          (and raw (format "%s" raw))))
+         (rule (arxana-browser--violation-rule item)))
+    (cond
+     ((equal actionability "auto-fixable") 'arxana-violation-auto-fixable-face)
+     ((equal actionability "needs-review") 'arxana-violation-needs-review-face)
+     ((equal actionability "informational") 'arxana-violation-informational-face)
+     (t (arxana-browser--violation-face rule)))))
+
 (defun arxana-browser--violations-row (item)
   "Row for violation ITEM."
-  (let* ((props (plist-get item :hx/props))
-         (inv (or (plist-get props :invariant)
-                  (format "%s" (or (plist-get item :invariant) ""))))
-         (vtype (or (plist-get props :summary)
-                    (format "%s" (or (plist-get item :hx/type) ""))))
-         (endpoints (plist-get item :hx/endpoints))
-         (entity (if endpoints
-                     (format "%s" (car endpoints))
-                   ""))
-         (resolution (or (plist-get props :resolution) ""))
-         (face (arxana-browser--violation-face inv)))
-    (vector (propertize inv 'face face)
-            (arxana-lab--truncate vtype 27)
-            (arxana-lab--truncate entity 39)
-            (arxana-lab--truncate resolution 50))))
+  (let* ((rule (arxana-browser--violation-rule item))
+         (domain (arxana-browser--violation-domain item))
+         (entity (arxana-browser--violation-entity item))
+         (action (arxana-browser--violation-action item))
+         (face (arxana-browser--violation-display-face item)))
+    (vector (propertize rule 'face face)
+            (arxana-lab--truncate domain 11)
+            (arxana-lab--truncate entity 35)
+            (arxana-lab--truncate action 60))))
+
+(defun arxana-browser--coerce-hyperedges (resp)
+  "Return a hyperedge list from RESP."
+  (cond
+   ((arxana-browser--field-present-p resp :hyperedges)
+    (arxana-browser--field resp :hyperedges))
+   ((and (listp resp) (listp (car resp)))
+    resp)
+   (t nil)))
+
+(defun arxana-browser--tag-violation-entry (hx)
+  "Attach `:type violation-entry` to HX, preserving alist/plist shape."
+  (if (and (listp hx) (keywordp (car hx)))
+      (append (list :type 'violation-entry) hx)
+    (append (list (cons :type 'violation-entry)) hx)))
 
 (defun arxana-browser--violations-items ()
   "Fetch invariant violations from futon1a hyperedge store."
-  (condition-case err
-      (let ((all-violations nil))
-        ;; Query each invariant type
-        (dolist (inv-type '("invariant/undocumented-entry-point"
-                            "invariant/uncovered-component"
-                            "invariant/orphan-namespace"
-                            "invariant/ungrounded-definition"))
-          (let ((resp (arxana-store-fetch-hyperedges :type inv-type :limit 200)))
-            (when resp
-              (let ((hxs (cond
-                          ((and (listp resp) (plist-get resp :hyperedges))
-                           (plist-get resp :hyperedges))
-                          ((and (listp resp) (listp (car resp)))
-                           resp)
-                          (t nil))))
-                (dolist (hx hxs)
-                  (push (append (list :type 'violation-entry) hx) all-violations))))))
-        (if all-violations
-            (nreverse all-violations)
-          (list (list :type 'info
-                      :label "No violations"
-                      :description "All invariants passed — store may need refresh (run ingest-three-columns.py --invariants)"))))
-    (error
-     (list (list :type 'info
-                 :label "Failed to fetch violations"
-                 :description (format "Error: %s" (error-message-string err)))))))
+  (let ((all-violations nil)
+        (seen (make-hash-table :test 'equal)))
+    ;; Prefer the generic invariant/violation shape, but keep older
+    ;; per-invariant hyperedges visible until everything is ported.
+    (dolist (inv-type '("invariant/violation"
+                        "invariant/undocumented-entry-point"
+                        "invariant/uncovered-component"
+                        "invariant/orphan-namespace"
+                        "invariant/ungrounded-definition"))
+      (let* ((resp (ignore-errors
+                     (arxana-store-fetch-hyperedges :type inv-type :limit 200)))
+             (hxs (arxana-browser--coerce-hyperedges resp)))
+        (dolist (hx hxs)
+          (let ((hx-id (or (arxana-browser--field hx :hx/id)
+                           (format "%s" hx))))
+            (unless (or (gethash hx-id seen)
+                        (not (arxana-browser--violation-active-p hx)))
+              (puthash hx-id t seen)
+              (push (arxana-browser--tag-violation-entry hx) all-violations))))))
+    (if all-violations
+        (nreverse all-violations)
+      (list (list :type 'info
+                  :label "No violations"
+                  :description "All invariants passed — store may need refresh (run ingest-three-columns.py --invariants or emit structural-law hyperedges).")))))
 
 (defun arxana-browser-violation-open-entry (item)
   "Open detail view for a violation ITEM."
   (let* ((buf-name "*Violation Detail*")
          (buf (get-buffer-create buf-name))
-         (props (plist-get item :hx/props))
-         (inv (or (plist-get props :invariant) "?"))
-         (summary (or (plist-get props :summary) "?"))
-         (resolution (or (plist-get props :resolution) "?"))
-         (endpoints (plist-get item :hx/endpoints))
-         (entity (if endpoints (format "%s" (car endpoints)) "?"))
-         (hx-id (or (plist-get item :hx/id) "?")))
+         (props (arxana-browser--violation-props item))
+         (inv (arxana-browser--violation-rule item))
+         (summary (or (arxana-browser--field props :summary)
+                      (arxana-browser--field props :message)
+                      "?"))
+         (resolution (or (arxana-browser--field props :resolution)
+                         (arxana-browser--field props :label)
+                         (arxana-browser--field props :actionability)
+                         "?"))
+         (domain (arxana-browser--violation-domain item))
+         (family (or (let ((raw (arxana-browser--field props :family)))
+                       (and raw (format "%s" raw)))
+                     "?"))
+         (endpoints (arxana-browser--violation-endpoints item))
+         (entity (or (arxana-browser--violation-entity item) "?"))
+         (hx-id (or (arxana-browser--field item :hx/id) "?")))
     (with-current-buffer buf
       (let ((inhibit-read-only t))
         (erase-buffer)
         (org-mode)
         (insert "* Violation: " summary "\n\n")
         (insert (format "- Invariant :: %s\n" inv))
+        (insert (format "- Family :: %s\n" family))
+        (insert (format "- Domain :: %s\n" domain))
         (insert (format "- Entity :: %s\n" entity))
         (insert (format "- Hyperedge ID :: %s\n" hx-id))
         (insert (format "- Resolution :: %s\n" resolution))
+        (when endpoints
+          (insert (format "- Endpoints :: %s\n"
+                          (mapconcat (lambda (x) (format "%s" x))
+                                     endpoints
+                                     ", "))))
         (insert "\n** Context\n\n")
         (cond
          ((string-match-p "INV-1" inv)
@@ -1461,7 +1808,25 @@ Returns :ok, :stale (signature changed), or :missing (var gone)."
          ((string-match-p "INV-4" inv)
           (insert "This scope (definition/binding) is never referenced by an iatc\n")
           (insert "(argumentation) edge. Add an iatc edge with act=reference to\n")
-          (insert "ground this definition in the argumentative structure.\n")))
+          (insert "ground this definition in the argumentative structure.\n"))
+         ((string= family "existence")
+          (insert "A required structural entity or relation is missing. The\n")
+          (insert "violation endpoints identify the canonical invariant plus the\n")
+          (insert "runtime objects that failed to satisfy it.\n"))
+         ((string= family "required-outputs")
+          (insert "A phase or workflow transition happened without producing a\n")
+          (insert "required output artifact. Repair the missing output before\n")
+          (insert "treating the cycle as complete.\n"))
+         ((string= family "phase-ordering")
+          (insert "This workflow advanced out of its declared order. The repair is\n")
+          (insert "to realign runtime state with the canonical phase sequence.\n"))
+         ((string= family "cross-store-agreement")
+          (insert "Two live stores disagree about the same runtime fact. Treat this\n")
+          (insert "as a review item until the responsible surfaces are reconciled.\n"))
+         (t
+          (insert "This violation uses the generic invariant/violation shape.\n")
+          (insert "Inspect the rule, family, and endpoints above to determine the\n")
+          (insert "relevant repair path.\n")))
         (insert "\n** Actions\n\n")
         (insert "- Press =q= to close this buffer\n")
         (when (string-match-p "^ns:" entity)

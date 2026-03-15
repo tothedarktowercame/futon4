@@ -22,8 +22,14 @@ Each invariant is a query over the hyperedge store that returns a set of
 The check cycle:
 1. Query futon1a for hyperedges of each relevant type
 2. Compute set operations (e.g., "namespaces without doc" = all namespaces minus those with doc)
-3. Write violations as hyperedges of type =invariant/<violation-type>=
+3. Write violations as hyperedges, preferably with the generic type
+   =invariant/violation= and rule/family/domain props
 4. Violations are browsable in Arxana and queryable via the futon1a API
+
+The older three-column pipeline uses type-specific rows such as
+=invariant/undocumented-entry-point=. The newer structural-law pipeline in
+futon3c emits the generic =invariant/violation= shape. The Arxana browser now
+accepts both forms on the same Violations screen.
 
 * Current invariants
 
@@ -77,6 +83,11 @@ This loop is the I4-compliant path from the AIF+ formalism: invariant rules
 (slow timescale) are not rewritable by code changes (fast timescale) without
 going through the project column (creating a tension, reviewing, recording).
 
+* Structural-law examples
+
+See docbook://futon3x/futon3x-c914e1cfe749 for the first structural-law
+examples rendered through the same hyperedge and browser path.
+
 * Extending with new invariants
 
 To add a new invariant:
@@ -85,8 +96,9 @@ To add a new invariant:
    =check_invariants()= section
 2. Use =query_all_of_type()= to fetch relevant hyperedges
 3. Compute violations as a set difference or property check
-4. Append violations to the violations list with invariant ID and resolution
-5. Add the new =invariant/<type>= to the count function's type list
-6. Add the type to =arxana-browser--violations-items= fetch list in
-   =arxana-browser-lab.el=
-7. Add face and context text for the new invariant type
+4. Emit either:
+   - a legacy =invariant/<type>= row, or preferably
+   - a generic =invariant/violation= row with =rule=, =family=, =domain=,
+     =message=, and =actionability= props
+5. If the violation needs custom explanation, add context text for the
+   relevant rule or family in =arxana-browser-lab.el=

@@ -337,6 +337,16 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
          (count (number-to-string (or (plist-get item :count) 0))))
     (vector type name source status count)))
 
+(defun arxana-browser--item-get (item key)
+  "Return KEY from ITEM, handling both plists and alists."
+  (cond
+   ((null item) nil)
+   ((and (listp item) (keywordp (car item)))
+    (plist-get item key))
+   ((listp item)
+    (alist-get key item nil nil #'eq))
+   (t nil)))
+
 (defun arxana-browser--menu-row (item)
   (vector (or (plist-get item :label) "")
           (or (plist-get item :description) "")))
@@ -383,9 +393,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
               :description "Self-representing stack: trace tensions through gates to source."
               :view 'trace-home)
         (list :type 'menu
-              :label "Violations"
-              :description "Cross-column invariant violations from futon1a."
-              :view 'violations)))
+              :label "Invariants"
+              :description "Live violations plus candidate-law queue."
+              :view 'invariants-home)))
 
 (defun arxana-browser--evidence-menu-items ()
   (if (require 'arxana-browser-evidence nil t)
@@ -740,6 +750,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         ('docbook-recent (arxana-browser--docbook-items (plist-get context :book)))
         ('forum (arxana-browser--forum-items))
         ('lab-home (arxana-browser--lab-menu-items))
+        ('invariants-home (arxana-browser--invariants-menu-items))
         ('lab-sessions-active (arxana-browser--lab-sessions-active-items))
         ('lab-sessions-recent (arxana-browser--lab-sessions-recent-items))
         ('lab-sessions-raw (arxana-browser--lab-sessions-raw-items))
@@ -748,6 +759,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         ('evidence-sessions (arxana-browser--evidence-sessions-items))
         ('tensions (arxana-browser--tensions-items))
         ('violations (arxana-browser--violations-items))
+        ('candidate-invariants (arxana-browser--candidate-invariants-items))
         ('devmaps (arxana-browser--devmaps-items))
         ('narrative-trail (arxana-browser--narrative-trail-items
                            (plist-get context :mission-id)))
@@ -938,6 +950,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
             ('docbook-recent #'arxana-browser--docbook-row)
             ('forum #'arxana-browser--forum-row)
             ('lab-home #'arxana-browser--lab-menu-row)
+            ('invariants-home #'arxana-browser--invariants-menu-row)
             ('lab-sessions-active #'arxana-browser--lab-sessions-active-row)
             ('lab-sessions-recent #'arxana-browser--lab-sessions-active-row)
             ('lab-sessions-raw #'arxana-browser--lab-sessions-raw-row)
@@ -946,6 +959,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
             ('evidence-sessions #'arxana-browser--evidence-sessions-row)
             ('tensions #'arxana-browser--tensions-row)
             ('violations #'arxana-browser--violations-row)
+            ('candidate-invariants #'arxana-browser--candidate-invariants-row)
             ('devmaps #'arxana-browser--devmaps-row)
             ('narrative-trail #'arxana-browser--narrative-trail-row)
             ('lab #'arxana-browser--lab-row)
@@ -1056,6 +1070,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                         ('docbook-recent (arxana-browser--docbook-format))
                         ('forum (arxana-browser--forum-format))
                         ('lab-home (arxana-browser--lab-menu-format))
+                        ('invariants-home (arxana-browser--invariants-menu-format))
                         ('lab-sessions-active (arxana-browser--lab-sessions-active-format))
                         ('lab-sessions-recent (arxana-browser--lab-sessions-active-format))
                         ('lab-sessions-raw (arxana-browser--lab-sessions-raw-format))
@@ -1064,6 +1079,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                         ('evidence-sessions (arxana-browser--evidence-sessions-format))
                         ('tensions (arxana-browser--tensions-format))
                         ('violations (arxana-browser--violations-format))
+                        ('candidate-invariants (arxana-browser--candidate-invariants-format))
                         ('devmaps (arxana-browser--devmaps-format))
                         ('narrative-trail (arxana-browser--narrative-trail-format))
                         ('lab (arxana-browser--lab-format))
@@ -1132,16 +1148,16 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
   (let ((item (arxana-browser--item-at-point)))
     (unless item
       (user-error "No entry on this line"))
-    (pcase (plist-get item :type)
+    (pcase (arxana-browser--item-get item :type)
       ('menu
-       (let ((view (plist-get item :view)))
+       (let ((view (arxana-browser--item-get item :view)))
          (if (not view)
              (message "No view associated with this entry")
            (when (and (eq view 'code)
-                      (plist-get item :docbook))
+                      (arxana-browser--item-get item :docbook))
              (require 'arxana-browser-code nil t)
              (when (fboundp 'arxana-browser-code-set-docbook)
-               (arxana-browser-code-set-docbook (plist-get item :docbook))))
+               (arxana-browser-code-set-docbook (arxana-browser--item-get item :docbook))))
            (setq arxana-browser--stack
                  (cons item arxana-browser--stack))
            (arxana-browser--render))))
@@ -1176,6 +1192,13 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
        (arxana-forum-open-thread item))
       ('lab-menu
        (arxana-browser-lab-open-session item))
+      ('invariants-menu
+       (let ((view (arxana-browser--item-get item :view))
+             (label (arxana-browser--item-get item :label)))
+         (setq arxana-browser--stack
+               (cons (list :view view :label label)
+                     arxana-browser--stack))
+         (arxana-browser--render)))
       ('lab-session-active
        (arxana-browser-lab-open-session item))
       ('lab-session-archived
@@ -1204,6 +1227,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
        (if (fboundp 'arxana-browser-violation-open-entry)
            (arxana-browser-violation-open-entry item)
          (message "Lab violations browser unavailable")))
+      ('candidate-invariant-entry
+       (if (fboundp 'arxana-browser-candidate-invariant-open-entry)
+           (arxana-browser-candidate-invariant-open-entry item)
+         (message "Invariant candidate browser unavailable")))
       ('devmap-entry
        (if (fboundp 'arxana-browser-devmap-open-entry)
            (arxana-browser-devmap-open-entry item)
@@ -1227,11 +1254,11 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
       ('graph-type
        (if (fboundp 'arxana-browser-graph-open)
            (arxana-browser-graph-open item)
-         (message "Graph type: %s" (or (plist-get item :label) "?"))))
+         (message "Graph type: %s" (or (arxana-browser--item-get item :label) "?"))))
       ('hypergraph-source
        (if (fboundp 'arxana-browser-hypergraph-open)
            (arxana-browser-hypergraph-open item)
-         (message "Hypergraph source: %s" (or (plist-get item :label) "?"))))
+         (message "Hypergraph source: %s" (or (arxana-browser--item-get item :label) "?"))))
       ('media-publication
        (let ((path (plist-get item :path)))
          (unless (and path (file-directory-p path))
@@ -1327,10 +1354,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
       ('lab-file
        (arxana-lab-open-file-entry item))
       ('info
-       (message "%s" (or (plist-get item :message)
+       (message "%s" (or (arxana-browser--item-get item :message)
                          "Nothing to open here yet")))
       (_
-       (user-error "Don't know how to open %S entries" (plist-get item :type))))))
+       (user-error "Don't know how to open %S entries" (arxana-browser--item-get item :type))))))
 
 (defun arxana-browser--pattern-location (item)
   (let* ((label (plist-get item :label))

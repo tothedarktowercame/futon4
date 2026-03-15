@@ -49,6 +49,8 @@ Violations are stored as hyperedges and browsable in Arxana:
 =M-x arxana-browse= -> Violations.
 
 See docbook://futon3x/futon3x-1e14c482efcf for how invariant checking works.
+See docbook://futon3x/futon3x-c914e1cfe749 for live structural-law examples on
+the same Arxana surface.
 See docbook://futon3x/futon3x-af593a33a648 for the ingestion pipeline.
 
 * Relation to the full trace

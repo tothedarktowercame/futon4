@@ -266,6 +266,17 @@
     "level": 3
   },
   {
+    "doc_id": "futon3x-c914e1cfe749",
+    "title": "Structural-law examples in Arxana",
+    "outline_path": [
+      "Self-Representing Stack",
+      "Three-Column Stack",
+      "Structural-law examples in Arxana"
+    ],
+    "path_string": "Self-Representing Stack / Three-Column Stack / Structural-law examples in Arxana",
+    "level": 3
+  },
+  {
     "doc_id": "futon3x-af593a33a648",
     "title": "Three-column ingestion pipeline",
     "outline_path": [
