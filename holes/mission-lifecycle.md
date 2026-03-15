@@ -68,6 +68,19 @@ Design the solution. This is the core intellectual work.
   and documents the trade-offs for future readers.
 - [ ] **View/UI specifications:** What browser views, commands, or interfaces
   will the user interact with?
+- [ ] **Wiring diagram (if applicable):** If a futon5 AIF+ exotype diagram
+  exists or would be useful, sketch it now. Diagrams settle ports, timescales,
+  exogeneity, and closure before code hardens. Not every mission needs one,
+  but missions that define components, loops, or multi-repo interfaces benefit
+  from having the diagram during DERIVE rather than discovering its absence
+  during VERIFY.
+- [ ] **Fidelity contract (GF, if applicable):** For port/rebuild missions,
+  inventory donor capabilities and produce a Capability Preservation Matrix
+  (preserve/adapt/drop) with tripwire tests. For greenfield missions,
+  inventory declared spec commitments. See `futon3c/docs/futonic-missions.md`
+  §GF for the full template. Not required for pure research or exploration
+  missions, but required for any mission that replaces or extends existing
+  behavior.
 
 **Exit criterion:** Someone could implement the mission from the DERIVE
 section alone, without needing to ask clarifying questions.
@@ -103,7 +116,39 @@ what it does and why from the plain-language argument alone.
 
 ### 5. VERIFY
 
-Build it and prove it works.
+Check the architecture against constraints before committing to full
+implementation. This phase is primarily about structural and empirical
+validation — confirming the design is sound before code hardens.
+
+- [ ] **Structural verification (if wiring diagram exists):** Check the
+  architecture against exotype diagrams (`.edn`). Verify: completeness,
+  coverage, no orphan inputs, type safety, spec coverage, timescale
+  ordering, exogeneity, and compositional closure. If no diagram exists,
+  record why (not every mission needs one) and skip this check.
+- [ ] **Prototype / spike (if needed):** For missions where structural
+  verification alone is insufficient, build a minimal spike to validate
+  the riskiest DERIVE commitments. This is not full implementation — it's
+  targeted risk reduction.
+- [ ] **Completion criteria pre-check:** Review each criterion from IDENTIFY
+  and confirm the DERIVE design addresses it. Flag any that the design
+  doesn't cover — these need either a DERIVE revision or an explicit
+  deferral.
+- [ ] **Fidelity check (if GF was produced):** Confirm tripwire tests exist
+  for all `preserve` capabilities and compatibility assertions for all
+  `adapt` capabilities.
+- [ ] **Decision log:** Record any verification-time discoveries that revise
+  the DERIVE design, with rationale.
+
+**Exit criterion:** The design has been checked against available structural
+constraints. Any risks that can't be verified statically have been spiked.
+DERIVE revisions (if any) are recorded.
+
+### 6. INSTANTIATE
+
+Build the code. By this point, the architecture is fully specified, the
+patterns are selected, the argument is written, and the constraints are
+checked. Implementation should be the *least creative* phase — if it
+requires novel design decisions, the earlier phases were incomplete.
 
 - [ ] **Implement:** Write the code, create the endpoints, wire the views.
 - [ ] **Round-trip test:** For each new entity/relation type, confirm that
@@ -112,15 +157,6 @@ Build it and prove it works.
   infrastructure (browsers, APIs, logic relations).
 - [ ] **Completion criteria check:** Go through each criterion from IDENTIFY
   and confirm it's met with evidence (not assertion).
-- [ ] **Decision log:** Record any implementation-time decisions that diverged
-  from DERIVE, with rationale.
-
-**Exit criterion:** Every completion criterion has a concrete demonstration.
-
-### 6. INSTANTIATE
-
-Demonstrate the full loop in the real system.
-
 - [ ] **End-to-end demo:** Walk through a realistic scenario that exercises
   the new capability from start to finish.
 - [ ] **Loop closure:** If the mission involves a feedback loop (invariant →
@@ -130,8 +166,9 @@ Demonstrate the full loop in the real system.
 - [ ] **Checkpoint:** Write the final checkpoint in the mission doc with
   commits, what was built, and what remains.
 
-**Exit criterion:** A new person (human or agent) could reproduce the demo
-from the mission doc without help.
+**Exit criterion:** Every completion criterion has a concrete demonstration.
+A new person (human or agent) could reproduce the demo from the mission doc
+without help.
 
 ### 7. DOCUMENT
 
