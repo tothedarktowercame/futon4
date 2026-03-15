@@ -1,0 +1,75 @@
+#+TITLE: Structural law consultation
+:PROPERTIES:
+:DOC_ID: futon3x-d86686ddfd4d
+:ENTRY_ID: futon3x-d86686ddfd4d::org
+:VERSION: org
+:OUTLINE_PATH: AIF Heads / Structural law consultation
+:PATH_STRING: AIF Heads / Structural law consultation
+:REPLACES:
+:END:
+
+* Context
+The structural law inventory (=docs/structural-law-inventory.sexp=) contains 9
+operational and 8 candidate invariant families that characterize what is
+conserved across transitions in the futon stack. Before AIF heads, these laws
+existed as documentation. Now they are the generative model — the AIF head
+consults them before every transition.
+
+* The inventory loader
+=futon3c.logic.inventory= parses the sexp inventory into core.logic pldb
+relations:
+
+#+BEGIN_SRC clojure
+;; Three relation types:
+(pldb/db-rel law-entry id scope status kind family)
+(pldb/db-rel law-family family-id)
+(pldb/db-rel law-status id status)
+#+END_SRC
+
+Query helpers:
+- =laws-by-status= — filter by =:operational= / =:candidate=
+- =laws-by-family= — filter by family keyword
+- =check-compliance= — returns ={:ok true}= or ={:ok false :violations [...] :unbacked-families [...]}=
+
+This follows the same pldb pattern used by 5 other domains in futon3c (portfolio,
+tickle, agency, proof, mission).
+
+* The refusal surface
+=AifHead.check-law= is called before phase transitions via an extended
+=validate-phase-advance= in =mission_backend.clj=. The 4-arity version accepts
+an =aif-head= and =state=, calls =.check_law=, and blocks on violation.
+
+Three error types in the mission-backend error catalog:
+
+| Error code                       | Tier   | Behavior           |
+|----------------------------------+--------+--------------------|
+| =:structural-law-violation=      | Reflex | Returns ={:ok false}= |
+| =:foundational-invariant-breach= | Reflex | Throws =ex-info=     |
+| =:prediction-divergence-high=    | Default | Returns ={:ok false}= (threshold: 0.7) |
+
+* "I'm sorry, Joe"
+The mature form: the stack refuses a transition initiated by any actor —
+including the human operator — if it would violate a structural law. The refusal
+includes the specific law family, law ID, and a human-readable message. The
+refusal is emitted as evidence (coordination type) and returned as the tool
+result.
+
+Candidate violations are soft: ={:ok false}=, try a different action.
+Foundational violations are hard: =ex-info=, impossible state, data corruption.
+
+* Prediction divergence gating
+In addition to structural law consultation, the extended =validate-phase-advance=
+checks prediction divergence. =compute-prediction-divergence= in
+=mission_shapes.clj= compares =:propose= predictions against =:execute= actuals
+using artifact set-difference and criteria satisfaction, returning a =[0,1]=
+divergence score. Divergence above 0.7 blocks advancement.
+
+* Implementation
+- =futon3c/src/futon3c/logic/inventory.clj= — sexp parser + pldb loader
+- =futon3c/src/futon3c/peripheral/mission_backend.clj= — extended =validate-phase-advance=
+- =futon3c/src/futon3c/peripheral/mission_shapes.clj= — =compute-prediction-divergence=
+
+* Cross-references
+- docbook://futon3x AIF Heads — parent section
+- docbook://futon3x Portfolio Inference / core.logic relations — the portfolio-level
+  pldb pattern that the inventory loader mirrors

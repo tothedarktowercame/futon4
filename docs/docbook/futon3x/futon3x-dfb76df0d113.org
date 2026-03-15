@@ -1,0 +1,61 @@
+#+TITLE: AIF Heads
+:PROPERTIES:
+:DOC_ID: futon3x-dfb76df0d113
+:ENTRY_ID: futon3x-dfb76df0d113::org
+:VERSION: org
+:OUTLINE_PATH: AIF Heads
+:PATH_STRING: AIF Heads
+:REPLACES:
+:END:
+
+* What they are
+An AIF head is the sensory-motor interface that turns a peripheral from a tool
+(does what the agent says) into an organism (maintains its own viability). Every
+peripheral that agents inhabit has an AIF head, implemented as two composing
+protocols:
+
+- =AifAdapter= (futon2): =select-pattern= + =update-beliefs= — the core AIF loop
+- =AifHead= (futon2): =observe= + =default-mode= + =check-law= — peripheral-grade extensions
+
+Together: 5 methods, three tiers (reflex, default mode, deliberative).
+
+* Why every peripheral needs one
+Without an AIF head, a peripheral constrains but doesn't learn. It enforces
+phase ordering and required outputs, but it has no generative model, no
+prediction error tracking, and no inter-cycle behavior. When a cycle completes,
+it stops and waits.
+
+With an AIF head, the peripheral:
+- Observes its environment through normalized channels
+- Consults structural laws before transitions (refusal surface)
+- Tracks prediction divergence between propose and execute phases
+- Enters default mode between cycles (PAR, portfolio check, compliance scan)
+- Participates in the evidence landscape as both reader and writer
+
+* The three-pillar mapping
+The futon stack's three conceptual pillars map directly onto AIF components:
+
+| Pillar | AIF Component | Implementation |
+|--------+---------------+----------------|
+| The Argument (holistic-argument-sketch) | Generative model | Structural law inventory as queryable pldb |
+| The Invariants (structural-crystallization) | Precision (tau) | Operational = high, candidate = low, liquid = negotiable |
+| Futonic Missions (futonic-missions.md) | Policy | Action selection to minimize free energy through mission phases |
+
+* Self-enforcing invariant
+"Every peripheral has an AIF head" is itself a testable structural law.
+=futon3c.aif.invariant= maintains a registry of AIF head bindings and provides
+=check-aif-head-coverage= to verify that all registered peripherals have
+bindings. See docbook://futon3x AIF Heads / The coverage invariant.
+
+* Files
+- =futon2/src/futon2/aif/head.clj= — protocol definition
+- =futon3c/src/futon3c/aif/mission_head.clj= — first implementation (Mission Peripheral)
+- =futon3c/src/futon3c/aif/observe.clj= — mission observation channels
+- =futon3c/src/futon3c/aif/invariant.clj= — coverage enforcement
+- =futon3c/src/futon3c/logic/inventory.clj= — structural law inventory loader
+- =futon3c/src/futon3c/portfolio/effect.clj= — portfolio effect sink (closes the AIF loop)
+
+* Cross-references
+- docbook://futon2 Active Inference / AifHead protocol — the protocol definition
+- docbook://futon3x Portfolio Inference — the slow-timescale AIF loop that
+  Portfolio Inference already runs; AIF heads are the fast-timescale complement

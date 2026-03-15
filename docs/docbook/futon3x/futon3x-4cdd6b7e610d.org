@@ -1,0 +1,66 @@
+#+TITLE: Mission observation channels
+:PROPERTIES:
+:DOC_ID: futon3x-4cdd6b7e610d
+:ENTRY_ID: futon3x-4cdd6b7e610d::org
+:VERSION: org
+:OUTLINE_PATH: AIF Heads / Mission observation channels
+:PATH_STRING: AIF Heads / Mission observation channels
+:REPLACES:
+:END:
+
+* Overview
+The Mission Peripheral's AIF head observes its environment through 10 normalized
+channels, each mapping a domain concept to a =[0,1]= signal. Channel definitions
+are declared in =peripheral-aif-vocabulary.sexp= and implemented in
+=futon3c.aif.observe=.
+
+* The 10 channels
+
+| Channel                     | What it measures                                | Source                              |
+|-----------------------------+-------------------------------------------------+-------------------------------------|
+| =:phase-progress=           | Ordinal position in 9-phase cycle               | =cycle/current-phase= → ordinal    |
+| =:obligation-satisfaction=  | Fraction of obligations resolved                | =mission-backend/obligation-summary= |
+| =:required-outputs-present= | Fraction of required phase outputs present      | =mission-logic/missing-phase-outputs= |
+| =:structural-law-compliance= | Law inventory compliance (0=violations, 1=clean) | =logic/inventory/check-compliance= |
+| =:prediction-divergence=    | Propose vs execute divergence                   | =mission-shapes/compute-prediction-divergence= |
+| =:evidence-for-completion=  | Fraction of completion criteria with evidence   | Evidence store query               |
+| =:gate-readiness=           | Fraction of gates that would pass dry-run       | Gate pipeline query                |
+| =:argument-claim-coverage=  | Fraction of argument claims backed by evidence  | Argument → evidence lookup         |
+| =:cycle-count=              | Normalized cycle count (sigmoid)                | =state :cycles-completed=          |
+| =:days-since-last-activity= | Staleness signal (0=active, 1=stale)            | Evidence store timestamps          |
+
+6 of 10 channels read from existing functions. 3 required new code (structural
+law compliance, prediction divergence, argument coverage). 1 is partial (gate
+dry-run falls back to a default estimate).
+
+* Composites
+=observe-mission= produces the full observation map:
+
+#+BEGIN_SRC clojure
+{:channels {:phase-progress 0.44
+            :obligation-satisfaction 0.75
+            ;; ... all 10
+            }
+ :raw {:phase-progress {:phase :execute :ordinal 4 :total 9}
+       :obligation-satisfaction {:resolved 6 :total 8}
+       ;; ... pre-normalization values
+       }}
+#+END_SRC
+
+=obs->vector= converts the channel map to a flat 10-element vector for
+ML-style consumers.
+
+* Conventions
+All channels follow the same contract as =portfolio/observe.clj= (15 channels):
+- Values are always =[0,1]= (clamped)
+- Higher = "more of the thing" (more progress, more satisfaction, more compliance)
+- Exception: =:prediction-divergence= and =:days-since-last-activity= where
+  higher = worse — consumers must interpret direction
+
+* Implementation
+File: =futon3c/src/futon3c/aif/observe.clj=
+
+* Cross-references
+- docbook://futon3x Portfolio Inference / Belief state and mu channels — the
+  portfolio-level observation pattern that this mirrors at mission scale
+- docbook://futon3x AIF Heads — parent section

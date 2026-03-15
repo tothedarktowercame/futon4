@@ -147,6 +147,55 @@
     "level": 2
   },
   {
+    "doc_id": "futon3x-dfb76df0d113",
+    "title": "AIF Heads",
+    "outline_path": [
+      "AIF Heads"
+    ],
+    "path_string": "AIF Heads",
+    "level": 1
+  },
+  {
+    "doc_id": "futon3x-4cdd6b7e610d",
+    "title": "Mission observation channels",
+    "outline_path": [
+      "AIF Heads",
+      "Mission observation channels"
+    ],
+    "path_string": "AIF Heads / Mission observation channels",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3x-d86686ddfd4d",
+    "title": "Structural law consultation",
+    "outline_path": [
+      "AIF Heads",
+      "Structural law consultation"
+    ],
+    "path_string": "AIF Heads / Structural law consultation",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3x-241366c9618f",
+    "title": "Default mode and cycle completion",
+    "outline_path": [
+      "AIF Heads",
+      "Default mode and cycle completion"
+    ],
+    "path_string": "AIF Heads / Default mode and cycle completion",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3x-fb05e1abca38",
+    "title": "The coverage invariant",
+    "outline_path": [
+      "AIF Heads",
+      "The coverage invariant"
+    ],
+    "path_string": "AIF Heads / The coverage invariant",
+    "level": 2
+  },
+  {
     "doc_id": "futon3x-78da12c2e512",
     "title": "Self-Representing Stack",
     "outline_path": [

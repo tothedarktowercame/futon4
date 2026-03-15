@@ -1,0 +1,81 @@
+#+TITLE: AifHead protocol
+:PROPERTIES:
+:DOC_ID: futon2-9e25bd105947
+:ENTRY_ID: futon2-9e25bd105947::org
+:VERSION: org
+:OUTLINE_PATH: Active Inference / AifHead protocol
+:PATH_STRING: Active Inference / AifHead protocol
+:REPLACES:
+:END:
+
+* Context
+The =AifAdapter= protocol (2 methods: =select-pattern=, =update-beliefs=) is the
+minimal interface for AIF reasoning. But peripherals — the environments where
+agents actually do work — need three additional capabilities that AifAdapter
+doesn't provide: domain-specific observation, default mode behavior between
+cycles, and structural law consultation before transitions.
+
+=AifHead= is a composable protocol that extends AifAdapter to the
+peripheral level. Together they form a 5-method interface:
+
+| Protocol   | Methods                          | Concern                         |
+|------------+----------------------------------+---------------------------------|
+| AifAdapter | =select-pattern=, =update-beliefs= | Core AIF loop (deliberation)    |
+| AifHead    | =observe=, =default-mode=, =check-law= | Peripheral-grade capabilities |
+
+* The three tiers
+
+AifHead formalizes a three-tier architecture from AIF+ (Chapter 0 §6.2–6.5):
+
+| Tier         | Method           | When invoked                                      |
+|--------------+------------------+---------------------------------------------------|
+| Reflex       | =check-law=     | Before every transition; throws on foundational violations |
+| Default mode | =default-mode=  | Between cycles, after completion, when deliberation abstains |
+| Deliberative | =select-pattern= | Normal action selection within a cycle             |
+
+The reflex tier is the stop-the-line gate: it blocks structurally illegal
+transitions without deliberation. Default mode sustains viability when
+deliberation is offline — like the brain's default mode network maintaining
+metabolic activity between tasks. The deliberative tier is the existing AIF
+action selection.
+
+* Protocol definition
+
+#+BEGIN_SRC clojure
+(defprotocol AifHead
+  (observe [head state context]
+    ;; Returns {:channels {kw → [0,1]} :raw {kw → any}}
+    )
+  (default-mode [head state observation]
+    ;; Returns same shape as select-pattern: {:action kw :params map :source :default-mode}
+    )
+  (check-law [head state transition]
+    ;; Returns {:ok true} or {:ok false :error {:code kw :law-family kw ...}}
+    ))
+#+END_SRC
+
+* Design constraints
+- =default-mode= returns the same shape as =select-pattern= — this is a
+  drop-in substitution, not a different code path. The caller doesn't need
+  to know which tier produced the action.
+- =check-law= returns ={:ok false}= for candidate invariant violations
+  (the agent can try a different action) but throws =ex-info= for
+  foundational violations (impossible states, not policy disagreements).
+- =observe= returns both normalized channels (=[0,1]=) and raw values.
+  The normalized vector feeds the AIF loop; the raw map supports
+  diagnostics and traceability.
+
+* Implementation
+File: =futon2/src/futon2/aif/head.clj=
+
+The first implementation is =MissionAifHead= in futon3c
+(=futon3c/src/futon3c/aif/mission_head.clj=), which implements both
+AifAdapter and AifHead for the Mission Peripheral. See docbook://futon3x AIF
+Heads for the peripheral-side documentation.
+
+* Cross-references
+- docbook://futon2 Active Inference / AIF policy selection — the ant-level
+  policy that inspired the three-tier design
+- docbook://futon3x Portfolio Inference / The AIF loop — Portfolio Inference
+  as the slow-timescale dual
+- docbook://futon3x AIF Heads — peripheral-level implementation

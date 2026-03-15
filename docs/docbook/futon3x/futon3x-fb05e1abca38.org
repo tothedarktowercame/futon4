@@ -1,0 +1,61 @@
+#+TITLE: The coverage invariant
+:PROPERTIES:
+:DOC_ID: futon3x-fb05e1abca38
+:ENTRY_ID: futon3x-fb05e1abca38::org
+:VERSION: org
+:OUTLINE_PATH: AIF Heads / The coverage invariant
+:PATH_STRING: AIF Heads / The coverage invariant
+:REPLACES:
+:END:
+
+* The invariant
+"Every peripheral has an AIF head." This is completion criterion C9 of
+M-aif-head and is itself a structural law — the first law whose enforcement
+mechanism was produced by the mission that identified it.
+
+* The registry
+=futon3c.aif.invariant= maintains an atom mapping peripheral IDs to their
+AifHead implementations:
+
+#+BEGIN_SRC clojure
+(register-aif-head! :mission mission-aif-head)
+(register-aif-head! :proof proof-aif-head)
+;; ... for each peripheral
+
+(check-aif-head-coverage)
+;; => {:ok true} if all registered peripherals have bindings
+;; => {:ok false :missing [:chat :edit] :coverage {:registered 8 :bound 6}}
+#+END_SRC
+
+* Law-shaped check
+=check-aif-head-law= returns the same shape as =AifHead.check-law=, making
+the coverage check composable with other structural law checks:
+
+#+BEGIN_SRC clojure
+(check-aif-head-law state {:type :registration :peripheral-id :chat})
+;; => {:ok false :error {:code :structural-law-violation
+;;                       :law-family :aif-head-coverage
+;;                       :message "Peripheral :chat has no AIF head binding"}}
+#+END_SRC
+
+* Scope
+The invariant currently covers agent-inhabited peripherals (those in
+=futon3c.peripheral.registry/peripheral-ids=). Infrastructure peripherals
+that agents don't inhabit (transport, storage) are excluded.
+
+* Deferred items
+- Phase 2: roll out AIF heads to all remaining peripherals (chat, explore, edit,
+  deploy, reflect, mentor, proof, discipline). The =AifHead= protocol and
+  =MissionAifHead= reference implementation make this mechanical — each
+  peripheral needs domain-specific observation channels and default mode logic,
+  but the interface is fixed.
+- Composition diagram: verify I5 (compositional closure) across the full
+  peripheral set once M-futonzero provides the composition framework.
+
+* Implementation
+File: =futon3c/src/futon3c/aif/invariant.clj=
+
+* Cross-references
+- docbook://futon3x AIF Heads — parent section
+- docbook://futon3x AIF Heads / Structural law consultation — how check-law
+  uses the inventory

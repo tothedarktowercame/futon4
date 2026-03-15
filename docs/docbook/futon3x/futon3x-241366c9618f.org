@@ -1,0 +1,87 @@
+#+TITLE: Default mode and cycle completion
+:PROPERTIES:
+:DOC_ID: futon3x-241366c9618f
+:ENTRY_ID: futon3x-241366c9618f::org
+:VERSION: org
+:OUTLINE_PATH: AIF Heads / Default mode and cycle completion
+:PATH_STRING: AIF Heads / Default mode and cycle completion
+:REPLACES:
+:END:
+
+* The problem
+Before AIF heads, the cycle engine had no completion callback. When a cycle
+finished, =dispatch-step= in =cycle.clj= would dissoc =:current-phase= and
+=:current-cycle-id=, increment =:cycles-completed=, and stop. The peripheral
+reverted to setup mode and waited for the operator to start the next cycle.
+
+This is the organism/tool distinction: a tool waits; an organism sustains its own
+viability between tasks.
+
+* The hook
+=cycle.clj= now supports an =:on-cycle-complete= callback in the domain config.
+When the cycle engine detects completion (=new-phase= equals =last-phase=), it
+calls the callback with the completed state:
+
+#+BEGIN_SRC clojure
+;; In dispatch-step, completion branch:
+(when (and (= new-phase last-phase)
+           (:on-cycle-complete config))
+  ((:on-cycle-complete config) new-state))
+#+END_SRC
+
+This is a single =when= clause — backward compatible (=nil= callback means
+current behavior).
+
+* Default mode behavior
+=MissionAifHead.default-mode= IS the callback. It receives the completed state
+and the most recent observation, then:
+
+1. If obligation satisfaction ≥ 0.95 → =:signal-complete= (mission is done)
+2. If structural law compliance < 0.5 → =:signal-blocked= (laws are violated)
+3. Otherwise → =:advance-phase= (begin next cycle)
+
+The return shape is identical to =select-pattern= output:
+
+#+BEGIN_SRC clojure
+{:action :signal-complete
+ :params {:reason "obligation satisfaction at 0.97"}
+ :source :default-mode}
+#+END_SRC
+
+This drop-in substitution means the caller doesn't know (or care) whether the
+action came from deliberation or default mode. The ant AIF implementation in
+futon2 established this convention: tropism-based fallback returns the same
+shape as policy.
+
+* The three-tier architecture in practice
+
+#+BEGIN_SRC text
+Incoming transition request
+    │
+    ▼
+[check-law] ── Reflex tier
+    │          Blocks foundational violations (throws)
+    │          Blocks candidate violations ({:ok false})
+    │
+    ▼ {:ok true}
+[select-pattern] ── Deliberative tier
+    │               EFE scoring, softmax, action selection
+    │
+    ▼ (abstain or no cycle)
+[default-mode] ── Default mode tier
+    │              Inter-cycle viability: complete/blocked/advance
+    │
+    ▼
+Action executed
+#+END_SRC
+
+* Implementation
+- =futon3c/src/futon3c/peripheral/cycle.clj= — =:on-cycle-complete= hook
+- =futon3c/src/futon3c/aif/mission_head.clj= — =mission-default-mode-fn=
+
+* Cross-references
+- docbook://futon2 Active Inference / AifHead protocol — protocol definition
+  including =default-mode= contract
+- docbook://futon3x AIF Heads — parent section
+- docbook://futon3x Portfolio Inference / Mode transitions and urgency —
+  Portfolio's mode transitions, the slow-timescale complement
