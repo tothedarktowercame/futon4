@@ -222,6 +222,7 @@
 (declare-function arxana-media-stage-to-ep "arxana-media")
 (declare-function arxana-media-delete-at-point "arxana-media")
 (declare-function arxana-media-move-misc-to-ep-at-point "arxana-media")
+(declare-function arxana-media-remove-from-ep-staging-at-point "arxana-media")
 (declare-function arxana-media-toggle-mark-at-point "arxana-media")
 (declare-function arxana-media-transcribe-and-podcast-at-point "arxana-media")
 
@@ -1748,9 +1749,13 @@ returning to the top-level list."
   (interactive)
   (arxana-browser--ensure-context)
   (let ((context (car arxana-browser--stack)))
-    (if (and context (eq (plist-get context :view) 'docbook-contents))
-        (arxana-browser-docbook-remove-marked)
-      (user-error "Remove is only supported in docbook contents views"))))
+    (cond
+     ((and context (eq (plist-get context :view) 'docbook-contents))
+      (arxana-browser-docbook-remove-marked))
+     ((and context (eq (plist-get context :view) 'media-ep-staging-ep))
+      (arxana-media-remove-from-ep-staging-at-point))
+     (t
+      (user-error "Remove is only supported in docbook contents and EP staging views")))))
 
 (defun arxana-browser--hard-delete-marked ()
   (interactive)
