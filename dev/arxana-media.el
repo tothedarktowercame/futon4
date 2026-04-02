@@ -272,6 +272,9 @@
     ("vocal+vocal2+bass+harp"
      :script "scripts/bounce_vocal_vocal2_bass_harp.sh"
      :instruments ("vocal" "vocal2" "bass" "harmonica"))
+    ("vocal+vocal2+vocoder"
+     :script "scripts/bounce_vocal_vocal2_vocoder.sh"
+     :instruments ("vocal" "vocal2"))
     ("vocal+bass+harp1+harp2"
      :script "scripts/bounce_vocal_bass_harp_harp2.sh"
      :instruments ("vocal" "bass" "harp1" "harp2"))
@@ -291,12 +294,21 @@
     ("vocal+piano+accordion+harmonica"
      :script "scripts/bounce_vocal_piano_accordion_harmonica.sh"
      :instruments ("vocal" "piano" "accordion" "harmonica"))
+    ("vocal+piano+accordion+banjo"
+     :script "scripts/bounce_vocal_piano_accordion_banjo.sh"
+     :instruments ("vocal" "piano" "accordion" "banjo"))
     ("vocal-forward+piano+accordion+harmonica"
      :script "scripts/bounce_vocal_piano_accordion_harmonica_vocal_forward.sh"
      :instruments ("vocal" "piano" "accordion" "harmonica"))
+    ("vocal+piano+bass+harmonica"
+     :script "scripts/bounce_vocal_piano_bass_harmonica.sh"
+     :instruments ("vocal" "piano" "bass" "harmonica"))
     ("vocal+guitar+piano+bass"
      :script "scripts/bounce_vocal_guitar_piano_bass.sh"
      :instruments ("vocal" "guitar" "piano" "bass"))
+    ("vocal-forward+drum-sharp+bass+guitar"
+     :script "scripts/bounce_vocal_drum_bass_guitar_vocal_forward_sharp_drums.sh"
+     :instruments ("vocal" "drum" "bass" "guitar"))
     ("dual-vocal-forward+piano+harmonica"
      :script "scripts/bounce_vocal_vocal2_piano_harmonica_vocal_forward.sh"
      :instruments ("vocal" "vocal2" "piano" "harmonica"))
@@ -324,6 +336,10 @@ Each entry is (PROFILE-NAME :script PATH [:instruments (\"vocal\" ...)])."
 (defcustom arxana-media-bounce-instrument-aliases
   '(("harmonic" . "harmonica")
     ("harp" . "harmonica")
+    ("drums" . "drum")
+    ("kit" . "drum")
+    ("perc" . "drum")
+    ("percussion" . "drum")
     ("gtr" . "guitar")
     ("vocal1" . "vocal")
     ("vocals" . "vocal")
@@ -843,15 +859,40 @@ Return a list of (CHORD TOKEN-START TOKEN-END BODY-START BODY-END)."
            response
            (format "Ensuring track entity %s" title)))))))
 
+(defun arxana-media--upsert-track-lyrics-bundle (item title entity-id lyrics-id sha lyrics context)
+  "Atomically upsert ITEM, its lyrics entity, and the lyrics relation.
+TITLE names the media track, ENTITY-ID and LYRICS-ID identify the relation
+endpoints, SHA is the media digest, LYRICS is the stored text, and CONTEXT is
+used for error reporting."
+  (let* ((track (arxana-media--track-payload item title))
+         (lyrics-payload (delq nil (list (cons 'id lyrics-id)
+                                         (cons 'name (format "%s (lyrics)" title))
+                                         (cons 'type "arxana/media-lyrics")
+                                         (cons 'external-id lyrics-id)
+                                         (cons 'media/sha256 sha)
+                                         (cons 'source lyrics)
+                                         (cons 'entity/source lyrics))))
+         (response (arxana-store-upsert-media-lyrics
+                    :track track
+                    :lyrics lyrics-payload
+                    :relation (list (cons 'type ":media/lyrics")
+                                    (cons 'src entity-id)
+                                    (cons 'dst lyrics-id)))))
+    (arxana-media--assert-store-ok response context)))
+
 (defun arxana-media--lyrics-context (item)
   (let* ((type (plist-get item :type))
          (entry (plist-get item :entry))
          (path (plist-get item :path))
          (title (arxana-media--track-title item))
-         (entity-id (arxana-media--track-entity-id item))
-         (lyrics-id (arxana-media--lyrics-entity-id item))
-         (source (if (eq type 'media-track) "zoom" "misc")))
+         (lyrics-item (or (and (eq type 'media-publication-track)
+                               (arxana-media--publication-source-item item))
+                          item))
+         (entity-id (arxana-media--track-entity-id lyrics-item))
+         (lyrics-id (arxana-media--lyrics-entity-id lyrics-item))
+         (source (if (eq (plist-get lyrics-item :type) 'media-track) "zoom" "misc")))
     (list :item item
+          :lyrics-item lyrics-item
           :title title
           :path path
           :entity-id entity-id
@@ -921,7 +962,8 @@ Return a list of (CHORD TOKEN-START TOKEN-END BODY-START BODY-END)."
          (entity-id (plist-get context :entity-id))
          (lyrics-id (plist-get context :lyrics-entity-id))
          (item (plist-get context :item))
-         (sha (and item (arxana-media--track-sha item)))
+         (lyrics-item (plist-get context :lyrics-item))
+         (sha (and lyrics-item (arxana-media--track-sha lyrics-item)))
          (title (plist-get context :title))
          (path (plist-get context :path))
          (source (plist-get context :source))
@@ -931,22 +973,11 @@ Return a list of (CHORD TOKEN-START TOKEN-END BODY-START BODY-END)."
     (arxana-media--journal-lyrics context lyrics)
     (unless sha
       (user-error "No media SHA available for %s" title))
-    (let* ((track (arxana-media--track-payload item title))
-           (lyrics-payload (delq nil (list (cons 'id lyrics-id)
-                                           (cons 'name lyrics-name)
-                                           (cons 'type "arxana/media-lyrics")
-                                           (cons 'external-id lyrics-id)
-                                           (cons 'media/sha256 sha)
-                                           (cons 'source lyrics)
-                                           (cons 'entity/source lyrics))))
-           (response (arxana-store-upsert-media-lyrics
-                      :track track
-                      :lyrics lyrics-payload
-                      :relation (list (cons 'type ":media/lyrics")
-                                      (cons 'src entity-id)
-                                      (cons 'dst lyrics-id)))))
-      (arxana-media--assert-store-ok response "Saving lyrics bundle"))
+    (arxana-media--upsert-track-lyrics-bundle
+     lyrics-item title entity-id lyrics-id sha lyrics "Saving lyrics bundle")
     (arxana-media--verify-lyrics-write lyrics-id sha lyrics)
+    (when (eq (plist-get item :type) 'media-publication-track)
+      (arxana-media--write-publication-track-lyrics item lyrics))
     (if (string-empty-p lyrics)
         (remhash lyrics-id arxana-media--lyrics-cache)
       (puthash lyrics-id t arxana-media--lyrics-cache))
@@ -969,7 +1000,8 @@ Return a list of (CHORD TOKEN-START TOKEN-END BODY-START BODY-END)."
            (title (plist-get context :title))
            (target-entity-id (plist-get context :entity-id))
            (target-lyrics-id (plist-get context :lyrics-entity-id))
-           (sha (and item (arxana-media--track-sha item)))
+           (lyrics-item (plist-get context :lyrics-item))
+           (sha (and lyrics-item (arxana-media--track-sha lyrics-item)))
            (response (ignore-errors (arxana-store-fetch-entity source-id)))
            (entity (and (listp response) (alist-get :entity response)))
            (source (arxana-media--entity-source entity))
@@ -979,22 +1011,11 @@ Return a list of (CHORD TOKEN-START TOKEN-END BODY-START BODY-END)."
       (arxana-media--journal-lyrics context lyrics)
       (unless sha
         (user-error "No media SHA available for %s" title))
-      (let* ((track (arxana-media--track-payload item title))
-             (lyrics-payload (delq nil (list (cons 'id target-lyrics-id)
-                                             (cons 'name (format "%s (lyrics)" title))
-                                             (cons 'type "arxana/media-lyrics")
-                                             (cons 'external-id target-lyrics-id)
-                                             (cons 'media/sha256 sha)
-                                             (cons 'source lyrics)
-                                             (cons 'entity/source lyrics))))
-             (response (arxana-store-upsert-media-lyrics
-                        :track track
-                        :lyrics lyrics-payload
-                        :relation (list (cons 'type ":media/lyrics")
-                                        (cons 'src target-entity-id)
-                                        (cons 'dst target-lyrics-id)))))
-        (arxana-media--assert-store-ok response "Saving lyrics bundle"))
+      (arxana-media--upsert-track-lyrics-bundle
+       lyrics-item title target-entity-id target-lyrics-id sha lyrics "Saving lyrics bundle")
       (arxana-media--verify-lyrics-write target-lyrics-id sha lyrics)
+      (when (eq (plist-get item :type) 'media-publication-track)
+        (arxana-media--write-publication-track-lyrics item lyrics))
       (puthash target-lyrics-id t arxana-media--lyrics-cache)
       (when (fboundp 'arxana-browser--render)
         (arxana-browser--render))
@@ -1164,15 +1185,116 @@ Return a list of (CHORD TOKEN-START TOKEN-END BODY-START BODY-END)."
         (copy-file pdf-out pdf t)
         (message "Exported lyrics to %s" pdf)))))
 
+(defun arxana-media--publication-filename-keys (name)
+  "Return plausible lookup keys for publication audio NAME."
+  (let ((keys nil)
+        (current name))
+    (while (and (stringp current)
+                (not (string-empty-p current))
+                (not (member current keys)))
+      (push current keys)
+      (let ((next (file-name-base current)))
+        (if (equal next current)
+            (setq current nil)
+          (setq current next))))
+    (nreverse keys)))
+
+(defun arxana-media--publication-audio-filename-map (directory)
+  "Return a hash map of plausible publication audio filenames in DIRECTORY."
+  (let ((table (make-hash-table :test 'equal)))
+    (dolist (path (or (arxana-media--publication-audio-files directory) '()))
+      (let ((name (file-name-nondirectory path)))
+        (dolist (key (arxana-media--publication-filename-keys name))
+          (unless (gethash key table)
+            (puthash key name table)))))
+    table))
+
+(defun arxana-media--publication-slug-for-path (path)
+  "Return the publication slug implied by PATH, or nil."
+  (when (and (stringp path) (not (string-empty-p path)))
+    (let ((directory (file-name-directory path)))
+      (and directory
+           (file-name-nondirectory (directory-file-name directory))))))
+
+(defun arxana-media--publication-source-path (item)
+  "Return the staging counterpart path for publication ITEM, if unique."
+  (when (eq (plist-get item :type) 'media-publication-track)
+    (let* ((path (plist-get item :path))
+           (slug (arxana-media--publication-slug-for-path path))
+           (staging-dir (and slug
+                             (file-name-as-directory
+                              (expand-file-name slug arxana-media-ep-staging-root))))
+           (file (and path (file-name-nondirectory path)))
+           (keys (and file (arxana-media--publication-filename-keys file)))
+           (files (and staging-dir
+                       (file-directory-p staging-dir)
+                       (arxana-media--publication-audio-files staging-dir)))
+           (matches
+            (and files
+                 (seq-filter
+                  (lambda (candidate)
+                    (let ((candidate-name (file-name-nondirectory candidate)))
+                      (seq-some (lambda (key)
+                                  (member key (arxana-media--publication-filename-keys candidate-name)))
+                                keys)))
+                  files))))
+      (when (= (length matches) 1)
+        (car matches)))))
+
+(defun arxana-media--publication-source-item (item)
+  "Return the staging-backed source item for publication ITEM, if available."
+  (let ((path (arxana-media--publication-source-path item)))
+    (when path
+      (list :type 'media-publication-track
+            :label (file-name-base path)
+            :path path))))
+
+(defun arxana-media--reconcile-publication-track-file (directory file)
+  "Resolve FILE against the actual audio filenames present in DIRECTORY."
+  (if (not (stringp file))
+      file
+    (let* ((table (arxana-media--publication-audio-filename-map directory))
+           (match (seq-some (lambda (key)
+                              (gethash key table))
+                            (arxana-media--publication-filename-keys file))))
+      (or match file))))
+
+(defun arxana-media--reconcile-publication-tracks-payload (directory payload)
+  "Return PAYLOAD with track filenames resolved against DIRECTORY contents."
+  (if (not (listp payload))
+      payload
+    (let* ((tracks (append (plist-get payload :tracks) nil))
+           (changed nil)
+           (tracks* (mapcar (lambda (track)
+                              (if (not (listp track))
+                                  track
+                                (let* ((file (plist-get track :file))
+                                       (resolved (arxana-media--reconcile-publication-track-file
+                                                  directory file)))
+                                  (if (equal resolved file)
+                                      track
+                                    (setq changed t)
+                                    (plist-put (copy-sequence track) :file resolved)))))
+                            tracks)))
+      (if changed
+          (let ((copy (copy-sequence payload)))
+            (plist-put copy :tracks tracks*))
+        payload))))
+
 (defun arxana-media--read-publication-tracks (directory)
   "Read publication tracks metadata from DIRECTORY."
   (let ((path (arxana-media--publication-tracks-path directory)))
     (when (file-readable-p path)
       (condition-case _err
-          (let ((json-object-type 'plist)
-                (json-array-type 'list)
-                (json-key-type 'keyword))
-            (json-read-file path))
+          (let* ((json-object-type 'plist)
+                 (json-array-type 'list)
+                 (json-key-type 'keyword)
+                 (payload (json-read-file path))
+                 (resolved (arxana-media--reconcile-publication-tracks-payload directory payload)))
+            (when (and (listp resolved) (not (equal resolved payload)))
+              (arxana-media--write-publication-tracks directory
+                                                     (append (plist-get resolved :tracks) nil)))
+            resolved)
         (error nil)))))
 
 (defun arxana-media--publication-display-name (directory)
@@ -1327,6 +1449,24 @@ DIRECTORIES defaults to all publication directories. FETCH-FN defaults to
         (json-key-type 'keyword))
     (json-read-file path)))
 
+(defun arxana-media--apply-publication-lyrics-data (data root)
+  "Apply bulk publication lyric DATA under ROOT.
+Returns the number of publications updated."
+  (let* ((publications (append (plist-get data :publications) nil))
+         (applied 0))
+    (dolist (pub publications)
+      (let* ((slug (and (listp pub) (plist-get pub :slug)))
+             (tracks (and (listp pub) (append (plist-get pub :tracks) nil))))
+        (unless (and (stringp slug) (not (string-empty-p slug)))
+          (user-error "Invalid publication slug in bulk lyrics payload"))
+        (let ((dir (expand-file-name slug root)))
+          (unless (file-directory-p dir)
+            (user-error "Publication directory missing for slug %s (%s)" slug dir))
+          (arxana-media--write-publication-tracks dir tracks)
+          (setq applied (1+ applied)))))
+    (arxana-media--write-publications-index)
+    applied))
+
 (defun arxana-media-apply-publication-lyrics-bulk-json (&optional filename)
   "Apply a bulk lyrics JSON file into per-EP publication `tracks.json` files."
   (interactive)
@@ -1340,18 +1480,7 @@ DIRECTORIES defaults to all publication directories. FETCH-FN defaults to
     (unless (file-readable-p path)
       (user-error "Bulk JSON file not readable: %s" path))
     (let* ((data (arxana-media--read-json-file path))
-           (publications (append (plist-get data :publications) nil))
-           (applied 0))
-      (dolist (pub publications)
-        (let* ((slug (and (listp pub) (plist-get pub :slug)))
-               (tracks (and (listp pub) (append (plist-get pub :tracks) nil))))
-          (unless (and (stringp slug) (not (string-empty-p slug)))
-            (user-error "Invalid publication slug in %s" path))
-          (let ((dir (expand-file-name slug root)))
-            (unless (file-directory-p dir)
-              (user-error "Publication directory missing for slug %s (%s)" slug dir))
-            (arxana-media--write-publication-tracks dir tracks)
-            (setq applied (1+ applied)))))
+           (applied (arxana-media--apply-publication-lyrics-data data root)))
       (message "Applied bulk lyrics JSON to %d publication(s)" applied)
       applied)))
 
@@ -1360,6 +1489,22 @@ DIRECTORIES defaults to all publication directories. FETCH-FN defaults to
   (interactive)
   (let ((path (arxana-media-export-publication-lyrics-bulk-json filename)))
     (arxana-media-apply-publication-lyrics-bulk-json path)))
+
+(defun arxana-media-refresh-publication-lyrics-at-point ()
+  "Refresh lyrics for the publication at point without republishing audio."
+  (interactive)
+  (unless (arxana-store-ensure-sync)
+    (user-error "Futon sync is disabled; enable futon4-enable-sync first"))
+  (let* ((item (arxana-media--publication-at-point))
+         (dir (plist-get item :path))
+         (root (file-name-as-directory (expand-file-name arxana-media-publications-root)))
+         (name (or (plist-get item :label)
+                   (and dir (file-name-nondirectory (directory-file-name dir)))
+                   "publication"))
+         (data (arxana-media--publication-lyrics-bulk-data (list dir)))
+         (applied (arxana-media--apply-publication-lyrics-data data root)))
+    (message "Refreshed lyrics for %s (%d publication updated)" name applied)
+    (arxana-browser--render)))
 
 (defun arxana-media-export-lyrics-chapbook (&optional filename)
   "Export published EP lyrics into one PDF chapbook."
@@ -1479,7 +1624,8 @@ DIRECTORIES defaults to all publication directories. FETCH-FN defaults to
   (let* ((item (arxana-browser--item-at-point)))
     (unless item
       (user-error "No media item at point"))
-    (let ((lyrics-id (ignore-errors (arxana-media--lyrics-entity-id item))))
+    (let* ((context (ignore-errors (arxana-media--lyrics-context item)))
+           (lyrics-id (plist-get context :lyrics-entity-id)))
       (unless (and lyrics-id (stringp lyrics-id))
         (user-error "No lyrics entity for item"))
       (remhash lyrics-id arxana-media--lyrics-cache)
@@ -1531,6 +1677,65 @@ DIRECTORIES defaults to all publication directories. FETCH-FN defaults to
     (with-temp-file path
       (insert (json-encode payload))
       (insert "\n"))))
+
+(defun arxana-media--publication-track-metadata (item)
+  "Return publication track metadata plist for ITEM, if available."
+  (when (eq (plist-get item :type) 'media-publication-track)
+    (or (plist-get item :publication-track)
+        (let* ((path (plist-get item :path))
+               (directory (and path (file-name-directory path)))
+               (file (and path (file-name-nondirectory path)))
+               (data (and directory (arxana-media--read-publication-tracks directory)))
+               (tracks (and (listp data) (append (plist-get data :tracks) nil))))
+          (seq-find (lambda (track)
+                      (equal (and (listp track) (plist-get track :file))
+                             file))
+                    tracks)))))
+
+(defun arxana-media--publication-track-lyrics (item)
+  "Return publication lyrics text for ITEM, or nil when unavailable."
+  (let ((track (arxana-media--publication-track-metadata item)))
+    (when (and (listp track) (plist-member track :lyrics))
+      (let ((lyrics (plist-get track :lyrics)))
+        (and (stringp lyrics) lyrics)))))
+
+(defun arxana-media--write-publication-track-lyrics (item lyrics)
+  "Persist LYRICS into ITEM's publication metadata entry."
+  (let* ((path (plist-get item :path))
+         (directory (and path (file-name-directory path)))
+         (file (and path (file-name-nondirectory path))))
+    (unless (and directory file)
+      (user-error "Publication track has no readable path"))
+    (let* ((data (or (arxana-media--read-publication-tracks directory)
+                     (list :tracks [])))
+           (tracks (append (plist-get data :tracks) nil))
+           (updated nil)
+           (tracks* (mapcar (lambda (track)
+                              (if (and (listp track)
+                                       (equal (plist-get track :file) file))
+                                  (progn
+                                    (setq updated t)
+                                    (plist-put (copy-sequence track) :lyrics lyrics))
+                                track))
+                            tracks)))
+      (unless updated
+        (user-error "Publication metadata entry missing for %s" file))
+      (arxana-media--write-publication-tracks directory tracks*)
+      (arxana-media--write-publications-index)
+      t)))
+
+(defun arxana-media--remove-publication-track-metadata (directory filename)
+  "Remove FILENAME from DIRECTORY track metadata, if present."
+  (let* ((data (arxana-media--read-publication-tracks directory)))
+    (when (listp data)
+      (let* ((tracks (append (plist-get data :tracks) nil))
+             (kept (seq-remove (lambda (track)
+                                 (string= (or (and (listp track)
+                                                   (plist-get track :file))
+                                              "")
+                                          filename))
+                               tracks)))
+        (arxana-media--write-publication-tracks directory kept)))))
 
 (defun arxana-media--publication-directories ()
   (let ((root (file-name-as-directory (expand-file-name arxana-media-publications-root))))
@@ -1588,6 +1793,7 @@ DIRECTORIES defaults to all publication directories. FETCH-FN defaults to
       display: flex;
       flex-direction: column;
       gap: 24px;
+      min-height: calc(100vh - 80px);
     }
 
     header {
@@ -1621,8 +1827,14 @@ DIRECTORIES defaults to all publication directories. FETCH-FN defaults to
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(clamp(160px, 20vw, 220px), clamp(160px, 20vw, 220px)));
-      gap: 18px;
+      gap: 26px;
       justify-content: start;
+    }
+
+    footer {
+      margin-top: auto;
+      padding-top: 18px;
+      color: var(--sand-soft);
     }
 
     .card {
@@ -1702,16 +1914,25 @@ DIRECTORIES defaults to all publication directories. FETCH-FN defaults to
   <main class=\"page\">
     <header class=\"fade-up\">
       <div class=\"eyebrow\">Music</div>
-      <h1>EPs</h1>
-      <p>these demo recordings build the world of a novel</p>
+      <h1>Notes for The Nightmarish Suite Libretto</h1>
+      <p>these demo recordings build the world of a novel<sup>*</sup></p>
     </header>
     <section id=\"list\" class=\"grid fade-up fade-delay-1\"></section>
+    <footer><small><i><sup>*</sup>:&nbsp;around 180 recordings across ≈20 EPs are planned; and with Lorane Prévost (lyricist for Crossroads of Dreams), an opera, based around our Nightmarish Suite, a portion of which was performed at South Oxford <a href=\"https://metameso.org/~joe/art-week/\">Art Week 2025</a>.  Some of the included material developed in an improvised music and spoken word series with Anders Amala. Some early draft material was reviewed by the Minneapolis Writers's Workshop.</i></small></footer>
   </main>
+  <script id=\"publications-data\" type=\"application/json\">__ARXANA_PUBLICATIONS_JSON__</script>
   <script>
-    fetch(`publications.json?_cb=${Date.now()}`, { cache: 'no-store' })
-      .then(r => r.json())
-      .then(data => {
+    const embeddedPublicationsNode = document.getElementById('publications-data');
+    let embeddedPublications = { publications: [] };
+    if (embeddedPublicationsNode) {
+      try {
+        embeddedPublications = JSON.parse(embeddedPublicationsNode.textContent || '{\"publications\":[]}');
+      } catch (_err) {}
+    }
+
+    const renderPublications = (data) => {
         const list = document.getElementById('list');
+        list.innerHTML = '';
         (data.publications || []).forEach(pub => {
         const link = document.createElement('a');
         link.href = `player.html?ep=${encodeURIComponent(pub.slug)}`;
@@ -1737,7 +1958,16 @@ DIRECTORIES defaults to all publication directories. FETCH-FN defaults to
         link.appendChild(card);
         list.appendChild(link);
         });
-      });
+    };
+
+    renderPublications(embeddedPublications);
+
+    if (window.location.protocol !== 'file:') {
+      fetch(`publications.json?_cb=${Date.now()}`, { cache: 'no-store' })
+        .then(r => r.json())
+        .then(renderPublications)
+        .catch(() => {});
+    }
   </script>
 </body>
 </html>
@@ -2117,6 +2347,7 @@ DIRECTORIES defaults to all publication directories. FETCH-FN defaults to
     </section>
   </main>
 
+  <script id=\"publications-player-data\" type=\"application/json\">__ARXANA_PLAYER_DATA_JSON__</script>
   <script>
     const params = new URLSearchParams(window.location.search);
     const slug = params.get('ep');
@@ -2133,6 +2364,7 @@ DIRECTORIES defaults to all publication directories. FETCH-FN defaults to
     const epLabel = document.getElementById('ep-label');
     const epCount = document.getElementById('ep-count');
     const epUrl = document.getElementById('ep-url');
+    const embeddedPlayerNode = document.getElementById('publications-player-data');
 
     if (!slug) {
       epTitle.textContent = 'No EP selected';
@@ -2141,6 +2373,13 @@ DIRECTORIES defaults to all publication directories. FETCH-FN defaults to
 
     const trackRows = [];
     let currentAudio = null;
+    let embeddedPlayerData = {};
+
+    if (embeddedPlayerNode) {
+      try {
+        embeddedPlayerData = JSON.parse(embeddedPlayerNode.textContent || '{}');
+      } catch (_err) {}
+    }
 
     function formatEpDisplayName(value) {
       const raw = String(value || '').trim();
@@ -2181,15 +2420,25 @@ DIRECTORIES defaults to all publication directories. FETCH-FN defaults to
       const row = trackRows[index];
       if (!row) return;
       stopAllTracks();
-      row.audio.play();
-      row.button.textContent = 'Pause';
-      row.button.classList.add('is-playing');
-      nowTitle.textContent = row.title || 'Untitled';
-      nowSub.textContent = row.note || '';
-      if (lyricsPanel) {
-        lyricsPanel.textContent = row.lyrics || 'No lyrics available.';
-      }
-      currentAudio = row.audio;
+      Promise.resolve(row.audio.play())
+        .then(() => {
+          row.button.textContent = 'Pause';
+          row.button.classList.add('is-playing');
+          nowTitle.textContent = row.title || 'Untitled';
+          nowSub.textContent = row.note || '';
+          if (lyricsPanel) {
+            lyricsPanel.textContent = row.lyrics || 'No lyrics available.';
+          }
+          currentAudio = row.audio;
+        })
+        .catch(() => {
+          stopAllTracks();
+          nowTitle.textContent = row.title || 'Untitled';
+          nowSub.textContent = 'Playback failed';
+          if (lyricsPanel) {
+            lyricsPanel.textContent = row.lyrics || 'No lyrics available.';
+          }
+        });
     }
 
     function addTrackRow(track, idx) {
@@ -2280,6 +2529,21 @@ DIRECTORIES defaults to all publication directories. FETCH-FN defaults to
       });
     }
 
+    function applyPublicationMeta(meta) {
+      if (meta && meta.url) {
+        epUrl.href = meta.url;
+        epUrl.textContent = 'Link';
+        epUrl.style.display = 'inline-flex';
+      }
+    }
+
+    function applyPublicationTracks(tracks) {
+      epCount.textContent = `${tracks.length} track${tracks.length === 1 ? '' : 's'}`;
+      tracklistEl.innerHTML = '';
+      trackRows.length = 0;
+      tracks.forEach((track, idx) => addTrackRow(track, idx));
+    }
+
     if (slug) {
       const displayName = formatEpDisplayName(slug);
       epSlug.textContent = displayName;
@@ -2287,24 +2551,25 @@ DIRECTORIES defaults to all publication directories. FETCH-FN defaults to
       if (epLabel) {
         epLabel.textContent = `Music / ${displayName}`;
       }
-      fetch(`${slug}/publication.json`)
-        .then(r => r.json())
-        .then(meta => {
-          if (meta.url) {
-            epUrl.href = meta.url;
-            epUrl.textContent = 'Link';
-            epUrl.style.display = 'inline-flex';
-          }
-        })
-        .catch(() => {});
+      const embeddedPublication = embeddedPlayerData[slug] || null;
+      if (embeddedPublication) {
+        applyPublicationMeta(embeddedPublication.meta || {});
+        applyPublicationTracks((embeddedPublication.tracks && embeddedPublication.tracks.tracks) || []);
+      }
 
-      fetch(`${slug}/tracks.json`)
-        .then(r => r.json())
-        .then(data => {
-          const tracks = data.tracks || [];
-          epCount.textContent = `${tracks.length} track${tracks.length === 1 ? '' : 's'}`;
-          tracks.forEach((track, idx) => addTrackRow(track, idx));
-        });
+      if (window.location.protocol !== 'file:') {
+        fetch(`${slug}/publication.json`)
+          .then(r => r.json())
+          .then(applyPublicationMeta)
+          .catch(() => {});
+
+        fetch(`${slug}/tracks.json`)
+          .then(r => r.json())
+          .then(data => {
+            applyPublicationTracks(data.tracks || []);
+          })
+          .catch(() => {});
+      }
     }
 
     if (volumeSlider) {
@@ -2319,6 +2584,34 @@ DIRECTORIES defaults to all publication directories. FETCH-FN defaults to
 </body>
 </html>
 ")
+
+(defun arxana-media--html-inline-json (payload)
+  "Encode PAYLOAD for safe embedding inside a JSON script tag."
+  (replace-regexp-in-string "</script" "<\\\\/script"
+                            (json-encode payload)
+                            t t))
+
+(defun arxana-media--html-fill-template (template replacements)
+  "Replace fixed-string REPLACEMENTS inside TEMPLATE."
+  (let ((result template))
+    (dolist (replacement replacements result)
+      (setq result
+            (replace-regexp-in-string
+             (regexp-quote (car replacement))
+             (cdr replacement)
+             result t t)))))
+
+(defun arxana-media--normalize-publication-tracks-payload (payload)
+  "Return PAYLOAD with any plist track list coerced to a JSON array shape."
+  (if (not (listp payload))
+      payload
+    (let* ((tracks (plist-get payload :tracks))
+           (tracks* (cond
+                     ((vectorp tracks) tracks)
+                     ((null tracks) [])
+                     ((listp tracks) (vconcat tracks))
+                     (t tracks))))
+      (plist-put (copy-sequence payload) :tracks tracks*))))
 
 (defun arxana-media--write-publications-index ()
   (let* ((root (file-name-as-directory (expand-file-name arxana-media-publications-root)))
@@ -2338,17 +2631,35 @@ DIRECTORIES defaults to all publication directories. FETCH-FN defaults to
                              :count (length tracks)
                              :cover cover)))
                    dirs)))
+         (publications-payload (list :updated_at (float-time (current-time))
+                                     :publications publications))
+         (player-data
+          (mapcar (lambda (dir)
+                    (let* ((slug (file-name-nondirectory (directory-file-name dir)))
+                           (meta (or (arxana-media--read-publication-metadata dir) '()))
+                           (tracks (arxana-media--normalize-publication-tracks-payload
+                                    (or (arxana-media--read-publication-tracks dir)
+                                        (list :tracks [])))))
+                      (cons slug (list :meta meta :tracks tracks))))
+                  dirs))
          (index-path (expand-file-name "index.html" root))
          (player-path (expand-file-name "player.html" root))
-         (list-path (expand-file-name "publications.json" root)))
+         (list-path (expand-file-name "publications.json" root))
+         (index-html (arxana-media--html-fill-template
+                      arxana-media--publications-index-html
+                      (list (cons "__ARXANA_PUBLICATIONS_JSON__"
+                                  (arxana-media--html-inline-json publications-payload)))))
+         (player-html (arxana-media--html-fill-template
+                       arxana-media--publications-player-html
+                       (list (cons "__ARXANA_PLAYER_DATA_JSON__"
+                                   (arxana-media--html-inline-json player-data))))))
     (make-directory root t)
     (with-temp-file index-path
-      (insert arxana-media--publications-index-html))
+      (insert index-html))
     (with-temp-file player-path
-      (insert arxana-media--publications-player-html))
+      (insert player-html))
     (with-temp-file list-path
-      (insert (json-encode (list :updated_at (float-time (current-time))
-                                 :publications publications)))
+      (insert (json-encode publications-payload))
       (insert "\n"))))
 
 (defun arxana-media--ep-staging-directories ()
@@ -2449,16 +2760,51 @@ DIRECTORIES defaults to all publication directories. FETCH-FN defaults to
               dirs))))
 
 (defun arxana-media--publication-track-items (directory)
-  (let* ((files (or (arxana-media--publication-audio-files directory) '())))
+  (let* ((files (or (arxana-media--publication-audio-files directory) '()))
+         (data (arxana-media--read-publication-tracks directory))
+         (tracks (and (listp data) (append (plist-get data :tracks) nil))))
     (if (null files)
         (list (list :type 'info
                     :label "Empty publication"
                     :description "No audio files found in this directory."))
       (mapcar (lambda (path)
-                (list :type 'media-publication-track
-                      :label (file-name-base path)
-                      :path path))
+                (let* ((file (file-name-nondirectory path))
+                       (track (seq-find (lambda (entry)
+                                          (equal (and (listp entry)
+                                                      (plist-get entry :file))
+                                                 file))
+                                        tracks)))
+                  (list :type 'media-publication-track
+                        :label (or (and (listp track) (plist-get track :title))
+                                   (file-name-base path))
+                        :path path
+                        :publication-track track)))
               files))))
+
+(defun arxana-media--path-mtime (path)
+  "Return PATH modification time, or nil when unavailable."
+  (when (and path (stringp path) (file-exists-p path))
+    (let ((attrs (file-attributes path)))
+      (and attrs (file-attribute-modification-time attrs)))))
+
+(defun arxana-media--path-date (path)
+  "Return PATH modification time formatted for browser tables."
+  (let ((mtime (arxana-media--path-mtime path)))
+    (when mtime
+      (format-time-string "%Y-%m-%d %H:%M" mtime))))
+
+(defun arxana-media--path-newest-first-p (left right)
+  "Return non-nil when LEFT should sort ahead of RIGHT by recency."
+  (let ((left-time (arxana-media--path-mtime left))
+        (right-time (arxana-media--path-mtime right)))
+    (cond
+     ((and left-time right-time)
+     (if (equal left-time right-time)
+          (string< (or left "") (or right ""))
+        (time-less-p right-time left-time)))
+     (left-time t)
+     (right-time nil)
+     (t (string< (or left "") (or right ""))))))
 
 (defun arxana-media--misc-items ()
   (let ((dirs (or (arxana-media--misc-directories) '())))
@@ -2478,7 +2824,8 @@ DIRECTORIES defaults to all publication directories. FETCH-FN defaults to
               dirs))))
 
 (defun arxana-media--misc-track-items (directory)
-  (let* ((files (or (arxana-media--publication-audio-files directory) '())))
+  (let* ((files (seq-sort #'arxana-media--path-newest-first-p
+                          (or (arxana-media--publication-audio-files directory) '()))))
     (if (null files)
         (list (list :type 'info
                     :label "Empty folder"
@@ -2531,20 +2878,13 @@ DIRECTORIES defaults to all publication directories. FETCH-FN defaults to
                                            (if (= (length roots) 1) "" "s"))
                                  "Set arxana-media-podcast-roots to enable scanning."))))))
 
-(defun arxana-media--podcast-date (path)
-  (when (and path (stringp path) (file-exists-p path))
-    (let* ((attrs (file-attributes path))
-           (mtime (and attrs (file-attribute-modification-time attrs))))
-      (when mtime
-        (format-time-string "%Y-%m-%d %H:%M" mtime)))))
-
 (defun arxana-media--podcast-format ()
   [("Date" 16 t)
    ("Title" 36 t)
    ("Details" 60 nil)])
 
 (defun arxana-media--podcast-row (item)
-  (vector (or (arxana-media--podcast-date (plist-get item :path)) "")
+  (vector (or (arxana-media--path-date (plist-get item :path)) "")
           (or (plist-get item :label) "")
           (or (plist-get item :description) "")))
 
@@ -3280,18 +3620,29 @@ Only positive results are cached in `arxana-media--lyrics-cache`."
 
 (defun arxana-media--lyrics-indicator (item)
   (condition-case nil
-      (let* ((lyrics-id
-              (pcase (plist-get item :type)
-                ('media-publication-track
-                 (let* ((path (plist-get item :path))
-                        (sha (arxana-media--lyrics-indicator-sha item path)))
-                   (and sha (format "arxana/media-lyrics/misc/%s" sha))))
-                ('media-misc-track
-                 (let* ((path (plist-get item :path))
-                        (sha (arxana-media--lyrics-indicator-sha item path)))
-                   (and sha (format "arxana/media-lyrics/misc/%s" sha))))
-                (_ (arxana-media--lyrics-entity-id item))))
-             (state (and lyrics-id (arxana-media--lyrics-present-p lyrics-id))))
+      (let* ((publication-item (and (eq (plist-get item :type) 'media-publication-track)
+                                    (arxana-media--publication-source-item item)))
+             (publication-track (and (eq (plist-get item :type) 'media-publication-track)
+                                     (plist-get item :publication-track)))
+             (publication-lyrics-known (and (not publication-item)
+                                            (listp publication-track)
+                                            (plist-member publication-track :lyrics)))
+             (publication-lyrics (and publication-lyrics-known
+                                      (plist-get publication-track :lyrics)))
+             (lyrics-id
+              (unless publication-lyrics-known
+                (pcase (plist-get item :type)
+                  ('media-publication-track
+                   (arxana-media--lyrics-entity-id (or publication-item item)))
+                  ('media-misc-track
+                   (let* ((path (plist-get item :path))
+                          (sha (arxana-media--lyrics-indicator-sha item path)))
+                     (and sha (format "arxana/media-lyrics/misc/%s" sha))))
+                  (_ (arxana-media--lyrics-entity-id item)))))
+             (state (if publication-lyrics-known
+                        (and (stringp publication-lyrics)
+                             (not (string-empty-p publication-lyrics)))
+                      (and lyrics-id (arxana-media--lyrics-present-p lyrics-id)))))
         (cond
          ((eq state t) "L")
          ((eq state 'unknown) "?")
@@ -3318,14 +3669,16 @@ Only positive results are cached in `arxana-media--lyrics-cache`."
 (defun arxana-media--misc-track-format ()
   [(" " 1 nil)
    ("Ly" 2 nil)
-   ("Title" 40 t)
+   ("Date" 16 t)
+   ("Title" 28 t)
    ("Len" 6 nil)
-   ("File" 34 t)])
+   ("File" 28 t)])
 
 (defun arxana-media--misc-track-row (item)
   (let ((path (plist-get item :path)))
     (vector (if (arxana-media--marked-p path) "*" " ")
             (arxana-media--lyrics-indicator item)
+            (or (arxana-media--path-date path) "")
             (or (plist-get item :label) "")
             (or (arxana-media--format-duration
                  (arxana-media--duration-seconds path))
@@ -3940,19 +4293,9 @@ When URL is provided, write it to the publication metadata."
                      (dest-sha (ignore-errors (arxana-media--track-sha dest-item))))
                 (when (and dest-entity-id dest-lyrics-id)
                   (arxana-media--store-track-entity dest-item title)
-                  (arxana-media--assert-store-ok
-                   (arxana-store-ensure-entity :id dest-lyrics-id
-                                               :name (format "%s (lyrics)" title)
-                                               :type "arxana/media-lyrics"
-                                               :external-id dest-lyrics-id
-                                               :media/sha256 dest-sha
-                                               :entity/source source-lyrics)
-                   (format "Publishing lyrics entity %s" title))
-                  (arxana-media--assert-store-ok
-                   (arxana-store-create-relation :src dest-entity-id
-                                                 :dst dest-lyrics-id
-                                                 :label ":media/lyrics")
-                   (format "Publishing lyrics relation %s" title))
+                  (arxana-media--upsert-track-lyrics-bundle
+                   dest-item title dest-entity-id dest-lyrics-id dest-sha source-lyrics
+                   (format "Publishing lyrics bundle %s" title))
                   (puthash dest-lyrics-id t arxana-media--lyrics-cache)))))))
       (dolist (item pub-items)
         (let* ((path (plist-get item :path))
@@ -3984,38 +4327,45 @@ When URL is provided, write it to the publication metadata."
                      (dest-sha (ignore-errors (arxana-media--track-sha dest-item))))
                 (when (and dest-entity-id dest-lyrics-id)
                   (arxana-media--store-track-entity dest-item title)
-                  (arxana-media--assert-store-ok
-                   (arxana-store-ensure-entity :id dest-lyrics-id
-                                               :name (format "%s (lyrics)" title)
-                                               :type "arxana/media-lyrics"
-                                               :external-id dest-lyrics-id
-                                               :media/sha256 dest-sha
-                                               :entity/source source-lyrics)
-                   (format "Publishing lyrics entity %s" title))
-                  (arxana-media--assert-store-ok
-                   (arxana-store-create-relation :src dest-entity-id
-                                                 :dst dest-lyrics-id
-                                                 :label ":media/lyrics")
-                   (format "Publishing lyrics relation %s" title))
+                  (arxana-media--upsert-track-lyrics-bundle
+                   dest-item title dest-entity-id dest-lyrics-id dest-sha source-lyrics
+                   (format "Publishing lyrics bundle %s" title))
                   (puthash dest-lyrics-id t arxana-media--lyrics-cache)))))))
       (when (and url (stringp url) (not (string-empty-p url)))
         (arxana-media--write-publication-metadata dest-dir name url))
       (arxana-media--write-publication-tracks dest-dir (nreverse tracks))
       (arxana-media--write-publications-index)
-      (when (seq entries)
+      (when entries
         (arxana-media--tag-entries entries tag))
       (setq arxana-media--catalog nil
             arxana-media--catalog-mtime nil)
       (message "Published %d track(s) to %s%s"
                (length tracks) dest-dir
-               (if (seq entries) (format " (tag %s)" tag) ""))
+               (if entries (format " (tag %s)" tag) ""))
       (arxana-browser--render))))
 
 (defun arxana-media--publication-at-point ()
-  (let ((item (arxana-browser--item-at-point)))
-    (unless (and item (eq (plist-get item :type) 'media-publication))
-      (user-error "No publication at point"))
-    item))
+  (when (fboundp 'arxana-browser--ensure-context)
+    (arxana-browser--ensure-context))
+  (let* ((item (arxana-browser--item-at-point))
+         (context (or (bound-and-true-p arxana-browser--context)
+                      (car-safe (and (boundp 'arxana-browser--stack)
+                                     arxana-browser--stack)))))
+    (cond
+     ((and item (eq (plist-get item :type) 'media-publication))
+      item)
+     ((and item
+           (eq (plist-get item :type) 'media-publication-track)
+           (listp context)
+           (eq (plist-get context :view) 'media-publication)
+           (plist-get context :publication-path))
+      (list :type 'media-publication
+            :label (or (plist-get context :label)
+                       (file-name-nondirectory
+                        (directory-file-name (plist-get context :publication-path))))
+            :path (plist-get context :publication-path)))
+     (t
+      (user-error "No publication at point")))))
 
 (defun arxana-media-set-publication-url ()
   "Set or update the URL metadata for the publication at point."
@@ -4103,6 +4453,53 @@ When URL is provided, write it to the publication metadata."
                dest-dir
                moved
                copied))))
+
+(defun arxana-media-remove-from-ep-staging-at-point ()
+  "Remove the current track or marked tracks from the current EP staging directory only."
+  (interactive)
+  (let* ((context (arxana-media--current-playback-context)))
+    (unless (and context (eq (plist-get context :view) 'media-ep-staging-ep))
+      (user-error "Remove is only available inside an EP staging view"))
+    (let* ((staging-dir (plist-get context :ep-staging-path))
+           (marked (arxana-media--marked-items-in-context))
+           (items (if (and marked (> (length marked) 0))
+                      marked
+                    (let ((item (arxana-browser--item-at-point)))
+                      (unless (and item (eq (plist-get item :type) 'media-publication-track))
+                        (user-error "No EP staging track at point"))
+                      (list item)))))
+      (unless (and staging-dir (file-directory-p staging-dir))
+        (user-error "EP staging directory missing or unreadable"))
+      (when (and (> (length items) 1)
+                 (not (yes-or-no-p
+                       (format "Remove %d tracks from %s staging? "
+                               (length items)
+                               (file-name-nondirectory
+                                (directory-file-name staging-dir))))))
+        (user-error "Canceled"))
+      (dolist (item items)
+        (let* ((path (plist-get item :path))
+               (label (or (plist-get item :label)
+                          (and path (file-name-base path))
+                          "track")))
+          (unless (and path (file-exists-p path))
+            (user-error "No file found for %s" label))
+          (unless (file-in-directory-p path staging-dir)
+            (user-error "Refusing to remove %s outside current staging directory" label))
+          (delete-file path)
+          (arxana-media--remove-publication-track-metadata
+           staging-dir
+           (file-name-nondirectory path))
+          (remhash path arxana-media--marked)
+          (remhash path arxana-media--misc-sha-cache)
+          (remhash path arxana-media--duration-cache)))
+      (arxana-browser--render)
+      (message "Removed %d track%s from %s staging"
+               (length items)
+               (if (= (length items) 1) "" "s")
+               (file-name-nondirectory
+                (directory-file-name staging-dir))))))
+
 (defun arxana-media-retitle-at-point ()
   "Retitle the current media track or misc audio file."
   (interactive)

@@ -62,6 +62,17 @@ Usage:
 ./bounce_vocal_piano_accordion_harmonica.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
 ```
 
+## Basic mix (vocal + piano + accordion + banjo)
+
+`bounce_vocal_piano_accordion_banjo.sh` keeps the vocal/piano center natural
+while placing accordion and banjo as a lightly widened overdub frame.
+
+Usage:
+
+```sh
+./bounce_vocal_piano_accordion_banjo.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
+```
+
 ## Vocal-forward mix (vocal + piano + accordion + harmonica)
 
 `bounce_vocal_piano_accordion_harmonica_vocal_forward.sh` keeps vocals
@@ -73,6 +84,18 @@ Usage:
 ./bounce_vocal_piano_accordion_harmonica_vocal_forward.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
 ```
 
+## Vocal-forward mix (vocal + drums + bass + guitar)
+
+`bounce_vocal_drum_bass_guitar_vocal_forward_sharp_drums.sh` keeps the lead
+vocal centered and brighter, lets the drums stay crisp, and ducks the
+bass/guitar bus harder so the backing does not turn to mud under the lyric.
+
+Usage:
+
+```sh
+./bounce_vocal_drum_bass_guitar_vocal_forward_sharp_drums.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
+```
+
 ## Vocal-forward mix (dual vocals + piano + harmonica)
 
 `bounce_vocal_vocal2_piano_harmonica_vocal_forward.sh` keeps both vocal leads
@@ -82,6 +105,33 @@ Usage:
 
 ```sh
 ./bounce_vocal_vocal2_piano_harmonica_vocal_forward.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
+```
+
+## Experimental stage (vocal1 + vocal2 pseudo-vocoder)
+
+`bounce_vocal_vocal2_vocoder.sh` treats `vocal1` as the lyric/modulator track
+and `vocal2` as a carrier stand-in. It is not a classic band vocoder; it first
+builds a hidden pitch-matched shadow copy of `vocal1`, then uses carrier
+shaping, vocal-keyed sidechain compression, and a multiplied synthetic layer to
+produce a talking-double / quasi-vocoder texture. WAV inputs are preferable for
+the pitch-matching stage.
+
+Usage:
+
+```sh
+./bounce_vocal_vocal2_vocoder.sh t1.wav t2.wav out.wav [out.mp3]
+```
+
+## Experimental stage (vocal1 + vocal2 shadow variants)
+
+`bounce_vocal_vocal2_shadow_variants.sh` builds the warped `vocal1 -> vocal2`
+shadow voice once, then renders several auditionable variants in one go:
+`raw`, `clean`, `demonic`, and `choir`.
+
+Usage:
+
+```sh
+./bounce_vocal_vocal2_shadow_variants.sh vocal1.wav vocal2.wav out-dir [stem]
 ```
 
 ## Basic mix (vocal1 + vocal2 + piano + bass)
@@ -104,6 +154,17 @@ Usage:
 
 ```sh
 ./bounce_vocal_guitar_piano_bass.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
+```
+
+## Basic mix (vocal + piano + bass + harmonica)
+
+`bounce_vocal_piano_bass_harmonica.sh` balances a shared vocal/piano capture
+with bass support and a harmonica overdub pushed slightly to the right.
+
+Usage:
+
+```sh
+./bounce_vocal_piano_bass_harmonica.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
 ```
 
 ## Basic mix (vocal + bass arco, with optional FX)

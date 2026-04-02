@@ -2,6 +2,7 @@
 .clj-kondo/
 .lsp/
 .arxana-language
+__pycache__/
 
 # Futon0 workflow artifacts
 boundary.edn
