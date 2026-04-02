@@ -1,0 +1,441 @@
+;; FUTON Stack Invariant Hypergraph
+;;
+;; Same treatment as ukrns-value-model.edn: actors, arenas (families),
+;; invariant layers (core out), typed edges, status annotations.
+;;
+;; Source of truth: futon3c/docs/structural-law-inventory.sexp
+;;
+;; The "equity loop" equivalent:
+;;   work → cleanup evidence → candidate invariant → promotion →
+;;   operational enforcement → prevented failures → cleaner work →
+;;   new (subtler) invariant pressure
+
+{:mission/id :futon-stack-invariants
+ :mission/state :active
+ :mission/date "2026-03-21"
+
+ ;; =====================================================================
+ ;; ACTORS — repos/devmaps that participate across invariant families
+ ;; =====================================================================
+
+ :actors
+ [{:id :R-futon0
+   :name "futon0"
+   :type :repo
+   :role "workspace hygiene, stack interface, reporting and coordination"
+   :implicates #{:atomic-inspectable-units :repo-role-clarity}
+   :cleanup-evidence "mixed HUD, systemd, podcast, and rhythm work had to be separated"}
+
+  {:id :R-futon1a
+   :name "futon1a"
+   :type :repo
+   :role "deterministic substrate with layered invariants"
+   :implicates #{:repo-role-clarity}
+   :cleanup-evidence "README needed to distinguish active substrate from devmap story"
+   :note "The substrate. 9 operational invariants. The firmest ground."}
+
+  {:id :R-futon3
+   :name "futon3"
+   :type :repo
+   :role "canon layer plus retained legacy tooling"
+   :implicates #{:repo-role-clarity :artifact-custody :archaeology-control}
+   :cleanup-evidence "root cluttered; generated JS tracked; stash archaeology obscured state"}
+
+  {:id :R-futon3b
+   :name "futon3b"
+   :type :repo
+   :role "task and glacial coordination boundary with typed proof-paths"
+   :note "5 operational invariants. Second firmest."}
+
+  {:id :R-futon3c
+   :name "futon3c"
+   :type :repo
+   :role "coordination/runtime layer with live peripherals and invariant logic"
+   :implicates #{:archaeology-control :peripheral-custody}
+   :cleanup-evidence "peripheral and bridge stashes accumulated heavily"
+   :note "6 operational invariants. The coordination layer."}
+
+  {:id :R-futon4
+   :name "futon4"
+   :type :repo
+   :role "Arxana workspace and media/browser surface"
+   :implicates #{:atomic-inspectable-units :archaeology-control :failure-locality}
+   :cleanup-evidence "old Arxana stashes lingered; Reazon-backed validation gates when enabled"
+   :note "3 operational gates (not foundational). The interface."}
+
+  {:id :R-futon5
+   :name "futon5"
+   :type :repo
+   :role "pattern/exotype/math tooling, AIF² formalism"
+   :implicates #{:atomic-inspectable-units :artifact-custody :budgeted-action-selection}
+   :cleanup-evidence "FM-001 tool landed in wrong repo; mana-gated work proposed not wired"}
+
+  {:id :R-futon6
+   :name "futon6"
+   :type :repo
+   :role "canonical home for FrontierMath and first-proof mathematics"
+   :implicates #{:artifact-custody :archaeology-control :human-visible-inspectability :failure-locality}
+   :cleanup-evidence "FM-001b needed canonical harness home; definition drift and missing falsification"}]
+
+ ;; =====================================================================
+ ;; INVARIANT LAYERS — core out, same structure as UKRN model
+ ;; =====================================================================
+
+ :invariants
+ [{:id :I0
+   :name "Data persists durably"
+   :type :invariant
+   :families #{:startup-contracts :authorization-and-identity-discipline :layered-error-hierarchy}
+   :question "Can I trust that what I wrote is still there, uncorrupted, and attributable?"
+   :ukrn-parallel "I0: Training produces capability change"
+   :note "If this doesn't hold, nothing above it matters."}
+
+  {:id :I1
+   :name "State transitions are valid"
+   :type :invariant
+   :families #{:phase-ordering :status-discipline :existence :dependency-satisfaction}
+   :question "Is the system in a legal state, and did it get there legally?"
+   :ukrn-parallel "I1: Capability change is detectable"}
+
+  {:id :I2
+   :name "Failures are visible"
+   :type :invariant
+   :families #{:failure-locality :human-visible-inspectability :graph-symmetry}
+   :question "When something goes wrong, can I tell what and where?"
+   :ukrn-parallel "I2: Evidence reaches the people who need it"}
+
+  {:id :I3
+   :name "Work is structured"
+   :type :invariant
+   :families #{:atomic-inspectable-units :artifact-custody :repo-role-clarity :required-outputs}
+   :question "Do outputs land where they belong, and can I find them?"
+   :ukrn-parallel "I3: Feedback improves practice"}
+
+  {:id :I4
+   :name "The system governs itself"
+   :type :invariant
+   :families #{:peripheral-custody :budgeted-action-selection :archaeology-control :cross-store-agreement}
+   :question "Can the system sustain without folklore, heroics, or manual archaeology?"
+   :ukrn-parallel "I4: The system sustains itself"}]
+
+ ;; =====================================================================
+ ;; FAMILIES — the invariant families, each placed in its layer
+ ;; These are the "action arenas" equivalent
+ ;; =====================================================================
+
+ :families
+ [;; --- I0: Data persists durably ---
+
+  {:id :F-startup-contracts
+   :name "Startup contracts"
+   :layer :I0
+   :status :operational
+   :question "Does startup require explicit policy and fail loudly when underspecified?"
+   :repos #{:R-futon1a}
+   :firm-exemplar :allowed-penholders-required-by-default
+   :invariant-count 3}
+
+  {:id :F-authorization-and-identity
+   :name "Authorization & identity discipline"
+   :layer :I0
+   :status :operational
+   :question "Are write authority and identity uniqueness enforced before durable write?"
+   :repos #{:R-futon1a}
+   :firm-exemplar :penholder-and-tooling-allowlists
+   :invariant-count 3}
+
+  {:id :F-layered-error-hierarchy
+   :name "Layered error hierarchy"
+   :layer :I0
+   :status :operational
+   :question "Do failures surface at the layer that caused them?"
+   :repos #{:R-futon1a}
+   :firm-exemplar :strict-layer-order-l4-to-l0
+   :invariant-count 2}
+
+  ;; --- I1: State transitions are valid ---
+
+  {:id :F-phase-ordering
+   :name "Phase ordering"
+   :layer :I1
+   :status :operational
+   :question "Do states advance in a valid order?"
+   :repos #{:R-futon3b :R-futon3c}
+   :firm-exemplar :mission-cycle-phase-ordering
+   :invariant-count 3}
+
+  {:id :F-status-discipline
+   :name "Status discipline"
+   :layer :I1
+   :status :operational
+   :question "Are state/status labels legal and evidence-consistent?"
+   :repos #{:R-futon3c :R-futon1a}
+   :firm-exemplar :mission-obligation-status-discipline
+   :invariant-count 4}
+
+  {:id :F-existence
+   :name "Existence"
+   :layer :I1
+   :status :operational
+   :question "Do referenced entities actually exist?"
+   :repos #{:R-futon3c :R-futon1a}
+   :firm-exemplar :mission-cycle-blocker-must-exist
+   :invariant-count 2}
+
+  {:id :F-dependency-satisfaction
+   :name "Dependency satisfaction"
+   :layer :I1
+   :status :operational
+   :question "Are completed things backed by completed prerequisites?"
+   :repos #{:R-futon3c}
+   :firm-exemplar :proved-with-completed-deps
+   :invariant-count 1}
+
+  ;; --- I2: Failures are visible ---
+
+  {:id :F-failure-locality
+   :name "Failure locality"
+   :layer :I2
+   :status :candidate
+   :question "Do failures surface near the layer that caused them?"
+   :repos #{:R-futon1a :R-futon3b :R-futon4 :R-futon6}
+   :firm-exemplar :first-failing-gate-wins
+   :candidate-invariants [:fail-at-source-layer :stop-the-line-ordering
+                          :diagnosis-with-bounded-search :falsification-cycle-before-commitment
+                          :failure-patterns-become-reusable-checks]
+   :note "Strong in futon1a and futon3b; candidate elsewhere"}
+
+  {:id :F-human-visible-inspectability
+   :name "Human-visible inspectability"
+   :layer :I2
+   :status :candidate
+   :question "Can the human operator tell what is going on without folklore?"
+   :repos #{:R-futon3b :R-futon3c :R-futon6}
+   :firm-exemplar :typed-proof-path-boundary
+   :candidate-invariants [:readable-surface :state-projection :evidence-over-folklore
+                          :mathematically-important-terms-defined :done-means-recoverable-math-conclusions]}
+
+  {:id :F-graph-symmetry
+   :name "Graph symmetry"
+   :layer :I2
+   :status :operational
+   :question "If A points to B, is the inverse structural relation present?"
+   :repos #{:R-futon3c}
+   :firm-exemplar :portfolio-symmetry
+   :invariant-count 1}
+
+  ;; --- I3: Work is structured ---
+
+  {:id :F-atomic-inspectable-units
+   :name "Atomic inspectable units"
+   :layer :I3
+   :status :candidate
+   :question "Does work happen in bounded, inspectable units?"
+   :repos #{:R-futon0 :R-futon3b :R-futon3c :R-futon4 :R-futon5}
+   :firm-exemplar :task-work-must-traverse-gates
+   :exemplar-status :operational-but-bypassable
+   :candidate-invariants [:home-repo :single-live-copy :checkout-before-work
+                          :checkin-on-exit :inspectable-boundary]
+   :note "The shape is real but normal live work routes around it — the nominal governance problem"}
+
+  {:id :F-artifact-custody
+   :name "Artifact custody"
+   :layer :I3
+   :status :candidate
+   :question "Do outputs land where the stack expects them to live?"
+   :repos #{:R-futon3 :R-futon3b :R-futon5 :R-futon6}
+   :firm-exemplar :no-silent-library-overwrite
+   :candidate-invariants [:artifact-locality :scratch-marking
+                          :generated-vs-source-separation :narrow-ignore-exceptions]}
+
+  {:id :F-repo-role-clarity
+   :name "Repo role clarity"
+   :layer :I3
+   :status :candidate
+   :question "Does a repo say what it is, and does its root match?"
+   :repos #{:R-futon0 :R-futon1a :R-futon3}
+   :firm-exemplar nil
+   :candidate-invariants [:declared-role :root-legibility :main-branch-coherence
+                          :legacy-surface-marking]
+   :note "Strong pressure from cleanup, no operational exemplar yet"}
+
+  {:id :F-required-outputs
+   :name "Required outputs"
+   :layer :I3
+   :status :operational
+   :question "Does each phase produce its required artifacts?"
+   :repos #{:R-futon3c :R-futon1a :R-futon3b}
+   :firm-exemplar :mission-phase-required-outputs
+   :invariant-count 3}
+
+  ;; --- I4: The system governs itself ---
+
+  {:id :F-peripheral-custody
+   :name "Peripheral custody"
+   :layer :I4
+   :status :candidate
+   :question "Does a peripheral session carry enough structure to prevent drift?"
+   :repos #{:R-futon3c}
+   :firm-exemplar nil
+   :candidate-invariants [:domain-id-required :home-repo-in-context
+                          :hop-preserves-custody :exit-produces-fruit]
+   :note "Mission and proof peripherals show the shape, not yet first-class"}
+
+  {:id :F-budgeted-action-selection
+   :name "Budgeted action selection"
+   :layer :I4
+   :status :candidate
+   :question "Is action selection constrained by budget, not priority alone?"
+   :repos #{:R-futon5 :R-futon6}
+   :firm-exemplar nil
+   :candidate-invariants [:no-costly-action-without-budget :priority-within-budget
+                          :spend-must-be-recorded :depletion-forces-deferral
+                          :replenishment-has-evidence :budget-state-visible]
+   :note "Discussed and partially sketched, no operational exemplar"}
+
+  {:id :F-archaeology-control
+   :name "Archaeology control"
+   :layer :I4
+   :status :candidate
+   :question "Is latent work accumulating as invisible debt?"
+   :repos #{:R-futon3 :R-futon3c :R-futon4 :R-futon6}
+   :firm-exemplar nil
+   :candidate-invariants [:stash-debt-bounded :recover-or-drop :obsolescence-recognition]
+   :note "Important workspace pressure, no enforced structure yet"}
+
+  {:id :F-cross-store-agreement
+   :name "Cross-store agreement"
+   :layer :I4
+   :status :candidate
+   :question "Do mirrors across stores agree about identity and continuity?"
+   :repos #{:R-futon3c}
+   :firm-exemplar :session-continuity-alignment
+   :exemplar-status :candidate-with-live-exemplar
+   :candidate-invariants [:canonical-ledger-backs-public-claim :mirrored-actor-agreement
+                          :session-continuity-alignment :aggregate-count-backed-by-ledger]}]
+
+ ;; =====================================================================
+ ;; EDGES — which repos participate in which families
+ ;; =====================================================================
+
+ :edges
+ [;; I0 — all futon1a
+  {:from :R-futon1a :to :F-startup-contracts             :type :owns     :strength :operational}
+  {:from :R-futon1a :to :F-authorization-and-identity     :type :owns     :strength :operational}
+  {:from :R-futon1a :to :F-layered-error-hierarchy        :type :owns     :strength :operational}
+
+  ;; I1 — futon3b, futon3c, futon1a
+  {:from :R-futon3b  :to :F-phase-ordering                :type :enforces :strength :operational}
+  {:from :R-futon3c  :to :F-phase-ordering                :type :enforces :strength :operational}
+  {:from :R-futon3c  :to :F-status-discipline             :type :enforces :strength :operational}
+  {:from :R-futon1a  :to :F-status-discipline             :type :enforces :strength :operational}
+  {:from :R-futon3c  :to :F-existence                     :type :enforces :strength :operational}
+  {:from :R-futon1a  :to :F-existence                     :type :enforces :strength :operational}
+  {:from :R-futon3c  :to :F-dependency-satisfaction       :type :enforces :strength :operational}
+
+  ;; I2 — cross-repo
+  {:from :R-futon1a  :to :F-failure-locality              :type :enforces :strength :operational}
+  {:from :R-futon3b  :to :F-failure-locality              :type :enforces :strength :operational}
+  {:from :R-futon4   :to :F-failure-locality              :type :gate     :strength :operational-when-enabled}
+  {:from :R-futon6   :to :F-failure-locality              :type :aspires  :strength :candidate}
+  {:from :R-futon3b  :to :F-human-visible-inspectability  :type :enforces :strength :operational}
+  {:from :R-futon3c  :to :F-human-visible-inspectability  :type :enforces :strength :operational}
+  {:from :R-futon6   :to :F-human-visible-inspectability  :type :aspires  :strength :candidate}
+  {:from :R-futon3c  :to :F-graph-symmetry                :type :enforces :strength :operational}
+
+  ;; I3 — wide participation
+  {:from :R-futon0   :to :F-atomic-inspectable-units      :type :aspires  :strength :candidate}
+  {:from :R-futon3b  :to :F-atomic-inspectable-units      :type :enforces :strength :operational-but-bypassable}
+  {:from :R-futon3c  :to :F-atomic-inspectable-units      :type :aspires  :strength :candidate}
+  {:from :R-futon4   :to :F-atomic-inspectable-units      :type :aspires  :strength :candidate}
+  {:from :R-futon5   :to :F-atomic-inspectable-units      :type :aspires  :strength :candidate}
+  {:from :R-futon3   :to :F-artifact-custody              :type :aspires  :strength :candidate}
+  {:from :R-futon3b  :to :F-artifact-custody              :type :enforces :strength :operational}
+  {:from :R-futon5   :to :F-artifact-custody              :type :aspires  :strength :candidate}
+  {:from :R-futon6   :to :F-artifact-custody              :type :aspires  :strength :candidate}
+  {:from :R-futon0   :to :F-repo-role-clarity             :type :aspires  :strength :candidate}
+  {:from :R-futon1a  :to :F-repo-role-clarity             :type :aspires  :strength :candidate}
+  {:from :R-futon3   :to :F-repo-role-clarity             :type :aspires  :strength :candidate}
+  {:from :R-futon3c  :to :F-required-outputs              :type :enforces :strength :operational}
+  {:from :R-futon1a  :to :F-required-outputs              :type :enforces :strength :operational}
+  {:from :R-futon3b  :to :F-required-outputs              :type :enforces :strength :operational}
+
+  ;; I4 — governance layer
+  {:from :R-futon3c  :to :F-peripheral-custody            :type :aspires  :strength :candidate}
+  {:from :R-futon5   :to :F-budgeted-action-selection     :type :aspires  :strength :candidate}
+  {:from :R-futon6   :to :F-budgeted-action-selection     :type :aspires  :strength :candidate}
+  {:from :R-futon3   :to :F-archaeology-control           :type :aspires  :strength :candidate}
+  {:from :R-futon3c  :to :F-archaeology-control           :type :aspires  :strength :candidate}
+  {:from :R-futon4   :to :F-archaeology-control           :type :aspires  :strength :candidate}
+  {:from :R-futon6   :to :F-archaeology-control           :type :aspires  :strength :candidate}
+  {:from :R-futon3c  :to :F-cross-store-agreement         :type :aspires  :strength :candidate-with-live-exemplar}]
+
+ ;; =====================================================================
+ ;; THE PROMOTION LOOP (equity loop equivalent)
+ ;; =====================================================================
+
+ :promotion-loop
+ {:description "work → cleanup evidence → candidate invariant → promotion → operational enforcement → prevented failures → cleaner work"
+  :steps
+  [{:id :PL-work       :name "Work happens"          :note "Live coding, missions, proofs"}
+   {:id :PL-cleanup    :name "Cleanup reveals debt"   :note "Stash archaeology, root clutter, wrong-repo artifacts"}
+   {:id :PL-candidate  :name "Pressure becomes candidate" :note "Recurring pattern earns a family entry"}
+   {:id :PL-promotion  :name "Candidate promoted"    :note "Exemplar reaches operational strength; logic-layer extraction"}
+   {:id :PL-enforce    :name "Operational enforcement" :note "The invariant bites on the live path"}
+   {:id :PL-prevent    :name "Failures prevented"    :note "The class of mess that prompted cleanup no longer recurs"}
+   {:id :PL-cleaner    :name "Cleaner work"          :note "Subtler invariant pressure emerges; cycle repeats at higher level"}]}
+
+ ;; =====================================================================
+ ;; GOVERNANCE QUESTIONS (equivalent of UKRN conversation prompts)
+ ;; =====================================================================
+
+ :governance-questions
+ [{:id :Q1 :text "Should atomic-inspectable-units become always-on?"
+   :family :F-atomic-inspectable-units :note "Currently bypassable"}
+  {:id :Q2 :text "Should every session carry a canonical home-repo?"
+   :family :F-peripheral-custody}
+  {:id :Q3 :text "Should cleanup conditions become structural-law checks?"
+   :family :F-archaeology-control :note "Or remain hygiene folklore?"}
+  {:id :Q4 :text "Should peripheral stops normalize to explicit check-in outcomes?"
+   :family :F-peripheral-custody}
+  {:id :Q5 :text "Which candidates deserve promotion to foundational always-on?"
+   :family nil :note "The meta-governance question"}]
+
+ ;; =====================================================================
+ ;; COMPARATIVE DIAGNOSIS
+ ;; =====================================================================
+
+ :comparative
+ {:ukrn-parallel
+  {:I0 {:futon "9 operational invariants in futon1a. Firm substrate."
+        :ukrn  "Training delivery exists. Untested downstream."
+        :feel  "futon I0 is solid. UKRN I0 is claimed but unproven."}
+   :I1 {:futon "7 operational invariants across futon3b/3c. Phase ordering, status, existence."
+        :ukrn  "Exit interviews don't exist yet. Optional forms yield nothing."
+        :feel  "futon I1 is operational. UKRN I1 is absent."}
+   :I2 {:futon "Mixed: graph-symmetry operational, failure-locality strong in some repos, candidate elsewhere."
+        :ukrn  "Evidence sharing doesn't exist."
+        :feel  "futon I2 is partially operational. UKRN I2 is absent."}
+   :I3 {:futon "Mixed: required-outputs operational, atomic-inspectable-units bypassable, repo-role-clarity no exemplar."
+        :ukrn  "Materials workshop nominal, mentoring and curriculum absent."
+        :feel  "futon I3 has real operational pieces but gaps. UKRN I3 is mostly absent."}
+   :I4 {:futon "All candidate. Peripheral custody, budgeted action, archaeology, cross-store: no operational exemplar."
+        :ukrn  "All absent. Governance, recognition, pulse check: proposed but not built."
+        :feel  "Both I4 layers are the frontier. Neither system governs itself yet."}}
+
+  :why-futon-feels-better
+  "The futon stack has a solid substrate (I0, I1 operational) and the promotion loop
+   is visibly working: cleanup reveals pressure, pressure becomes candidates, some
+   candidates have already been promoted. The system is learning about itself.
+
+   UKRN has a claimed I0 with no detection mechanism, so it can't even tell whether
+   its core fact holds. The promotion loop hasn't started because there's no evidence
+   to promote from. The spreadsheet is a list of tasks without a model of how they
+   relate — which is exactly the folklore-over-evidence pattern that the futon stack's
+   human-visible-inspectability family is designed to prevent."
+
+  :what-they-share
+  "Both systems have an I4 frontier that is entirely candidate/absent. Neither system
+   governs itself yet. The difference is that the futon stack knows this about itself
+   (it has an inventory that names the gap), while UKRN doesn't (it has a spreadsheet
+   that doesn't know what it's missing)."}}
