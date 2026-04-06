@@ -745,6 +745,40 @@ RELATIONS is a list of relation payloads matching the /relation format."
       (funcall callback resp))
     resp))
 
+(cl-defun arxana-store-create-hyperedge
+    (&key id type hx-type endpoints props content labels confidence)
+  "Persist a rich hyperedge through Futon's `/hyperedge` endpoint.
+ID, CONTENT, LABELS, and CONFIDENCE expose the richer Futon1a hyperedge
+shape while preserving the simpler wrapper used elsewhere in Futon4."
+  (when (fboundp 'arxana-data-constraints-validate-hyperedge)
+    (arxana-data-constraints-validate-hyperedge hx-type endpoints))
+  (cond
+   ((not (arxana-store-sync-enabled-p))
+    (arxana-store--record-error 'disabled "Futon sync disabled" 'hyperedge))
+   ((or (not hx-type) (not endpoints))
+    (arxana-store--record-error 'invalid "Provide hx/type and endpoints" 'hyperedge))
+   (t
+    (let ((payload
+           (delq nil
+                 (list (when arxana-store-default-penholder
+                         (cons 'penholder arxana-store-default-penholder))
+                       (when id
+                         (cons 'id (arxana-store--stringify id)))
+                       (when type
+                         (cons 'type (arxana-store--stringify type)))
+                       (cons 'hx/type (arxana-store--stringify hx-type))
+                       (cons 'hx/endpoints (delq nil endpoints))
+                       (when props
+                         (cons 'props props))
+                       (when content
+                         (cons 'hx/content content))
+                       (when labels
+                         (cons 'hx/labels
+                               (mapcar #'arxana-store--stringify labels)))
+                       (when (numberp confidence)
+                         (cons 'hx/confidence confidence))))))
+      (arxana-store--request "POST" "/hyperedge" payload)))))
+
 (defun arxana-store-fetch-hyperedge (id)
   "Fetch a single hyperedge by ID from the store.
 Returns the parsed response or nil on error."
@@ -771,6 +805,25 @@ Returns the parsed response or nil on error."
                               (cons "limit" (number-to-string limit)))))
          (query   (arxana-store--query-string params)))
     (arxana-store--request "GET" "/hyperedges" nil query)))
+
+(defun arxana-store-fetch-entities-latest (&rest args)
+  "Fetch the latest entities from the store.
+Keyword ARGS:
+  :type    - entity type filter (string or symbol)
+  :limit   - max results (number, default 50)
+Returns the parsed response or nil on error."
+  (let* ((entity-type (plist-get args :type))
+         (limit (or (plist-get args :limit) 50))
+         (entity-type
+          (cond
+           ((keywordp entity-type) (substring (symbol-name entity-type) 1))
+           ((symbolp entity-type) (symbol-name entity-type))
+           (t entity-type)))
+         (params (delq nil
+                       (list (when entity-type (cons "type" entity-type))
+                             (cons "limit" (number-to-string limit)))))
+         (query (arxana-store--query-string params)))
+    (arxana-store--request "GET" "/entities/latest" nil query)))
 
 (defun arxana-store-upsert-scholium (source target &optional label)
   (interactive

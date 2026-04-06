@@ -1,5 +1,7 @@
 ;;; arxana-store-test.el --- Tests for Futon storage bridge -*- lexical-binding: t; -*-
 
+(setq load-prefer-newer t)
+
 (require 'ert)
 (require 'arxana-store)
 
@@ -155,6 +157,23 @@
       (should-not (arxana-store-fetch-entity "foo"))
       (should (eq (plist-get arxana-store-last-error :reason) 'connection)))))
 
+(ert-deftest arxana-store-fetch-entities-latest-builds-request ()
+  (let ((futon4-enable-sync t)
+        (captured nil))
+    (cl-letf (((symbol-function 'arxana-store--request)
+               (lambda (method path payload &optional query)
+                 (setq captured (list method path payload query))
+                 '((:entities . nil)))))
+      (should (equal '((:entities . nil))
+                     (arxana-store-fetch-entities-latest
+                      :type "arxana/media-lyrics"
+                      :limit 25)))
+      (should (equal captured
+                     (list "GET"
+                           "/entities/latest"
+                           nil
+                           "type=arxana%2Fmedia-lyrics&limit=25"))))))
+
 (ert-deftest arxana-store-upsert-scholium-builds-ids ()
   (let ((futon4-enable-sync t)
         (calls nil))
@@ -241,6 +260,48 @@
                                (hx/endpoints . (((role . ":role/source") (entity . "src"))
                                                 ((role . ":role/target") (entity . "dst"))))
                                (props . ((label . "passage"))))
+                             nil)))))))
+
+(ert-deftest arxana-store-create-hyperedge-builds-rich-payload ()
+  (let ((futon4-enable-sync t)
+        (arxana-store-default-penholder "api")
+        (captured nil))
+    (cl-letf (((symbol-function 'arxana-store--request)
+               (lambda (method path payload &optional query)
+                 (setq captured (list method path payload query))
+                 '((:hyperedge . t)))))
+      (let ((response
+             (arxana-store-create-hyperedge
+              :id "hx:test"
+              :type "arxana/annotation"
+              :hx-type "annotation/supports"
+              :endpoints '(((role . "annotated")
+                            (entity-id . "song:abi")
+                            (passage . "line 7"))
+                           ((role . "source")
+                            (entity-id . "doc:no-longer-alone")
+                            (passage . "butterfly")))
+              :props '((note . "Against heaviness, release"))
+              :content '((summary . "demo"))
+              :labels '("annotation/demo" annotation/positive)
+              :confidence 0.9)))
+        (should (equal '((:hyperedge . t)) response))
+        (should (equal captured
+                       (list "POST" "/hyperedge"
+                             '((penholder . "api")
+                               (id . "hx:test")
+                               (type . "arxana/annotation")
+                               (hx/type . "annotation/supports")
+                               (hx/endpoints . (((role . "annotated")
+                                                 (entity-id . "song:abi")
+                                                 (passage . "line 7"))
+                                                ((role . "source")
+                                                 (entity-id . "doc:no-longer-alone")
+                                                 (passage . "butterfly"))))
+                               (props . ((note . "Against heaviness, release")))
+                               (hx/content . ((summary . "demo")))
+                               (hx/labels . ("annotation/demo" "annotation/positive"))
+                               (hx/confidence . 0.9))
                              nil)))))))
 
 (ert-deftest arxana-store-post-hyperedge-validates-inputs ()

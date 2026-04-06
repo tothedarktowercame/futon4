@@ -31,6 +31,18 @@
 (declare-function arxana-browser-hypergraph-format "arxana-browser-hypergraph")
 (declare-function arxana-browser-hypergraph-row "arxana-browser-hypergraph")
 (declare-function arxana-browser-hypergraph-open "arxana-browser-hypergraph")
+(declare-function arxana-browser-songs-menu-items "arxana-browser-songs")
+(declare-function arxana-browser-songs-items "arxana-browser-songs" (context))
+(declare-function arxana-browser-songs-format "arxana-browser-songs")
+(declare-function arxana-browser-songs-row "arxana-browser-songs" (item))
+(declare-function arxana-browser-songs-open "arxana-browser-songs" (item))
+(declare-function arxana-browser-songs-location "arxana-browser-songs" (item))
+(declare-function arxana-browser-chorus-menu-items "arxana-browser-chorus")
+(declare-function arxana-browser-chorus-items "arxana-browser-chorus" (context))
+(declare-function arxana-browser-chorus-format "arxana-browser-chorus")
+(declare-function arxana-browser-chorus-row "arxana-browser-chorus" (item))
+(declare-function arxana-browser-chorus-open "arxana-browser-chorus" (item))
+(declare-function arxana-browser-chorus-location "arxana-browser-chorus" (item))
 
 (declare-function arxana-browser-patterns--language-index-by-path "arxana-browser-patterns" (language-rows))
 (declare-function arxana-browser-patterns--filesystem-collection-items "arxana-browser-patterns" (&optional language-index))
@@ -378,6 +390,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
               :description "Zoom/Napster media library prototype."
               :view 'media)
         (list :type 'menu
+              :label "Songs"
+              :description "XTDB-backed songs and lyrics catalogs."
+              :view 'songs-home)
+        (list :type 'menu
               :label "Docs"
               :description "Doc books (XTDB-backed)."
               :view 'docbook)
@@ -439,6 +455,26 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                 :label "Hypergraph viewer unavailable"
                 :description "Load arxana-browser-hypergraph.el for local JSON datasets."))))
 
+(defun arxana-browser--songs-items ()
+  (let ((song-items (and (require 'arxana-browser-songs nil t)
+                         (arxana-browser-songs-menu-items)))
+        (chorus-items (and (require 'arxana-browser-chorus nil t)
+                           (arxana-browser-chorus-menu-items))))
+    (cond
+     ((or song-items chorus-items)
+      (append song-items chorus-items))
+     (t
+      (list (list :type 'info
+                  :label "Songs browser unavailable"
+                  :description "Load song/chorus browser modules for XTDB-backed songs and choruses."))))))
+
+(defun arxana-browser--chorus-items ()
+  (if (require 'arxana-browser-chorus nil t)
+      (arxana-browser-chorus-menu-items)
+    (list (list :type 'info
+                :label "Chorus browser unavailable"
+                :description "Load arxana-browser-chorus.el for XTDB-backed choruses."))))
+
 (defun arxana-browser-code-select-docbook ()
   "Select the docbook used for code docs in the browser."
   (interactive)
@@ -491,6 +527,20 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
       "Hypergraph viewer — inspect local JSON datasets. RET/right shows details. LEFT/b returns.")
      ((eq (plist-get context :view) 'media)
       (concat "Media library — pick All tracks, a status, or Projects to drill into recorder projects. LEFT/b returns."
+              store-suffix))
+     ((eq (plist-get context :view) 'songs-home)
+      (concat "Songs — browse imported lyrics, suite songs, and chorus experiments. LEFT/b returns."
+              store-suffix))
+     ((memq (plist-get context :view) '(songs-chapbook songs-suite))
+      (concat (format "Songs — %s. RET opens the stored text. LEFT/b returns."
+                      (or (plist-get context :label) "catalog"))
+              store-suffix))
+     ((eq (plist-get context :view) 'choruses-home)
+      (concat "Choruses — browse Arxana-native chorus entities assembled from chapbook passages. LEFT/b returns."
+              store-suffix))
+     ((eq (plist-get context :view) 'choruses-demo)
+      (concat (format "Choruses — %s. RET opens the stored text. LEFT/b returns."
+                      (or (plist-get context :label) "catalog"))
               store-suffix))
      ((eq (plist-get context :view) 'media-projects)
       (concat "Media projects — select a recorder project to list its tracks. LEFT/b returns."
@@ -722,6 +772,17 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         ('graph (arxana-browser--graph-items))
         ('hypergraph (arxana-browser--hypergraph-items))
         ('media (arxana-media--items))
+        ('songs-home (arxana-browser--songs-items))
+        ('songs-chapbook (if (require 'arxana-browser-songs nil t)
+                             (arxana-browser-songs-items context)
+                           (arxana-browser--songs-items)))
+        ('songs-suite (if (require 'arxana-browser-songs nil t)
+                          (arxana-browser-songs-items context)
+                        (arxana-browser--songs-items)))
+        ('choruses-home (arxana-browser--chorus-items))
+        ('choruses-demo (if (require 'arxana-browser-chorus nil t)
+                            (arxana-browser-chorus-items context)
+                          (arxana-browser--chorus-items)))
         ('docbook (arxana-browser--docbook-books))
         ('evidence-home (arxana-browser--evidence-menu-items))
         ('evidence-timeline (if (require 'arxana-browser-evidence nil t)
@@ -922,6 +983,17 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                              #'arxana-browser-hypergraph-row
                            #'arxana-browser--info-row))
             ('media #'arxana-browser--info-row)
+            ('songs-home #'arxana-browser--info-row)
+            ('songs-chapbook (if (fboundp 'arxana-browser-songs-row)
+                                 #'arxana-browser-songs-row
+                               #'arxana-browser--info-row))
+            ('songs-suite (if (fboundp 'arxana-browser-songs-row)
+                              #'arxana-browser-songs-row
+                            #'arxana-browser--info-row))
+            ('choruses-home #'arxana-browser--info-row)
+            ('choruses-demo (if (fboundp 'arxana-browser-chorus-row)
+                                #'arxana-browser-chorus-row
+                              #'arxana-browser--info-row))
             ('docbook #'arxana-browser--info-row)
             ('evidence-home #'arxana-browser--info-row)
             ('evidence-timeline (if (fboundp 'arxana-browser--evidence-timeline-row)
@@ -1042,6 +1114,17 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                                          (arxana-browser-hypergraph-format)
                                        (arxana-browser--info-format)))
                         ('media (arxana-browser--info-format))
+                        ('songs-home (arxana-browser--info-format))
+                        ('songs-chapbook (if (fboundp 'arxana-browser-songs-format)
+                                             (arxana-browser-songs-format)
+                                           (arxana-browser--info-format)))
+                        ('songs-suite (if (fboundp 'arxana-browser-songs-format)
+                                          (arxana-browser-songs-format)
+                                        (arxana-browser--info-format)))
+                        ('choruses-home (arxana-browser--info-format))
+                        ('choruses-demo (if (fboundp 'arxana-browser-chorus-format)
+                                            (arxana-browser-chorus-format)
+                                          (arxana-browser--info-format)))
                         ('docbook (arxana-browser--info-format))
                         ('evidence-home (arxana-browser--info-format))
                         ('evidence-timeline (if (fboundp 'arxana-browser--evidence-timeline-format)
@@ -1280,6 +1363,28 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                            :ep-staging-path path)
                      arxana-browser--stack))
          (arxana-browser--render)))
+      ('songs-catalog
+       (setq arxana-browser--stack
+             (cons (list :view (plist-get item :view)
+                         :label (plist-get item :label)
+                         :catalog-id (plist-get item :catalog-id))
+                   arxana-browser--stack))
+       (arxana-browser--render))
+      ('song-entity
+       (if (fboundp 'arxana-browser-songs-open)
+           (arxana-browser-songs-open item)
+         (message "Songs browser unavailable")))
+      ('chorus-catalog
+       (setq arxana-browser--stack
+             (cons (list :view (plist-get item :view)
+                         :label (plist-get item :label)
+                         :catalog-id (plist-get item :catalog-id))
+                   arxana-browser--stack))
+       (arxana-browser--render))
+      ('chorus-entity
+       (if (fboundp 'arxana-browser-chorus-open)
+           (arxana-browser-chorus-open item)
+         (message "Chorus browser unavailable")))
       ('media-misc-folder
        (let ((path (plist-get item :path)))
          (unless (and path (file-directory-p path))
@@ -1470,6 +1575,12 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                     ((and item (eq (plist-get item :type) 'hypergraph-source))
                      (let ((path (plist-get item :path)))
                        (when path (format "file://%s" (expand-file-name path)))))
+                    ((and item (eq (plist-get item :type) 'song-entity))
+                     (and (fboundp 'arxana-browser-songs-location)
+                          (arxana-browser-songs-location item)))
+                    ((and item (eq (plist-get item :type) 'chorus-entity))
+                     (and (fboundp 'arxana-browser-chorus-location)
+                          (arxana-browser-chorus-location item)))
                     ((and item (eq (plist-get item :type) 'pattern))
                      (arxana-browser--pattern-location item))
                     ((and item (eq (plist-get item :type) 'collection))
