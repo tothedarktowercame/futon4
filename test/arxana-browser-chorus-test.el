@@ -127,6 +127,18 @@
         (should (string-match-p (regexp-quote "Blue carnations, in the soil\nKiss me in the moonlight\nBlue daisies sleep\nKiss, my lips")
                                 (plist-get entry :song-text)))))))
 
+(ert-deftest arxana-browser-chorus-extract-song-text-prefers-quoted-text-when-lines-drift ()
+  (let ((song '((:entity/id . "song:abi")
+                (:entity/name . "Abi")
+                (:entity/type . "arxana/song")
+                (:entity/source
+                 . "Prelude one\nPrelude two\nPrelude three\nPrelude four\nBlue carnations, in the soil\nKiss me in the moonlight\nBlue daisies sleep\nKiss, my lips"))))
+    (should
+     (equal "Blue carnations, in the soil\nKiss me in the moonlight\nBlue daisies sleep\nKiss, my lips"
+            (arxana-browser-chorus--extract-song-text
+             song
+             "lines 1-4: Blue carnations, in the soil")))))
+
 (ert-deftest arxana-browser-chorus-annotation-entries-filter-by-source-song ()
   (let ((chorus '((:entity/id . "chorus-1")
                   (:entity/name . "Abi Chorus (demo)")
@@ -206,6 +218,7 @@
                                       (:passage . "So go to the orange of purple or the blue of green, the blue of red")))))))))
           (arxana-browser-chorus-open '(:entity-id "chorus-1"))
           (with-current-buffer notes-buffer
+            (should (derived-mode-p 'org-mode))
             (let ((content (buffer-substring-no-properties (point-min) (point-max))))
               (should (string-match-p (regexp-quote "Notes for Abi Chorus (demo)") content))
               (should (string-match-p "Blue carnations, in the soil" content))

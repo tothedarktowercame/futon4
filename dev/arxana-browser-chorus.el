@@ -10,6 +10,7 @@
 (require 'subr-x)
 (require 'view)
 
+(require 'arxana-browser-annotations)
 (require 'arxana-store)
 (require 'arxana-ui)
 (require 'arxana-browser-songs)
@@ -235,20 +236,18 @@
       (backward-char)
     (arxana-ui-left-or-return)))
 
-(defvar arxana-browser-chorus-text-link-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map [mouse-1] #'arxana-browser-chorus-text-activate)
-    (define-key map (kbd "RET") #'arxana-browser-chorus-text-activate)
-    map)
+(defvar arxana-browser-chorus-text-link-map nil
   "Keymap for clickable chorus annotation markers.")
+(setq arxana-browser-chorus-text-link-map (make-sparse-keymap))
+(define-key arxana-browser-chorus-text-link-map [mouse-1] #'arxana-browser-chorus-text-activate)
+(define-key arxana-browser-chorus-text-link-map (kbd "RET") #'arxana-browser-chorus-text-activate)
 
-(defvar arxana-browser-chorus-mode-map
-  (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map view-mode-map)
-    (define-key map (kbd "<left>") #'arxana-browser-chorus-left-or-return)
-    (define-key map (kbd "RET") #'arxana-browser-chorus-text-activate)
-    map)
+(defvar arxana-browser-chorus-mode-map nil
   "Keymap for `arxana-browser-chorus-mode'.")
+(setq arxana-browser-chorus-mode-map (make-sparse-keymap))
+(set-keymap-parent arxana-browser-chorus-mode-map view-mode-map)
+(define-key arxana-browser-chorus-mode-map (kbd "<left>") #'arxana-browser-chorus-left-or-return)
+(define-key arxana-browser-chorus-mode-map (kbd "RET") #'arxana-browser-chorus-text-activate)
 
 (define-minor-mode arxana-browser-chorus-mode
   "Minor mode for chorus display buffers."
@@ -259,20 +258,18 @@
       (add-hook 'post-command-hook #'arxana-browser-chorus--sync-note-from-point nil t)
     (remove-hook 'post-command-hook #'arxana-browser-chorus--sync-note-from-point t)))
 
-(defvar arxana-browser-chorus-notes-link-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map [mouse-1] #'arxana-browser-chorus-notes-activate)
-    (define-key map (kbd "RET") #'arxana-browser-chorus-notes-activate)
-    map)
+(defvar arxana-browser-chorus-notes-link-map nil
   "Keymap for chorus note links.")
+(setq arxana-browser-chorus-notes-link-map (make-sparse-keymap))
+(define-key arxana-browser-chorus-notes-link-map [mouse-1] #'arxana-browser-chorus-notes-activate)
+(define-key arxana-browser-chorus-notes-link-map (kbd "RET") #'arxana-browser-chorus-notes-activate)
 
-(defvar arxana-browser-chorus-notes-mode-map
-  (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map view-mode-map)
-    (define-key map (kbd "<left>") #'arxana-browser-chorus-left-or-return)
-    (define-key map (kbd "RET") #'arxana-browser-chorus-notes-activate)
-    map)
+(defvar arxana-browser-chorus-notes-mode-map nil
   "Keymap for `arxana-browser-chorus-notes-mode'.")
+(setq arxana-browser-chorus-notes-mode-map (make-sparse-keymap))
+(set-keymap-parent arxana-browser-chorus-notes-mode-map view-mode-map)
+(define-key arxana-browser-chorus-notes-mode-map (kbd "<left>") #'arxana-browser-chorus-left-or-return)
+(define-key arxana-browser-chorus-notes-mode-map (kbd "RET") #'arxana-browser-chorus-notes-activate)
 
 (define-minor-mode arxana-browser-chorus-notes-mode
   "Minor mode for chorus notes."
@@ -282,20 +279,6 @@
   (if arxana-browser-chorus-notes-mode
       (add-hook 'post-command-hook #'arxana-browser-chorus--sync-source-from-point nil t)
     (remove-hook 'post-command-hook #'arxana-browser-chorus--sync-source-from-point t)))
-
-(defun arxana-browser-chorus--value-name (value)
-  (cond
-   ((keywordp value) (substring (symbol-name value) 1))
-   ((symbolp value) (symbol-name value))
-   ((stringp value) value)
-   ((null value) nil)
-   (t (format "%s" value))))
-
-(defun arxana-browser-chorus--alist-value (alist &rest keys)
-  (seq-some (lambda (key)
-              (and (listp alist)
-                   (ignore-errors (alist-get key alist))))
-            keys))
 
 (defun arxana-browser-chorus--entity-props (entity)
   (or (alist-get :props entity)
@@ -346,27 +329,44 @@
       '()))
 
 (defun arxana-browser-chorus--endpoint-role (endpoint)
-  (arxana-browser-chorus--value-name
-   (arxana-browser-chorus--alist-value endpoint :role :hx/role)))
+  (arxana-browser-annotations-endpoint-role endpoint))
 
 (defun arxana-browser-chorus--endpoint-entity-id (endpoint)
-  (arxana-browser-chorus--alist-value endpoint :entity-id :id))
+  (arxana-browser-annotations-endpoint-entity-id endpoint))
 
 (defun arxana-browser-chorus--endpoint-passage (endpoint)
-  (arxana-browser-chorus--alist-value endpoint :passage :hx/passage))
+  (arxana-browser-annotations-endpoint-passage endpoint))
 
 (defun arxana-browser-chorus--extract-song-text (entity passage)
   (let* ((source (arxana-browser-chorus--entity-source entity))
          (lines (split-string source "\n" nil))
-         (bounds (arxana-browser-chorus--demo-line-bounds passage)))
+         (bounds (arxana-browser-annotations-line-bounds-from-passage passage))
+         (search-text (arxana-browser-annotations-passage-search-text passage))
+         (line-count (or (arxana-browser-annotations-passage-line-count passage) 1)))
     (cond
      ((and bounds
            (<= 1 (car bounds))
            (<= (cdr bounds) (length lines)))
-      (string-join
-       (cl-loop for idx from (1- (car bounds)) to (1- (cdr bounds))
-                collect (nth idx lines))
-       "\n"))
+      (let ((snippet
+             (string-join
+              (cl-loop for idx from (1- (car bounds)) to (1- (cdr bounds))
+                       collect (nth idx lines))
+              "\n")))
+        (if (or (not (stringp search-text))
+                (string-empty-p search-text)
+                (string-match-p (regexp-quote search-text) snippet))
+            snippet
+          (let ((match-index
+                 (cl-position-if (lambda (line)
+                                   (string-match-p (regexp-quote search-text) line))
+                                 lines)))
+            (if match-index
+                (string-join
+                 (cl-loop for idx from match-index
+                          below (min (length lines) (+ match-index line-count))
+                          collect (nth idx lines))
+                 "\n")
+              snippet)))))
      (t
       (or (and (stringp passage)
                (string-match "\\`lines? [0-9]+\\(?:-[0-9]+\\)?:\\s-*\\(.+\\)\\'" passage)
@@ -377,8 +377,8 @@
 (defun arxana-browser-chorus--resolve-annotation-entry (hyperedge-id allowed-song-ids entity-cache)
   (let* ((response (arxana-store-fetch-hyperedge hyperedge-id))
          (hyperedge (arxana-browser-chorus--unwrap-hyperedge-response response))
-         (kind (arxana-browser-chorus--value-name
-                (arxana-browser-chorus--alist-value hyperedge :hx/type :type)))
+         (kind (arxana-browser-annotations-value-name
+                (arxana-browser-annotations-alist-value hyperedge :hx/type :type)))
          (ends (or (alist-get :hx/ends hyperedge) '()))
          (annotated (seq-find (lambda (ep)
                                 (equal (arxana-browser-chorus--endpoint-role ep) "annotated"))
@@ -405,17 +405,17 @@
         (list :hyperedge-id hyperedge-id
               :chorus-passage source-passage
               :song-id song-id
-	              :song-name (or (and song-entity (arxana-browser-chorus--entity-name song-entity))
-	                             song-id)
-	              :song-passage annotated-passage
-	              :song-text (if song-entity
-	                             (arxana-browser-chorus--extract-song-text song-entity annotated-passage)
-	                           annotated-passage)
-	              :note (or (alist-get :note props)
-	                        (alist-get 'note props)
-	                        (alist-get :gloss props)
-	                        (alist-get 'gloss props)
-	                        ""))))))
+              :song-name (or (and song-entity (arxana-browser-chorus--entity-name song-entity))
+                             song-id)
+              :song-passage annotated-passage
+              :song-text (if song-entity
+                             (arxana-browser-chorus--extract-song-text song-entity annotated-passage)
+                           annotated-passage)
+              :note (or (alist-get :note props)
+                        (alist-get 'note props)
+                        (alist-get :gloss props)
+                        (alist-get 'gloss props)
+                        ""))))))
 
 (defun arxana-browser-chorus--chorus-line-order (entity passage)
   (let ((lines (split-string (arxana-browser-chorus--entity-source entity) "\n" nil))
@@ -585,18 +585,27 @@
     (with-current-buffer buf
       (let ((inhibit-read-only t))
         (remove-overlays (point-min) (point-max))
+        (erase-buffer)
+        (org-mode)
         (setq-local arxana-browser-chorus--note-index (make-hash-table :test 'equal))
         (setq-local arxana-browser-chorus--note-highlight-overlay nil)
         (setq-local arxana-browser-chorus--last-active-hyperedge nil)
         (setq-local arxana-browser-chorus--current-entity entity)
-        (erase-buffer)
+        (setq-local truncate-lines nil)
         (setq-local header-line-format '(:eval (arxana-browser-chorus--notes-header-line)))
-        (insert (format "Notes for %s\n\n" (arxana-browser-chorus--entity-name entity)))
+        (insert (format "#+TITLE: Notes for %s\n\n"
+                        (arxana-browser-chorus--entity-name entity)))
+        (insert (format "- Entity: %s\n"
+                        (or (arxana-browser-chorus--entity-id entity) "?")))
+        (insert (format "- Type: %s\n\n"
+                        (or (arxana-browser-chorus--entity-type entity) "?")))
         (if (null entries)
-            (insert "(none yet)\n")
+            (progn
+              (insert "* Notes\n")
+              (insert "- (none yet)\n"))
           (dolist (entry entries)
             (let ((entry-start (point)))
-              (insert (format "%s %s\n"
+              (insert (format "- %s %s\n"
                               (or (plist-get entry :marker-label) "[*]")
                               (or (plist-get entry :song-name) "(unknown song)")))
               (add-text-properties
@@ -752,18 +761,6 @@
     (when entity-id
       (format "arxana://chorus/%s" (url-hexify-string entity-id)))))
 
-(defun arxana-browser-chorus--demo-line-bounds (passage)
-  (cond
-   ((and (stringp passage)
-         (string-match "\\`lines? \\([0-9]+\\)-\\([0-9]+\\)\\(?::\\|\\'\\)" passage))
-    (cons (string-to-number (match-string 1 passage))
-          (string-to-number (match-string 2 passage))))
-   ((and (stringp passage)
-         (string-match "\\`line \\([0-9]+\\)\\(?::\\|\\'\\)" passage))
-    (let ((line (string-to-number (match-string 1 passage))))
-      (cons line line)))
-   (t nil)))
-
 (defun arxana-browser-chorus--demo-song-passage (spec)
   (let* ((annotated (car (plist-get spec :endpoints))))
     (alist-get :passage annotated)))
@@ -773,7 +770,7 @@
     (alist-get :passage source)))
 
 (defun arxana-browser-chorus--demo-order-key (spec)
-  (let* ((bounds (arxana-browser-chorus--demo-line-bounds
+  (let* ((bounds (arxana-browser-annotations-line-bounds-from-passage
                   (arxana-browser-chorus--demo-song-passage spec)))
          (start (or (car-safe bounds) most-positive-fixnum))
          (end (or (cdr-safe bounds) most-positive-fixnum)))

@@ -167,6 +167,11 @@ See:
 - [dev/arxana-browser-chorus.el](/home/joe/code/futon4/dev/arxana-browser-chorus.el#L817)
 
 These `chorus/*` keys are interpreted in `futon4`, not validated in `futon1a`.
+For the current `Abi Chorus (demo)`, the stored `:source` is itself derived from
+the current set of `Abi` support annotations. That means if the underlying demo
+annotation set changes and the demo Chorus is re-imported, the Chorus text will
+change too. This is intentional for the demo, but it is not yet a stable
+authoring model.
 
 ### What `chorus/*` Means Right Now
 
@@ -198,6 +203,9 @@ Current behavior:
 - Songs use the passage strings directly to highlight text and label note blocks.
 - Chorus retrieval parses line-range strings like `lines 1-4: ...` to recover the
   corresponding lines from the song entity text.
+- Both Songs and Chorus now validate line-based passage references against the
+  quoted text fragment before trusting the line numbers, so minor line drift is
+  less likely to silently point at the wrong material.
 
 This is one of the main places where we are still relying on client-side logic.
 

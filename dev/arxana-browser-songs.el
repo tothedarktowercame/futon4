@@ -11,6 +11,7 @@
 (require 'subr-x)
 (require 'view)
 
+(require 'arxana-browser-annotations)
 (require 'arxana-store)
 (require 'arxana-ui)
 
@@ -740,7 +741,7 @@ When DRY-RUN is non-nil, return the payload specs without writing them."
 
 (defun arxana-browser-songs--entry-sort-key (entry)
   (let* ((passage (arxana-browser-songs--entry-passage entry))
-         (line-bounds (arxana-browser-songs--line-bounds-from-passage passage))
+         (line-bounds (arxana-browser-annotations-line-bounds-from-passage passage))
          (start (or (car-safe line-bounds) most-positive-fixnum))
          (end (or (cdr-safe line-bounds) most-positive-fixnum)))
     (list end start (downcase (string-trim passage)))))
@@ -873,20 +874,6 @@ When DRY-RUN is non-nil, return the payload specs without writing them."
               :return-window-config arxana-ui-return-window-config
               :return-item arxana-browser-songs--return-item)))))
 
-(defun arxana-browser-songs--value-name (value)
-  (cond
-   ((keywordp value) (substring (symbol-name value) 1))
-   ((symbolp value) (symbol-name value))
-   ((stringp value) value)
-   ((null value) nil)
-   (t (format "%s" value))))
-
-(defun arxana-browser-songs--alist-value (alist &rest keys)
-  (seq-some (lambda (key)
-              (and (listp alist)
-                   (ignore-errors (alist-get key alist))))
-            keys))
-
 (defun arxana-browser-songs--unwrap-hyperedges (response)
   (let ((items (and (listp response)
                     (or (ignore-errors (alist-get :hyperedges response))
@@ -897,43 +884,34 @@ When DRY-RUN is non-nil, return the payload specs without writing them."
      ((listp items) items)
      (t nil))))
 
-(defun arxana-browser-songs--line-bounds-from-passage (passage)
-  (cond
-   ((and (stringp passage)
-         (string-match "\\`lines? \\([0-9]+\\)-\\([0-9]+\\)\\(?::\\|\\'\\)" passage))
-    (cons (string-to-number (match-string 1 passage))
-          (string-to-number (match-string 2 passage))))
-   ((and (stringp passage)
-         (string-match "\\`line \\([0-9]+\\)\\(?::\\|\\'\\)" passage))
-    (let ((line (string-to-number (match-string 1 passage))))
-      (cons line line)))
-   (t nil)))
-
-(defun arxana-browser-songs--passage-search-text (passage)
-  (cond
-   ((not (stringp passage)) nil)
-   ((string-match "\\`lines? [0-9]+\\(?:-[0-9]+\\)?:\\s-*\\(.+\\)\\'" passage)
-    (string-trim (match-string 1 passage)))
-   (t (string-trim passage))))
-
 (defun arxana-browser-songs--locate-passage-bounds (passage)
-  (or
-   (let ((line-bounds (arxana-browser-songs--line-bounds-from-passage passage)))
-     (when (and line-bounds (vectorp arxana-browser-songs--line-map))
-       (let* ((start-line (car line-bounds))
-              (end-line (cdr line-bounds))
-              (start-entry (and (< 0 start-line (length arxana-browser-songs--line-map))
-                                (aref arxana-browser-songs--line-map start-line)))
-              (end-entry (and (< 0 end-line (length arxana-browser-songs--line-map))
-                              (aref arxana-browser-songs--line-map end-line))))
-         (when (and start-entry end-entry)
-           (cons (car start-entry) (cdr end-entry))))))
-   (let ((text (arxana-browser-songs--passage-search-text passage)))
-     (when (and (stringp text) (not (string-empty-p text)))
+  (let ((search-text (arxana-browser-annotations-passage-search-text passage))
+        (line-count (or (arxana-browser-annotations-passage-line-count passage) 1)))
+    (or
+     (let ((line-bounds (arxana-browser-annotations-line-bounds-from-passage passage)))
+       (when (and line-bounds (vectorp arxana-browser-songs--line-map))
+         (let* ((start-line (car line-bounds))
+                (end-line (cdr line-bounds))
+                (start-entry (and (< 0 start-line (length arxana-browser-songs--line-map))
+                                  (aref arxana-browser-songs--line-map start-line)))
+                (end-entry (and (< 0 end-line (length arxana-browser-songs--line-map))
+                                (aref arxana-browser-songs--line-map end-line))))
+           (when (and start-entry end-entry)
+             (let* ((bounds (cons (car start-entry) (cdr end-entry)))
+                    (snippet (string-trim
+                              (buffer-substring-no-properties
+                               (car bounds) (cdr bounds)))))
+               (when (or (not (stringp search-text))
+                         (string-empty-p search-text)
+                         (string-match-p (regexp-quote search-text) snippet))
+                 bounds))))))
+     (when (and (stringp search-text) (not (string-empty-p search-text)))
        (save-excursion
          (goto-char (point-min))
-         (when (search-forward text nil t)
-           (cons (match-beginning 0) (match-end 0))))))))
+         (when (search-forward search-text nil t)
+           (let ((start (line-beginning-position)))
+             (forward-line (1- line-count))
+             (cons start (line-end-position)))))))))
 
 (defun arxana-browser-songs--focus-bounds (bounds)
   (when (and bounds (consp bounds))
@@ -1133,14 +1111,13 @@ When DRY-RUN is non-nil, return the payload specs without writing them."
                 (setq arxana-browser-songs--active-overlay nil)))))))))
 
 (defun arxana-browser-songs--endpoint-role (endpoint)
-  (arxana-browser-songs--value-name
-   (arxana-browser-songs--alist-value endpoint :role :hx/role)))
+  (arxana-browser-annotations-endpoint-role endpoint))
 
 (defun arxana-browser-songs--endpoint-entity-id (endpoint)
-  (arxana-browser-songs--alist-value endpoint :entity-id :id))
+  (arxana-browser-annotations-endpoint-entity-id endpoint))
 
 (defun arxana-browser-songs--endpoint-passage (endpoint)
-  (arxana-browser-songs--alist-value endpoint :passage :hx/passage))
+  (arxana-browser-annotations-endpoint-passage endpoint))
 
 (defun arxana-browser-songs--annotation-props (hyperedge)
   (or (alist-get :hx/props hyperedge)
@@ -1148,8 +1125,8 @@ When DRY-RUN is non-nil, return the payload specs without writing them."
       '()))
 
 (defun arxana-browser-songs--hyperedge-kind (hyperedge)
-  (arxana-browser-songs--value-name
-   (arxana-browser-songs--alist-value hyperedge :hx/type :type)))
+  (arxana-browser-annotations-value-name
+   (arxana-browser-annotations-alist-value hyperedge :hx/type :type)))
 
 (defun arxana-browser-songs--annotation-sections (entity)
   (let* ((entity-id (arxana-browser-songs--entity-id entity))
@@ -1181,7 +1158,7 @@ When DRY-RUN is non-nil, return the payload specs without writing them."
           (push (list :kind 'open-question
                       :hyperedge-id (alist-get :hx/id hyperedge)
                       :passage (or (arxana-browser-songs--endpoint-passage current-end) "")
-                      :question (or (arxana-browser-songs--alist-value props :question)
+                      :question (or (arxana-browser-annotations-alist-value props :question)
                                     "Open question"))
                 questions))
          ((and (equal kind "annotation/supports") current-end)
@@ -1199,7 +1176,7 @@ When DRY-RUN is non-nil, return the payload specs without writing them."
                           :target-type (and other-entity (arxana-browser-songs--entity-type other-entity))
                           :current-passage (or (arxana-browser-songs--endpoint-passage annotated) "")
                           :target-passage (or (arxana-browser-songs--endpoint-passage source) "")
-                          :note (or (arxana-browser-songs--alist-value props :note :gloss) ""))
+                          :note (or (arxana-browser-annotations-alist-value props :note :gloss) ""))
                     supports)))
            ((and source
                  (equal entity-id (arxana-browser-songs--endpoint-entity-id source))
@@ -1214,7 +1191,7 @@ When DRY-RUN is non-nil, return the payload specs without writing them."
                           :target-type (and other-entity (arxana-browser-songs--entity-type other-entity))
                           :current-passage (or (arxana-browser-songs--endpoint-passage source) "")
                           :target-passage (or (arxana-browser-songs--endpoint-passage annotated) "")
-                          :note (or (arxana-browser-songs--alist-value props :note :gloss) ""))
+                          :note (or (arxana-browser-annotations-alist-value props :note :gloss) ""))
                     backlinks))))))))
     (delq nil
           (list (when supports

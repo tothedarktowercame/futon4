@@ -272,6 +272,26 @@
       (when (get-buffer buffer-name)
         (kill-buffer buffer-name)))))
 
+(ert-deftest arxana-browser-songs-locate-passage-bounds-prefers-text-when-lines-drift ()
+  (with-temp-buffer
+    (insert "  1  Intro line\n")
+    (insert "  2  Another intro\n")
+    (insert "  3  Heavy, the sleep of butterflies\n")
+    (insert "  4  Kiss, my lips\n")
+    (setq-local arxana-browser-songs--line-map
+                (let ((map (make-vector 5 nil)))
+                  (aset map 1 (cons 6 16))
+                  (aset map 2 (cons 20 33))
+                  (aset map 3 (cons 37 69))
+                  (aset map 4 (cons 73 87))
+                  map))
+    (let ((bounds (arxana-browser-songs--locate-passage-bounds
+                   "line 2: Heavy, the sleep of butterflies")))
+      (should bounds)
+      (should (string-match-p
+               "Heavy, the sleep of butterflies"
+               (buffer-substring-no-properties (car bounds) (cdr bounds)))))))
+
 (ert-deftest arxana-browser-songs-mode-maps-bind-highlight-toggle ()
   (should (eq #'arxana-browser-songs-left-or-return
               (lookup-key arxana-browser-songs-text-mode-map (kbd "<left>"))))
