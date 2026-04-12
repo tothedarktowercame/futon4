@@ -365,7 +365,8 @@
   []
   (let [query (r/atom "")
         saving-diagram (r/atom false)
-        diagram-name (r/atom "")]
+        diagram-name (r/atom "")
+        diagram-saved (r/atom false)]
     (fn []
       (let [types     (:available-types @state/ui-state)
             sidebar?  (:sidebar-open @state/ui-state)
@@ -414,15 +415,18 @@
               [:button.hop-btn
                {:on-click #(do (api/save-diagram! @diagram-name)
                                (reset! saving-diagram false)
-                               (reset! diagram-name ""))}
+                               (reset! diagram-name "")
+                               (reset! diagram-saved true)
+                               (js/setTimeout (fn [] (reset! diagram-saved false)) 2000))}
                "\u2713"]
               [:button.hop-btn
                {:on-click #(reset! saving-diagram false)}
                "\u2717"]]
              [:button.hop-btn
               {:on-click #(reset! saving-diagram true)
-               :title "Save current spread as a diagram"}
-              "\ud83d\udcbe"]))
+               :title "Save current spread as a diagram"
+               :class (when @diagram-saved "saved")}
+              (if @diagram-saved "\u2713" "\ud83d\udcbe")]))
          [:span.status-indicator
           {:class (if (:connected @state/ui-state) "connected" "disconnected")}
           (if (:connected @state/ui-state) "live" "offline")]
@@ -458,9 +462,16 @@
             ^{:key (:id e)}
             [:div.sidebar-entity-item
              [:span.entity-name
-              {:on-click #(api/browse-and-focus! (:name e) (:id e))}
+              {:on-click (if (= "diagram" (or (:_type e) (:type e)))
+                           #(api/expand-diagram! (:id e))
+                           #(api/browse-and-focus! (:name e) (:id e)))}
               (str (or (:name e) "?") " ")]
              [:span.entity-type-badge (or (:_type e) (:type e) "?")]
+             (when (= "diagram" (or (:_type e) (:type e)))
+               [:button.scratchpad-btn
+                {:on-click #(api/expand-diagram! (:id e))
+                 :title "Expand diagram"}
+                "\u25b6"])
              [:button.pin-btn
               {:on-click (fn [evt]
                            (.stopPropagation evt)

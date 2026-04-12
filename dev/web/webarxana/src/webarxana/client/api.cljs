@@ -9,7 +9,7 @@
 
 (def base "/api/futon")
 
-(declare fetch-hyperedges save-entity! save-relation! fetch-types pin-entity! connect-ws! ws-send! save-diagram!)
+(declare fetch-hyperedges save-entity! save-relation! fetch-types pin-entity! connect-ws! ws-send! save-diagram! fetch-recent expand-diagram!)
 
 (defn- ingest-ego!
   "Ingest an ego response (entity + outgoing + incoming) into Datascript."
@@ -181,14 +181,35 @@
               (<! (save-relation! {:type "diagram/includes"
                                    :src  eid
                                    :dst  pid})))
-            ;; Don't pin the diagram itself — it's metadata, not a member
-            ))))))
+            ;; Don't pin the diagram — it's metadata, not a member
+            ;; Refresh the recent list so it appears in the sidebar
+            (fetch-recent)
+            ;; Return the entity for UI feedback
+            entity))))))
+
+(defn expand-diagram!
+  "Restore a diagram's pins onto the canvas."
+  [diagram-id]
+  (go
+    (let [resp (<! (http/get (str base "/entity/" diagram-id)
+                             {:with-credentials? true}))]
+      (when (= 200 (:status resp))
+        (let [entity (or (get-in resp [:body :entity]) (:body resp))
+              pin-ids (get-in entity [:props :pins])
+              focus (get-in entity [:props :focus])]
+          (when (seq pin-ids)
+            ;; Clear existing pins and load diagram's pins
+            (swap! state/ui-state assoc :pins [])
+            (doseq [pid pin-ids]
+              (<! (pin-entity! pid pid)))
+            (when focus
+              (state/set-focus! focus))))))))
 
 (defn fetch-recent
   "Fetch recent entities across key types for the activity feed."
   []
   (go
-    (let [types ["article" "arxana/song" "arxana/chorus" "pattern/language"
+    (let [types ["diagram" "article" "arxana/song" "arxana/chorus" "pattern/language"
                  "pattern/component" "apm/problem" "claim" "question"]
           results (atom [])]
       (doseq [t types]
