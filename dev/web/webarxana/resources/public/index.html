@@ -250,6 +250,114 @@
     .btn-cancel { color: var(--text-dim) !important; }
     .btn-new { background: var(--success) !important; color: #fff !important; border-color: var(--success) !important; }
 
+    /* New node button */
+    .btn-new-node {
+      padding: 6px 12px !important;
+      background: var(--success) !important;
+      font-size: 16px !important;
+      font-weight: bold;
+      min-width: 36px;
+      border: none !important;
+    }
+    .btn-new-node:hover { opacity: 0.85; }
+
+    /* Hop depth controls */
+    .hop-controls {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      margin-left: 4px;
+    }
+    .hop-btn {
+      padding: 4px 8px !important;
+      background: var(--card) !important;
+      font-size: 14px !important;
+      min-width: 28px;
+      text-align: center;
+    }
+    .hop-label {
+      font-size: 11px;
+      font-family: monospace;
+      color: var(--text-dim);
+      padding: 0 4px;
+      min-width: 32px;
+      text-align: center;
+    }
+
+    /* Creation dialog */
+    .creation-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    .creation-dialog {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      width: 360px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+    .creation-header {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .creation-field {
+      margin-bottom: 12px;
+    }
+    .creation-field label {
+      display: block;
+      font-size: 11px;
+      font-family: monospace;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .creation-field input,
+    .creation-field select {
+      width: 100%;
+      padding: 8px 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+    .creation-field input:focus,
+    .creation-field select:focus { border-color: var(--accent); }
+    .creation-field select { cursor: pointer; }
+    .creation-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .creation-actions .btn-create {
+      flex: 1;
+      padding: 8px;
+      background: var(--accent);
+      border: none;
+      border-radius: 4px;
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .creation-actions .btn-create:hover { background: var(--accent-hover); }
+    .creation-actions .btn-cancel {
+      padding: 8px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 14px;
+    }
+
     /* Empty state */
     .empty-graph {
       display: flex;

@@ -107,9 +107,16 @@
                              {:with-credentials? true}))]
       (when (= 200 (:status resp))
         (let [types (get-in resp [:body :types])]
-          (swap! state/ui-state assoc :available-types
+          (swap! state/ui-state assoc
+                 :available-types
                  (->> types
                       (filter #(= "entity" (:type/kind %)))
+                      (map :type/id)
+                      sort
+                      vec)
+                 :available-relation-types
+                 (->> types
+                      (filter #(= "relation" (:type/kind %)))
                       (map :type/id)
                       sort
                       vec))

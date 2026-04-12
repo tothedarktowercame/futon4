@@ -13,7 +13,7 @@ test("login and search renders the arxana ego graph", async ({ page }) => {
 
   // After login, the search bar should appear
   await expect(
-    page.locator('input[placeholder="Search nemas by name..."]')
+    page.locator('input[placeholder="Search by name..."]')
   ).toBeVisible({ timeout: 5000 });
 
   // We should see the "No nema in focus" empty state
@@ -21,7 +21,7 @@ test("login and search renders the arxana ego graph", async ({ page }) => {
 
   // Search for "arxana"
   const searchInput = page.locator(
-    'input[placeholder="Search nemas by name..."]'
+    'input[placeholder="Search by name..."]'
   );
   await searchInput.fill("arxana");
   await searchInput.press("Enter");
@@ -69,12 +69,12 @@ test("clicking a neighbour node shifts focus", async ({ page }) => {
   await page.locator('input[type="password"]').fill("arxana");
   await page.locator("button", { hasText: "Sign in" }).click();
   await expect(
-    page.locator('input[placeholder="Search nemas by name..."]')
+    page.locator('input[placeholder="Search by name..."]')
   ).toBeVisible({ timeout: 5000 });
 
   // Search for arxana
   const searchInput = page.locator(
-    'input[placeholder="Search nemas by name..."]'
+    'input[placeholder="Search by name..."]'
   );
   await searchInput.fill("arxana");
   await searchInput.press("Enter");

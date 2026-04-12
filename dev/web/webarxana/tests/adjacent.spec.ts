@@ -1,6 +1,8 @@
 import { test, expect } from "@playwright/test";
 
-test("+ Adjacent creates a new entity and shifts focus", async ({ page }) => {
+test("+ Adjacent opens dialog, creates entity with relation", async ({
+  page,
+}) => {
   await page.goto("/index.html");
 
   // Login
@@ -26,17 +28,22 @@ test("+ Adjacent creates a new entity and shifts focus", async ({ page }) => {
 
   // Wait for focus card
   await expect(page.locator(".focus-card")).toBeVisible({ timeout: 10000 });
-  const originalName = await page.locator(".focus-card .card-name").textContent();
-  console.log(`Focused on: ${originalName}`);
 
-  // Click + Adjacent
+  // Click + Adjacent — should open creation dialog
   await page.locator(".btn-new", { hasText: "+ Adjacent" }).click();
+  await expect(page.locator(".creation-dialog")).toBeVisible({ timeout: 3000 });
 
-  // Focus should shift to "New nema"
-  await expect(page.locator(".focus-card .card-name")).toHaveText("New nema", {
-    timeout: 10000,
-  });
+  // Fill in name and create
+  await page
+    .locator('.creation-field input[type="text"]')
+    .fill("Adjacent test node");
+  await page.locator(".btn-create").click();
 
-  console.log("New adjacent nema created and focused");
+  // Focus should shift to the new node
+  await expect(page.locator(".focus-card .card-name")).toHaveText(
+    "Adjacent test node",
+    { timeout: 10000 }
+  );
+
   await page.screenshot({ path: "tests/adjacent.png", fullPage: true });
 });
