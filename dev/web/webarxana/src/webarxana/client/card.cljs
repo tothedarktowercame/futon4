@@ -283,7 +283,7 @@
                                                :name final-name
                                                :type @scratch-type
                                                :source @scratch-text})
-                        (state/set-focus! eid)
+                        (state/pin! eid)
                         (swap! state/ui-state update :scratchpad
                                (fn [sp] (vec (remove (fn [n] (= (:id n) node-id)) sp))))))))}
                "Focus"]
