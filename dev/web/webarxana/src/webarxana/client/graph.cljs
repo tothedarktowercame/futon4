@@ -11,50 +11,66 @@
 
 (defn- force-layout
   "Compute positions using d3-force simulation.
-   Pins are initialized at spread-out positions but free to move.
+   Edge midpoints are included as phantom nodes for label spacing.
    Returns {nema-id [x y]}."
   [nemas links pin-centres]
-  (let [;; Build node array — initialize pins at grid positions
-        nodes (clj->js
-               (mapv (fn [n]
-                       (let [nid (:nema/id n)
-                             pin-pos (get pin-centres nid)]
-                         (cond-> {:id nid}
-                           pin-pos (assoc :x (first pin-pos)
-                                         :y (second pin-pos)))))
-                     nemas))
-        ;; Build link array
-        edges (clj->js
-               (keep (fn [link]
-                       (let [src (get-in link [:link/src :nema/id])
-                             dst (get-in link [:link/dst :nema/id])]
-                         (when (and src dst)
-                           {:source src :target dst})))
-                     links))
+  (let [;; Real nodes — initialize pins at grid positions
+        real-nodes (mapv (fn [n]
+                           (let [nid (:nema/id n)
+                                 pin-pos (get pin-centres nid)]
+                             (cond-> {:id nid :radius 40}
+                               pin-pos (assoc :x (first pin-pos)
+                                             :y (second pin-pos)))))
+                         nemas)
+        ;; Phantom nodes for edge label midpoints (prevents label overlap)
+        phantom-nodes (keep (fn [link]
+                              (let [lid (:link/id link)]
+                                (when lid
+                                  {:id (str "phantom:" lid) :radius 25})))
+                            links)
+        all-sim-nodes (clj->js (into real-nodes phantom-nodes))
+        ;; Real edges
+        real-edges (keep (fn [link]
+                           (let [src (get-in link [:link/src :nema/id])
+                                 dst (get-in link [:link/dst :nema/id])
+                                 lid (:link/id link)
+                                 pid (str "phantom:" lid)]
+                             (when (and src dst lid)
+                               ;; Connect phantom to both endpoints
+                               [{:source src :target pid}
+                                {:source pid :target dst}])))
+                         links)
+        all-edges (clj->js (vec (mapcat identity real-edges)))
+        ;; Centre of usable area (leave room for cards on right)
+        cx (* svg-width 0.42)
+        cy (/ svg-height 2)
         ;; Create simulation
-        sim (-> (d3/forceSimulation nodes)
-                (.force "charge" (.strength (d3/forceManyBody) -400))
-                (.force "link" (-> (d3/forceLink edges)
+        sim (-> (d3/forceSimulation all-sim-nodes)
+                (.force "charge" (-> (d3/forceManyBody)
+                                     (.strength -600)
+                                     (.distanceMax 500)))
+                (.force "link" (-> (d3/forceLink all-edges)
                                    (.id (fn [d] (.-id d)))
-                                   (.distance 120)
-                                   (.strength 0.5)))
-                (.force "center" (d3/forceCenter
-                                  (* svg-width 0.45)
-                                  (/ svg-height 2)))
-                (.force "collide" (.radius (d3/forceCollide) 55))
-                (.force "x" (.strength (d3/forceX (/ svg-width 2)) 0.03))
-                (.force "y" (.strength (d3/forceY (/ svg-height 2)) 0.05))
+                                   (.distance 100)
+                                   (.strength 0.7)))
+                (.force "center" (d3/forceCenter cx cy))
+                (.force "collide" (.radius (d3/forceCollide)
+                                           (fn [d] (or (.-radius d) 30))))
+                (.force "x" (.strength (d3/forceX cx) 0.04))
+                (.force "y" (.strength (d3/forceY cy) 0.04))
                 (.stop))]
     ;; Run simulation
-    (dotimes [_ 200]
+    (dotimes [_ 250]
       (.tick sim))
-    ;; Extract positions, clamp to viewBox with margin
+    ;; Extract positions for real nodes only (skip phantoms)
     (into {}
-          (map (fn [node]
-                 [(.-id node)
-                  [(max 40 (min (- svg-width 40) (.-x node)))
-                   (max 40 (min (- svg-height 40) (.-y node)))]])
-               (array-seq nodes)))))
+          (keep (fn [node]
+                  (let [nid (.-id node)]
+                    (when-not (.startsWith nid "phantom:")
+                      [nid
+                       [(max 50 (min (- svg-width 50) (.-x node)))
+                        (max 50 (min (- svg-height 50) (.-y node)))]]))))
+               (array-seq all-sim-nodes))))
 
 (defn- pin-centres
   "Compute grid positions for pinned nodes."
