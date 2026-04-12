@@ -254,7 +254,8 @@
               [:button.btn-edit
                {:on-click #(do (state/ingest-entity! {:id node-id
                                                       :name (if (seq @scratch-name) @scratch-name "")
-                                                      :type @scratch-type})
+                                                      :type @scratch-type
+                                                      :source @scratch-text})
                                (state/set-focus! node-id)
                                (swap! state/ui-state update :scratchpad
                                       (fn [sp] (vec (remove (fn [n] (= (:id n) node-id)) sp)))))}

@@ -140,29 +140,51 @@
 (defn graph-svg
   "Main SVG canvas rendering the neighbourhood graph."
   []
-  (let [_tick    (:_render-tick @state/ui-state)
-        focus-id (state/focus-id)
-        hood     (state/neighbourhood focus-id (:hop-depth @state/ui-state))]
-    (if (and hood (seq (:nemas hood)))
-      (let [positions (radial-positions hood)
-            nema-map  (into {} (map (fn [n] [(:nema/id n) n]) (:nemas hood)))]
+  (let [_tick      (:_render-tick @state/ui-state)
+        focus-id   (state/focus-id)
+        hood       (state/neighbourhood focus-id (:hop-depth @state/ui-state))
+        scratchpad (:scratchpad @state/ui-state)
+        ;; Scratchpad nodes not already in the neighbourhood
+        hood-ids   (set (map :nema/id (:nemas hood)))
+        floating   (->> scratchpad
+                        (remove #(contains? hood-ids (:id %)))
+                        vec)]
+    (if (or (and hood (seq (:nemas hood))) (seq floating))
+      (let [positions (if hood (radial-positions hood) {})
+            nema-map  (into {} (map (fn [n] [(:nema/id n) n]) (:nemas hood)))
+            ;; Place floating scratchpad nodes along bottom-left
+            float-positions (into {}
+                             (map-indexed
+                              (fn [i node]
+                                [(:id node) [(+ 80 (* i 90)) (- svg-height 60)]])
+                              floating))
+            float-nemas (into {}
+                         (map (fn [node]
+                                [(:id node)
+                                 {:nema/id   (:id node)
+                                  :nema/name (if (seq (:name node)) (:name node) "(new)")
+                                  :nema/type (or (:type node) "article")}])
+                              floating))
+            all-positions (merge positions float-positions)
+            all-nemas     (merge nema-map float-nemas)]
         [:svg {:width "100%" :height "100%"
                :viewBox (str "0 0 " svg-width " " svg-height)
                :style {:background "#1a1a2e"}}
          ;; Links first (behind nodes)
+         (when hood
+           (doall
+            (for [link (:links hood)
+                  :let [src-id (get-in link [:link/src :nema/id])
+                        dst-id (get-in link [:link/dst :nema/id])
+                        src-pos (get all-positions src-id)
+                        dst-pos (get all-positions dst-id)]
+                  :when (and src-pos dst-pos)]
+              ^{:key (:link/id link)}
+              [link-component link src-pos dst-pos])))
+         ;; Nodes (neighbourhood + floating)
          (doall
-          (for [link (:links hood)
-                :let [src-id (get-in link [:link/src :nema/id])
-                      dst-id (get-in link [:link/dst :nema/id])
-                      src-pos (get positions src-id)
-                      dst-pos (get positions dst-id)]
-                :when (and src-pos dst-pos)]
-            ^{:key (:link/id link)}
-            [link-component link src-pos dst-pos]))
-         ;; Nodes
-         (doall
-          (for [[nema-id pos] positions
-                :let [nema (get nema-map nema-id)]
+          (for [[nema-id pos] all-positions
+                :let [nema (get all-nemas nema-id)]
                 :when nema]
             ^{:key nema-id}
             [node-component nema pos (= nema-id focus-id)]))])
