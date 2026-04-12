@@ -176,7 +176,20 @@
 (declare-function arxana-browser--evidence-sessions-items "arxana-browser-evidence")
 (declare-function arxana-browser--evidence-sessions-row "arxana-browser-evidence" (item))
 (declare-function arxana-browser--evidence-sessions-format "arxana-browser-evidence")
+;; Mission Control browser
+(declare-function arxana-browser--missions-portfolio-items "arxana-browser-missions")
+(declare-function arxana-browser--missions-portfolio-row "arxana-browser-missions" (item))
+(declare-function arxana-browser--missions-portfolio-format "arxana-browser-missions")
+(declare-function arxana-browser--missions-by-status-items "arxana-browser-missions")
+(declare-function arxana-browser--missions-by-status-row "arxana-browser-missions" (item))
+(declare-function arxana-browser--missions-by-status-format "arxana-browser-missions")
+(declare-function arxana-browser--missions-status-group-items "arxana-browser-missions" (context))
+(declare-function arxana-browser-missions-open-entry "arxana-browser-missions" (item))
+(declare-function arxana-browser-missions-open-status-group "arxana-browser-missions" (item))
+(declare-function arxana-browser-missions-menu-items "arxana-browser-missions")
 (declare-function arxana-browser--evidence-session-items "arxana-browser-evidence" (context))
+(declare-function arxana-browser--evidence-session-chat-row "arxana-browser-evidence" (item))
+(declare-function arxana-browser--evidence-session-chat-format "arxana-browser-evidence")
 (declare-function arxana-browser--evidence-threads-items "arxana-browser-evidence")
 (declare-function arxana-browser--evidence-threads-row "arxana-browser-evidence" (item))
 (declare-function arxana-browser--evidence-threads-format "arxana-browser-evidence")
@@ -401,6 +414,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
               :label "Evidence"
               :description "Evidence landscape views (timeline, sessions, threads)."
               :view 'evidence-home)
+        (list :type 'menu
+              :label "Missions"
+              :description "Mission Control portfolio (98 missions across 7 repos)."
+              :view 'missions-portfolio)
         (list :type 'menu
               :label "Encyclopedia"
               :description "PlanetMath and other math reference content."
@@ -806,6 +823,16 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         ('evidence-entry-detail (if (require 'arxana-browser-evidence nil t)
                                     (arxana-browser--evidence-entry-detail-items context)
                                   (arxana-browser--evidence-menu-items)))
+        ;; Mission Control views
+        ('missions-portfolio (if (require 'arxana-browser-missions nil t)
+                                 (arxana-browser--missions-portfolio-items)
+                               (list (list :type 'info :label "Missions module unavailable"))))
+        ('missions-by-status (if (require 'arxana-browser-missions nil t)
+                                 (arxana-browser--missions-by-status-items)
+                               (list (list :type 'info :label "Missions module unavailable"))))
+        ('missions-status-group (if (require 'arxana-browser-missions nil t)
+                                    (arxana-browser--missions-status-group-items context)
+                                  (list (list :type 'info :label "Missions module unavailable"))))
         ('docbook-book (arxana-browser--docbook-book-items (plist-get context :book)))
         ('docbook-contents (arxana-browser--docbook-contents-items (plist-get context :book)))
         ('docbook-section (arxana-browser--docbook-section-items (plist-get context :book) context))
@@ -821,6 +848,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         ('evidence-sessions (arxana-browser--evidence-sessions-items))
         ('tensions (arxana-browser--tensions-items))
         ('violations (arxana-browser--violations-items))
+        ('operational-families (arxana-browser--operational-families-items))
+        ('invariant-guide (arxana-browser--invariant-guide-items))
         ('candidate-invariants (arxana-browser--candidate-invariants-items))
         ('devmaps (arxana-browser--devmaps-items))
         ('narrative-trail (arxana-browser--narrative-trail-items
@@ -1002,9 +1031,18 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
             ('evidence-sessions (if (fboundp 'arxana-browser--evidence-sessions-row)
                                     #'arxana-browser--evidence-sessions-row
                                   #'arxana-browser--info-row))
-            ('evidence-session (if (fboundp 'arxana-browser--evidence-timeline-row)
-                                   #'arxana-browser--evidence-timeline-row
+            ('evidence-session (if (fboundp 'arxana-browser--evidence-session-chat-row)
+                                   #'arxana-browser--evidence-session-chat-row
                                  #'arxana-browser--info-row))
+            ('missions-portfolio (if (fboundp 'arxana-browser--missions-portfolio-row)
+                                     #'arxana-browser--missions-portfolio-row
+                                   #'arxana-browser--info-row))
+            ('missions-by-status (if (fboundp 'arxana-browser--missions-by-status-row)
+                                     #'arxana-browser--missions-by-status-row
+                                   #'arxana-browser--info-row))
+            ('missions-status-group (if (fboundp 'arxana-browser--missions-portfolio-row)
+                                        #'arxana-browser--missions-portfolio-row
+                                      #'arxana-browser--info-row))
             ('evidence-threads (if (fboundp 'arxana-browser--evidence-threads-row)
                                    #'arxana-browser--evidence-threads-row
                                  #'arxana-browser--info-row))
@@ -1032,6 +1070,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
             ('evidence-sessions #'arxana-browser--evidence-sessions-row)
             ('tensions #'arxana-browser--tensions-row)
             ('violations #'arxana-browser--violations-row)
+            ('operational-families #'arxana-browser--operational-families-row)
+            ('invariant-guide #'arxana-browser--info-row)
             ('candidate-invariants #'arxana-browser--candidate-invariants-row)
             ('devmaps #'arxana-browser--devmaps-row)
             ('narrative-trail #'arxana-browser--narrative-trail-row)
@@ -1133,9 +1173,18 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                         ('evidence-sessions (if (fboundp 'arxana-browser--evidence-sessions-format)
                                                 (arxana-browser--evidence-sessions-format)
                                               (arxana-browser--info-format)))
-                        ('evidence-session (if (fboundp 'arxana-browser--evidence-timeline-format)
-                                               (arxana-browser--evidence-timeline-format)
+                        ('evidence-session (if (fboundp 'arxana-browser--evidence-session-chat-format)
+                                               (arxana-browser--evidence-session-chat-format)
                                              (arxana-browser--info-format)))
+                        ('missions-portfolio (if (fboundp 'arxana-browser--missions-portfolio-format)
+                                                 (arxana-browser--missions-portfolio-format)
+                                               (arxana-browser--info-format)))
+                        ('missions-by-status (if (fboundp 'arxana-browser--missions-by-status-format)
+                                                 (arxana-browser--missions-by-status-format)
+                                               (arxana-browser--info-format)))
+                        ('missions-status-group (if (fboundp 'arxana-browser--missions-portfolio-format)
+                                                    (arxana-browser--missions-portfolio-format)
+                                                  (arxana-browser--info-format)))
                         ('evidence-threads (if (fboundp 'arxana-browser--evidence-threads-format)
                                                (arxana-browser--evidence-threads-format)
                                              (arxana-browser--info-format)))
@@ -1163,6 +1212,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                         ('evidence-sessions (arxana-browser--evidence-sessions-format))
                         ('tensions (arxana-browser--tensions-format))
                         ('violations (arxana-browser--violations-format))
+                        ('operational-families (arxana-browser--operational-families-format))
+                        ('invariant-guide (arxana-browser--info-format))
                         ('candidate-invariants (arxana-browser--candidate-invariants-format))
                         ('devmaps (arxana-browser--devmaps-format))
                         ('narrative-trail (arxana-browser--narrative-trail-format))
@@ -1303,6 +1354,22 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
        (if (fboundp 'arxana-browser-evidence-open-entry)
            (arxana-browser-evidence-open-entry item)
          (message "Evidence module unavailable")))
+      ('evidence-chat-turn
+       (if (fboundp 'arxana-browser-evidence-open-entry)
+           (arxana-browser-evidence-open-entry item)
+         (message "Evidence module unavailable")))
+      ('evidence-meta
+       (if (fboundp 'arxana-browser-evidence-open-entry)
+           (arxana-browser-evidence-open-entry item)
+         (message "Evidence module unavailable")))
+      ('mission-entry
+       (if (fboundp 'arxana-browser-missions-open-entry)
+           (arxana-browser-missions-open-entry item)
+         (message "Missions module unavailable")))
+      ('missions-status-group
+       (if (fboundp 'arxana-browser-missions-open-status-group)
+           (arxana-browser-missions-open-status-group item)
+         (message "Missions module unavailable")))
       ('tension-entry
        (if (fboundp 'arxana-browser-tension-open-entry)
            (arxana-browser-tension-open-entry item)
@@ -1315,6 +1382,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
        (if (fboundp 'arxana-browser-candidate-invariant-open-entry)
            (arxana-browser-candidate-invariant-open-entry item)
          (message "Invariant candidate browser unavailable")))
+      ('operational-family-entry
+       (if (fboundp 'arxana-browser-operational-family-open-entry)
+           (arxana-browser-operational-family-open-entry item)
+         (message "Operational family browser unavailable")))
       ('devmap-entry
        (if (fboundp 'arxana-browser-devmap-open-entry)
            (arxana-browser-devmap-open-entry item)
@@ -1628,8 +1699,28 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                     ((and context (symbolp (plist-get context :view))
                           (string-prefix-p "media-" (symbol-name (plist-get context :view))))
                      (format "arxana://view/%s" (plist-get context :view)))
+                    ;; Evidence views: append session-id or evidence-id
+                    ((and context (eq (plist-get context :view) 'evidence-session)
+                          (plist-get context :session-id))
+                     (format "arxana://evidence/session/%s"
+                             (plist-get context :session-id)))
+                    ((and context (eq (plist-get context :view) 'evidence-thread-reader)
+                          (plist-get context :root-id))
+                     (format "arxana://evidence/thread/%s"
+                             (plist-get context :root-id)))
+                    ((and context (eq (plist-get context :view) 'evidence-entry-detail)
+                          (plist-get context :evidence-id))
+                     (format "arxana://evidence/entry/%s"
+                             (plist-get context :evidence-id)))
                     ((and context (plist-get context :view))
-                     (format "arxana://view/%s" (plist-get context :view)))
+                     ;; Try item-at-point for evidence views
+                     (let ((item (ignore-errors (arxana-browser--item-at-point))))
+                       (or (and item
+                                (plist-get item :evidence-id)
+                                (not (string-empty-p (plist-get item :evidence-id)))
+                                (format "arxana://evidence/entry/%s"
+                                        (plist-get item :evidence-id)))
+                           (format "arxana://view/%s" (plist-get context :view)))))
                     ((eq context-type 'collection)
                      (arxana-browser--collection-location context))
                     ((eq context-type 'language)

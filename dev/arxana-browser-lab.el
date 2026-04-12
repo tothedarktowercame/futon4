@@ -255,6 +255,10 @@ Otherwise, HTTP 5050 -> ws 5056, HTTPS 5051 -> wss 5057 (nginx SSL)."
   "Return the Invariants sub-menu items."
   (list
    (list :type 'invariants-menu
+         :label "Operational Families"
+         :description "Wired invariant families from futon-stack-invariant-model.edn — what the system actually checks."
+         :view 'operational-families)
+   (list :type 'invariants-menu
          :label "Live Violations"
          :description "Store-backed active invariant/violation hyperedges."
          :view 'violations)
@@ -262,9 +266,91 @@ Otherwise, HTTP 5050 -> ws 5056, HTTPS 5051 -> wss 5057 (nginx SSL)."
          :label "Candidate Queue"
          :description "Registry-backed candidate invariant families from structural-law-inventory.sexp."
          :view 'candidate-invariants)
+   (list :type 'invariants-menu
+         :label "Invariant Guide"
+         :description "How the five layers (I0-I4) work, who owns what, and how invariants mature."
+         :view 'invariant-guide)
    (list :type 'info
          :label "Interface split"
-         :description "Violations are live and store-backed; candidate invariants are inventory pressure, not active defects.")))
+         :description "Operational = wired checks; Violations = detected defects; Candidates = unwired structural pressure.")))
+
+(defun arxana-browser--invariant-guide-items ()
+  "Return items for the invariant guide view."
+  (list
+   (list :type 'info :label "THE FIVE INVARIANT LAYERS"
+         :description "From substrate (I0) to self-governance (I4). Each layer depends on all layers below it.")
+   (list :type 'info :label ""
+         :description "")
+   (list :type 'info :label "I0: Data persists durably"
+         :description "Owner: futon1a. 3 operational families. The substrate — if this breaks, nothing works.")
+   (list :type 'info :label "  Startup contracts"
+         :description "Startup requires explicit policy; underspecified → loud failure.")
+   (list :type 'info :label "  Authorization & identity"
+         :description "Write authority and identity uniqueness enforced before durable write.")
+   (list :type 'info :label "  Layered error hierarchy"
+         :description "Failures surface at the layer that caused them, with stable context.")
+   (list :type 'info :label ""
+         :description "")
+   (list :type 'info :label "I1: State transitions are valid"
+         :description "Owner: futon3b, futon3c. 4 operational families. Legal states, legal transitions.")
+   (list :type 'info :label "  Phase ordering"
+         :description "States advance in valid order (mission phases, proof cycles).")
+   (list :type 'info :label "  Status discipline"
+         :description "Status labels are legal and evidence-consistent.")
+   (list :type 'info :label "  Existence"
+         :description "Referenced entities actually exist.")
+   (list :type 'info :label "  Dependency satisfaction"
+         :description "Completed things backed by completed prerequisites.")
+   (list :type 'info :label ""
+         :description "")
+   (list :type 'info :label "I2: Failures are visible"
+         :description "Mixed ownership. 1 operational (graph-symmetry), 2 candidate. Observability layer.")
+   (list :type 'info :label "  Graph symmetry (operational)"
+         :description "If A points to B, the inverse relation exists. Checked in portfolio/agency/proof logic.")
+   (list :type 'info :label "  Failure locality (candidate)"
+         :description "Failures surface near source layer. Strong in futon1a/3b, candidate elsewhere.")
+   (list :type 'info :label "  Human-visible inspectability (candidate)"
+         :description "Operator can tell what's going on without folklore.")
+   (list :type 'info :label ""
+         :description "")
+   (list :type 'info :label "I3: Work is structured"
+         :description "1 operational (required-outputs), 3 candidate. Where outputs land.")
+   (list :type 'info :label "  Required outputs (operational)"
+         :description "Each phase produces its required artifacts.")
+   (list :type 'info :label "  Atomic inspectable units (candidate)"
+         :description "Work in bounded units. Shape is real but live work routes around it.")
+   (list :type 'info :label "  Artifact custody (candidate)"
+         :description "Outputs land where the stack expects them.")
+   (list :type 'info :label "  Repo role clarity (candidate)"
+         :description "A repo says what it is, and its root matches.")
+   (list :type 'info :label ""
+         :description "")
+   (list :type 'info :label "I4: The system governs itself"
+         :description "All 4 families candidate. The frontier — where the stack needs to grow.")
+   (list :type 'info :label "  Peripheral custody (candidate)"
+         :description "Sessions carry enough structure to prevent drift.")
+   (list :type 'info :label "  Budgeted action selection (candidate)"
+         :description "Action constrained by budget, not priority alone.")
+   (list :type 'info :label "  Archaeology control (candidate)"
+         :description "Latent work doesn't accumulate as invisible debt.")
+   (list :type 'info :label "  Cross-store agreement (candidate)"
+         :description "Mirrors across stores agree about identity and continuity.")
+   (list :type 'info :label ""
+         :description "")
+   (list :type 'info :label "INVARIANT LIFECYCLE"
+         :description "candidate → wired (violation detectable) → operational (enforced) → structural property")
+   (list :type 'info :label "  candidate"
+         :description "Law-shaped pressure recurs but no enforcement. Named in structural-law-inventory.sexp.")
+   (list :type 'info :label "  wired"
+         :description "Check exists in *_logic.clj. Violations produce obligation records.")
+   (list :type 'info :label "  operational"
+         :description "Check runs in production. Violations surfaced as live hyperedges.")
+   (list :type 'info :label "  structural"
+         :description "Never violated. Property of the system. (Aspirational for most.)")
+   (list :type 'info :label ""
+         :description "")
+   (list :type 'info :label "SOURCE OF TRUTH"
+         :description "futon3c/docs/structural-law-inventory.sexp → futon4/futon-stack-invariant-model.edn")))
 
 (defun arxana-browser--invariants-menu-format ()
   "Format for the Invariants menu view."
@@ -448,6 +534,185 @@ all `devmap` forms rather than assuming a single well-nested repo-seeds block."
         (insert "This is a candidate invariant from the structural-law inventory,\n")
         (insert "not a live violation. It names a concrete law-shaped pressure that\n")
         (insert "may later become an always-on invariant, gate, or obligation source.\n")
+        (goto-char (point-min))))
+    (pop-to-buffer buf)))
+
+;; =============================================================================
+;; Operational Families view — wired invariants from the EDN model
+;; =============================================================================
+
+(defcustom arxana-invariants-model-path
+  "/home/joe/code/futon4/futon-stack-invariant-model.edn"
+  "Path to the futon-stack-invariant-model.edn file."
+  :type 'file
+  :group 'arxana-browser)
+
+(defun arxana-browser--read-invariant-model ()
+  "Read invariant families from futon-stack-invariant-model.edn.
+Uses line-by-line extraction since EDN maps can't be parsed by `read'."
+  (when (file-readable-p arxana-invariants-model-path)
+    (with-temp-buffer
+      (insert-file-contents arxana-invariants-model-path)
+      (buffer-string))))
+
+(defun arxana-browser--edn-extract-families (edn-text)
+  "Extract family entries from EDN-TEXT using per-field line matching.
+Finds each {:id :F-... block and extracts fields individually."
+  (let ((families nil)
+        (pos 0)
+        (next-pos 0))
+    ;; Find each family block by its :id line
+    (while (string-match ":id +:F-\\([a-z-]+\\)" edn-text pos)
+      (let* ((id (concat ":F-" (match-string 1 edn-text)))
+             (block-start (match-beginning 0))
+             (block-end (or (string-match ":id +:F-" edn-text (1+ block-start))
+                            (length edn-text)))
+             (block (substring edn-text block-start block-end))
+             (name (when (string-match ":name +\"\\([^\"]+\\)\"" block)
+                     (match-string 1 block)))
+             (layer (when (string-match ":layer +\\(:I[0-9]+\\)" block)
+                      (match-string 1 block)))
+             (status (when (string-match ":status +:\\([a-z-]+\\)" block)
+                       (concat ":" (match-string 1 block))))
+             (question (when (string-match ":question +\"\\([^\"]+\\)\"" block)
+                         (match-string 1 block)))
+             (repos (when (string-match ":repos +#?{?\\[?\\([^]}]+\\)" block)
+                      (match-string 1 block)))
+             (inv-count (when (string-match ":invariant-count +\\([0-9]+\\)" block)
+                          (string-to-number (match-string 1 block))))
+             (cand-invs (when (string-match ":candidate-invariants +\\[\\([^]]+\\)\\]" block)
+                          (match-string 1 block)))
+             (cand-count (if cand-invs
+                             (length (split-string cand-invs ":" t " +"))
+                           0))
+             (note (when (string-match ":note +\"\\([^\"]+\\)\"" block)
+                     (match-string 1 block))))
+        (push (list :type 'operational-family-entry
+                    :id id
+                    :name (or name id)
+                    :layer (or layer "?")
+                    :status (or status ":unknown")
+                    :question (or question "")
+                    :repos (or repos "")
+                    :invariant-count (or inv-count cand-count 0)
+                    :candidate-invariants (or cand-invs "")
+                    :note (or note "")
+                    :label (or name id))
+              families)
+        (setq next-pos block-end))
+      (setq pos (max (1+ pos) next-pos)))
+    (nreverse families)))
+
+(defvar arxana-browser--invariant-layers
+  '((:id ":I0" :name "Data persists durably"
+     :question "Can I trust that what I wrote is still there, uncorrupted, and attributable?"
+     :owner "futon1a (substrate)" :note "If this doesn't hold, nothing above it matters.")
+    (:id ":I1" :name "State transitions are valid"
+     :question "Is the system in a legal state, and did it get there legally?"
+     :owner "futon3b, futon3c (coordination)")
+    (:id ":I2" :name "Failures are visible"
+     :question "When something goes wrong, can I tell what and where?"
+     :owner "futon1a (operational) + futon3c, futon4, futon6 (candidate)")
+    (:id ":I3" :name "Work is structured"
+     :question "Do outputs land where they belong, and can I find them?"
+     :owner "futon3c (required-outputs operational), rest candidate across stack")
+    (:id ":I4" :name "The system governs itself"
+     :question "Can the system sustain without folklore, heroics, or manual archaeology?"
+     :owner "all candidate — the frontier"))
+  "The five invariant layers, from substrate to self-governance.")
+
+(defun arxana-browser--operational-families-items ()
+  "Return items for the operational families view.
+Reads from futon-stack-invariant-model.edn and shows all families
+grouped by layer with header rows."
+  (let* ((model (arxana-browser--read-invariant-model))
+         (families (and model (arxana-browser--edn-extract-families model))))
+    (if families
+        ;; Group by layer, insert layer headers
+        (let ((sorted (sort (copy-sequence families)
+                            (lambda (a b)
+                              (string< (or (plist-get a :layer) "")
+                                       (or (plist-get b :layer) "")))))
+              (current-layer nil)
+              (result nil))
+          (dolist (fam sorted)
+            (let ((layer (plist-get fam :layer)))
+              (unless (equal layer current-layer)
+                (setq current-layer layer)
+                ;; Insert layer header
+                (let ((layer-info (seq-find (lambda (l) (equal (plist-get l :id) layer))
+                                            arxana-browser--invariant-layers)))
+                  (push (list :type 'info
+                              :label (format "%s: %s"
+                                             (or layer "?")
+                                             (or (and layer-info (plist-get layer-info :name)) ""))
+                              :description (or (and layer-info (plist-get layer-info :owner)) ""))
+                        result)))
+              (push fam result)))
+          (nreverse result))
+      (list (list :type 'info
+                  :label "No invariant model"
+                  :description "Could not read futon-stack-invariant-model.edn.")))))
+
+(defun arxana-browser--operational-families-format ()
+  "Column format for the operational families view."
+  [("Family" 30 t)
+   ("Layer" 6 t)
+   ("Status" 12 t)
+   ("Checks" 6 t)
+   ("Question" 0 nil)])
+
+(defun arxana-browser--operational-families-row (item)
+  "Row for operational family ITEM."
+  (let ((status (or (plist-get item :status) "?")))
+    (vector
+     (arxana-lab--truncate (or (plist-get item :name) "") 29)
+     (or (plist-get item :layer) "?")
+     (propertize status
+                 'face (cond
+                        ((string= status ":operational")
+                         'arxana-violation-auto-fixable-face)
+                        ((string= status ":candidate")
+                         'arxana-violation-needs-review-face)
+                        (t 'default)))
+     (let ((n (plist-get item :invariant-count)))
+       (if (and n (> n 0)) (number-to-string n) "-"))
+     (arxana-lab--truncate (or (plist-get item :question) "") 80))))
+
+(defun arxana-browser-operational-family-open-entry (item)
+  "Open detail view for operational family ITEM."
+  (let ((buf (get-buffer-create "*Invariant Family*")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (org-mode)
+        (insert "* Invariant Family: " (or (plist-get item :name) "?") "\n\n")
+        (insert (format "- ID :: %s\n" (or (plist-get item :id) "?")))
+        (insert (format "- Layer :: %s\n" (or (plist-get item :layer) "?")))
+        (insert (format "- Status :: %s\n" (or (plist-get item :status) "?")))
+        (insert (format "- Question :: %s\n" (or (plist-get item :question) "?")))
+        (insert (format "- Repos :: %s\n" (or (plist-get item :repos) "?")))
+        (let ((n (plist-get item :invariant-count)))
+          (when (and n (> n 0))
+            (insert (format "- Invariant count :: %d\n" n))))
+        (let ((cands (plist-get item :candidate-invariants)))
+          (when (and cands (not (string-empty-p cands)))
+            (insert "\n** Candidate Invariants\n\n")
+            (dolist (inv (split-string cands ":" t " +"))
+              (insert (format "- %s\n" inv)))))
+        (let ((note (plist-get item :note)))
+          (when (and note (not (string-empty-p note)))
+            (insert "\n** Note\n\n" note "\n")))
+        (let ((status (or (plist-get item :status) "")))
+          (insert "\n** Interpretation\n\n")
+          (cond
+           ((string= status ":operational")
+            (insert "This family has wired invariant checks that run in production.\n")
+            (insert "Violations are detected and surfaced as live violation hyperedges.\n"))
+           ((string= status ":candidate")
+            (insert "This family has identified structural pressures but no operational checks.\n")
+            (insert "The invariants are law-shaped tendencies, not yet enforced.\n")
+            (insert "Wiring these checks would promote them from candidate to operational.\n"))))
         (goto-char (point-min))))
     (pop-to-buffer buf)))
 
