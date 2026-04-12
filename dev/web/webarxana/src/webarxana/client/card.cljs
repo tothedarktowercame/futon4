@@ -506,12 +506,14 @@
              [:button.btn-save
               {:on-click
                (fn []
-                 (let [link-id (:id info)]
+                 (let [link-id (:id info)
+                       new-text (or @edit-text cur-text)
+                       new-type (or @edit-type cur-type)]
                    (when link-id
                      (d/transact! state/conn
-                       [(cond-> {:link/id link-id}
-                          @edit-type (assoc :link/type @edit-type)
-                          @edit-text (assoc :link/text @edit-text))]))
+                       [{:link/id   link-id
+                         :link/type new-type
+                         :link/text new-text}]))
                    (reset! edit-text nil)
                    (reset! edit-type nil)
                    (swap! state/ui-state dissoc :editing-link)

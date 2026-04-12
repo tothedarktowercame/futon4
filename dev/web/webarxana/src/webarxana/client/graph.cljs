@@ -96,6 +96,46 @@
      {}
      pins)))
 
+(defn- repel-pass
+  "One pass of repulsion: push overlapping nodes apart."
+  [positions min-dist]
+  (let [ids (keys positions)]
+    (reduce
+     (fn [pos id-a]
+       (reduce
+        (fn [pos id-b]
+          (if (= id-a id-b)
+            pos
+            (let [[ax ay] (get pos id-a)
+                  [bx by] (get pos id-b)
+                  dx (- bx ax)
+                  dy (- by ay)
+                  dist (js/Math.sqrt (+ (* dx dx) (* dy dy)))]
+              (if (and (> dist 0) (< dist min-dist))
+                (let [force (* 0.3 (- min-dist dist))
+                      nx (/ dx dist)
+                      ny (/ dy dist)]
+                  (-> pos
+                      (update id-a (fn [[x y]] [(- x (* nx force)) (- y (* ny force))]))
+                      (update id-b (fn [[x y]] [(+ x (* nx force)) (+ y (* ny force))]))))
+                pos))))
+        pos ids))
+     positions ids)))
+
+(defn- relax-positions
+  "Run a few iterations of repulsion to eliminate overlaps."
+  [positions pin-ids]
+  (loop [pos positions
+         i 0]
+    (if (>= i 8)
+      ;; Clamp to viewBox bounds
+      (into {}
+            (map (fn [[id [x y]]]
+                   [id [(max 40 (min (- svg-width 40) x))
+                        (max 40 (min (- svg-height 40) y))]])
+                 pos))
+      (recur (repel-pass pos 70) (inc i)))))
+
 (defn nema-color [nema-type]
   (case nema-type
     "article"  "#4a9eff"
@@ -230,7 +270,9 @@
                                   :nema/name (if (seq (:name node)) (:name node) "(new)")
                                   :nema/type (or (:type node) "article")}])
                               floating))
-            all-positions (merge positions float-positions)
+            ;; Run force relaxation to eliminate overlaps
+            relaxed   (relax-positions positions pin-ids)
+            all-positions (merge relaxed float-positions)
             all-nemas     (merge nema-map float-nemas)]
         [:svg {:width "100%" :height "100%"
                :viewBox (str "0 0 " svg-width " " svg-height)
