@@ -1,23 +1,68 @@
 (ns webarxana.client.graph
   (:require [reagent.core :as r]
             [webarxana.client.state :as state]
-            [webarxana.client.api :as api]))
-
-;; Multi-radial layout: each pinned node is a centre, neighbours radiate out.
+            [webarxana.client.api :as api]
+            ["d3-force" :as d3]))
 
 (def svg-width 1200)
 (def svg-height 800)
 
-(defn- pin-centre
-  "Compute the canvas centre for each pin, distributing evenly."
+;; --- Force-directed layout ---
+
+(defn- force-layout
+  "Compute positions using d3-force simulation.
+   pin-ids are fixed in place at their grid positions.
+   Returns {nema-id [x y]}."
+  [nemas links pin-centres]
+  (let [;; Build node array — pins get fixed positions
+        nodes (clj->js
+               (mapv (fn [n]
+                       (let [nid (:nema/id n)
+                             pin-pos (get pin-centres nid)]
+                         (cond-> {:id nid}
+                           pin-pos (assoc :fx (first pin-pos)
+                                         :fy (second pin-pos)))))
+                     nemas))
+        ;; Build link array
+        edges (clj->js
+               (keep (fn [link]
+                       (let [src (get-in link [:link/src :nema/id])
+                             dst (get-in link [:link/dst :nema/id])]
+                         (when (and src dst)
+                           {:source src :target dst})))
+                     links))
+        ;; Create simulation
+        sim (-> (d3/forceSimulation nodes)
+                (.force "charge" (.strength (d3/forceManyBody) -200))
+                (.force "link" (-> (d3/forceLink edges)
+                                   (.id (fn [d] (.-id d)))
+                                   (.distance 100)))
+                (.force "center" (d3/forceCenter
+                                  (/ svg-width 2)
+                                  (/ svg-height 2)))
+                (.force "collide" (.radius (d3/forceCollide) 45))
+                (.stop))]
+    ;; Run simulation for fixed iterations
+    (dotimes [_ 150]
+      (.tick sim))
+    ;; Extract positions, clamp to viewBox
+    (into {}
+          (map (fn [node]
+                 [(.-id node)
+                  [(max 40 (min (- svg-width 40) (.-x node)))
+                   (max 40 (min (- svg-height 40) (.-y node)))]])
+               (array-seq nodes)))))
+
+(defn- pin-centres
+  "Compute grid positions for pinned nodes."
   [pins]
   (let [n (count pins)
-        margin-x 60
-        margin-y 40
+        margin-x 100
+        margin-y 80
         usable-w (- svg-width (* 2 margin-x))
         usable-h (- svg-height (* 2 margin-y))]
     (if (= n 1)
-      {(:id (first pins)) [(+ margin-x (/ usable-w 2) -80)
+      {(:id (first pins)) [(+ margin-x (/ usable-w 2) -60)
                             (+ margin-y (/ usable-h 2))]}
       (let [cols (min n (max 2 (int (js/Math.ceil (js/Math.sqrt n)))))
             rows (int (js/Math.ceil (/ n cols)))
@@ -33,108 +78,7 @@
                    [(:id pin) [x y]]))
                pins))))))
 
-(defn- radial-around
-  "Place neighbours radially around a centre point."
-  [cx cy nodes ring-idx n-pins]
-  (let [n (count nodes)
-        ;; Shrink radius when many pins share the space
-        scale-factor (/ 1 (max 1 (js/Math.sqrt (/ n-pins 2))))
-        min-arc (* 80 scale-factor)
-        base-radius (* 120 scale-factor)
-        min-r (if (> n 1) (/ (* n min-arc) (* 2 js/Math.PI)) base-radius)
-        r (max (* base-radius ring-idx) min-r)
-        offset (* 0.3 ring-idx)]
-    (into {}
-          (map-indexed
-           (fn [i [nema-id _]]
-             (let [angle (+ offset (* 2 js/Math.PI (/ i n)))
-                   x (+ cx (* r (js/Math.cos angle)))
-                   y (+ cy (* r (js/Math.sin angle)))]
-               [nema-id [x y]]))
-           nodes))))
-
-(defn- radial-positions-from
-  "Compute positions for a neighbourhood rooted at [cx cy]."
-  [cx cy {:keys [nemas links focus]} n-pins]
-  (when (and focus (seq nemas))
-    (let [adj (reduce (fn [m link]
-                        (let [src (get-in link [:link/src :nema/id])
-                              dst (get-in link [:link/dst :nema/id])]
-                          (-> m
-                              (update src (fnil conj #{}) dst)
-                              (update dst (fnil conj #{}) src))))
-                      {} links)
-          distances (loop [q (conj cljs.core/PersistentQueue.EMPTY focus)
-                           dist {focus 0}]
-                      (if (empty? q)
-                        dist
-                        (let [v (peek q)
-                              d (get dist v)
-                              nbrs (remove dist (get adj v []))]
-                          (recur (into (pop q) nbrs)
-                                 (into dist (map #(vector % (inc d)) nbrs))))))
-          rings (->> (dissoc distances focus)
-                     (group-by val)
-                     (sort-by key))]
-      (reduce
-       (fn [positions [ring-idx nodes]]
-         (merge positions (radial-around cx cy nodes ring-idx n-pins)))
-       {focus [cx cy]}
-       rings))))
-
-(defn- multi-positions
-  "Compute positions for all pins merged. First-pin-wins for shared nodes."
-  [pins centres merged-hood]
-  (let [nema-map (into {} (map (fn [n] [(:nema/id n) n]) (:nemas merged-hood)))]
-    (reduce
-     (fn [positions pin]
-       (let [[cx cy] (get centres (:id pin))
-             hood (state/neighbourhood (:id pin) (or (:k pin) 1))
-             pin-positions (when hood (radial-positions-from cx cy hood (count pins)))]
-         ;; Only add positions for nodes not already placed (first-pin-wins)
-         (merge-with (fn [existing _new] existing) positions (or pin-positions {}))))
-     {}
-     pins)))
-
-(defn- repel-pass
-  "One pass of repulsion: push overlapping nodes apart."
-  [positions min-dist]
-  (let [ids (keys positions)]
-    (reduce
-     (fn [pos id-a]
-       (reduce
-        (fn [pos id-b]
-          (if (= id-a id-b)
-            pos
-            (let [[ax ay] (get pos id-a)
-                  [bx by] (get pos id-b)
-                  dx (- bx ax)
-                  dy (- by ay)
-                  dist (js/Math.sqrt (+ (* dx dx) (* dy dy)))]
-              (if (and (> dist 0) (< dist min-dist))
-                (let [force (* 0.3 (- min-dist dist))
-                      nx (/ dx dist)
-                      ny (/ dy dist)]
-                  (-> pos
-                      (update id-a (fn [[x y]] [(- x (* nx force)) (- y (* ny force))]))
-                      (update id-b (fn [[x y]] [(+ x (* nx force)) (+ y (* ny force))]))))
-                pos))))
-        pos ids))
-     positions ids)))
-
-(defn- relax-positions
-  "Run a few iterations of repulsion to eliminate overlaps."
-  [positions pin-ids]
-  (loop [pos positions
-         i 0]
-    (if (>= i 8)
-      ;; Clamp to viewBox bounds
-      (into {}
-            (map (fn [[id [x y]]]
-                   [id [(max 40 (min (- svg-width 40) x))
-                        (max 40 (min (- svg-height 40) y))]])
-                 pos))
-      (recur (repel-pass pos 70) (inc i)))))
+;; --- Rendering ---
 
 (defn nema-color [nema-type]
   (case nema-type
@@ -162,7 +106,7 @@
                       :else (or link-type "link"))
         label short-label
         label-w (+ 14 (* 7 (count label)))
-        is-editing (= (:editing @state/ui-state) link-id)
+        is-editing (= (get-in @state/ui-state [:editing-link :id]) link-id)
         dx (- x2 x1) dy (- y2 y1)
         len (js/Math.sqrt (+ (* dx dx) (* dy dy)))
         ratio (if (> len 30) (/ (- len 30) len) 1)
@@ -176,14 +120,12 @@
              :opacity 0.7
              :marker-end "url(#arrowhead)"}]
      [:g {:on-click (fn [e]
-                      ;; Store link info + screen position for the popup
-                      (let [rect (.getBoundingClientRect (.-currentTarget e))]
-                        (swap! state/ui-state assoc
-                               :editing-link {:id link-id
-                                              :type (or link-type "arxana/scholium")
-                                              :text (or link-text "")
-                                              :x (.-clientX e)
-                                              :y (.-clientY e)})))
+                      (swap! state/ui-state assoc
+                             :editing-link {:id link-id
+                                            :type (or link-type "arxana/scholium")
+                                            :text (or link-text "")
+                                            :x (.-clientX e)
+                                            :y (.-clientY e)}))
           :style {:cursor "pointer"}}
       [:rect {:x (- mx (/ label-w 2)) :y (- my 9) :width label-w :height 18
               :rx 4 :fill "#2a2a3a"
@@ -207,7 +149,7 @@
                        (api/connect-nodes! (:node-id connecting) nema-id nil)
                        (api/browse-and-focus! nema-id nema-id)))
          :style {:cursor (if connecting "crosshair" "pointer")}}
-     ;; Pin ring: all pins get a white ring; active pin is brighter/thicker
+     ;; Pin ring
      (when is-pin
        [:circle {:cx x :cy y :r (+ r 5)
                  :fill "none"
@@ -234,27 +176,26 @@
         nema-name)]]))
 
 (defn graph-svg
-  "Main SVG canvas rendering the multi-focus neighbourhood graph."
+  "Main SVG canvas with force-directed layout."
   []
   (let [_tick      (:_render-tick @state/ui-state)
         focus-id   (state/focus-id)
         pins       (:pins @state/ui-state)
         scratchpad (:scratchpad @state/ui-state)
-        ;; Fall back to single-focus if no pins yet (backward compat)
         effective-pins (if (seq pins)
                          pins
                          (when focus-id [{:id focus-id :k (:hop-depth @state/ui-state)}]))
         merged-hood (when (seq effective-pins)
                       (state/multi-neighbourhood effective-pins))
-        ;; Scratchpad nodes not in the merged neighbourhood
         hood-ids   (set (map :nema/id (:nemas merged-hood)))
         floating   (->> scratchpad
                         (remove #(contains? hood-ids (:id %)))
                         vec)]
     (if (or (and merged-hood (seq (:nemas merged-hood))) (seq floating))
-      (let [centres   (when (seq effective-pins) (pin-centre effective-pins))
-            positions (if (seq effective-pins)
-                        (multi-positions effective-pins centres merged-hood)
+      (let [centres   (when (seq effective-pins) (pin-centres effective-pins))
+            ;; Force-directed layout
+            positions (if (and merged-hood (seq (:nemas merged-hood)))
+                        (force-layout (:nemas merged-hood) (:links merged-hood) (or centres {}))
                         {})
             nema-map  (into {} (map (fn [n] [(:nema/id n) n]) (:nemas merged-hood)))
             pin-ids   (set (map :id effective-pins))
@@ -270,9 +211,7 @@
                                   :nema/name (if (seq (:name node)) (:name node) "(new)")
                                   :nema/type (or (:type node) "article")}])
                               floating))
-            ;; Run force relaxation to eliminate overlaps
-            relaxed   (relax-positions positions pin-ids)
-            all-positions (merge relaxed float-positions)
+            all-positions (merge positions float-positions)
             all-nemas     (merge nema-map float-nemas)]
         [:svg {:width "100%" :height "100%"
                :viewBox (str "0 0 " svg-width " " svg-height)

@@ -12,6 +12,7 @@
     "shadow-cljs": "2.28.20"
   },
   "dependencies": {
+    "d3-force": "^3.0.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
   }
