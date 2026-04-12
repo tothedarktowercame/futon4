@@ -74,6 +74,17 @@ collaboration.
 - **Author list on entities:** Entities track an ordered list of
   contributors (creator + subsequent editors). Not a single "owner"
   — co-authorship is the norm.
+- **Multi-focus canvas:** The graph should support multiple "pinned"
+  focus nodes, each bringing their k-neighbourhood into the view.
+  This enables the core use case: pulling in clusters from different
+  parts of the graph and drawing connections between them. Two entry
+  points: (1) the green "+" creates a new node in the canvas, and
+  (2) a "pin" or "inject" action (e.g. "\u2192" button) pulls an
+  existing node from the library/sidebar into the canvas as a second
+  focus. Layout shifts from single-centre radial to multi-centre
+  (force-directed or multi-radial). The Connect workflow then works
+  across clusters. This is the primary design shift from v1's
+  "magnifying glass" model to a "workbench" model.
 
 ### Out of scope (deferred)
 
