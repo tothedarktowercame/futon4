@@ -340,6 +340,76 @@ BECAUSE attempting to merge positions (midpoint) creates jittery
 layouts when pins are added/removed, and the "first wins" rule
 is simple and predictable.
 
+### Pattern cross-reference (vsatelier)
+
+Patterns from `futon3/library/vsatelier/` mapped to this design.
+Not all apply equally — the current mission is a warm-up for
+VSATELIER, not a full implementation.
+
+**Cluster as Agenda Item** — *directly supports*.
+The multi-focus canvas IS a cluster viewer. When the user pins
+multiple entities and sees their neighbourhoods overlap or form a
+bridge, that visual pattern is a candidate "agenda item." In the
+current design, the user acts on this by drawing a connection
+(creating a scholium). A future extension could let the user
+*flag* a cluster as a named discussion topic. For now, the
+Connect action is the lightweight equivalent: "I see a pattern
+here, I'm recording it as a relation."
+
+**Decision Provenance** — *partially supports*.
+Every relation created in WebArxana is persisted with author
+attribution (`props.authors`) and can be traced back to the
+entities it connects. The spread itself (the set of pins) is the
+context in which the decision was made — the hash captures this
+context, even if it's not a first-class entity yet. The gap:
+there's no explicit "decision" entity type linking the why to
+the what. IF we add `arxana/decision` entities that reference
+the spread hash and the relations created during a session,
+THEN we close this gap. Deferred but architecturally compatible.
+
+**Annotation as Commitment** — *seeds the workflow*.
+The scratch card → Save → Connect flow is a lightweight version
+of "observation graduates to commitment." The user writes a note
+(annotation), saves it as an entity (gives it identity), and
+connects it to existing structure (commits to a relationship).
+The full pattern would add deadlines, owners, and status tracking
+on annotations. This is out of scope but the entity + relation
+model can carry those fields in `props` when needed.
+
+**Return Loop** — *architecturally present, not yet surfaced*.
+When a user creates a relation between clusters, that relation
+becomes visible to future spreads — anyone who pins one of the
+connected entities will see the link to the other cluster. This
+IS the return loop: actions taken in one session alter the graph
+that future sessions explore. The gap: there's no explicit
+"outcome" story or "what changed" node. The activity feed (in
+scope) would partially surface this — showing what was added
+and by whom, so the loop is visible.
+
+**Session as Rehearsal** — *structural fit, not yet scoped*.
+The spread model is inherently session-based and low-stakes:
+you can pin, connect, unpin, try again. The spread isn't
+persisted by default, so it's a safe space for exploration.
+A future "rehearsal mode" could load a curated sub-graph and
+pose a question. For now, the ephemeral spread is the rehearsal
+space.
+
+**Projection Independence** — *partially honoured*.
+The Datascript graph model, the futon1a entity/relation types,
+and the hash-encoded spread state are all independent of the
+SVG rendering. A different frontend (terminal, AR, mobile)
+could reconstruct the same spread from the same hash. The gap:
+interaction protocols (pin, connect, flag) are embedded in the
+ClojureScript UI, not defined as abstract contracts. Acceptable
+for now; worth extracting if a second surface is built.
+
+**Federated Cosmoses** — *not in scope, but not blocked*.
+The current design is single-instance (one futon1a backend).
+Federation would require multi-backend proxy support in the
+webarxana server. The entity model doesn't prevent it — entity
+IDs are opaque strings, and a federated ID scheme (e.g.,
+`instance://entity-id`) could work. Deferred.
+
 ---
 
 ## Prototype checkpoint (pre-IDENTIFY)
