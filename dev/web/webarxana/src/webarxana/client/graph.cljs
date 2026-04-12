@@ -114,7 +114,13 @@
         link-id (:link/id link)
         link-type (:link/type link)
         link-text (:link/text link)
-        label (if (seq link-text) link-text (or link-type "link"))
+        has-annotation (seq link-text)
+        short-label (cond
+                      (and has-annotation (> (count link-text) 20))
+                      (str (subs link-text 0 18) "...")
+                      has-annotation link-text
+                      :else (or link-type "link"))
+        label short-label
         label-w (+ 12 (* 6 (count label)))
         is-editing (= (:editing @state/ui-state) link-id)
         dx (- x2 x1) dy (- y2 y1)
