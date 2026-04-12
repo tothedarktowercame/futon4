@@ -37,14 +37,20 @@
           rings (->> (dissoc distances focus)
                      (group-by val)
                      (sort-by key))
-          ring-radius 160]
+          ;; Scale ring radius so nodes don't crowd: at least 80px arc between neighbours
+          min-arc 80
+          base-radius 160]
       (reduce
        (fn [positions [ring-idx nodes]]
-         (let [r (* ring-radius ring-idx)
-               n (count nodes)]
+         (let [n (count nodes)
+               ;; Ensure enough room: radius so that arc between adjacent nodes >= min-arc
+               min-r (if (> n 1) (/ (* n min-arc) (* 2 js/Math.PI)) base-radius)
+               r (max (* base-radius ring-idx) min-r)
+               ;; Offset angle slightly per ring to avoid radial alignment
+               offset (* 0.3 ring-idx)]
            (reduce
             (fn [pos [i [nema-id _]]]
-              (let [angle (* 2 js/Math.PI (/ i n))
+              (let [angle (+ offset (* 2 js/Math.PI (/ i n)))
                     x (+ cx (* r (js/Math.cos angle)))
                     y (+ cy (* r (js/Math.sin angle)))]
                 (assoc pos nema-id [x y])))
@@ -71,21 +77,23 @@
         my (/ (+ y1 y2) 2)
         link-type (:link/type link)
         link-text (:link/text link)]
-    [:g {:key (:link/id link)}
-     [:line {:x1 x1 :y1 y1 :x2 x2 :y2 y2
-             :stroke "#556677"
-             :stroke-width 1.5
-             :stroke-dasharray (when (= link-type "scholium") "4,4")
-             :opacity 0.6}]
-     ;; Clickable link label at midpoint
-     [:g {:on-click #(swap! state/ui-state assoc :editing (:link/id link))
-          :style {:cursor "pointer"}}
-      [:rect {:x (- mx 30) :y (- my 10) :width 60 :height 20
-              :rx 4 :fill "#2a2a3a" :stroke "#556677" :stroke-width 0.5
-              :opacity 0.85}]
-      [:text {:x mx :y (+ my 3) :text-anchor "middle"
-              :fill "#aabbcc" :font-size 10 :font-family "monospace"}
-       (if (seq link-text) link-text (or link-type "link"))]]]))
+    (let [label (if (seq link-text) link-text (or link-type "link"))
+          label-w (+ 12 (* 6 (count label)))]
+      [:g {:key (:link/id link)}
+       [:line {:x1 x1 :y1 y1 :x2 x2 :y2 y2
+               :stroke "#556677"
+               :stroke-width 1.5
+               :stroke-dasharray (when (= link-type "scholium") "4,4")
+               :opacity 0.6}]
+       ;; Label at midpoint, auto-sized
+       [:g {:on-click #(swap! state/ui-state assoc :editing (:link/id link))
+            :style {:cursor "pointer"}}
+        [:rect {:x (- mx (/ label-w 2)) :y (- my 9) :width label-w :height 18
+                :rx 4 :fill "#2a2a3a" :stroke "#556677" :stroke-width 0.5
+                :opacity 0.85}]
+        [:text {:x mx :y (+ my 3) :text-anchor "middle"
+                :fill "#aabbcc" :font-size 9 :font-family "monospace"}
+         label]]])))
 
 (defn node-component
   "SVG group for a nema node. Click to focus, or to connect in connect-mode."
