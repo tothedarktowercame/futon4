@@ -154,6 +154,28 @@
                 ;; Nudge re-render after Datascript transactions
                 (swap! state/ui-state update :_render-tick (fnil inc 0))))))))))
 
+(defn fetch-recent
+  "Fetch recent entities across key types for the activity feed."
+  []
+  (go
+    (let [types ["article" "arxana/song" "arxana/chorus" "pattern/language"
+                 "pattern/component" "apm/problem" "claim" "question"]
+          results (atom [])]
+      (doseq [t types]
+        (let [resp (<! (http/get (str base "/entities/latest")
+                                 {:query-params {:type t :limit 10}
+                                  :with-credentials? true}))]
+          (when (= 200 (:status resp))
+            (swap! results into
+                   (->> (get-in resp [:body :entities])
+                        (map #(assoc % :_type t)))))))
+      ;; Sort by name (we don't have timestamps, so alphabetical is the best we can do)
+      (swap! state/ui-state assoc :recent-entities
+             (->> @results
+                  (filter #(seq (:name %)))
+                  (take 30)
+                  vec)))))
+
 (defn fetch-types
   "Fetch registered types from futon1a."
   []

@@ -382,6 +382,26 @@
           [:button.scratchpad-btn
            {:on-click #(swap! state/ui-state assoc :connecting nil)}
            "Cancel"]])
+       ;; Recent activity
+       [:div.sidebar-recent
+        [:div.sidebar-heading
+         {:on-click #(api/fetch-recent)
+          :style {:cursor "pointer"}}
+         "Recent"]
+        (when-let [recent (:recent-entities @state/ui-state)]
+          (for [e recent]
+            ^{:key (:id e)}
+            [:div.sidebar-entity-item
+             [:span.entity-name
+              {:on-click #(api/browse-and-focus! (:name e) (:id e))}
+              (str (or (:name e) "?") " ")]
+             [:span.entity-type-badge (or (:_type e) (:type e) "?")]
+             [:button.pin-btn
+              {:on-click (fn [evt]
+                           (.stopPropagation evt)
+                           (api/pin-entity! (:name e) (:id e)))
+               :title (if (state/pinned? (:id e)) "Unpin" "Pin")}
+              (if (state/pinned? (:id e)) "\u25cb" "\u25cf")]]))]
        ;; Types browser
        [:div.sidebar-types
         [:div.sidebar-heading "Types"]
