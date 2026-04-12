@@ -1,7 +1,8 @@
 # Mission: WebArxana — Collaborative Hypergraph Surface
 
 **Date:** 2026-04-12
-**Status:** IDENTIFY (2026-04-12)
+**Status:** IDENTIFY (2026-04-12). Scope revised: real-time sync,
+deployment, and author lists moved in-scope.
 **Blocked by:** None (futon1a operational, Arxana Browser operational,
 WebArxana v1 prototype committed)
 **Owner:** futon4 (WebArxana), with dependencies on futon1a (data store)
@@ -63,6 +64,17 @@ collaboration.
   focused entity (done in v1). Show the gloss/note from hyperedge
   props.
 
+- **Multi-user real-time sync:** Wire the existing WebSocket
+  infrastructure so that when one user creates or edits an entity,
+  all connected clients see the change without refreshing. XTDB's
+  transactional model makes this natural — broadcast after tx commit.
+- **Public access / deployment:** Deploy so a collaborator who isn't
+  Joe can reach it. This is an exit criterion: the system is only
+  useful for collaboration if a collaborator can use it.
+- **Author list on entities:** Entities track an ordered list of
+  contributors (creator + subsequent editors). Not a single "owner"
+  — co-authorship is the norm.
+
 ### Out of scope (deferred)
 
 - **Character-level annotation editor:** The Emacs chorus model
@@ -73,10 +85,6 @@ collaboration.
 - **Hyperedge *creation* workflow:** Select source node(s), browse to
   sink, save annotation with roles. Procedurally complex; deferred
   but not ruled out.
-- **Multi-user real-time sync:** The WebSocket infrastructure exists
-  but is not yet wired for live co-editing. Current model: refresh to
-  see changes.
-- **Public access / deployment:** Currently localhost only.
 
 ## Completion criteria
 
@@ -86,10 +94,14 @@ collaboration.
    and relation type (defaulting to "arxana/scholium"), then creates
    both entities and the link.
 3. Hop-depth is adjustable via +/- controls in the UI.
-4. Each entity shows its author. New entities record the logged-in
-   user as author.
+4. Each entity shows its author list. New entities record the
+   logged-in user as creator; edits append to the author list.
 5. An activity/recent-additions view shows what was added and by whom.
-6. All of the above is covered by Playwright tests.
+6. When one user creates or edits content, other connected clients
+   see the change in real time via WebSocket broadcast.
+7. The system is deployed and reachable by a collaborator outside
+   localhost.
+8. All of the above is covered by Playwright tests.
 
 ## Relationship to other missions
 
@@ -114,28 +126,67 @@ collaboration.
 ## Owner and dependencies
 
 - **Primary repo:** futon4
-- **Backend:** futon1a (no changes planned; work within existing API)
+- **Backend:** futon1a (props persistence may need fixing; otherwise
+  work within existing API)
 - **Driver:** Joe + collaborators via WebArxana itself
 
 ---
 
 ## MAP
 
-Survey questions for the MAP phase:
+Survey questions and answers:
 
 - Q1: What entity types and relation types are registered in
   futon1a's type system? Which are relevant for collaborative
   writing?
-- Q2: How does author attribution currently work? Is there an
-  `author` field on entities, or does it need to be added via the
-  penholder/evidence system?
-- Q3: What does futon1a's evidence timeline look like for recent
-  writes? Can it serve as the activity feed, or does WebArxana need
-  its own?
+  - **To answer during MAP.** The v1 prototype enumerated types via
+    `/api/alpha/types`. Relevant subset for collaboration TBD.
+
+- Q2: How does author attribution currently work?
+  - **Answer (from IDENTIFY discussion):** There is no author field
+    on entities. We need to add an author list (ordered list of
+    contributors: creator + subsequent editors). This is distinct from
+    the penholder system (which controls write authorization) and from
+    the evidence system (which records AI agent sessions, not human
+    co-editing). WebArxana sessions are a *source of* evidence but we
+    don't edit existing evidence — history is immutable.
+
+- Q3: What should the activity feed show?
+  - **Answer (from IDENTIFY discussion):** The evidence timeline is
+    orthogonal — it tracks AI agent work. The WebArxana activity feed
+    should show recent entity/relation writes by human collaborators,
+    with author attribution. This may be a new lightweight query
+    (recent entities by creation date) rather than the evidence API.
+
 - Q4: What are the current limits of the entity write endpoint?
-  (Known: `props` not persisted. What else?)
+  - **Answer (from prototype):** `props` field is not persisted by
+    `futon1a/compat/futon1_write.clj:ensure-entity-doc` (lines 80-85
+    only extract name, type, external-id, source). This needs fixing
+    in futon1a before we can store author lists, annotation IDs, or
+    other structured metadata on entities. **Decision needed:** fix
+    in futon1a, or work around via a separate metadata store.
+
 - Q5: How do the existing Emacs browser views handle hop-depth
   control and neighbourhood expansion?
+  - **Answer (from IDENTIFY discussion):** The Emacs browser doesn't
+    do hop-depth. It composites static views that can be assembled
+    from any graph contents. WebArxana's radial ego-graph with
+    adjustable k is a new interaction model.
+
+- Q6: What use cases should drive the design? What does a WebArxana
+  session look like in practice?
+  - **To answer during MAP.** Core use case: two humans co-writing.
+    One adds a short text, the other draws connections or responds.
+    Think of it as structured conversation where the messages persist
+    as nodes in the graph. Adjacent use cases: inspecting what a
+    collaborator added, following a thread of connected nodes, adding
+    a typed annotation to existing material.
+
+- Q7: What deployment model makes sense for "reachable by a
+  collaborator outside localhost"?
+  - **To answer during MAP.** Options: tunnel (ngrok/tailscale),
+    VPS deployment, or piggyback on existing futon3c Linode
+    infrastructure.
 
 ---
 
