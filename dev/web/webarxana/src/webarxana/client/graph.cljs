@@ -111,32 +111,55 @@
         [x2 y2] dst-pos
         mx (/ (+ x1 x2) 2)
         my (/ (+ y1 y2) 2)
+        link-id (:link/id link)
         link-type (:link/type link)
         link-text (:link/text link)
         label (if (seq link-text) link-text (or link-type "link"))
-        label-w (+ 12 (* 6 (count label)))]
-    (let [;; Shorten line so arrow doesn't overlap the target node
-          dx (- x2 x1) dy (- y2 y1)
-          len (js/Math.sqrt (+ (* dx dx) (* dy dy)))
-          ;; Pull back by ~30px (node radius) from the destination
-          ratio (if (> len 30) (/ (- len 30) len) 1)
-          ax2 (+ x1 (* dx ratio))
-          ay2 (+ y1 (* dy ratio))]
-      [:g {:key (:link/id link)}
-       [:line {:x1 x1 :y1 y1 :x2 ax2 :y2 ay2
-               :stroke "#6688aa"
-               :stroke-width 1.5
-               :stroke-dasharray (when (= link-type "scholium") "4,4")
-               :opacity 0.7
-               :marker-end "url(#arrowhead)"}]
-     [:g {:on-click #(swap! state/ui-state assoc :editing (:link/id link))
-          :style {:cursor "pointer"}}
-      [:rect {:x (- mx (/ label-w 2)) :y (- my 9) :width label-w :height 18
-              :rx 4 :fill "#2a2a3a" :stroke "#556677" :stroke-width 0.5
-              :opacity 0.85}]
-      [:text {:x mx :y (+ my 3) :text-anchor "middle"
-              :fill "#aabbcc" :font-size 9 :font-family "monospace"}
-       label]]])))
+        label-w (+ 12 (* 6 (count label)))
+        is-editing (= (:editing @state/ui-state) link-id)
+        dx (- x2 x1) dy (- y2 y1)
+        len (js/Math.sqrt (+ (* dx dx) (* dy dy)))
+        ratio (if (> len 30) (/ (- len 30) len) 1)
+        ax2 (+ x1 (* dx ratio))
+        ay2 (+ y1 (* dy ratio))]
+    [:g {:key link-id}
+     [:line {:x1 x1 :y1 y1 :x2 ax2 :y2 ay2
+             :stroke (if is-editing "#ffd43b" "#6688aa")
+             :stroke-width (if is-editing 2.5 1.5)
+             :stroke-dasharray (when (= link-type "scholium") "4,4")
+             :opacity 0.7
+             :marker-end "url(#arrowhead)"}]
+     (if is-editing
+       ;; Inline type editor
+       [:foreignObject {:x (- mx 80) :y (- my 14) :width 160 :height 28}
+        [:select
+         {:value (or link-type "arxana/scholium")
+          :auto-focus true
+          :style {:width "100%" :height "100%"
+                  :background "#22223a" :color "#d4d4e8"
+                  :border "1px solid #ffd43b" :border-radius "4px"
+                  :font-size "10px" :font-family "monospace"
+                  :cursor "pointer"}
+          :on-change (fn [e]
+                       (let [new-type (.. e -target -value)]
+                         ;; TODO: persist type change to futon1a
+                         ;; For now, update Datascript locally
+                         (swap! state/ui-state assoc :editing nil)))
+          :on-blur #(swap! state/ui-state assoc :editing nil)}
+         (for [t (or (seq (:available-relation-types @state/ui-state))
+                     ["arxana/scholium" "defines" "inspired-by"
+                      "supported-by" "answered-by" "example"
+                      "implemented-by" "surface" "evolved-into"])]
+           ^{:key t} [:option {:value t} t])]]
+       ;; Normal label
+       [:g {:on-click #(swap! state/ui-state assoc :editing link-id)
+            :style {:cursor "pointer"}}
+        [:rect {:x (- mx (/ label-w 2)) :y (- my 9) :width label-w :height 18
+                :rx 4 :fill "#2a2a3a" :stroke (if is-editing "#ffd43b" "#556677")
+                :stroke-width 0.5 :opacity 0.85}]
+        [:text {:x mx :y (+ my 3) :text-anchor "middle"
+                :fill "#aabbcc" :font-size 9 :font-family "monospace"}
+         label]])]))
 
 (defn node-component
   [nema pos is-focus is-pin]
