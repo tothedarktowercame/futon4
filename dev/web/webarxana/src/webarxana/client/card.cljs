@@ -461,17 +461,24 @@
           (for [e recent]
             ^{:key (:id e)}
             [:div.sidebar-entity-item
-             [:span.entity-name
-              {:on-click (if (= "diagram" (or (:_type e) (:type e)))
-                           #(api/expand-diagram! (:id e))
-                           #(api/browse-and-focus! (:name e) (:id e)))}
-              (str (or (:name e) "?") " ")]
-             [:span.entity-type-badge (or (:_type e) (:type e) "?")]
-             (when (= "diagram" (or (:_type e) (:type e)))
-               [:button.scratchpad-btn
-                {:on-click #(api/expand-diagram! (:id e))
-                 :title "Expand diagram"}
-                "\u25b6"])
+             (let [is-diagram (= "diagram" (or (:_type e) (:type e)))
+                   is-expanded (= (:id e) (:expanded-diagram @state/ui-state))]
+               [:<>
+                [:span.entity-name
+                 {:on-click (if is-diagram
+                              (if is-expanded
+                                #(api/compress-diagram! (:id e))
+                                #(api/expand-diagram! (:id e)))
+                              #(api/browse-and-focus! (:name e) (:id e)))}
+                 (str (or (:name e) "?") " ")]
+                [:span.entity-type-badge (or (:_type e) (:type e) "?")]
+                (when is-diagram
+                  [:button.scratchpad-btn
+                   {:on-click (if is-expanded
+                                #(api/compress-diagram! (:id e))
+                                #(api/expand-diagram! (:id e)))
+                    :title (if is-expanded "Compress diagram" "Expand diagram")}
+                   (if is-expanded "\u23f8" "\u25b6")])])
              [:button.pin-btn
               {:on-click (fn [evt]
                            (.stopPropagation evt)

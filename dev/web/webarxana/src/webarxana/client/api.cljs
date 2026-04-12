@@ -199,11 +199,17 @@
               focus (get-in entity [:props :focus])]
           (when (seq pin-ids)
             ;; Clear existing pins and load diagram's pins
-            (swap! state/ui-state assoc :pins [])
+            (swap! state/ui-state assoc :pins [] :expanded-diagram diagram-id)
             (doseq [pid pin-ids]
               (<! (pin-entity! pid pid)))
             (when focus
               (state/set-focus! focus))))))))
+
+(defn compress-diagram!
+  "Collapse current expanded diagram — clear pins, show diagram as a single node."
+  [diagram-id]
+  (swap! state/ui-state assoc :pins [] :expanded-diagram nil)
+  (pin-entity! diagram-id diagram-id))
 
 (defn fetch-recent
   "Fetch recent entities across key types for the activity feed."
