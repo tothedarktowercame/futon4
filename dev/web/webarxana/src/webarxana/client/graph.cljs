@@ -206,20 +206,30 @@
                          (when focus-id [{:id focus-id :k (:hop-depth @state/ui-state)}]))
         raw-hood (when (seq effective-pins)
                    (state/multi-neighbourhood effective-pins))
-        ;; Filter out diagram entities that are NOT pinned (they're metadata neighbours)
-        ;; Keep pinned diagrams (when viewing a compressed diagram)
+        ;; Diagram filtering:
+        ;; - Pinned diagram (compressed): show ONLY the diagram node, hide
+        ;;   all diagram/includes links and included neighbours
+        ;; - Non-pinned diagram (neighbour): hide it entirely
         pin-id-set (set (map :id (or effective-pins [])))
         merged-hood (when raw-hood
-                      (let [diagram-ids (->> (:nemas raw-hood)
-                                            (filter #(and (= "diagram" (:nema/type %))
-                                                         (not (contains? pin-id-set (:nema/id %)))))
-                                            (map :nema/id)
-                                            set)]
-                        {:nemas (remove #(contains? diagram-ids (:nema/id %)) (:nemas raw-hood))
-                         :links (remove #(or (and (= "diagram/includes" (:link/type %))
-                                                  ;; Only filter diagram/includes if the diagram is not pinned
-                                                  (contains? diagram-ids (get-in % [:link/src :nema/id])))
-                                            (contains? diagram-ids (get-in % [:link/dst :nema/id])))
+                      (let [;; Diagrams that are pinned (compressed view)
+                            pinned-diagrams (->> (:nemas raw-hood)
+                                                 (filter #(and (= "diagram" (:nema/type %))
+                                                              (contains? pin-id-set (:nema/id %))))
+                                                 (map :nema/id)
+                                                 set)
+                            ;; Diagrams that are NOT pinned (appearing as neighbours)
+                            neighbour-diagrams (->> (:nemas raw-hood)
+                                                    (filter #(and (= "diagram" (:nema/type %))
+                                                                 (not (contains? pin-id-set (:nema/id %)))))
+                                                    (map :nema/id)
+                                                    set)
+                            ;; All diagram IDs to filter links
+                            all-diagram-ids (into pinned-diagrams neighbour-diagrams)]
+                        {:nemas (remove #(contains? neighbour-diagrams (:nema/id %)) (:nemas raw-hood))
+                         :links (remove #(or (= "diagram/includes" (:link/type %))
+                                            (contains? neighbour-diagrams (get-in % [:link/src :nema/id]))
+                                            (contains? neighbour-diagrams (get-in % [:link/dst :nema/id])))
                                         (:links raw-hood))
                          :pins (:pins raw-hood)}))
         hood-ids   (set (map :nema/id (:nemas merged-hood)))
