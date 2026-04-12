@@ -1,6 +1,7 @@
 (ns webarxana.client.graph
   (:require [reagent.core :as r]
-            [webarxana.client.state :as state]))
+            [webarxana.client.state :as state]
+            [webarxana.client.api :as api]))
 
 ;; Radial layout: focus node at center, neighbours in concentric rings.
 
@@ -87,17 +88,23 @@
        (if (seq link-text) link-text (or link-type "link"))]]]))
 
 (defn node-component
-  "SVG group for a nema node. Click to focus."
+  "SVG group for a nema node. Click to focus, or to connect in connect-mode."
   [nema pos is-focus]
   (let [[x y] pos
         nema-id (:nema/id nema)
         nema-name (or (:nema/name nema) nema-id)
         nema-type (or (:nema/type nema) "unknown")
+        connecting (:connecting @state/ui-state)
         r (if is-focus 40 28)]
     [:g {:key nema-id
-         :on-click (when-not is-focus
-                     #(state/set-focus! nema-id))
-         :style {:cursor (if is-focus "default" "pointer")}}
+         :on-click (fn []
+                     (if connecting
+                       ;; Connect mode: link the scratchpad node to this node
+                       (api/connect-nodes! (:node-id connecting) nema-id nil)
+                       ;; Normal mode: focus
+                       (when-not is-focus
+                         (state/set-focus! nema-id))))
+         :style {:cursor (if connecting "crosshair" (if is-focus "default" "pointer"))}}
      ;; Glow ring for focus
      (when is-focus
        [:circle {:cx x :cy y :r (+ r 6)

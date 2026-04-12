@@ -192,63 +192,87 @@
 (defn search-bar
   "Top bar with search, entity type browser, new node, and hop controls."
   []
-  (let [query          (r/atom "")
-        show-new-node  (r/atom false)]
+  (let [query (r/atom "")]
     (fn []
       (let [types     (:available-types @state/ui-state)
             sidebar?  (:sidebar-open @state/ui-state)
             hop-depth (:hop-depth @state/ui-state)]
-        [:<>
-         [:div.search-bar
-          ;; Sidebar toggle
-          [:button.sidebar-toggle
-           {:on-click #(do (when (empty? types)
-                            (api/fetch-types))
-                          (swap! state/ui-state update :sidebar-open not))}
-           (if sidebar? "\u25c0" "\u2630")]
-          ;; New node
-          [:button.btn-new-node
-           {:on-click #(do (when (empty? types)
-                            (api/fetch-types))
-                          (reset! show-new-node true))}
-           "+"]
-          ;; Name search
-          [:input {:type "text"
-                   :placeholder "Search by name..."
-                   :value @query
-                   :on-change #(reset! query (.. % -target -value))
-                   :on-key-down #(when (= 13 (.-keyCode %))
-                                   (api/fetch-ego @query))}]
-          [:button {:on-click #(api/fetch-ego @query)} "Go"]
-          ;; Hop depth controls
-          [:div.hop-controls
-           [:button.hop-btn
-            {:on-click #(swap! state/ui-state update :hop-depth (fn [k] (max 1 (dec k))))}
-            "\u2212"]
-           [:span.hop-label (str "k=" hop-depth)]
-           [:button.hop-btn
-            {:on-click #(swap! state/ui-state update :hop-depth (fn [k] (min 10 (inc k))))}
-            "+"]]
-          [:span.status-indicator
-           {:class (if (:connected @state/ui-state) "connected" "disconnected")}
-           (if (:connected @state/ui-state) "live" "offline")]
-          (when-let [user (:username @state/ui-state)]
-            [:span.username user])]
-         ;; New node dialog
-         (when @show-new-node
-           [creation-dialog {:adjacent? false
-                             :on-close #(reset! show-new-node false)}])]))))
+        [:div.search-bar
+         ;; Sidebar toggle
+         [:button.sidebar-toggle
+          {:on-click #(do (when (empty? types)
+                           (api/fetch-types))
+                         (swap! state/ui-state update :sidebar-open not))}
+          (if sidebar? "\u25c0" "\u2630")]
+         ;; Instant new node — creates immediately, adds to scratchpad
+         [:button.btn-new-node
+          {:on-click #(api/create-scratch-node!)}
+          "+"]
+         ;; Name search
+         [:input {:type "text"
+                  :placeholder "Search by name..."
+                  :value @query
+                  :on-change #(reset! query (.. % -target -value))
+                  :on-key-down #(when (= 13 (.-keyCode %))
+                                  (api/fetch-ego @query))}]
+         [:button {:on-click #(api/fetch-ego @query)} "Go"]
+         ;; Hop depth controls
+         [:div.hop-controls
+          [:button.hop-btn
+           {:on-click #(swap! state/ui-state update :hop-depth (fn [k] (max 1 (dec k))))}
+           "\u2212"]
+          [:span.hop-label (str "k=" hop-depth)]
+          [:button.hop-btn
+           {:on-click #(swap! state/ui-state update :hop-depth (fn [k] (min 10 (inc k))))}
+           "+"]]
+         [:span.status-indicator
+          {:class (if (:connected @state/ui-state) "connected" "disconnected")}
+          (if (:connected @state/ui-state) "live" "offline")]
+         (when-let [user (:username @state/ui-state)]
+           [:span.username user])]))))
 
 ;; --- Sidebar ---
 
 (defn sidebar
-  "Sidebar for browsing entities by type."
+  "Sidebar for browsing entities by type, with scratchpad for new nodes."
   []
   (when (:sidebar-open @state/ui-state)
-    (let [types     (:available-types @state/ui-state)
-          cur-type  (:browse-type @state/ui-state)
-          entities  (:browse-list @state/ui-state)]
+    (let [types      (:available-types @state/ui-state)
+          cur-type   (:browse-type @state/ui-state)
+          entities   (:browse-list @state/ui-state)
+          scratchpad (:scratchpad @state/ui-state)
+          connecting (:connecting @state/ui-state)]
       [:div.sidebar
+       ;; Scratchpad — new nodes waiting to be named/connected
+       (when (seq scratchpad)
+         [:div.sidebar-scratchpad
+          [:div.sidebar-heading "Scratchpad"]
+          (for [node scratchpad]
+            ^{:key (:id node)}
+            [:div.scratchpad-item
+             [:span.scratchpad-name
+              (if (seq (:name node))
+                (:name node)
+                [:em "(unnamed)"])]
+             [:div.scratchpad-actions
+              [:button.scratchpad-btn
+               {:on-click #(do (state/ingest-entity! {:id (:id node)
+                                                      :name (or (:name node) "")
+                                                      :type (or (:type node) "article")})
+                               (state/set-focus! (:id node)))}
+               "Focus"]
+              [:button.scratchpad-btn
+               {:on-click #(swap! state/ui-state assoc
+                                  :connecting {:node-id (:id node)})}
+               "Connect"]]])])
+       ;; Connect mode banner
+       (when connecting
+         [:div.connect-banner
+          [:span "Click a node in the graph to connect"]
+          [:button.scratchpad-btn
+           {:on-click #(swap! state/ui-state assoc :connecting nil)}
+           "Cancel"]])
+       ;; Types browser
        [:div.sidebar-types
         [:div.sidebar-heading "Types"]
         (for [t types]

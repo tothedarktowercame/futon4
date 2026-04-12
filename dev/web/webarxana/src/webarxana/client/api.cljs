@@ -8,7 +8,7 @@
 
 (def base "/api/futon")
 
-(declare fetch-hyperedges)
+(declare fetch-hyperedges save-entity! save-relation!)
 
 (defn fetch-entity
   "Fetch a single entity by ID and ingest into Datascript."
@@ -98,6 +98,32 @@
           ;; Nudge Reagent to re-render after datascript transactions
           (swap! state/ui-state update :_render-tick (fnil inc 0))
           hxs)))))
+
+(defn create-scratch-node!
+  "Instantly create an unnamed article and add it to the scratchpad."
+  []
+  (go
+    (let [entity (<! (save-entity! {:name ""
+                                    :type "article"
+                                    :props {:authors [(:username @state/ui-state)]}}))]
+      (when-let [eid (or (:id entity) (:entity/id entity))]
+        (state/ingest-entity! (assoc entity :name "" :type "article"))
+        (swap! state/ui-state update :scratchpad
+               conj {:id eid :name "" :type "article"})
+        (swap! state/ui-state assoc :sidebar-open true)
+        eid))))
+
+(defn connect-nodes!
+  "Create a relation between two nodes."
+  [src-id dst-id rel-type]
+  (go
+    (let [rel (<! (save-relation! {:type (or rel-type "arxana/scholium")
+                                   :src src-id
+                                   :dst dst-id}))]
+      (swap! state/ui-state assoc :connecting nil)
+      ;; Nudge re-render
+      (swap! state/ui-state update :_render-tick (fnil inc 0))
+      rel)))
 
 (defn fetch-types
   "Fetch registered types from futon1a."

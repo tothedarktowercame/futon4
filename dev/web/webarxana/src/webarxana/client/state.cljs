@@ -31,6 +31,8 @@
            :browse-type nil      ;; currently selected type for browsing
            :browse-list []       ;; entities loaded for the selected type
            :sidebar-open false   ;; sidebar visibility
+           :scratchpad  []       ;; newly created nodes awaiting connection
+           :connecting  nil      ;; {:node-id "..."} when waiting to pick a target
            }))
 
 (defn focus-id []
