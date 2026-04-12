@@ -11,17 +11,17 @@
 
 (defn- force-layout
   "Compute positions using d3-force simulation.
-   pin-ids are fixed in place at their grid positions.
+   Pins are initialized at spread-out positions but free to move.
    Returns {nema-id [x y]}."
   [nemas links pin-centres]
-  (let [;; Build node array — pins get fixed positions
+  (let [;; Build node array — initialize pins at grid positions
         nodes (clj->js
                (mapv (fn [n]
                        (let [nid (:nema/id n)
                              pin-pos (get pin-centres nid)]
                          (cond-> {:id nid}
-                           pin-pos (assoc :fx (first pin-pos)
-                                         :fy (second pin-pos)))))
+                           pin-pos (assoc :x (first pin-pos)
+                                         :y (second pin-pos)))))
                      nemas))
         ;; Build link array
         edges (clj->js
@@ -33,19 +33,22 @@
                      links))
         ;; Create simulation
         sim (-> (d3/forceSimulation nodes)
-                (.force "charge" (.strength (d3/forceManyBody) -200))
+                (.force "charge" (.strength (d3/forceManyBody) -400))
                 (.force "link" (-> (d3/forceLink edges)
                                    (.id (fn [d] (.-id d)))
-                                   (.distance 100)))
+                                   (.distance 120)
+                                   (.strength 0.5)))
                 (.force "center" (d3/forceCenter
-                                  (/ svg-width 2)
+                                  (* svg-width 0.45)
                                   (/ svg-height 2)))
-                (.force "collide" (.radius (d3/forceCollide) 45))
+                (.force "collide" (.radius (d3/forceCollide) 55))
+                (.force "x" (.strength (d3/forceX (/ svg-width 2)) 0.03))
+                (.force "y" (.strength (d3/forceY (/ svg-height 2)) 0.05))
                 (.stop))]
-    ;; Run simulation for fixed iterations
-    (dotimes [_ 150]
+    ;; Run simulation
+    (dotimes [_ 200]
       (.tick sim))
-    ;; Extract positions, clamp to viewBox
+    ;; Extract positions, clamp to viewBox with margin
     (into {}
           (map (fn [node]
                  [(.-id node)
