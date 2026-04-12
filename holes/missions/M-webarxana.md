@@ -1,8 +1,7 @@
 # Mission: WebArxana — Collaborative Hypergraph Surface
 
 **Date:** 2026-04-12
-**Status:** IDENTIFY (2026-04-12). Scope revised: real-time sync,
-deployment, and author lists moved in-scope.
+**Status:** DERIVE (2026-04-12). Multi-focus canvas design drafted.
 **Blocked by:** None (futon1a operational, Arxana Browser operational,
 WebArxana v1 prototype committed)
 **Owner:** futon4 (WebArxana), with dependencies on futon1a (data store)
@@ -198,6 +197,148 @@ Survey questions and answers:
   - **To answer during MAP.** Options: tunnel (ngrok/tailscale),
     VPS deployment, or piggyback on existing futon3c Linode
     infrastructure.
+
+---
+
+## DERIVE — Multi-focus canvas ("the spread")
+
+### Analogy
+
+The interaction model resembles a tarot spread. You **pull** entities
+from the library onto a canvas. Each arrives with its associations
+(ego neighbourhood). You arrange them spatially and then **draw
+connections** between entities from different clusters. In tarot, the
+reading is ephemeral; in Arxana, the connections you draw are globally
+persisted as relations/scholia. The spatial arrangement is session
+state; the structural relationships are permanent.
+
+### Entity types
+
+**Spread (session-level, client-side).** A spread is the set of
+pinned entities currently on the canvas, their layout positions, and
+the hop-depth for each. Spreads are NOT persisted to futon1a — they
+are URL-encoded in the hash for shareability and stored in the
+client's ui-state for the session. A spread is reconstructed from
+its hash.
+
+IF we later want persistent spreads (e.g. "Joe's reading from
+Tuesday"), THEN we can promote them to futon1a entities of type
+`arxana/spread` with props listing the pinned entity IDs.
+HOWEVER this is not needed for the initial implementation.
+BECAUSE the hash already captures the spread state, and forcing
+persistence adds friction to an exploratory workflow.
+
+**Pinned node.** An entity that has been pulled onto the canvas.
+Each pin has:
+- `entity-id` — the futon1a entity ID
+- `position` — [x, y] on the canvas (client-side, mutable by drag)
+- `hop-depth` — how many hops of neighbourhood to show (default 1,
+  adjustable per-pin, separate from the global k)
+
+The focused node (whose card is shown on the right) is one of the
+pinned nodes. Clicking a node makes it the active card but does not
+unpin the others.
+
+### Interaction model
+
+**Pull from library ("\u2192" or "Pin" button):**
+When browsing entities in the sidebar, a "Pin" button next to each
+entity (or on the search result) adds it to the canvas as a new
+pinned node. Its ego is fetched and its neighbourhood rendered.
+Position is auto-assigned (avoid overlap with existing pins).
+
+**Green "+" (create new):**
+Works as now — creates a local scratch node, shown on canvas. On
+Save, it becomes a real entity and a pinned node.
+
+**Connect across clusters:**
+Same as now — click Connect on a node, then click a target node
+anywhere on the canvas (even in a different cluster). The relation
+is created and becomes visible as a link spanning the two clusters.
+
+**Unpin ("\u00d7" or "Remove from spread"):**
+Removes a pinned node and its neighbourhood from the canvas. Does
+not delete the entity from futon1a.
+
+**Focus (click):**
+Clicking any node on the canvas makes it the active card (shown
+on the right). The graph stays multi-focus; only the card changes.
+
+### Layout algorithm
+
+The single-centre radial layout is replaced by a multi-centre layout:
+
+**Option A — Multi-radial (simpler):**
+Each pinned node gets its own radial layout centred at its position.
+Overlapping neighbourhoods merge visually — if a node appears in two
+clusters, it gets one position (midpoint or closer to the pin with
+more connections to it). Links between clusters are drawn as longer
+edges crossing the canvas.
+
+**Option B — Force-directed (more natural):**
+Use a force simulation (d3-force or a lightweight equivalent).
+Pinned nodes have fixed positions (draggable); their neighbours
+are pulled toward them. Cross-cluster links create attractive forces
+that pull related clusters closer. This produces more organic
+layouts but requires an animation loop.
+
+**Decision:** Start with multi-radial (Option A). It's deterministic,
+no animation needed, and works with the existing rendering. If the
+layouts become too crowded or overlapping, upgrade to force-directed.
+BECAUSE multi-radial is a straightforward extension of the current
+code, while force-directed requires a simulation loop, requestAnimationFrame,
+and careful performance tuning.
+
+### Hash encoding for spreads
+
+Current hash: `#/type/<type>/focus/<entity-id>`
+
+Extended hash for multi-focus:
+`#/pins/<id1>,<id2>,<id3>/focus/<active-id>`
+
+Where `pins` is a comma-separated list of pinned entity IDs, and
+`focus` is the one whose card is shown. The `type` segment remains
+optional (for sidebar state). Per-pin hop-depth could be encoded
+as `<id>:k` (e.g., `<id>:2`) but defaults to 1 if omitted.
+
+### Data flow
+
+1. User pins entity → `fetch-ego` for that entity → ingest into
+   Datascript → add to `ui-state.pins` list
+2. Graph renders all pinned nodes + their neighbourhoods via
+   `neighbourhood` for each pin, merged into one position map
+3. User draws connection → `save-relation!` → relation appears as
+   a cross-cluster link
+4. User unpins → remove from `ui-state.pins` → graph re-renders
+   without that cluster (Datascript retains the data but the graph
+   filters to pinned nodes' neighbourhoods)
+
+### UI changes needed
+
+1. Replace single `:focus-id` with `:pins [{:id ... :pos [...] :k 1} ...]`
+   and `:active-pin` (which pin's card is shown)
+2. Add "Pin" button to sidebar entity items and search results
+3. Add "Unpin" button to pinned nodes (or to the focus card header)
+4. Graph: render merged multi-radial layout from all pins
+5. Update hash encoding/decoding for multi-pin state
+6. Scratch card "Save" adds the new entity as a pin
+7. Connect works across any nodes on the canvas
+
+### IF/HOWEVER/THEN/BECAUSE
+
+IF the multi-radial layout produces overlapping clusters,
+HOWEVER the user can adjust per-pin hop-depth to reduce clutter,
+THEN the layout remains usable without force-directed simulation,
+BECAUSE reducing k from 3 to 1 on crowded pins dramatically reduces
+overlap while keeping the essential connections visible.
+
+IF a node appears in multiple pins' neighbourhoods,
+HOWEVER it can only have one position on the canvas,
+THEN we assign it the position computed by the first pin that
+introduced it (stable, deterministic),
+BECAUSE attempting to merge positions (midpoint) creates jittery
+layouts when pins are added/removed, and the "first wins" rule
+is simple and predictable.
 
 ---
 
