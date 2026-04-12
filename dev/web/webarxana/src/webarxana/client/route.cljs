@@ -4,28 +4,29 @@
             [webarxana.client.api :as api]))
 
 ;; Hash-based deep linking.
-;; Format: #/type/<type>/focus/<entity-id>
-;;         #/focus/<entity-id>
+;; Format: #/pins/<id1>,<id2>,.../focus/<active-id>/type/<type>
+;;         #/focus/<entity-id>  (legacy single-focus, auto-pins)
 ;;         #/type/<type>
 
 (defn- encode [s] (js/encodeURIComponent s))
 (defn- decode [s] (js/decodeURIComponent s))
 
 (defn push-hash!
-  "Update the URL hash to reflect current UI state without triggering hashchange."
+  "Update the URL hash to reflect current UI state."
   []
-  (let [{:keys [browse-type focus-id]} @state/ui-state
+  (let [{:keys [browse-type focus-id pins]} @state/ui-state
+        pin-ids (map :id pins)
         parts (cond-> []
-                browse-type (into ["type" (encode browse-type)])
-                focus-id    (into ["focus" (encode focus-id)]))]
-    (when (seq parts)
-      (let [new-hash (str "#/" (str/join "/" parts))]
-        (when (not= new-hash (.-hash js/location))
-          ;; Use replaceState to avoid polluting browser history on every click
-          (.replaceState js/history nil "" new-hash))))))
+                (seq pin-ids) (into ["pins" (str/join "," (map encode pin-ids))])
+                focus-id      (into ["focus" (encode focus-id)])
+                browse-type   (into ["type" (encode browse-type)]))]
+    (let [new-hash (if (seq parts)
+                     (str "#/" (str/join "/" parts))
+                     "#")]
+      (when (not= new-hash (.-hash js/location))
+        (.replaceState js/history nil "" new-hash)))))
 
 (defn- parse-hash
-  "Parse the URL hash into a map of {:type ... :focus ...}."
   [hash-str]
   (let [s (str/replace hash-str #"^#/?" "")
         segments (str/split s #"/")]
@@ -38,6 +39,8 @@
                  (case k
                    "type"  (assoc result :type (decode v))
                    "focus" (assoc result :focus (decode v))
+                   "pins"  (assoc result :pins
+                                  (mapv decode (str/split v #",")))
                    result)))))))
 
 (defn restore-from-hash!
@@ -45,26 +48,32 @@
   []
   (let [hash (.-hash js/location)]
     (when (seq hash)
-      (let [{:keys [type focus]} (parse-hash hash)]
+      (let [{:keys [type focus pins]} (parse-hash hash)]
         (when type
           (api/browse-type! type))
-        (when focus
-          ;; Fetch the entity by ID and set focus
-          (api/browse-and-focus! focus focus))))))
+        (if (seq pins)
+          ;; Multi-pin: pin each entity, focus the active one
+          (do
+            (doseq [pid pins]
+              (api/pin-entity! pid pid))
+            (when focus
+              (state/set-focus! focus)))
+          ;; Legacy single-focus
+          (when focus
+            (api/browse-and-focus! focus focus)))))))
 
 (defn install!
-  "Wire up hash sync: update hash when focus/type changes, restore on load."
+  "Wire up hash sync."
   []
-  ;; Watch ui-state for changes and update the hash
   (add-watch state/ui-state ::route-sync
     (fn [_ _ old new]
       (when (or (not= (:focus-id old) (:focus-id new))
+                (not= (:pins old) (:pins new))
                 (not= (:browse-type old) (:browse-type new)))
         (push-hash!))))
-  ;; Handle browser back/forward
   (.addEventListener js/window "hashchange"
     (fn [_]
-      (let [{:keys [type focus]} (parse-hash (.-hash js/location))]
+      (let [{:keys [type focus pins]} (parse-hash (.-hash js/location))]
         (when (and type (not= type (:browse-type @state/ui-state)))
           (api/browse-type! type))
         (when (and focus (not= focus (:focus-id @state/ui-state)))

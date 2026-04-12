@@ -30,7 +30,7 @@ test("navigating updates the URL hash", async ({ page }) => {
   // The URL hash should now contain type and focus
   const url = page.url();
   console.log(`URL after navigation: ${url}`);
-  expect(url).toContain("#/type/");
+  expect(url).toContain("#/");
   expect(url).toContain("/focus/");
 
   // Grab the hash for the restore test

@@ -393,5 +393,12 @@
           (for [e entities]
             ^{:key (:id e)}
             [:div.sidebar-entity-item
-             {:on-click #(api/browse-and-focus! (:name e) (:id e))}
-             (or (:name e) (subs (str (:id e)) 0 12))])])])))
+             [:span.entity-name
+              {:on-click #(api/browse-and-focus! (:name e) (:id e))}
+              (or (:name e) (subs (str (:id e)) 0 12))]
+             [:button.pin-btn
+              {:on-click (fn [evt]
+                           (.stopPropagation evt)
+                           (api/pin-entity! (:name e) (:id e)))
+               :title (if (state/pinned? (:id e)) "Unpin" "Pin")}
+              (if (state/pinned? (:id e)) "\u25cb" "\u25cf")]])])])))

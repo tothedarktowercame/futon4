@@ -8,7 +8,7 @@
 
 (def base "/api/futon")
 
-(declare fetch-hyperedges save-entity! save-relation! fetch-types)
+(declare fetch-hyperedges save-entity! save-relation! fetch-types pin-entity!)
 
 (defn fetch-entity
   "Fetch a single entity by ID and ingest into Datascript."
@@ -121,6 +121,39 @@
       (swap! state/ui-state update :_render-tick (fnil inc 0))
       rel)))
 
+(defn pin-entity!
+  "Pin an entity onto the canvas. Fetches ego and adds as a pin."
+  [entity-name entity-id]
+  (if (state/pinned? entity-id)
+    ;; Already pinned — unpin
+    (state/unpin! entity-id)
+    ;; Pin it: fetch ego, ingest, add pin
+    (go
+      (let [resp (<! (http/get (str base "/ego/" (js/encodeURIComponent (or entity-name entity-id)))
+                               {:with-credentials? true}))]
+        (when (= 200 (:status resp))
+          (let [ego (get-in resp [:body :ego])
+                entity (:entity ego)
+                outgoing (:outgoing ego)]
+            (when entity
+              (state/ingest-entity! entity)
+              (doseq [entry outgoing]
+                (let [dst-entity (:entity entry)
+                      rel-info   (:relation entry)]
+                  (when dst-entity
+                    (state/ingest-entity! dst-entity))
+                  (when (and rel-info dst-entity)
+                    (state/ingest-relation!
+                     {:type (:type rel-info)
+                      :src  (:id entity)
+                      :dst  (:id dst-entity)
+                      :id   (str (:id entity) "->" (:id dst-entity))}))))
+              (let [eid (or (:id entity) (:entity/id entity))]
+                (state/pin! eid)
+                (fetch-hyperedges eid)
+                ;; Nudge re-render after Datascript transactions
+                (swap! state/ui-state update :_render-tick (fnil inc 0))))))))))
+
 (defn fetch-types
   "Fetch registered types from futon1a."
   []
@@ -181,8 +214,9 @@
                       :dst  (:id dst-entity)
                       :id   (str (:id entity) "->" (:id dst-entity))}))))
               (let [eid (or (:id entity) (:entity/id entity))]
-                (state/set-focus! eid)
-                (fetch-hyperedges eid)))
+                (state/pin! eid)
+                (fetch-hyperedges eid)
+                (swap! state/ui-state update :_render-tick (fnil inc 0))))
             ;; Ego didn't find by name — try direct entity fetch by ID
             (when entity-id
               (let [resp2 (<! (http/get (str base "/entity/" entity-id)
@@ -192,8 +226,10 @@
                     (when e
                       (state/ingest-entity! e)
                       (let [eid (or (:id e) (:entity/id e))]
-                        (state/set-focus! eid)
-                        (fetch-hyperedges eid)))))))))))))
+                        (state/pin! eid)
+                        (fetch-hyperedges eid)
+                        (swap! state/ui-state update :_render-tick (fnil inc 0))))))))))))))
+
 
 (defn save-entity!
   "Create or update an entity via futon1a."

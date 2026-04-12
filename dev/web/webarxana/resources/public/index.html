@@ -128,13 +128,29 @@
     .sidebar-entity-item {
       padding: 5px 12px;
       font-size: 13px;
-      cursor: pointer;
       border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .sidebar-entity-item .entity-name {
+      flex: 1;
+      cursor: pointer;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .sidebar-entity-item:hover { background: var(--card); color: var(--accent); }
+    .sidebar-entity-item .entity-name:hover { color: var(--accent); }
+    .pin-btn {
+      background: none !important;
+      border: none !important;
+      color: var(--text-dim) !important;
+      font-size: 12px !important;
+      cursor: pointer;
+      padding: 0 4px !important;
+      flex-shrink: 0;
+    }
+    .pin-btn:hover { color: var(--success) !important; }
     /* Scratchpad */
     .sidebar-scratchpad {
       border-bottom: 1px solid var(--border);

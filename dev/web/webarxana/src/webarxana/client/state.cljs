@@ -22,8 +22,9 @@
 
 ;; Reactive atoms for UI state
 (defonce ui-state
-  (r/atom {:focus-id    nil      ;; nema/id of the focused card
-           :hop-depth   3        ;; how many hops to show
+  (r/atom {:focus-id    nil      ;; nema/id of the active card (shown on right)
+           :pins        []       ;; [{:id "..." :k 1} ...] pinned nodes on canvas
+           :hop-depth   3        ;; default hop-depth for new pins
            :editing     nil      ;; nema/id currently being edited
            :username    nil      ;; logged-in user
            :connected   false    ;; WebSocket connected?
@@ -44,24 +45,57 @@
 (defn logged-in? []
   (some? (:username @ui-state)))
 
-;; Query: get a nema by its id
+;; --- Pin management ---
+
+(defn pinned? [nema-id]
+  (some #(= (:id %) nema-id) (:pins @ui-state)))
+
+(defn pin!
+  "Add a node to the canvas as a pinned focus. Also sets it as active card."
+  [nema-id & {:keys [k] :or {k 1}}]
+  (when-not (pinned? nema-id)
+    (swap! ui-state update :pins conj {:id nema-id :k k}))
+  (set-focus! nema-id))
+
+(defn unpin!
+  "Remove a node from the canvas pins."
+  [nema-id]
+  (swap! ui-state update :pins
+         (fn [ps] (vec (remove #(= (:id %) nema-id) ps))))
+  ;; If we unpinned the active card, focus the last remaining pin
+  (when (= nema-id (:focus-id @ui-state))
+    (let [remaining (:pins @ui-state)]
+      (if (seq remaining)
+        (set-focus! (:id (last remaining)))
+        (set-focus! nil)))))
+
+(defn set-pin-k!
+  "Adjust hop-depth for a specific pin."
+  [nema-id k]
+  (swap! ui-state update :pins
+         (fn [ps] (mapv #(if (= (:id %) nema-id)
+                           (assoc % :k k)
+                           %) ps))))
+
+;; --- Queries ---
+
 (defn get-nema [nema-id]
   (when-let [eid (d/entid @conn [:nema/id nema-id])]
     (d/pull @conn '[*] eid)))
 
-;; Query: get neighbourhood — all nemas within k hops of focus
-(defn neighbourhood [focus-nema-id k]
+(defn neighbourhood
+  "All nemas within k hops of focus-nema-id."
+  [focus-nema-id k]
   (when focus-nema-id
     (let [db @conn]
-      ;; BFS over links
       (loop [frontier #{focus-nema-id}
              visited  #{}
              depth    0]
         (if (or (>= depth k) (empty? frontier))
-          ;; Return all visited nemas with their links
-          (let [nema-eids (keep #(d/entid db [:nema/id %]) visited)
+          ;; Include frontier in visited — they are reachable within k hops
+          (let [visited  (into visited frontier)
+                nema-eids (keep #(d/entid db [:nema/id %]) visited)
                 nemas     (map #(d/pull db '[*] %) nema-eids)
-                ;; Find all links where both endpoints are in visited set
                 links     (d/q '[:find [(pull ?l [:link/id :link/type :link/text
                                                        {:link/src [:nema/id]}
                                                        {:link/dst [:nema/id]}]) ...]
@@ -75,9 +109,7 @@
                                  [(contains? ?visited ?did)]]
                                db visited)]
             {:nemas nemas :links links :focus focus-nema-id})
-          ;; Expand frontier
           (let [new-visited (into visited frontier)
-                ;; Find nemas connected to frontier via links
                 outgoing (d/q '[:find [?did ...]
                                 :in $ [?fid ...]
                                 :where
@@ -99,7 +131,29 @@
                                new-visited)]
             (recur next-frontier new-visited (inc depth))))))))
 
-;; Transact nemas from futon1a API responses into Datascript
+(defn multi-neighbourhood
+  "Merge neighbourhoods from all pinned nodes into a single graph."
+  [pins]
+  (let [hoods (keep (fn [{:keys [id k]}]
+                      (neighbourhood id (or k 1)))
+                    pins)
+        all-nemas (->> hoods
+                       (mapcat :nemas)
+                       (group-by :nema/id)
+                       (map (fn [[_ vs]] (first vs)))
+                       vec)
+        all-links (->> hoods
+                       (mapcat :links)
+                       (group-by :link/id)
+                       (map (fn [[_ vs]] (first vs)))
+                       vec)
+        pin-ids (set (map :id pins))]
+    {:nemas all-nemas
+     :links all-links
+     :pins  pin-ids}))
+
+;; --- Ingest ---
+
 (defn ingest-entity! [entity]
   (let [nema {:nema/id   (or (:entity/id entity) (:id entity) (str (:xt/id entity)))
               :nema/name (or (:entity/name entity) (:name entity) "")

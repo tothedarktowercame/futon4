@@ -3,21 +3,61 @@
             [webarxana.client.state :as state]
             [webarxana.client.api :as api]))
 
-;; Radial layout: focus node at center, neighbours in concentric rings.
+;; Multi-radial layout: each pinned node is a centre, neighbours radiate out.
 
 (def svg-width 1200)
 (def svg-height 800)
-;; Shift centre left to leave room for the focus card on the right
-(def cx (- (/ svg-width 2) 100))
-(def cy (/ svg-height 2))
 
-(defn radial-positions
-  "Compute {nema-id [x y]} for a neighbourhood.
-   Focus at center, others in concentric rings by hop distance."
-  [{:keys [nemas links focus]}]
+(defn- pin-centre
+  "Compute the canvas centre for each pin, distributing evenly."
+  [pins]
+  (let [n (count pins)
+        ;; Leave margins for cards (left 360, right 360)
+        usable-w (- svg-width 360)
+        usable-h (- svg-height 80)
+        margin-x 180
+        margin-y 40]
+    (if (= n 1)
+      ;; Single pin: shifted left of centre (room for focus card on right)
+      {(:id (first pins)) [(+ margin-x (/ usable-w 2) -100) (+ margin-y (/ usable-h 2))]}
+      ;; Multiple pins: distribute in a grid-like arrangement
+      (let [cols (min n (max 2 (int (js/Math.ceil (js/Math.sqrt n)))))
+            rows (int (js/Math.ceil (/ n cols)))
+            cell-w (/ usable-w cols)
+            cell-h (/ usable-h rows)]
+        (into {}
+              (map-indexed
+               (fn [i pin]
+                 (let [col (mod i cols)
+                       row (int (/ i cols))
+                       x (+ margin-x (* cell-w (+ 0.5 col)))
+                       y (+ margin-y (* cell-h (+ 0.5 row)))]
+                   [(:id pin) [x y]]))
+               pins))))))
+
+(defn- radial-around
+  "Place neighbours radially around a centre point."
+  [cx cy nodes ring-idx]
+  (let [n (count nodes)
+        min-arc 80
+        base-radius 120
+        min-r (if (> n 1) (/ (* n min-arc) (* 2 js/Math.PI)) base-radius)
+        r (max (* base-radius ring-idx) min-r)
+        offset (* 0.3 ring-idx)]
+    (into {}
+          (map-indexed
+           (fn [i [nema-id _]]
+             (let [angle (+ offset (* 2 js/Math.PI (/ i n)))
+                   x (+ cx (* r (js/Math.cos angle)))
+                   y (+ cy (* r (js/Math.sin angle)))]
+               [nema-id [x y]]))
+           nodes))))
+
+(defn- radial-positions-from
+  "Compute positions for a neighbourhood rooted at [cx cy]."
+  [cx cy {:keys [nemas links focus]}]
   (when (and focus (seq nemas))
-    (let [;; BFS to compute hop distances from focus
-          adj (reduce (fn [m link]
+    (let [adj (reduce (fn [m link]
                         (let [src (get-in link [:link/src :nema/id])
                               dst (get-in link [:link/dst :nema/id])]
                           (-> m
@@ -33,31 +73,28 @@
                               nbrs (remove dist (get adj v []))]
                           (recur (into (pop q) nbrs)
                                  (into dist (map #(vector % (inc d)) nbrs))))))
-          ;; Group by ring
           rings (->> (dissoc distances focus)
                      (group-by val)
-                     (sort-by key))
-          ;; Scale ring radius so nodes don't crowd: at least 80px arc between neighbours
-          min-arc 80
-          base-radius 160]
+                     (sort-by key))]
       (reduce
        (fn [positions [ring-idx nodes]]
-         (let [n (count nodes)
-               ;; Ensure enough room: radius so that arc between adjacent nodes >= min-arc
-               min-r (if (> n 1) (/ (* n min-arc) (* 2 js/Math.PI)) base-radius)
-               r (max (* base-radius ring-idx) min-r)
-               ;; Offset angle slightly per ring to avoid radial alignment
-               offset (* 0.3 ring-idx)]
-           (reduce
-            (fn [pos [i [nema-id _]]]
-              (let [angle (+ offset (* 2 js/Math.PI (/ i n)))
-                    x (+ cx (* r (js/Math.cos angle)))
-                    y (+ cy (* r (js/Math.sin angle)))]
-                (assoc pos nema-id [x y])))
-            positions
-            (map-indexed vector nodes))))
+         (merge positions (radial-around cx cy nodes ring-idx)))
        {focus [cx cy]}
        rings))))
+
+(defn- multi-positions
+  "Compute positions for all pins merged. First-pin-wins for shared nodes."
+  [pins centres merged-hood]
+  (let [nema-map (into {} (map (fn [n] [(:nema/id n) n]) (:nemas merged-hood)))]
+    (reduce
+     (fn [positions pin]
+       (let [[cx cy] (get centres (:id pin))
+             hood (state/neighbourhood (:id pin) (or (:k pin) 1))
+             pin-positions (when hood (radial-positions-from cx cy hood))]
+         ;; Only add positions for nodes not already placed (first-pin-wins)
+         (merge-with (fn [existing _new] existing) positions (or pin-positions {}))))
+     {}
+     pins)))
 
 (defn nema-color [nema-type]
   (case nema-type
@@ -69,59 +106,59 @@
     "#8899aa"))
 
 (defn link-component
-  "SVG line for a link-nema, with a clickable midpoint label."
   [link src-pos dst-pos]
   (let [[x1 y1] src-pos
         [x2 y2] dst-pos
         mx (/ (+ x1 x2) 2)
         my (/ (+ y1 y2) 2)
         link-type (:link/type link)
-        link-text (:link/text link)]
-    (let [label (if (seq link-text) link-text (or link-type "link"))
-          label-w (+ 12 (* 6 (count label)))]
-      [:g {:key (:link/id link)}
-       [:line {:x1 x1 :y1 y1 :x2 x2 :y2 y2
-               :stroke "#556677"
-               :stroke-width 1.5
-               :stroke-dasharray (when (= link-type "scholium") "4,4")
-               :opacity 0.6}]
-       ;; Label at midpoint, auto-sized
-       [:g {:on-click #(swap! state/ui-state assoc :editing (:link/id link))
-            :style {:cursor "pointer"}}
-        [:rect {:x (- mx (/ label-w 2)) :y (- my 9) :width label-w :height 18
-                :rx 4 :fill "#2a2a3a" :stroke "#556677" :stroke-width 0.5
-                :opacity 0.85}]
-        [:text {:x mx :y (+ my 3) :text-anchor "middle"
-                :fill "#aabbcc" :font-size 9 :font-family "monospace"}
-         label]]])))
+        link-text (:link/text link)
+        label (if (seq link-text) link-text (or link-type "link"))
+        label-w (+ 12 (* 6 (count label)))]
+    [:g {:key (:link/id link)}
+     [:line {:x1 x1 :y1 y1 :x2 x2 :y2 y2
+             :stroke "#556677"
+             :stroke-width 1.5
+             :stroke-dasharray (when (= link-type "scholium") "4,4")
+             :opacity 0.6}]
+     [:g {:on-click #(swap! state/ui-state assoc :editing (:link/id link))
+          :style {:cursor "pointer"}}
+      [:rect {:x (- mx (/ label-w 2)) :y (- my 9) :width label-w :height 18
+              :rx 4 :fill "#2a2a3a" :stroke "#556677" :stroke-width 0.5
+              :opacity 0.85}]
+      [:text {:x mx :y (+ my 3) :text-anchor "middle"
+              :fill "#aabbcc" :font-size 9 :font-family "monospace"}
+       label]]]))
 
 (defn node-component
-  "SVG group for a nema node. Click to focus, or to connect in connect-mode."
-  [nema pos is-focus]
+  [nema pos is-focus is-pin]
   (let [[x y] pos
         nema-id (:nema/id nema)
         nema-name (or (:nema/name nema) nema-id)
         nema-type (or (:nema/type nema) "unknown")
         connecting (:connecting @state/ui-state)
-        r (if is-focus 40 28)]
+        r (cond is-focus 40 is-pin 34 :else 28)]
     [:g {:key nema-id
          :on-click (fn []
                      (if connecting
-                       ;; Connect mode: link the scratchpad node to this node
                        (api/connect-nodes! (:node-id connecting) nema-id nil)
-                       ;; Normal mode: focus and fetch ego
-                       (when-not is-focus
-                         (api/browse-and-focus! nema-id nema-id))))
-         :style {:cursor (if connecting "crosshair" (if is-focus "default" "pointer"))}}
+                       (api/browse-and-focus! nema-id nema-id)))
+         :style {:cursor (if connecting "crosshair" "pointer")}}
      ;; Glow ring for focus
      (when is-focus
        [:circle {:cx x :cy y :r (+ r 6)
                  :fill "none" :stroke "#4a9eff"
                  :stroke-width 2 :opacity 0.4}])
+     ;; Pin indicator ring
+     (when (and is-pin (not is-focus))
+       [:circle {:cx x :cy y :r (+ r 4)
+                 :fill "none" :stroke "#51cf66"
+                 :stroke-width 1.5 :opacity 0.5
+                 :stroke-dasharray "4,3"}])
      ;; Node circle
      [:circle {:cx x :cy y :r r
                :fill (nema-color nema-type)
-               :opacity (if is-focus 1.0 0.75)
+               :opacity (if is-focus 1.0 (if is-pin 0.9 0.75))
                :stroke (if is-focus "#ffffff" "none")
                :stroke-width (if is-focus 2 0)}]
      ;; Type badge
@@ -138,21 +175,31 @@
         nema-name)]]))
 
 (defn graph-svg
-  "Main SVG canvas rendering the neighbourhood graph."
+  "Main SVG canvas rendering the multi-focus neighbourhood graph."
   []
   (let [_tick      (:_render-tick @state/ui-state)
         focus-id   (state/focus-id)
-        hood       (state/neighbourhood focus-id (:hop-depth @state/ui-state))
+        pins       (:pins @state/ui-state)
         scratchpad (:scratchpad @state/ui-state)
-        ;; Scratchpad nodes not already in the neighbourhood
-        hood-ids   (set (map :nema/id (:nemas hood)))
+        ;; Fall back to single-focus if no pins yet (backward compat)
+        effective-pins (if (seq pins)
+                         pins
+                         (when focus-id [{:id focus-id :k (:hop-depth @state/ui-state)}]))
+        merged-hood (when (seq effective-pins)
+                      (state/multi-neighbourhood effective-pins))
+        ;; Scratchpad nodes not in the merged neighbourhood
+        hood-ids   (set (map :nema/id (:nemas merged-hood)))
         floating   (->> scratchpad
                         (remove #(contains? hood-ids (:id %)))
                         vec)]
-    (if (or (and hood (seq (:nemas hood))) (seq floating))
-      (let [positions (if hood (radial-positions hood) {})
-            nema-map  (into {} (map (fn [n] [(:nema/id n) n]) (:nemas hood)))
-            ;; Place floating scratchpad nodes along bottom-left
+    (if (or (and merged-hood (seq (:nemas merged-hood))) (seq floating))
+      (let [centres   (when (seq effective-pins) (pin-centre effective-pins))
+            positions (if (seq effective-pins)
+                        (multi-positions effective-pins centres merged-hood)
+                        {})
+            nema-map  (into {} (map (fn [n] [(:nema/id n) n]) (:nemas merged-hood)))
+            pin-ids   (set (map :id effective-pins))
+            ;; Floating scratchpad nodes along bottom-left
             float-positions (into {}
                              (map-indexed
                               (fn [i node]
@@ -170,10 +217,10 @@
         [:svg {:width "100%" :height "100%"
                :viewBox (str "0 0 " svg-width " " svg-height)
                :style {:background "#1a1a2e"}}
-         ;; Links first (behind nodes)
-         (when hood
+         ;; Links
+         (when merged-hood
            (doall
-            (for [link (:links hood)
+            (for [link (:links merged-hood)
                   :let [src-id (get-in link [:link/src :nema/id])
                         dst-id (get-in link [:link/dst :nema/id])
                         src-pos (get all-positions src-id)
@@ -181,13 +228,15 @@
                   :when (and src-pos dst-pos)]
               ^{:key (:link/id link)}
               [link-component link src-pos dst-pos])))
-         ;; Nodes (neighbourhood + floating)
+         ;; Nodes
          (doall
           (for [[nema-id pos] all-positions
                 :let [nema (get all-nemas nema-id)]
                 :when nema]
             ^{:key nema-id}
-            [node-component nema pos (= nema-id focus-id)]))])
+            [node-component nema pos
+             (= nema-id focus-id)
+             (contains? pin-ids nema-id)]))])
       ;; Empty state
       [:div.empty-graph
        [:p "No nema in focus."]
