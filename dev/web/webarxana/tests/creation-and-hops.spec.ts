@@ -1,8 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test("+ button instantly creates a node in the scratchpad", async ({
-  page,
-}) => {
+test("+ button creates a scratch card floating left", async ({ page }) => {
   await page.goto("/index.html");
   await page.locator('input[type="text"]').fill("joe");
   await page.locator('input[type="password"]').fill("arxana");
@@ -11,26 +9,38 @@ test("+ button instantly creates a node in the scratchpad", async ({
     page.locator('input[placeholder="Search by name..."]')
   ).toBeVisible({ timeout: 5000 });
 
-  // Click + — should instantly create a node, open sidebar, show scratchpad
+  // Click + — should create a scratch card
   await page.locator(".btn-new-node").click();
 
-  // Sidebar should open with a scratchpad item
-  await expect(page.locator(".sidebar-scratchpad")).toBeVisible({
-    timeout: 5000,
-  });
-  await expect(page.locator(".scratchpad-item")).toBeVisible({ timeout: 5000 });
+  // Scratch card should appear with name input, text area, and buttons
+  await expect(page.locator(".scratch-card")).toBeVisible({ timeout: 5000 });
+  await expect(
+    page.locator('.scratch-card input[placeholder="Name..."]')
+  ).toBeVisible();
+  await expect(
+    page.locator('.scratch-card textarea[placeholder="Write here..."]')
+  ).toBeVisible();
+  await expect(
+    page.locator(".scratch-card .btn-save", { hasText: "Save" })
+  ).toBeVisible();
+  await expect(
+    page.locator(".scratch-card .btn-edit", { hasText: "Focus" })
+  ).toBeVisible();
 
-  // Scratchpad item should show (unnamed) and have Focus/Connect buttons
-  await expect(page.locator(".scratchpad-name em")).toHaveText("(unnamed)");
-  await expect(
-    page.locator(".scratchpad-btn", { hasText: "Focus" })
-  ).toBeVisible();
-  await expect(
-    page.locator(".scratchpad-btn", { hasText: "Connect" })
-  ).toBeVisible();
+  // Type something and save
+  await page
+    .locator('.scratch-card input[placeholder="Name..."]')
+    .fill("My new node");
+  await page
+    .locator('.scratch-card textarea')
+    .fill("Some content here");
+  await page.locator(".scratch-card .btn-save").click();
+
+  // Scratch card should still be visible with the saved name
+  await expect(page.locator(".scratch-card")).toBeVisible();
 });
 
-test("scratchpad Focus button focuses the new node", async ({ page }) => {
+test("scratch card Focus button focuses the new node", async ({ page }) => {
   await page.goto("/index.html");
   await page.locator('input[type="text"]').fill("joe");
   await page.locator('input[type="password"]').fill("arxana");
@@ -39,20 +49,23 @@ test("scratchpad Focus button focuses the new node", async ({ page }) => {
     page.locator('input[placeholder="Search by name..."]')
   ).toBeVisible({ timeout: 5000 });
 
-  // Create a scratch node
   await page.locator(".btn-new-node").click();
-  await expect(page.locator(".scratchpad-item")).toBeVisible({ timeout: 5000 });
+  await expect(page.locator(".scratch-card")).toBeVisible({ timeout: 5000 });
 
-  // Click Focus
-  await page.locator(".scratchpad-btn", { hasText: "Focus" }).click();
+  // Give it a name first
+  await page
+    .locator('.scratch-card input[placeholder="Name..."]')
+    .fill("Focus test");
 
-  // Should now show a focus card for the new node
+  // Click Focus — should focus this node and dismiss scratch card
+  await page.locator(".scratch-card .btn-edit", { hasText: "Focus" }).click();
+
   await expect(page.locator(".focus-card")).toBeVisible({ timeout: 5000 });
-  // Type should be article
-  await expect(page.locator(".focus-card .card-type")).toHaveText("article");
+  // Scratch card should be gone (node removed from scratchpad)
+  await expect(page.locator(".scratch-card")).not.toBeVisible({ timeout: 3000 });
 });
 
-test("scratchpad Connect button enters connect mode", async ({ page }) => {
+test("scratch card Connect enters connect mode", async ({ page }) => {
   await page.goto("/index.html");
   await page.locator('input[type="text"]').fill("joe");
   await page.locator('input[type="password"]').fill("arxana");
@@ -61,34 +74,50 @@ test("scratchpad Connect button enters connect mode", async ({ page }) => {
     page.locator('input[placeholder="Search by name..."]')
   ).toBeVisible({ timeout: 5000 });
 
-  // First, navigate to a node so we have a graph to connect to
+  // Navigate to Abi so we have a graph
   await page.locator('input[placeholder="Search by name..."]').fill("Abi");
   await page.locator('input[placeholder="Search by name..."]').press("Enter");
   await expect(page.locator(".focus-card")).toBeVisible({ timeout: 10000 });
 
-  // Create a scratch node
+  // Create scratch node
   await page.locator(".btn-new-node").click();
-  await expect(page.locator(".scratchpad-item")).toBeVisible({ timeout: 5000 });
+  await expect(page.locator(".scratch-card")).toBeVisible({ timeout: 5000 });
 
-  // Click Connect
-  await page.locator(".scratchpad-btn", { hasText: "Connect" }).click();
+  // Click Connect on the scratch card
+  await page
+    .locator(".scratch-card .scratchpad-btn", { hasText: "Connect" })
+    .click();
 
-  // Should show connect banner
+  // Should show connect banner in sidebar
+  await page.locator(".sidebar-toggle").click();
   await expect(page.locator(".connect-banner")).toBeVisible({ timeout: 3000 });
-  await expect(page.locator(".connect-banner")).toContainText(
-    "Click a node in the graph"
-  );
 
-  // Click the focused Abi node in the SVG to complete the connection
+  // Click a node in the graph to complete
   await page
     .locator("svg text", { hasText: /^Abi$/ })
     .last()
     .click({ force: true });
 
-  // Connect banner should disappear
   await expect(page.locator(".connect-banner")).not.toBeVisible({
     timeout: 5000,
   });
+});
+
+test("scratch card dismiss button removes it", async ({ page }) => {
+  await page.goto("/index.html");
+  await page.locator('input[type="text"]').fill("joe");
+  await page.locator('input[type="password"]').fill("arxana");
+  await page.locator("button", { hasText: "Sign in" }).click();
+  await expect(
+    page.locator('input[placeholder="Search by name..."]')
+  ).toBeVisible({ timeout: 5000 });
+
+  await page.locator(".btn-new-node").click();
+  await expect(page.locator(".scratch-card")).toBeVisible({ timeout: 5000 });
+
+  // Click the × button
+  await page.locator(".scratch-dismiss").click();
+  await expect(page.locator(".scratch-card")).not.toBeVisible({ timeout: 3000 });
 });
 
 test("+ Adjacent still opens creation dialog", async ({ page }) => {
@@ -100,15 +129,12 @@ test("+ Adjacent still opens creation dialog", async ({ page }) => {
     page.locator('input[placeholder="Search by name..."]')
   ).toBeVisible({ timeout: 5000 });
 
-  // Search for Abi
   await page.locator('input[placeholder="Search by name..."]').fill("Abi");
   await page.locator('input[placeholder="Search by name..."]').press("Enter");
   await expect(page.locator(".focus-card")).toBeVisible({ timeout: 10000 });
 
-  // Click + Adjacent
   await page.locator(".btn-new", { hasText: "+ Adjacent" }).click();
   await expect(page.locator(".creation-dialog")).toBeVisible({ timeout: 3000 });
-  // Should have relation picker
   await expect(page.locator(".creation-field select")).toHaveCount(2);
 });
 

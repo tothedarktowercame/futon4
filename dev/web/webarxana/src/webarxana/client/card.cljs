@@ -159,6 +159,72 @@
                              :from-id (state/focus-id)
                              :on-close #(reset! show-adjacent false)}])]))))
 
+;; --- Scratch card (floats left, for newly created nodes) ---
+
+(defn scratch-card
+  "Editable card for the most recent scratchpad node, floats top-left."
+  []
+  (let [scratch-name (r/atom "")
+        scratch-text (r/atom "")]
+    (fn []
+      (let [scratchpad (:scratchpad @state/ui-state)
+            node       (last scratchpad)]
+        (when node
+          (let [node-id (:id node)]
+            [:div.scratch-card
+             ;; Header
+             [:div.card-header
+              [:span.card-type (or (:type node) "article")]
+              [:input.card-name-input
+               {:value @scratch-name
+                :on-change #(reset! scratch-name (.. % -target -value))
+                :placeholder "Name..."}]
+              [:button.scratch-dismiss
+               {:on-click #(swap! state/ui-state update :scratchpad
+                                  (fn [sp] (vec (remove (fn [n] (= (:id n) node-id)) sp))))}
+               "\u00d7"]]
+             ;; Body — always editable
+             [:textarea.card-body-edit
+              {:value @scratch-text
+               :on-change #(reset! scratch-text (.. % -target -value))
+               :placeholder "Write here..."
+               :auto-focus true}]
+             ;; Footer
+             [:div.card-footer
+              [:button.btn-save
+               {:on-click
+                (fn []
+                  (let [name-val (str/trim @scratch-name)
+                        text-val @scratch-text]
+                    (go
+                      (<! (api/save-entity! {:id   node-id
+                                             :name (if (seq name-val) name-val "Untitled")
+                                             :type (or (:type node) "article")
+                                             :source text-val
+                                             :props {:authors [(:username @state/ui-state)]}}))
+                      ;; Update the scratchpad entry with the name
+                      (swap! state/ui-state update :scratchpad
+                             (fn [sp] (mapv #(if (= (:id %) node-id)
+                                               (assoc % :name (if (seq name-val) name-val "Untitled"))
+                                               %) sp)))
+                      (state/ingest-entity! {:id node-id
+                                             :name (if (seq name-val) name-val "Untitled")
+                                             :type (or (:type node) "article")
+                                             :source text-val}))))}
+               "Save"]
+              [:button.btn-edit
+               {:on-click #(do (state/ingest-entity! {:id node-id
+                                                      :name (if (seq @scratch-name) @scratch-name "")
+                                                      :type (or (:type node) "article")})
+                               (state/set-focus! node-id)
+                               (swap! state/ui-state update :scratchpad
+                                      (fn [sp] (vec (remove (fn [n] (= (:id n) node-id)) sp)))))}
+               "Focus"]
+              [:button.scratchpad-btn
+               {:on-click #(swap! state/ui-state assoc
+                                  :connecting {:node-id node-id})}
+               "Connect"]]]))))))
+
 ;; --- Login ---
 
 (defn login-form
@@ -240,31 +306,8 @@
     (let [types      (:available-types @state/ui-state)
           cur-type   (:browse-type @state/ui-state)
           entities   (:browse-list @state/ui-state)
-          scratchpad (:scratchpad @state/ui-state)
           connecting (:connecting @state/ui-state)]
       [:div.sidebar
-       ;; Scratchpad — new nodes waiting to be named/connected
-       (when (seq scratchpad)
-         [:div.sidebar-scratchpad
-          [:div.sidebar-heading "Scratchpad"]
-          (for [node scratchpad]
-            ^{:key (:id node)}
-            [:div.scratchpad-item
-             [:span.scratchpad-name
-              (if (seq (:name node))
-                (:name node)
-                [:em "(unnamed)"])]
-             [:div.scratchpad-actions
-              [:button.scratchpad-btn
-               {:on-click #(do (state/ingest-entity! {:id (:id node)
-                                                      :name (or (:name node) "")
-                                                      :type (or (:type node) "article")})
-                               (state/set-focus! (:id node)))}
-               "Focus"]
-              [:button.scratchpad-btn
-               {:on-click #(swap! state/ui-state assoc
-                                  :connecting {:node-id (:id node)})}
-               "Connect"]]])])
        ;; Connect mode banner
        (when connecting
          [:div.connect-banner

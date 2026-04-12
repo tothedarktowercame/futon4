@@ -14,6 +14,7 @@
       [card/sidebar]
       [:div.canvas-container
        [graph/graph-svg]
+       [card/scratch-card]
        [card/focus-card]]]]
     [card/login-form]))
 
