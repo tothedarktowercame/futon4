@@ -207,8 +207,8 @@
         raw-hood (when (seq effective-pins)
                    (state/multi-neighbourhood effective-pins))
         ;; Diagram filtering:
-        ;; - Pinned diagram (compressed): show ONLY the diagram node, hide
-        ;;   all diagram/includes links and included neighbours
+        ;; - Pinned diagram (compressed): keep the diagram node, hide
+        ;;   diagram/includes links and their target entities (the "contents")
         ;; - Non-pinned diagram (neighbour): hide it entirely
         pin-id-set (set (map :id (or effective-pins [])))
         merged-hood (when raw-hood
@@ -224,12 +224,22 @@
                                                                  (not (contains? pin-id-set (:nema/id %)))))
                                                     (map :nema/id)
                                                     set)
-                            ;; All diagram IDs to filter links
-                            all-diagram-ids (into pinned-diagrams neighbour-diagrams)]
-                        {:nemas (remove #(contains? neighbour-diagrams (:nema/id %)) (:nemas raw-hood))
+                            ;; Content entities of pinned diagrams (targets of diagram/includes)
+                            content-ids (->> (:links raw-hood)
+                                            (filter #(and (= "diagram/includes" (:link/type %))
+                                                         (contains? pinned-diagrams
+                                                                    (get-in % [:link/src :nema/id]))))
+                                            (map #(get-in % [:link/dst :nema/id]))
+                                            set)
+                            ;; Hide: neighbour diagrams + content of pinned diagrams
+                            hide-ids (into neighbour-diagrams content-ids)]
+                        {:nemas (remove #(contains? hide-ids (:nema/id %)) (:nemas raw-hood))
                          :links (remove #(or (= "diagram/includes" (:link/type %))
                                             (contains? neighbour-diagrams (get-in % [:link/src :nema/id]))
-                                            (contains? neighbour-diagrams (get-in % [:link/dst :nema/id])))
+                                            (contains? neighbour-diagrams (get-in % [:link/dst :nema/id]))
+                                            ;; Also hide links to/from hidden content nodes
+                                            (contains? content-ids (get-in % [:link/src :nema/id]))
+                                            (contains? content-ids (get-in % [:link/dst :nema/id])))
                                         (:links raw-hood))
                          :pins (:pins raw-hood)}))
         hood-ids   (set (map :nema/id (:nemas merged-hood)))

@@ -208,19 +208,11 @@
               (state/set-focus! focus))))))))
 
 (defn compress-diagram!
-  "Collapse current expanded diagram — clear pins, show diagram as a single node."
+  "Collapse current expanded diagram — show diagram node with non-content connections."
   [diagram-id]
   (swap! state/ui-state assoc :pins [] :expanded-diagram nil)
-  ;; Pin with k=0 so no neighbours are shown — just the diagram node
-  (go
-    (let [resp (<! (http/get (str base "/ego/" (js/encodeURIComponent diagram-id))
-                             {:with-credentials? true}))]
-      (when (= 200 (:status resp))
-        (let [entity (ingest-ego! (get-in resp [:body :ego]))]
-          (when entity
-            (let [eid (or (:id entity) (:entity/id entity))]
-              (state/pin! eid :k 0)
-              (swap! state/ui-state update :_render-tick (fnil inc 0)))))))))
+  ;; Pin normally — the graph filter handles hiding diagram/includes content
+  (pin-entity! diagram-id diagram-id))
 
 (defn fetch-recent
   "Fetch recent entities across key types for the activity feed."
