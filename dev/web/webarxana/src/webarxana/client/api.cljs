@@ -66,8 +66,9 @@
               entity (ingest-ego! ego)]
           (when entity
             (let [eid (or (:id entity) (:entity/id entity))]
-              (state/set-focus! eid)
-              (fetch-hyperedges eid)))
+              (state/pin! eid)
+              (fetch-hyperedges eid)
+              (swap! state/ui-state update :_render-tick (fnil inc 0))))
           ego)))))
 
 (defn fetch-entities-by-type

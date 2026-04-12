@@ -27,7 +27,7 @@ test("+ Adjacent opens dialog, creates entity with relation", async ({
   await page.locator(".sidebar-entity-item").first().click();
 
   // Wait for focus card
-  await expect(page.locator(".focus-card")).toBeVisible({ timeout: 10000 });
+  await expect(page.locator(".focus-card").first()).toBeVisible({ timeout: 10000 });
 
   // Click + Adjacent — should open creation dialog
   await page.locator(".btn-new", { hasText: "+ Adjacent" }).click();
@@ -40,7 +40,7 @@ test("+ Adjacent opens dialog, creates entity with relation", async ({
   await page.locator(".btn-create").click();
 
   // Focus should shift to the new node
-  await expect(page.locator(".focus-card .card-name")).toHaveText(
+  await expect(page.locator(".focus-card.active-pin .card-name")).toHaveText(
     "Adjacent test node",
     { timeout: 10000 }
   );

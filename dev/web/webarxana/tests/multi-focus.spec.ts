@@ -30,7 +30,7 @@ test("pin button in sidebar adds entity to canvas", async ({ page }) => {
 
   // Should see the entity in the graph
   await expect(page.locator("svg")).toBeVisible({ timeout: 5000 });
-  await expect(page.locator(".focus-card")).toBeVisible({ timeout: 5000 });
+  await expect(page.locator(".focus-card").first()).toBeVisible({ timeout: 5000 });
 
   // The URL should contain pins
   const url = page.url();
@@ -44,7 +44,7 @@ test("multiple pins show multiple clusters on canvas", async ({ page }) => {
   const search = page.locator('input[placeholder="Search by name..."]');
   await search.fill("Nets");
   await search.press("Enter");
-  await expect(page.locator(".focus-card")).toBeVisible({ timeout: 10000 });
+  await expect(page.locator(".focus-card").first()).toBeVisible({ timeout: 10000 });
 
   // Now pin Abi as a second focus via sidebar
   await page.locator(".sidebar-toggle").click();

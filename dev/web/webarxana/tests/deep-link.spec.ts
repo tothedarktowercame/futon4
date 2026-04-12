@@ -25,7 +25,7 @@ test("navigating updates the URL hash", async ({ page }) => {
 
   // Click an entity
   await page.locator(".sidebar-entity-item").first().click();
-  await expect(page.locator(".focus-card")).toBeVisible({ timeout: 10000 });
+  await expect(page.locator(".focus-card").first()).toBeVisible({ timeout: 10000 });
 
   // The URL hash should now contain type and focus
   const url = page.url();
@@ -38,7 +38,7 @@ test("navigating updates the URL hash", async ({ page }) => {
   console.log(`Hash: ${hash}`);
 
   // Remember what entity is focused
-  const focusedName = await page.locator(".focus-card .card-name").textContent();
+  const focusedName = await page.locator(".focus-card.active-pin .card-name").textContent();
   console.log(`Focused entity: ${focusedName}`);
 });
 
@@ -63,11 +63,11 @@ test("deep link restores view on page load", async ({ page }) => {
     timeout: 5000,
   });
   await page.locator(".sidebar-entity-item").first().click();
-  await expect(page.locator(".focus-card")).toBeVisible({ timeout: 10000 });
+  await expect(page.locator(".focus-card").first()).toBeVisible({ timeout: 10000 });
 
   const hash = new URL(page.url()).hash;
   const focusedName = await page
-    .locator(".focus-card .card-name")
+    .locator(".focus-card.active-pin .card-name")
     .textContent();
   console.log(`Original: ${focusedName} at ${hash}`);
 
@@ -76,10 +76,10 @@ test("deep link restores view on page load", async ({ page }) => {
 
   // Need to log in again (session cookie should persist)
   // The hash restore happens after auth check
-  await expect(page.locator(".focus-card")).toBeVisible({ timeout: 15000 });
+  await expect(page.locator(".focus-card").first()).toBeVisible({ timeout: 15000 });
 
   const restoredName = await page
-    .locator(".focus-card .card-name")
+    .locator(".focus-card.active-pin .card-name")
     .textContent();
   console.log(`Restored: ${restoredName}`);
   expect(restoredName).toBe(focusedName);

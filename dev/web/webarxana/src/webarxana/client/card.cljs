@@ -72,7 +72,7 @@
                          ;; Fetch ego for the parent so the graph shows the connection
                          (when adjacent?
                            (<! (api/fetch-ego (str from-id))))
-                         (state/set-focus! eid)
+                         (state/pin! eid)
                          (on-close)))))))}
             "Create"]
            [:button.btn-cancel {:on-click on-close} "Cancel"]]]]))))
@@ -80,23 +80,24 @@
 
 ;; --- Focus card ---
 
-(defn focus-card
-  "Editable card overlay for the focused nema."
-  []
+(defn- pin-card-inner
+  "A single editable card for a pinned entity."
+  [pin-id]
   (let [editing-text (r/atom nil)
         editing-name (r/atom nil)
         show-adjacent (r/atom false)]
-    (fn []
-      (let [focus-id (state/focus-id)
-            nema     (when focus-id (state/get-nema focus-id))]
-        [:<>
-         (when nema
-           (let [is-editing (= (:editing @state/ui-state) focus-id)
-                 nema-name    (or (:nema/name nema) "")
-                 nema-text    (or (:nema/text nema) "")
-                 nema-type    (or (:nema/type nema) "unknown")
-                 nema-authors (or (:nema/authors nema) [])]
-             [:div.focus-card
+    (fn [pin-id]
+      (let [nema     (state/get-nema pin-id)
+            focus-id (state/focus-id)
+            is-active (= pin-id focus-id)]
+        (when nema
+          (let [is-editing  (= (:editing @state/ui-state) pin-id)
+                nema-name   (or (:nema/name nema) "")
+                nema-text   (or (:nema/text nema) "")
+                nema-type   (or (:nema/type nema) "unknown")
+                nema-authors (or (:nema/authors nema) [])]
+            [:<>
+             [:div.focus-card {:class (when is-active "active-pin")}
               ;; Header
               [:div.card-header
                [:span.card-type nema-type]
@@ -105,14 +106,19 @@
                   {:value (or @editing-name nema-name)
                    :on-change #(reset! editing-name (.. % -target -value))
                    :placeholder "Name..."}]
-                 [:span.card-name {:on-double-click
-                                   #(do (reset! editing-name nema-name)
-                                        (swap! state/ui-state assoc :editing focus-id))}
+                 [:span.card-name
+                  {:on-click #(state/set-focus! pin-id)
+                   :on-double-click
+                   #(do (reset! editing-name nema-name)
+                        (swap! state/ui-state assoc :editing pin-id))}
                   nema-name])
-               [:span.card-id (subs (str focus-id) 0 8)]
+               [:span.card-id (subs (str pin-id) 0 8)]
                (when (seq nema-authors)
-                 [:span.card-authors
-                  (str/join ", " nema-authors)])]
+                 [:span.card-authors (str/join ", " nema-authors)])
+               [:button.scratch-dismiss
+                {:on-click #(state/unpin! pin-id)
+                 :title "Unpin"}
+                "\u00d7"]]
               ;; Body
               (if is-editing
                 [:textarea.card-body-edit
@@ -123,7 +129,7 @@
                 [:div.card-body
                  {:on-double-click
                   #(do (reset! editing-text nema-text)
-                       (swap! state/ui-state assoc :editing focus-id))}
+                       (swap! state/ui-state assoc :editing pin-id))}
                  (if (seq nema-text) nema-text [:em "Empty — double-click to edit"])])
               ;; Footer
               [:div.card-footer
@@ -137,11 +143,6 @@
                         (api/save-entity! {:name new-name
                                            :type nema-type
                                            :source new-text})
-                        (api/ws-send! {:type "nema-updated"
-                                       :entity {:nema/id focus-id
-                                                :nema/name new-name
-                                                :nema/text new-text
-                                                :nema/type nema-type}})
                         (swap! state/ui-state assoc :editing nil)
                         (reset! editing-text nil)
                         (reset! editing-name nil)))}
@@ -155,16 +156,28 @@
                   [:button.btn-edit
                    {:on-click #(do (reset! editing-text nema-text)
                                    (reset! editing-name nema-name)
-                                   (swap! state/ui-state assoc :editing focus-id))}
+                                   (swap! state/ui-state assoc :editing pin-id))}
                    "Edit"]
                   [:button.btn-new
-                   {:on-click #(reset! show-adjacent true)}
-                   "+ Adjacent"]])]]))
-         ;; Adjacent creation dialog
-         (when @show-adjacent
-           [creation-dialog {:adjacent? true
-                             :from-id (state/focus-id)
-                             :on-close #(reset! show-adjacent false)}])]))))
+                   {:on-click #(do (state/set-focus! pin-id)
+                                   (reset! show-adjacent true))}
+                   "+ Adjacent"]])]]
+             ;; Adjacent dialog for this pin
+             (when (and @show-adjacent is-active)
+               [creation-dialog {:adjacent? true
+                                 :from-id pin-id
+                                 :on-close #(reset! show-adjacent false)}])]))))))
+
+(defn focus-card
+  "Stacked cards for all pinned entities, scrollable on the right."
+  []
+  (let [pins (:pins @state/ui-state)]
+    (when (seq pins)
+      [:div.pin-cards
+       (doall
+        (for [pin pins]
+          ^{:key (:id pin)}
+          [pin-card-inner (:id pin)]))])))
 
 ;; --- Scratch card (floats left, for newly created nodes) ---
 

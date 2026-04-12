@@ -60,7 +60,7 @@ test("scratch card Focus button focuses the new node", async ({ page }) => {
   // Click Focus — should focus this node and dismiss scratch card
   await page.locator(".scratch-card .btn-edit", { hasText: "Focus" }).click();
 
-  await expect(page.locator(".focus-card")).toBeVisible({ timeout: 5000 });
+  await expect(page.locator(".focus-card").first()).toBeVisible({ timeout: 5000 });
   // Scratch card should be gone (node removed from scratchpad)
   await expect(page.locator(".scratch-card")).not.toBeVisible({ timeout: 3000 });
 });
@@ -77,7 +77,7 @@ test("scratch card Connect enters connect mode", async ({ page }) => {
   // Navigate to Abi so we have a graph
   await page.locator('input[placeholder="Search by name..."]').fill("Abi");
   await page.locator('input[placeholder="Search by name..."]').press("Enter");
-  await expect(page.locator(".focus-card")).toBeVisible({ timeout: 10000 });
+  await expect(page.locator(".focus-card").first()).toBeVisible({ timeout: 10000 });
 
   // Create scratch node
   await page.locator(".btn-new-node").click();
@@ -161,7 +161,7 @@ test("+ Adjacent still opens creation dialog", async ({ page }) => {
 
   await page.locator('input[placeholder="Search by name..."]').fill("Abi");
   await page.locator('input[placeholder="Search by name..."]').press("Enter");
-  await expect(page.locator(".focus-card")).toBeVisible({ timeout: 10000 });
+  await expect(page.locator(".focus-card").first()).toBeVisible({ timeout: 10000 });
 
   await page.locator(".btn-new", { hasText: "+ Adjacent" }).click();
   await expect(page.locator(".creation-dialog")).toBeVisible({ timeout: 3000 });

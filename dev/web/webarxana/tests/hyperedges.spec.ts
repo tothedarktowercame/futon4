@@ -17,8 +17,8 @@ test("Abi song shows hyperedge connections", async ({ page }) => {
   await searchInput.press("Enter");
 
   // Wait for focus card
-  await expect(page.locator(".focus-card")).toBeVisible({ timeout: 10000 });
-  await expect(page.locator(".focus-card .card-name")).toHaveText("Abi");
+  await expect(page.locator(".focus-card").first()).toBeVisible({ timeout: 10000 });
+  await expect(page.locator(".focus-card.active-pin .card-name")).toHaveText("Abi");
 
   // Wait for hyperedge connections to render in the SVG
   await expect(page.locator("svg")).toBeVisible({ timeout: 5000 });

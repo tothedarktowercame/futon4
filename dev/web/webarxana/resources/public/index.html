@@ -222,13 +222,22 @@
     }
     .canvas-container svg { display: block; }
 
-    /* Focus card overlay — docked to the right */
-    .focus-card {
+    /* Stacked pin cards on the right */
+    .pin-cards {
       position: absolute;
-      top: 12px;
-      right: 12px;
+      top: 8px;
+      right: 8px;
       width: 340px;
-      max-height: calc(100% - 24px);
+      max-height: calc(100% - 16px);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 5;
+      pointer-events: auto;
+    }
+    .focus-card {
+      width: 100%;
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 8px;
@@ -238,6 +247,8 @@
       z-index: 5;
       pointer-events: auto;
     }
+    .focus-card.active-pin { border-color: var(--accent); }
+    .focus-card .card-body { max-height: 150px; }
     .card-header {
       display: flex;
       align-items: center;

@@ -45,7 +45,7 @@ test("browse real data via type sidebar", async ({ page }) => {
   await firstEntity.click();
 
   // Wait for the focus card to show the entity
-  await expect(page.locator(".focus-card")).toBeVisible({ timeout: 10000 });
+  await expect(page.locator(".focus-card").first()).toBeVisible({ timeout: 10000 });
 
   await page.screenshot({
     path: "tests/browse-real-data.png",
@@ -85,7 +85,7 @@ test("browse pattern languages", async ({ page }) => {
 
   // Click one
   await page.locator(".sidebar-entity-item").first().click();
-  await expect(page.locator(".focus-card")).toBeVisible({ timeout: 10000 });
+  await expect(page.locator(".focus-card").first()).toBeVisible({ timeout: 10000 });
 
   await page.screenshot({
     path: "tests/browse-patterns.png",

@@ -85,7 +85,7 @@ test("clicking a neighbour node shifts focus", async ({ page }) => {
   ).toBeVisible({ timeout: 10000 });
 
   // The focus card should show arxana details
-  await expect(page.locator(".focus-card .card-name")).toHaveText("arxana");
+  await expect(page.locator(".focus-card.active-pin .card-name")).toHaveText("arxana");
 
   // Click the "nema" node label in the SVG — use the bold name label (font-weight bold)
   // There are two text elements per node (type label + name), we want the name.
@@ -96,7 +96,7 @@ test("clicking a neighbour node shifts focus", async ({ page }) => {
   await nemaNodeText.click({ force: true });
 
   // Focus card should now show "nema"
-  await expect(page.locator(".focus-card .card-name")).toHaveText("nema", {
+  await expect(page.locator(".focus-card.active-pin .card-name")).toHaveText("nema", {
     timeout: 5000,
   });
 
