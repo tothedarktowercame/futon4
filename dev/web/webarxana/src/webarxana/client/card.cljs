@@ -92,9 +92,10 @@
         [:<>
          (when nema
            (let [is-editing (= (:editing @state/ui-state) focus-id)
-                 nema-name  (or (:nema/name nema) "")
-                 nema-text  (or (:nema/text nema) "")
-                 nema-type  (or (:nema/type nema) "unknown")]
+                 nema-name    (or (:nema/name nema) "")
+                 nema-text    (or (:nema/text nema) "")
+                 nema-type    (or (:nema/type nema) "unknown")
+                 nema-authors (or (:nema/authors nema) [])]
              [:div.focus-card
               ;; Header
               [:div.card-header
@@ -108,7 +109,10 @@
                                    #(do (reset! editing-name nema-name)
                                         (swap! state/ui-state assoc :editing focus-id))}
                   nema-name])
-               [:span.card-id (subs (str focus-id) 0 8)]]
+               [:span.card-id (subs (str focus-id) 0 8)]
+               (when (seq nema-authors)
+                 [:span.card-authors
+                  (str/join ", " nema-authors)])]
               ;; Body
               (if is-editing
                 [:textarea.card-body-edit

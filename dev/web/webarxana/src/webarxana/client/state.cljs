@@ -9,6 +9,7 @@
    :nema/name     {}
    :nema/type     {}
    :nema/text     {}
+   :nema/authors  {}
    :nema/payload  {}
    ;; Relations (links between nemas — themselves nemas)
    :link/id       {:db/unique :db.unique/identity}
@@ -164,7 +165,9 @@
                              (:source entity)
                              (get-in entity [:payload :text])
                              (:notes entity)
-                             "")}]
+                             "")
+              :nema/authors (or (get-in entity [:props :authors])
+                                [])}]
     (d/transact! conn [nema])))
 
 (defn ingest-relation! [rel]
