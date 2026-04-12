@@ -15,7 +15,8 @@
       [:div.canvas-container
        [graph/graph-svg]
        [card/scratch-card]
-       [card/focus-card]]]]
+       [card/focus-card]
+       [card/link-editor]]]]
     [card/login-form]))
 
 (defonce root (rdc/create-root (.getElementById js/document "app")))

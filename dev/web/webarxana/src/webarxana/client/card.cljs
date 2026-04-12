@@ -450,3 +450,37 @@
                            (api/pin-entity! (:name e) (:id e)))
                :title (if (state/pinned? (:id e)) "Unpin" "Pin")}
               (if (state/pinned? (:id e)) "\u25cb" "\u25cf")]])])])))
+
+;; --- Link editor popup ---
+
+(defn link-editor
+  "Popup for editing a link's type, positioned near the clicked label."
+  []
+  (when-let [info (:editing-link @state/ui-state)]
+    (let [rel-types (or (seq (:available-relation-types @state/ui-state))
+                        ["arxana/scholium" "defines" "inspired-by"
+                         "supported-by" "answered-by" "example"
+                         "implemented-by" "surface" "evolved-into"])]
+      [:div.link-editor-popup
+       {:style {:left (str (:x info) "px")
+                :top  (str (:y info) "px")}}
+       [:div.link-editor-header
+        [:span "Edit relation"]
+        [:button.scratch-dismiss
+         {:on-click #(swap! state/ui-state dissoc :editing-link)}
+         "\u00d7"]]
+       [:div.link-editor-body
+        [:label "Type"]
+        [:select
+         {:value (:type info)
+          :auto-focus true
+          :on-change (fn [e]
+                       (let [new-type (.. e -target -value)]
+                         ;; TODO: persist to futon1a (needs relation update endpoint)
+                         ;; For now, just close
+                         (swap! state/ui-state dissoc :editing-link)))}
+         (for [t rel-types]
+           ^{:key t} [:option {:value t} t])]
+        [:div.link-editor-info
+         [:span.card-id (subs (str (:id info)) 0 20)]]]])))
+

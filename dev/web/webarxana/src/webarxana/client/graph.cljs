@@ -129,37 +129,22 @@
              :stroke-dasharray (when (= link-type "scholium") "4,4")
              :opacity 0.7
              :marker-end "url(#arrowhead)"}]
-     (if is-editing
-       ;; Inline type editor
-       [:foreignObject {:x (- mx 80) :y (- my 14) :width 160 :height 28}
-        [:select
-         {:value (or link-type "arxana/scholium")
-          :auto-focus true
-          :style {:width "100%" :height "100%"
-                  :background "#22223a" :color "#d4d4e8"
-                  :border "1px solid #ffd43b" :border-radius "4px"
-                  :font-size "10px" :font-family "monospace"
-                  :cursor "pointer"}
-          :on-change (fn [e]
-                       (let [new-type (.. e -target -value)]
-                         ;; TODO: persist type change to futon1a
-                         ;; For now, update Datascript locally
-                         (swap! state/ui-state assoc :editing nil)))
-          :on-blur #(swap! state/ui-state assoc :editing nil)}
-         (for [t (or (seq (:available-relation-types @state/ui-state))
-                     ["arxana/scholium" "defines" "inspired-by"
-                      "supported-by" "answered-by" "example"
-                      "implemented-by" "surface" "evolved-into"])]
-           ^{:key t} [:option {:value t} t])]]
-       ;; Normal label
-       [:g {:on-click #(swap! state/ui-state assoc :editing link-id)
-            :style {:cursor "pointer"}}
-        [:rect {:x (- mx (/ label-w 2)) :y (- my 9) :width label-w :height 18
-                :rx 4 :fill "#2a2a3a" :stroke (if is-editing "#ffd43b" "#556677")
-                :stroke-width 0.5 :opacity 0.85}]
-        [:text {:x mx :y (+ my 3) :text-anchor "middle"
-                :fill "#aabbcc" :font-size 9 :font-family "monospace"}
-         label]])]))
+     [:g {:on-click (fn [e]
+                      ;; Store link info + screen position for the popup
+                      (let [rect (.getBoundingClientRect (.-currentTarget e))]
+                        (swap! state/ui-state assoc
+                               :editing-link {:id link-id
+                                              :type (or link-type "arxana/scholium")
+                                              :x (.-clientX e)
+                                              :y (.-clientY e)})))
+          :style {:cursor "pointer"}}
+      [:rect {:x (- mx (/ label-w 2)) :y (- my 9) :width label-w :height 18
+              :rx 4 :fill "#2a2a3a"
+              :stroke (if is-editing "#ffd43b" "#556677")
+              :stroke-width 0.5 :opacity 0.85}]
+      [:text {:x mx :y (+ my 3) :text-anchor "middle"
+              :fill "#aabbcc" :font-size 9 :font-family "monospace"}
+       label]]]))
 
 (defn node-component
   [nema pos is-focus is-pin]
