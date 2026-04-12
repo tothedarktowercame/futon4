@@ -363,7 +363,9 @@
 (defn search-bar
   "Top bar with search, entity type browser, new node, and hop controls."
   []
-  (let [query (r/atom "")]
+  (let [query (r/atom "")
+        saving-diagram (r/atom false)
+        diagram-name (r/atom "")]
     (fn []
       (let [types     (:available-types @state/ui-state)
             sidebar?  (:sidebar-open @state/ui-state)
@@ -396,6 +398,31 @@
           [:button.hop-btn
            {:on-click #(swap! state/ui-state update :hop-depth (fn [k] (min 10 (inc k))))}
            "+"]]
+         ;; Save diagram button (only when pins exist)
+         (when (seq (:pins @state/ui-state))
+           (if @saving-diagram
+             [:div.diagram-save-inline
+              [:input {:type "text"
+                       :placeholder "Diagram name..."
+                       :value @diagram-name
+                       :auto-focus true
+                       :on-change #(reset! diagram-name (.. % -target -value))
+                       :on-key-down #(when (= 13 (.-keyCode %))
+                                       (api/save-diagram! @diagram-name)
+                                       (reset! saving-diagram false)
+                                       (reset! diagram-name ""))}]
+              [:button.hop-btn
+               {:on-click #(do (api/save-diagram! @diagram-name)
+                               (reset! saving-diagram false)
+                               (reset! diagram-name ""))}
+               "\u2713"]
+              [:button.hop-btn
+               {:on-click #(reset! saving-diagram false)}
+               "\u2717"]]
+             [:button.hop-btn
+              {:on-click #(reset! saving-diagram true)
+               :title "Save current spread as a diagram"}
+              "\ud83d\udcbe"]))
          [:span.status-indicator
           {:class (if (:connected @state/ui-state) "connected" "disconnected")}
           (if (:connected @state/ui-state) "live" "offline")]

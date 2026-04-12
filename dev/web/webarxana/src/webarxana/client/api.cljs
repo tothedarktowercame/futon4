@@ -1,5 +1,6 @@
 (ns webarxana.client.api
-  (:require [cljs-http.client :as http]
+  (:require [clojure.string :as str]
+            [cljs-http.client :as http]
             [cljs.core.async :refer [go <!]]
             [webarxana.client.state :as state]))
 
@@ -8,7 +9,7 @@
 
 (def base "/api/futon")
 
-(declare fetch-hyperedges save-entity! save-relation! fetch-types pin-entity! connect-ws! ws-send!)
+(declare fetch-hyperedges save-entity! save-relation! fetch-types pin-entity! connect-ws! ws-send! save-diagram!)
 
 (defn- ingest-ego!
   "Ingest an ego response (entity + outgoing + incoming) into Datascript."
@@ -158,6 +159,30 @@
                 (state/pin! eid)
                 (fetch-hyperedges eid)
                 (swap! state/ui-state update :_render-tick (fnil inc 0))))))))))
+
+(defn save-diagram!
+  "Save the current pin spread as a diagram entity."
+  [name]
+  (let [pins (:pins @state/ui-state)
+        pin-ids (mapv :id pins)
+        focus-id (:focus-id @state/ui-state)]
+    (when (and (seq (str/trim (or name ""))) (seq pin-ids))
+      (go
+        (let [entity (<! (save-entity!
+                          {:name   (str/trim name)
+                           :type   "diagram"
+                           :source (str "Spread: " (str/join ", " pin-ids))
+                           :props  {:pins     pin-ids
+                                    :focus    focus-id
+                                    :authors  [(:username @state/ui-state)]}}))]
+          (when-let [eid (or (:id entity) (:entity/id entity))]
+            ;; Create relations from diagram to each pinned entity
+            (doseq [pid pin-ids]
+              (<! (save-relation! {:type "diagram/includes"
+                                   :src  eid
+                                   :dst  pid})))
+            (state/pin! eid)
+            (swap! state/ui-state update :_render-tick (fnil inc 0))))))))
 
 (defn fetch-recent
   "Fetch recent entities across key types for the activity feed."
