@@ -278,6 +278,11 @@
                                                  :name final-name
                                                  :type @scratch-type
                                                  :source text-val})
+                          ;; Also pin so a card appears on the right with the content
+                          (state/pin! server-id)
+                          ;; Remove from scratchpad since it's now a real pinned entity
+                          (swap! state/ui-state update :scratchpad
+                                 (fn [sp] (vec (remove (fn [n] (= (:id n) server-id)) sp))))
                           ;; Flash confirmation
                           (reset! save-status "Saved")
                           (js/setTimeout #(reset! save-status nil) 2000))))))}
