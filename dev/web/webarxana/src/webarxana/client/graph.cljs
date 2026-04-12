@@ -124,10 +124,10 @@
           ay2 (+ y1 (* dy ratio))]
       [:g {:key (:link/id link)}
        [:line {:x1 x1 :y1 y1 :x2 ax2 :y2 ay2
-               :stroke "#556677"
+               :stroke "#6688aa"
                :stroke-width 1.5
                :stroke-dasharray (when (= link-type "scholium") "4,4")
-               :opacity 0.6
+               :opacity 0.7
                :marker-end "url(#arrowhead)"}]
      [:g {:on-click #(swap! state/ui-state assoc :editing (:link/id link))
           :style {:cursor "pointer"}}
@@ -152,23 +152,19 @@
                        (api/connect-nodes! (:node-id connecting) nema-id nil)
                        (api/browse-and-focus! nema-id nema-id)))
          :style {:cursor (if connecting "crosshair" "pointer")}}
-     ;; Glow ring for focus
-     (when is-focus
-       [:circle {:cx x :cy y :r (+ r 6)
-                 :fill "none" :stroke "#4a9eff"
-                 :stroke-width 2 :opacity 0.4}])
-     ;; Pin indicator ring
-     (when (and is-pin (not is-focus))
-       [:circle {:cx x :cy y :r (+ r 4)
-                 :fill "none" :stroke "#51cf66"
-                 :stroke-width 1.5 :opacity 0.5
-                 :stroke-dasharray "4,3"}])
+     ;; Pin ring: all pins get a white ring; active pin is brighter/thicker
+     (when is-pin
+       [:circle {:cx x :cy y :r (+ r 5)
+                 :fill "none"
+                 :stroke (if is-focus "#ffffff" "#aaaacc")
+                 :stroke-width (if is-focus 2.5 1.5)
+                 :opacity (if is-focus 0.8 0.4)}])
      ;; Node circle
      [:circle {:cx x :cy y :r r
                :fill (nema-color nema-type)
-               :opacity (if is-focus 1.0 (if is-pin 0.9 0.75))
-               :stroke (if is-focus "#ffffff" "none")
-               :stroke-width (if is-focus 2 0)}]
+               :opacity (if is-pin 1.0 0.7)
+               :stroke "none"
+               :stroke-width 0}]
      ;; Type badge
      [:text {:x x :y (- y 4) :text-anchor "middle"
              :fill "#ffffff" :font-size 9 :font-family "monospace"
@@ -227,9 +223,9 @@
                :style {:background "#1a1a2e"}}
          ;; Arrowhead marker definition
          [:defs
-          [:marker {:id "arrowhead" :markerWidth 8 :markerHeight 6
-                    :refX 7 :refY 3 :orient "auto" :markerUnits "strokeWidth"}
-           [:path {:d "M0,0 L8,3 L0,6 L2,3 Z" :fill "#778899"}]]]
+          [:marker {:id "arrowhead" :markerWidth 10 :markerHeight 8
+                    :refX 9 :refY 4 :orient "auto" :markerUnits "strokeWidth"}
+           [:path {:d "M0,0 L10,4 L0,8 L3,4 Z" :fill "#99aabb"}]]]
          ;; Links
          (when merged-hood
            (doall
