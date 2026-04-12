@@ -1,8 +1,8 @@
 # Mission: WebArxana — Collaborative Hypergraph Surface
 
 **Date:** 2026-04-12
-**Status:** ARGUE (2026-04-12). Design argued against vsatelier
-patterns and theoretical anchors.
+**Status:** VERIFY (2026-04-12). Checked against Emacs Arxana
+capabilities and completion criteria.
 **Blocked by:** None (futon1a operational, Arxana Browser operational,
 WebArxana v1 prototype committed)
 **Owner:** futon4 (WebArxana), with dependencies on futon1a (data store)
@@ -562,6 +562,93 @@ level of structure already exists in a custom database. The need is
 clear: creative collaboration requires both the freedom to explore
 and the ability to accumulate.
 
+
+---
+
+## VERIFY
+
+### Structural verification
+
+No wiring diagram exists for this mission. The architecture is a
+straightforward web frontend → proxy → futon1a pipeline. No
+exotype diagram is needed.
+
+### Capability cross-reference: Emacs Arxana vs. WebArxana DERIVE
+
+| Capability | Emacs Arxana | WebArxana (v1 prototype) | WebArxana (DERIVE) | Status |
+|---|---|---|---|---|
+| Browse entities by type | Yes (sidebar catalogs) | Yes (sidebar) | Yes | Preserve |
+| View entity content | Yes (buffer) | Yes (focus card) | Yes | Preserve |
+| Edit entity content | Yes (buffer edit) | Yes (double-click card) | Yes | Preserve |
+| View ego neighbourhood | Yes (static composite) | Yes (radial graph, k-hops) | Yes (multi-pin, per-pin k) | Adapt |
+| Create entity | Yes (M-x) | Yes (+, scratch card) | Yes (+ with type picker) | Preserve |
+| Create relation | Yes (M-x scholium) | Yes (+ Adjacent, Connect) | Yes (Connect across clusters) | Adapt |
+| View hyperedge connections | Yes (chorus annotations) | Yes (auto-fetched) | Yes | Preserve |
+| Create hyperedge | Yes (chorus builder) | No | No (sequel) | Defer |
+| Author attribution | No | Partial (props.authors on create) | Yes (author list, display) | New |
+| Activity feed | No | No | Yes (recent additions view) | New |
+| Multi-user real-time | No | No (WS infra exists) | Yes (broadcast on write) | New |
+| Deep linking | No | Yes (hash-based) | Yes (multi-pin hash) | New |
+| Multi-focus canvas | No | No (single focus) | Yes (pin/unpin, multi-radial) | New |
+| Character-level annotation | Yes (chorus passage refs) | No | No (sequel) | Defer |
+
+**Summary:** All preserved capabilities are covered. Two are adapted
+(neighbourhood and relation creation gain multi-focus behaviour).
+Two are deferred to the sequel (hyperedge creation, character-level
+annotation). Four are new capabilities not present in Emacs Arxana.
+
+### Completion criteria pre-check
+
+| # | Criterion | Addressed by DERIVE? | Notes |
+|---|-----------|---------------------|-------|
+| 1 | Freestanding node creation with type picker | Yes — scratch card + type badge | Already implemented in v1 |
+| 2 | + Adjacent with name, type, relation prompt | Yes — creation dialog | Already implemented in v1 |
+| 3 | Adjustable hop-depth | Yes — per-pin k in multi-focus | Already implemented globally in v1; per-pin is new |
+| 4 | Author list display | Yes — props.authors | Props persistence fixed in futon1a; UI display not yet built |
+| 5 | Activity feed | Yes — described as recent-additions view | Not yet built; needs a query (recent entities by date) |
+| 6 | Real-time sync | Yes — broadcast after tx commit | WS infra exists; wiring not yet built |
+| 7 | Deployed externally | Not architectural — ops task | Needs deployment decision (tunnel, VPS, or Linode) |
+| 8 | Playwright tests | Yes — test pattern established | 15 tests in v1; each new feature adds tests |
+
+**Gaps found:** Criteria 4-7 are designed but not yet implemented.
+No DERIVE revision needed — these are INSTANTIATE work items.
+
+### Spike: multi-radial layout risk
+
+The riskiest DERIVE commitment is the multi-radial layout with
+multiple pinned nodes. Risk: overlapping clusters become unreadable.
+
+**Mitigation already in design:**
+- Per-pin hop-depth (reduce k on crowded pins)
+- "First pin wins" rule for shared nodes (deterministic, no jitter)
+- Unpin to remove a cluster entirely
+
+**Assessment:** The current single-radial code already handles
+adaptive ring sizing (min-arc between nodes). Extending to
+multiple centres is additive — each pin gets its own radial
+layout offset by its canvas position. The merge logic for shared
+nodes is the only new complexity, and the "first wins" rule keeps
+it simple. No spike needed — the risk is low.
+
+### Architectural constraint check (hypergraph sequel)
+
+- Graph renderer uses SVG `<g>` groups for nodes and `<line>` for
+  edges. n-ary hyperedge rendering (e.g. convex hull overlay) can
+  be added as a new component type without rewriting existing code.
+- Datascript schema has `:link/src` and `:link/dst` as refs.
+  Hyperedges with >2 endpoints would need a different schema
+  (e.g. `:hx/endpoints` as a collection). This is additive, not
+  conflicting.
+- The pin model stores entity IDs. Group selection (selecting
+  multiple nodes) is a UI state extension, not a data model change.
+
+**No architectural blockers for the sequel.**
+
+### Decision log
+
+No DERIVE revisions needed from VERIFY. All completion criteria
+are addressed by the design. The capability cross-reference confirms
+no regressions from Emacs Arxana for the capabilities in scope.
 
 ---
 
