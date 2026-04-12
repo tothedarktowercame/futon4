@@ -1,7 +1,8 @@
 # Mission: WebArxana — Collaborative Hypergraph Surface
 
 **Date:** 2026-04-12
-**Status:** DERIVE (2026-04-12). Multi-focus canvas design drafted.
+**Status:** ARGUE (2026-04-12). Design argued against vsatelier
+patterns and theoretical anchors.
 **Blocked by:** None (futon1a operational, Arxana Browser operational,
 WebArxana v1 prototype committed)
 **Owner:** futon4 (WebArxana), with dependencies on futon1a (data store)
@@ -409,6 +410,115 @@ Federation would require multi-backend proxy support in the
 webarxana server. The entity model doesn't prevent it — entity
 IDs are opaque strings, and a federated ID scheme (e.g.,
 `instance://entity-id`) could work. Deferred.
+
+---
+
+## ARGUE
+
+### Synthesis from pattern THEN statements
+
+The vsatelier patterns converge on a single workflow arc:
+**see structure → flag it → deliberate → decide → record → witness
+the consequences.** The WebArxana multi-focus canvas implements the
+first three moves of this arc:
+
+1. **See structure:** Pinning entities onto the canvas and expanding
+   their neighbourhoods makes structure visible across disconnected
+   parts of the graph. This is the *Cluster as Agenda Item* gesture —
+   the canvas IS a cluster viewer, and each pin is a hypothesis about
+   what's relevant.
+
+2. **Flag it:** Drawing a connection between entities from different
+   clusters is a lightweight flag. The user says "these things are
+   related" by creating a scholium. This is *Annotation as Commitment*
+   in miniature — the annotation (the scholium) is a persisted,
+   attributed, typed entity, not a sticky note. It doesn't yet carry
+   deadlines or owners, but it carries authorship and a link back to
+   the entities that prompted it.
+
+3. **Deliberate:** Two collaborators working the same canvas — one
+   adding texts, the other drawing connections — is the *Session as
+   Rehearsal* pattern in its simplest form. The spread is ephemeral
+   (not persisted by default), so it's a safe space to try ideas.
+   The relations they create survive the session; the spread doesn't.
+
+The remaining arc moves (decide, record, witness consequences) are
+structurally compatible but not yet built:
+- *Decision Provenance* needs an explicit `arxana/decision` entity
+  type, which can be added without architectural changes.
+- *Return Loop* is already happening at the graph level — relations
+  created in one session alter future sessions — but isn't surfaced
+  to the user yet. The activity feed would make it visible.
+- *Projection Independence* is partially honoured: the data model
+  (entities, relations, spreads-as-hash) is surface-independent.
+  A second rendering surface could use the same primitives.
+
+### Theoretical coherence
+
+The four theoretical anchors from IDENTIFY map cleanly:
+
+- **Scholia-based annotation:** The scholium is the primary unit of
+  work in the multi-focus canvas. Every connection is a first-class
+  entity with authorship, type, and provenance. This is preserved.
+
+- **Peer learning (PlanetMath):** Two collaborators work the same
+  canvas, each contributing texts and connections. Author attribution
+  (`props.authors`) tracks who wrote what. The design explicitly
+  supports co-construction, not just co-viewing. This is preserved.
+
+- **Pattern languages:** The type system is the shared vocabulary.
+  Collaborators classify entities using registered types, and can
+  create new types by naming them. The sidebar organises by type.
+  This is preserved, and the multi-focus canvas extends it: you can
+  now *see* entities of different types side by side and draw
+  connections between them.
+
+- **Hypergraph editing:** The canvas displays hyperedge connections
+  (done in v1) and the Connect workflow creates binary relations.
+  Full hyperedge *creation* (multi-endpoint, with roles and
+  passages) is deferred but structurally unblocked — the entity
+  model already supports it. This is partially preserved with a
+  clear upgrade path.
+
+No theoretical shift from IDENTIFY. The design serves all four
+anchors.
+
+### Trade-off summary
+
+| Gave up | In favour of | Why |
+|---------|-------------|-----|
+| Persistent spreads | Hash-encoded ephemeral spreads | Reduces friction in exploratory workflow; can add persistence later via `arxana/spread` entity type |
+| Force-directed layout | Multi-radial (deterministic) | Simpler implementation, no animation loop; upgrade path is clear |
+| Full VSATELIER arc (decide, record, witness) | First three moves (see, flag, deliberate) | The warm-up delivers usable collaboration now; the remaining arc is additive, not architectural |
+| Hyperedge creation UI | Binary relation creation only | Binary connect is the 80% case; hyperedge creation is procedurally complex and deferred |
+| Character-level annotation | Entity-level annotation | The Emacs chorus model is powerful but complex to port; entity-level scholia are the web-appropriate unit |
+
+### Generalization notes
+
+The multi-focus canvas is not specific to Arxana content. Any
+system with typed entities and relations could use this design:
+- A research group mapping connections between papers
+- A design team linking user stories to technical decisions
+- A community mapping relationships between organisations
+
+The requirements: an entity/relation store with ego queries, a
+type registry, and a web surface. The vsatelier patterns provide
+the deliberation scaffolding. The spread model (pinned entities +
+hash-encoded state) is portable across domains.
+
+The main thing that would need to change: the type vocabulary and
+the relation types. The interaction model (pin, connect, unpin,
+create) is domain-independent.
+
+### Plain-language argument
+
+Two people want to build a shared world of ideas together. They
+each add short texts, then draw connections between them. The
+connections are typed and attributed — you can see what each person
+wrote and how they linked it. The workspace shows multiple clusters
+of ideas side by side, so you can see how different threads relate.
+Everything you create is permanent and searchable; the arrangement
+on screen is temporary and shareable via a link.
 
 ---
 
