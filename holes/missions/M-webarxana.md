@@ -1,8 +1,9 @@
 # Mission: WebArxana — Collaborative Hypergraph Surface
 
 **Date:** 2026-04-12
-**Status:** INSTANTIATE (2026-04-12). Core features built, pending
-deployment and interactive testing.
+**Status:** INSTANTIATE (2026-04-12). Interactive testing pass done.
+Multi-focus canvas, d3-force layout, diagrams, link annotations.
+Pending: deployment, some polish items.
 **Blocked by:** None (futon1a operational, Arxana Browser operational,
 WebArxana v1 prototype committed)
 **Owner:** futon4 (WebArxana), with dependencies on futon1a (data store)
@@ -702,8 +703,69 @@ Built during a single session. Key commits:
 
 **Remaining for COMPLETE:**
 - Deployment (criterion 7)
-- Interactive testing pass by Joe
 - Per-pin hop-depth UI controls (minor)
+- Persist link annotation edits to futon1a (currently Datascript only)
+
+---
+
+## INSTANTIATE checkpoint 2 (2026-04-12, continued session)
+
+Interactive testing pass with Joe. Major additions:
+
+**Multi-focus canvas:**
+- `1c48b82` — Pins state, multi-radial layout, hash encoding
+- `3e5b505` — Stacked pin cards on the right (one per pin)
+- `4a90c14` — Fix Focus to pin (not just set-focus)
+- `42869f3` — d3-force directed layout (replaced radial)
+- `1af763f` — Tuned d3-force: free nodes, stronger repulsion
+- `96556f5` — Phantom nodes for edge labels (prevent overlap)
+
+**Directional edges and link editing:**
+- `4eb8bbd` — Arrowheads showing edge direction
+- `a24089c` — Link editor popup (click edge label)
+- `e8137cb` — Annotation text field on links (scholium model)
+- `0f5f9a0` — Truncate long labels, full text in popup
+
+**Diagrams (persisted spreads):**
+- `941111a` — Save Diagram: captures pin set as a `diagram` entity
+- `e3e5f56` — Don't pin diagram into its own spread
+- `f6060a2` — Filter diagram/includes from graph
+- `0739fba` — Expand/compress toggle in sidebar
+- `93c44fc` — Compress hides contents, keeps external connections
+
+**Data layer fixes:**
+- `54b73b2` — Client ingests incoming relations
+- `122bda0` — futon1a: ego returns incoming relations (hot-reloaded)
+- `d338c37` — Creation dialog includes text field
+- `93aac55` — Save graduates scratch card to pin card
+- `32f2f84` — Newest pins at top of card stack
+
+**Completion criteria updated:**
+
+| # | Criterion | Status |
+|---|-----------|--------|
+| 1 | Freestanding node creation with type picker | Done |
+| 2 | + Adjacent with name, type, relation, text | Done |
+| 3 | Adjustable hop-depth | Done (global controls) |
+| 4 | Author list display | Done |
+| 5 | Activity feed | Done (Recent with diagram expand) |
+| 6 | Real-time sync via WebSocket | Done |
+| 7 | Deployed externally | Pending |
+| 8 | Playwright tests | 18 passing |
+
+**Beyond original criteria (emerged during interactive testing):**
+- Multi-focus canvas with pins (DERIVE feature, fully built)
+- d3-force directed layout
+- Directional edges with arrowheads
+- Link annotations (scholium text on edges)
+- Diagrams: save/expand/compress spreads
+- Incoming relations in ego (futon1a change)
+
+**Known issues / polish:**
+- Link annotation edits are Datascript-only (not persisted to futon1a)
+- Per-pin hop-depth UI controls not yet surfaced
+- Some junk test entities in futon1a (see eviction manifest)
+- Deployment decision pending (tunnel, VPS, or Linode)
 
 ---
 
