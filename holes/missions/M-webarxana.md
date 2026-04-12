@@ -512,13 +512,26 @@ create) is domain-independent.
 
 ### Plain-language argument
 
-Two people want to build a shared world of ideas together. They
-each add short texts, then draw connections between them. The
-connections are typed and attributed — you can see what each person
-wrote and how they linked it. The workspace shows multiple clusters
-of ideas side by side, so you can see how different threads relate.
-Everything you create is permanent and searchable; the arrangement
-on screen is temporary and shareable via a link.
+When two people collaborate on ideas, existing tools force a choice:
+chat (WhatsApp, Slack) where ideas are ephemeral and linear, or
+documents (Google Docs, Notion) where ideas are flat and the
+connections between them live only in people's heads. Trello adds
+structure but only one kind — cards in lanes — and the connections
+between cards aren't real objects you can name, type, or trace.
+
+What's missing is a tool where the *connections* between ideas are
+as real as the ideas themselves. When you link two notes, that link
+should say who drew it, what kind of connection it is, and be
+discoverable by anyone navigating the graph in the future — not
+buried in a paragraph or lost in a chat scroll.
+
+WebArxana is that tool. Two people add short texts, then draw typed,
+attributed connections between them. They can pull in clusters from
+different parts of an existing knowledge graph and see how they
+relate. The workspace is temporary and shareable via a link; the
+ideas and connections are permanent, searchable, and navigable.
+The graph grows with every session, and each new session starts
+from the full accumulated structure — not from a blank page.
 
 ---
 
