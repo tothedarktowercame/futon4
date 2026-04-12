@@ -5,24 +5,17 @@
 
 ;; Multi-radial layout: each pinned node is a centre, neighbours radiate out.
 
-(defn- svg-dims
-  "Compute viewBox dimensions based on pin count."
-  [n-pins]
-  (let [base-w 1200
-        base-h 800
-        ;; Scale up for many pins to avoid crowding
-        scale (max 1 (/ n-pins 2))]
-    [(* base-w (js/Math.sqrt scale))
-     (* base-h (js/Math.sqrt scale))]))
+(def svg-width 1200)
+(def svg-height 800)
 
 (defn- pin-centre
   "Compute the canvas centre for each pin, distributing evenly."
-  [pins svg-w svg-h]
+  [pins]
   (let [n (count pins)
         margin-x 60
         margin-y 40
-        usable-w (- svg-w (* 2 margin-x))
-        usable-h (- svg-h (* 2 margin-y))]
+        usable-w (- svg-width (* 2 margin-x))
+        usable-h (- svg-height (* 2 margin-y))]
     (if (= n 1)
       {(:id (first pins)) [(+ margin-x (/ usable-w 2) -80)
                             (+ margin-y (/ usable-h 2))]}
@@ -42,10 +35,12 @@
 
 (defn- radial-around
   "Place neighbours radially around a centre point."
-  [cx cy nodes ring-idx]
+  [cx cy nodes ring-idx n-pins]
   (let [n (count nodes)
-        min-arc 80
-        base-radius 120
+        ;; Shrink radius when many pins share the space
+        scale-factor (/ 1 (max 1 (js/Math.sqrt (/ n-pins 2))))
+        min-arc (* 80 scale-factor)
+        base-radius (* 120 scale-factor)
         min-r (if (> n 1) (/ (* n min-arc) (* 2 js/Math.PI)) base-radius)
         r (max (* base-radius ring-idx) min-r)
         offset (* 0.3 ring-idx)]
@@ -60,7 +55,7 @@
 
 (defn- radial-positions-from
   "Compute positions for a neighbourhood rooted at [cx cy]."
-  [cx cy {:keys [nemas links focus]}]
+  [cx cy {:keys [nemas links focus]} n-pins]
   (when (and focus (seq nemas))
     (let [adj (reduce (fn [m link]
                         (let [src (get-in link [:link/src :nema/id])
@@ -83,7 +78,7 @@
                      (sort-by key))]
       (reduce
        (fn [positions [ring-idx nodes]]
-         (merge positions (radial-around cx cy nodes ring-idx)))
+         (merge positions (radial-around cx cy nodes ring-idx n-pins)))
        {focus [cx cy]}
        rings))))
 
@@ -95,7 +90,7 @@
      (fn [positions pin]
        (let [[cx cy] (get centres (:id pin))
              hood (state/neighbourhood (:id pin) (or (:k pin) 1))
-             pin-positions (when hood (radial-positions-from cx cy hood))]
+             pin-positions (when hood (radial-positions-from cx cy hood (count pins)))]
          ;; Only add positions for nodes not already placed (first-pin-wins)
          (merge-with (fn [existing _new] existing) positions (or pin-positions {}))))
      {}
@@ -126,7 +121,7 @@
                       has-annotation link-text
                       :else (or link-type "link"))
         label short-label
-        label-w (+ 12 (* 6 (count label)))
+        label-w (+ 14 (* 7 (count label)))
         is-editing (= (:editing @state/ui-state) link-id)
         dx (- x2 x1) dy (- y2 y1)
         len (js/Math.sqrt (+ (* dx dx) (* dy dy)))
@@ -155,7 +150,7 @@
               :stroke (if is-editing "#ffd43b" "#556677")
               :stroke-width 0.5 :opacity 0.85}]
       [:text {:x mx :y (+ my 3) :text-anchor "middle"
-              :fill "#aabbcc" :font-size 9 :font-family "monospace"}
+              :fill "#aabbcc" :font-size 11 :font-family "monospace"}
        label]]]))
 
 (defn node-component
@@ -186,13 +181,13 @@
                :stroke "none"
                :stroke-width 0}]
      ;; Type badge
-     [:text {:x x :y (- y 4) :text-anchor "middle"
-             :fill "#ffffff" :font-size 9 :font-family "monospace"
+     [:text {:x x :y (- y 6) :text-anchor "middle"
+             :fill "#ffffff" :font-size 11 :font-family "monospace"
              :opacity 0.7}
       nema-type]
      ;; Name label
-     [:text {:x x :y (+ y 8) :text-anchor "middle"
-             :fill "#ffffff" :font-size 11 :font-weight "bold"
+     [:text {:x x :y (+ y 10) :text-anchor "middle"
+             :fill "#ffffff" :font-size 13 :font-weight "bold"
              :font-family "sans-serif"}
       (if (> (count nema-name) 16)
         (str (subs nema-name 0 14) "...")
@@ -217,9 +212,7 @@
                         (remove #(contains? hood-ids (:id %)))
                         vec)]
     (if (or (and merged-hood (seq (:nemas merged-hood))) (seq floating))
-      (let [n-pins    (count (or effective-pins []))
-            [svg-w svg-h] (svg-dims (max n-pins 1))
-            centres   (when (seq effective-pins) (pin-centre effective-pins svg-w svg-h))
+      (let [centres   (when (seq effective-pins) (pin-centre effective-pins))
             positions (if (seq effective-pins)
                         (multi-positions effective-pins centres merged-hood)
                         {})
@@ -228,7 +221,7 @@
             float-positions (into {}
                              (map-indexed
                               (fn [i node]
-                                [(:id node) [(+ 80 (* i 90)) (- svg-h 60)]])
+                                [(:id node) [(+ 80 (* i 90)) (- svg-height 60)]])
                               floating))
             float-nemas (into {}
                          (map (fn [node]
@@ -240,7 +233,7 @@
             all-positions (merge positions float-positions)
             all-nemas     (merge nema-map float-nemas)]
         [:svg {:width "100%" :height "100%"
-               :viewBox (str "0 0 " svg-w " " svg-h)
+               :viewBox (str "0 0 " svg-width " " svg-height)
                :style {:background "#1a1a2e"}}
          ;; Arrowhead marker definition
          [:defs
