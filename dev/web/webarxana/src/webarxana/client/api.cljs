@@ -181,8 +181,8 @@
               (<! (save-relation! {:type "diagram/includes"
                                    :src  eid
                                    :dst  pid})))
-            (state/pin! eid)
-            (swap! state/ui-state update :_render-tick (fnil inc 0))))))))
+            ;; Don't pin the diagram itself — it's metadata, not a member
+            ))))))
 
 (defn fetch-recent
   "Fetch recent entities across key types for the activity feed."
