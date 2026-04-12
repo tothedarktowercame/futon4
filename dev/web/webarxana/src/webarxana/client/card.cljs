@@ -167,7 +167,8 @@
   (let [scratch-name (r/atom "")
         scratch-text (r/atom "")
         scratch-type (r/atom "article")
-        editing-type (r/atom false)]
+        editing-type (r/atom false)
+        save-status  (r/atom nil)]
     (fn []
       (let [scratchpad (:scratchpad @state/ui-state)
             node       (last scratchpad)
@@ -245,8 +246,11 @@
                       (state/ingest-entity! {:id node-id
                                              :name (if (seq name-val) name-val "Untitled")
                                              :type @scratch-type
-                                             :source text-val}))))}
-               "Save"]
+                                             :source text-val})
+                      ;; Flash confirmation
+                      (reset! save-status "Saved")
+                      (js/setTimeout #(reset! save-status nil) 2000))))}
+               (or @save-status "Save")]
               [:button.btn-edit
                {:on-click #(do (state/ingest-entity! {:id node-id
                                                       :name (if (seq @scratch-name) @scratch-name "")
