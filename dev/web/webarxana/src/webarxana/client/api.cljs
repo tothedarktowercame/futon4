@@ -10,6 +10,40 @@
 
 (declare fetch-hyperedges save-entity! save-relation! fetch-types pin-entity! connect-ws! ws-send!)
 
+(defn- ingest-ego!
+  "Ingest an ego response (entity + outgoing + incoming) into Datascript."
+  [ego]
+  (let [entity   (:entity ego)
+        outgoing (:outgoing ego)
+        incoming (:incoming ego)]
+    (when entity
+      (state/ingest-entity! entity)
+      ;; Outgoing relations
+      (doseq [entry outgoing]
+        (let [dst-entity (:entity entry)
+              rel-info   (:relation entry)]
+          (when dst-entity
+            (state/ingest-entity! dst-entity))
+          (when (and rel-info dst-entity)
+            (state/ingest-relation!
+             {:type (:type rel-info)
+              :src  (:id entity)
+              :dst  (:id dst-entity)
+              :id   (str (:id entity) "->" (:id dst-entity))}))))
+      ;; Incoming relations
+      (doseq [entry incoming]
+        (let [src-entity (:entity entry)
+              rel-info   (:relation entry)]
+          (when src-entity
+            (state/ingest-entity! src-entity))
+          (when (and rel-info src-entity)
+            (state/ingest-relation!
+             {:type (:type rel-info)
+              :src  (:id src-entity)
+              :dst  (:id entity)
+              :id   (str (:id src-entity) "->" (:id entity))})))))
+    entity))
+
 (defn fetch-entity
   "Fetch a single entity by ID and ingest into Datascript."
   [entity-id]
@@ -29,26 +63,10 @@
                              {:with-credentials? true}))]
       (when (= 200 (:status resp))
         (let [ego (get-in resp [:body :ego])
-              entity (:entity ego)
-              outgoing (:outgoing ego)]
+              entity (ingest-ego! ego)]
           (when entity
-            (state/ingest-entity! entity)
-            ;; Ego returns [{:relation {:type ...} :entity {:id ...}} ...]
-            (doseq [entry outgoing]
-              (let [dst-entity (:entity entry)
-                    rel-info   (:relation entry)]
-                (when dst-entity
-                  (state/ingest-entity! dst-entity))
-                (when (and rel-info dst-entity)
-                  (state/ingest-relation!
-                   {:type (:type rel-info)
-                    :src  (:id entity)
-                    :dst  (:id dst-entity)
-                    :id   (str (:id entity) "->" (:id dst-entity))}))))
-            ;; Set focus to the entity we just loaded
             (let [eid (or (:id entity) (:entity/id entity))]
               (state/set-focus! eid)
-              ;; Also fetch hyperedges for this entity
               (fetch-hyperedges eid)))
           ego)))))
 
@@ -133,25 +151,11 @@
                                {:with-credentials? true}))]
         (when (= 200 (:status resp))
           (let [ego (get-in resp [:body :ego])
-                entity (:entity ego)
-                outgoing (:outgoing ego)]
+                entity (ingest-ego! ego)]
             (when entity
-              (state/ingest-entity! entity)
-              (doseq [entry outgoing]
-                (let [dst-entity (:entity entry)
-                      rel-info   (:relation entry)]
-                  (when dst-entity
-                    (state/ingest-entity! dst-entity))
-                  (when (and rel-info dst-entity)
-                    (state/ingest-relation!
-                     {:type (:type rel-info)
-                      :src  (:id entity)
-                      :dst  (:id dst-entity)
-                      :id   (str (:id entity) "->" (:id dst-entity))}))))
               (let [eid (or (:id entity) (:entity/id entity))]
                 (state/pin! eid)
                 (fetch-hyperedges eid)
-                ;; Nudge re-render after Datascript transactions
                 (swap! state/ui-state update :_render-tick (fnil inc 0))))))))))
 
 (defn fetch-recent
@@ -219,26 +223,12 @@
                              {:with-credentials? true}))]
       (when (= 200 (:status resp))
         (let [ego (get-in resp [:body :ego])
-              entity (:entity ego)
-              outgoing (:outgoing ego)]
-          (if entity
-            (do
-              (state/ingest-entity! entity)
-              (doseq [entry outgoing]
-                (let [dst-entity (:entity entry)
-                      rel-info   (:relation entry)]
-                  (when dst-entity
-                    (state/ingest-entity! dst-entity))
-                  (when (and rel-info dst-entity)
-                    (state/ingest-relation!
-                     {:type (:type rel-info)
-                      :src  (:id entity)
-                      :dst  (:id dst-entity)
-                      :id   (str (:id entity) "->" (:id dst-entity))}))))
+              entity (ingest-ego! ego)]
+            (if entity
               (let [eid (or (:id entity) (:entity/id entity))]
                 (state/pin! eid)
                 (fetch-hyperedges eid)
-                (swap! state/ui-state update :_render-tick (fnil inc 0))))
+                (swap! state/ui-state update :_render-tick (fnil inc 0)))
             ;; Ego didn't find by name — try direct entity fetch by ID
             (when entity-id
               (let [resp2 (<! (http/get (str base "/entity/" entity-id)
