@@ -97,6 +97,34 @@ collaboration.
   sink, save annotation with roles. Procedurally complex; deferred
   but not ruled out.
 
+### Potential sequel: M-webarxana-hypergraph
+
+WebArxana v2 works with binary relations and displays existing
+hyperedges. A follow-on mission should extend this to full
+hypergraph browsing and interaction:
+
+- **Annotating structures, not just nodes:** Select a subgraph
+  (multiple nodes, a cluster, an entire local spread) and create
+  a hyperedge that annotates the whole thing — not just one node.
+- **Hyperedge creation UI:** A multi-step workflow: select
+  source endpoints (with roles and optional passage references),
+  browse to sink endpoints, add a gloss, save as a typed
+  hyperedge.
+- **Hyperedge-as-node:** Hyperedges should be navigable entities
+  themselves — clickable, focusable, with their own cards showing
+  endpoints, roles, and gloss.
+
+**Architectural constraint for the current mission:** The multi-focus
+canvas, the Connect workflow, and the entity/relation model must
+not preclude these extensions. Specifically:
+- The graph renderer must be able to handle n-ary connections (not
+  just binary edges) without a rewrite.
+- The Datascript schema should remain compatible with hyperedge
+  ingestion (already the case: hyperedges are ingested as links
+  with extra metadata).
+- The spread/pin model should support selecting multiple nodes as
+  a group, even if we don't act on that selection yet.
+
 ## Completion criteria
 
 1. A user can create a new freestanding node from the top bar,
