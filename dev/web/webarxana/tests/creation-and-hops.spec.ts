@@ -120,6 +120,34 @@ test("scratch card dismiss button removes it", async ({ page }) => {
   await expect(page.locator(".scratch-card")).not.toBeVisible({ timeout: 3000 });
 });
 
+test("name auto-populates from first line on Enter", async ({ page }) => {
+  await page.goto("/index.html");
+  await page.locator('input[type="text"]').fill("joe");
+  await page.locator('input[type="password"]').fill("arxana");
+  await page.locator("button", { hasText: "Sign in" }).click();
+  await expect(
+    page.locator('input[placeholder="Search by name..."]')
+  ).toBeVisible({ timeout: 5000 });
+
+  await page.locator(".btn-new-node").click();
+  await expect(page.locator(".scratch-card")).toBeVisible({ timeout: 5000 });
+
+  // Name should be empty
+  await expect(
+    page.locator('.scratch-card input[placeholder="Name..."]')
+  ).toHaveValue("");
+
+  // Type a first line then press Enter
+  const textarea = page.locator(".scratch-card textarea");
+  await textarea.fill("My first line");
+  await textarea.press("Enter");
+
+  // Name should auto-populate from the first line
+  await expect(
+    page.locator('.scratch-card input[placeholder="Name..."]')
+  ).toHaveValue("My first line", { timeout: 3000 });
+});
+
 test("+ Adjacent still opens creation dialog", async ({ page }) => {
   await page.goto("/index.html");
   await page.locator('input[type="text"]').fill("joe");

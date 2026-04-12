@@ -186,7 +186,17 @@
              ;; Body — always editable
              [:textarea.card-body-edit
               {:value @scratch-text
-               :on-change #(reset! scratch-text (.. % -target -value))
+               :on-change (fn [e]
+                            (let [new-val (.. e -target -value)
+                                  old-val @scratch-text]
+                              (reset! scratch-text new-val)
+                              ;; Auto-populate name from first line on first newline
+                              (when (and (empty? @scratch-name)
+                                         (not (str/includes? old-val "\n"))
+                                         (str/includes? new-val "\n"))
+                                (let [first-line (str/trim (first (str/split new-val #"\n")))]
+                                  (when (seq first-line)
+                                    (reset! scratch-name first-line))))))
                :placeholder "Write here..."
                :auto-focus true}]
              ;; Footer
