@@ -512,26 +512,37 @@ create) is domain-independent.
 
 ### Plain-language argument
 
-When two people collaborate on ideas, existing tools force a choice:
-chat (WhatsApp, Slack) where ideas are ephemeral and linear, or
-documents (Google Docs, Notion) where ideas are flat and the
-connections between them live only in people's heads. Trello adds
-structure but only one kind — cards in lanes — and the connections
-between cards aren't real objects you can name, type, or trace.
-
-What's missing is a tool where the *connections* between ideas are
-as real as the ideas themselves. When you link two notes, that link
-should say who drew it, what kind of connection it is, and be
+When two or more people collaborate on ideas, existing tools force a
+choice: chat where ideas are ephemeral and linear, or documents where
+ideas are flat and the connections between them live only in people's
+heads. Physical notecards can be reorganised and grouped, but the
+structures that are created are simultaneously static and ephemeral
+(the structure is fixed by order or placement, but if the cards are
+rearranged, the structure goes away). What's missing is a tool where
+the *connections* between ideas are as real as the ideas themselves.
+When you link two notes, that link should say who made the connection
+and what kind of connection it is. This connection should be
 discoverable by anyone navigating the graph in the future — not
-buried in a paragraph or lost in a chat scroll.
+buried in a paragraph, lost in a chat scroll, or hidden in a filebox.
+At the same time, if someone wants to trace a different set of
+connections, or integrate a different set of concepts, they should be
+able to do that, too.
 
-WebArxana is that tool. Two people add short texts, then draw typed,
-attributed connections between them. They can pull in clusters from
-different parts of an existing knowledge graph and see how they
-relate. The workspace is temporary and shareable via a link; the
-ideas and connections are permanent, searchable, and navigable.
-The graph grows with every session, and each new session starts
-from the full accumulated structure — not from a blank page.
+We are now in a position to build an easy-to-use tool like this that
+works in a standard web browser, because the heavy lifting at the
+level of structure already exists in a custom database. The need is
+clear: creative collaboration requires both the freedom to explore
+and the ability to accumulate. The VSATELIER pattern language
+describes the full arc — see patterns, flag them, deliberate, decide,
+record, and witness the consequences. WebArxana implements the opening
+moves: you pull ideas onto a shared canvas, see how they cluster, and
+draw connections that persist. The connections you make today become
+the structure that tomorrow's session starts from. Unlike a chat, the
+ideas don't scroll away. Unlike a document, the connections aren't
+trapped in prose. Unlike notecards, you can lay out a new spread
+without losing the old one. And unlike any of these, the whole thing
+is a graph: every idea, every connection, every author is a node that
+others can find, follow, and build on.
 
 ---
 
