@@ -204,8 +204,20 @@
         effective-pins (if (seq pins)
                          pins
                          (when focus-id [{:id focus-id :k (:hop-depth @state/ui-state)}]))
-        merged-hood (when (seq effective-pins)
-                      (state/multi-neighbourhood effective-pins))
+        raw-hood (when (seq effective-pins)
+                   (state/multi-neighbourhood effective-pins))
+        ;; Filter out diagram entities and diagram/includes links
+        merged-hood (when raw-hood
+                      (let [diagram-ids (->> (:nemas raw-hood)
+                                            (filter #(= "diagram" (:nema/type %)))
+                                            (map :nema/id)
+                                            set)]
+                        {:nemas (remove #(contains? diagram-ids (:nema/id %)) (:nemas raw-hood))
+                         :links (remove #(or (= "diagram/includes" (:link/type %))
+                                            (contains? diagram-ids (get-in % [:link/src :nema/id]))
+                                            (contains? diagram-ids (get-in % [:link/dst :nema/id])))
+                                        (:links raw-hood))
+                         :pins (:pins raw-hood)}))
         hood-ids   (set (map :nema/id (:nemas merged-hood)))
         floating   (->> scratchpad
                         (remove #(contains? hood-ids (:id %)))
