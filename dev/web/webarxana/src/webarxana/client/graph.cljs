@@ -5,22 +5,27 @@
 
 ;; Multi-radial layout: each pinned node is a centre, neighbours radiate out.
 
-(def svg-width 1200)
-(def svg-height 800)
+(defn- svg-dims
+  "Compute viewBox dimensions based on pin count."
+  [n-pins]
+  (let [base-w 1200
+        base-h 800
+        ;; Scale up for many pins to avoid crowding
+        scale (max 1 (/ n-pins 2))]
+    [(* base-w (js/Math.sqrt scale))
+     (* base-h (js/Math.sqrt scale))]))
 
 (defn- pin-centre
   "Compute the canvas centre for each pin, distributing evenly."
-  [pins]
+  [pins svg-w svg-h]
   (let [n (count pins)
-        ;; Leave margins for cards (left 360, right 360)
-        usable-w (- svg-width 360)
-        usable-h (- svg-height 80)
-        margin-x 180
-        margin-y 40]
+        margin-x 60
+        margin-y 40
+        usable-w (- svg-w (* 2 margin-x))
+        usable-h (- svg-h (* 2 margin-y))]
     (if (= n 1)
-      ;; Single pin: shifted left of centre (room for focus card on right)
-      {(:id (first pins)) [(+ margin-x (/ usable-w 2) -100) (+ margin-y (/ usable-h 2))]}
-      ;; Multiple pins: distribute in a grid-like arrangement
+      {(:id (first pins)) [(+ margin-x (/ usable-w 2) -80)
+                            (+ margin-y (/ usable-h 2))]}
       (let [cols (min n (max 2 (int (js/Math.ceil (js/Math.sqrt n)))))
             rows (int (js/Math.ceil (/ n cols)))
             cell-w (/ usable-w cols)
@@ -212,17 +217,18 @@
                         (remove #(contains? hood-ids (:id %)))
                         vec)]
     (if (or (and merged-hood (seq (:nemas merged-hood))) (seq floating))
-      (let [centres   (when (seq effective-pins) (pin-centre effective-pins))
+      (let [n-pins    (count (or effective-pins []))
+            [svg-w svg-h] (svg-dims (max n-pins 1))
+            centres   (when (seq effective-pins) (pin-centre effective-pins svg-w svg-h))
             positions (if (seq effective-pins)
                         (multi-positions effective-pins centres merged-hood)
                         {})
             nema-map  (into {} (map (fn [n] [(:nema/id n) n]) (:nemas merged-hood)))
             pin-ids   (set (map :id effective-pins))
-            ;; Floating scratchpad nodes along bottom-left
             float-positions (into {}
                              (map-indexed
                               (fn [i node]
-                                [(:id node) [(+ 80 (* i 90)) (- svg-height 60)]])
+                                [(:id node) [(+ 80 (* i 90)) (- svg-h 60)]])
                               floating))
             float-nemas (into {}
                          (map (fn [node]
@@ -234,7 +240,7 @@
             all-positions (merge positions float-positions)
             all-nemas     (merge nema-map float-nemas)]
         [:svg {:width "100%" :height "100%"
-               :viewBox (str "0 0 " svg-width " " svg-height)
+               :viewBox (str "0 0 " svg-w " " svg-h)
                :style {:background "#1a1a2e"}}
          ;; Arrowhead marker definition
          [:defs

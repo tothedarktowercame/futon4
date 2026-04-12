@@ -27,5 +27,10 @@
 (defn init []
   (api/check-auth!)
   (route/install!)
-  (route/restore-from-hash!)
+  ;; Restore hash after auth succeeds (username gets set)
+  (add-watch state/ui-state ::auth-restore
+    (fn [_ _ old new]
+      (when (and (nil? (:username old)) (some? (:username new)))
+        (route/restore-from-hash!)
+        (remove-watch state/ui-state ::auth-restore))))
   (reload))

@@ -1,5 +1,6 @@
 (ns webarxana.client.route
   (:require [clojure.string :as str]
+            [cljs.core.async :refer [go <!]]
             [webarxana.client.state :as state]
             [webarxana.client.api :as api]))
 
@@ -52,10 +53,10 @@
         (when type
           (api/browse-type! type))
         (if (seq pins)
-          ;; Multi-pin: pin each entity, focus the active one
-          (do
+          ;; Multi-pin: pin each entity sequentially, then set focus
+          (go
             (doseq [pid pins]
-              (api/pin-entity! pid pid))
+              (<! (api/pin-entity! pid pid)))
             (when focus
               (state/set-focus! focus)))
           ;; Legacy single-focus
