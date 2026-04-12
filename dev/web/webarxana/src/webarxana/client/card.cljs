@@ -13,6 +13,7 @@
    opts: {:adjacent? bool, :from-id string, :on-close fn}"
   [opts]
   (let [new-name     (r/atom "")
+        new-text     (r/atom "")
         new-type     (r/atom "article")
         rel-type     (r/atom "arxana/scholium")
         entity-types (:available-types @state/ui-state)]
@@ -53,6 +54,17 @@
                           ["arxana/scholium" "defines" "inspired-by"
                            "supported-by" "answered-by" "example"])]
                 ^{:key t} [:option {:value t} t])]])
+          [:div.creation-field
+           [:label "Text"]
+           [:textarea
+            {:value @new-text
+             :placeholder "Write here..."
+             :on-change #(reset! new-text (.. % -target -value))
+             :style {:width "100%" :min-height "60px" :padding "8px"
+                     :background "var(--surface)" :border "1px solid var(--border)"
+                     :border-radius "4px" :color "var(--text)"
+                     :font-size "13px" :resize "vertical" :outline "none"
+                     :font-family "inherit"}}]]
           [:div.creation-actions
            [:button.btn-create
             {:on-click
@@ -63,6 +75,7 @@
                      (let [entity (<! (api/save-entity!
                                        {:name name-val
                                         :type @new-type
+                                        :source @new-text
                                         :props {:authors [(:username @state/ui-state)]}}))]
                        (when-let [eid (or (:id entity) (:entity/id entity))]
                          (when adjacent?
