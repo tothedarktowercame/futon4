@@ -182,6 +182,8 @@
                                    :src  eid
                                    :dst  pid})))
             ;; Don't pin the diagram — it's metadata, not a member
+            ;; Track that this diagram is currently expanded
+            (swap! state/ui-state assoc :expanded-diagram eid)
             ;; Refresh the recent list so it appears in the sidebar
             (fetch-recent)
             ;; Return the entity for UI feedback
