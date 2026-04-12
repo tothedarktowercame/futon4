@@ -1,8 +1,8 @@
 # Mission: WebArxana — Collaborative Hypergraph Surface
 
 **Date:** 2026-04-12
-**Status:** VERIFY (2026-04-12). Checked against Emacs Arxana
-capabilities and completion criteria.
+**Status:** INSTANTIATE (2026-04-12). Core features built, pending
+deployment and interactive testing.
 **Blocked by:** None (futon1a operational, Arxana Browser operational,
 WebArxana v1 prototype committed)
 **Owner:** futon4 (WebArxana), with dependencies on futon1a (data store)
@@ -669,6 +669,43 @@ was formalised. It established:
   `props`; relation endpoint requires map-style `{:id "..."}` for
   non-UUID entity IDs; ego endpoint only returns outgoing relations.
 - **Commit:** `4e5831f` "Add WebArxana v1"
+
+## INSTANTIATE checkpoint (2026-04-12)
+
+Built during a single session. Key commits:
+
+- `4e5831f` — WebArxana v1: login, sidebar, radial graph, cards, deep linking
+- `565d353` — Creation dialogs, hop-depth controls, type/relation pickers
+- `c96ccdd` — Scratch card with scratchpad and connect mode
+- `e6887fe` — Auto-populate name from first line on Enter
+- `0149c15` — Adaptive ring radius, auto-sized link labels
+- `67be5e5` — Deferred server creation (save only on Save)
+- `595e505` — Fetch ego on every focus change
+- `1c48b82` — Multi-focus canvas: pins, multi-radial, hash encoding
+- `4fd8a70` — Author display on focus cards
+- `e5e437f` — Activity feed (Recent section in sidebar)
+- `8883da2` — Real-time WebSocket sync
+- `89245f0` — futon1a: persist entity props through write/read pipeline
+
+**Completion criteria status:**
+
+| # | Criterion | Status |
+|---|-----------|--------|
+| 1 | Freestanding node creation with type picker | Done (scratch card + editable type badge) |
+| 2 | + Adjacent with name, type, relation prompt | Done (creation dialog) |
+| 3 | Adjustable hop-depth | Done (global k controls; per-pin k in state, UI pending) |
+| 4 | Author list display | Done (shown in focus card header) |
+| 5 | Activity feed | Done (Recent section in sidebar) |
+| 6 | Real-time sync via WebSocket | Done (broadcast on save) |
+| 7 | Deployed externally | Pending (ops decision needed) |
+| 8 | Playwright tests | 18 tests passing |
+
+**Remaining for COMPLETE:**
+- Deployment (criterion 7)
+- Interactive testing pass by Joe
+- Per-pin hop-depth UI controls (minor)
+
+---
 
 ## Eviction manifest
 
