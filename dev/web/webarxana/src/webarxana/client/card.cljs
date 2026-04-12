@@ -182,7 +182,7 @@
     (when (seq pins)
       [:div.pin-cards
        (doall
-        (for [pin pins]
+        (for [pin (reverse pins)]
           ^{:key (:id pin)}
           [pin-card-inner (:id pin)]))])))
 
