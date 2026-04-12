@@ -532,17 +532,8 @@ We are now in a position to build an easy-to-use tool like this that
 works in a standard web browser, because the heavy lifting at the
 level of structure already exists in a custom database. The need is
 clear: creative collaboration requires both the freedom to explore
-and the ability to accumulate. The VSATELIER pattern language
-describes the full arc — see patterns, flag them, deliberate, decide,
-record, and witness the consequences. WebArxana implements the opening
-moves: you pull ideas onto a shared canvas, see how they cluster, and
-draw connections that persist. The connections you make today become
-the structure that tomorrow's session starts from. Unlike a chat, the
-ideas don't scroll away. Unlike a document, the connections aren't
-trapped in prose. Unlike notecards, you can lay out a new spread
-without losing the old one. And unlike any of these, the whole thing
-is a graph: every idea, every connection, every author is a node that
-others can find, follow, and build on.
+and the ability to accumulate.
+
 
 ---
 
