@@ -207,3 +207,30 @@ was formalised. It established:
   `props`; relation endpoint requires map-style `{:id "..."}` for
   non-UUID entity IDs; ego endpoint only returns outgoing relations.
 - **Commit:** `4e5831f` "Add WebArxana v1"
+
+## Eviction manifest
+
+Junk entities created during prototype exploration (2026-04-12) when
+the database was incorrectly assumed to be empty. These should be
+evicted from XTDB when convenient. No general entity delete endpoint
+exists in futon1a; eviction requires direct XTDB access.
+
+| Entity ID | Name | Type | Notes |
+|-----------|------|------|-------|
+| `0c250a46-7a21-432b-9d95-eb40aae71730` | test-nema | article | First test POST |
+| `1790ae53-ef33-44db-9e3a-7bd0b74bedc0` | arxana | article | Seed duplicate |
+| `89ac6215-8b34-4801-86cd-defc767fba44` | nema | article | Seed duplicate |
+| `c9513a39-1de3-49b6-9dd7-d17c7350a144` | scholium | article | Seed duplicate |
+| `30d2e9eb-2379-4b90-b30e-4031dd67084d` | peer-learning | article | Seed duplicate |
+| `8cfcc678-5735-400b-b386-cd1a19d12d27` | planetmath | article | Seed duplicate |
+| `113dae85-442e-4704-9818-8b8b518703a4` | futon | article | Seed duplicate |
+| `5bb1c9b2-e092-4d79-95b3-4b464a236af7` | webarxana | article | Seed duplicate |
+| `1bc5e179-4392-4aa6-bddf-b09813d01c6d` | prelim-problem | question | Seed; source text dropped |
+| `d69503fb-9040-478b-89ba-20c12c8ed9e1` | claim-density | claim | Seed; source text dropped |
+| `45c529d2-8d91-4030-b271-0fc963e466b7` | evidence-archimedean | evidence | Seed duplicate |
+| `2efe96f8-a345-4ccb-a16b-9c8322220e41` | props-test | article | Props round-trip test |
+
+Also evict the 9 seed relations created between these entities, and
+the junk relations created via the non-alpha `/relation` endpoint
+(which stored docs with `:src`/`:dst` keys instead of
+`:relation/src`/`:relation/dst`, invisible to ego queries).
