@@ -8,7 +8,7 @@
 
 (def base "/api/futon")
 
-(declare fetch-hyperedges save-entity! save-relation! fetch-types pin-entity!)
+(declare fetch-hyperedges save-entity! save-relation! fetch-types pin-entity! connect-ws! ws-send!)
 
 (defn fetch-entity
   "Fetch a single entity by ID and ingest into Datascript."
@@ -263,6 +263,8 @@
       (when (= 200 (:status resp))
         (let [entity (get-in resp [:body :entity])]
           (state/ingest-entity! entity)
+          ;; Broadcast to other clients
+          (ws-send! {:type "nema-updated" :entity entity})
           entity)))))
 
 (defn save-relation!
@@ -279,6 +281,7 @@
       (when (= 200 (:status resp))
         (let [rel (get-in resp [:body :relation])]
           (state/ingest-relation! rel)
+          (ws-send! {:type "relation-updated" :relation rel})
           rel)))))
 
 ;; --- Auth ---
@@ -292,6 +295,7 @@
         (do (swap! state/ui-state assoc
                    :username username
                    :login-error nil)
+            (connect-ws!)
             (when on-success (on-success)))
         (do (swap! state/ui-state assoc
                    :login-error "Invalid credentials")
@@ -303,7 +307,8 @@
                              {:with-credentials? true}))]
       (when (= 200 (:status resp))
         (swap! state/ui-state assoc
-               :username (get-in resp [:body :username]))))))
+               :username (get-in resp [:body :username]))
+        (connect-ws!)))))
 
 ;; --- WebSocket ---
 
@@ -327,11 +332,13 @@
           (fn [e]
             (let [msg (js->clj (js/JSON.parse (.-data e)) :keywordize-keys true)]
               (case (:type msg)
-                "nema-updated" (when-let [entity (:entity msg)]
-                                 (state/ingest-entity! entity))
-                "relation-updated" (when-let [rel (:relation msg)]
-                                     (state/ingest-relation! rel))
-                "presence" (println (str (:username msg) " " (:event msg)))
+                "nema-updated" (do (when-let [entity (:entity msg)]
+                                    (state/ingest-entity! entity))
+                                  (swap! state/ui-state update :_render-tick (fnil inc 0)))
+                "relation-updated" (do (when-let [rel (:relation msg)]
+                                         (state/ingest-relation! rel))
+                                      (swap! state/ui-state update :_render-tick (fnil inc 0)))
+                "presence" (println (str (:from msg (:username msg)) " " (:event msg)))
                 (println "WS message:" msg)))))
     (reset! ws-conn ws)))
 
