@@ -158,6 +158,12 @@
                                    (reset! editing-name nema-name)
                                    (swap! state/ui-state assoc :editing pin-id))}
                    "Edit"]
+                  [:button.scratchpad-btn
+                   {:on-click #(swap! state/ui-state assoc
+                                      :connecting {:node-id pin-id})
+                    :class (when (= pin-id (get-in @state/ui-state [:connecting :node-id]))
+                             "connecting-active")}
+                   "Link"]
                   [:button.btn-new
                    {:on-click #(do (state/set-focus! pin-id)
                                    (reset! show-adjacent true))}
