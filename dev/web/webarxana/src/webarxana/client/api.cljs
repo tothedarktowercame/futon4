@@ -8,7 +8,7 @@
 
 (def base "/api/futon")
 
-(declare fetch-hyperedges save-entity! save-relation!)
+(declare fetch-hyperedges save-entity! save-relation! fetch-types)
 
 (defn fetch-entity
   "Fetch a single entity by ID and ingest into Datascript."
@@ -102,6 +102,9 @@
 (defn create-scratch-node!
   "Instantly create an unnamed article and add it to the scratchpad."
   []
+  ;; Ensure types are loaded for the type picker
+  (when (empty? (:available-types @state/ui-state))
+    (fetch-types))
   (go
     (let [entity (<! (save-entity! {:name ""
                                     :type "article"

@@ -88,8 +88,10 @@ test("scratch card Connect enters connect mode", async ({ page }) => {
     .locator(".scratch-card .scratchpad-btn", { hasText: "Connect" })
     .click();
 
-  // Should show connect banner in sidebar
-  await page.locator(".sidebar-toggle").click();
+  // Should show connect banner in sidebar (ensure sidebar is open)
+  if (!(await page.locator(".sidebar").isVisible())) {
+    await page.locator(".sidebar-toggle").click();
+  }
   await expect(page.locator(".connect-banner")).toBeVisible({ timeout: 3000 });
 
   // Click a node in the graph to complete

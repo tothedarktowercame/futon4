@@ -165,16 +165,41 @@
   "Editable card for the most recent scratchpad node, floats top-left."
   []
   (let [scratch-name (r/atom "")
-        scratch-text (r/atom "")]
+        scratch-text (r/atom "")
+        scratch-type (r/atom "article")
+        editing-type (r/atom false)]
     (fn []
       (let [scratchpad (:scratchpad @state/ui-state)
-            node       (last scratchpad)]
+            node       (last scratchpad)
+            entity-types (:available-types @state/ui-state)]
         (when node
           (let [node-id (:id node)]
             [:div.scratch-card
              ;; Header
              [:div.card-header
-              [:span.card-type (or (:type node) "article")]
+              (if @editing-type
+                [:input.card-type-input
+                 {:value @scratch-type
+                  :auto-focus true
+                  :list "type-suggestions"
+                  :on-change #(reset! scratch-type (.. % -target -value))
+                  :on-blur #(reset! editing-type false)
+                  :on-key-down (fn [e]
+                                 (when (= 13 (.-keyCode e))
+                                   (reset! editing-type false)
+                                   ;; Update the scratchpad entry
+                                   (swap! state/ui-state update :scratchpad
+                                          (fn [sp] (mapv #(if (= (:id %) node-id)
+                                                            (assoc % :type @scratch-type)
+                                                            %) sp)))))}]
+                [:span.card-type
+                 {:on-click #(reset! editing-type true)
+                  :style {:cursor "pointer"}}
+                 @scratch-type])
+              ;; Datalist for type suggestions
+              [:datalist {:id "type-suggestions"}
+               (for [t (or (seq entity-types) ["article"])]
+                 ^{:key t} [:option {:value t}])]
               [:input.card-name-input
                {:value @scratch-name
                 :on-change #(reset! scratch-name (.. % -target -value))
@@ -209,7 +234,7 @@
                     (go
                       (<! (api/save-entity! {:id   node-id
                                              :name (if (seq name-val) name-val "Untitled")
-                                             :type (or (:type node) "article")
+                                             :type @scratch-type
                                              :source text-val
                                              :props {:authors [(:username @state/ui-state)]}}))
                       ;; Update the scratchpad entry with the name
@@ -219,13 +244,13 @@
                                                %) sp)))
                       (state/ingest-entity! {:id node-id
                                              :name (if (seq name-val) name-val "Untitled")
-                                             :type (or (:type node) "article")
+                                             :type @scratch-type
                                              :source text-val}))))}
                "Save"]
               [:button.btn-edit
                {:on-click #(do (state/ingest-entity! {:id node-id
                                                       :name (if (seq @scratch-name) @scratch-name "")
-                                                      :type (or (:type node) "article")})
+                                                      :type @scratch-type})
                                (state/set-focus! node-id)
                                (swap! state/ui-state update :scratchpad
                                       (fn [sp] (vec (remove (fn [n] (= (:id n) node-id)) sp)))))}
