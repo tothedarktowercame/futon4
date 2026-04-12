@@ -135,6 +135,7 @@
                         (swap! state/ui-state assoc
                                :editing-link {:id link-id
                                               :type (or link-type "arxana/scholium")
+                                              :text (or link-text "")
                                               :x (.-clientX e)
                                               :y (.-clientY e)})))
           :style {:cursor "pointer"}}

@@ -1,5 +1,6 @@
 (ns webarxana.client.card
   (:require [clojure.string :as str]
+            [datascript.core :as d]
             [reagent.core :as r]
             [cljs.core.async :refer [go <!]]
             [webarxana.client.state :as state]
@@ -454,33 +455,55 @@
 ;; --- Link editor popup ---
 
 (defn link-editor
-  "Popup for editing a link's type, positioned near the clicked label."
+  "Popup for editing a link's type and annotation text."
   []
-  (when-let [info (:editing-link @state/ui-state)]
-    (let [rel-types (or (seq (:available-relation-types @state/ui-state))
-                        ["arxana/scholium" "defines" "inspired-by"
-                         "supported-by" "answered-by" "example"
-                         "implemented-by" "surface" "evolved-into"])]
-      [:div.link-editor-popup
-       {:style {:left (str (:x info) "px")
-                :top  (str (:y info) "px")}}
-       [:div.link-editor-header
-        [:span "Edit relation"]
-        [:button.scratch-dismiss
-         {:on-click #(swap! state/ui-state dissoc :editing-link)}
-         "\u00d7"]]
-       [:div.link-editor-body
-        [:label "Type"]
-        [:select
-         {:value (:type info)
-          :auto-focus true
-          :on-change (fn [e]
-                       (let [new-type (.. e -target -value)]
-                         ;; TODO: persist to futon1a (needs relation update endpoint)
-                         ;; For now, just close
-                         (swap! state/ui-state dissoc :editing-link)))}
-         (for [t rel-types]
-           ^{:key t} [:option {:value t} t])]
-        [:div.link-editor-info
-         [:span.card-id (subs (str (:id info)) 0 20)]]]])))
+  (let [edit-text (r/atom nil)
+        edit-type (r/atom nil)]
+    (fn []
+      (when-let [info (:editing-link @state/ui-state)]
+        (let [rel-types (or (seq (:available-relation-types @state/ui-state))
+                            ["arxana/scholium" "defines" "inspired-by"
+                             "supported-by" "answered-by" "example"
+                             "implemented-by" "surface" "evolved-into"])
+              cur-text (if (nil? @edit-text) (:text info) @edit-text)
+              cur-type (if (nil? @edit-type) (:type info) @edit-type)]
+          [:div.link-editor-popup
+           {:style {:left (str (:x info) "px")
+                    :top  (str (:y info) "px")}}
+           [:div.link-editor-header
+            [:span "Edit relation"]
+            [:button.scratch-dismiss
+             {:on-click #(do (reset! edit-text nil)
+                             (reset! edit-type nil)
+                             (swap! state/ui-state dissoc :editing-link))}
+             "\u00d7"]]
+           [:div.link-editor-body
+            [:label "Type"]
+            [:select
+             {:value cur-type
+              :on-change #(reset! edit-type (.. % -target -value))}
+             (for [t rel-types]
+               ^{:key t} [:option {:value t} t])]
+            [:label "Annotation"]
+            [:textarea.link-editor-text
+             {:value cur-text
+              :placeholder "Describe this connection..."
+              :on-change #(reset! edit-text (.. % -target -value))}]
+            [:div.link-editor-actions
+             [:button.btn-save
+              {:on-click
+               (fn []
+                 (let [link-id (:id info)]
+                   (when link-id
+                     (d/transact! state/conn
+                       [(cond-> {:link/id link-id}
+                          @edit-type (assoc :link/type @edit-type)
+                          @edit-text (assoc :link/text @edit-text))]))
+                   (reset! edit-text nil)
+                   (reset! edit-type nil)
+                   (swap! state/ui-state dissoc :editing-link)
+                   (swap! state/ui-state update :_render-tick (fnil inc 0))))}
+              "Save"]
+             [:span.card-id (subs (str (:id info)) 0 20)]]]])))))
+
 

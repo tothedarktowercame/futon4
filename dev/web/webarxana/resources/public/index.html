@@ -532,6 +532,28 @@
       font-family: monospace;
       cursor: pointer;
     }
+    .link-editor-text {
+      width: 100%;
+      padding: 6px 8px;
+      margin-top: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-size: 12px;
+      font-family: inherit;
+      min-height: 50px;
+      resize: vertical;
+      outline: none;
+    }
+    .link-editor-text:focus { border-color: var(--accent); }
+    .link-editor-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .link-editor-actions .btn-save { flex-shrink: 0; }
     .link-editor-info {
       margin-top: 6px;
     }
