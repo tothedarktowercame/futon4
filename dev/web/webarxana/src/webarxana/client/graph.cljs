@@ -109,9 +109,9 @@
                      (if connecting
                        ;; Connect mode: link the scratchpad node to this node
                        (api/connect-nodes! (:node-id connecting) nema-id nil)
-                       ;; Normal mode: focus
+                       ;; Normal mode: focus and fetch ego
                        (when-not is-focus
-                         (state/set-focus! nema-id))))
+                         (api/browse-and-focus! nema-id nema-id))))
          :style {:cursor (if connecting "crosshair" (if is-focus "default" "pointer"))}}
      ;; Glow ring for focus
      (when is-focus

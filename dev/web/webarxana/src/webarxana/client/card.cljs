@@ -69,6 +69,9 @@
                                 {:type @rel-type
                                  :src  from-id
                                  :dst  eid})))
+                         ;; Fetch ego for the parent so the graph shows the connection
+                         (when adjacent?
+                           (<! (api/fetch-ego (str from-id))))
                          (state/set-focus! eid)
                          (on-close)))))))}
             "Create"]
