@@ -100,21 +100,14 @@
           hxs)))))
 
 (defn create-scratch-node!
-  "Instantly create an unnamed article and add it to the scratchpad."
+  "Add a local scratch entry to the scratchpad. No server call until Save."
   []
-  ;; Ensure types are loaded for the type picker
   (when (empty? (:available-types @state/ui-state))
     (fetch-types))
-  (go
-    (let [entity (<! (save-entity! {:name ""
-                                    :type "article"
-                                    :props {:authors [(:username @state/ui-state)]}}))]
-      (when-let [eid (or (:id entity) (:entity/id entity))]
-        (state/ingest-entity! (assoc entity :name "" :type "article"))
-        (swap! state/ui-state update :scratchpad
-               conj {:id eid :name "" :type "article"})
-        (swap! state/ui-state assoc :sidebar-open true)
-        eid))))
+  (let [local-id (str "scratch-" (random-uuid))]
+    (swap! state/ui-state update :scratchpad
+           conj {:id local-id :name "" :type "article" :local? true})
+    local-id))
 
 (defn connect-nodes!
   "Create a relation between two nodes."

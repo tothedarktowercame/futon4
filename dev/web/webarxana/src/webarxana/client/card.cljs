@@ -231,34 +231,54 @@
                {:on-click
                 (fn []
                   (let [name-val (str/trim @scratch-name)
-                        text-val @scratch-text]
+                        text-val @scratch-text
+                        final-name (if (seq name-val) name-val "Untitled")]
                     (go
-                      (<! (api/save-entity! {:id   node-id
-                                             :name (if (seq name-val) name-val "Untitled")
-                                             :type @scratch-type
-                                             :source text-val
-                                             :props {:authors [(:username @state/ui-state)]}}))
-                      ;; Update the scratchpad entry with the name
-                      (swap! state/ui-state update :scratchpad
-                             (fn [sp] (mapv #(if (= (:id %) node-id)
-                                               (assoc % :name (if (seq name-val) name-val "Untitled"))
-                                               %) sp)))
-                      (state/ingest-entity! {:id node-id
-                                             :name (if (seq name-val) name-val "Untitled")
-                                             :type @scratch-type
-                                             :source text-val})
-                      ;; Flash confirmation
-                      (reset! save-status "Saved")
-                      (js/setTimeout #(reset! save-status nil) 2000))))}
+                      (let [entity (<! (api/save-entity!
+                                        {:name   final-name
+                                         :type   @scratch-type
+                                         :source text-val
+                                         :props  {:authors [(:username @state/ui-state)]}}))]
+                        (when-let [server-id (or (:id entity) (:entity/id entity))]
+                          ;; Replace local scratchpad entry with server ID
+                          (swap! state/ui-state update :scratchpad
+                                 (fn [sp] (mapv #(if (= (:id %) node-id)
+                                                   (assoc % :id server-id
+                                                            :name final-name
+                                                            :local? false)
+                                                   %) sp)))
+                          ;; Ingest into Datascript with content
+                          (state/ingest-entity! {:id server-id
+                                                 :name final-name
+                                                 :type @scratch-type
+                                                 :source text-val})
+                          ;; Flash confirmation
+                          (reset! save-status "Saved")
+                          (js/setTimeout #(reset! save-status nil) 2000))))))}
                (or @save-status "Save")]
               [:button.btn-edit
-               {:on-click #(do (state/ingest-entity! {:id node-id
-                                                      :name (if (seq @scratch-name) @scratch-name "")
-                                                      :type @scratch-type
-                                                      :source @scratch-text})
-                               (state/set-focus! node-id)
-                               (swap! state/ui-state update :scratchpad
-                                      (fn [sp] (vec (remove (fn [n] (= (:id n) node-id)) sp)))))}
+               {:on-click
+                (fn []
+                  (go
+                    ;; Save first if not yet persisted
+                    (let [final-name (let [n (str/trim @scratch-name)]
+                                      (if (seq n) n "Untitled"))
+                          eid (if (:local? node)
+                                (let [entity (<! (api/save-entity!
+                                                  {:name   final-name
+                                                   :type   @scratch-type
+                                                   :source @scratch-text
+                                                   :props  {:authors [(:username @state/ui-state)]}}))]
+                                  (or (:id entity) (:entity/id entity)))
+                                node-id)]
+                      (when eid
+                        (state/ingest-entity! {:id eid
+                                               :name final-name
+                                               :type @scratch-type
+                                               :source @scratch-text})
+                        (state/set-focus! eid)
+                        (swap! state/ui-state update :scratchpad
+                               (fn [sp] (vec (remove (fn [n] (= (:id n) node-id)) sp))))))))}
                "Focus"]
               [:button.scratchpad-btn
                {:on-click #(swap! state/ui-state assoc
