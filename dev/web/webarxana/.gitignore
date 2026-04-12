@@ -1,0 +1,6 @@
+.cpcache/
+.shadow-cljs/
+node_modules/
+resources/public/js/
+test-results/
+tests/*.png
