@@ -115,12 +115,20 @@
         link-text (:link/text link)
         label (if (seq link-text) link-text (or link-type "link"))
         label-w (+ 12 (* 6 (count label)))]
-    [:g {:key (:link/id link)}
-     [:line {:x1 x1 :y1 y1 :x2 x2 :y2 y2
-             :stroke "#556677"
-             :stroke-width 1.5
-             :stroke-dasharray (when (= link-type "scholium") "4,4")
-             :opacity 0.6}]
+    (let [;; Shorten line so arrow doesn't overlap the target node
+          dx (- x2 x1) dy (- y2 y1)
+          len (js/Math.sqrt (+ (* dx dx) (* dy dy)))
+          ;; Pull back by ~30px (node radius) from the destination
+          ratio (if (> len 30) (/ (- len 30) len) 1)
+          ax2 (+ x1 (* dx ratio))
+          ay2 (+ y1 (* dy ratio))]
+      [:g {:key (:link/id link)}
+       [:line {:x1 x1 :y1 y1 :x2 ax2 :y2 ay2
+               :stroke "#556677"
+               :stroke-width 1.5
+               :stroke-dasharray (when (= link-type "scholium") "4,4")
+               :opacity 0.6
+               :marker-end "url(#arrowhead)"}]
      [:g {:on-click #(swap! state/ui-state assoc :editing (:link/id link))
           :style {:cursor "pointer"}}
       [:rect {:x (- mx (/ label-w 2)) :y (- my 9) :width label-w :height 18
@@ -128,7 +136,7 @@
               :opacity 0.85}]
       [:text {:x mx :y (+ my 3) :text-anchor "middle"
               :fill "#aabbcc" :font-size 9 :font-family "monospace"}
-       label]]]))
+       label]]])))
 
 (defn node-component
   [nema pos is-focus is-pin]
@@ -217,6 +225,11 @@
         [:svg {:width "100%" :height "100%"
                :viewBox (str "0 0 " svg-width " " svg-height)
                :style {:background "#1a1a2e"}}
+         ;; Arrowhead marker definition
+         [:defs
+          [:marker {:id "arrowhead" :markerWidth 8 :markerHeight 6
+                    :refX 7 :refY 3 :orient "auto" :markerUnits "strokeWidth"}
+           [:path {:d "M0,0 L8,3 L0,6 L2,3 Z" :fill "#778899"}]]]
          ;; Links
          (when merged-hood
            (doall
