@@ -766,6 +766,13 @@ Interactive testing pass with Joe. Major additions:
 - Per-pin hop-depth UI controls not yet surfaced
 - Some junk test entities in futon1a (see eviction manifest)
 - Deployment decision pending (tunnel, VPS, or Linode)
+- Dashed "through" edges for compressed diagrams: when a diagram is
+  compressed, external nodes connected to hidden contents should show
+  a dashed synthetic edge to the diagram node (e.g., Nets → Corks
+  becomes Nets ⟿ Essay Ethics when Corks is folded inside)
+- Two-user collaboration verified via Playwright (2 contexts, both
+  "live", content persists across users). `jac` user added for
+  manual testing.
 
 ---
 
