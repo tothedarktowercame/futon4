@@ -53,12 +53,12 @@
         (when type
           (api/browse-type! type))
         (if (seq pins)
-          ;; Multi-pin: pin each entity sequentially, then set focus
-          (go
+          ;; Multi-pin: fire all pin requests in parallel, then set focus
+          (do
             (doseq [pid pins]
-              (<! (api/pin-entity! pid pid)))
+              (api/pin-entity! pid pid))
             (when focus
-              (state/set-focus! focus)))
+              (js/setTimeout #(state/set-focus! focus) 1500)))
           ;; Legacy single-focus
           (when focus
             (api/browse-and-focus! focus focus)))))))
