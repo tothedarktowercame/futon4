@@ -11,7 +11,7 @@
 
 (declare fetch-hyperedges save-entity! save-relation! fetch-types pin-entity! connect-ws! ws-send! save-diagram! fetch-recent expand-diagram!)
 
-(defn- ingest-ego!
+(defn ingest-ego!
   "Ingest an ego response (entity + outgoing + incoming) into Datascript."
   [ego]
   (let [entity   (:entity ego)

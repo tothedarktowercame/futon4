@@ -1,6 +1,7 @@
 (ns webarxana.client.route
   (:require [clojure.string :as str]
-            [cljs.core.async :refer [go <!]]
+            [cljs.core.async :refer [go <!] :as async]
+            [cljs-http.client :as http]
             [webarxana.client.state :as state]
             [webarxana.client.api :as api]))
 
@@ -53,13 +54,35 @@
         (when type
           (api/browse-type! type))
         (if (seq pins)
-          ;; Multi-pin: fire pin requests with slight stagger to avoid races
-          (do
-            (doseq [[i pid] (map-indexed vector pins)]
-              (js/setTimeout #(api/pin-entity! pid pid) (* i 200)))
-            (when focus
-              (js/setTimeout #(state/set-focus! focus)
-                             (+ 500 (* (count pins) 200)))))
+          ;; Multi-pin: fetch all egos in parallel, then batch-ingest + pin
+          (go
+            (let [;; Fire all ego fetches in parallel
+                  channels (mapv (fn [pid]
+                                  (http/get (str "/api/futon/ego/"
+                                                 (js/encodeURIComponent pid))
+                                            {:with-credentials? true}))
+                                pins)
+                  ;; Collect all responses
+                  responses (loop [chs channels results []]
+                              (if (empty? chs)
+                                results
+                                (recur (rest chs)
+                                       (conj results (<! (first chs))))))]
+              ;; Ingest all egos into Datascript
+              (doseq [resp responses]
+                (when (= 200 (:status resp))
+                  (let [ego (get-in resp [:body :ego])]
+                    (api/ingest-ego! ego))))
+              ;; Now pin all entities (Datascript already has the data)
+              (doseq [resp responses]
+                (when (= 200 (:status resp))
+                  (when-let [entity (get-in resp [:body :ego :entity])]
+                    (let [eid (or (:id entity) (:entity/id entity))]
+                      (state/pin! eid)))))
+              ;; Set focus and trigger render
+              (when focus
+                (state/set-focus! focus))
+              (swap! state/ui-state update :_render-tick (fnil inc 0))))
           ;; Legacy single-focus
           (when focus
             (api/browse-and-focus! focus focus)))))))
