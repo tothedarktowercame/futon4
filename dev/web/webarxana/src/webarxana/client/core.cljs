@@ -25,12 +25,10 @@
   (rdc/render root [app]))
 
 (defn init []
-  (api/check-auth!)
+  (println "[init] Starting...")
   (route/install!)
-  ;; Restore hash after auth succeeds (username gets set)
-  (add-watch state/ui-state ::auth-restore
-    (fn [_ _ old new]
-      (when (and (nil? (:username old)) (some? (:username new)))
-        (route/restore-from-hash!)
-        (remove-watch state/ui-state ::auth-restore))))
+  (api/check-auth!
+   (fn []
+     (println "[init] Auth succeeded, restoring hash")
+     (route/restore-from-hash!)))
   (reload))

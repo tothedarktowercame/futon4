@@ -347,14 +347,17 @@
                    :login-error "Invalid credentials")
             (when on-error (on-error)))))))
 
-(defn check-auth! []
-  (go
-    (let [resp (<! (http/get "/api/auth/check"
-                             {:with-credentials? true}))]
-      (when (= 200 (:status resp))
-        (swap! state/ui-state assoc
-               :username (get-in resp [:body :username]))
-        (connect-ws!)))))
+(defn check-auth!
+  ([] (check-auth! nil))
+  ([on-success]
+   (go
+     (let [resp (<! (http/get "/api/auth/check"
+                              {:with-credentials? true}))]
+       (when (= 200 (:status resp))
+         (swap! state/ui-state assoc
+                :username (get-in resp [:body :username]))
+         (connect-ws!)
+         (when on-success (on-success)))))))
 
 ;; --- WebSocket ---
 
