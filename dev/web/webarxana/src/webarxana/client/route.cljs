@@ -53,12 +53,13 @@
         (when type
           (api/browse-type! type))
         (if (seq pins)
-          ;; Multi-pin: fire all pin requests in parallel, then set focus
+          ;; Multi-pin: fire pin requests with slight stagger to avoid races
           (do
-            (doseq [pid pins]
-              (api/pin-entity! pid pid))
+            (doseq [[i pid] (map-indexed vector pins)]
+              (js/setTimeout #(api/pin-entity! pid pid) (* i 200)))
             (when focus
-              (js/setTimeout #(state/set-focus! focus) 1500)))
+              (js/setTimeout #(state/set-focus! focus)
+                             (+ 500 (* (count pins) 200)))))
           ;; Legacy single-focus
           (when focus
             (api/browse-and-focus! focus focus)))))))
