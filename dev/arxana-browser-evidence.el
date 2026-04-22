@@ -22,11 +22,23 @@
   "Evidence landscape browsing for Arxana."
   :group 'arxana)
 
-(defcustom arxana-evidence-server
-  (or (getenv "FUTON3C_SERVER")
-      (getenv "FUTON1_API_BASE")
+(defun arxana-evidence--default-server ()
+  "Return the canonical base URL for the evidence landscape API.
+
+Evidence browsing is anchored on the persisted Futon1/Futon1a store, not the
+local agency transport endpoint.  Falling back to the agent-chat base URL makes
+Arxana show only the local session stream instead of the shared evidence
+landscape."
+  (or (getenv "FUTON1_API_BASE")
       (getenv "STACK_HUD_FUTON1_API_BASE")
-      "http://localhost:7070")
+      (and (boundp 'arxana-lab-futon1-server)
+           (stringp arxana-lab-futon1-server)
+           (not (string-empty-p arxana-lab-futon1-server))
+           arxana-lab-futon1-server)
+      "http://localhost:8080/api/alpha"))
+
+(defcustom arxana-evidence-server
+  (arxana-evidence--default-server)
   "HTTP base URL for the evidence API."
   :type 'string
   :group 'arxana-evidence)
@@ -46,8 +58,55 @@
   :type 'integer
   :group 'arxana-evidence)
 
+(defcustom arxana-evidence-open-session-entry-limit 24
+  "Maximum Evidence entries sampled for each open REPL session summary."
+  :type 'integer
+  :group 'arxana-evidence)
+
+(defcustom arxana-evidence-open-session-llm-summaries t
+  "When non-nil, summarize open-session Evidence capsules with Claude."
+  :type 'boolean
+  :group 'arxana-evidence)
+
+(defcustom arxana-evidence-open-session-summary-command
+  (or (executable-find "claude")
+      (and (file-executable-p "/home/joe/.local/bin/claude")
+           "/home/joe/.local/bin/claude")
+      "claude")
+  "Command used for cheap open-session summaries."
+  :type 'string
+  :group 'arxana-evidence)
+
+(defcustom arxana-evidence-open-session-summary-model "haiku"
+  "Claude model alias used for cheap open-session summaries."
+  :type 'string
+  :group 'arxana-evidence)
+
+(defcustom arxana-evidence-open-session-summary-timeout 45
+  "Maximum seconds for a batched open-session summary call."
+  :type 'integer
+  :group 'arxana-evidence)
+
+(defcustom arxana-evidence-open-session-summary-max-budget "0.05"
+  "Maximum USD budget passed to the Claude summary call."
+  :type 'string
+  :group 'arxana-evidence)
+
+(defvar arxana-evidence--open-session-summary-cache
+  (make-hash-table :test 'equal)
+  "Cache of open-session LLM summaries keyed by session/latest/model.")
+
+(defvar arxana-evidence--open-session-item-cache
+  (make-hash-table :test 'equal)
+  "Cache of open-session rows keyed by session/latest/model.")
+
+(defconst arxana-evidence--open-session-item-cache-version "row-v3"
+  "Version tag for open-session row cache entries.")
+
 (defun arxana-evidence--normalize-base (base)
   (let ((value (string-remove-suffix "/" (or base ""))))
+    (setq value (replace-regexp-in-string
+                 "/api\\(?:/alpha\\|/%ce%b1\\|/%CE%B1\\)?/evidence\\'" "" value))
     (setq value (replace-regexp-in-string "/api\\(?:/alpha\\|/%ce%b1\\|/%CE%B1\\)?\\'" "" value))
     value))
 
@@ -96,16 +155,21 @@
          (buffer (url-retrieve-synchronously url t t arxana-evidence-request-timeout)))
     (unless buffer
       (user-error "Evidence request failed: %s" url))
-    (with-current-buffer buffer
-      (goto-char (point-min))
-      (let ((status (or (and (boundp 'url-http-response-status) url-http-response-status) 0)))
-        (re-search-forward "\n\n" nil 'move)
-        (let* ((body (buffer-substring-no-properties (point) (point-max)))
-               (parsed (arxana-evidence--parse-json body)))
-          (kill-buffer buffer)
-          (if (and (>= status 200) (< status 300))
-              parsed
-            (user-error "Evidence API error %s (%s)" status url)))))))
+    (unwind-protect
+        (with-current-buffer buffer
+          (goto-char (point-min))
+          (let ((status (and (boundp 'url-http-response-status)
+                             url-http-response-status)))
+            (unless (and (integerp status) (> status 0))
+              (user-error "Evidence request failed with no HTTP response: %s" url))
+            (re-search-forward "\n\n" nil 'move)
+            (let* ((body (buffer-substring-no-properties (point) (point-max)))
+                   (parsed (arxana-evidence--parse-json body)))
+              (if (and (>= status 200) (< status 300))
+                  parsed
+                (user-error "Evidence API error %s (%s)" status url)))))
+      (when (buffer-live-p buffer)
+        (kill-buffer buffer)))))
 
 (defun arxana-evidence--kw-name (value)
   (cond
@@ -144,6 +208,66 @@
      ((listp body) (arxana-evidence--truncate (prin1-to-string body) 48))
      (t "-"))))
 
+(defun arxana-evidence--entry-body-text (entry)
+  "Return the plain text payload for Evidence ENTRY, or an empty string."
+  (let ((body (plist-get entry :evidence/body)))
+    (cond
+     ((stringp body) body)
+     ((listp body)
+      (or (plist-get body :text)
+          (plist-get body :message)
+          (plist-get body :summary)
+          ""))
+     (t ""))))
+
+(defun arxana-evidence--entry-role (entry)
+  "Return a normalized chat role for Evidence ENTRY."
+  (let* ((body (plist-get entry :evidence/body))
+         (role (and (listp body) (plist-get body :role)))
+         (author (downcase (or (plist-get entry :evidence/author) "")))
+         (claim (arxana-evidence--kw-name (plist-get entry :evidence/claim-type))))
+    (cond
+     ((and (stringp role) (not (string-empty-p role))) (downcase role))
+     ((member author '("joe" "user")) "user")
+     ((member author '("codex" "claude" "assistant")) "assistant")
+     ((string= claim "question") "user")
+     ((member claim '("observation" "correction" "conjecture")) "assistant")
+     (t ""))))
+
+(defun arxana-evidence--semantic-snippet (text max-len)
+  "Return a compact semantic snippet from TEXT bounded by MAX-LEN."
+  (let* ((raw (arxana-evidence--extract-user-message (or text "")))
+         (single (replace-regexp-in-string "[ \t\n\r]+" " " (string-trim raw))))
+    (arxana-evidence--truncate single max-len)))
+
+(defun arxana-evidence--extract-missions (texts)
+  "Return sorted distinct mission ids mentioned in TEXTS."
+  (let ((missions nil))
+    (dolist (text texts)
+      (when (stringp text)
+        (with-temp-buffer
+          (insert text)
+          (goto-char (point-min))
+          (while (re-search-forward "\\bM-[[:alnum:]][[:alnum:]_-]*\\b" nil t)
+            (cl-pushnew (match-string 0) missions :test #'equal)))))
+    (sort missions #'string<)))
+
+(defun arxana-evidence--extract-artifacts (texts)
+  "Return a compact list of file/path-like artifacts mentioned in TEXTS."
+  (let ((artifacts nil))
+    (dolist (text texts)
+      (when (stringp text)
+        (with-temp-buffer
+          (insert text)
+          (goto-char (point-min))
+          (while (re-search-forward
+                  "\\(?:[[:alnum:]_.-]+/\\)+[[:alnum:]_.-]+\\|[[:alnum:]_-]+\\.[[:alpha:]][[:alnum:]]+"
+                  nil t)
+            (cl-pushnew (string-trim-right (match-string 0) "[.,;:]+")
+                        artifacts
+                        :test #'equal)))))
+    (cl-subseq (sort artifacts #'string<) 0 (min 4 (length artifacts)))))
+
 (defun arxana-evidence--entry->item (entry &optional depth)
   (list :type 'evidence-entry
         :entry entry
@@ -171,6 +295,10 @@
               :label "Evidence by Session"
               :description "Group evidence entries by session-id."
               :view 'evidence-sessions)
+        (list :type 'menu
+              :label "Open REPL Sessions"
+              :description "Evidence-backed semantic summaries for open Codex/Claude buffers."
+              :view 'evidence-open-sessions)
         (list :type 'menu
               :label "Evidence Threads"
               :description "Group reply chains into thread projections."
@@ -409,18 +537,507 @@
                  :label "Evidence unavailable"
                  :description (format "Error: %s" (error-message-string err)))))))
 
+(defun arxana-evidence--repl-buffer-p (buffer)
+  "Return non-nil when BUFFER appears to be an open Codex/Claude REPL."
+  (with-current-buffer buffer
+    (or (memq major-mode '(codex-repl-mode claude-repl-mode))
+        (string-match-p "\\`\\*\\(?:codex\\|claude\\)-repl\\(?::[^*]+\\)?\\*\\'"
+                        (buffer-name buffer)))))
+
+(defun arxana-evidence--buffer-session-id ()
+  "Return the current buffer's REPL session id, or nil."
+  (let ((sid (or (and (memq major-mode '(codex-repl-mode codex-repl-mirror-mode))
+                      (local-variable-p 'codex-repl--last-emitted-session-id
+                                        (current-buffer))
+                      (boundp 'codex-repl--last-emitted-session-id)
+                      (stringp codex-repl--last-emitted-session-id)
+                      codex-repl--last-emitted-session-id)
+                 (and (memq major-mode '(codex-repl-mode codex-repl-mirror-mode))
+                      (local-variable-p 'codex-repl--evidence-session-id
+                                        (current-buffer))
+                      (boundp 'codex-repl--evidence-session-id)
+                      (stringp codex-repl--evidence-session-id)
+                      codex-repl--evidence-session-id)
+                 (and (boundp 'agent-chat--session-id)
+                      (stringp agent-chat--session-id)
+                      agent-chat--session-id)
+                 (and (memq major-mode '(codex-repl-mode codex-repl-mirror-mode))
+                      (local-variable-p 'codex-repl-session-id (current-buffer))
+                      (boundp 'codex-repl-session-id)
+                      (stringp codex-repl-session-id)
+                      codex-repl-session-id))))
+    (and sid
+         (not (string-empty-p sid))
+         (not (string= sid "pending"))
+         sid)))
+
+(defun arxana-evidence--buffer-agent ()
+  "Return the current buffer's REPL agent label."
+  (or (and (boundp 'agent-chat--agent-name)
+           (stringp agent-chat--agent-name)
+           (not (string-empty-p agent-chat--agent-name))
+           agent-chat--agent-name)
+      (cond
+       ((string-match-p "\\`\\*codex-repl" (buffer-name)) "codex")
+       ((string-match-p "\\`\\*claude-repl" (buffer-name)) "claude")
+       (t "agent"))))
+
+(defun arxana-evidence--buffer-evidence-server ()
+  "Return the current REPL buffer's Evidence server base, or nil."
+  (let ((url (cond
+              ((and (boundp 'agent-chat--evidence-url)
+                    (stringp agent-chat--evidence-url)
+                    (not (string-empty-p agent-chat--evidence-url)))
+               agent-chat--evidence-url)
+              ((and (boundp 'codex-repl-evidence-url)
+                    (stringp codex-repl-evidence-url)
+                    (not (string-empty-p codex-repl-evidence-url)))
+               codex-repl-evidence-url)
+              ((and (boundp 'claude-repl-evidence-url)
+                    (stringp claude-repl-evidence-url)
+                    (not (string-empty-p claude-repl-evidence-url)))
+               claude-repl-evidence-url)
+	       (t nil))))
+    (and url (arxana-evidence--normalize-base url))))
+
+(defun arxana-evidence--buffer-latest-evidence-id ()
+  "Return the current REPL buffer's latest Evidence id hint, or nil."
+  (let ((eid (cond
+              ((and (boundp 'codex-repl--last-evidence-id)
+                    (local-variable-p 'codex-repl--last-evidence-id)
+                    (stringp codex-repl--last-evidence-id))
+               codex-repl--last-evidence-id)
+              ((and (boundp 'claude-repl--last-evidence-id)
+                    (local-variable-p 'claude-repl--last-evidence-id)
+                    (stringp claude-repl--last-evidence-id))
+               claude-repl--last-evidence-id)
+              ((and (boundp 'agent-chat--last-evidence-id)
+                    (local-variable-p 'agent-chat--last-evidence-id)
+                    (stringp agent-chat--last-evidence-id))
+               agent-chat--last-evidence-id)
+              (t nil))))
+    (and eid (not (string-empty-p eid)) eid)))
+
+(defun arxana-evidence--open-repl-sessions ()
+  "Return open Codex/Claude REPL buffers with their session ids.
+Signals a user error if an open REPL buffer lacks a usable session id."
+  (let (sessions)
+    (dolist (buffer (buffer-list))
+      (when (arxana-evidence--repl-buffer-p buffer)
+        (with-current-buffer buffer
+          (let* ((sid (arxana-evidence--buffer-session-id))
+                 (evidence-server (arxana-evidence--buffer-evidence-server))
+                 (state (if (and (boundp 'agent-chat--pending-process)
+                                 (process-live-p agent-chat--pending-process))
+                            "running"
+                          "idle")))
+            (cond
+             ((not sid)
+              (when (string= state "running")
+                (user-error "Open REPL buffer has no Evidence session id: %s"
+                            (buffer-name buffer))))
+             (t
+              (unless evidence-server
+                (user-error "Open REPL buffer has no Evidence endpoint: %s"
+                            (buffer-name buffer)))
+              (push (list :buffer (buffer-name buffer)
+                          :agent (arxana-evidence--buffer-agent)
+                          :session-id sid
+                          :evidence-server evidence-server
+                          :latest-id-hint (arxana-evidence--buffer-latest-evidence-id)
+                          :state state)
+                    sessions)))))))
+    (sort sessions (lambda (a b)
+                     (string< (plist-get a :buffer)
+                              (plist-get b :buffer))))))
+
+(defun arxana-evidence--entries-for-open-session (session)
+  "Fetch bounded Evidence entries for open REPL SESSION."
+  (let* ((sid (plist-get session :session-id))
+         (server (plist-get session :evidence-server))
+         (entries (let ((arxana-evidence-server server))
+                    (arxana-evidence--fetch-evidence
+                     `(("session-id" . ,sid)
+                       ("limit" . ,arxana-evidence-open-session-entry-limit))))))
+    (unless entries
+      (user-error "No Evidence found for open REPL session %s (%s)"
+                  sid (plist-get session :buffer)))
+    entries))
+
+(defun arxana-evidence--count-open-session-turns (session)
+  "Return the exact Evidence turn count for open REPL SESSION."
+  (let* ((sid (plist-get session :session-id))
+         (server (plist-get session :evidence-server))
+         (payload
+          (let ((arxana-evidence-server server))
+            (arxana-evidence--request
+             "/evidence/count"
+             (arxana-evidence--query-string
+              `(("session-id" . ,sid)
+                ("tag" . "turn"))))))
+         (count (plist-get payload :count)))
+    (unless (integerp count)
+      (user-error "Evidence count unavailable for open REPL session %s (%s)"
+                  sid (plist-get session :buffer)))
+    count))
+
+(defun arxana-evidence--open-session-summary (session entries turn-count)
+  "Return a semantic summary item for open REPL SESSION using ENTRIES."
+  (let* ((sorted (sort (copy-sequence entries)
+                       (lambda (a b)
+                         (string> (arxana-evidence--entry-time a)
+                                  (arxana-evidence--entry-time b)))))
+         (texts (mapcar #'arxana-evidence--entry-body-text sorted))
+         (latest (car sorted))
+         (latest-user
+          (cl-find-if (lambda (entry)
+                        (string= (arxana-evidence--entry-role entry) "user"))
+                      sorted))
+         (latest-assistant
+          (cl-find-if (lambda (entry)
+                        (string= (arxana-evidence--entry-role entry) "assistant"))
+                      sorted))
+         (about (if latest-user
+                    (arxana-evidence--semantic-snippet
+                     (arxana-evidence--entry-body-text latest-user) 120)
+                  (arxana-evidence--entry-summary latest)))
+         (outcome (and latest-assistant
+                       (arxana-evidence--semantic-snippet
+                        (arxana-evidence--entry-body-text latest-assistant) 90)))
+         (missions (arxana-evidence--extract-missions texts))
+         (artifacts (arxana-evidence--extract-artifacts texts)))
+    (append (list :type 'evidence-open-session)
+            session
+            (list :count turn-count
+                  :latest (arxana-evidence--entry-time latest)
+                  :latest-id (arxana-evidence--entry-id latest)
+                  :about about
+                  :outcome (or outcome "")
+                  :missions missions
+                  :artifacts artifacts
+                  :entries sorted))))
+
+(defun arxana-evidence--open-session-cache-key (item)
+  "Return the LLM-summary cache key for open-session ITEM."
+  (format "%s|%s|%s"
+          (or (plist-get item :session-id) "")
+          (or (plist-get item :latest-id) "")
+          arxana-evidence-open-session-summary-model))
+
+(defun arxana-evidence--open-session-item-cache-key (item)
+  "Return the row-cache key for open-session ITEM."
+  (format "%s|%s"
+          arxana-evidence--open-session-item-cache-version
+          (arxana-evidence--open-session-cache-key item)))
+
+(defun arxana-evidence--open-session-hint-cache-key (session)
+  "Return row-cache key for open SESSION when it has a latest-id hint."
+  (when-let ((eid (plist-get session :latest-id-hint)))
+    (format "%s|%s|%s|%s"
+            arxana-evidence--open-session-item-cache-version
+            (or (plist-get session :session-id) "")
+            eid
+            arxana-evidence-open-session-summary-model)))
+
+(defun arxana-evidence--open-session-refresh-cached-item (session item)
+  "Return cached ITEM with volatile fields refreshed from SESSION."
+  (let ((copy (copy-sequence item)))
+    (dolist (key '(:buffer :agent :evidence-server :state :latest-id-hint))
+      (setq copy (plist-put copy key (plist-get session key))))
+    copy))
+
+(defun arxana-evidence--cache-open-session-item (item)
+  "Store open-session ITEM under its fetched and buffer-local latest ids."
+  (puthash (arxana-evidence--open-session-item-cache-key item)
+           item
+           arxana-evidence--open-session-item-cache)
+  (when-let ((hint-key (arxana-evidence--open-session-hint-cache-key item)))
+    (puthash hint-key item arxana-evidence--open-session-item-cache)))
+
+(defun arxana-evidence--open-session-item (session)
+  "Return cached or freshly fetched summary item for open SESSION."
+  (let* ((hint-key (arxana-evidence--open-session-hint-cache-key session))
+         (cached (and hint-key
+                      (gethash hint-key arxana-evidence--open-session-item-cache))))
+    (if cached
+        (arxana-evidence--open-session-refresh-cached-item session cached)
+      (let* ((entries (arxana-evidence--entries-for-open-session session))
+             (turn-count (arxana-evidence--count-open-session-turns session))
+             (item (arxana-evidence--open-session-summary
+                    session entries turn-count)))
+        (arxana-evidence--cache-open-session-item item)
+        item))))
+
+(defun arxana-evidence--open-session-capsule (item)
+  "Return a bounded text capsule for LLM summary of open-session ITEM."
+  (let* ((entries (cl-subseq (or (plist-get item :entries) '())
+                             0 (min 4 (length (or (plist-get item :entries) '())))))
+         (turns
+          (mapconcat
+           (lambda (entry)
+             (format "- %s %s: %s"
+                     (arxana-evidence--truncate
+                      (arxana-evidence--entry-time entry) 19)
+                     (or (arxana-evidence--entry-role entry) "")
+                     (arxana-evidence--semantic-snippet
+                      (arxana-evidence--entry-body-text entry) 140)))
+           entries
+           "\n")))
+    (format "BUFFER: %s\nAGENT: %s\nSTATE: %s\nMISSIONS: %s\nARTIFACTS: %s\nEXTRACTIVE ABOUT: %s\nLATEST OUTCOME: %s\nRECENT EVIDENCE:\n%s"
+            (or (plist-get item :buffer) "")
+            (or (plist-get item :agent) "")
+            (or (plist-get item :state) "")
+            (string-join (or (plist-get item :missions) '()) ", ")
+            (string-join (or (plist-get item :artifacts) '()) ", ")
+            (or (plist-get item :about) "")
+            (or (plist-get item :outcome) "")
+            turns)))
+
+(defun arxana-evidence--clean-llm-summary (text)
+  "Normalize one-line LLM summary TEXT."
+  (let* ((single (replace-regexp-in-string "[ \t\n\r]+" " " (string-trim (or text ""))))
+         (unquoted (replace-regexp-in-string "\\`[\"']\\|[\"']\\'" "" single)))
+    (arxana-evidence--truncate unquoted 110)))
+
+(defun arxana-evidence--batch-open-session-summaries (requests)
+  "Return alist of (ID . SUMMARY) for batched summary REQUESTS.
+Each request is (ID . CAPSULE)."
+  (when (and requests
+             arxana-evidence-open-session-llm-summaries
+             (executable-find arxana-evidence-open-session-summary-command))
+    (let* ((system
+            "You summarize coding/research sessions. Return exactly one TSV line per requested ID: ID<TAB>summary. Summaries must be plain, concrete, and at most 12 words. No bullets, no preamble.")
+           (prompt
+            (concat
+             "Summarize each session capsule.\n\n"
+             (mapconcat
+              (lambda (request)
+                (format "ID: %s\n%s"
+                        (car request)
+                        (cdr request)))
+              requests
+              "\n\n---\n\n")))
+           (out (generate-new-buffer " *arxana-session-summary*"))
+           (status nil))
+      (unwind-protect
+          (let (rows)
+            (with-temp-buffer
+              (insert prompt)
+              (setq status
+                    (with-timeout (arxana-evidence-open-session-summary-timeout :timeout)
+                      (call-process-region
+                       (point-min) (point-max)
+                       arxana-evidence-open-session-summary-command
+                       nil out nil
+                       "-p"
+                       "--model" arxana-evidence-open-session-summary-model
+                       "--no-session-persistence"
+                       "--max-budget-usd" arxana-evidence-open-session-summary-max-budget
+                       "--tools" ""
+                       "--system-prompt" system))))
+            (when (eq status 0)
+              (with-current-buffer out
+                (goto-char (point-min))
+                (while (not (eobp))
+                  (let ((line (string-trim
+                               (buffer-substring-no-properties
+                                (line-beginning-position)
+                                (line-end-position)))))
+                    (when (string-match "\\`\\(S[0-9]+\\)[\t ]+\\(.+\\)\\'" line)
+                      (push (cons (match-string 1 line)
+                                  (arxana-evidence--clean-llm-summary
+                                   (match-string 2 line)))
+                            rows)))
+                  (forward-line 1))))
+            (nreverse rows))
+        (when (buffer-live-p out)
+          (kill-buffer out))))))
+
+(defun arxana-evidence--apply-open-session-llm-summaries (items)
+  "Return ITEMS with cached or newly generated LLM summaries applied."
+  (if (not arxana-evidence-open-session-llm-summaries)
+      items
+    (let ((requests nil)
+          (id->key nil)
+          (index 0))
+      (dolist (item items)
+        (when (eq (plist-get item :type) 'evidence-open-session)
+          (unless (plist-get item :summary-ready)
+            (let* ((key (arxana-evidence--open-session-cache-key item))
+                   (cached (gethash key arxana-evidence--open-session-summary-cache)))
+              (unless cached
+                (cl-incf index)
+                (let ((id (format "S%d" index)))
+                  (push (cons id (arxana-evidence--open-session-capsule item)) requests)
+                  (push (cons id key) id->key)))))))
+      (when requests
+        (condition-case err
+            (dolist (row (arxana-evidence--batch-open-session-summaries
+                          (nreverse requests)))
+              (when-let* ((key (cdr (assoc (car row) id->key)))
+                          (summary (cdr row)))
+                (puthash key summary arxana-evidence--open-session-summary-cache)))
+          (error
+           (message "arxana evidence session summaries unavailable: %s"
+                    (error-message-string err)))
+          (quit
+           (message "arxana evidence session summaries timed out: %s"
+                    (error-message-string err)))))
+      (mapcar
+       (lambda (item)
+         (if (eq (plist-get item :type) 'evidence-open-session)
+             (let* ((key (arxana-evidence--open-session-cache-key item))
+                    (summary (gethash key arxana-evidence--open-session-summary-cache)))
+               (if summary
+                   (plist-put (plist-put item :about summary)
+                              :summary-ready t)
+                 item))
+           item))
+       items))))
+
+(defun arxana-browser--evidence-open-sessions-format ()
+  [("Buffer" 28 t)
+   ("Agent" 8 t)
+   ("State" 8 t)
+   ("Turns" 7 nil)
+   ("Latest" 20 t)
+   ("Missions" 30 nil)
+   ("About" 0 nil)])
+
+(defun arxana-browser--evidence-open-sessions-row (item)
+  (vector (arxana-evidence--truncate (or (plist-get item :buffer) "") 27)
+          (arxana-evidence--truncate (or (plist-get item :agent) "") 7)
+          (arxana-evidence--truncate (or (plist-get item :state) "") 7)
+          (format "%d" (or (plist-get item :count) 0))
+          (arxana-evidence--truncate (or (plist-get item :latest) "") 19)
+          (arxana-evidence--truncate
+           (string-join (or (plist-get item :missions) '()) ", ") 29)
+          (or (plist-get item :about) "")))
+
+(defun arxana-browser--evidence-open-sessions-items ()
+  "Return Evidence-backed semantic summaries for open REPL buffers."
+  (let ((sessions (arxana-evidence--open-repl-sessions)))
+    (if sessions
+        (let ((items (arxana-evidence--apply-open-session-llm-summaries
+                      (mapcar #'arxana-evidence--open-session-item sessions))))
+          (dolist (item items)
+            (when (eq (plist-get item :type) 'evidence-open-session)
+              (arxana-evidence--cache-open-session-item item)))
+          items)
+      (list (list :type 'info
+                  :label "No open REPL sessions"
+                  :description "Open a Codex or Claude REPL buffer to see Evidence-backed summaries.")))))
+
+(defun arxana-evidence--chat-turn-item (entry)
+  "Render a chat-turn evidence entry as a conversation item."
+  (let* ((body (plist-get entry :evidence/body))
+         (role (or (and (listp body) (plist-get body :role)) "system"))
+         (text (or (and (listp body) (plist-get body :text)) ""))
+         (author (or (plist-get entry :evidence/author) role))
+         (time-str (or (plist-get entry :evidence/at) ""))
+         (time-short (if (>= (length time-str) 19)
+                         (substring time-str 11 19)
+                       time-str))
+         (eid (arxana-evidence--entry-id entry)))
+    (list :type 'evidence-chat-turn
+          :entry entry
+          :evidence-id eid
+          :role role
+          :author author
+          :time time-short
+          :text text
+          :label (format "%s [%s]" author time-short)
+          :description text)))
+
+(defun arxana-evidence--meta-item (entry)
+  "Render a non-chat evidence entry as a subdued metadata line."
+  (let* ((body (plist-get entry :evidence/body))
+         (event (or (and (listp body) (plist-get body :event)) ""))
+         (author (or (plist-get entry :evidence/author) ""))
+         (time-str (or (plist-get entry :evidence/at) ""))
+         (time-short (if (>= (length time-str) 19)
+                         (substring time-str 11 19)
+                       time-str))
+         (detail (cond
+                  ((string= event "context-retrieval")
+                   (let ((results (and (listp body) (plist-get body :results))))
+                     (if results
+                         (mapconcat (lambda (r) (or (plist-get r :id) "?"))
+                                    results ", ")
+                       "")))
+                  ((string= event "invoke-start") "invoke started")
+                  ((string= event "invoke-complete")
+                   (format "invoke complete (ok=%s)" (plist-get body :ok)))
+                  (t (arxana-evidence--truncate (format "%s" event) 60)))))
+    (list :type 'evidence-meta
+          :entry entry
+          :evidence-id (arxana-evidence--entry-id entry)
+          :label (format "  %s %s · %s" time-short event author)
+          :description detail)))
+
+(defun arxana-evidence--extract-user-message (text)
+  "Strip surface contract / transport headers from TEXT to get the core message."
+  (let ((result text))
+    ;; Strip 'Agent: ...\n\nUser message:\n' prefix
+    (when (and (stringp result) (string-match "\\(?:^\\|\n\\)User message:\n" result))
+      (setq result (substring result (match-end 0))))
+    ;; Strip '--- CURRENT TURN ---...\n---\n' prefix
+    (when (and (stringp result) (string-match "\\`---[^\n]*\n\\(?:.*\n\\)*?---\n+" result))
+      (setq result (substring result (match-end 0))))
+    (or result text)))
+
+(defun arxana-evidence--dedup-session-entries (entries)
+  "Remove forum-post duplicates when a chat-turn exists for the same content.
+Forum-post and chat-turn are dual records of the same turn; prefer chat-turn."
+  (let ((chat-turn-texts (make-hash-table :test 'equal)))
+    ;; Collect normalized text from chat-turn entries
+    (dolist (entry entries)
+      (let* ((body (plist-get entry :evidence/body))
+             (event (and (listp body) (plist-get body :event))))
+        (when (and (stringp event) (string= event "chat-turn"))
+          (let ((text (and (listp body) (plist-get body :text))))
+            (when (and (stringp text) (> (length text) 0))
+              (puthash (substring text 0 (min 60 (length text))) t chat-turn-texts))))))
+    ;; Filter out forum-posts whose core text matches a chat-turn
+    (cl-remove-if
+     (lambda (entry)
+       (let ((etype (arxana-evidence--kw-name (plist-get entry :evidence/type))))
+         (and (string= etype "forum-post")
+              (let* ((body (plist-get entry :evidence/body))
+                     (raw-text (and (listp body)
+                                    (or (plist-get body :text) "")))
+                     (clean (arxana-evidence--extract-user-message raw-text)))
+                (and (stringp clean)
+                     (> (length clean) 0)
+                     (gethash (substring clean 0 (min 60 (length clean)))
+                              chat-turn-texts))))))
+     entries)))
+
 (defun arxana-browser--evidence-session-items (context)
+  "Render session entries as a chat-like conversation with metadata interleaved."
   (let* ((session-id (plist-get context :session-id))
          (entries (or (plist-get context :entries)
                       (when (and (stringp session-id) (not (string= session-id "(none)")))
                         (arxana-evidence--fetch-evidence
                          `(("session-id" . ,session-id)
-                           ("limit" . ,arxana-evidence-thread-limit)))))))
-    (if (and entries (listp entries) (> (length entries) 0))
-        (mapcar #'arxana-evidence--entry->item entries)
+                           ("limit" . ,arxana-evidence-thread-limit))))))
+         ;; Deduplicate forum-post vs chat-turn
+         (deduped (arxana-evidence--dedup-session-entries (or entries '())))
+         ;; Sort chronologically
+         (sorted (sort (copy-sequence deduped)
+                       (lambda (a b)
+                         (string< (arxana-evidence--entry-time a)
+                                  (arxana-evidence--entry-time b))))))
+    (if (and sorted (> (length sorted) 0))
+        (mapcar (lambda (entry)
+                  (if (arxana-evidence--chat-like-entry-p entry)
+                      (arxana-evidence--chat-turn-item entry)
+                    (arxana-evidence--meta-item entry)))
+                sorted)
       (list (list :type 'info
                   :label "No evidence in session"
-                  :description (format "Session %s has no visible entries." (or session-id "(none)")))))))
+                  :description (format "Session %s has no visible entries."
+                                       (or session-id "(none)")))))))
 
 (defun arxana-evidence--find-root-id (entry entry-table)
   (let ((current (arxana-evidence--entry-id entry))
@@ -586,6 +1203,29 @@
                       :entry (plist-get item :entry))
                 arxana-browser--stack))
     (arxana-browser--render)))
+
+;; =============================================================================
+;; Session chat view — format and row functions
+;; =============================================================================
+
+(defun arxana-browser--evidence-session-chat-format ()
+  "Format for the session chat view — wide label + description."
+  [("Speaker" 16 t)
+   ("Message" 0 nil)])
+
+(defun arxana-browser--evidence-session-chat-row (item)
+  "Row renderer for session chat view. Dispatches on item type."
+  (let ((type (plist-get item :type)))
+    (cond
+     ((eq type 'evidence-chat-turn)
+      (vector (or (plist-get item :label) "")
+              (or (plist-get item :description) "")))
+     ((eq type 'evidence-meta)
+      (vector (or (plist-get item :label) "")
+              (or (plist-get item :description) "")))
+     (t
+      (vector (or (plist-get item :label) "")
+              (or (plist-get item :description) ""))))))
 
 (provide 'arxana-browser-evidence)
 ;;; arxana-browser-evidence.el ends here

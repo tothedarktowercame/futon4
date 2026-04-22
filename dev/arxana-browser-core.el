@@ -35,6 +35,11 @@
 (declare-function arxana-browser-songs-items "arxana-browser-songs" (context))
 (declare-function arxana-browser-songs-format "arxana-browser-songs")
 (declare-function arxana-browser-songs-row "arxana-browser-songs" (item))
+(declare-function arxana-browser-essays-menu-items "arxana-browser-essays")
+(declare-function arxana-browser-essays-items "arxana-browser-essays" (context))
+(declare-function arxana-browser-essays-format "arxana-browser-essays" (&optional context))
+(declare-function arxana-browser-essays-row "arxana-browser-essays" (item))
+(declare-function arxana-browser-essays-open "arxana-browser-essays" (item))
 (declare-function arxana-browser-songs-open "arxana-browser-songs" (item))
 (declare-function arxana-browser-songs-location "arxana-browser-songs" (item))
 (declare-function arxana-browser-chorus-menu-items "arxana-browser-chorus")
@@ -176,6 +181,9 @@
 (declare-function arxana-browser--evidence-sessions-items "arxana-browser-evidence")
 (declare-function arxana-browser--evidence-sessions-row "arxana-browser-evidence" (item))
 (declare-function arxana-browser--evidence-sessions-format "arxana-browser-evidence")
+(declare-function arxana-browser--evidence-open-sessions-items "arxana-browser-evidence")
+(declare-function arxana-browser--evidence-open-sessions-row "arxana-browser-evidence" (item))
+(declare-function arxana-browser--evidence-open-sessions-format "arxana-browser-evidence")
 ;; Mission Control browser
 (declare-function arxana-browser--missions-portfolio-items "arxana-browser-missions")
 (declare-function arxana-browser--missions-portfolio-row "arxana-browser-missions" (item))
@@ -252,6 +260,10 @@
 (declare-function arxana-media-transcribe-and-podcast-at-point "arxana-media")
 
 (declare-function arxana-browser-marks-items-in-context "arxana-browser-marks" (marks key-fn &optional filter-fn))
+(declare-function arxana-browser-vsatarcs-items "arxana-browser-vsatarcs")
+(declare-function arxana-browser-vsatarcs-format "arxana-browser-vsatarcs")
+(declare-function arxana-browser-vsatarcs-row "arxana-browser-vsatarcs" (item))
+(declare-function arxana-browser-vsatarcs-open "arxana-browser-vsatarcs" (item))
 
 (defun arxana-browser--require-patterns ()
   "Ensure the pattern browser helpers are available."
@@ -407,6 +419,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
               :description "XTDB-backed songs and lyrics catalogs."
               :view 'songs-home)
         (list :type 'menu
+              :label "Essays"
+              :description "Annotated editions of essays linking sentences to flexiarg patterns."
+              :view 'essays-home)
+        (list :type 'menu
               :label "Docs"
               :description "Doc books (XTDB-backed)."
               :view 'docbook)
@@ -414,6 +430,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
               :label "Evidence"
               :description "Evidence landscape views (timeline, sessions, threads)."
               :view 'evidence-home)
+        (list :type 'menu
+              :label "Sessions"
+              :description "Evidence-backed semantic summaries for open REPL buffers."
+              :view 'evidence-open-sessions)
         (list :type 'menu
               :label "Missions"
               :description "Mission Control portfolio (98 missions across 7 repos)."
@@ -426,6 +446,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
               :label "Trace"
               :description "Self-representing stack: trace tensions through gates to source."
               :view 'trace-home)
+        (list :type 'menu
+              :label "VSATARCS"
+              :description "Read VSAT-shaped anthology stories as Arxana-native scenes."
+              :view 'vsatarcs)
         (list :type 'menu
               :label "Invariants"
               :description "Live violations plus candidate-law queue."
@@ -548,6 +572,17 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
      ((eq (plist-get context :view) 'songs-home)
       (concat "Songs — browse imported lyrics, suite songs, and chorus experiments. LEFT/b returns."
               store-suffix))
+     ((eq (plist-get context :view) 'essays-home)
+      (concat "Essays — annotated editions linking essay sentences to flexiarg patterns. RET drills into an essay."
+              store-suffix))
+     ((eq (plist-get context :view) 'essays-essay)
+      (concat "Essay — sections of "
+              (or (plist-get context :label) "this essay")
+              ". RET drills into a section to see annotations. LEFT/b returns."
+              store-suffix))
+     ((eq (plist-get context :view) 'essays-section)
+      (concat "Essay section — annotations linking sentences to pattern-library sources. RET opens an annotation. LEFT/b returns."
+              store-suffix))
      ((memq (plist-get context :view) '(songs-chapbook songs-suite))
       (concat (format "Songs — %s. RET opens the stored text. LEFT/b returns."
                       (or (plist-get context :label) "catalog"))
@@ -617,6 +652,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
      ((eq (plist-get context :view) 'evidence-sessions)
       (concat "Evidence sessions — RET opens session timeline. LEFT/b returns."
               store-suffix))
+     ((eq (plist-get context :view) 'evidence-open-sessions)
+      (concat "Open REPL sessions — Evidence-backed semantic summaries. RET opens session timeline; g refreshes. LEFT/b returns."
+              store-suffix))
      ((eq (plist-get context :view) 'evidence-session)
       (concat "Evidence session — chronological entries for this session. RET opens entry details. LEFT/b returns."
               store-suffix))
@@ -632,6 +670,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
      ((eq (plist-get context :view) 'evidence-entry-detail)
       (concat "Evidence entry details — full metadata for the selected item. LEFT/b returns."
               store-suffix))
+     ((eq (plist-get context :view) 'vsatarcs)
+      "VSATARCS — select a VSAT-shaped story to read. LEFT/b returns.")
      ((eq (plist-get context :view) 'lab)
       (concat "Lab notebook — RET stub; v trace, r raw, d draft. LEFT/b returns."
               store-suffix))
@@ -796,6 +836,12 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         ('songs-suite (if (require 'arxana-browser-songs nil t)
                           (arxana-browser-songs-items context)
                         (arxana-browser--songs-items)))
+        ((or 'essays-home 'essays-essay 'essays-section)
+         (if (require 'arxana-browser-essays nil t)
+             (arxana-browser-essays-items context)
+           (list (list :type 'info
+                       :label "Essays browser unavailable"
+                       :description "Load arxana-browser-essays.el."))))
         ('choruses-home (arxana-browser--chorus-items))
         ('choruses-demo (if (require 'arxana-browser-chorus nil t)
                             (arxana-browser-chorus-items context)
@@ -808,6 +854,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         ('evidence-sessions (if (require 'arxana-browser-evidence nil t)
                                 (arxana-browser--evidence-sessions-items)
                               (arxana-browser--evidence-menu-items)))
+        ('evidence-open-sessions (if (require 'arxana-browser-evidence nil t)
+                                     (arxana-browser--evidence-open-sessions-items)
+                                   (arxana-browser--evidence-menu-items)))
         ('evidence-session (if (require 'arxana-browser-evidence nil t)
                                (arxana-browser--evidence-session-items context)
                              (arxana-browser--evidence-menu-items)))
@@ -891,6 +940,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                           (arxana-browser-trace-gates-items context)
                         (list (list :type 'info :label "Trace module unavailable"
                                     :description "Load arxana-browser-trace.el"))))
+        ('vsatarcs (if (require 'arxana-browser-vsatarcs nil t)
+                       (arxana-browser-vsatarcs-items)
+                     (list (list :type 'info :label "VSATARCS module unavailable"
+                                 :description "Load arxana-browser-vsatarcs.el"))))
         (_ (arxana-browser--menu-items))))
      (t
       (arxana-browser--require-patterns)
@@ -1019,6 +1072,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
             ('songs-suite (if (fboundp 'arxana-browser-songs-row)
                               #'arxana-browser-songs-row
                             #'arxana-browser--info-row))
+            ((or 'essays-home 'essays-essay 'essays-section)
+             (if (fboundp 'arxana-browser-essays-row)
+                 #'arxana-browser-essays-row
+               #'arxana-browser--info-row))
             ('choruses-home #'arxana-browser--info-row)
             ('choruses-demo (if (fboundp 'arxana-browser-chorus-row)
                                 #'arxana-browser-chorus-row
@@ -1031,6 +1088,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
             ('evidence-sessions (if (fboundp 'arxana-browser--evidence-sessions-row)
                                     #'arxana-browser--evidence-sessions-row
                                   #'arxana-browser--info-row))
+            ('evidence-open-sessions (if (fboundp 'arxana-browser--evidence-open-sessions-row)
+                                         #'arxana-browser--evidence-open-sessions-row
+                                       #'arxana-browser--info-row))
             ('evidence-session (if (fboundp 'arxana-browser--evidence-session-chat-row)
                                    #'arxana-browser--evidence-session-chat-row
                                  #'arxana-browser--info-row))
@@ -1106,6 +1166,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
             ('trace-gates (if (fboundp 'arxana-browser-trace-gates-row)
                               #'arxana-browser-trace-gates-row
                             #'arxana-browser--info-row))
+            ('vsatarcs (if (fboundp 'arxana-browser-vsatarcs-row)
+                           #'arxana-browser-vsatarcs-row
+                         #'arxana-browser--info-row))
             (_ #'arxana-browser--menu-row)))
         (t (arxana-browser--require-patterns)
            #'arxana-browser-patterns--browser-pattern-row))))
@@ -1161,6 +1224,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                         ('songs-suite (if (fboundp 'arxana-browser-songs-format)
                                           (arxana-browser-songs-format)
                                         (arxana-browser--info-format)))
+                        ((or 'essays-home 'essays-essay 'essays-section)
+                         (if (fboundp 'arxana-browser-essays-format)
+                             (arxana-browser-essays-format context)
+                           (arxana-browser--info-format)))
                         ('choruses-home (arxana-browser--info-format))
                         ('choruses-demo (if (fboundp 'arxana-browser-chorus-format)
                                             (arxana-browser-chorus-format)
@@ -1173,6 +1240,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                         ('evidence-sessions (if (fboundp 'arxana-browser--evidence-sessions-format)
                                                 (arxana-browser--evidence-sessions-format)
                                               (arxana-browser--info-format)))
+                        ('evidence-open-sessions (if (fboundp 'arxana-browser--evidence-open-sessions-format)
+                                                     (arxana-browser--evidence-open-sessions-format)
+                                                   (arxana-browser--info-format)))
                         ('evidence-session (if (fboundp 'arxana-browser--evidence-session-chat-format)
                                                (arxana-browser--evidence-session-chat-format)
                                              (arxana-browser--info-format)))
@@ -1248,6 +1318,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                         ('trace-gates (if (fboundp 'arxana-browser-trace-gates-format)
                                           (arxana-browser-trace-gates-format)
                                         (arxana-browser--info-format)))
+                        ('vsatarcs (if (fboundp 'arxana-browser-vsatarcs-format)
+                                       (arxana-browser-vsatarcs-format)
+                                     (arxana-browser--info-format)))
                         (_ (arxana-browser--menu-format))))
                      ((eq (plist-get context :type) 'language)
                       (arxana-browser--pattern-format))
@@ -1342,6 +1415,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
        (if (fboundp 'arxana-browser-evidence-open-session)
            (arxana-browser-evidence-open-session item)
          (message "Evidence module unavailable")))
+      ('evidence-open-session
+       (if (fboundp 'arxana-browser-evidence-open-session)
+           (arxana-browser-evidence-open-session item)
+         (message "Evidence module unavailable")))
       ('evidence-thread
        (if (fboundp 'arxana-browser-evidence-open-thread)
            (arxana-browser-evidence-open-thread item)
@@ -1414,6 +1491,25 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
        (if (fboundp 'arxana-browser-hypergraph-open)
            (arxana-browser-hypergraph-open item)
          (message "Hypergraph source: %s" (or (arxana-browser--item-get item :label) "?"))))
+      ('vsatarcs-story
+       (if (fboundp 'arxana-browser-vsatarcs-open)
+           (arxana-browser-vsatarcs-open item)
+         (message "VSATARCS module unavailable")))
+      ('essays-essay
+       (setq arxana-browser--stack
+             (cons (list :view 'essays-essay
+                         :label (plist-get item :label)
+                         :essay-id (plist-get item :essay-id))
+                   arxana-browser--stack))
+       (arxana-browser--render))
+      ('essays-section
+       (if (fboundp 'arxana-browser-essays-open)
+           (arxana-browser-essays-open item)
+         (message "Essays browser unavailable")))
+      ('essays-annotation
+       (if (fboundp 'arxana-browser-essays-open)
+           (arxana-browser-essays-open item)
+         (message "Essays browser unavailable")))
       ('media-publication
        (let ((path (plist-get item :path)))
          (unless (and path (file-directory-p path))

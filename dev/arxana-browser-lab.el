@@ -203,6 +203,10 @@ Otherwise, HTTP 5050 -> ws 5056, HTTPS 5051 -> wss 5057 (nginx SSL)."
               :description "Evidence grouped by session ID"
               :view 'evidence-sessions)
         (list :type 'lab-menu
+              :label "Open REPL Sessions"
+              :description "Evidence-backed semantic summaries for open Codex/Claude buffers"
+              :view 'evidence-open-sessions)
+        (list :type 'lab-menu
               :label "Active Sessions"
               :description "Currently running Codex/Claude sessions"
               :view 'lab-sessions-active)

@@ -21,6 +21,7 @@ TEST_FILES=(
   arxana-browse-test.el
   arxana-browser-invariants-test.el
   arxana-browser-hypergraph-test.el
+  arxana-browser-vsatarcs-test.el
   arxana-check-parens-test.el
   arxana-docbook-order-test.el
   arxana-docbook-redirect-test.el

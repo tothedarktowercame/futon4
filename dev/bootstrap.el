@@ -178,6 +178,7 @@
                       "dev/arxana-xtdb-browse.el"
                       "dev/arxana-media.el"
                       "dev/arxana-browser-evidence.el"
+                      "dev/arxana-browser-vsatarcs.el"
                       "dev/arxana-browser-trace.el"
                       "dev/arxana-browser-core.el"))
          (features '(arxana-docbook arxana-docbook-ui arxana-docbook-checkout
@@ -186,7 +187,8 @@
                      arxana-org-links arxana-relations arxana-browser arxana-derivation
                      arxana-saving arxana-inclusion arxana-import
                      arxana-articles-export arxana-compat arxana-xtdb-browse
-                     arxana-media arxana-browser-evidence arxana-browser-trace
+                     arxana-media arxana-browser-evidence arxana-browser-vsatarcs
+                     arxana-browser-trace
                      arxana-browser-core)))
     (dolist (feat features)
       (when (featurep feat)

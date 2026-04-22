@@ -12,6 +12,7 @@
 (require 'arxana-browser-forum)
 (require 'arxana-browser-lab)
 (require 'arxana-browser-marks)
+(require 'arxana-browser-vsatarcs)
 (require 'arxana-media)
 (require 'arxana-browser-browse)
 
