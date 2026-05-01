@@ -29,6 +29,30 @@ accretes onto it.
 **Exit criterion:** A human has read the proposal and agrees the gap is real
 and the scope is right.
 
+#### Optional: shape-first IDENTIFY
+
+When the mission's gap is an *invariant* (or a candidate one), IDENTIFY
+can have a more formal character. Before progressing to MAP, ask:
+**"what shape is this one instance of?"** If the candidate invariant is
+naturally one of several siblings under a single protocol-shape, name
+the shape, enumerate at least 2-3 plausible instances, and adopt
+namespace IDs (`<shape>/<instance>`) in the inventory. If only one
+instance ever surfaces, that absence of generalisation is itself a
+finding — record it explicitly as `:special-case true`.
+
+This is a methodological move that produces sibling-namespaces of
+invariants rather than narrow one-offs, and dogfoods the futon stack's
+existing `family → invariants` shape without inventing new structural
+elements. Worked example: `M-archaeology-control` IDENTIFY surfaces
+the subsumption-witness shape (artifact A obsolete relative to record
+P) with siblings `obsolescence-recognition/{autostash, deferred-stub,
+pipeline-tracer, branch-merged, ...}`.
+
+Reference patterns:
+- `futon3/library/invariant-coherence/shape-first-identify.flexiarg`
+- `futon3/library/invariant-coherence/subsumption-witness.flexiarg`
+- `futon3/library/invariant-coherence/protocol-family-naming.flexiarg`
+
 ### 2. MAP
 
 Survey what exists. Don't design yet — just look.
@@ -81,6 +105,11 @@ Design the solution. This is the core intellectual work.
   §GF for the full template. Not required for pure research or exploration
   missions, but required for any mission that replaces or extends existing
   behavior.
+- [ ] **PSR (optional, per non-obvious design choice):** When the design
+  selects a pattern from `futon3/library/`, write a Pattern Selection Record
+  *before* committing to it. Format and storage in §PSR/PUR Discipline below.
+  Optional but strongly encouraged when the choice is non-obvious or the
+  pattern is being used in a new way.
 
 **Exit criterion:** Someone could implement the mission from the DERIVE
 section alone, without needing to ask clarifying questions.
@@ -93,7 +122,9 @@ Synthesize. Why is this design *right*, not just *workable*?
   relevant to the DERIVE design. For each pattern that applies, record:
   which pattern, where it applies in the design, and how. This is a
   structured survey, not a post-hoc decoration — patterns you discover
-  here may revise the DERIVE design.
+  here may revise the DERIVE design. PSRs collected during DERIVE feed
+  directly into this cross-reference; if PSRs were skipped, this is the
+  catch-up moment to write them.
 - [ ] **Theoretical coherence:** Does the design serve the theoretical
   anchoring from IDENTIFY? Or has the theory shifted?
 - [ ] **Trade-off summary:** What did we give up and why?
@@ -138,6 +169,11 @@ validation — confirming the design is sound before code hardens.
   `adapt` capabilities.
 - [ ] **Decision log:** Record any verification-time discoveries that revise
   the DERIVE design, with rationale.
+- [ ] **PUR (optional, per pattern application during a spike):** If
+  VERIFY-time spikes apply patterns from `futon3/library/`, record a
+  Pattern Use Record per application — outcome, prediction error,
+  surprises. PURs are how patterns get validated or revised; even
+  short ones are valuable.
 
 **Exit criterion:** The design has been checked against available structural
 constraints. Any risks that can't be verified statically have been spiked.
@@ -165,6 +201,14 @@ requires novel design decisions, the earlier phases were incomplete.
   VERIFY/INSTANTIATE but belongs to a follow-on mission.
 - [ ] **Checkpoint:** Write the final checkpoint in the mission doc with
   commits, what was built, and what remains.
+- [ ] **PUR (optional but expected for pattern-driven implementation):**
+  This is where the bulk of PURs land. For each pattern selected via
+  PSR (or applied without a prior PSR), write a Pattern Use Record after
+  the pattern is in place: outcome (success / partial / failure),
+  prediction errors, surprises, and any revisions to the pattern itself
+  this exercise suggests. Skip only when the implementation is purely
+  mechanical (no pattern was actually applied — e.g. a one-line typo
+  fix or a rote dependency bump).
 
 **Exit criterion:** Every completion criterion has a concrete demonstration.
 A new person (human or agent) could reproduce the demo from the mission doc
@@ -220,12 +264,89 @@ A mission may also be:
 - Completed missions become source material for future missions.
 - Each phase accretes — the mission doc grows as phases complete.
 
+## PSR/PUR Discipline
+
+PSR (Pattern Selection Record) and PUR (Pattern Use Record) are the
+mechanism by which the pattern library evolves alongside the missions
+that consume it. They are **optional per phase** — the per-phase
+checklists call out where they typically land — but they are **strongly
+encouraged whenever a non-trivial design choice references a pattern**.
+
+### When to write them
+
+| Phase | PSR? | PUR? | Note |
+|---|---|---|---|
+| IDENTIFY | – | – | Patterns named here are theoretical anchoring, not selection |
+| MAP | – | – | MAP is research; no design decisions yet |
+| DERIVE | **yes (optional)** | – | Per non-obvious pattern selection |
+| ARGUE | catch-up | – | Cross-reference step is the safety net |
+| VERIFY | – | **yes** if a spike applied a pattern | |
+| INSTANTIATE | – | **yes (expected)** | The bulk of PURs land here |
+| DOCUMENT | – | – | PURs become source material for docbook entries |
+
+Skip both only when the work is purely mechanical (typo fix, rote
+dependency bump, generated-code regeneration). For everything else, at
+least one PUR is the floor.
+
+### Where they live
+
+```
+<repo>/holes/labs/<mission-name>/psr/<YYYY-MM-DD>__<phase>__<topic>.md
+<repo>/holes/labs/<mission-name>/pur/<YYYY-MM-DD>__<phase>__<topic>.md
+```
+
+The labs directory is per-mission; one mission may produce many PSR/PUR
+pairs across its phases. Keep filenames sortable by date.
+
+### Format
+
+PSR (write *before* committing to a pattern):
+
+```markdown
+# PSR: <short title>
+context: <what the situation is, why a pattern is needed>
+patterns: <which patterns from futon3/library/ were considered>
+decision: <which one was selected, and any sub-choices>
+alternatives: <what else was considered, why rejected>
+outcome (target): <what success looks like for this application>
+confidence: <high / medium / low + rationale>
+```
+
+PUR (write *after* applying a pattern):
+
+```markdown
+# PUR: <short title matching the PSR if one exists>
+pattern (re-confirmed): <which patterns were actually used>
+actions taken: <what code/structure changed>
+outcome: <success / partial / failure, with evidence>
+prediction errors: <where the PSR's expectations differed from reality>
+invariants verified: <if applicable, what was checked and how>
+connections: <links to other missions, follow-on work, library revisions>
+```
+
+### Why optional, not mandatory
+
+PSR/PUR adds friction. For substrate-spanning work, novel pattern
+applications, or any decision that future agents would otherwise have
+to re-derive ("why was this built this way?"), the friction is bought
+back many times over. For trivial work, it's bureaucracy. Mission
+authors decide per phase; the lifecycle gives them visible hooks rather
+than mandating compliance.
+
+### Exemplar
+
+`futon3/holes/labs/M-live-geometric-stack/{psr,pur}/2026-04-27__phase-1__edge-taxonomy-lift.md`
+is the inaugural full-discipline pair after this revision (substrate-2
+phase 1, 2026-04-27). Earlier exemplars from the futon1a rebuild are at
+`futon3/holes/labs/futon1a/{psr,pur}/`.
+
 ## Relationship to Other Processes
 
 - **Portfolio inference** (M-portfolio-inference) decides *which* mission to
   work on next. The mission lifecycle says *how* to work on it.
-- **Patterns** (futon3/library) inform DERIVE decisions. Pattern use is
-  recorded via PSR/PUR during VERIFY.
+- **Patterns** (futon3/library) inform DERIVE decisions. Pattern selection
+  and use are recorded via PSR/PUR per the discipline above; PURs feed
+  back into the library as evidence for pattern revision.
 - **Evidence landscape** (futon1a) stores the trail. Mission artifacts become
   queryable evidence.
 - **Mission Control** (futon3c) tracks mission status, computes coverage,
