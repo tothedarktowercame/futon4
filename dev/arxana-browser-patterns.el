@@ -1728,15 +1728,17 @@ use that entry; otherwise prompt for a directory."
 (defun arxana-browser-patterns-open (name)
   "Fetch the Futon pattern NAME and render it in an Org buffer."
   (interactive (list (read-string "Pattern name: " (thing-at-point 'symbol t))))
-  (let* ((pattern (arxana-browser-patterns--fetch-pattern-data name))
-         (file (arxana-browser-patterns--pattern-file name)))
-    (if (and arxana-browser-patterns-prefer-filesystem
-             (arxana-browser-patterns--filesystem-newer-p file
-                                                         (plist-get pattern :last-seen)))
-        (progn
-          (message "Opening local flexiarg; it is newer than XTDB.")
-          (arxana-browser-patterns-open-filesystem file))
-      (arxana-browser-patterns--render-pattern pattern))))
+  (let ((file (arxana-browser-patterns--pattern-file name)))
+    (if (and arxana-browser-patterns-prefer-filesystem file)
+        (arxana-browser-patterns-open-filesystem file)
+      (let* ((pattern (arxana-browser-patterns--fetch-pattern-data name)))
+        (if (and file
+                 (arxana-browser-patterns--filesystem-newer-p
+                  file (plist-get pattern :last-seen)))
+            (progn
+              (message "Opening local flexiarg; it is newer than XTDB.")
+              (arxana-browser-patterns-open-filesystem file))
+          (arxana-browser-patterns--render-pattern pattern))))))
 
 (defun arxana-browser-patterns-inspect-entity (name)
   "Show the Futon source text for entity NAME (pattern or component)."

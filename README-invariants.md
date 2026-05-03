@@ -1,11 +1,28 @@
 # Invariants Interface
 
-The Arxana invariants interface currently has two distinct surfaces:
+The Arxana invariants interface should be read in this order:
 
-1. Live violations
-2. Candidate invariant queue
+1. Live invariants
+2. Live violations
+3. Candidate invariant queue
 
 They are related, but they are not the same kind of thing.
+
+## Live invariants
+
+The `Live Invariants` view is the primary surface. It reads the wired invariant
+families from `futon-stack-invariant-model.edn` and shows what the system
+actually checks today.
+
+These rows are:
+
+- family-level
+- live
+- already wired into the stack
+- the right starting point for understanding what is real now
+
+This is the motivational surface: before looking at failures or frontier work,
+you can see the working invariant shape of the system.
 
 ## Live violations
 
@@ -59,6 +76,7 @@ This is intentionally a recapitulation-in-advance surface.
 Eventually, separate docbooks and per-repo invariant pages may explain each
 family in local detail. For now, Arxana needs one place where you can see:
 
+- what invariant families are already live in the stack
 - what is currently violated in the live stack
 - what invariant families are waiting to be brought online
 
@@ -68,6 +86,8 @@ story.
 
 ## Current sources of truth
 
+- Live invariants:
+  `futon4/futon-stack-invariant-model.edn`
 - Live violations:
   `futon3c/src/futon3c/logic/arxana_bridge.clj`
 - Candidate queue:

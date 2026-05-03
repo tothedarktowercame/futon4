@@ -640,21 +640,47 @@ Call this after loading arxana-browser-patterns."
   (setq arxana-lab-claude-jsonl-path path)
   (message "Claude JSONL set to: %s" path))
 
+(defun arxana-lab-browse-evidence-chain ()
+  "Open the reply chain for the current evidence buffer."
+  (interactive)
+  (let ((eid (and (string-match "\\*Evidence:\\([^*]+\\)\\*" (buffer-name))
+                  (match-string 1 (buffer-name)))))
+    (when eid
+      (if (fboundp 'arxana-browser-lab--browse-evidence-chain)
+          (arxana-browser-lab--browse-evidence-chain eid)
+        (message "Load arxana-browser-lab for chain viewing")))))
+
+(defvar-local arxana-lab-view-mode-map nil
+  "Buffer-local keymap installed for Arxana Lab view buffers.")
+
+(define-minor-mode arxana-lab-view-mode
+  "Buffer-local bindings for Arxana Lab view buffers."
+  :lighter nil
+  :keymap nil
+  (if arxana-lab-view-mode
+      (let ((map (make-sparse-keymap)))
+        (when (string-prefix-p "*Lab:" (buffer-name))
+          (define-key map (kbd "g") #'arxana-lab-refresh-claude-session))
+        (when (string-prefix-p "*Evidence:" (buffer-name))
+          (define-key map (kbd "C") #'arxana-lab-browse-evidence-chain))
+        (setq-local arxana-lab-view-mode-map map)
+        (setq-local minor-mode-overriding-map-alist
+                    (assq-delete-all 'arxana-lab-view-mode
+                                     minor-mode-overriding-map-alist))
+        (push `(arxana-lab-view-mode . ,map) minor-mode-overriding-map-alist))
+    (setq-local minor-mode-overriding-map-alist
+                (assq-delete-all 'arxana-lab-view-mode
+                                 minor-mode-overriding-map-alist))
+    (kill-local-variable 'arxana-lab-view-mode-map)))
+
 ;; Add refresh binding to view-mode in Lab buffers
 (defun arxana-lab--setup-refresh-key ()
-  "Set up 'g' key for refresh in Lab buffers."
-  (when (string-prefix-p "*Lab:" (buffer-name))
-    (local-set-key (kbd "g") #'arxana-lab-refresh-claude-session))
-  ;; Evidence detail buffer: C for reply chain
-  (when (string-prefix-p "*Evidence:" (buffer-name))
-    (local-set-key (kbd "C")
-      (lambda () (interactive)
-        (let ((eid (and (string-match "\\*Evidence:\\([^*]+\\)\\*" (buffer-name))
-                        (match-string 1 (buffer-name)))))
-          (when eid
-            (if (fboundp 'arxana-browser-lab--browse-evidence-chain)
-                (arxana-browser-lab--browse-evidence-chain eid)
-              (message "Load arxana-browser-lab for chain viewing"))))))))
+  "Install buffer-local bindings for Arxana Lab view buffers."
+  (if (and view-mode
+           (or (string-prefix-p "*Lab:" (buffer-name))
+               (string-prefix-p "*Evidence:" (buffer-name))))
+      (arxana-lab-view-mode 1)
+    (arxana-lab-view-mode 0)))
 
 (add-hook 'view-mode-hook #'arxana-lab--setup-refresh-key)
 

@@ -118,5 +118,59 @@
       (should docbook-called)
       (should-not bounce-called))))
 
+(ert-deftest arxana-browser-mode-map-binds-context-help ()
+  (should (eq #'arxana-browser-help
+              (lookup-key arxana-browser-mode-map (kbd "?")))))
+
+(ert-deftest arxana-browser-help-rows-include-ep-staging-remove-only-in-staging ()
+  (let* ((staging-rows (arxana-browser--help-rows '(:view media-ep-staging-ep)))
+         (staging-descriptions (mapcar (lambda (row) (plist-get row :description))
+                                       staging-rows))
+         (media-rows (arxana-browser--help-rows '(:view media-publications)))
+         (media-descriptions (mapcar (lambda (row) (plist-get row :description))
+                                     media-rows)))
+    (should (member "Remove the current or marked tracks from this staging EP."
+                    staging-descriptions))
+    (should-not (member "Remove the current or marked tracks from this staging EP."
+                        media-descriptions))))
+
+(ert-deftest arxana-browser-help-rows-show-zoom-status-only-in-zoom-track-lists ()
+  (let* ((zoom-rows (arxana-browser--help-rows '(:type media-category)))
+         (zoom-descriptions (mapcar (lambda (row) (plist-get row :description))
+                                    zoom-rows))
+         (misc-rows (arxana-browser--help-rows '(:view media-misc-folder)))
+         (misc-descriptions (mapcar (lambda (row) (plist-get row :description))
+                                    misc-rows)))
+    (should (member "Set status for marked Zoom recorder tracks."
+                    zoom-descriptions))
+    (should-not (member "Set status for marked Zoom recorder tracks."
+                        misc-descriptions))))
+
+(ert-deftest arxana-browser-help-prefers-hydra-when-available ()
+  (let ((hydra-called nil)
+        (buffer-called nil))
+    (cl-letf (((symbol-function 'arxana-browser--ensure-help-hydra)
+               (lambda () t))
+              ((symbol-function 'arxana-browser-help-hydra/body)
+               (lambda () (setq hydra-called t)))
+              ((symbol-function 'arxana-browser-show-bindings-help)
+               (lambda () (setq buffer-called t))))
+      (arxana-browser-help)
+      (should hydra-called)
+      (should-not buffer-called))))
+
+(ert-deftest arxana-browser-help-falls-back-to-buffer-when-hydra-unavailable ()
+  (let ((hydra-called nil)
+        (buffer-called nil))
+    (cl-letf (((symbol-function 'arxana-browser--ensure-help-hydra)
+               (lambda () nil))
+              ((symbol-function 'arxana-browser-help-hydra/body)
+               (lambda () (setq hydra-called t)))
+              ((symbol-function 'arxana-browser-show-bindings-help)
+               (lambda () (setq buffer-called t))))
+      (arxana-browser-help)
+      (should buffer-called)
+      (should-not hydra-called))))
+
 (provide 'arxana-browse-test)
 ;;; arxana-browse-test.el ends here

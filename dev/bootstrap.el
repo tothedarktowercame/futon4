@@ -141,6 +141,8 @@
   (arxana--profile-load "require arxana-docbook" (lambda () (ignore-errors (require 'arxana-docbook))))
   (arxana--profile-load "require arxana-docbook-ui" (lambda () (ignore-errors (require 'arxana-docbook-ui))))
   (arxana--profile-load "require arxana-lab" (lambda () (ignore-errors (require 'arxana-lab))))
+  (arxana--profile-load "require arxana-browser-essays-wikibooks"
+                        (lambda () (ignore-errors (require 'arxana-browser-essays-wikibooks))))
   (arxana--report-load-profile (- (float-time) total-start)))
   (message "Loaded dev/ modules")
   t)
@@ -180,7 +182,8 @@
                       "dev/arxana-browser-evidence.el"
                       "dev/arxana-browser-vsatarcs.el"
                       "dev/arxana-browser-trace.el"
-                      "dev/arxana-browser-core.el"))
+                      "dev/arxana-browser-core.el"
+                      "dev/arxana-browser-essays-wikibooks.el"))
          (features '(arxana-docbook arxana-docbook-ui arxana-docbook-checkout
                      arxana-docbook-remote arxana-lab arxana-patterns
                      arxana-store arxana-links arxana-article arxana-scholium
@@ -188,7 +191,7 @@
                      arxana-saving arxana-inclusion arxana-import
                      arxana-articles-export arxana-compat arxana-xtdb-browse
                      arxana-media arxana-browser-evidence arxana-browser-vsatarcs
-                     arxana-browser-trace
+                     arxana-browser-trace arxana-browser-essays-wikibooks
                      arxana-browser-core)))
     (dolist (feat features)
       (when (featurep feat)
