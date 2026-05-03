@@ -1,0 +1,37 @@
+It's not completely beyond us to work with technology, although right now it's giving us a big pain in the neck with the internet being a bit touchy, but that's okay, that happens sometimes.
+So for those who are on video, here's a little tiny kind of mock-up of keeping track of some of our own data. So this is not really extractive, it's like, hey, this is our data.
+And we will have a chance to do one of these kind of reviews that we sometimes do after such sessions to create a data source ourselves, which we can then use.
+And we're trying to build a bit of technology to help manage that, but I feel like that's very naive.
+So I feel like you and Paula would both have things to say that's a bit less naive, maybe from an ethical standpoint, and maybe we could push things a bit further.
+So, yeah, sorry, the question maybe feels a little bit out of the blue if it's a matter of like, well, I need to know more about the review methods and stuff you're using.
+But yeah, feel free to interview me. You can ask me questions about how we are using technology if you want to, or to say, you know, here's something you must do.
+How can we, in this kind of global collaboration, learn from your work?
+Well, I suppose one question that I would have for the wider, Pyrogogy, Pyrogogy, or very good.
+A little bit of however you like it. Yeah, Pyrogogy is how I say it.
+And it's a question I kind of have for myself is, how do you involve people who are not academically inclined?
+Because I think, you know, personally, most of the people that I collaborate with happen to be academics or technologists or industry people or artists and just like people who are already concerned
+and active. But what I'm really interested in is getting the people who are affected by this like rapid technological development, who have something to say, but there is no real forum for that.
+Because, you know, our governments just do a really bad job of getting like meaningful public participation.
+So I guess my question is, how are you working to incorporate meaningful public participation?
+So I would say that it's a multi-layer process, but this is definitely something that Charlotte will remind us of a lot of times is like, this is not a book really written for academics.
+We're talking about book, there's this Pyrogogy handbook that we are writing, and that's one of our things, aside from the podcast that we like to make.
+So like we like to make things as a way of learning.
+I think that that resonates with what you were talking about with art.
+But the things we make aren't, sometimes they are academic papers, there are some of those.
+But there's other things we've tried to make together like this book and the podcast, which are a bit more accessible.
+And of course, with those things, you know, there's always a matter of marketing, and then there's a matter of this and that.
+There's a really nitty-gritty stuff that as an academic, you sort of don't have to think about or you could get away without thinking about it, let's say.
+But I think that in terms of the engagement, I would like it if this stuff was kind of, you know, I think if we were ever going for grants or funding or something,
+and we could say, oh look, you know, hundreds of people have used this and it's really revolutionized X rather than this is something that we really enjoy doing ourselves
+and it's really fun and we think other people have fun with it too.
+I think the former could be a bit more flashy.
+So, you know, I would say Piragaji is often cited in the literature on MOOCs, Massive Open Online Courses.
+And so they must find the concept useful.
+But in terms of like, what are we actually doing, you know, one thing that's come up would be,
+how could we make our own Massive Open Online Course?
+So we haven't built one yet, but we have done some course design.
+And it's like, how do you design a course that's not just taught from the top down, but is actually built by the participants.
+So those are some of the ideas that we've been exploring.
+I don't think we can say, oh yeah, we've nailed it and it's going great.
+We've built this, you know, Massive Open Online Course which is subscribed by, you know, loads of people around the world.
+But in the broader sense in which Piragaji...

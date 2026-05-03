@@ -1,0 +1,482 @@
+The Peeragogy in Action podcast. This is episode nine. Peeragogy, of course. In the Peeragogy project,
+we collaborate to build a no longer missing guide to all things relevant to successful peer
+learning and peer production. The Peeragogy in Action livestream video and audio podcast aims
+to provide an interactive space where participants and audience can explore the philosophies,
+concepts, contributors, and practical applications of Peeragogy. We aim to keep the discussions
+informal and free-flowing within some minimal guidelines, generally two to three talking
+points or topics. We livestream via videos that Peeragogy channels on YouTube, LinkedIn, and
+Facebook. Please consider subscribing on your favorite podcast app. More details about where to
+find the podcast at peerspress.com slash podcasts or peeragogy.org. Additionally, archive recordings
+is that on our YouTube channel. And for those of you in the audience, please, wherever you are,
+comment during the show and we'll have time for Q and A at the end. All right. Hey, so today
+we're talking about the the Peeragogy course. And in the booth with me, I have
+Sherry Ann Anchwan, Executive Director of Afro Free Culture, crowdsourcing with the media,
+also known as Afro crowd. Christy Roche, Managing Director of News and the Colab
+Walter Cronkite School of Journalism and Mass Communication at Arizona State University.
+Pete Forsyth, the Principal at Wikistrategies. And Howard Rangel,
+who's an independent thinker, online instigator, novice educator, expert learner and offline gardener.
+In addition to being an instigator of the Peeragogy project. All right. And now for our first
+topic, we're going to talk about what is the Peeragogy pilot course. And Howard, do you
+want to take that one? Sure. Well, the the Peeragogy project started about 10 years ago
+after after teaching college students for 10 years and becoming more and more aware that
+students are learners. And instead of having teachers and students, we ended up having
+co learners and that that learning is a social activity. And right now, we have an opportunity
+that that actually has not existed before in the sense that if you had to learn something,
+you wanted to learn something until pretty recently, you had to go to a school to do it.
+But now we've got the the web and we've got Wikipedia and we've got search and we have
+open educational resources and tools like streaming video, all kinds of tools
+that don't cost anything. Why can't any group of people who want to learn something
+figure out how to learn it together? What's missing is is the how do you do that? So
+the the Peeragogy handbook, which you can find at Peeragogy.org is the result of a group of us
+grappling with the question of what should people know in order to have the best kind of
+peer learning? Very recently, it occurred to us that maybe we ought to do an online course
+about that and the original creation of the Peeragogy handbook was really an example of
+Peeragogy in that people literally from all over the world who had not known each other,
+we got together and figured out what media to use and what methods to use and how to
+divide the work and come up with a handbook together. So the idea of a pilot course is that
+let's get some some people together and and and figure out how we can put this handbook
+into action and how people all over can can use the the pilot course to get themselves
+started on this and and I think just as the creation of the handbook was an example and a
+challenge of Peeragogy, I think that that we ought to make that challenge for the course as well.
+I personally don't have an idea right now of exactly how we're going to to to make a a course
+that that is in itself an example of Peeragogy.
+But we know some things, and we're going to present those things in a way in which we are
+all co-learners.
+So the people who join the course are going to help us create the course.
+That's the pilot part of it.
+And we're going to use a variety of media.
+We'll be using video and with synchronous chat and asynchronous forum and we'll have
+collaborative documents and whatever else seems appropriate to the task.
+So this is an invitation to anybody who's interested in the new possibilities that the
+resources on the internet provide for us to put that into action, whether you are in
+a formal academic setting or you and a group of friends want to learn something.
+Awesome.
+Thank you.
+And yeah, I think I'm excited about the challenge of having the course be like an example of
+peeragogy itself.
+And for those of you who do, if you're interested, we have an interest forum available
+and it's on peeragogy.org and also find it in our Twitter feed and please sign
+up there and then once the course is officially live, we'll share that info with you.
+And as Howard said, we'll be co-learners and also like the course is going to, it's meant
+to be the pilot is for what do you do, if you want to join as, you know, just as a
+learner and follow along, that's fine, but also if you want to be a co-designer, that's
+definitely something we're interested in having.
+And so yeah, so then so we're talking, we talked a lot about peeragogy and some
+of the history of it and different things, but one example of an action is Howard
+mentioned is the handbook and then, but something else that another example of it came
+recently in this, where people were learning together and creating something new
+with the News on Wiki Project on Wikipedia.
+Hey, Charlie, before we jump to that, could I just make a quick point about
+Howard's just respond to what Howard said?
+Of course.
+Of course.
+I just wanted to really emphasize, if people are watching this and are not familiar
+with the background of Howard or peeragogy, you know, this whole like making it up
+as we're going along is something that I think it rests on really a wealth of real
+world experience and a lot of similar experiments over the years.
+And I think, you know, Howard himself is, I would say, you're one of the really
+the pioneers of self-directed online learning.
+I would say in the world, it's certainly in my world and I think you've
+attracted a lot of similar people to you.
+So, you know, just to anyone, if you're listening and it sounds like, oh, well,
+this is just going to be a fly by the seat of your pants, make it up as we
+go along thing.
+Well, yes, absolutely it is, but in a way that is really informed by a lot
+of experience and I expect it will be a lot of fun and really fun.
+Well, okay.
+I will add that I did teach a blended courses, blended, meaning that
+we met face to face and online for 10 years at UC Berkeley and at Stanford.
+And it was really from that experience that I was invited to give a what they
+call a regents lecture at Cal at Berkeley about my methods.
+And at the end of the lecture, I proposed that we do this.
+You know, what's interesting is that part of the lecture was that I was supposed
+to meet with Cal faculty and graduate students face to face for a couple of
+weeks after the lecture and I brought my laptop and I opened it to a video
+conferencing system and invited people via Facebook and Twitter to join us.
+And a couple of months later, all of the faculty and graduate students from Berkeley
+had dropped out, but people from UK, Mexico, Brazil, Japan, Canada, and the US,
+none of whom I had known and none of whom knew each other had coalesced
+to create this thing and I really have not been that active in recent years
+that a community grew up and if you instigated community, it's really often
+a good idea to kind of step back and let the community find its sea legs.
+So I'm back in the game here, but really all of the.
+The work has been done by an international group of people.
+All right. Yeah. Great. Thank you, Pete. That was a great point. And all right. And then,
+so another, so we do have the flat by seat, a flat by our pants, nature of it, but also
+we're doing a lot of experience. And then one experience of peeragogy and action that we're
+going to talk about today is the News on Wiki project. And Pete and Christie and Sherry collaborated
+on this. And I think, why don't we, who wants to, why don't we have Sherry? Do you want to start
+describing the News on Wiki project? And then Pete and Christie, jump in. Sure. So it's
+wonderful to be here with you guys. And the concept of peeragogy in itself, I think, is very timely,
+especially now in this moment where more and more people are finding themselves using skill shares
+and other peer education as, and it's becoming more and more important to be able to continue
+to learn throughout, not just your official education, but beyond that. So News on Wiki
+actually is, we are a campaign that began a few years ago, actually, in its first phase in 2018.
+And I connected with Pete, who was part of that first project at a Wikipedia conference at MIT in
+the Cambridge area in Massachusetts. And later on, we decided to collaborate to
+work on this project, which is we're going to build trust and credible news sources
+by generating Wiki content about newspapers. And so from 2020 to about 2021,
+we focused on three areas, Blacko Newspapers, local newspapers in a specific state. This time around
+we chose Washington State, and stretching it a little bit more to focus on news from
+the Caribbean or in the Caribbean community where it within the United States.
+And so our aim was to create or improve 300 Wikipedia articles, as well as associated
+Wiki data entries on newspaper content. So now that you've got the general gist of what it is,
+I'm going to let Pete go a little bit more into detail about the project and, you know,
+its general aim and what it's about. Thanks, Harry. Yeah, I think News on Wiki is an example.
+There are sort of several intersecting goals and benefits to this campaign. So originally,
+the idea which really was the brainchild of Mike Caulfield, who I think probably everyone
+on the call knows to some degree, who's a specialist in digital learning and misinformation
+in the Washington State University system. And Mike was basically looking to take on the issue
+that people were more and more encountering a publication that they'd never heard of from
+a small town on the other side of the country or something like that. And not knowing,
+is this just some fake publication that was just invented last week to drive a political
+narrative? Is it something that's been around for 100 years and is well respected in his community?
+Does it fall somewhere in between those things? Just to make like a quick assessment.
+And what he found and other colleagues of ours have demonstrated with peer-reviewed research
+is that when people are engaging with a question like that, number one, they will probably do
+a Google search or other web search. And number two, the search engines will actually pull
+in information from Wikipedia if it exists. So just by creating Wikipedia content,
+you will be informing people's understanding of the media landscape, even if they don't
+visit Wikipedia themselves, just by what they see in the results of their web browser.
+So the general concept was really just about improving content on Wikipedia.
+It wasn't a rigid, the core idea is not really about building community or about learning.
+You know, what it turns out that in order to achieve that goal of generating content, really the best way to go about it is
+to bring in a lot of people who share that vision and
+help them learn the skills that they don't have yet.
+You know, if they know about the news industry, but they don't know anything about Wikipedia,
+then teach them about Wikipedia. If they know Wikipedia really well,
+but they don't know a lot about the news industry or the area that you're focusing on, the Caribbean or Washington State,
+then, you know, you sort of, then you have
+opportunities for people to learn and to teach one another. So by doing that, we've really been able to put together a pretty vibrant community,
+I'd say, which includes librarians,
+dedicated Wikipedia editors, professors, students, and I think we really ought to hear from Christy,
+who came in and really added a great dimension this time by bringing her
+digital media literacy course and having her students work on this. And sort of as an end result,
+you not only get the improved content on Wikipedia, but you end up with,
+you know, dozens of people who now understand Wikipedia better and understand how
+media fits together better. So in that way, it's sort of grown into, it's become something that's very much of the same
+universe as Piragoji, even though that wasn't sort of the original core intent.
+Yeah, so if I should just jump in, then I can kind of explain how I got associated with
+with Pete and Sherry, and it really is just kind of like a nice sort of right place at the right time sort of situation where I'd been
+teaching with Wikipedia for a few years and media literacy courses at Arizona State. And with the idea that,
+you know, part of media literacy is understanding where and how knowledge is produced in an online world.
+Knowledge is produced not only by experts, but by regular people, and Wikipedia really is a valuable resource.
+We all use it, but we've also all been taught that we shouldn't use it.
+So there's this long history of like, it's not a good a good research place to go for information.
+And my colleagues and I at Arizona State have felt like that's kind of the wrong message to be sending because people,
+students are using Wikipedia all the time. As Pete mentioned, it's often the first
+result when you search for anything on Google. And so I've been familiar with Mike's project,
+but I didn't really put the two together when I heard Pete and Sherry speaking at a
+Wiki conference, I think that was put on by a disinfo con, and I watched this webinar and thought, oh my goodness,
+I've been searching for a more specific way to involve my students in editing on Wikipedia.
+News on Wiki is perfect. I teach at a journalism school. I teach media literacy classes.
+I'm very passionate about people being able to find credible sources and using the tools that we most often use in our regular research,
+like Wikipedia, like Google, to find credible sources. And so when I learned about this project,
+I was like, this is perfect. If we could help, you know, track down some of these newspapers,
+find even a little bit of information about whether or not they're notable enough to have their own Wikipedia entries,
+help them clean up these lists so we know what we're, you know, we want to still keep looking for.
+These are really great activities that help a larger cause. It serves the purpose of helping
+promote credible journalism. And then from my student's perspective, it really gives them,
+well, they have to learn an entirely new language to learn how to edit on Wikipedia,
+which is a big challenge for them. And many of them grumble about it,
+but they also feel like they learned a lot at the end.
+And then mostly it just changes their perception about information production and knowledge production.
+And that Wikipedia is not a bad place to go for information and, you know, that
+with footnotes and credible sources and knowing the rigor that editors must go through to have
+their edits accepted on Wikipedia. It's really an eye-opener for students. So it's this really
+great sort of meta lesson in media literacy while helping the journalism business, which,
+of course, I'm passionate about as a journalism professor. So it's really,
+I felt very grateful to be connected with these two and this project. And I think for the most part,
+my students have really enjoyed it as well. And hopefully I've been able to contribute in a positive
+way. You know, I think if I could jump in on the journalism industry aspect of that.
+I think one of the things that this campaign really highlights is that,
+you know, when you kind of assemble people from enough sort of diverse backgrounds,
+it's a it can be and it's this is sort of why Wikipedia works, but it's also kind of why a
+campaign like this can work is that, you know, you might have sort of individual special interests,
+but if you have a clear like public interest that's at the core that's kind of driving the
+project, you know, if you have like like a newspaper might look at a campaign like ours
+and think, oh, this is great from a marketing perspective, right? We've always wanted to
+have a Wikipedia page. It's going to help us be perceived as being more serious, etc, etc.
+So, you know, that's the sort of thing that like unchecked, that's not really a good thing in the
+Wikipedia ecosystem, right? You don't want you get you get lots of businesses trying to put a
+article about themselves on Wikipedia and a lot of it is not really that good content.
+But if they're doing that in a context where there are students and professors and experienced
+Wikipedia editors, a lot of that kind of gets, you know, there's a lot of eyes from different
+perspectives and really the interest of society in general of having information about its
+media sources tends to kind of override and have more of an influence than those individual
+special interests.
+You also want the quality of the coverage of the paper to be there as well because it
+can impact, you know, what's used, what's not used and so forth.
+You know what, when I started out teaching, I started teaching digital journalism.
+I really didn't try to pass myself off as a journalist, but I was persuaded that I
+knew enough about the digital part and I think it's only been in the recent years
+that I've come to understand the role of personal learning networks, but of course every journalist
+has networks of sources and increasingly journalists are networked with other journalists.
+So I think when something happens in the world, there is a certain amount of paragogy
+that goes on among networks of journalists.
+I think we're just only beginning to learn how these informal peer learning is working
+in a number of different realms.
+I would agree and I would add to that that there's, you know, the interaction even between
+journalists and citizens, right?
+So not even just journalists amongst themselves, but the interaction of regular people with
+journalists to produce news and information has only increased in the last, you know,
+two decades.
+And so that's another great example is, you know, these callouts of like, what have you
+seen?
+What do you know?
+What can you tell us about this news?
+And that can come from really anywhere.
+And she also mentioned there's a lot of newspapers that are disappearing as well, but the information
+that they produce is still out there and is still affecting how, for example, you
+know, affecting learning, affecting what we know about a subject.
+And so, you know, campaigns like this, I have to steer away from calling it a project.
+It's a campaign like this, really highlight the importance of, you know, maintaining and
+preserving knowledge about these resources because they can fall through the cracks,
+especially if they're local news, and especially if they're, for example, from regions that
+can be overlooked as well.
+So that's another area that we were able to touch on.
+You know, during a time where, for example, during the pandemic, we've lost a few papers
+and as well as, and even before that, of course, the move to digital has been affecting
+that.
+So it's sort of an area of overlap where you can learn about, you can learn about
+the resources, learn about, you know, their origination, et cetera, but also you can help
+to preserve knowledge that may be fading about an item as well.
+And the research, obviously, learning how to find that information in the first place
+is also a skill that's naturally picked up whenever you're learning to edit and as
+well as using learning to code in some cases, using the platform as kind of an entryway for
+that as well.
+So there are many, many, many skills to be picked up and there's also a good amount
+of impact for you or for the time that you actually spend in the process.
+I'd like to emphasize for the pilot course that, if you're watching this, you're seeing
+people who are experts in academia and information science.
+It's really important for you to understand that you don't need to be in academia or journalism
+or a particular expert in information to join us.
+The recent work on collective intelligence has shown that it's not the particular expertise
+of the people in a group that contributes to its collective intelligence.
+It's really the diversity of the group.
+So we need people who want to learn together.
+Whether or not you have any expertise at all.
+I think that's something that really reflects what we've seen in news on Wiki as well.
+I mean, it's, and even, you know, on a personal level, like my original experience with Wikipedia,
+like I was, I didn't go to Wikipedia as an expert, I went to Wikipedia, this is like back in 2006,
+I had moved out to Oregon from the East Coast sometime earlier and was just feeling like I
+didn't know much about my home, about where I lived, you know, where I'd moved to.
+And so I went to Wikipedia to work on articles about Oregon as part of my process of learning
+about Oregon, you know. And so it's really, you know, just by jumping in and being willing to do
+a bit of research, find a good source to quote to like to justify a fact that you put on Wikipedia,
+you know, it's a, it's the learning process and generating knowledge to help other people's
+learning processes naturally go hand in hand. I think both in the Piragaji world and in the
+Wikipedia world. Yeah, absolutely. And then, well, on that note, I think so the third
+part of the course and the third topic today is that one assignment we know for sure is going to be
+to edit the Wikipedia article. And so that people are dispensed, whether you're, you know,
+experienced, Mickey, media wiki text, you know, manipulator or, you know, novice,
+they want you to edit one. And then the, if you're like feeling intimidated, there's some
+great resources out there. There's, Sherry, you want to talk about the Afro Crowd videos
+tutorials? Sure. So Afro Crowd is a group and it's a Wikipedia initiative as well as
+user group in the wiki community that I that I run that focuses on getting more people of color
+and especially women involved in editing Wikipedia and different kinds of wiki
+platforms and projects. And so if you're interested, we welcome anyone, any background,
+any kind of interest, whether you have experience or not in even using a computer in some cases.
+We have tons of resources online. I would say first go to afrocrowd.org slash about.
+It's a great place to not just learn about Afro Crowd, but also to, you know, lock into our
+YouTube tutorials, which are both in English and Spanish. It teaches you step by step how to edit
+Wikipedia, how to add images to Wikipedia, how to add citations, and also some of the other
+information that could be useful to you on your wiki journey. And also you can join our
+mailing list there as well. We have events all year round and usually one or two a month.
+And so if you would like to join us, that's a good way to do it. Also we are connected to
+other groups in the wiki community. Obviously I'm very highly involved with Pete and news on
+wiki. And we are excited about what's happened with that. And if you want to connect with news on
+wiki, I do believe that that would also be a great way for you to learn. We hope that the
+campaign will continue into its next phase. So you can join us on news on wiki as well.
+And we have, you know, there are opportunities to connect with us to learn as well. So for news on
+wiki, you can follow us on Twitter at news wiki one. And just send us a message if you're
+interested and you just want to jump right in because that account is still, we're still very
+active in that if you want to connect with us, just contact us that way as well. And we will
+see how we can can further work together. But yeah, if you would like to edit at any time,
+there's lots of videos out there, not just with Africa, but in the wiki community.
+You can go to YouTube, put in your query and we'll probably be one of those videos.
+Okay, thanks. And then, all right. And then we try
+We're going to try to stick to a half hour ish with these podcast episodes.
+We're going to go a little over here, but that's okay.
+Nick, we're going to bring in Charlotte now.
+And we've had some nice comments from the attendees.
+Hey, Melanie. Hey, Robert.
+And Charlotte, any questions we've had from people in the audience that we should cover?
+Yeah, there's a distinguished panel.
+Some basic questions. I think a lot of people saw this and they heard peeragogy.
+And they, you know, you can't just internalize it when you hear the word.
+But a lot of basic questions like what is peeragogy exactly?
+I used to learn bibliography from Wikipedia.
+That's from VTOR, one of our colleagues.
+And do you want to take any of those?
+Sure. Yeah, I think for...
+Go, Charlie.
+I was going to say for Lucinda, for the great question, what is peeragogy exactly?
+And I think, as Charlotte said, it's like it's tough to hit initially.
+But I think, well, to quote from the handbook.
+So it's like a flexible framework of techniques for peer learning and peer knowledge production.
+Whereas pedagogy deals with transmission knowledge of teachers to students.
+And the peeragogy that people use to produce and apply knowledge together.
+The strength is its flexibility and scalability.
+And then I think the editing, like Wikipedia itself is a great example of peeragogy in action.
+There's people coming together to build knowledge.
+And then obviously the News on Wiki project, within that, you know.
+And then, yeah, anyway, Howard, what were you going to say?
+I was just going to add that peeragogy is kind of a fancy word.
+People have done peer learning since forever.
+It's just that we have some tools now that allow people all over the world to join together
+and to have access to the kind of knowledge that you had to have a university library to have access to before.
+And tools that actually have not been available for the, you know, several thousand years of classroom learning.
+You know, it's new, but it's not something that's unfamiliar to people.
+People learn together all the time.
+I think, Howard, I think you and I have discussed before and definitely Christy, we've talked about this.
+Like I think in the more formal education world, there's a concept of service learning.
+Where, you know, you might have students that volunteer with a nonprofit
+whose mission is related to the course they're taking or something like that.
+And so they're actually doing something.
+They're doing some good in the world as they're gaining some real-world experience
+that's informing their understanding of the subject.
+And I think that's one place where Wikipedia really fits in well with, you know,
+where you get like this sort of this meshing of self-directed learning
+and more formal education that I think is kind of the sweet spot of peeragogy.
+We always say that in the project, you know, the core people have been together for about 10 years.
+But we, you know, we didn't invent peeragogy.
+It's out there everywhere.
+It's every time you go outside or to your office or wherever you're experiencing it,
+but we're doing it.
+But there's another question.
+I think Vitor, one of our colleagues, he runs the Milestone English course in Brazil.
+And I think I know what he means.
+How to make peer knowledge exchange easier.
+I mean, I think he's talking about there's all these different platforms
+and people doing interesting projects.
+And there's just like not a lot of interoperability or not enough,
+or it's not good enough.
+Is that something you want to answer or respond to?
+Yeah.
+So I think, good.
+I'm just going to say that sounds like something that we ought to pursue in the course.
+Oh, nice.
+Nice.
+And yes, I think we're good.
+And anybody else have thoughts on that?
+Christy, what does that look like from an instructor's point of view?
+Like if you want to expose your students to something like Wikipedia,
+I imagine there's a lot of challenges around like, well, you know,
+if there's 17 different things they got to learn before they can even do
+something that's related to our course.
+How do you address that?
+I mean, it's a good point.
+And also just so much of formal education is so siloed, right?
+So what I do in my classroom, no one may ever know about, you know,
+it's just with me and my students, which is why Wikipedia is a great place,
+I think, to center a lot of pure learning because it is a place
+where everybody knows about, you know, it has global recognition.
+So it's not, you know, maybe you don't have to worry
+about other platforms in that way.
+And there are great videos.
+I mean, Sherri talked about the videos that she's produced,
+P2PU produced some great videos.
+I've had the Wiki Education Foundation
+has produced great training videos.
+And so there's a lot of ways for students,
+even outside of a class like mine, to learn how to do this.
+Because people are contributing to that collaborative learning,
+that collaborative knowledge of how to use Wikipedia,
+so it's a little less intimidating.
+So I think Wikipedia is a destination for collaboration.
+It feels like a good fit because it is so globally known.
+And that's kind of one of the reasons why I chose it.
+I mean, we do things on social media
+and some other things as well.
+It's a digital media literacy class.
+We talk about a lot of different platforms.
+But it's really interesting to see the students
+start to understand how they're contributing
+to something that's bigger than a typical class assignment
+via doing research for Wikipedia
+in a way that I think is very useful.
+It's super intimidating for them at first and a lot of them.
+And it's interesting to Howard's comment
+about us being a relatively expert.
+I wanted to mention that Christie's class was amazing.
+It was phenomenal experience in collaborative learning
+in that we, originally what we did was we came in,
+Pete and I came into the class to kind of talk
+about the project and kind of do some demonstrations
+of what to do.
+And Christie had been working with the students
+before we had gotten there and afterwards.
+So it's part of her course.
+And one of the students actually was live editing
+while we were in the course doing the demonstration
+and they came across an issue.
+And so we were able to help during that class
+a work together to find a solution
+to the problem that had surfaced.
+And what it ended up being was a great opportunity
+to just show the collaborative nature of Wikipedia
+that it isn't just this two-dimensional website
+that you come in, you read it
+and there's the knowledge that it's edited by people.
+It's really this collaborative space
+where people all over the world
+literally come together to work,
+to improve knowledge and share knowledge
+and as well as use different skills
+for this collaborative effort.
+So what you see on the website, on the page
+is a product of that collaborative effort
+that's taken, maybe you enter something today
+and through collaboration, two years from now
+it's still growing and still developing.
+So oftentimes when I describe it for what we do,
+for me it's like a growing a tree of knowledge.
+So you plant a seed, an event like this
+is sort of we're talking about it
+and then you plant the seed, which is,
+you put something in the ground
+like an edit or some other kind of contribution
+and then it's watered and given and nurtured
+through different people putting in different efforts
+whether it be fixing grammar, linking it to another page,
+doing something more in depth
+like what we're doing on News on Wiki
+or adding an article or a sentence
+or an image or a sound or something.
+And next thing you know you've got
+this wealth of knowledge that's branched off
+into this beautiful tree or plants or whatever.
+I'm trying to grow strawberries right now.
+I know, there you go, there you go.
+Well it's kind of like how we're doing it.
+And then you have that, yeah.
+And you have how we have something like that.
+It's kind of like what Howard was saying
+with his little, not little lecture but his lecture
+and then it kind of, here we are, it's great.
+Nice, yeah.
+I just, we had a couple of shout outs from people.
+Just Robert Best, Armano,
+he's one of our Brazilian colleagues.
+Robert.
+Hey Armano.
+Yeah, hi Robert.
+Vitor, Nat Hunter, Lissinda.
+Thank you all for coming by and oh,
+Joe had some questions but we can answer them.
+Joe's one of our core people.
+So thanks, you can wrap it up Charlie, let's go ahead.
+Okay, and yeah, so thank you everybody
+for our amazing panel for joining.
+Thank you Charlotte for all the technical direction
+and producing, and people in the audience
+for the great comments and questions
+and look forward to seeing.
+Learning with you in the course and sign up for the News and Wiki project and we will talk
+to you all soon.
+Thank you.
+Thank you all.
+All right.
+Thank you.
+Thank you all.

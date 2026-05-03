@@ -1,0 +1,86 @@
+It's a kind of storytelling mechanism or discussion mechanism.
+So is that where it's going?
+Please.
+So let me tie a couple of things together for a member of the stack, and I'm sorry I can't
+participate on the chat from here, but I'm seeing the questions and they're awesome.
+And so Love Evolved is Charles Blass in Zurich, and he and Max Harper and a couple of other
+people have been mining our conversations and taking our transcripts.
+And basically Max, for instance, is a programmer in Miro, and he took one of our transcript
+sessions and then mapped, visually, did a tracking of who was talking to whom and what
+that was like.
+It's totally different from what I showed you in the brain.
+Super interesting.
+And back to the question you posed to Pete, one of the interesting questions here is,
+what is the relationship between a wiki and a brain and a Miro and a Kumu and all these
+other...
+How do these things...
+And Rome, there's like a cult of Rome right now and a lot of people love backlinky
+outlining tools.
+How do they talk to each other?
+How do we collaborate?
+Because each of these does different things really, really well, right?
+That's been...
+On Paragaji, that's been one of the things that we've...
+It's caused a little tension because we get tracking on one tool.
+And then someone says, well, this is really great.
+And that makes everyone's brain explode.
+Exactly.
+I wanted to add one tiny little thing, which is metaphorically, I use a lot of nature
+metaphors to explain our process.
+And metaphorically, we're a little bit like leaf cutter ants, which most people
+don't know can't eat leaves.
+Like why are leaf cutter ants up there chopping down leaves and taking them into the nest?
+They're doing that because there's a bunch of specialized ants from the same hive, which
+are in there chewing up the leaves, putting that on a fungus, basically curating a fungus.
+The fungus metabolizes the leaf matter and oozes a nectar that everybody eats.
+So metaphorically, I think a lot of us will be little termites or ants chewing
+up different parts of what we see and then putting them into a common infrastructure
+so that we can all feed society and civilization and culture off of this infrastructure,
+as opposed to each of these things being really different and separate and sort of
+siloed off and proprietary worse.
+So, OK.
+So I have a proprietary reverse is exactly where I was going to go.
+But I wonder if we could go then into the next image, Charlotte, because this is I
+think OGM is often doing this reflection.
+By the way, that's a picture by Pete, which I absolutely love.
+It's a beautiful reflecting pool.
+But on the right is another thing that Pete installed.
+It's a matter most chat software.
+And I feel like OGM and the community around it is always kind of reflecting on
+itself and thinking about how to take itself forward.
+And that's great to have all these reflections.
+But like I think it's I feel as though there's kind of a what next?
+And I think that the proprietary not so keen this is this is this is
+I'm going to pull up this comment from Leo.
+Yeah, we've heard of Rome research, but there's even this such a thing as
+Org Rome and Emacs.
+Someone will have heard of that, which Leo is a co-maintenor.
+So he'll be happy I'm giving a shout out to that, but I use it for a lot.
+There's, you know, and that there's various other open source things besides that.
+So and, you know, so where the open is even the first word in open global mind.
+So you guys were talking about Rome yesterday, right?
+I yeah, somebody mentioned Jerry, when you you did that,
+went the other way for me on my screen.
+And I did that knowing fully that we're each in a different place
+in each other's displays and it won't mean anything.
+But the gesture was over to you, Pete, I'll move it.
+Let's see that.
+So interestingly enough, we we bumped into something just not that long ago.
+But we've been talking about how all these tools fit together,
+how all this data fits together.
+We're working with the brain, both Jerry's brain and Mark's climate
+web on getting the information out.
+And now what do we do with it?
+So what we've come to is an initiative I've got started just a few weeks ago,
+called I call it massive wiki.
+It's got a funny spelling, M-A-S-V-F massive.
+It stands for Markdown shared version files.
+What I kind of realized and Jerry's been a great co explorer into this.
+And we're just at the very beginning of it.
+But you've got a few other folks, Charles and and and especially Bill
+have been great co explorers with us.
+We're exploring what if we don't concentrate on the tools so much,
+but rather the information.
+So especially if we make the information interoperable,
+if we start using Markdown, which is a very basic kind of lingua franca,
+it's not very complex and make sure.

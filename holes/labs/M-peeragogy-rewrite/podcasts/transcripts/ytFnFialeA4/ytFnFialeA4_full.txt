@@ -1,0 +1,390 @@
+Hi, welcome to the 11th episode of Peeragogy in Action, the podcast.
+In the Peeragogy project, we collaborate to build the no longer missing guides to all things
+relevant to successful peer learning and peer production.
+And I'm Joe Corneli.
+You've often seen me before as the host of this.
+This time we have a guest host or a new host, Pete Forsythe, who will be interviewing
+Leo Vivier.
+But I'm going to just tell you a little bit about the podcast in case you're jumping
+in at episode 11.
+Peeragogy in Action, live stream, video and audio podcast aims to provide an interactive
+space where participants and audience can explore the philosophies, concepts, contributors and
+practical applications of peeragogy.
+We aim to keep the discussions informal and free-flowing with some minimal guidelines
+and generally two or three talking points, which we have summarized in some slides
+for you if you have a video connection.
+It's live streamed on YouTube, LinkedIn and Facebook, and also recorded and available
+on your favorite podcast app.
+You can find out about this podcast at peerspress.com slash podcasts or peeragogy.org.
+And there's now some archive recordings on our YouTube channel.
+So with that, I'm going to turn it over to Pete and he can take it from here.
+Maybe we'll come back in me and show it at the end for some Q&A and broader discussion.
+But anyway, leave it to you, Pete and Leo, bye for now.
+Thanks Joe.
+So Leo, we had talked a little bit about the conference that you put together recently
+for the Emacs community.
+And I thought it'd be interesting to hear a little bit more about it, especially now
+that the conference has finished.
+So maybe you could tell us a little bit to get us started about what are the goals
+of the conference?
+What are you looking to accomplish with it?
+And how long have you been doing it?
+Sure.
+Hi, Pete.
+Hi, everyone else, Charlotte, Joe, and everyone watching.
+Yeah.
+So as Pete said, I'm one of the organizers for EmacsCon, which as you said, it's in
+the name.
+It's a conference about Emacs.
+And yeah, I wanted to, I mean, we chatted a little bit with Pete before in preparation
+for today.
+And we thought it'd be a great idea to start talking about EmacsCon from a
+pure agogic perspective, pure agogic, you know, being the objective of pure agogy,
+which you're watching right now.
+And yeah, as a result, we thought it'd be pretty interesting for me to talk about
+my experience as an organizer, since I had more of a facilitator slash organization
+role within the team of organizers for the event.
+And as a result, we thought it'd be interesting to maybe talk about how we
+work together and how we prepare it for the next one.
+And so since you've asked me for dates, so it's actually a little longer.
+I mean, it was a while ago when we finished EmacsCon 2020.
+It was in late November.
+And recently, we've just opened the call for proposals for the next one,
+which will also take place on the last weekend of November.
+So EmacsCon 2020, I believe, will be on the 28th and 29th of November.
+And there will be a time which is nice for most time zones
+and we'll probably get a chance to talk about it later.
+So, yes, did I answer your question?
+Just like I've done a lot of setup.
+And, you know, I'm curious if you could talk a little bit.
+I mean, I think a conference is a familiar concept.
+I mean, we have them for for various purposes so that people can get
+to know each other and form working relationships, work on projects,
+things like that.
+But maybe you could say a little bit more about what your goals
+in this particular conference are.
+What is the what's the Emacs community like and what are people
+looking to get out of a conference like this?
+Sure.
+So maybe just to specify first, because yes, now remember that I did not
+understand answer the for the mental question, which you asked before,
+which is what is Emacs and it's kind of granted for a lot of people
+in the field I work on.
+But Emacs is a text editor, which is, you know, a lot of people use word
+or any kind of software that you usually find on Windows computers.
+But text editors, you know, they come in all shapes and forms
+and the shape and form of Emacs to the untrained eye is very spartan.
+You know, if you fire it up, it feels like you're back to the 80s.
+But it's actually a surprisingly well developed software
+with many different components working together.
+You have a calculator.
+You have the ability to write notes in what we call plain text,
+which allows you to organize your day, organize your life,
+organize the way you work with people.
+And you have ways to check your emails.
+You have ways to program in any kind of language imaginable.
+And all this comes with a text editor.
+Emax. I've been working on it. I mean, I'm not the developer of Emax. I merely develop for Emax,
+but I've been doing this for eight years. Moving on to the second question, which you asked, which is
+about the community. Well, if you imagine a text editor straight from the 80s, you don't have
+the neons everywhere like the Tron film, but you still have the very strong nerdy culture around
+it. And whenever you have nerdy culture, you think about problems of diversity of other representation
+of specific groups of people. And so as a result, the community of Emax, we tend to say that it's
+fairly diverse. And the previous editions that we did of the Emax cons kind of reveal this to us
+because we have people from many different fields. You have authors writing books inside Emax and
+they were telling us about the setup to take the notes and organize the plot and all this. You have
+obviously developers who use text editors for their main job, writing programming on Emax and
+working for their companies or working for free software in general. But you also have people
+who use org mode, which is a component of Emax, to organize their life like I do. That's how I
+got started. That's the hook that got me completely enthralled by Emax and made me want to contribute
+so much to the code. And so even though the community is diverse, what we wanted to address
+with regards to the next Emax con but also the previous one is how do we make the community
+more diverse under different declensions of the words? Because diversity can be about
+the job that you do in your life. It can be about your gender. It can be about your age. It can
+be about your ethnicity and so many different aspects. So I feel like I've answered your question
+and I'm going to try to be shorter in my next answers. No, this is wonderful.
+I guess just getting into what the organizing the conference looks like. So you described
+yourself as the organizer, but I imagine that organizing a conference is not a one person
+job. Even if there's one central person, surely you have to collaborate with many different people
+in different respects. Maybe you didn't have to get a venue this time if it's all virtual,
+but you have software and technical questions, you have to build a program. There are many
+different pieces to a conference. So can you talk a little bit about who else you were working
+with and what those relationships are like? Is anyone paid? Is anyone drawing a salary
+from working on this? Is it all purely volunteer? No. It's good that you asked the question because
+it gives me the opportunity to say how happy I am to work with this team. I joined only for the
+last edition and I've discovered a group of people, the other organizers, the main organizers
+so to speak, who have been running the show for two or three editions. We didn't have one in 2018,
+but we had one in 2019 and one two years prior. So there were about five Emacs Conf totaled in the
+last six years and I only joined for the very last one as well as for the next one, but I work with
+lovely people who are fairly salient figures in the Emacs community. We didn't necessarily
+define the words community, but here I mean just the people. We do have a subreddit, we do
+have mailing list, which might feel a little antiquated to the younger viewers, but you know,
+it's still the main way work is being done on a lot of free software nowadays.
+And as a result, I work with a lot of people. We are about 10 organizers with various
+degrees of involvement in the project, but we are about four people who meet on a
+near weekly basis to try to prepare for the next Emacs Conf. And I'm happy to mention I'm in Bandali,
+who is the lead organizers for the Emacs Conf, but also Sasha Schwa, who runs the lovely
+lovely blog Emacs Life where she publishes a lot of notes about her own experience with Emacs
+and she's a gateway for many, many people discovering Emacs into how to do a lot of
+stuff, a lot of cool stuff especially. Sasha is very excited about a lot of stuff and she shares it
+on a blog. So yeah, that's two of the people I'm working on. I believe there was another side
+to the question you were asking. Would you mind repeating it possibly?
+Well, I guess, you know, what I'm really interested to hear and I see, I think we have Joe
+asking a similar question in the chat is what are some of the ways that you need to collaborate
+with other organizers? So if you're
+As you're building towards the conference and then as you're running the conference,
+what are the ways in which you need to kind of see what developments are going on in the planning,
+make adjustments? Can you talk a little bit about that dynamic?
+Sure, definitely. And it's actually the main cap that I have for Emacsconth. I'm really happy
+to talk about this. So, yeah, I had the privilege to help prepare Emacsconth 2020, the last
+edition. And really, we were, I joined about two months away from the conference. And so,
+we had two months of getting ready. So, we had the call for proposals. We needed to review
+all the proposals. We needed to submit a schedule. We needed to make sure that all the speakers
+would take check, okay, all the technical aspects, which any kind of conference needs to have,
+at least virtual conferences. But the thing you really need to keep in mind when you're
+trying to run an event like this, any kind of conference, and especially online conferences,
+is that there are so many aspects that need to be worked on prior to the event. Not only that,
+once the event is done, there's a whole lot more of debriefing that needs to go on,
+so that the next edition can take into account all the aspects. Now, Emacs is free software.
+And we are, all the organizers, we have contributed in some shape or forms to Emacs.
+And as a result, I'd say that it has structured the way we approached working together as a group.
+And so, as a result, we tend to have to be very methodical when it comes to preparing the event.
+I mentioned that we were meeting on a weekly basis. When we finished Emacs on 2020,
+we started meeting every Saturday and discussing, well, first debriefing what had
+gone on in the last Emacs on that we did, but also trying to see how we could make the next one
+better. And so, when I said methodical, there's obviously the method in the schedule meeting every
+week, but also sticking to a particular mode of debriefing when we do something which is called
+checking in with people, where make sure that people say where they are at mentally.
+And then we move on to usually an agenda working on different points. But we always try to
+gather points throughout the week, whatever we're working on. We gather points and we come to the
+meeting with all the notes and we discuss them together. We minute the meeting. We're very rigorous
+about this. And I think that this rigor materializes itself in the way we run the conference itself.
+I say this half jokingly, but in the entire two days of conference, and it's about,
+it's about 20 hours total of conference are going from Saturday,
+late in the evening for me, which is early morning for the East Coast,
+up until the evening in East Coast and very, very late for me. We only managed to
+be late by 10 minutes over the two days. And I was watching my watch constantly,
+virtual conferences. You always need to make sure that people have their gears working,
+that they know what they need to be doing. We need to ensure that the tech infrastructure
+works. So it could be a nice move, but it went surprisingly well. And I think it's a testament to
+in a way how well we were organized ahead of time and how well the patterns that we used
+actually were. And maybe we could go a little deeper into this part since it's kind of the
+whole aspect of your energy in a way. Yeah. Well, I think, as we were talking before, we
+were discussing the similarities of planning a conference and working on a wiki. And so,
+you know, I wonder if we might be able to sort of draw out some of those comparisons in terms of,
+you know, on a wiki, one of the main ways that a user will understand what's going on,
+you know, if you go away for a day or a week or something and you come back and you want
+to see what's changed, you can look at the recent changes and see which pages have been edited.
+You know, there are various software features that sort of allow you to see
+what's going on. And then various, you know, features that let you respond to that or make
+your own impact. So what do you see as similarities with that? It sounds like having your regular
+meetings is one part of it and having a blog is another part of it. But what are sort of
+the main ways that someone would get, well, someone like you would get involved in planning
+something like this. How do you gain a sense of how everything fits together and what your
+contribution can be? Well, you've mentioned software solutions as in functions that your
+software provides to be able to do this. But I kind of want to be broader about this.
+It's not only about the solution, it's about the
+Paradise. Being able to track the changes that is being done to any kind of text or any
+kind of code is kind of vital to the craft of programming. Any kind of setting, whether it
+be the corporate setting or free software, you kind of need to be able to track who did
+what, if only for credit, but also in order to be able to try to talk to the person if
+something needs to be worked on.
+If a bug shows up, you don't want to have to look through 3,000 lines of code, you want
+to know what changed recently since the bug showed up.
+Exactly. And that's the whole concept of version control history, which is a very big
+paradigm in programming. Some of you might know Git, which is the most used tool to
+track changes. You might know GitHub, which uses Git in the background. But, yeah, as
+a result, it is a complete paradigm which allows you to track what everybody's doing,
+what work is being done, and how the problems are being tackled. And it's
+especially important when you're doing a conference, an online conference where we
+are very open about the process. Because, you know, Emacs is free software, and free
+software always is an element of openness. But we really wanted, at the end of the
+last Emacs conference, to gather feedback from, you know, the people that watch
+the event. I didn't give any figures, but we had about 300 to 400 viewers,
+concurrent viewers, during the entire event. We're pretty happy because we had
+doubled the number of concurrent viewers compared to Emacs 2019. But, you know,
+when there are more people attending a conference, for the people organizing it
+and wanting to do this in the most open way possible, well, it does put extra
+pressure on you because it means having twice the number of feedback to
+consider. And trying to account for growth and changes in, you know, how do
+we, how do we encourage diversity? Yes, we are getting more people in. We are
+doubling the crowd, but the crowd, we're not doubling the diversity if it could be
+quantified. And so as a result, yeah, it takes method to be able to do this.
+What we did at the end of the conference and throughout the entire
+conference is that we had a pad, sorry, an online pad, like, you know,
+when you have Google documents up on your drive, you know, you can edit
+them concurrently with multiple people. Well, we had a pad where we had about 200
+people at any time writing questions, taking notes, like, for accessibility, Joe,
+who is in the background right now, was actually taking notes on what was
+being said so that people who could not hear the conference could actually get
+a clue of what was going on. And, you know, stuff like this, we, a whole
+lot of the feedback stuff was done in a pad. And what we did during the three to
+four weeks that followed the conference is that we dissected this entire pad.
+We extracted whatever could be extracted in terms of diversity, in terms of how
+did the call for proposal go? How did the tech checks go in?
+Did people feel stressed before coming live? Was there any kinds of stuff that
+they would have wanted us to cover with them that we didn't? You know, all kind
+of stuff on any kind, any elements of the conference. And as a result, you know,
+it takes method to be able not only to review everything, but also to adapt your
+process afterwards. And I'll just finish on this. But, you know, one of the
+things that we usually do when we are running conferences is that because
+you have so many things to think about, you do have checklists which
+allow you to make sure that you're not forgetting anything, so that you don't
+realize, oh, I didn't tell the speaker to use the microphone or how to come live
+when they're ready to go. And then you can derail an entire conference
+just because of this little event. And since we are only using, you know,
+software solution, which are free software, a lot of paid solutions
+for software usually have ways for you to, you know, do jazz ends for a
+while and be able to tackle the contingency in a very
+smooth way. But we didn't have this opportunity because for us, the software
+that we use is a little more smart and we are working on it obviously as we go,
+but we had much less room for mistakes and stuff like this.
+Anyway, I've been preting on for a while, so I'll be happy to.
+We did have a question. What can you tell us about sort of the
+connections in terms of community building between the conference itself
+and other community aspects of the other ways that Emacs users and developers
+connect? Sorry, could you repeat the beginning?
+Because I think you fired me, you fired my brain towards a direction and then I was
+kind of, what was the rest of the question? Just about how to, as a
+As a community building component, how does the conference connect with other building
+community components of the Emacs world? You've talked a little bit about the blog
+and the meetings that you have for planning the conference. What else is there that builds and
+sustains community around Emacs? Well, the thing about Emacs, it feels like I've spoken a lot
+about paradigms today, but there is also an Emacs paradigm. I've talked about the free
+software, the fact that Emacs is free software and the paradigm within which it exists.
+But Emacs also within this whole field of free software is a tool that is particularly open.
+It's like a lot of people say that Emacs is an operating system and what they mean by this
+is that it supports many different type of stuff that you could do with it. You can, as I said,
+take notes, you can write code, you can organize your day, you can check your emails,
+you can browse the web, you can check your RSS feeds, so many things. But the lovely thing about
+it all is that it's all done under the paradigm of Emacs, which is think of it as the kernel.
+And we can actually see if you look at the, oh, I need to get the, there we go. It's really
+hard. Not disco, I swear. But if you look at the slide on my left, not on my right,
+damn it, it's really hard to do relativity. The middle of the screen now.
+Thank you. That's a good strategy here. But, you know, you have notes and Emacs is like the
+note at the very center and so many things are being linked to it. Actually, just for the anecdotes,
+what you're seeing on the screen here is an algorithm server, which is a tool that I've
+developed. I didn't get the chance today to speak, to talk about this, but one of my
+contribution to Emacs was algorithm and it's actually the perfect encapsulation of what's
+what I was trying to say about Emacs because everything is linked to Emacs. Everything can
+interact, you know, different modules within, you know, Emacs at the center and you have
+modules everywhere, everywhere. But the thing is, because they are linked to Emacs, any kind of
+modules can interact between one another. And if we step away from Emacs for a bit and we
+think about collaboration in a way, it feels like the method, the patterns, the tools that
+you have could be this kernel at the very middle. And people working together or working
+between one another are kind of depending on those methods. And personally, I've been working
+with Joe for a while, so I do know about Pyrogyn. I've been implementing some of those patterns
+that you've especially worked on into my own work, but also into, you know,
+the projects that I manage. And I truly feel like Emacs and Free Software in general
+are a very good pipeline for us to mobilize patterns, not only that, but also to see how
+the Free Software world is actually informing some of the patterns which could be used elsewhere.
+One of the stuff that we were trying on and I'll finish on this because I know we
+are running a little short on time. You know, we've been thinking with Joe and
+other people inside the Emacs research group about ways Emacs could help, you know, the
+academia in general in producing reproducible research working together collaboratively
+with Free Software. And it feels like, you know, if we could do this with academia,
+who knows which other fields we could do this with. You know, it could be just the
+whole aspect of working as a group on something. And as a result, I'm pretty inspired about this
+and I'm pretty inspired about working on this in the future. Okay, that's me done.
+Excellent. All right, so Joe, were you going to come back in? Do you have some
+show notes to discuss? Or did we want to talk a little bit more about the future of the Emacs
+conference? Hi, here I am. Yeah, so I was just thinking, yeah, takeaways in general,
+whether the future of Emacs and Charlotte, I hope she'll come in and just get some
+comments as someone watching this discussion and what we like and what we find exciting about
+this particular discussion and all that. So in any order, I'll happily jump in and just say one
+thing that wasn't covered in the discussion, but I think it's really important to say for the record
+is that I've really learned how to program through the Emacs mailing list. I would post
+things on this mailing list, and the people were so generous, they would send back comments
+saying, that was pretty good, but here you can do it better. And so like, actually not only
+was that how I learned how to program, that was for me really one of the key foundations
+of Purogogy, because I didn't go to class to learn how to program like that. I did it by
+this mailing list. So Leo is really a key figure in making that community even better
+now for the 21st century, right? This was a long time ago. So that's one of my takeaways,
+is that community is doing well, and indeed for me, Purogogy is really wrapped up.
+Thank you for the praise. I'm not sure if I'm deserving of it, but thank you anyway.
+Was there a question for me, Joe, regarding the future of Emacs?
+Or a future of Emacs conflict at any rate? Let's not be too broad.
+Sure, yeah. I think that was what was up briefly flying by on the screen when we were talking about other things.
+What would your takeaway be about that?
+That would be a good question.
+Well, first maybe to echo the point that you've just said.
+I discovered Emacs when I was doing my, I mean, I didn't say it, but I'm French and I studied English.
+And I was an English teacher for a couple of years, just a completely different life in a way.
+But I've learned how to program on the side of this particular academic gig.
+And it feels to me like I've learned more about working together with this side of my life,
+with programming, with Emacs, with mailing lists, with GitHub, Git, than I have with my traditional courses at university.
+And I think it's saying something, if someone like me who had not set out to become a programmer
+could somehow feel like I was getting more out of my experience as a programmer
+than of my experience as an academic studying English literature.
+And moving swiftly to the next question, oh, we're running a little bit out of time.
+Should I cover the question or should I end it off to someone else?
+We have about one minute.
+I think I was going to be short to talk about the Emacs conflict.
+Let's go to Charlotte and Pete for some takeaways.
+The other comment to put is there will be an after discussion, but let's go to Charlotte to give her a chance.
+Yeah, I just feel like I don't know much about Emacs and I don't know much about programming.
+But I like how you've teased out the methods for keeping people who are maybe engaging at different speeds up to speed.
+And I think that's, in Piragaji, that's very important, something we intentionally work on and try to be mindful of
+is not just laying all the responsibility for the wrapper or the newsletter or the information on one person,
+but kind of try to overlap.
+Is that something that you would say?
+Oh, sorry, did I cut you off?
+No, no, that goes on it in your Emacs Con.
+Yeah, I would say that the thing is, even though we were talking about Emacs Con today,
+there are many other things that I do with regards to Emacs.
+And one of them, which we could probably talk about one day, is the concept of Emacs workshops.
+They are inherited from Linux user groups, which is pretty much people meeting around Linux stuff,
+and they talk about software, they talk about the cool stuff that they discovered lately.
+But we do have the same thing, the same concept of Emacs,
+and we do have all around the world in different big cities and big countries.
+We do have events, sometimes on a monthly basis, sometimes on a bi-monthly basis,
+where people meet people from all different levels of expertise with regards to Emacs.
+Some of them are beginners, some of them are seasoned veterans,
+some of them are maintainers like me, working on software and maintaining software,
+and some of them even have the actual Emacs developers.
+So it makes for, you know, we wanted to strategize this year,
+and I won't be too long elsewhere, 30 more seconds than I'm done.
+But we wanted to think about ways to make those meetings, make those workshops,
+both inviting to people discovering Emacs,
+but also to the people who are a little more experienced.
+I attended many different workshops.
+I was part of the one in Paris, Emacs Paris, but we also have one in New York,
+we also have one in Austin, Texas, we also have one in San Francisco.
+I attended many, many of them, even in Asia.
+And it's funny to see how by simply nudging people to be, you know,
+to toe down the level, you know, when they're being too technical to toss them,
+you actually explain this particular function.
+And when they do, it feels like you're hooking more and more people into the discussion,
+and it's been a lovely experience, and we could probably talk about this during an entire whole episode.
+Let's have another episode about this topic.
+Do you have people that kind of like get involved for like intensely for a short period of time
+and then drop off for a while?
+We do, but what we try to do, I mentioned that we were about 10 organizers for the Emacs content,
+we were about four regulars, the colonel of the group.
+Well, the thing is some of them are only joining two weeks prior to the event and they say,
+okay, I'm really willing to help. I do not know what to do, but please give me work to do.
+And we know that those people are going to show up, so we do try to prepare in advance
+some kind of roles that we could add off to people. I mean, more often than not, we're
+happy wearing three, five, six caps at a given time, you know, taking the time,
+taking in people, making sure that the stream is running properly.
+But, you know, we are always happy to say, oh, you want to help? So here, take a couple of my
+caps and run the show. But yes, we do have those people who are of high burst of energy
+for a very short amount of time. And they are, they make valuable contributions.
+But you still, it still feels to me like you need to have a locomotive that is kind of
+carrying the show years after years otherwise, you know, if you only have pulses of energy,
+it doesn't feel like you're constructing something.
+Exactly, yeah. All right.
+Okay, well, so any closing thoughts here, Pete, other than that, Charlotte, could you bring up the
+invitation while Pete is composing his thoughts?
+Well, I, you know, just I think there's a lot of common, common themes in planning a conference
+and building a wiki, you know, certainly have run across many of the dynamics that
+Charlotte was talking about there as far as, you know, creating a space where different people
+bring different kinds of knowledge and, and can help people work through, you know,
+problems and, and solve problems through a mailing list and in person and things like that.
+So very rich discussion. Thank you.
+Very cool. Yeah, certainly reminiscent issues of the Purigaji project. So yeah,
+just to flash up this URL, meat.jit.c slash Purigaji, we're going to have to end the live
+stream, but we will continue the discussion with that little after party there. So anyone who's
+watching live can join us, meat.jit.c slash Purigaji in a minute or so. Other than that,
+yeah, we're going to end now and see you next time. Thanks a lot. Thanks, everyone.
+You guys are the best. Very productive discussion. Thank you. Thank you.

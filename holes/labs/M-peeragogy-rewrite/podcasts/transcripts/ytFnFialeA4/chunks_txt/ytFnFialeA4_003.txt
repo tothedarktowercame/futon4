@@ -1,0 +1,62 @@
+Paradise. Being able to track the changes that is being done to any kind of text or any
+kind of code is kind of vital to the craft of programming. Any kind of setting, whether it
+be the corporate setting or free software, you kind of need to be able to track who did
+what, if only for credit, but also in order to be able to try to talk to the person if
+something needs to be worked on.
+If a bug shows up, you don't want to have to look through 3,000 lines of code, you want
+to know what changed recently since the bug showed up.
+Exactly. And that's the whole concept of version control history, which is a very big
+paradigm in programming. Some of you might know Git, which is the most used tool to
+track changes. You might know GitHub, which uses Git in the background. But, yeah, as
+a result, it is a complete paradigm which allows you to track what everybody's doing,
+what work is being done, and how the problems are being tackled. And it's
+especially important when you're doing a conference, an online conference where we
+are very open about the process. Because, you know, Emacs is free software, and free
+software always is an element of openness. But we really wanted, at the end of the
+last Emacs conference, to gather feedback from, you know, the people that watch
+the event. I didn't give any figures, but we had about 300 to 400 viewers,
+concurrent viewers, during the entire event. We're pretty happy because we had
+doubled the number of concurrent viewers compared to Emacs 2019. But, you know,
+when there are more people attending a conference, for the people organizing it
+and wanting to do this in the most open way possible, well, it does put extra
+pressure on you because it means having twice the number of feedback to
+consider. And trying to account for growth and changes in, you know, how do
+we, how do we encourage diversity? Yes, we are getting more people in. We are
+doubling the crowd, but the crowd, we're not doubling the diversity if it could be
+quantified. And so as a result, yeah, it takes method to be able to do this.
+What we did at the end of the conference and throughout the entire
+conference is that we had a pad, sorry, an online pad, like, you know,
+when you have Google documents up on your drive, you know, you can edit
+them concurrently with multiple people. Well, we had a pad where we had about 200
+people at any time writing questions, taking notes, like, for accessibility, Joe,
+who is in the background right now, was actually taking notes on what was
+being said so that people who could not hear the conference could actually get
+a clue of what was going on. And, you know, stuff like this, we, a whole
+lot of the feedback stuff was done in a pad. And what we did during the three to
+four weeks that followed the conference is that we dissected this entire pad.
+We extracted whatever could be extracted in terms of diversity, in terms of how
+did the call for proposal go? How did the tech checks go in?
+Did people feel stressed before coming live? Was there any kinds of stuff that
+they would have wanted us to cover with them that we didn't? You know, all kind
+of stuff on any kind, any elements of the conference. And as a result, you know,
+it takes method to be able not only to review everything, but also to adapt your
+process afterwards. And I'll just finish on this. But, you know, one of the
+things that we usually do when we are running conferences is that because
+you have so many things to think about, you do have checklists which
+allow you to make sure that you're not forgetting anything, so that you don't
+realize, oh, I didn't tell the speaker to use the microphone or how to come live
+when they're ready to go. And then you can derail an entire conference
+just because of this little event. And since we are only using, you know,
+software solution, which are free software, a lot of paid solutions
+for software usually have ways for you to, you know, do jazz ends for a
+while and be able to tackle the contingency in a very
+smooth way. But we didn't have this opportunity because for us, the software
+that we use is a little more smart and we are working on it obviously as we go,
+but we had much less room for mistakes and stuff like this.
+Anyway, I've been preting on for a while, so I'll be happy to.
+We did have a question. What can you tell us about sort of the
+connections in terms of community building between the conference itself
+and other community aspects of the other ways that Emacs users and developers
+connect? Sorry, could you repeat the beginning?
+Because I think you fired me, you fired my brain towards a direction and then I was
+kind of, what was the rest of the question? Just about how to, as a

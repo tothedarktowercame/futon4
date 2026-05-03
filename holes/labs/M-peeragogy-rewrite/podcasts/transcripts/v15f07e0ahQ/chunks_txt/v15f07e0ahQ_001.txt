@@ -1,0 +1,45 @@
+We can, for example, share some basic principles of living and being in the world, like, for example,
+I don't know, freedom.
+The way we understand freedom is very different depending on the culture and the context we
+live in.
+So that is a very short response to Europe.
+Yeah, I think we can dig into it a bit more.
+But the other reason I felt confident to put epistemologies in the question was, I know that
+Yasmin is working on topics related to research, which is related to epistemology, how do we
+learn about things?
+So, Yasmin, you may have very different things to say, or you may say, oh, I completely
+agree.
+But how do you think about data, ethics, and epistemology?
+Well, I completely agree with Paula, of course.
+The thing is, like, if we take a step back from that, and to Paula's point of the origins
+of knowledge, there's a misconception that technology is born of the West, and there's
+this very Eurocentric idea that countries in the global South have, you know, were completely
+helpless before colonialism happened, and then the colonialists kind of brought technological
+knowledge to these barbaric, helpless people.
+And I think, like, obviously that's wrong, but that ideology has permeated our educational
+institutions, and it's really shaped the way that we design technology since.
+There's a sort of arrogance, but also it means that we design technological products in a
+way that's not as creative as it could be.
+So one way to address the misconception that all technology is born of the West, and all
+kind of scientific knowledge is born of the West, is through art, I would say.
+And we've seen a kind of, like, one particular project that comes to mind is by Alan Kudiccio,
+and he made a game called the Wagadoubou Chronicles, and for that he did lots and lots of research
+on cultures in sub-Saharan Africa and the technologies that they used before coloniality,
+and I think it's so tragic that, you know, those were not allowed to continue and evolve
+because the way that we design AI products especially has been intellectually stunted
+because of that.
+So that's where, like we are at, so there is work to be done in dismantling these
+misconceptions of origins of knowledge, and secondly, there's work to be done
+in kind of proving the point and designing AI products that demonstrate that actually you
+can build better things when you acknowledge that knowledge is not a kind of Western product.
+So this reminds me of a really interesting tension in Paula's paper, so maybe we can
+flip onto topic two, how do you address this in your work?
+Paula, one of the interesting kind of tensions in the paper is you talk about the stuff that
+we've been talking about now, but then you also talk about this topic of resistance,
+and someone who is a researcher in Mexico building a website, and it's a very kind
+of sobering topic, it's a website about femicide, violent assault and death on women,
+and it documents all the circumstances and stuff, so it's a very grim topic, but of course
+a very needed one, so the official numbers, the official statistics don't cover this,
+but she and I guess her team have used some open source software to get this information out there,
+and it's literally life or death information for people to understand this, so that seemed
+to be an interesting example about related to a creative use of technology, okay, in this case

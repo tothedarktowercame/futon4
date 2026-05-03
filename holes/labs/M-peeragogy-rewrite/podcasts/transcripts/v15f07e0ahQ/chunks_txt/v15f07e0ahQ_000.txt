@@ -1,0 +1,38 @@
+Hi everybody, this is Joe for the episode five of the Peeragogy podcast and today we are joined
+by Yasmin Budyoff and Paola Ricaurte, who I would love it if they would introduce themselves in
+the order I just said so that the audience knows who they are. And just everyone, please remember
+this is a video podcast when you have video but it also goes by audio so people may not see
+what you see. So if you have to describe something, feel free. But yeah, please take it away,
+Yasmin. Okay, hi. Thank you, Joe. Hi Paola. My name is Yasmin Budyoff. I'm a creative technologist
+based in London. I do computational art at Goldsmiths University. I organise with no tech
+for tyrants and I'm also a visiting fellow at the Ada Lovelace Institute where I'm looking at
+the ethics of AI, specifically AI justice. And I'm working on ways of having discussions around
+designing ethical frameworks that truly benefit everyone involved. That's pretty much it for me.
+And Paola, I know quite well but some people in the audience may not know her as well as I
+do. So please go for it, Paola. Thank you very much, Joe. My name is Paola Riccardo. I'm
+based in Mexico City but I'm originally from Ecuador. I teach at Tecnológico de Mante Rey,
+Department of Media and Digital Culture. I'm also a faculty associate at the Bergman Klein
+Centre for Internet and Society. And I'm also co-founder with Nick Koldrian, Ulysses Mejías
+of the Tierra Común Network, an initiative to think and organise around data, the coloniality
+and in the global south. And I also belong to the A-plus Alliance, a global alliance to think about
+feminist AI and feminist ethics in AI. And I'm super happy to be here. So I wanted first of all to
+introduce the two of you because I felt that that would be good. So I did that a while ago by
+email. And I know we've been wanting to have this chat for a while. So this is the first
+podcast after the holiday break. So yeah, I would say although it's a bit of an interview,
+it's really hopefully a slightly facilitated discussion between the two of you. So if I
+have a slightly light touch, it's because I really hope that you'll have an opportunity
+to get to know each other as well as just share some background. So yeah. And by the way,
+these slides don't move around by themselves. Charlotte is they're producing as usual. So
+thank you Charlotte. But yeah, the first kind of interview question or really discussion question
+is how do you think about data ethics and epistemology? So it's not necessary maybe to
+define these terms, but I got these words from a paper by Paolo called Data Epistemologies,
+The Coloniality of Power and Resistance. So maybe Paolo, if you wouldn't mind going first,
+how did you choose such an interesting title and how do you combine these topics in that paper?
+Thank you, Joe. Yeah, I wrote this paper because I was trying to think around the way
+data epistemologies are the way we see the world right now. And for me, it's very important to
+challenge the idea of data or the defecation of society as the only way of existence in this
+moment of history. And also, I address the problem of creating universal worldviews through data and
+specifically Western worldviews as universal worldviews through defecation and through data.
+So what I'm trying to do and going back to the ethics and ethical frameworks
+is to challenge the idea of having universal values that are applied to all cultures because
+even though we

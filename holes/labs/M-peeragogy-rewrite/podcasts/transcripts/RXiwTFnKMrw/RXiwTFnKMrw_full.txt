@@ -1,0 +1,628 @@
+Well, hello and welcome to the 12th episode of the Peeragogy in Action podcast called title
+is Opening Education. So we're going to be talking about open source education with Peter Schucke
+in the UK and David Preston if he solves technical issues in California. So if you're
+wondering what the Peeragogy project is about, this is our 10th anniversary and we've
+been collaborating to build what we call the no longer missing guide to all things relevant
+to successful peer learning and peer production. And we like to remind people that we didn't
+invent Peeragogy, it's been happening since the beginning of time and maybe before. But
+through this podcast called Peeragogy in Action, we aim to provide an interactive space where
+participants and audience can explore the philosophies, the concepts, contributors and
+practical applications of Peeragogy. And we aim to keep these discussions for informal
+and free flowing within some minimal guidelines. We generally work around two to three topping
+or talking points or topics. We live streamed via video live video to the Peeragogy
+channels on YouTube, LinkedIn and Facebook. And we'd like you to consider subscribing on
+your favorite podcast apps. So that's just any podcast app. Literally, I think we're
+on all of them. And you can find the links to all those at Peeragogy in Action. So
+there's, you know, pierspress.com slash podcasts is the easiest place to find them. And several
+dozen archived recordings reside on our YouTube channel. We've been doing it, like I said,
+since 2012. And please consider subscribing and participating in future live streams. It
+makes it more interesting for us. And with that said, I'd like to go back to introducing
+our guests and I'll turn it over to Joe Corneli. Hello. Yeah. So in fact, Charlotte is
+going to join us as a guest representing the Peeragogy project. We would be joined by David
+Preston. But yeah, he seems to not be online today. But we can try to fill his shoes as well as
+we can. Because we do know him. He's contributed to the Peeragogy Handbook. Peter
+Schucke is our guest. And I'd really be great just to hear a bit more about him. But to
+introduce his background and why we reach out to him, we came to know of his work through
+on and through and with community open online courses.
+And yeah, Peter, if you'd like to just introduce yourself to the audience and a bit to us as
+well, we can get to know you. Hi. Yeah, I'm Peter Schucke. I'm a lecturer in higher education
+in a college based university center in East Lancashire, which is in the northwest of
+England. It's between Liverpool and Manchester, I guess it's a little bit north of Manchester
+toward the east. And I think the first time I got involved with Peeragogy, I can't remember
+when that was now, but it was quite a way. I mean, it was 10 years, it must have been
+getting offered to the 10 years at the beginning time. And I would wrangle for
+people who are fully aware. But he interviewed me about Coops when Coops was a project that
+I designed. He later became a PhD thesis and project. But Coops was running at the time as
+a community open online courses project. And it was a direct response to MOOCs and massive open
+online courses. And I felt at the time that it fitted very much between the Coops, the X,
+I don't know if these terms still get used as much as the ones did, but the connectivist MOOC.
+So the idea that this was like an egalitarian space where we were going to learn and create new
+ecologies of learning. And then the X MOOC, which seems to really dominate now and they're the blue
+chip institutional base MOOCs. Both of them were massive and both of them focused on the massive.
+And I thought there's such a missing space here that is community. How do people that need
+to use technology that are actually cut off from those other spaces that have through resource,
+through economics, through culture, through location in terms of geographic location or
+societal location. They really do need to be part of this and they're at threat to be, you know,
+those small micro communities are in threat or under threat of being isolated again, right at
+the beginning of something when actually we can do things.
+To make that happen and to be part of something new, smaller spaces, but with not massive, community
+not massive.
+That was the phrase at the beginning.
+Everybody can teach and everybody can learn for free.
+That was the other mantra for it.
+Yeah.
+Is that enough, Joe, to start off?
+That's certainly enough to get us started.
+Thank you so much.
+That's great.
+I love the community, not massive.
+And I think, yeah, had we had David here, we would have got his introduction, but David
+has worked on something which I think will be a theme that we can discuss in his absence
+unless he shows up, open source learning.
+How do you share the methods and ideas that you've been developing?
+I think that's one notion of open source.
+I guess in the peeragogy project also, we've been trying to make, as Charlotte was saying,
+in our intro, a guide.
+Just to ask another follow-up question about your intro, really, is are you now the
+owner and proprietor of this Cooke's website?
+And if someone else wanted to run a Cooke, say, we wanted to run one, how would we do it?
+Would we approach you?
+Would we look on the website and see, okay, I click this and click that and I can do it
+myself here?
+Or do you have something else where someone can download that and go off and run it
+in their own time on their own platform?
+How does that work?
+Yeah.
+Okay.
+Good questions.
+Cooke's here.
+He's 10 years old now.
+And the idea of the, well, actually, it's older than 10 years, initially what we wanted
+to have is a platform that people could go on wherever they were and create courses.
+And that happened, you know, within the first three years, we thought we'd be quite small
+and it'd be in the northwest of England.
+And we had 1500 users within the first three years, which is a massive, I know
+in technology terms and in network terms, but people were creating courses in pretty
+diverse locations on every continent.
+Now, what happened was over a period of time, we noticed a lot of people created courses
+and then left them and they were abandoned and there was a real ethical dilemma, do we
+just shut them down or do we maintain them?
+Because people are taking the time to produce them, but they haven't been back
+and sometimes they haven't been back for years.
+So in the last 12 months, it's a sentient time for us.
+In this period now, we've shifted, we've got, we're going to move it now.
+You can still go on and you can still create courses, but at the point
+that we're at now, our focus is not to make it all things to all people,
+but to work with organizations and help them create the coops.
+So the ones that work really well have had existing organizations, not organizations
+necessarily, but a community.
+So a community can come together and use the coops.
+So the idea that we kind of began with, and that was part of the investigation is,
+will people create courses just as an individual in the hope that other people
+will come and join?
+And that happened only in tiny ways.
+And I think what happens is there's a whole thing behind course creation
+that we're not aware of.
+So somebody may be an expert, we had artists do this,
+and a really beautiful one from, I won't give the name of the creator,
+but a really beautiful one about making the invisible people.
+And it was an art thing, so it said, and it was part of the project
+that they were working on, and they put it out there for other people to come.
+So the knowledge was there, the expertise was there, but what was missing
+was how do you create a community online?
+How do you go and find those other people?
+They don't just happen and stumble across.
+It's not a high street where the people in it go past that building.
+It's a website, it's a web address.
+There's absolutely nothing that there is no way you would encounter this
+unless somebody comes and finds you.
+So there was that issue.
+And I think that's where we're at.
+I don't think people are going to stumble across these things.
+So we work with the groups first to make courses.
+But if somebody was listening to this now and wanted to make a cook
+and could they? Yes, they could.
+We might have a couple of issues right at this moment
+because we're switching from one domain to another.
+We're not a domain.
+We've got the same web addresses
+while we're being hosted somewhere differently.
+And the background is WordPress and Moodle.
+And so they are attached to each other,
+but it might be a couple of days.
+I'm hoping that you'll be less than that, actually,
+that they'll be free.
+But the goal is people can go from create.
+Peter, I have a question about, like,
+can a group say, I'm just thinking of a bunch of organizations
+that I'm involved in, mostly nonprofits.
+Could they use that platform to improve community interactions
+in their own community?
+Or is it just something to go and learn as a subject?
+Does that make sense?
+Yeah, it does.
+And the former, I would say, we can't compete with, why would, I think it's got to be this,
+the former, it's got to be small micro communities and organizations that want to teach each of
+us something at a given time. So it's temporal, it's local perhaps, but I don't mean local in
+this term geographic, it's local in that all the people have got an interest at a given time.
+But it's not necessarily, a great course, I don't know if K-side button's come out,
+but K-created a great course for post-humanism, which is a flourishing thing and there's lots
+of places you can go and learn it, there are university courses you can go and develop it.
+But she created something that ran in a temporal space that invented a particular group of people
+to look at it in a particular way. And that was a fabulous course. I think it's one of
+my favorite ones because it's what these things are. It created itself, well it created
+it from a spark and people came together, then it dies away. And what precludes us doing that in
+terms of the organizations you describe Charlotte is, if we want to go into universities or to
+colleges or to learning centers, straight away there's an insistence that the course runs
+for a particular amount of time, that it's got some kind of backing, that it's got course fees,
+that it's got support, that it's got all these logistical and resource-based requirements
+that people are forever getting there. So what if we took all that away and the course creation
+was free? And if you design that work yourself, if you created the pages, if you created the
+resources, the presentations, the videos, the photographs, the conversation space,
+if you made all that and then gave it away and you just gave it to the people you wanted
+to converse with, I think that takes us back to a different age. You said before about
+Piragaji's timeless, I agree. And this is also tapping into that or at least recognizing that
+that we have an innate desire to learn. And that is different than wanting to go and learn a
+subject. It reminds me that we've been trying on and off here and there to start a Piragaji
+course up the street from Charlotte. There's Tufts University and they have something called
+an experimental college. We initially thought that would be a great home and indeed we sent
+a proposal to them and they liked it, but they didn't accept it because they didn't think it was
+sufficiently different from some of the other things that they had on offer. And so then
+we tried again and that time we didn't hear back. So in between all this we just thought,
+why don't we just run it online? But I think one of the key things that maybe
+we always need to remind ourselves of in the Piragaji project, which is right there at
+the heart of what you said today, is you need an existing community that needs to learn something
+together. It reminds me a lot of a guest we had on one of our earlier series of discussions.
+Do you remember Willow Brew Charlotte who came on the side? Yeah, yeah, with the blue hair. That's
+where I got my blue hair. There you go. Yeah. Yeah. So she said, you know, people think
+about going and starting a community, but they forget they're already part of a community.
+So next time you think about starting a community, just look around and think about
+the community that you're already there with. Well, I was just just an aside. I was just
+talking. I set up another podcast about this institute of my rowing club. They're starting
+an institute for rowing leadership. And I said, you know, what they're relaunching it. And I said,
+what what are you trying to do differently this time? And they're trying to attract a more
+diverse group of people because rowing is very white and it has an elitist sort of background,
+you know, connotation to it. But, you know, a lot of it is is the cost. I mean, you have to come to
+Boston for a year and learn this. I mean, a lot and a lot of it is on, you know, is in real time,
+you have to go on a boat, you have to learn how to, you know, coach and stuff. But there is
+a component that is just, you know, interacting with the other course, you know, so they're
+trying to figure out how to make that happen so that more diverse kinds of coaches can participate
+and grow this board. So, yeah. And that, and in that, Charlotte, that very example is like that
+slot. That's how learning takes place in slow burn. You don't necessarily need, all right,
+and I've got the resources for 12 months in Boston and all that goes with that. Actually,
+what I need is an hour a week to just listen to some other people talk about their experience
+and what I really love this so next week, I'm going to go because I'm running a little course,
+I'm going to go do that. So an hour a night, I'm going to go and you build up into these places
+and because I mean, I don't want to get involved in this argument right now, but like,
+if we can modify education to the point that what comes first is the cost and the ability to
+pay for it straight away, then we cut that off. You know, we were immediately saying that
+only those that could hold it straight away are in. I think David's here. Yeah, yeah. Amazing.
+David.
+It's so cool to see you, David.
+Hi, everyone.
+I'm so sorry.
+I'm late.
+That's okay.
+We've got half of the podcast left.
+Maybe we should just do this as a kind of a parallel format.
+We told you that you were having technical difficulties.
+No, I wish.
+I was having cultural and institutional crisis management issues, but I was kind of
+hoping that by joining it about 20 minutes after the hour, that maybe you all had solved
+every problem we have.
+Yeah.
+We have.
+Sorry.
+Yeah.
+No problem.
+Maybe not quite, but it's great to have you here.
+Maybe now is a good time after discussing these things to go into some of these talking
+points, which largely are derived from questions you shared with us.
+First of all, David focuses on open source learning, and I think sharing some questions
+with us is a great way to do that in a very paraphrase way, but is that so just as a way
+to introduce yourself in your work, can you explain what is open source learning in a
+common sense way for people to understand that?
+Let me just jump in.
+I'm going to take myself off so that you guys, so that I won't clip off the bottom
+with the banner.
+Come back in the end, then we can all have a panel session.
+Yes, sir.
+That'd be great.
+Okay.
+All right.
+So Charlotte's gone, but David's here.
+So open source learning, which you do.
+There he is.
+Sure.
+Well, thanks, Joe.
+And it has been a long time.
+It's really lovely to see you again, and I'm so glad that you're all doing this.
+So my life sort of went interestingly in terms of career path.
+I started as a management consultant in Southern California in Los Angeles.
+I taught for 11 years at UCLA.
+And shortly after 9-11, I found myself working with some nonprofits and then with the
+Los Angeles Unified School District.
+And I began teaching high school English classes, not so much because of a particular
+acumen for English, but more because when you teach English, you can really teach anything
+as long as you're communicating in English.
+And what I realized was that my graduate students and my private sector clients who
+had been telling me that they had to recover from their formal education just to survive
+in life and thrive in a career, were not exaggerating.
+And I think every generation has its issues with education and with schooling, but things
+had moved in ways that I was not aware of even though I was in the knowledge transfer
+business professionally.
+And I started constructively breaking things.
+So using the public internet, building in collaboration tools and amplification tools
+that would allow and empower learners to be more active in their process and connect
+with the experts that had the knowledge and the experience they needed.
+And in so doing, now more than ever, educators who don't do the lockstep or following protocol
+have to have something, a theoretical framework, a term to art, because there's at least
+going to be curiosity, if not criticism, if not outright sabotage.
+So I dubbed what I did open source learning, not for the purpose of commodifying it, but
+for the purpose of giving it a shape and a container, built out a theoretical framework
+over time, and essentially ever since have been playing Johnny Appleseed, working with
+educators who do wonderful things all over the place.
+And this sort of acts as the sriracha of learning.
+Anybody who practices the same sorts of values that inform peer goji, for example,
+project-based learning, or it does another ways of doing this, but who come to this from
+a place of preserving a learner's sovereign identity, supporting the learning ability
+to create, curate, manage, and sometimes destroy their own data and create their own value
+in the process.
+This is a much longer rabbit hole to follow, but the term open source learning came from
+both open source software development and forking and cloning, but also thermodynamics
+in the sense that whereas once classrooms were siloed and private, now in an open source
+learning network, even if a classroom is formally designed in ways that are pedantic and restrictive,
+an independent learner can still take that course and share out through the internet and
+create a network and so on and so on.
+So I hope somewhere in that I answered your question.
+I think I've got a feel for it.
+It certainly allows me to ask one question, which I think applies to all of us.
+And this is not on the slides, but it's these different ways to blend things like
+peer goji or things like open source learning or things like community.
+The three of us are employed at institutions of learning, so, and written, you know, we can
+write books.
+I think you have a book out as well about this, David, or you can write a PhD dissertation,
+as Peter and I have done.
+But you know, you're just mentioning in your little intro, there's a bit of a culture
+clash, isn't there, in terms of open-source learning or community, anything.
+I wonder if both of you could say a little bit about that culture clash and how you've
+responded to it, or if you agree, is there a culture clash?
+Well, I'm wondering if I can piggyback just a little bit before Peter answers, because
+I saw a question from your friend Bryan Alexander pop up while you were talking, and he was
+asking about the cultural skepticism about digital technology.
+I think this is the misguided conversation, you know, you ask me what does it mean
+to be an educated global citizen?
+Open-source learning looks at the things that school ostensibly should be supporting, and
+most often doesn't.
+Mental fitness, how well do we concentrate, how well do we manage our emotions, how
+well do we remember things or comprehend them?
+Physical fitness, how well are we managing us?
+Civic fitness, spiritual fitness, and technical fitness.
+Technical fitness, technology itself, I'm a word geek.
+It comes from the ancient Greek technique, which doesn't mean tools, it means the cleverness
+and the purposeful use of tools.
+And you don't need a computer to do open-source learning, or pyrogogy for that matter.
+I'll take a stick and some dirt, but really all I need is a learner.
+And I think that we've gone too far afield into these sort of horse race, dichotomous
+debates about face-to-face versus virtual, and we get lost in the weeds when really,
+you know, I'm looking at my own children when I think these things.
+What we're trying to do is create the habits of mind and the practices in life that support
+learning, which is something we all do very naturally as homo sapiens, to support the
+kinds of outcomes we need in the face of an increasingly complex and uncertain future.
+I think that, you know, that resonates even though you weren't here at the time, at
+least in my mind it resonates with something that Peter was talking about, when you
+go to an institution of higher learning, for example, there's all this paraphernalia you
+need.
+You need to have three years to write your PhD, or eight years if it's in the US or something
+like that, et cetera, et cetera, whereas people, as you said, learn naturally without
+making those kinds of commitments or outlays at the outset.
+So Peter, do you want to come back to what David just said, or think a bit more about
+culture clashes?
+I love what David said, and I also I think are very respondent to Brian's question
+as well.
+There is a culture class in Pyrogodgy and things like Cooke's and Dave's work is you
+need to establish a space that is not, but I don't want to turn this into the good
+bad, you know, the evil, but another Greek word, and this is how I use this, I teach
+informal education, and I teach a technology project module, and it relates to Cooke's
+and I think it relates to what Dave's angle there was, and the Greek word that we
+use in that that's often missed is frenesis.
+So that's what the purpose, what's the good, what's your reason for doing the work
+that you're doing, and so rather than just looking at technology and saying we're
+going to achieve this qualification as if that in itself is enough, what is the
+learning that was within that qualification, what is the good, what is
+the action that your work is involved with in the community that you're
+working, so when you leave this college, when you're involved in this
+college, you're a trainee teacher, I know I've got Ryan and a few other people
+now in a room just watching this and, you know, training to be teachers, so what
+do we do that for? Is it just for the money? Is it for status? Is it for
+respect? Is it for any of those things? Or is it to change the world that
+we're in? And that's on so many different levels, we don't all have
+to work informal education to do that, and I think open education is the
+space that both recognises that the innate desire drive need to teach and to
+learn and to share knowledge, but also it can be so manipulable in terms of size,
+micro communities, I keep mentioning that term, because any course, college
+courses need a specific number of people to run, when actually two people
+is enough really to be able to trade something to change lives, to change
+those two lives, open education is the way that that can happen. We're not
+living in a utopia, there's a lot of things that go with this. You know, in
+terms of Virginia U banks, we've had over here from Blackburn, from the
+states who wrote Automating Inequality, you know, the idea
+We've just had it here in the UK around how algorithms privileged people from a particular
+part, well, a wealthier part of society, and you've dismissed people from less wealthy parts
+in terms of grading exams. So technology is not a utopian space. It's already possessed
+a known, it's already open to challenge, but it dominates the world in which we live
+and we're either part of it and helping to shape it, or we leave it to somebody else
+and it shapes us anyway. So open education is the means by which we can get involved with
+each other and be involved with what technology is used for. And more importantly, I suppose,
+or at least as importantly, what education is for, you know.
+I think this is making me think, are there ways that, because we're clearly a part of
+a quite distributed community, as David said, we've interacted infrequently over the last
+10 years, I think he was part of the first peeragogy handbook, and you yourself were
+there before, but are we already with Bryan and Leo and some of the other people who
+are on the chat and Charlotte and other people who are involved with the peeragogy
+project and your projects, who I either know or don't know. Is there enough of a community
+or a network of communities here that we could pull together around, you know, sharing and
+learning more from each other? Because I mean, it feels like this conversation is really
+literally just getting started. We tend to keep it to a half an hour. But how might
+we go about any next steps? Is there enough here that we could think about what a next
+step might be for us?
+So I think this comes in two ways, Joe. And I was really grateful to hear what
+Peter said about, you know, to paraphrase Douglas Rushcroft, you know, it's program or
+be programmed. And so someone is telling our story online. It may as well be us who
+creates that digital footprint and who uses the technology, you know, for example,
+Web 3 and crypto, a lot of people are saying, well, you know, you need badges
+when you have NFTs. It's not really about the hype or the metaverse or the
+whatever. It's about the, you know, I like to think of the Internet as agreements
+between people about how we communicate and how we interact. And to come back to
+your question, I think that those are choices. And this is what really drew me
+to Howard Reingold's work in the first place when the Piragogi conversation
+started, started with Howard. And I think that, you know, the use of
+convivial tools, it could be the well, it could be the metaverse, it could
+be two cans in a string depends on our desire to share information. And to the
+idea of formal education, if I get on an airplane or if I go in for surgery, I do
+want to know that my professional service provider has passed some objective
+metric of expertise and I'm not the guinea pig. At the same time, there are
+many different creative ways of validating knowledge that we just never had
+before. So, you know, in the 80s, when one gig cost $300,000, multiple
+choice and scantron exams made a lot of sense to administer to a lot of people.
+And it was a very efficient model for surface level evaluation. But we're
+not getting that second axis. We don't have the why of the what was
+answered on the test. And so in my way of thinking about this, can you have
+badges? Sure. Can you have NFTs? Sure. Are there, you know, when I had a
+student who wanted to learn to fly an airplane, and I see Brian's comment
+again, high school had nothing for him. So when I introduced him to a
+pilot, and three months after that conversation, I found myself in the
+backseat of a Piper tripaser 3000 feet above the school where we had
+the first conversation. The only way to document that properly was through
+video images and still photography and narrative and couple that with his
+pre flight inspection and his career path. And by the way, that also led
+him to be valuable in marketplace terms so that people who didn't know
+him and weren't privy to those moments. You know, when I was a student,
+I wrote an essay, right? And that would be for an audience of one. The teacher
+would make a few nasty comments about how my theme could have been more
+clearly articulated and give me a C or whatever. And then I promptly value
+that by crumpling it up in the bottom of my backpack and eventually be
+lost to history. Well, now we can longitudinally see how people
+develop. And by lowering the boundaries between individuals and
+organizations, we can encourage that breadth of information flow that
+makes
+It makes us all better.
+And to your question, I think part of that is networks like this.
+Part of that is eventually using semantic software more thoughtfully.
+Part of that is picking up the phone and calling a friend or sending a letter because we haven't
+really talked about this, but the isolation and loneliness factor worldwide right now
+is crippling.
+And I believe, Peter, don't you have a minister of loneliness?
+Yeah, that rings a bell, I don't know who that is, they just sit in a room on their own, nobody
+speaks to them.
+We'll find that person, they're probably sitting in a room sad.
+Yeah.
+Peter, any next steps?
+And Charlotte, another immediate next step would be great to have you back if you're
+having a chance to sit and listen and reflect, but why don't we go to Peter for some thoughts
+about next steps, if you have any, if you have any, next steps are important, but next
+steps don't need to be about growth in the usual terms, I would say.
+I've read something on the comments that kept coming up and it was around about the role
+of the teacher and the role of student and how people are incentivised.
+And I think there is a real danger that we see what education is in one model only.
+And maybe you just teach one thing and then your incentive is you're a passion drive for
+that moment.
+It doesn't need to be career choice all the time.
+There are careers.
+I remember, I don't know who came up with this quote, but it was that it's well used
+so that any teacher that can be replaced by a computer should be.
+And there's the idea in terms of how we use technology is as open as what technology,
+what groups, what do we mean by teacher, what do we mean by student?
+All these things can be fluid and open.
+And when I'm not disappearing down rabbit holes, I'm saying, there is no desire.
+We don't need to be the body that standardises and drifts toward a centre because the centre
+is already doing that.
+There are enough forces drifting towards a standardised centre.
+The idea of having multiple different voices in different places, doing different things
+with different technologies, absolutely fine and it's about being able to respect
+that people do things differently rather than saying only the thing that's got 600,000
+users is worth having and then even that is nascent and it's going to be six million
+within a year to be of growth and then it's going to be 60 million at any other point
+to be profitable.
+We can't think in terms of that.
+If five people are using technology in a particular way and there are organisations, networks
+like Art coming together about this moment, where we can support each other and show these
+things are working together.
+I love it, I love it.
+You know, either it's something that I want to pick up on and amplify your point.
+Thinking in terms of differences rather than deficiencies might be the single most
+important thing we can do for learners at every level right now because whether it's
+the zooms and proctorios of the world showing algorithmic bias and downgrading an individual
+because of their skin colour or the ambient noise in their living quarters when they're
+trying to participate or whether it's thinking about, you know, earlier the question came
+about social justice and I do want to key on this because we talk about cultural
+proficiency and interpersonal interactions on campus or maybe even leveling the playing
+field in terms of hierarchical authorities between learners and educators.
+But we have some systemic issues that when you say about the 600,000 user limit, you
+take an LMS like Canvas for example, which is a brand of infrastructure holdings out
+of Utah.
+Well, they were taken private in March 2020 by an equity firm for two billion dollars
+and then there was an IPO less than 12 months later for 2.9 billion.
+They said it was for expansion.
+Really it was debt service.
+All the private equity people are still on the board and now they're valued at 3.95
+billion.
+Now, I understand that there's a lot of data being exchanged during the pandemic,
+but that doesn't explain that valuation when you look at the few thousand dollars
+that they charge school districts and a few hundred dollars per head.
+So it's really about data and when people don't have a choice about which
+platform they have to use because someone in procurement in the business arm of an
+institution bought the software, what we really have is an entire generation of
+intellectual sharecroppers.
+And there's no part pregnant here.
+We're either talking about value contribution or value extraction.
+So when it comes to the software side of things, I wanted to bring in on this
+because you nailed it.
+And I really think that it deserves to be amplified, not just in terms of which technologies we adopt,
+but also the simple fact of the matter is anyone who talks about seat time or academic rigor is someone who won the zoo and now runs the zoo.
+And what I mean by that is that most of the people in charge of making decisions in education institutions were pretty good themselves at playing the game,
+and so it worked for them. Most of our students today, it doesn't work for them.
+And people who look at the pandemic and campus closures and think, oh, well, this is a momentary crisis and we had to respond.
+Nope, that's not the thing. We have so much economic food and housing insecurity.
+We have the next variant, the next pandemic, the next extreme environmental incident.
+We need more resilience in all forms of learning and school was a great start.
+But for us to think that's the end all be all would be one of the absolute crimes against the next generation.
+Thank you. That was that was a nice amplification and some great points there.
+I'm really glad Charlotte brought Leo's comment up here because it's a good question for I think all of us, including the Charlotte and Joe,
+we might have to ponder this as well.
+But yeah, it sounds good. It sounds good.
+I wish I was I wish I had been in your classroom, literally both of you actually at any point in my life.
+And at the same time, you know, I am not sure I feel the same thing about my own classroom.
+I'm not sure I'm actually able to be my best person when I'm on the job in formal education.
+So how how could we be our best selves, first of all, and then in terms of, you know, sharing what we love doing.
+And then the question, you know, how can we have the next Charlotte and Peter and David come along out of the ranks of teachers or students
+and do even better than we did any thoughts about just to add on to that.
+I remember when David's was, you know, talking about that, a contribution of his to the to the previous Piragaji handbook.
+And hearing about all the pushback from the educational system.
+I mean this, it seems like there's a.
+Oh, it's real. It's scary and risky for teachers out there to get involved in something that they don't understand or that, you know, is not being provided to them.
+Is that valid point.
+Well, you know, early on, and I think I had the benefit of being a mid career professional when I started teaching K 12.
+But I think that the the real risk is is the death we die inside before we stop living.
+I know we just had what four point something million Americans leave their jobs.
+And I think it's something the numbers are something like 50% of all first year teachers left.
+And the numbers over the last few decades weren't much better.
+If that's the worst thing that can happen that you find yourself a different job.
+I know it's traumatic. I know that we're all hanging on by threads to senses of normalcy and health and sustenance for our families.
+But the nature of integrity isn't honesty. It's integrating our thinking with what we say and what we do.
+The fact that there hasn't been an absolute, you know, I don't know how to say this gently.
+I really believe in empathy and kindness and compassion.
+But when I see the vitriol and the venom with which people show up on campus demanding that their maskless kid be able to do whatever they want at the potential health risk of a 60 year old teacher with auto immune.
+Nope, I'm out.
+So the answer to your question Charlotte is the tough answer.
+I think people have to do what they believe.
+I respect mightily the First Amendment, not just because of the ability to improve and increase communication, but also because it lets me know where the trouble spots are.
+And, and I, you know, it may be an unpopular thing to come out as an educator and say, Yeah, I believe in nonviolent communication and restorative dialogue and I can do all of that all day long.
+But they're at the end of the day are some handrails for how we do this business of interacting with younger human beings and how we promote learning and critical thinking.
+Yeah.
+Anybody who wasn't political in the last American administration, I think was derelict in their duty.
+It got quiet, didn't it?
+Yeah.
+It's a nice juicy concepts to think about.
+Learning to love my mute button. I think I would I would like to have any further comments to Peter because from Peter, because I guess you are also teaching teachers, right?
+So, you know, you do what kind of what.
+What's that like, basically? And then I think at that point we have to go to Charlotte for
+the closing down ceremony after that.
+Yeah. Well, again, I will keep echoing there, but I think we're coming from a very similar
+place and teaching teachers as it's frustrations, but it doesn't in some ways. I look in a
+room like I've been tonight, and you see people are going to be brilliant with other people.
+But then you look at the systems that they've got to operate within, and then you do
+feel the sugar of fear. So what do you do? Like, I don't want to teach that system.
+So I don't. I could because I think in some ways, I think people think I possibly am, but
+I'm not. My idea is like, what can you be yourselves? How can we be? And I do this with
+education studies. It's the whole idea where COOPS came from. People who have never
+taught anything in a normal institution at all, just the encouragement to say, share
+this, do you not be with this? And it's that idea that we specialize and compartmentalize
+and we reduce. You know, the idea is that, you know, there's a populist argument like
+that we're sick of experts. This is not about expertise, expertise as its place, but we
+can't make everyone who's not an expert an idiot. You know, and the idea of teaching
+and learning and what knowledge is, it's so fluid that nobody knows the answers
+now. And there was a question that came up about incentivizing and I get this
+because I've had this all the time about the COOPS project. Why would people do
+this? Like, you know, at what point do they stop? The point that they don't want
+to do it anymore. And there are things that if they look at the world, we were
+in Dave mentioned this right at the top of his introduction, the world that we
+are in. If you have a solution to something like saving energy or making
+a better planet, the idea that you would need to be paid to share that
+with people is kind of abhorrent, isn't it? You know, if we've got little
+bits of things that we can do to save the planet that we live on, then we
+should be doing that. If we can do a little bit of something that makes
+people's lives a little better, share that. This isn't about grand
+philosophies necessarily, although that might be the thing that people want
+to come together and learn around. But it's about the idea that learning is
+for everyone and it should be traded. It should be, it should, I'm not
+necessarily free, but it's a tradable concept. It doesn't have to be
+specialized, putting buildings that you need a certain set of criteria to
+come into. And that's guided by somebody else who doesn't even live there.
+And there are policies that set that and there are individuals in alien
+spaces that set who can enter that building. All of that is disastrous
+really for community. And we can use education to build our communities.
+Small. I don't think we need that. Like I said earlier, we don't need
+the 60,600 million. We don't need those sizes. We just need to
+compose a network of people like ourselves, like other people that we
+know and encourage people. Yeah, keep going, keep doing it.
+So teaching is hard because you're going to find that amongst the system.
+I would, I would season that lightly. I would agree with that. And I
+would add to it that the benefit of helping to grow, you know, there's
+a natural parallel metaphor in my mind between the ways that learning
+expresses itself. The invisible becomes manifest and the ways in which
+we think about data. You know, we're looking at images on a screen right
+now of faces, but they're not really faces. They're pixels. They're
+ones and zeros. And those ones and zeros, even if you, you know, people
+know markdown language, for example, well, that markdown language
+could be a word document. It could be a slide. It could be a meme.
+It could be any one of a number of manifestations. And so it is
+with learning. You can have a wonderful expression of learning as
+an undersea welder or as an essayist. And Peter made a very
+important point. The only place that we divide this rich
+experience of living into subject by subject thought
+patterns, hour by hour, this hour you'll think in chemistry,
+that hour you'll think in Spanish is in school. Everything
+is naturally interdisciplinary. And when we think about the
+Medici effect, we think about the interdisciplinary benefits of
+integrate again, integrity, right of integrating that. Again,
+that's part of open source learning. Learners drive the
+process by identifying anything in their lives that they want to
+learn more about. Because any single one of those top show me a
+cup of tea, you've got ceramics, fluid mechanics,
+botany, the history of colonialism, we can build that
+out into all sorts of meaning, some of which may connect to
+your course credit and your progress toward graduation, and
+your formal certifications. Some of it might be beyond what the
+curriculum could provide. Some of it might be something I've not
+yet imagined, which would be the happiest surprise of all. And
+to that end, when you say about it doesn't have to
+To be a large-scale community, I would agree with that.
+But I also suggest that we grow the capacity in every single learner to feel an awareness
+that there's somebody out there that shares a passion, that has an expertise, that might
+be worth beginning a relationship through which they can accelerate and amplify their
+process.
+So that's a great, both comments from Peter and then David would be great introduction.
+So what we're about to do next, opening up the room, so to speak, and if you join us
+on the URL on the screen, meet.jit.c slash peeragogy, hopefully all of us will be there.
+That's kind of the after party from the podcast.
+So we try to keep these things brief.
+But there's been so many amazing things to share today and really great comments
+from guests via YouTube, I mean, extra guests online watching this live.
+So I hope some people will make the jump over to meet.jit.c slash peeragogy for a further discussion.
+Any closing comments, Charlotte?
+No, just we try and do a project action review after each one during that after party.
+And there will be cocktails.
+So, you know, no, I'm just so happy that we got so many people participating live.
+It's like our most ever.
+And I think that says a lot about our guests and the topic and what's on people's minds.
+So thank you all so much.
+This has been a pleasure.
+Really great conversation.
+And I will definitely be rewatching it.
+And I hope others will be listening in.
+And I'll see you all, I hope, on the meet.jit.c slash peeragogy link.
+We showed up on screen.
+OK, I think if peeragogy.org has that link, if your brain is spinning like mine.
+So thank you so much.
+And now we do our Saturday.

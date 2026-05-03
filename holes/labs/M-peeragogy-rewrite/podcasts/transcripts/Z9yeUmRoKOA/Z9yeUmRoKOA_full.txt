@@ -1,0 +1,424 @@
+Good afternoon, good morning or afternoon depending where you are in the world.
+This is the Peeragogy podcast, episode three.
+We welcome you to our special episode on Peering into Learning.
+We have just started the podcast, so we have, I'm going to mute you, Charles, because
+I think I can hear you.
+We have, in the Peeragogy project, which is the producer of this podcast, we collaborate
+to build a no longer missing guide to all things relevant to peer learning and peer production.
+And this regular video and audio live streaming podcast aims to provide an interactive space
+where participants and audience can explore the philosophy's, concepts, contributors,
+and practical applications of Peeragogy.
+We introduced the series with session with our editorial core members, Joe Cornelian London.
+He's in the backstage of this episode, and he'll join us at the end.
+Charles Danoff in Chicago, he's hosting today, Paola Ricarte in Mexico City, and Lisa McDonald
+is in Los Angeles, I'm Charlotte Pierce, and I am in Boston, Massachusetts.
+As I said, we're in our third episode and we run these about every two weeks or so.
+We welcome input on from our audience for topics and panelists and things relating
+to peer learning and peer production.
+I'm going to introduce Charlie now.
+Charlie Danoff is one of the original Peeragogs, I guess you are, right, Charlie?
+You want to unmute yourself and I'll let you take it from here.
+Hey, thanks, Charlotte.
+Happy to thank you to the audience for tuning in.
+So excited today to talk about Kiko Lab.
+And so we're going to start, we'll have Lauren, we've got Lauren and Charles.
+Lauren, do you want to introduce yourself?
+Yeah, sure.
+I have a background in digital media and now collective intelligence and I live right outside
+of Paris.
+Oh, but I'm American.
+Okay.
+Thank you.
+Charles?
+Hey there, reporting from Zurich, Switzerland.
+I'm also American from New York City, mostly been here 10 years in Switzerland.
+And yeah, co-founded Kiko Lab Collective Intelligence Collaboratory with Lauren Nyon.
+We've been working together about two years now, kind of developing a lot of ideas and
+processes and building our knowledge repository, focusing a lot on Peeragogy and other learnings
+from Howard Ryan Gold and Doug Engelbart.
+Awesome.
+So on the next slide, we're going to, yeah, so as you said, we're going to run the
+Kiko Lab and today we're going to talk about that as well as about education for
+all ages.
+And as you can see on the slide, you're both parents of young children.
+You want to just kind of give a little more, talk a little more about Kiko Lab and Collective
+Intelligence Collaboratory or Collective Intelligence Collaboratory and the Rapid Learning Network,
+please.
+I just want to say is I'm super excited to be here.
+This is like a peer-produced podcast and Peeragogy is awesome, peer learning and
+peer making.
+I think the peer making and producing part maybe gets left out more in the conversation
+about Peeragogy.
+So I just want to state that we embrace the full spectrum of Peeragogy in what we do at
+Kiko Lab and we're not experts, we're curators and we're bringing a lot of people into conversation
+and sort of connective intelligence in terms of the conversation as the foundation for
+what we do.
+And we have kids and like everyone in various ways got kind of slammed by the pandemic
+and we're already being slammed in a lot of ways and then we had to go into another mode
+in regard to our kids and not just school but kind of overall life at home, homework and
+so forth.
+Lauren?
+Yeah, we got inspired to do Peeragogy for Kids because basically I was so disappointed with
+my performance during the first quarter in March trying to teach my kids.
+It was just really, it was really hard and I was scared that my kids were getting a little
+depressed, being inside all the time and they were really losing their love of learning.
+So I really wanted to find ways to inspire them and to get them connected to people, kids
+from around the world.
+And find better solutions to keep us less crazy during the fall because I think it will be just
+as bad.
+So, yeah.
+Yeah, keeping us less crazy is a good goal for all of us right now, in any time, especially
+now.
+Yeah.
+And yeah, peeragogy for kids is something that we haven't explored that much in our
+work historically.
+And so I think that's what's really exciting and excited to talk about it.
+So, I think you want to discuss this educational summit that you hosted that we have here at
+the back of school.
+Yeah.
+It was just kind of a one-off thing.
+Just decided we would host a little educational summit for and we just had, you know, a
+lot of people came and they contributed and we made a 15-minute video with People's
+Thoughts.
+And we were just blown away by the creativity of people and how people in collective intelligence
+just designed things so differently than other people would and how kind of light and dynamic
+their design was.
+And I was really just blown away by using peeragogy and collective intelligence, how
+you can solve problems quickly and on a grand scale just by leaving behind some assumptions
+that we were making.
+I would just add that, you know, it was that summit was a one-off event and but then as
+Lawrence said, we made a video 15 minutes boiled down out of many hours and that in general
+is a practice that we're doing all the time.
+One of the ways that we wrap kind of using a peeragogy pattern, our form of wrap is a
+video remix or edit distillation and we've done that iteratively now with the material
+from that event, the educational summit and follow-up conversations kind of subsequently
+reflecting back and feeding back the wraps, the remixes into the conversations and into
+the wraps themselves.
+So there's lots of layers to it and that becomes not just a one-off event but persists
+and it grows.
+And further, we actually managed to use this process to very smoothly collaborate on making
+a video telling the story we're now calling Learning Garden.
+That's, so yeah, you're by doing the, that's a great, the doing the process of peer producing
+the video taught you more about how to produce videos and that's a peeragogy in action.
+And so yeah, you brought Learning Garden and that's our first point we want to discuss
+today is how to use peeragogy to solve the pandemic education problem in lightweight, accessible
+and agile ways.
+So what are those, what are those ways?
+Well, we're talking about some assumptions that most people make in building, you know,
+schools and education systems and that's that, that kids must be in the same class
+with the kids their own age.
+So we threw that out the window and said, we can build networks of inter, we can
+do inter-generationally and so we can have people of different ages together so that the
+older kids can teach the younger kids and it just, it makes it easier in certain ways.
+Yeah, there's also the elders, the parents and the grandparents getting involved and
+also having a peeragogy across literally those generations.
+But then again, mixing up the, you know, we're looking mostly at age 6 to 12, K through 12.
+Well, yeah, anyway, the age differences between, you know, kids at a young age are experienced
+as it is pretty big and so that's also kind of intergenerational.
+Another assumption was that learning had to be done, pandemic learning has to be
+done in pods and one of the things that we really wanted to do was design it to make it
+accessible and if you do it with, you know, a group of parents hiring a teacher, that's
+really out of the financial reach for.
+A lot of parents.
+And so we absolutely wanted to make an accessible solution.
+So using peeragogy, you can actually do it much cheaper
+and affordable for people.
+So that's another assumption that we debunked, I guess.
+Yeah, it's really important to revisit assumptions
+and all walks of life.
+And then, especially when the context
+and our day-to-day changes, the rechecking,
+that's a great point, not being able to bring in a,
+oh, not everybody could afford to bring in a teacher
+like that or the pods.
+And then the, so then the intergenerational nature of it,
+that kind of reminded me of like,
+it's almost like a return to kind of a one-room
+schoolhouse type model where that,
+a lot of things, definitely the U.S.
+and that's in all over the world.
+That was where like a lot of how learning was done
+and then is done in some places still.
+And so what kind of,
+and I think that's also like a good opportunity
+to the older kids too,
+because like one of the best ways to learn something
+is to teach somebody else about it.
+And I definitely, in my experience,
+teaching English as a second language,
+I discovered how little I actually know
+about the English language.
+And so that was very helpful.
+And I got much better English
+as I was helping my students.
+And then so what,
+so we're talking about the high level
+and then getting a little more specific on the next slide,
+we have, like with tactically how to do this,
+we have the parent dashboard in Trello.
+Do you wanna talk about how that works?
+Yeah, sure.
+So we kind of needed some kind of instrument
+when you're, for, this is a parent one,
+we haven't made a kid's one, we could easily do that.
+But basically when you're trying to kind of manage
+the situation on hand,
+it just basically has
+suggestions and tips
+that you can use while you're in the moment
+and don't wanna go around searching for things,
+but just so it's almost like a quick start guide
+for parents on activities that they could do
+on procedures that they can do
+if there's conflict and agreements
+that the kids can make to make things go better.
+So it's basically a real time board for parents to use
+and where parents can share tips and tricks
+and put if they,
+if one group comes up with an activity,
+they can get feedback and share it to another group.
+So that's a great learning loop.
+And then the, so it'd be the difference.
+And you said earlier, you're saying that the assumption was
+you've had to have pods and you're saying you don't
+necessarily have to do that.
+Right?
+The assumption was that you had to hire a teacher
+who would then take over the role and kind of,
+but that's a pretty expensive way to do it.
+So we were trying to work around that.
+That's a parent, I'm sorry.
+Yeah, it's built so that by getting one,
+if we can build one successful pod,
+that all of that knowledge can be shared with other pods.
+So it's a very, very scalable.
+Got it, got it, got it.
+So to be the parents in the pod would be the ones
+on the trailer board sharing tips and tricks
+and for their given pod experience.
+And then as that success happens
+and you can scale that to other pods
+and then additional like pods to pod type learning can happen.
+Yes, exactly.
+One thing I can just comment on is the real challenge
+to, I mean, to get to the point of being able to scale,
+you know, there's a lot of groundwork
+and luck that needs to happen leading up to that.
+In other words, just having a regular consistent schedule,
+holding space, having the parents obviously show up
+with the kids and doing that consistently
+has been a real challenge
+because life is just gets in the way.
+And even for us with various things that come up
+with our families, our houses and so forth.
+And that's just part of the reality.
+But we have managed to do it consistently
+in the Kool Laboratory,
+which is our sort of in-house version of learning garden.
+And...
+One of the really significant things that's happened is that the kids are getting to know each other and open up to each other, and I think that really goes a long way as kind of the soil for the garden to grow, to learn and garden.
+Nice connection, extension of the metaphor there.
+Yeah, we're going to water that soil.
+And then so, all right, and then in terms of one of the things that comes out of that, I think, so it goes to our second point on the next slide is, as those learning plants grow from the soil,
+I think that the International Peeragogy helps adults as much as children.
+So what are, and I think this is a really important point, what are some of the things that the adults have learned from the children during this experience?
+Go ahead, Lauren.
+Go ahead.
+I know you have something.
+Well, one thing I learned, I was actually planning an activity for the kids and I thought, well, let's, I went on Domestika because they have very affordable art classes for only about $15.
+And so I downloaded one of those and we were all drawing kind of magical pens.
+And so I was doing it along with my kids.
+And I just, you know, I realized how long it had been since I just sat down and did art and doing that with them.
+It was really kind of magical experience.
+And it just made me think, you know, adults when we kind of, when we do relaxing things, it's always like work, kind of like, you know, meditation or yoga.
+And sometimes we forget to do like creative play stuff.
+And so they bring that element to it.
+So that's something I really appreciated.
+That's a great example.
+I would add to that because I really resonate with that one and take, I've been taking that in more and more and come to the conclusion kind of in the broader picture that we can't, we can't afford to consider art as a luxury anymore.
+I think art is not is just much more than luxury for everyone, not just kids.
+But we did also have a chance.
+And it was such a kind of.
+So we talked to Howard Reingold a number of times, but more recently, particular around this exact area of creativity of art and creativity and its role in learning in pure goji and pure goji for kids.
+And it's just a wonderful conversation and he has gone on.
+So in some of his writings about his mother who was an art teacher and just how much he took from her. And I think one of the things is about having permission to create and to be to be creative.
+I agree with that. Yeah, I think it's something that people don't people don't always realize they can like give that permission to themselves. And I feel like that's come from like a third party or something or maybe you're maybe your kids.
+So we've actually had a quick, we actually had a question from the audience, which is wonderful and please for all listeners out there, please continue with the questions.
+And so it was how many kids are currently learning in the cool laboratory.
+It's averaged around five or six, but it goes up a little bit, it goes down a little bit. It's, as I said, it's been a challenge for it to be consistent in terms of attendance.
+And Lauren has a couple of daughters and I have a couple of daughters and usually we're the regular ones and then we have a handful of others that have come in and out a few stick around longer.
+You know, it's very much relating to family sort of lifestyle and or just, you know, schedule and logistics, as much as anything else we picked a time.
+Central Europe time five o'clock in the afternoon on Sundays, which is eight in the morning on the West Coast. So occasionally we get some some Californians joining but it's pretty early on a Sunday.
+So it's, you know, there's a lot of logistical factors to take into consideration but but yeah that's about the size it's quite intimate.
+Nice.
+All right, we have another question from the audience could a could a family set up their own learning pod or lab.
+Yeah, absolutely. I mean that's how we've been designing it.
+The surprising thing for us is that we have found that actually the parents are
+The hardest people to get involved, and I could line up 100 interesting people to come and do
+stuff with the children, it's harder to get the parents involved, I don't know why.
+I thought every parent in the world wanted a cool international group of kids who would
+meet and get to know each other and learn about each other's culture and learn to collaborate
+together.
+That was my dream, but it's been difficult attracting more parents, so that's something I was really
+shocked by.
+That is surprising, you would think more of getting more of the guests would be more
+of a challenge than the actual parents, but as an example of an alternative, a good example
+of a surprise you've learned along this process, so for all the parents in the audience, I'm
+sure we will share out the Kiko Lab URL and they can get out and contact information,
+so they do want to join, they can reach out to you and hopefully, hey, don't give
+up the dream, Lauren, I think it will grow.
+Yeah, I don't know, maybe parents feel more competent or don't need a support network,
+but that's what I felt like I needed.
+I'd love to reach out to other parents and have them involved and be able to share
+tips and tricks and get our kids excited about learning again.
+We have really growing kind of bag of tricks or toolkit of resources and activities and
+we haven't had a chance to try a lot of them, but we're kind of growing the map of all
+these possibilities and actually what's more kind of fun and engaging and effective
+is having the kids lead really and just come up with ideas and they are, and they
+really are leading sometimes, they're really showing us things as well, including with the
+tech, of course, and this is a lot.
+And just one thing to add is that we actually recently started getting into metacognition
+for kids, kind of social thinking for kids and that's sort of the gateway to some of
+the other things that we're doing up here, not at Kiko Lab, which is like deep profiles
+and exploring alternative currencies and so forth, imagining like a currency for the
+Koo Laboratory and we have the great Michael Linton of Open Money in the mix and with
+some games that we try with the kids.
+For example, there's a lot more that we can be doing and we're just going to keep
+trying and as far as getting more people involved, doors open.
+Excellent.
+And I think what, and this for people may not be familiar with top of the head, how would
+you define a metacognition and then for the, and applying that, and then for kids too.
+Thinking about thinking.
+In other words, being aware of how you're thinking and, yeah, I guess the awareness
+of that.
+Excellent.
+That's an impressive thing for a kid to tackle, and be very helpful, especially
+at that young age, to then, you know, push their lives.
+Thanks to a friend, Scott Moreing, who's prepared some modules around this and we
+started the first one with him last week, which was around distinctions.
+And so, yeah, just to give a little teaser, that's what's coming.
+Nice.
+Yeah, definitely.
+We're teaching and learning systems, thinking with kids.
+Yeah, it's pretty cool.
+Yeah.
+And another thing, actually, that's really important that maybe we're going to run out
+of time, but it has to do with crap detection.
+Another phrase from Ernest Hemingway, that Howard Reingold uses a lot.
+And we've done at Kikoab and also Sister Circle Metacogs.
+There's a lot of discussion around crap detection and also recently with Howard
+around crap detection for kids and sort of particular privacy and security
+concerns that are just involved for everyone online, but in particular,
+in a special way with kids online.
+So just so you know, we're considering these dimensions a lot.
+Excellent.
+All right. And yeah, we've got about five minutes left here.
+So let's discuss point three.
+So I feel like we've already kind of discussed this,
+but point three is about solving problems.
+Co-learning, co-making, challenges to find motivated people
+and that good ideas don't sell themselves.
+We can't talk about the parents a little bit.
+So what kind of, yeah, want to expand
+on the solving problems that we've kind of
+already been discussing?
+Charles?
+Well, there's a real urgency.
+I mean, one of my launches is whatever works.
+And we know that the situation is messy.
+There's urgency.
+There's a lot of kind of unraveling of old ways
+and old systems.
+And so having awareness about this
+and then ultimately being able to turn that around
+into something positive.
+And actually, it's a chance for unlearning and unschooling
+in a lot of ways, not just for the kids.
+So in the broader scope of things,
+that's a good way.
+That's a handy way I can respond
+with a few minutes left here.
+Yeah, unlearning is, I mean,
+if I unlearnings find more important for the adults
+than the kids, the kids are still,
+yeah, they haven't gotten those bad habits yet.
+And...
+Actually, I would say that they learn
+those bad habits really quickly.
+Yeah, I think they're already kind of indoctrinated
+to behaving and not questioning authority.
+Seeking periodically, they're teaching us
+that even the bad habits sometimes back.
+It's a cyclical thing.
+Yeah, it's like, I don't know,
+it's like, you get surprises when it grows
+out of the soil in the garden sometimes, I guess.
+Yeah.
+You reap what you sow.
+There you go.
+There you go.
+Yeah.
+All right.
+Well, I think we have one more time.
+Time for, all right.
+Well, we got next, so we got on here
+the Peer Gadget Project Action Review.
+And so this is something we've done
+at the end of the first two podcasts.
+And we'd like to do this at the end of
+whenever we're kind of coming together in a meeting
+to learn something or to produce something,
+it's a way to, I guess it's a metacognition tool
+to think about what we're learning
+and to reflect on that.
+And there's five questions.
+And this time we're gonna change it up in reaction.
+We're not gonna do it during the podcast itself.
+We're gonna have a after party,
+which we encourage you to join,
+at meet.jit.c slash piragadjie.
+And it'll be right on right after this.
+So please check it out.
+And that's net.jit.si forward slash piragadjie.
+And we'd love to talk to the audience
+and hear from you and reflect on what we've learned here.
+As we, before we close out,
+any parting thoughts you want to share?
+Maybe we'll go first with Charles
+and then we'll finish with Lauren.
+I came up with a hashtag yesterday or today
+that the pandemic ate my homework
+and my class.
+That's kind of maybe that's not one hashtag, that's two.
+Pandemic ate my homework,
+a hashtag and my classroom too.
+I would just say that if there are any parents listening
+or people who know parents would be interested,
+we would be dying to talk to you and to meet you.
+And we would love for you to connect with us.
+Put the hashtag there.
+Yes, absolutely.
+And they will have the information will be on the,
+yeah, you can get links to the Kiko lab
+on the where you find the streams
+and just Google it and CICO LAB
+and research, Charles learn.
+Well, thank you to very much for joining.
+This has been a wonderful discussion
+and we really appreciate taking the time.
+And thank you, Joe.
+Thanks to you, Charlie.
+Thank you.
+Pleasure.
+You stepped in and fine for him.
+And Joe was behind the scenes tech directing.
+I just, it's really like learning how to make a podcast
+by making a podcast.
+Yeah, you got a big production happening.
+It's so, so periodical.
+It will be on all the major audio podcast apps as well.
+So, you know, Stitcher Spotify, SoundCloud, Apple, Google
+and then the recordings of the video livestream
+will be on YouTube and Facebook.
+So please check it out.
+Yay! Thank you! This is our Saturday night live stage scene. We'll see you over in Jitsi. Okay, peeragogy podcast over and out.
