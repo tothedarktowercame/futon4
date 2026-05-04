@@ -325,5 +325,51 @@ suitable for piping into evidence emission later."
                  (plist-get (car untyped) :source)
                  (plist-get (car untyped) :priority-rank))))))))
 
+;;; --------------------------------------------------------------------
+;;; Test — invariant-queue motion-flag must not lie about stack motion
+;;;
+;;; Bug found 2026-05-04: the stack-hud invariant-queue widget rendered
+;;; "STUCK   open: 0   closed: 0   canary fires: 11". The "STUCK" label
+;;; came from `stack-hud-widget--motion-flag', whose data path looks
+;;; only at pipeline-tracer-tagged open/closed evidence — neither of
+;;; which has been emitted in the window. But the same widget surfaces
+;;; 11 canary fires alongside, demonstrating clearly that the system
+;;; *is* moving by another tracked signal. The flag was over-narrow.
+;;;
+;;; Joe's read: "I have seen that before and it's just inaccurate
+;;; b/c the Invariant Queue *is moving*."
+;;;
+;;; The structural fix: motion-flag must consider all motion signals
+;;; the widget already reports, not just pipeline-tracer open/closed.
+;;; This test asserts the operator-meaningful invariant:
+;;;
+;;;   if the widget reports any nonzero motion signal (closed-count or
+;;;   canary-total > 0), motion-flag must not be STUCK.
+
+(arxana-dramaturge-deftest invariant-queue-flag-honesty
+  "Invariant-queue motion-flag must not say STUCK when any tracked
+   motion signal in the same widget is nonzero. STUCK is reserved for
+   genuine no-motion (closed=0 AND canary=0)."
+  (cond
+   ((not (fboundp 'stack-hud-widget--invariant-queue-data))
+    (arxana-dramaturge--push-fail :widget-fn-missing
+                                  "stack-hud-widget--invariant-queue-data not loaded."))
+   ((not (fboundp 'stack-hud-widget--motion-flag))
+    (arxana-dramaturge--push-fail :flag-fn-missing
+                                  "stack-hud-widget--motion-flag not loaded."))
+   (t
+    (let* ((data (stack-hud-widget--invariant-queue-data))
+           (open-count (length (plist-get data :open)))
+           (closed-count (or (plist-get data :closed-count) 0))
+           (canary-total (or (plist-get data :canary-total) 0))
+           (flag-raw (stack-hud-widget--motion-flag open-count closed-count canary-total))
+           (flag (substring-no-properties flag-raw))
+           (any-motion? (or (> closed-count 0) (> canary-total 0))))
+      (when (and any-motion? (string= flag "STUCK"))
+        (arxana-dramaturge--push-fail
+         :motion-flag-lies
+         (format "Widget says STUCK but reports motion: closed=%d canary=%d open=%d"
+                 closed-count canary-total open-count)))))))
+
 (provide 'arxana-dramaturge)
 ;;; arxana-dramaturge.el ends here
