@@ -371,5 +371,113 @@ suitable for piping into evidence emission later."
          (format "Widget says STUCK but reports motion: closed=%d canary=%d open=%d"
                  closed-count canary-total open-count)))))))
 
+;;; --------------------------------------------------------------------
+;;; Test — HUD invariant-queue widget honestly tracks tracer state
+;;;
+;;; When a pipeline-tracer event gets instantiated (open) and later
+;;; closed, the widget's data plist must reflect the transition:
+;;; OPEN-only → MOVING/PULSING; OPEN+CLOSED for same track-id → CLOSED
+;;; (track filtered out of `:open`, counted in `:closed-count`).
+;;;
+;;; Done with synthetic fixtures by `cl-letf`-shadowing
+;;; `stack-hud-widget--fetch-coordination' — keeps the live evidence
+;;; store untouched, exercises the downstream computation purely.
+;;;
+;;; Locks in three transitions in one test:
+;;;   T1  open A only                       →  PULSING (closed=0, canary>0)
+;;;   T2  open A + closed A (same id)       →  FLOWING (open list empty, closed=1)
+;;;   T3  open A + closed A + open B + open C  →  MOVING (open=2 > closed=1)
+
+(defun arxana-dramaturge--mock-coord-entry (tags body &optional event)
+  "Build a synthetic coordination evidence entry shaped like
+`stack-hud-widget--fetch-coordination' would return: a plist with
+`:evidence/tags', `:evidence/at', `:evidence/body'."
+  (list :evidence/at (format-time-string "%Y-%m-%dT%H:%M:%SZ" nil t)
+        :evidence/tags tags
+        :evidence/body (cond
+                        (event (append body (list :event event)))
+                        (t body))))
+
+(arxana-dramaturge-deftest invariant-queue-tracer-state-transitions
+  "Pipeline-tracer instantiation transitions are honestly reflected in
+   the HUD invariant-queue widget's data plist. Three transitions are
+   asserted via cl-letf-shadowed synthetic fixtures."
+  (cond
+   ((not (fboundp 'stack-hud-widget--invariant-queue-data))
+    (arxana-dramaturge--push-fail :widget-fn-missing
+                                  "stack-hud-widget--invariant-queue-data not loaded."))
+   (t
+    (let* ((open-only
+            (list
+             (arxana-dramaturge--mock-coord-entry
+              '("pipeline-tracer" "open")
+              '(:track-id "track-test-A" :title "Test A" :target-date "2026-05-10"))
+             (arxana-dramaturge--mock-coord-entry
+              '("family-canary")
+              '(:family-id "evidence-per-turn" :outcome "ok")
+              "family-fired")))
+           (open-and-closed
+            (cons (arxana-dramaturge--mock-coord-entry
+                   '("pipeline-tracer" "closed")
+                   '(:track-id "track-test-A"))
+                  open-only))
+           (open-two-closed-one
+            (append
+             (list
+              (arxana-dramaturge--mock-coord-entry
+               '("pipeline-tracer" "open")
+               '(:track-id "track-test-B" :title "Test B" :target-date "2026-05-12"))
+              (arxana-dramaturge--mock-coord-entry
+               '("pipeline-tracer" "open")
+               '(:track-id "track-test-C" :title "Test C" :target-date "2026-05-14")))
+             open-and-closed)))
+      ;; T1: open=1, closed=0, canary=1 → PULSING
+      (cl-letf (((symbol-function 'stack-hud-widget--fetch-coordination)
+                 (lambda (&rest _) open-only)))
+        (let* ((data (stack-hud-widget--invariant-queue-data))
+               (open (plist-get data :open))
+               (closed (plist-get data :closed-count))
+               (canary (plist-get data :canary-total))
+               (flag (substring-no-properties
+                      (stack-hud-widget--motion-flag (length open) closed canary))))
+          (arxana-dramaturge-assert-equal (length open) 1
+            "T1 open count = 1")
+          (arxana-dramaturge-assert-equal closed 0
+            "T1 closed-count = 0")
+          (arxana-dramaturge-assert-equal canary 1
+            "T1 canary-total = 1")
+          (arxana-dramaturge-assert-equal flag "PULSING"
+            "T1 flag = PULSING (closed=0 with canary>0)")))
+      ;; T2: same track closed → open list empty, closed-count=1 → FLOWING
+      (cl-letf (((symbol-function 'stack-hud-widget--fetch-coordination)
+                 (lambda (&rest _) open-and-closed)))
+        (let* ((data (stack-hud-widget--invariant-queue-data))
+               (open (plist-get data :open))
+               (closed (plist-get data :closed-count))
+               (canary (plist-get data :canary-total))
+               (flag (substring-no-properties
+                      (stack-hud-widget--motion-flag (length open) closed canary))))
+          (arxana-dramaturge-assert-equal (length open) 0
+            "T2 open list empty (track-test-A filtered by closed counterpart)")
+          (arxana-dramaturge-assert-equal closed 1
+            "T2 closed-count = 1")
+          (arxana-dramaturge-assert-equal flag "FLOWING"
+            "T2 flag = FLOWING (closed >= open)")))
+      ;; T3: second open without closed → MOVING
+      (cl-letf (((symbol-function 'stack-hud-widget--fetch-coordination)
+                 (lambda (&rest _) open-two-closed-one)))
+        (let* ((data (stack-hud-widget--invariant-queue-data))
+               (open (plist-get data :open))
+               (closed (plist-get data :closed-count))
+               (canary (plist-get data :canary-total))
+               (flag (substring-no-properties
+                      (stack-hud-widget--motion-flag (length open) closed canary))))
+          (arxana-dramaturge-assert-equal (length open) 2
+            "T3 open list = 2 (track-test-B + track-test-C; track-test-A filtered)")
+          (arxana-dramaturge-assert-equal closed 1
+            "T3 closed-count = 1")
+          (arxana-dramaturge-assert-equal flag "MOVING"
+            "T3 flag = MOVING (closed < open)")))))))
+
 (provide 'arxana-dramaturge)
 ;;; arxana-dramaturge.el ends here
