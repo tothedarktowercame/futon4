@@ -1,0 +1,241 @@
+#+TITLE: M-bounded-in-flight-state — metabolic-balance/working-tree
+
+:PROPERTIES:
+:DOC_ID: futon3x-mbi05031b8c
+:ENTRY_ID: futon3x-mbi05031b8c::org
+:VERSION: org
+:OUTLINE_PATH: Invariants / metabolic-balance / working-tree
+:PATH_STRING: Invariants / metabolic-balance / working-tree
+:REPLACES:
+:END:
+
+* Context
+
+The futon stack's invariant skeleton has nine static-binding cognitive
+faculties (single-boundary, evidence-per-turn, coverage-ratchet,
+family-canary, subsumption-witness, bounded-disposition, single-locus,
+reachable-from-boot, state-snapshot-witness). All nine fire as
+ok/violation. None of them tracks a *graduated drive* — a continuous
+felt-pressure that rises with accumulated unfinished work and dissipates
+when the work is closed.
+
+The 2026-05-02 sweep made the gap concrete: 14 repos, 8 dirty
+simultaneously, 40 commits required to clear the backlog. Without an
+apparatus that tracks accumulating drain across the substrate, the
+operator notices the mess only when it has compounded past the point
+of easy resolution.
+
+M-bounded-in-flight-state introduces ~metabolic-balance~ as the 10th
+cognitive-faculty shape, with ~metabolic-balance/working-tree~ as the
+first operational sibling.
+
+* What was built
+
+** New code (futon3c)
+
+| Namespace                                       | Purpose                                                            |
+|-------------------------------------------------+--------------------------------------------------------------------|
+| ~futon3c.logic.metabolic-balance~               | Pressure function + check-fn factory + on-load wrapper             |
+| ~futon3c.logic.disposition-edn~                 | ~.futon-disposition.edn~ parser with ~:review-by~ self-decay       |
+| ~futon3c.logic.disposition-derive~              | Derive disposition state from active mission references (no LLM)  |
+| ~futon3c.logic.mana-session~                    | Read-side HTTP binding to nonstarter ~/api/mana~ + ~/api/pool~     |
+| ~futon3c.logic.operational-readiness~           | Diagnostic: fresh-fire each registered family-check-fn             |
+
+** New surfaces (futon0)
+
+| Path                                  | Purpose                                                       |
+|---------------------------------------+---------------------------------------------------------------|
+| ~scripts/mana-snapshot.bb~            | Lightweight HUD-feed snapshot. Walks the 14-repo manifest;    |
+|                                       | emits per-repo drain + per-session AIF-head data + pool stats |
+| ~contrib/mana-hud.el~                 | HUD widget; reads the snapshot JSON, renders one line         |
+| ~emacs/mana-modeline.el~              | Per-buffer modeline lighter; reads buffer-local session-id    |
+|                                       | (claude-repl/codex-repl), polls nonstarter for balance        |
+
+** Three new patterns (futon3/library/)
+
+| Pattern                                                          | Role                                            |
+|------------------------------------------------------------------+-------------------------------------------------|
+| ~structure/block-as-futonic-revolution.flexiarg~                 | A block IS one revolution of the futonic loop  |
+| ~structure/mana-allostasis.flexiarg~                             | Dissonance is the precursor to resolution       |
+| ~invariant-coherence/drain-channel-shape.flexiarg~               | Drain channels are voices in one harmonic structure |
+
+Plus two cross-mission flexiargs:
+~p4ng/agent-as-mana-unit-was-the-wrong-unit~ (precursor note),
+~budgeted-action-selection/mana-gated-work~ (formalises run-064).
+
+** Inventory entry
+
+~docs/structural-law-inventory.sexp~ gains a new family
+~metabolic-balance~ (status: ~:candidate~) with one invariant
+~metabolic-balance/working-tree~ (status: ~:operational-when-enabled~).
+
+** Wiring
+
+~dev/futon3c/dev/bootstrap.clj~ now calls
+~check-working-tree-pressure-on-load!~ at boot and
+~register-metabolic-balance-taps!~ for the probe-tap registry. Both
+calls go through ~requiring-resolve~ to avoid namespace-level
+coupling with operator WIP in the bootstrap file.
+
+* How to use it
+
+** Reading current state
+
+Run the snapshot script:
+
+#+BEGIN_SRC bash
+bb /home/joe/code/futon0/scripts/mana-snapshot.bb
+#+END_SRC
+
+Output:
+- ~/home/joe/code/storage/futon0/mana-snapshot.json~ — JSON with
+  ~:per-repo~ (drain per repo), ~:max-tier~, ~:max-pressure~,
+  ~:sessions~ (per-session AIF-head data with phase + balance), ~:pool~.
+
+** HUD widget
+
+Load ~mana-hud.el~ and call ~M-x mana-hud-show~ to echo the
+single-line summary in the minibuffer:
+
+: ◔ drain advisory P=1.68 / 14 repos
+
+The widget can also be embedded in ~stack-hud.el~ via ~(mana-hud-render)~.
+
+** Modeline lighter
+
+#+BEGIN_SRC elisp
+(require 'mana-modeline)
+(mana-modeline-mode 1)
+#+END_SRC
+
+The lighter renders only in buffers that carry a session-id (claude-repl /
+codex-repl buffers do; other buffers render empty). Polls nonstarter every
+30 seconds in the background. Modeline render itself never blocks.
+
+** Boot-time invariant fire
+
+Restart ~./scripts/dev-laptop-env~. Boot output gains:
+
+: [metabolic-balance] working-tree load-time check: OK (max-tier=advisory P=1.68)
+: [dev] registered metabolic-balance probe-taps (1 family-id)
+
+** Operational readiness
+
+From a Drawbridge nREPL:
+
+#+BEGIN_SRC clojure
+(require '[futon3c.logic.operational-readiness :as op-rd])
+(op-rd/snapshot)                                ; full table
+(op-rd/ready? :metabolic-balance/working-tree)  ; bool
+(op-rd/enabled-but-not-firing-cleanly)          ; violators list
+#+END_SRC
+
+** Disposition opt-out
+
+Two paths:
+
+1. Author a per-repo ~.futon-disposition.edn~ (schema in
+   ~futon3c.logic.disposition-edn~):
+
+   #+BEGIN_SRC edn
+   {:in-progress
+    {"src/foo.clj" {:reasoning "long refactor in progress"
+                    :since "2026-05-03"
+                    :review-by "2026-05-31"}}
+    :decided-at "2026-05-03T..."}
+   #+END_SRC
+
+2. Reference the path from an active mission's body. The
+   ~disposition-derive~ namespace walks
+   ~holes/missions/M-*.md~ each fire and treats paths under
+   non-terminal-status missions as ~:in-progress~ automatically.
+   No file required.
+
+* How it connects to prior work
+
+** Cognitive-faculty skeleton (M-the-futon-stack)
+
+Tenth shape; updates §"What invariantly exists today" to declare
+metabolic-balance and reread bounded-disposition siblings as
+single-tier instances of the same faculty (per ~drain-channel-shape~).
+
+** M-aif-head (futon2)
+
+Each operator session is its own AIF head — a peripheral in the sense
+M-aif-head specifies. War Machine integrates these heads. M-aif-head
+itself is not re-opened (it is COMPLETE 2026-03-15); the session-as-
+AIF-head extension lives in M-bounded-in-flight-state.
+
+** M-war-machine (futon3c)
+
+Receives an integration note tying M-aif-head + M-bounded-in-flight-state
++ M-war-machine. The cljs War Machine view that consumes the
+~:sessions~ shape from the snapshot is the cljs-iteration step (Joe:
+"interactive, not one-shot") — explicitly out of scope for this mission.
+
+** M-live-geometric-stack
+
+Prerequisite-for. M-live-geometric-stack's substrate semantics presume
+a substrate where transactions complete in bounded time; without
+metabolic-balance's drain-channel surveillance, Δ and drift readings
+over the manifold would be corrupted by half-finished transactions.
+
+** M-bounded-disposition / M-single-locus / M-reachable-from-boot
+
+Same faculty (metabolic-balance) at slower cadences. The harmolodic
+reread (per ~drain-channel-shape~) preserves their existing operational
+implementations unchanged while making the cross-channel diagnosis
+possible: ~(operational-readiness/snapshot)~ surfaces all of them in
+one table.
+
+** futon5 nonstarter (~scripts/nonstarter_mana.clj~)
+
+Read-side binding via ~/api/mana~ and ~/api/pool~. Sessions are
+already the mana-bearing unit in production code (the ~--session~
+parameter on ~sospeso~). M-bounded-in-flight-state formalises this
+unit choice at the spec level (per ARGUE-3 amendment in V-6).
+
+** futon5a queue (~run-064~ vs ~run-068~)
+
+run-064-budgeted-action-selection--mana-gated-work documents the
+candidate that this mission's ~budgeted-action-selection/mana-gated-work~
+flexiarg formalises. run-068-commit-as-you-go--working-tree-commit-pressure
+is this mission's research-phase queue entry.
+
+* Known follow-ups
+
+The mission's DOCUMENT phase walks 20 QA items individually
+(Q-01..Q-20 in the mission body). The substantial ones:
+
+- *Q-15* :: Cross-mission back-references — M-the-futon-stack done;
+  M-live-geometric-stack, M-single-entry-point, M-aif-head pending.
+- *Q-19* :: Feature registry gap — M-the-futon-stack should produce a
+  feature registry better than fallible memory; this mission surfaces
+  the need.
+- *cljs War Machine view* :: deferred per Joe's "interactive, not
+  one-shot" call. The data shape is here; the visual integration
+  follows whenever the operator next iterates the War Machine UI.
+
+* Tests
+
+| Namespace                                  | Tests | Assertions |
+|--------------------------------------------+-------+------------|
+| ~metabolic-balance-test~                   |    10 |         28 |
+| ~disposition-edn-test~                     |     8 |         16 |
+| ~mana-session-test~                        |    10 |         23 |
+| ~disposition-derive-test~                  |     5 |          9 |
+| ~operational-readiness-test~               |     5 |         11 |
+| *Total*                                    | *38*  |       *87* |
+
+V-1 calibration anchors verified numerically:
+~futon6 pre-cleanup~ (507 paths, 98 MB, 85d) → P ≈ 25.35 (stop-the-line);
+~post-cleanup~ → P ≈ 0.15 (silent). Tier discrimination correct at the
+empirical extremes.
+
+* Mission cross-references
+
+- ~futon3c/holes/missions/M-bounded-in-flight-state.md~ — primary mission text.
+- ~futon3c/holes/labs/M-bounded-in-flight-state/~ — lab dir (placeholder; founding research artefact at ~M-commit-as-you-go/~).
+- ~futon3c/holes/labs/M-commit-as-you-go/cleanup-2026-05-03-futon6-data-leak.md~ — empirical research artefact, 40 commits / 18 findings.
+
+This entry is the docbook fascia covering all three.
