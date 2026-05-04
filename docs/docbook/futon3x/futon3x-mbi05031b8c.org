@@ -225,7 +225,7 @@ The mission's DOCUMENT phase walks 20 QA items individually
 | ~mana-session-test~                        |    10 |         23 |
 | ~disposition-derive-test~                  |     5 |          9 |
 | ~operational-readiness-test~               |     5 |         11 |
-| *Total*                                    | *38*  |       *87* |
+| *Total*                                    | *38*  |       *91* |
 
 V-1 calibration anchors verified numerically:
 ~futon6 pre-cleanup~ (507 paths, 98 MB, 85d) → P ≈ 25.35 (stop-the-line);
