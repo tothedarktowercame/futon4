@@ -1473,9 +1473,17 @@ opposite convention from rank). Used only for the displayed P column."
          ;; meaningful (days-to-target for pipeline-tracers, mid-range
          ;; for deferred-stubs), so tracers intersperse with regular
          ;; lane peers rather than bunching at top or bottom.
+         ;;
+         ;; Stamp `:type 'candidate-invariant-entry'` so the row-open
+         ;; dispatcher in arxana-browser-core.el (case on :type) routes
+         ;; to the candidate-invariant detail view rather than silently
+         ;; no-op'ing. Without this, opening any tracer row was a no-op
+         ;; — caught 2026-05-04 by arxana-dramaturge test
+         ;; `candidate-invariants-items-have-type'.
          (tracer-items (mapcar (lambda (item)
                                  (append (copy-sequence item)
-                                         (list :lane-rank
+                                         (list :type 'candidate-invariant-entry
+                                               :lane-rank
                                                (arxana-browser--candidate-lane-rank
                                                 (plist-get item :lane))
                                                :priority-rank

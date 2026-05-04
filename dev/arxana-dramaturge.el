@@ -284,5 +284,46 @@ suitable for piping into evidence emission later."
               (arxana-dramaturge-assert-equal view-match-count truth-count
                 (format "session %s entry-count agrees with aggregator" sid))))))))))
 
+;;; --------------------------------------------------------------------
+;;; Test — candidate-invariants items have dispatchable :type
+;;;
+;;; Bug found 2026-05-04: opening the first item (priority-rank -2) in
+;;; arxana://view/candidate-invariants was silently a no-op, while
+;;; opening the priority-6 item worked. Cause: tracer items
+;;; (pre-built in `arxana-browser--invariant-queue-tracer-items') have
+;;; no `:type' keyword, so the row-open dispatcher in
+;;; arxana-browser-core.el (case-by-:type) silently fell through.
+;;;
+;;; This test asserts every non-info item in the view has a non-nil
+;;; `:type' — sufficient to catch the bug at test-run time instead of
+;;; the operator noticing it by hand.
+
+(arxana-dramaturge-deftest candidate-invariants-items-have-type
+  "Every non-info item in candidate-invariants has a dispatchable :type.
+   The view's row-open dispatcher (arxana-browser-core, case on
+   `:type`) silently no-ops on items missing :type. Tracer items
+   were the case in point 2026-05-04."
+  (cond
+   ((not (fboundp 'arxana-browser--candidate-invariants-items))
+    (arxana-dramaturge--push-fail :view-fn-missing
+                                  "arxana-browser--candidate-invariants-items not defined."))
+   (t
+    (let* ((items (arxana-browser--candidate-invariants-items))
+           (entries (cl-remove-if (lambda (i) (eq (plist-get i :type) 'info))
+                                  items))
+           (untyped (cl-remove-if (lambda (i) (plist-get i :type)) entries)))
+      (arxana-dramaturge-assert-true (> (length entries) 0)
+        "candidate-invariants returns at least one entry")
+      (arxana-dramaturge-assert-equal (length untyped) 0
+        (format "every entry has :type (found %d untyped of %d total)"
+                (length untyped) (length entries)))
+      (when untyped
+        (arxana-dramaturge--push-fail
+         :sample-untyped
+         (format "first untyped item: invariant=%S source=%S priority-rank=%S"
+                 (plist-get (car untyped) :invariant)
+                 (plist-get (car untyped) :source)
+                 (plist-get (car untyped) :priority-rank))))))))
+
 (provide 'arxana-dramaturge)
 ;;; arxana-dramaturge.el ends here
