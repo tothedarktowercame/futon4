@@ -1491,7 +1491,19 @@ opposite convention from rank). Used only for the displayed P column."
                                                :priority-score
                                                (arxana-browser--tracer-priority-score item))))
                                arxana-browser--invariant-queue-tracer-items))
-         (items (append tracer-items regular-items)))
+         (items (append tracer-items regular-items))
+         ;; Enrich with :last-fire-at / :last-violation-at /
+         ;; :inactive-since from `:family-fired' evidence, joined on
+         ;; the item's `:family' string against the family-fired
+         ;; family-id root (track-4-3-arxana-view-columns).
+         (fire-by-root (arxana-browser--family-fired-summary))
+         (items (if fire-by-root
+                    (mapcar (lambda (i)
+                              (let* ((fam (plist-get i :family))
+                                     (summary (and fam (gethash fam fire-by-root))))
+                                (if summary (append i summary) i)))
+                            items)
+                  items)))
     (if items
         (arxana-browser--candidate-section-items items)
       (list (list :type 'info
@@ -1506,6 +1518,9 @@ opposite convention from rank). Used only for the displayed P column."
    ("Lane" 15 t)
    ("Layer" 6 t)
    ("Family" 24 t)
+   ("LastFire" 12 t)
+   ("LastViol" 12 t)
+   ("Inactive" 12 t)
    ("Source" 14 t)
    ("Note" 0 nil)])
 
@@ -1516,6 +1531,9 @@ they stand out against regular candidates."
   (if (eq (plist-get item :type) 'info)
       (vector
        (or (plist-get item :label) "")
+       ""
+       ""
+       ""
        ""
        ""
        ""
@@ -1543,6 +1561,11 @@ they stand out against regular candidates."
                        14))
        (funcall paint (or (plist-get item :layer) "?"))
        (funcall paint (arxana-lab--truncate (or (plist-get item :family) "") 23))
+       (arxana-browser--format-iso-compact (plist-get item :last-fire-at))
+       (let ((lv (plist-get item :last-violation-at)))
+         (propertize (arxana-browser--format-iso-compact lv)
+                     'face (if lv 'arxana-violation-needs-review-face 'default)))
+       (arxana-browser--format-iso-compact (plist-get item :inactive-since))
        (funcall paint (arxana-lab--truncate (or (plist-get item :source) "") 13))
        (funcall paint (arxana-lab--truncate (or (plist-get item :note) "") 90))))))
 
@@ -1677,14 +1700,92 @@ Finds each {:id :F-... block and extracts fields individually."
             ":operational-but-bypassable"
             ":operational-when-enabled")))
 
+(defun arxana-browser--family-fired-summary ()
+  "Build a hash: family-root (string, no leading colon, no \"/\" suffix)
+→ plist {:last-fire-at :last-violation-at :inactive-since}, computed
+from recent `:family-fired' coordination evidence. Returns nil on
+fetch failure (callers should treat that as \"no data\")."
+  (condition-case _
+      (let* ((entries (arxana-evidence--fetch-evidence
+                       '((type . "coordination") (limit . "10000"))))
+             (by-root (make-hash-table :test 'equal)))
+        (dolist (e entries)
+          (let* ((body (plist-get e :evidence/body))
+                 (event (and body (plist-get body :event)))
+                 (fid (and body (plist-get body :family-id)))
+                 (outcome (and body (plist-get body :outcome)))
+                 (at (plist-get e :evidence/at)))
+            (when (and (or (eq event :family-fired)
+                           (equal event "family-fired")
+                           (and (stringp event) (string-suffix-p "family-fired" event)))
+                       fid at)
+              (let* ((fid-name (cond
+                                ((keywordp fid) (substring (symbol-name fid) 1))
+                                ((symbolp fid) (symbol-name fid))
+                                ((stringp fid) (if (string-prefix-p ":" fid)
+                                                   (substring fid 1) fid))
+                                (t (format "%s" fid))))
+                     (root (if (string-match "/" fid-name)
+                               (substring fid-name 0 (match-beginning 0))
+                             fid-name))
+                     (existing (gethash root by-root))
+                     (outcome-name (cond
+                                    ((keywordp outcome) (substring (symbol-name outcome) 1))
+                                    ((symbolp outcome) (symbol-name outcome))
+                                    ((stringp outcome) outcome)
+                                    (t (format "%s" outcome))))
+                     (lf (plist-get existing :last-fire-at))
+                     (lv (plist-get existing :last-violation-at))
+                     (is (plist-get existing :inactive-since)))
+                (puthash root
+                         (list :last-fire-at (if (or (null lf) (string< lf at)) at lf)
+                               :last-violation-at
+                               (if (and (equal outcome-name "violation")
+                                        (or (null lv) (string< lv at)))
+                                   at lv)
+                               :inactive-since
+                               (if (and (equal outcome-name "inactive")
+                                        (or (null is) (string< is at)))
+                                   at is))
+                         by-root)))))
+        by-root)
+    (error nil)))
+
+(defun arxana-browser--family-root-for-f-id (f-id)
+  "Map a F-id like \":F-archaeology-control\" to the family-fired
+root \"archaeology-control\" used in `:family-id' keywords."
+  (when (and f-id (stringp f-id))
+    (replace-regexp-in-string "^:F-" "" f-id)))
+
+(defun arxana-browser--format-iso-compact (iso)
+  "Format ISO timestamp as \"MM-DD HH:MM\"; \"—\" when nil/blank."
+  (cond
+   ((or (null iso) (and (stringp iso) (string-empty-p iso))) "—")
+   ((and (stringp iso) (>= (length iso) 16))
+    (concat (substring iso 5 10) " " (substring iso 11 16)))
+   (t "—")))
+
 (defun arxana-browser--operational-families-items ()
   "Return items for the operational families view.
 Reads from futon-stack-invariant-model.edn and shows all families
-grouped by layer with header rows."
+grouped by layer with header rows. Enriches each item with
+`:last-fire-at', `:last-violation-at', `:inactive-since' derived from
+recent `:family-fired' evidence (track-4-3-arxana-view-columns)."
   (let* ((model (arxana-browser--read-invariant-model))
          (families (and model
                         (seq-filter #'arxana-browser--live-invariant-family-p
-                                    (arxana-browser--edn-extract-families model)))))
+                                    (arxana-browser--edn-extract-families model))))
+         (fire-by-root (arxana-browser--family-fired-summary)))
+    (when fire-by-root
+      (setq families
+            (mapcar (lambda (fam)
+                      (let* ((root (arxana-browser--family-root-for-f-id
+                                    (plist-get fam :id)))
+                             (summary (and root (gethash root fire-by-root))))
+                        (if summary
+                            (append fam summary)
+                          fam)))
+                    families)))
     (if families
         ;; Group by layer, insert layer headers
         (let ((sorted (sort (copy-sequence families)
@@ -1719,6 +1820,9 @@ grouped by layer with header rows."
    ("Status" 12 t)
    ("Repos" 10 t)
    ("Checks" 6 t)
+   ("LastFire" 12 t)
+   ("LastViol" 12 t)
+   ("Inactive" 12 t)
    ("Question" 0 nil)])
 
 (defun arxana-browser--operational-families-row (item)
@@ -1741,6 +1845,11 @@ grouped by layer with header rows."
       9)
      (let ((n (plist-get item :invariant-count)))
        (if (and n (> n 0)) (number-to-string n) "-"))
+     (arxana-browser--format-iso-compact (plist-get item :last-fire-at))
+     (let ((lv (plist-get item :last-violation-at)))
+       (propertize (arxana-browser--format-iso-compact lv)
+                   'face (if lv 'arxana-violation-needs-review-face 'default)))
+     (arxana-browser--format-iso-compact (plist-get item :inactive-since))
      (arxana-lab--truncate (or (plist-get item :question) "") 80))))
 
 (defun arxana-browser-operational-family-location (item)

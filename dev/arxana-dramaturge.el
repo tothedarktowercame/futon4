@@ -479,5 +479,50 @@ suitable for piping into evidence emission later."
           (arxana-dramaturge-assert-equal flag "MOVING"
             "T3 flag = MOVING (closed < open)")))))))
 
+;;; --------------------------------------------------------------------
+;;; Test — candidate-invariants renders family-fired columns
+;;;
+;;; track-4-3-arxana-view-columns: the candidate-invariants view should
+;;; expose `:last-fire-at' / `:last-violation-at' / `:inactive-since'
+;;; columns populated from `:family-fired' coordination evidence,
+;;; joined on the item's `:family' string.
+;;;
+;;; This test asserts the wiring at three points:
+;;;  - the format vector includes the three column headers,
+;;;  - the row builder produces rows of the matching length, and
+;;;  - at least one candidate-invariants item has a :last-fire-at
+;;;    populated from real evidence (proves end-to-end fetch + join).
+
+(arxana-dramaturge-deftest candidate-invariants-fire-columns
+  "Candidate-invariants view exposes LastFire/LastViol/Inactive columns
+   sourced from family-fired evidence, with at least one row populated."
+  (let* ((fmt (arxana-browser--candidate-invariants-format))
+         (headers (mapcar (lambda (col)
+                            (cond
+                             ((vectorp col) (aref col 0))
+                             ((consp col) (car col))
+                             (t col)))
+                          (append fmt nil)))
+         (items (arxana-browser--candidate-invariants-items))
+         (entries (cl-remove-if (lambda (i) (eq (plist-get i :type) 'info))
+                                items))
+         (with-fire (cl-remove-if-not
+                     (lambda (i) (plist-get i :last-fire-at))
+                     entries))
+         (sample (and entries (car entries)))
+         (row (and sample (arxana-browser--candidate-invariants-row sample))))
+    (arxana-dramaturge-assert-true (member "LastFire" headers)
+      "format includes LastFire column")
+    (arxana-dramaturge-assert-true (member "LastViol" headers)
+      "format includes LastViol column")
+    (arxana-dramaturge-assert-true (member "Inactive" headers)
+      "format includes Inactive column")
+    (when (and row fmt)
+      (arxana-dramaturge-assert-equal (length row) (length fmt)
+        "row vector length matches format column count"))
+    (arxana-dramaturge-assert-true (> (length with-fire) 0)
+      (format "at least one candidate-invariants item has :last-fire-at populated (got %d of %d entries)"
+              (length with-fire) (length entries)))))
+
 (provide 'arxana-dramaturge)
 ;;; arxana-dramaturge.el ends here
