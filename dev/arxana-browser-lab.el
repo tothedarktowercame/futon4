@@ -2226,48 +2226,58 @@ Applies `arxana-browser--evidence-filter' when set."
             (arxana-lab--truncate latest 19))))
 
 (defun arxana-browser--evidence-sessions-items ()
-  "Fetch evidence and group by session-id."
+  "Fetch session summaries from futon1a's aggregator endpoint.
+
+GET /api/alpha/evidence/sessions returns pre-aggregated per-session
+summaries directly from XTDB; replaces the prior client-side
+group-by-of-recent-N pattern (which capped at 500 entries and silently
+truncated session counts and missed older sessions entirely).
+
+Server (futon1a/src/futon1a/http/app.clj, added 2026-05-04) returns:
+  {:sessions [{:session-id :count :types :authors
+               :first-at :latest-at} ...]
+   :total-sessions N :total-entries M}"
   (condition-case err
-      (let* ((response (arxana-browser--evidence-fetch
-                        (list (cons "limit" "500"))))
-             (entries (or (plist-get response :entries) '()))
-             (groups (make-hash-table :test 'equal)))
-        ;; Group entries by session-id
-        (dolist (e entries)
-          (let* ((sid (or (plist-get e :evidence/session-id) "(no session)"))
-                 (existing (gethash sid groups)))
-            (puthash sid (cons e existing) groups)))
-        ;; Build session summary items
-        (let ((items '()))
-          (maphash
-           (lambda (sid group-entries)
-             (let* ((count (length group-entries))
-                    (types (seq-uniq (mapcar (lambda (e)
-                                              (format "%s" (or (plist-get e :evidence/type) "?")))
-                                            group-entries)))
-                    (latest (car (seq-sort (lambda (a b)
-                                            (string> (or (plist-get a :evidence/at) "")
-                                                     (or (plist-get b :evidence/at) "")))
-                                          group-entries))))
-               (push (list :type 'evidence-session
-                           :session-id sid
-                           :entry-count count
-                           :type-summary (mapconcat #'identity types ", ")
-                           :latest-at (or (plist-get latest :evidence/at) ""))
-                     items)))
-           groups)
-          (if items
-              (seq-sort (lambda (a b)
-                          (string> (or (plist-get a :latest-at) "")
-                                   (or (plist-get b :latest-at) "")))
-                        items)
-            (list (list :type 'info
-                        :label "No evidence sessions"
-                        :description "No session-tagged evidence found")))))
+      (let* ((url-request-method "GET")
+             (url-request-extra-headers '(("Accept" . "application/json")))
+             (base (string-remove-suffix "/" arxana-lab-futon1-server))
+             (url (concat base "/evidence/sessions"))
+             (buffer (url-retrieve-synchronously
+                      url t t arxana-lab-sessions-request-timeout))
+             (payload (when buffer
+                        (with-current-buffer buffer
+                          (goto-char (point-min))
+                          (re-search-forward "\n\n" nil 'move)
+                          (let ((body (buffer-substring-no-properties
+                                       (point) (point-max))))
+                            (kill-buffer buffer)
+                            (arxana-lab--parse-json body)))))
+             (sessions (plist-get payload :sessions)))
+        (if (and sessions (> (length sessions) 0))
+            (mapcar (lambda (s)
+                      (let ((types (or (plist-get s :types) '()))
+                            (authors (or (plist-get s :authors) '())))
+                        (list :type 'evidence-session
+                              :session-id (or (plist-get s :session-id) "(no session)")
+                              :entry-count (or (plist-get s :count) 0)
+                              :type-summary
+                              (mapconcat (lambda (s)
+                                           (replace-regexp-in-string "^:" "" s))
+                                         types ", ")
+                              :authors (mapconcat #'identity authors ", ")
+                              :first-at (or (plist-get s :first-at) "")
+                              :latest-at (or (plist-get s :latest-at) ""))))
+                    sessions)
+          (list (list :type 'info
+                      :label "No evidence sessions"
+                      :description (format "Server returned %d sessions / %d entries total"
+                                           (or (plist-get payload :total-sessions) 0)
+                                           (or (plist-get payload :total-entries) 0))))))
     (error
      (list (list :type 'info
-                 :label "Failed to fetch evidence"
-                 :description (format "Error: %s" (error-message-string err)))))))
+                 :label "Failed to fetch session aggregator"
+                 :description (format "Error: %s — endpoint: GET /api/alpha/evidence/sessions"
+                                      (error-message-string err)))))))
 
 ;; -- Evidence visit actions --
 
