@@ -5,8 +5,16 @@
 ;; Users stored as a simple EDN file alongside the server.
 ;; Format: {"username" "<bcrypt-hash>"}
 ;; Generate a hash:  (buddy.hashers/derive "password")
+;;
+;; Path resolution:
+;;   - default: "users.edn" (resolved against the JVM working directory)
+;;   - override: set the WEBARXANA_USERS_FILE environment variable to an
+;;     absolute or cwd-relative path. Useful when the install root is a
+;;     build-output tree and runtime state should land elsewhere.
 
-(def users-file "users.edn")
+(def users-file
+  (or (System/getenv "WEBARXANA_USERS_FILE")
+      "users.edn"))
 
 (defn load-users []
   (try
