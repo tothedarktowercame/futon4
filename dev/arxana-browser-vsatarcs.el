@@ -397,7 +397,10 @@ configuration as the left-at-start return target."
   (setq-local truncate-lines nil))
 
 (defun arxana-browser-vsatarcs--story-paths ()
-  "Return readable VSATARCS source paths."
+  "Return readable VSATARCS source paths.
+Files matching `*.aif.md' are excluded — they are AIF+ annotation overlays
+on stories, not stories themselves.  See `README-vsatarcs.md' for the
+`*.md' / `*.aif.md' / `*.aif.edn' naming convention."
   (let (paths)
     (dolist (directory arxana-vsatarcs-story-directories)
       (let ((expanded (expand-file-name directory)))
@@ -405,7 +408,11 @@ configuration as the left-at-start return target."
           (setq paths
                 (append paths
                         (directory-files expanded t "\\.md\\'"))))))
-    (delete-dups (sort paths #'string<))))
+    (delete-dups
+     (sort (cl-remove-if (lambda (p)
+                           (string-suffix-p ".aif.md" p))
+                         paths)
+           #'string<))))
 
 (defun arxana-browser-vsatarcs-format ()
   "Return tabulated format for VSATARCS story sources."
