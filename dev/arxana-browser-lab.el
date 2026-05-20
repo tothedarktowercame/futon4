@@ -2405,9 +2405,10 @@ Server (futon1a/src/futon1a/http/app.clj, added 2026-05-04) returns:
 (defun arxana-browser-evidence-open-session (item)
   "Open evidence timeline filtered by session from ITEM."
   (let* ((session-id (plist-get item :session-id))
+         (entry-count (or (plist-get item :entry-count) 200))
          (response (arxana-browser--evidence-fetch
                     (list (cons "session-id" session-id)
-                          (cons "limit" "200"))))
+                          (cons "limit" (number-to-string entry-count)))))
          (entries (plist-get response :entries)))
     (if entries
         (arxana-lab-open-evidence-timeline entries session-id)
