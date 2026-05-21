@@ -1,8 +1,26 @@
 (ns webarxana.client.graph
-  (:require [reagent.core :as r]
+  (:require [clojure.string :as str]
+            [reagent.core :as r]
             [webarxana.client.state :as state]
             [webarxana.client.api :as api]
             ["d3-force" :as d3]))
+
+(defn- display-label
+  "Strip noisy namespace prefixes from a Clojure-keyword-shaped display
+   string. The fully-qualified form (e.g. \":mfuton/mission/parent-child\")
+   is what lives in XTDB and what the wire surface speaks; on the canvas
+   we only need the last segment to be legible.
+
+   Examples:
+   - \"mfuton/mission/parent-child\" → \"parent-child\"
+   - \"mfuton/external-reference\"   → \"external-reference\"
+   - \"arxana/scholium\"             → \"scholium\"
+   - \"article\"                     → \"article\"
+   - nil / empty / non-string        → input unchanged"
+  [s]
+  (if (and (string? s) (str/includes? s "/"))
+    (last (str/split s #"/"))
+    s))
 
 (def svg-width 1200)
 (def svg-height 800)
@@ -122,7 +140,7 @@
                       (and has-annotation (> (count link-text) 20))
                       (str (subs link-text 0 18) "...")
                       has-annotation link-text
-                      :else (or link-type "link"))
+                      :else (display-label (or link-type "link")))
         label short-label
         label-w (+ 14 (* 7 (count label)))
         is-editing (= (get-in @state/ui-state [:editing-link :id]) link-id)
@@ -181,11 +199,11 @@
                :opacity (if is-pin 1.0 0.7)
                :stroke "none"
                :stroke-width 0}]
-     ;; Type badge
+     ;; Type badge (strip noisy namespace prefix for canvas legibility)
      [:text {:x x :y (- y 6) :text-anchor "middle"
              :fill "#ffffff" :font-size 11 :font-family "monospace"
              :opacity 0.7}
-      nema-type]
+      (display-label nema-type)]
      ;; Name label
      [:text {:x x :y (+ y 10) :text-anchor "middle"
              :fill "#ffffff" :font-size 13 :font-weight "bold"
