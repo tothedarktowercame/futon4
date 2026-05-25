@@ -16,14 +16,18 @@
 (declare-function arxana-browser--render "arxana-browser-core")
 (defvar arxana-browser--stack)
 
-;; Reuse the evidence server (same Agency)
-(defvar arxana-evidence-server)
+(defcustom arxana-mission-control-server "http://localhost:7070"
+  "Base URL (host:port only, no path suffix) for the Mission Control HTTP
+server.  Distinct from `arxana-evidence-server' — Mission Control runs in
+futon3c (default port 7070), whereas the evidence server runs in futon1a
+(default port 7071).  Mission inventory queries are issued against
+`<server>/api/alpha/missions'."
+  :type 'string
+  :group 'arxana-missions)
 
 (defun arxana-missions--server ()
-  "Return the Agency server URL for mission queries."
-  (or (and (boundp 'arxana-evidence-server) arxana-evidence-server)
-      (and (boundp 'agent-chat-agency-base-url) agent-chat-agency-base-url)
-      "http://localhost:47070"))
+  "Return the Mission Control server base URL."
+  arxana-mission-control-server)
 
 (defun arxana-missions--fetch ()
   "Fetch mission inventory from Agency. Returns list of mission maps."
@@ -55,15 +59,22 @@
         (or (plist-get parsed :missions) '())))))
 
 (defun arxana-missions--status-sort-key (status)
-  "Sort key for mission status — active first, complete last."
+  "Sort key for mission status — active first, archived/nonstarter last.
+Slots `stale-in-progress' (derived server-side when an in-progress
+mission's source file is older than 7 days) just below the actively-
+in-progress band so untouched work surfaces visibly. Slots `archived'
+just above `nonstarter' so closed-but-not-failed work sits at the
+bottom of the active range."
   (cond
    ((member status '("in-progress" "testing")) 0)
-   ((member status '("ready" "identify" "map" "derive")) 1)
-   ((string= status "blocked") 2)
-   ((string= status "deferred") 3)
-   ((string= status "complete") 4)
-   ((string= status "nonstarter") 5)
-   (t 3)))
+   ((string= status "stale-in-progress") 1)
+   ((member status '("ready" "identify" "map" "derive")) 2)
+   ((string= status "blocked") 3)
+   ((string= status "deferred") 4)
+   ((string= status "complete") 5)
+   ((string= status "archived") 6)
+   ((string= status "nonstarter") 7)
+   (t 4)))
 
 ;; =============================================================================
 ;; Menu items (top-level entry from evidence-home or main menu)
