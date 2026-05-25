@@ -265,6 +265,7 @@
 (declare-function arxana-media-publish-marked "arxana-media")
 (declare-function arxana-media-set-publication-url "arxana-media")
 (declare-function arxana-media-open-publication-url "arxana-media")
+(declare-function arxana-media-create-ep-staging "arxana-media")
 (declare-function arxana-media-stage-to-ep "arxana-media")
 (declare-function arxana-media-delete-at-point "arxana-media")
 (declare-function arxana-media-move-misc-to-ep-at-point "arxana-media")
@@ -597,7 +598,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
      ((eq (plist-get context :view) 'hypergraph)
       "Hypergraph viewer — inspect local JSON datasets. RET/right shows details. LEFT/b returns.")
      ((eq (plist-get context :view) 'media)
-      (concat "Media library — pick All tracks, a status, or Projects to drill into recorder projects. LEFT/b returns."
+      (concat "Media library — pick All tracks, a status, or Projects to drill into recorder projects. N creates a staging EP. LEFT/b returns."
               store-suffix))
      ((eq (plist-get context :view) 'songs-home)
       (concat "Songs — browse imported lyrics, suite songs, and chorus experiments. LEFT/b returns."
@@ -634,7 +635,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
       (concat "Publication tracks — RET plays, p plays, s stops, B bounces marked tracks. LEFT/b returns."
               store-suffix))
      ((eq (plist-get context :view) 'media-ep-staging)
-      (concat "EP staging — select an EP folder to browse its exported tracks. LEFT/b returns."
+      (concat "EP staging — select an EP folder to browse its exported tracks, or press N to create one. LEFT/b returns."
               store-suffix))
      ((eq (plist-get context :view) 'media-ep-staging-ep)
       (concat "EP staging tracks — RET plays, p plays, s stops, B bounces marked tracks. LEFT/b returns."
@@ -816,6 +817,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
      :description "Stage the current or marked tracks into an EP."
      :predicate arxana-browser--help-media-track-list-p)
     (:section "Media"
+     :keys ("N")
+     :description "Create a new empty staging EP and open it."
+     :predicate arxana-browser--help-ep-creation-p)
+    (:section "Media"
      :keys ("B")
      :description "Bounce the marked tracks in the current media view."
      :predicate arxana-browser--help-media-p)
@@ -916,6 +921,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
   "Return non-nil when CONTEXT is an EP staging track list."
   (eq (plist-get context :view) 'media-ep-staging-ep))
 
+(defun arxana-browser--help-ep-creation-p (context)
+  "Return non-nil when CONTEXT can create a new staging EP."
+  (memq (plist-get context :view) '(media media-ep-staging)))
+
 (defun arxana-browser--help-docbook-p (context)
   "Return non-nil when CONTEXT is any docbook browser view."
   (memq (plist-get context :view)
@@ -1004,19 +1013,21 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         (arxana-browser--insert-help-sections sections)))))
 
 (defun arxana-browser--ensure-help-hydra ()
-  "Define the browser help Hydra if Hydra is installed.
+  "Define the browser help Hydra(s) if Hydra is installed.
 
-Return non-nil when the Hydra body command is available after this call."
-  (unless (fboundp 'arxana-browser-help-hydra/body)
-    (when (require 'hydra nil t)
-      ;; Define the Hydra lazily so `?` can pick it up even when Hydra
-      ;; was not on `load-path` when `arxana-browser-core.el` first loaded.
+Return non-nil when the default Hydra body command is available after
+this call. Two hydras are defined: the default and a variant for
+`media-ep-staging-ep` views that surfaces publish instead of stage."
+  (when (or (fboundp 'defhydra)
+            (require 'hydra nil t))
+    (unless (fboundp 'arxana-browser-help-hydra/body)
       (eval
        '(defhydra arxana-browser-help-hydra (:hint nil :foreign-keys run)
           "
 Arxana Browser
   _RET_: open   _<left>_/_b_: up   _g_: refresh   _m_: mark   _U_: unmark
-  _p_: play     _s_: stop          _e_: stage     _B_: bounce _?_: full help
+  _p_: play     _s_: stop          _e_: stage     _N_: new EP _B_: bounce
+  _?_: full help
   _q_: quit
 "
           ("RET" arxana-browser--visit nil)
@@ -1029,16 +1040,49 @@ Arxana Browser
           ("p" arxana-media-play-at-point nil)
           ("s" arxana-media-stop-playback nil)
           ("e" arxana-browser--stage-to-ep nil)
+          ("N" arxana-browser--create-ep-staging nil)
+          ("B" arxana-browser--bounce-or-select-docbook nil)
+          ("?" arxana-browser-show-bindings-help "full help" :exit t)
+          ("q" nil "quit" :exit t))))
+    (unless (fboundp 'arxana-browser-help-hydra-ep-staging/body)
+      (eval
+       '(defhydra arxana-browser-help-hydra-ep-staging (:hint nil :foreign-keys run)
+          "
+Arxana Browser (EP staging)
+  _RET_: open   _<left>_/_b_: up   _g_: refresh   _m_: mark   _U_: unmark
+  _p_: play     _s_: stop          _P_: publish   _N_: new EP _B_: bounce
+  _?_: full help
+  _q_: quit
+"
+          ("RET" arxana-browser--visit nil)
+          ("<right>" arxana-browser--visit nil)
+          ("<left>" arxana-browser--up nil)
+          ("b" arxana-browser--up nil)
+          ("g" arxana-browser--refresh nil)
+          ("m" arxana-browser--toggle-mark nil)
+          ("U" arxana-media-unmark-all nil)
+          ("p" arxana-media-play-at-point nil)
+          ("s" arxana-media-stop-playback nil)
+          ("P" arxana-media-publish-marked nil :exit t)
+          ("N" arxana-browser--create-ep-staging nil)
           ("B" arxana-browser--bounce-or-select-docbook nil)
           ("?" arxana-browser-show-bindings-help "full help" :exit t)
           ("q" nil "quit" :exit t)))))
   (fboundp 'arxana-browser-help-hydra/body))
 
 (defun arxana-browser-help ()
-  "Open browser bindings help, preferring Hydra when available."
+  "Open browser bindings help, preferring Hydra when available.
+The Hydra variant adapts to the current view: in `media-ep-staging-ep'
+views the hint surfaces publish instead of stage-to-ep, since the
+tracks already live in an EP and publish is the next likely action."
   (interactive)
   (if (arxana-browser--ensure-help-hydra)
-      (arxana-browser-help-hydra/body)
+      (let ((view (and (boundp 'arxana-browser--context)
+                       (plist-get arxana-browser--context :view))))
+        (if (and (eq view 'media-ep-staging-ep)
+                 (fboundp 'arxana-browser-help-hydra-ep-staging/body))
+            (arxana-browser-help-hydra-ep-staging/body)
+          (arxana-browser-help-hydra/body)))
     (arxana-browser-show-bindings-help)))
 
 (defun arxana-browser--with-help-hint (line)
@@ -2416,6 +2460,7 @@ returning to the top-level list."
     (define-key map (kbd "I") #'arxana-browser--import-library)
     (define-key map (kbd "E") #'arxana-browser--edit-current-context)
     (define-key map (kbd "e") #'arxana-browser--stage-to-ep)
+    (define-key map (kbd "N") #'arxana-browser--create-ep-staging)
     (define-key map (kbd "+") #'arxana-browser--move-pattern-up)
     (define-key map (kbd "-") #'arxana-browser--move-pattern-down)
     (define-key map (kbd "A") #'arxana-browser--add-collection-root)
@@ -2507,6 +2552,14 @@ returning to the top-level list."
 (defun arxana-browser--stage-to-ep ()
   (interactive)
   (arxana-media-move-misc-to-ep-at-point))
+
+(defun arxana-browser--create-ep-staging ()
+  (interactive)
+  (arxana-browser--ensure-context)
+  (let ((view (plist-get (car arxana-browser--stack) :view)))
+    (unless (memq view '(media media-ep-staging))
+      (user-error "New EP staging is only available from Media or EP staging views")))
+  (arxana-media-create-ep-staging))
 
 (defun arxana-browser--toggle-mark ()
   (interactive)
