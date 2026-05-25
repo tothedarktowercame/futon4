@@ -22,6 +22,28 @@ TEST_FILES=(
   arxana-browser-invariants-test.el
   arxana-browser-hypergraph-test.el
   arxana-browser-vsatarcs-test.el
+  arxana-vsatarcs-belief-test.el
+  arxana-vsatarcs-wm-bridge-test.el
+  arxana-vsatarcs-observation-test.el
+  arxana-vsatarcs-trace-test.el
+  arxana-vsatarcs-likelihood-test.el
+  arxana-vsatarcs-effective-sign-test.el
+  arxana-vsatarcs-r6-softmax-test.el
+  arxana-vsatarcs-efe-test.el
+  arxana-vsatarcs-intrinsic-values-test.el
+  arxana-vsatarcs-xtdb-clicks-test.el
+  arxana-vsatarcs-lifting-queue-test.el
+  arxana-vsatarcs-essay-revision-queue-test.el
+  arxana-vsatarcs-essay-revise-test.el
+  arxana-vsatarcs-r10-tap-test.el
+  arxana-vsatarcs-precision-test.el
+  arxana-vsatarcs-anticipation-test.el
+  arxana-vsatarcs-sorrys-test.el
+  arxana-vsatarcs-bilateral-test.el
+  arxana-vsatarcs-r-criteria-wm-test.el
+  arxana-vsatarcs-wm-decision-test.el
+  arxana-vsatarcs-wm-recent-test.el
+  arxana-vsatarcs-cluster-test.el
   arxana-check-parens-test.el
   arxana-docbook-order-test.el
   arxana-docbook-redirect-test.el
