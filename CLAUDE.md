@@ -4,7 +4,27 @@ Arxana hypertext system — Emacs browser, web surfaces (WebArxana), and data ac
 
 ## Critical rules
 
-- **NEVER kill or restart running JVM server processes** (futon1a, futon3c, webarxana server, etc.). Use Drawbridge nREPL for code reload where possible.
-- WebArxana lives in `dev/web/webarxana/`. Build with `npx shadow-cljs compile app` from that directory.
-- The Emacs Arxana Browser (`dev/arxana-browser-*.el`) and data layer (`dev/arxana-store.el`) are the reference implementation for data access patterns.
-- Mission docs live in `holes/missions/M-*.md` and follow the lifecycle in `holes/mission-lifecycle.md`.
+- **ONE JVM IS PLENTY.** The futon3c JVM hosts everything that serves —
+  WebArxana app on port 3100, the WebArxana server code from
+  `dev/web/webarxana/src/webarxana/server/` (started from futon3c's
+  bootstrap via `requiring-resolve`), substrate-2 on 7071, futon3c API
+  on 7070, Drawbridge on 6768. Do NOT start a second long-running JVM
+  for WebArxana. The only acceptable second JVM here is a *temporary*
+  `npx shadow-cljs watch app` for active CLJS editing; it serves no
+  request path (futon3c serves the compiled `resources/public/js/main.js`
+  as a static file) and should be killed when you stop editing CLJS.
+  See `futon3c/CLAUDE.md` I-0 for the full invariant.
+- **NEVER kill or restart the futon3c serving JVM.** Use Drawbridge
+  nREPL (`futon3c/scripts/proof-eval.sh` or `futon3c/README-drawbridge.md`)
+  for code reload.
+- WebArxana CLJS frontend lives in `dev/web/webarxana/`. Build with
+  `npx shadow-cljs compile app` (or `release app` for optimised
+  output) from that directory. The watch mode (`shadow-cljs watch app`)
+  is a *dev tool*; stop it when you're not editing CLJS.
+- The Emacs Arxana Browser (`dev/arxana-browser-*.el`) and data layer
+  (`dev/arxana-store.el`) are the reference implementation for data
+  access patterns. The Mission Portfolio view talks to futon3c on port
+  7070, not futon1a — see `arxana-mission-control-server` defcustom
+  in `dev/arxana-browser-missions.el`.
+- Mission docs live in `holes/missions/M-*.md` and follow the lifecycle
+  in `holes/mission-lifecycle.md`.
