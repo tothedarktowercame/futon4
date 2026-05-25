@@ -122,6 +122,23 @@
   (should (eq #'arxana-browser-help
               (lookup-key arxana-browser-mode-map (kbd "?")))))
 
+(ert-deftest arxana-browser-mode-map-binds-new-ep-creation ()
+  (should (eq #'arxana-browser--create-ep-staging
+              (lookup-key arxana-browser-mode-map (kbd "N")))))
+
+(ert-deftest arxana-browser-create-ep-staging-delegates-to-media-layer ()
+  (let ((called nil)
+        (arxana-browser--stack (list (list :view 'media))))
+    (cl-letf (((symbol-function 'arxana-media-create-ep-staging)
+               (lambda () (setq called t))))
+      (arxana-browser--create-ep-staging)
+      (should called))))
+
+(ert-deftest arxana-browser-create-ep-staging-rejects-non-media-contexts ()
+  (let ((arxana-browser--stack (list (list :view 'docbook))))
+    (should-error (arxana-browser--create-ep-staging)
+                  :type 'user-error)))
+
 (ert-deftest arxana-browser-help-rows-include-ep-staging-remove-only-in-staging ()
   (let* ((staging-rows (arxana-browser--help-rows '(:view media-ep-staging-ep)))
          (staging-descriptions (mapcar (lambda (row) (plist-get row :description))
@@ -146,6 +163,23 @@
     (should-not (member "Set status for marked Zoom recorder tracks."
                         misc-descriptions))))
 
+(ert-deftest arxana-browser-help-rows-show-new-ep-only-where-creation-is-available ()
+  (let* ((media-rows (arxana-browser--help-rows '(:view media)))
+         (media-descriptions (mapcar (lambda (row) (plist-get row :description))
+                                     media-rows))
+         (staging-rows (arxana-browser--help-rows '(:view media-ep-staging)))
+         (staging-descriptions (mapcar (lambda (row) (plist-get row :description))
+                                       staging-rows))
+         (track-rows (arxana-browser--help-rows '(:view media-ep-staging-ep)))
+         (track-descriptions (mapcar (lambda (row) (plist-get row :description))
+                                     track-rows)))
+    (should (member "Create a new empty staging EP and open it."
+                    media-descriptions))
+    (should (member "Create a new empty staging EP and open it."
+                    staging-descriptions))
+    (should-not (member "Create a new empty staging EP and open it."
+                        track-descriptions))))
+
 (ert-deftest arxana-browser-help-prefers-hydra-when-available ()
   (let ((hydra-called nil)
         (buffer-called nil))
@@ -158,6 +192,22 @@
       (arxana-browser-help)
       (should hydra-called)
       (should-not buffer-called))))
+
+(ert-deftest arxana-browser-help-hydra-rebuilds-from-loaded-defhydra ()
+  (unwind-protect
+      (progn
+        (ignore-errors (fmakunbound 'arxana-browser-help-hydra/body))
+        (eval
+         '(defmacro defhydra (&rest _args)
+            '(defun arxana-browser-help-hydra/body ()
+               (interactive)
+               t)))
+        (cl-letf (((symbol-function 'require)
+                   (lambda (&rest _) nil)))
+          (should (arxana-browser--ensure-help-hydra))
+          (should (fboundp 'arxana-browser-help-hydra/body))))
+    (ignore-errors (fmakunbound 'arxana-browser-help-hydra/body))
+    (ignore-errors (fmakunbound 'defhydra))))
 
 (ert-deftest arxana-browser-help-falls-back-to-buffer-when-hydra-unavailable ()
   (let ((hydra-called nil)
