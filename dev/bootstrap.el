@@ -23,6 +23,10 @@
     (file-name-as-directory base))
   "Root directory containing the Arxana repository.")
 
+;; Prefer source over stale bytecode for interactive dev reloads and direct
+;; `require` calls from the browser surface.
+(setq load-prefer-newer t)
+
 (add-to-list 'load-path (expand-file-name "dev" arxana-root-directory))
 (let ((reazon-root (expand-file-name "dev/vendor/reazon" arxana-root-directory)))
   (when (file-directory-p reazon-root)
@@ -181,6 +185,26 @@
                       "dev/arxana-media.el"
                       "dev/arxana-browser-evidence.el"
                       "dev/arxana-browser-vsatarcs.el"
+                      "dev/arxana-vsatarcs-belief.el"
+                      "dev/arxana-vsatarcs-wm-bridge.el"
+                      "dev/arxana-vsatarcs-observation.el"
+                      "dev/arxana-vsatarcs-trace.el"
+                      "dev/arxana-vsatarcs-likelihood.el"
+                      "dev/arxana-vsatarcs-effective-sign.el"
+                      "dev/arxana-vsatarcs-efe.el"
+                      "dev/arxana-vsatarcs-r6-softmax.el"
+                      "dev/arxana-vsatarcs-precision.el"
+                      "dev/arxana-vsatarcs-xtdb-clicks.el"
+                      "dev/arxana-vsatarcs-lifting-queue.el"
+                      "dev/arxana-vsatarcs-essay-revision-queue.el"
+                      "dev/arxana-vsatarcs-r10-tap.el"
+                      "dev/arxana-vsatarcs-anticipation.el"
+                      "dev/arxana-vsatarcs-sorrys.el"
+                      "dev/arxana-vsatarcs-bilateral.el"
+                      "dev/arxana-vsatarcs-r-criteria-wm.el"
+                      "dev/arxana-vsatarcs-wm-decision.el"
+                      "dev/arxana-vsatarcs-wm-recent.el"
+                      "dev/arxana-vsatarcs-cluster.el"
                       "dev/arxana-browser-trace.el"
                       "dev/arxana-browser-core.el"
                       "dev/arxana-browser-essays-wikibooks.el"))
@@ -191,6 +215,20 @@
                      arxana-saving arxana-inclusion arxana-import
                      arxana-articles-export arxana-compat arxana-xtdb-browse
                      arxana-media arxana-browser-evidence arxana-browser-vsatarcs
+                     arxana-vsatarcs-belief arxana-vsatarcs-wm-bridge
+                     arxana-vsatarcs-observation arxana-vsatarcs-trace
+                     arxana-vsatarcs-likelihood arxana-vsatarcs-effective-sign arxana-vsatarcs-efe arxana-vsatarcs-r6-softmax arxana-vsatarcs-precision
+                     arxana-vsatarcs-xtdb-clicks
+                     arxana-vsatarcs-lifting-queue
+                     arxana-vsatarcs-essay-revision-queue
+                     arxana-vsatarcs-r10-tap
+                     arxana-vsatarcs-anticipation
+                     arxana-vsatarcs-sorrys
+                     arxana-vsatarcs-bilateral
+                     arxana-vsatarcs-r-criteria-wm
+                     arxana-vsatarcs-wm-decision
+                     arxana-vsatarcs-wm-recent
+                     arxana-vsatarcs-cluster
                      arxana-browser-trace arxana-browser-essays-wikibooks
                      arxana-browser-core)))
     (dolist (feat features)
