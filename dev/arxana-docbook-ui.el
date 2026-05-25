@@ -20,6 +20,9 @@
 (declare-function arxana-docbook--entries-by-doc-id "arxana-docbook-core" (entries))
 (declare-function arxana-browser-browse "arxana-browser")
 (declare-function arxana-browser--render "arxana-browser-core")
+(declare-function arxana-browser-essays-open "arxana-browser-essays" (item))
+(declare-function arxana-browser-essays--manifest-for "arxana-browser-essays" (essay-id))
+(declare-function arxana-browser-essays--section-name "arxana-browser-essays" (manifest section-id))
 (declare-function arxana-links-load-strategies "arxana-links" (&optional type-filter))
 (declare-function arxana-links-edit-surface-form-at-point "arxana-links" ())
 (declare-function arxana-docbook--entry-doc-ids "arxana-docbook-toc" (book))
@@ -1216,66 +1219,144 @@
                       (car entries)
                       (list :book book :doc-id prev-id))))
       (arxana-docbook--render-entry entry))))
+(defun arxana-docbook--essay-target-from-uri (uri)
+  "Parse essay URI into a plist with essay, section, and annotation ids."
+  (let* ((parts (mapcar #'url-unhex-string
+                        (split-string
+                         (string-remove-prefix "arxana://essay/" uri)
+                         "/" t)))
+         (essay-id (nth 0 parts))
+         (section-id (and (equal (nth 1 parts) "section")
+                          (nth 2 parts)))
+         (annotation-id (and (equal (nth 3 parts) "annotation")
+                             (nth 4 parts))))
+    (when essay-id
+      (list :essay-id essay-id
+            :section-id section-id
+            :annotation-id annotation-id))))
+
+(defun arxana-docbook--focus-essay-annotation (annotation-id)
+  "Move point to ANNOTATION-ID in the notes buffer when available."
+  (when annotation-id
+    (let ((notes-buf (get-buffer "*Arxana Essay Notes*")))
+      (when (buffer-live-p notes-buf)
+        (let* ((note-index (buffer-local-value 'arxana-browser-essays--note-index
+                                               notes-buf))
+               (bounds (and (hash-table-p note-index)
+                            (gethash annotation-id note-index)))
+               (beg (and bounds (marker-position (car bounds)))))
+          (when beg
+            (let ((win (display-buffer notes-buf)))
+              (when (window-live-p win)
+                (set-window-point win beg)))
+            (with-current-buffer notes-buf
+              (goto-char beg))))))))
+
 (defun arxana-docbook-open-uri (uri)
-  "Open a docbook URI like docbook://BOOK/DOC-ID[/ENTRY-ID]."
+  "Open a docbook or Arxana URI.
+Supported forms include `docbook://BOOK/DOC-ID[/ENTRY-ID]',
+`arxana://view/...' and `arxana://essay/...'."
   (interactive "sDocbook URI: ")
   (let* ((clean (string-trim uri))
          (is-docbook (string-prefix-p "docbook://" clean))
-         (is-view (string-prefix-p "arxana://view/" clean)))
-    (when is-view
-      (let* ((view-name (string-remove-prefix "arxana://view/" clean))
+         (is-view (string-prefix-p "arxana://view/" clean))
+         (is-essay (string-prefix-p "arxana://essay/" clean)))
+    (cond
+     (is-view
+     (let* ((view-name (string-remove-prefix "arxana://view/" clean))
              (view (intern view-name))
-             (book (when (string-prefix-p "docbook" view-name) "futon4")))
+             (book (cond
+                    ((string-prefix-p "docbook" view-name) "futon4")
+                    ((eq view 'code) "futon4"))))
         (unless (require 'arxana-browser nil t)
           (user-error "Arxana browser is unavailable; load arxana-browser"))
         (arxana-browser-browse)
         (with-current-buffer (get-buffer arxana-browser--buffer)
-          (setq arxana-browser--stack (list (list :view view :book book :label view-name))
+          (when (and (eq view 'code)
+                     book
+                     (require 'arxana-browser-code nil t)
+                     (fboundp 'arxana-browser-code-set-docbook))
+            (arxana-browser-code-set-docbook book))
+          (setq arxana-browser--stack (list (list :view view :book book :docbook book :label view-name))
                 arxana-browser--context (car arxana-browser--stack))
           (arxana-browser--render))
         (when (fboundp 'arxana-ui-refresh)
-          (arxana-ui-refresh))
-        (cl-return-from arxana-docbook-open-uri nil)))
-    (unless is-docbook
-      (user-error "Invalid docbook URI: %s" uri))
-    (let* ((parts (split-string (string-remove-prefix "docbook://" clean) "/" t))
-           (book (nth 0 parts))
-           (doc-id (nth 1 parts))
-           (entry-id (nth 2 parts)))
-      (unless (and book doc-id)
-        (user-error "Invalid docbook URI: %s" uri))
-      (let* ((root (arxana-docbook--locate-books-root))
-             (stub-path (and root doc-id
-                             (expand-file-name (format "%s.org" doc-id)
-                                               (expand-file-name book root))))
-             (entries (arxana-docbook--entries-for-doc book doc-id))
-             (_ingested (arxana-docbook--maybe-auto-ingest-doc book doc-id entries))
-             (entries (if _ingested
-                          (arxana-docbook--entries-for-doc book doc-id)
-                        entries))
-             (local-stubs (seq-filter (lambda (e) (plist-get e :stub-path)) entries))
-             (pick-from (lambda (pool)
-                          (or (and entry-id
-                                   (seq-find (lambda (e)
-                                               (equal entry-id (plist-get e :entry-id)))
-                                             pool))
-                              (arxana-docbook--latest-non-lab pool)
-                              (car pool))))
-             (entry (if arxana-docbook-open-uri-prefer-render
-                        (or (funcall pick-from entries)
-                            (funcall pick-from local-stubs)
-                            (list :book book :doc-id doc-id))
-                      (or (funcall pick-from local-stubs)
-                          (funcall pick-from entries)
-                          (list :book book :doc-id doc-id)))))
+          (arxana-ui-refresh))))
+     (is-essay
+      (let* ((target (arxana-docbook--essay-target-from-uri clean))
+             (essay-id (plist-get target :essay-id))
+             (section-id (plist-get target :section-id))
+             (annotation-id (plist-get target :annotation-id)))
+        (unless (require 'arxana-browser nil t)
+          (user-error "Arxana browser is unavailable; load arxana-browser"))
+        (unless (require 'arxana-browser-essays nil t)
+          (user-error "Arxana essays browser is unavailable; load arxana-browser-essays"))
+        (arxana-browser-browse)
+        (if section-id
+            (let* ((manifest (ignore-errors
+                              (arxana-browser-essays--manifest-for essay-id)))
+                   (section-name (or (and manifest
+                                          (arxana-browser-essays--section-name
+                                           manifest section-id))
+                                     section-id)))
+              (arxana-browser-essays-open
+               (list :type 'essays-section
+                     :essay-id essay-id
+                     :section-id section-id
+                     :annotation-id annotation-id
+                     :label section-name))
+              (arxana-docbook--focus-essay-annotation annotation-id))
+          (with-current-buffer (get-buffer arxana-browser--buffer)
+            (setq arxana-browser--stack
+                  (list (list :view 'essays-essay
+                              :essay-id essay-id
+                              :label essay-id))
+                  arxana-browser--context (car arxana-browser--stack))
+            (arxana-browser--render)))
+        (when (fboundp 'arxana-ui-refresh)
+          (arxana-ui-refresh))))
+     (is-docbook
+      (let* ((parts (split-string (string-remove-prefix "docbook://" clean) "/" t))
+             (book (nth 0 parts))
+             (doc-id (nth 1 parts))
+             (entry-id (nth 2 parts)))
+        (unless (and book doc-id)
+          (user-error "Invalid docbook URI: %s" uri))
+        (let* ((root (arxana-docbook--locate-books-root))
+               (stub-path (and root doc-id
+                               (expand-file-name (format "%s.org" doc-id)
+                                                 (expand-file-name book root))))
+               (entries (arxana-docbook--entries-for-doc book doc-id))
+               (_ingested (arxana-docbook--maybe-auto-ingest-doc book doc-id entries))
+               (entries (if _ingested
+                            (arxana-docbook--entries-for-doc book doc-id)
+                          entries))
+               (local-stubs (seq-filter (lambda (e) (plist-get e :stub-path)) entries))
+               (pick-from (lambda (pool)
+                            (or (and entry-id
+                                     (seq-find (lambda (e)
+                                                 (equal entry-id (plist-get e :entry-id)))
+                                               pool))
+                                (arxana-docbook--latest-non-lab pool)
+                                (car pool))))
+               (entry (if arxana-docbook-open-uri-prefer-render
+                          (or (funcall pick-from entries)
+                              (funcall pick-from local-stubs)
+                              (list :book book :doc-id doc-id))
+                        (or (funcall pick-from local-stubs)
+                            (funcall pick-from entries)
+                            (list :book book :doc-id doc-id)))))
           (if arxana-docbook-open-uri-prefer-render
               (arxana-docbook--render-entry entry)
             (if (and stub-path (file-readable-p stub-path))
-                (arxana-docbook-open-stub (plist-put (copy-sequence entry) :stub-path stub-path))
+                (arxana-docbook-open-stub
+                 (plist-put (copy-sequence entry) :stub-path stub-path))
               (if (and (plist-get entry :stub-path)
                        (file-readable-p (plist-get entry :stub-path)))
                   (arxana-docbook-open-stub entry)
-                (arxana-docbook--render-entry entry))))))))
+                (arxana-docbook--render-entry entry)))))))
+     (t
+      (user-error "Invalid docbook URI: %s" uri)))))
 (defun arxana-docbook--view-raw (_entry)
   (user-error "Raw JSON cache is disabled; open the stub instead"))
 (defun arxana-docbook-open-entry ()
