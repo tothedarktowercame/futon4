@@ -1,13 +1,51 @@
 # Futonic Mission Lifecycle
 
 A futonic mission is a scoped unit of work that moves the stack from a
-known state to a better one. Missions follow a 7-phase derivation path
-that progresses from naming a gap to demonstrating a working result and
-documenting it in the living system.
+known state to a better one. Missions may begin with a `HEAD`
+bootstrap, then follow a 7-phase derivation path that progresses from
+naming a gap to demonstrating a working result and documenting it in
+the living system.
 
 This document is a reusable reference — not specific to any mission.
 
 ## Phases
+
+### HEAD (optional bootstrap before IDENTIFY)
+
+Use `HEAD` when a mission exists first as a live operator-shape rather
+than as a scoped proposal. `HEAD` is not yet design, research, or
+formal scoping. Its job is to preserve the operator's voice, surface
+the mission's live pressure, and carry forward named tensions before
+IDENTIFY hardens the mission into a tractable gap statement.
+
+- [ ] **Operator-voice anchor:** A first-person statement of what this
+  mission is for, ideally preserving the operator's own wording rather
+  than an after-the-fact paraphrase.
+- [ ] **What's already felt to be true:** What seems promising,
+  effective, or morphogenetically real about the practice / system this
+  mission is trying to formalize or extend?
+- [ ] **Anti-glibness discipline:** What would make this mission
+  superficial, rhetorical, or under-evidenced? Name the discipline that
+  prevents that.
+- [ ] **Working-economy position:** What does this mission underwrite,
+  and what underwrites it? Why does it matter in the stack's actual
+  working life?
+- [ ] **Clarity-gap / carried-forward tensions:** What is still unclear,
+  not yet articulated, or intentionally deferred? Name these as live
+  tensions to be picked up by later phases rather than silently buried.
+- [ ] **Provenance:** How was this `HEAD` generated? Interview, flash,
+  note sequence, operator memo, or another intake process. Record the
+  date and source.
+
+`HEAD` does not replace IDENTIFY. It is a pre-IDENTIFY intake layer for
+missions whose real starting point is an operator's live sense of the
+problem. If a mission already has a crisp gap statement, skip `HEAD`
+and begin at IDENTIFY.
+
+**Exit criterion:** The operator recognises the `HEAD` as faithful to
+the mission's live shape, and the carried-forward tensions are named
+well enough that IDENTIFY can proceed without pretending the unknowns
+have already been settled.
 
 ### 1. IDENTIFY
 
@@ -23,8 +61,9 @@ Name the gap. Why does this mission exist?
 - [ ] **Source material:** Files, APIs, prior work that feed into this mission.
 - [ ] **Owner and dependencies:** Which repos are involved, who drives?
 
-The IDENTIFY document IS the mission file (`M-<name>.md`). Everything else
-accretes onto it.
+The mission file (`M-<name>.md`) begins no later than `HEAD`; if `HEAD`
+is skipped, IDENTIFY is the first required authored section. Everything
+else accretes onto that file.
 
 **Exit criterion:** A human has read the proposal and agrees the gap is real
 and the scope is right.
@@ -244,11 +283,14 @@ navigation, not just via grep.
 ## Mission Lifecycle States
 
 ```
-IDENTIFY → MAP → DERIVE → ARGUE → VERIFY → INSTANTIATE → DOCUMENT → COMPLETE
-                                                                        ↓
-                                                                    RE-OPENED
-                                                                    (if gaps found)
+[HEAD] → IDENTIFY → MAP → DERIVE → ARGUE → VERIFY → INSTANTIATE → DOCUMENT → COMPLETE
+                                                                                 ↓
+                                                                             RE-OPENED
+                                                                             (if gaps found)
 ```
+
+`HEAD` is optional. When present, it precedes IDENTIFY; when absent, the
+mission starts at IDENTIFY.
 
 A mission may also be:
 - **BLOCKED:** Waiting on another mission or external dependency.
@@ -258,7 +300,10 @@ A mission may also be:
 ## Conventions
 
 - Mission files live in `<repo>/holes/missions/M-<name>.md`.
-- Status line at the top: `**Status:** <PHASE> (date)`.
+- Status line at the top records the mission's current phase-state. For
+  straightforward missions this can be `**Status:** <PHASE> (date)`;
+  for `HEAD`-bootstrapped missions it may be composite, e.g.
+  `**Status:** HEAD complete; IDENTIFY pending`.
 - Checkpoints are appended (never overwrite prior phases).
 - Evidence is emitted to futon1a during VERIFY/INSTANTIATE.
 - Completed missions become source material for future missions.
@@ -290,39 +335,83 @@ least one PUR is the floor.
 
 ### Where they live
 
-```
-<repo>/holes/labs/<mission-name>/psr/<YYYY-MM-DD>__<phase>__<topic>.md
-<repo>/holes/labs/<mission-name>/pur/<YYYY-MM-DD>__<phase>__<topic>.md
-```
+**Canonical (2026-05-23):** PSR / PUR records live as sections *inside
+the mission .md file*, so the mission watcher picks them up
+automatically and surfaces them on the mission's substrate-2 hyperedge
+(`:mission/psrs` and `:mission/purs` props served by
+`/api/alpha/missions`). No separate `<repo>/holes/labs/<mission>/psr/`
+directory tree is needed; the mission file is the canonical record of
+its own pattern selections and applications.
 
-The labs directory is per-mission; one mission may produce many PSR/PUR
-pairs across its phases. Keep filenames sortable by date.
+Legacy `<repo>/holes/labs/<mission-name>/psr|pur/<date>__<phase>__<topic>.md`
+files from earlier sessions are still readable but new PSRs should land
+in the mission file directly.
 
 ### Format
 
-PSR (write *before* committing to a pattern):
+PSR (write *before* committing to a pattern): a `## PSR` (or `### PSR`,
+or `#### PSR-N: <title>`) section in the mission file, followed by
+`- Key: value` bullets. Multi-line values are supported via indented
+continuation lines under the bullet.
 
 ```markdown
-# PSR: <short title>
-context: <what the situation is, why a pattern is needed>
-patterns: <which patterns from futon3/library/ were considered>
-decision: <which one was selected, and any sub-choices>
-alternatives: <what else was considered, why rejected>
-outcome (target): <what success looks like for this application>
-confidence: <high / medium / low + rationale>
+## PSR
+
+- Pattern chosen: code-coherence/dead-code-hygiene
+- Candidates: dead-code-hygiene, test-before-commit
+- Rationale: Removed orphan helpers in mission_control_backend.clj after
+  Task 8 consolidated three parsers into one — leftover functions for
+  the deleted code paths.
+- Confidence: high — pattern is well-established and the orphan check
+  was straightforward.
 ```
 
-PUR (write *after* applying a pattern):
+Or numbered, for missions with multiple PSRs:
 
 ```markdown
-# PUR: <short title matching the PSR if one exists>
-pattern (re-confirmed): <which patterns were actually used>
-actions taken: <what code/structure changed>
-outcome: <success / partial / failure, with evidence>
-prediction errors: <where the PSR's expectations differed from reality>
-invariants verified: <if applicable, what was checked and how>
-connections: <links to other missions, follow-on work, library revisions>
+### PSR — Pattern Selection Records
+
+#### PSR-1: `code-coherence/dead-code-hygiene` applied to futon3a parser
+
+- Pattern chosen: code-coherence/dead-code-hygiene
+- Candidates: dead-code-hygiene, keep-deprecated-with-comment
+- Rationale: ...
+- Confidence: high
+
+#### PSR-2: `regex-tightening` for code-paths capture
+
+- Pattern chosen: combining-methods-as-diagnostic
+- ...
 ```
+
+PUR (write *after* applying a pattern): a `## PUR` (or `### PUR`, or
+`#### PUR-N: <title>`) section with the same bullet shape.
+
+```markdown
+## PUR
+
+- Pattern: code-coherence/dead-code-hygiene
+- Actions taken: Removed 21 unused defns + def patterns (mission_control_backend.clj
+  reduced from 892 → 682 lines). Updated parse-roots and -main to
+  drop the filesystem-walk fallback.
+- Outcome: success
+- Prediction error: low — clean removal, all callers re-checked
+- Notes: futon.missions namespace now compiles cleanly with no orphans
+```
+
+**Field keys are case-insensitive and whitespace becomes hyphen-separated
+when parsed** (e.g. `Pattern chosen` → `pattern-chosen`, `Actions taken`
+→ `actions-taken`). Keep them roughly canonical for cross-mission
+queries.
+
+**Avoid the legacy "code-block-with-template" format** seen in some
+2026-05 mission files (M-vsatarcs-writer, M-or-training,
+M-self-documenting-stack): a `**PSR-X — title**` bold-key line followed
+by a triple-backtick fenced code block with `key: value` lines inside.
+The mission watcher's V1 parser captures the section heading but not
+the code-block contents. Convert those to bullet format when the
+mission is next touched, or live with the section being heading-only
+in the substrate.
 
 ### Why optional, not mandatory
 
