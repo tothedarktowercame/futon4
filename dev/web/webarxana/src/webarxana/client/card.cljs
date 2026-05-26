@@ -109,6 +109,8 @@
                 nema-name   (or (:nema/name nema) "")
                 nema-text   (or (:nema/text nema) "")
                 nema-type   (or (:nema/type nema) "unknown")
+                openable?   (some? (api/entity-location {:id pin-id
+                                                         :type nema-type}))
                 nema-authors (or (:nema/authors nema) [])]
             [:<>
              [:div.focus-card {:class (when is-active "active-pin")}
@@ -167,11 +169,17 @@
                                    (reset! editing-name nil))}
                    "Cancel"]]
                  [:<>
-                  [:button.btn-edit
+                 [:button.btn-edit
                    {:on-click #(do (reset! editing-text nema-text)
                                    (reset! editing-name nema-name)
                                    (swap! state/ui-state assoc :editing pin-id))}
                    "Edit"]
+                  (when openable?
+                    [:button.scratchpad-btn
+                     {:on-click #(api/open-in-emacs! {:id pin-id
+                                                      :type nema-type})
+                      :title "Open this node in Emacs"}
+                     "Emacs"])
                   [:button.scratchpad-btn
                    {:on-click #(swap! state/ui-state assoc
                                       :connecting {:node-id pin-id})
@@ -461,8 +469,12 @@
           (for [e recent]
             ^{:key (:id e)}
             [:div.sidebar-entity-item
-             (let [is-diagram (= "diagram" (or (:_type e) (:type e)))
-                   is-expanded (= (:id e) (:expanded-diagram @state/ui-state))]
+             (let [entity-type (or (:_type e) (:type e))
+                   is-diagram (= "diagram" entity-type)
+                   is-essay (= "arxana/essay" entity-type)
+                   is-essay-section (= "arxana/essay-section" entity-type)
+                   is-expanded (= (:id e) (:expanded-diagram @state/ui-state))
+                   essay-expanded (contains? (:expanded-essays @state/ui-state) (:id e))]
                [:<>
                 [:span.entity-name
                  {:on-click (if is-diagram
@@ -471,14 +483,35 @@
                                 #(api/expand-diagram! (:id e)))
                               #(api/browse-and-focus! (:name e) (:id e)))}
                  (str (or (:name e) "?") " ")]
-                [:span.entity-type-badge (or (:_type e) (:type e) "?")]
-                (when is-diagram
+                [:span.entity-type-badge entity-type]
+                (when (or is-diagram is-essay)
                   [:button.scratchpad-btn
-                   {:on-click (if is-expanded
-                                #(api/compress-diagram! (:id e))
-                                #(api/expand-diagram! (:id e)))
-                    :title (if is-expanded "Compress diagram" "Expand diagram")}
-                   (if is-expanded "\u23f8" "\u25b6")])])
+                   {:on-click (cond
+                                is-diagram
+                                (if is-expanded
+                                  #(api/compress-diagram! (:id e))
+                                  #(api/expand-diagram! (:id e)))
+
+                                is-essay
+                                (if essay-expanded
+                                  #(api/collapse-essay! (:id e))
+                                  #(api/expand-essay! (:id e))))
+                    :title (cond
+                             is-diagram
+                             (if is-expanded "Compress diagram" "Expand diagram")
+
+                             is-essay
+                             (if essay-expanded "Collapse essay sections" "Expand essay sections"))}
+                   (if is-diagram
+                     (if is-expanded "\u23f8" "\u25b6")
+                     (if essay-expanded "\u23f8" "\u25b6"))])
+                (when (or is-essay is-essay-section)
+                  [:button.scratchpad-btn
+                   {:on-click (fn [evt]
+                                (.stopPropagation evt)
+                                (api/open-in-emacs! e))
+                    :title "Open in Emacs"}
+                   "Emacs"])])
              [:button.pin-btn
               {:on-click (fn [evt]
                            (.stopPropagation evt)
@@ -500,15 +533,39 @@
           (for [e entities]
             ^{:key (:id e)}
             [:div.sidebar-entity-item
-             [:span.entity-name
-              {:on-click #(api/browse-and-focus! (:name e) (:id e))}
-              (or (:name e) (subs (str (:id e)) 0 12))]
-             [:button.pin-btn
-              {:on-click (fn [evt]
-                           (.stopPropagation evt)
-                           (api/pin-entity! (:name e) (:id e)))
-               :title (if (state/pinned? (:id e)) "Unpin" "Pin")}
-              (if (state/pinned? (:id e)) "\u25cb" "\u25cf")]])])])))
+             (let [entity-type (or (:type e) "unknown")
+                   is-essay (= "arxana/essay" entity-type)
+                   is-essay-section (= "arxana/essay-section" entity-type)
+                   essay-expanded (contains? (:expanded-essays @state/ui-state) (:id e))]
+               [:<>
+                [:span.entity-name
+                 {:on-click #(api/browse-and-focus! (:name e) (:id e))}
+                 (or (:name e) (subs (str (:id e)) 0 12))]
+                (when is-essay
+                  [:button.scratchpad-btn
+                   {:on-click (fn [evt]
+                                (.stopPropagation evt)
+                                (if essay-expanded
+                                  (api/collapse-essay! (:id e))
+                                  (api/expand-essay! (:id e))))
+                    :title (if essay-expanded
+                             "Collapse essay sections"
+                             "Expand essay sections")}
+                   (if essay-expanded "\u23f8" "\u25b6")])
+                (when (or is-essay is-essay-section)
+                  [:button.scratchpad-btn
+                   {:on-click (fn [evt]
+                                (.stopPropagation evt)
+                                (api/open-in-emacs! e))
+                    :title "Open in Emacs"}
+                   "Emacs"])
+                [:button.pin-btn
+                 {:on-click (fn [evt]
+                              (.stopPropagation evt)
+                              (api/pin-entity! (:name e) (:id e)))
+                  :title (if (state/pinned? (:id e)) "Unpin" "Pin")}
+                 (if (state/pinned? (:id e)) "\u25cb" "\u25cf")]])])])
+       ])))
 
 ;; --- Link editor popup ---
 
@@ -565,5 +622,3 @@
                    (swap! state/ui-state update :_render-tick (fnil inc 0))))}
               "Save"]
              [:span.card-id (subs (str (:id info)) 0 20)]]]])))))
-
-

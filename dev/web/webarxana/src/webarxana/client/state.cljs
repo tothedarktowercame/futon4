@@ -24,6 +24,7 @@
 ;; Reactive atoms for UI state
 (defonce ui-state
   (r/atom {:focus-id    nil      ;; nema/id of the active card (shown on right)
+           :page        :graph   ;; :graph or :mission-search
            :pins        []       ;; [{:id "..." :k 1} ...] pinned nodes on canvas
            :hop-depth   3        ;; default hop-depth for new pins
            :editing     nil      ;; nema/id currently being edited
@@ -33,8 +34,16 @@
            :browse-type nil      ;; currently selected type for browsing
            :browse-list []       ;; entities loaded for the selected type
            :sidebar-open false   ;; sidebar visibility
+           :expanded-essays #{}  ;; essay ids expanded to show section neighbourhoods
+           :expanded-essay-sections {} ;; essay id -> ordered section-id vector
            :scratchpad  []       ;; newly created nodes awaiting connection
            :connecting  nil      ;; {:node-id "..."} when waiting to pick a target
+           :mission-search {:query ""
+                            :query-id nil
+                            :results []
+                            :graph {:nodes [] :links []}
+                            :loading? false
+                            :error nil}
            }))
 
 (defn focus-id []

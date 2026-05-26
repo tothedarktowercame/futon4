@@ -4,10 +4,13 @@
             [webarxana.client.api :as api]
             [webarxana.client.graph :as graph]
             [webarxana.client.card :as card]
+            [webarxana.client.mission-search :as mission-search]
             [webarxana.client.route :as route]))
 
 (defn app []
   (if (state/logged-in?)
+    (if (= :mission-search (:page @state/ui-state))
+      [mission-search/page]
     [:div.webarxana
      [card/search-bar]
      [:div.main-area
@@ -16,7 +19,7 @@
        [graph/graph-svg]
        [card/scratch-card]
        [card/focus-card]
-       [card/link-editor]]]]
+       [card/link-editor]]]])
     [card/login-form]))
 
 (defonce root (rdc/create-root (.getElementById js/document "app")))

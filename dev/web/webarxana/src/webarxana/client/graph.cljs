@@ -167,6 +167,16 @@
                      (if connecting
                        (api/connect-nodes! (:node-id connecting) nema-id nil)
                        (api/browse-and-focus! nema-id nema-id)))
+         :on-double-click
+         (fn [_]
+           (cond
+             (= nema-type "arxana/essay")
+             (if (contains? (:expanded-essays @state/ui-state) nema-id)
+               (api/collapse-essay! nema-id)
+               (api/expand-essay! nema-id))
+
+             (= nema-type "arxana/essay-section")
+             (api/open-in-emacs! {:id nema-id :type nema-type})))
          :style {:cursor (if connecting "crosshair" "pointer")}}
      ;; Pin ring
      (when is-pin
@@ -201,6 +211,7 @@
         focus-id   (state/focus-id)
         pins       (:pins @state/ui-state)
         scratchpad (:scratchpad @state/ui-state)
+        expanded-essay-sections (:expanded-essay-sections @state/ui-state)
         effective-pins (if (seq pins)
                          pins
                          (when focus-id [{:id focus-id :k (:hop-depth @state/ui-state)}]))
@@ -212,7 +223,17 @@
         ;; - Non-pinned diagram (neighbour): hide it entirely
         pin-id-set (set (map :id (or effective-pins [])))
         merged-hood (when raw-hood
-                      (let [;; Diagrams that are pinned (compressed view)
+                      (let [essay-links (->> expanded-essay-sections
+                                             (mapcat (fn [[essay-id section-ids]]
+                                                       (map (fn [section-id]
+                                                              {:link/id (str "essay-expand:" essay-id "->" section-id)
+                                                               :link/type "essay/includes-section"
+                                                               :link/src {:nema/id essay-id}
+                                                               :link/dst {:nema/id section-id}})
+                                                            section-ids)))
+                                             vec)
+                            raw-hood (update raw-hood :links into essay-links)
+                            ;; Diagrams that are pinned (compressed view)
                             pinned-diagrams (->> (:nemas raw-hood)
                                                  (filter #(and (= "diagram" (:nema/type %))
                                                               (contains? pin-id-set (:nema/id %))))

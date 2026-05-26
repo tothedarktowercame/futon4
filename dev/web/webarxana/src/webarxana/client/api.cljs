@@ -9,7 +9,100 @@
 
 (def base "/api/futon")
 
-(declare fetch-hyperedges save-entity! save-relation! fetch-types pin-entity! connect-ws! ws-send! save-diagram! fetch-recent expand-diagram!)
+(declare fetch-hyperedges save-entity! save-relation! fetch-types pin-entity! connect-ws! ws-send! save-diagram! fetch-recent expand-diagram! expand-essay! collapse-essay! entity-location open-in-emacs! open-location! mission-search! mission-search-event!)
+
+(defn entity-location
+  "Return an Emacs-openable location for ENTITY when one is known."
+  [entity]
+  (let [entity-id (or (:id entity) (:entity/id entity) (:nema/id entity))
+        entity-type (or (:type entity) (:_type entity) (:nema/type entity))]
+    (cond
+      (= entity-type "arxana/essay")
+      (str "arxana://essay/" (js/encodeURIComponent entity-id))
+
+      (= entity-type "arxana/essay-section")
+      (when-let [[_ essay-id]
+                 (re-matches #"^(.*)/section/[^/]+$" (or entity-id ""))]
+        (str "arxana://essay/"
+             (js/encodeURIComponent essay-id)
+             "/section/"
+             (js/encodeURIComponent entity-id)))
+
+      :else
+      nil)))
+
+(defn open-in-emacs!
+  "Ask the local WebArxana server to open ENTITY in Emacs."
+  [entity]
+  (when-let [location (entity-location entity)]
+    (open-location! location)))
+
+(defn open-location!
+  "Ask the local WebArxana server to open LOCATION in Emacs."
+  [location]
+  (when (seq location)
+    (go
+      (let [resp (<! (http/post "/api/emacs/open"
+                                {:json-params {:location location}
+                                 :with-credentials? true}))]
+        (when-not (= 200 (:status resp))
+          (.error js/console "Open in Emacs failed" (clj->js resp)))
+        resp))))
+
+(defn mission-search!
+  "Run mission-search via the server-backed JSON endpoint.
+   Optional opts (T-1): :top-k :confidence-threshold :agreement-only?"
+  ([query] (mission-search! query {}))
+  ([query opts]
+   (let [trimmed (str/trim (or query ""))
+         top-k (:top-k opts 8)
+         confidence (:confidence-threshold opts 0.0)
+         agreement-only? (:agreement-only? opts false)]
+     (swap! state/ui-state assoc :page :mission-search)
+     (swap! state/ui-state assoc-in [:mission-search :query] trimmed)
+     (when (seq trimmed)
+       (swap! state/ui-state assoc-in [:mission-search :loading?] true)
+       (swap! state/ui-state assoc-in [:mission-search :error] nil)
+       (go
+         (let [resp (<! (http/get "/api/mission-search"
+                                  {:query-params {:query trimmed
+                                                  :top-k top-k
+                                                  :confidence-threshold confidence
+                                                  :agreement-only (str agreement-only?)
+                                                  :consumer-id "joe-webarxana"}
+                                   :with-credentials? true}))]
+           (if (= 200 (:status resp))
+             (let [body (:body resp)]
+               (swap! state/ui-state assoc
+                      :mission-search {:query trimmed
+                                       :query-id (:query_id body)
+                                       :results (vec (:results body))
+                                       :graph (or (:graph body) {:nodes [] :links []})
+                                       :top-k top-k
+                                       :confidence-threshold confidence
+                                       :agreement-only? agreement-only?
+                                       :loading? false
+                                       :error nil}))
+             (swap! state/ui-state assoc
+                    :mission-search {:query trimmed
+                                     :query-id nil
+                                     :results []
+                                     :graph {:nodes [] :links []}
+                                     :loading? false
+                                     :error (or (get-in resp [:body :error])
+                                                "mission-search failed")}))))))))
+
+(defn mission-search-event!
+  [{:keys [query-id result-id title action]}]
+  (when (and query-id result-id action)
+    (go
+      (<! (http/post "/api/mission-search/event"
+                     {:json-params {:query-id query-id
+                                    :consumer-id "joe-webarxana"
+                                    :result-id result-id
+                                    :title title
+                                    :action action}
+                      :with-credentials? true})))))
 
 (defn ingest-ego!
   "Ingest an ego response (entity + outgoing + incoming) into Datascript."
@@ -119,6 +212,69 @@
           (swap! state/ui-state update :_render-tick (fnil inc 0))
           hxs)))))
 
+(defn expand-essay!
+  "Expand ESSAY-ID into section neighbours, then fetch section hyperedges.
+This is the essay-side analogue of expanding a diagram: it teaches the
+generic graph enough local structure to show section-level activity
+without waiting for the full dedicated lifecycle surface."
+  [essay-id]
+  (go
+    (when-not (state/get-nema essay-id)
+      (let [essay-resp (<! (http/get (str base "/entity/" essay-id)
+                                     {:with-credentials? true}))]
+        (when (= 200 (:status essay-resp))
+          (when-let [essay-entity (or (get-in essay-resp [:body :entity])
+                                      (:body essay-resp))]
+            (state/ingest-entity! essay-entity)))))
+    (state/pin! essay-id)
+    (let [resp (<! (http/get (str base "/entities/latest")
+                             {:query-params {:type "arxana/essay-section"
+                                             :limit 2000}
+                              :with-credentials? true}))]
+      (when (= 200 (:status resp))
+        (let [sections (->> (get-in resp [:body :entities])
+                            (filter (fn [section]
+                                      (str/starts-with?
+                                       (or (:id section) (:entity/id section) "")
+                                       (str essay-id "/section/"))))
+                            vec)]
+          (doseq [section sections]
+            (let [section-id (or (:id section) (:entity/id section))]
+              (state/ingest-entity! section)
+              (swap! state/ui-state update :pins
+                     (fn [pins]
+                       (if (some #(= (:id %) section-id) pins)
+                         pins
+                         (conj (vec pins) {:id section-id
+                                           :k 1}))))
+              (<! (fetch-hyperedges section-id))))
+          (state/set-focus! essay-id)
+          (swap! state/ui-state update :expanded-essays (fnil conj #{}) essay-id)
+          (swap! state/ui-state assoc-in
+                 [:expanded-essay-sections essay-id]
+                 (mapv (fn [section]
+                         (or (:id section) (:entity/id section)))
+                       sections))
+          (swap! state/ui-state update :_render-tick (fnil inc 0))
+          sections)))))
+
+(defn collapse-essay!
+  "Collapse ESSAY-ID back to its central essay node.
+Removes the section pins introduced by `expand-essay!' and clears the
+essay-expansion metadata used by the graph projection."
+  [essay-id]
+  (let [section-ids (get-in @state/ui-state [:expanded-essay-sections essay-id] [])]
+    (swap! state/ui-state update :pins
+           (fn [pins]
+             (vec
+              (remove (fn [pin]
+                        (some #(= (:id pin) %) section-ids))
+                      pins))))
+    (swap! state/ui-state update :expanded-essays disj essay-id)
+    (swap! state/ui-state update :expanded-essay-sections dissoc essay-id)
+    (state/set-focus! essay-id)
+    (swap! state/ui-state update :_render-tick (fnil inc 0))))
+
 (defn create-scratch-node!
   "Add a local scratch entry to the scratchpad. No server call until Save."
   []
@@ -218,7 +374,8 @@
   "Fetch recent entities across key types for the activity feed."
   []
   (go
-    (let [types ["diagram" "article" "arxana/song" "arxana/chorus" "pattern/language"
+    (let [types ["diagram" "article" "arxana/essay" "arxana/essay-section"
+                 "arxana/song" "arxana/chorus" "pattern/language"
                  "pattern/component" "apm/problem" "claim" "question"]
           results (atom [])]
       (doseq [t types]
@@ -342,6 +499,7 @@
                    :username username
                    :login-error nil)
             (connect-ws!)
+            (fetch-recent)
             (when on-success (on-success)))
         (do (swap! state/ui-state assoc
                    :login-error "Invalid credentials")
@@ -357,6 +515,7 @@
          (swap! state/ui-state assoc
                 :username (get-in resp [:body :username]))
          (connect-ws!)
+         (fetch-recent)
          (when on-success (on-success)))))))
 
 ;; --- WebSocket ---
