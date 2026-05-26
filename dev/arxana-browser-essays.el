@@ -65,15 +65,102 @@ Used to resolve missing pattern entities (looked up by pattern-name +
   :type 'directory
   :group 'arxana-browser-essays)
 
+(defcustom arxana-browser-essays-catalog-query-limit 2000
+  "Maximum number of XTDB essay entities to read when projecting the catalog."
+  :type 'integer
+  :group 'arxana-browser-essays)
+
 ;;; ─────────────────────────────────────────────────────────────
 ;;; Manifest loading
 ;;; ─────────────────────────────────────────────────────────────
 
+(defun arxana-browser-essays--edn-annotations-as-el (edn-path)
+  "Read EDN-PATH (sibling annotations.edn) and convert its `:annotations'
+to the `.el' manifest shape used by the Essays browser.  For each EDN
+annotation, picks the first `:role :annotated' endpoint's `:section-id'
+and `:passage' to build `:annotated (:entity-id ... :passage ...)'.
+
+If the endpoint's :section-id doesn't appear in the EDN's `:sections'
+vector (e.g. it points at the essay-entity as a whole rather than a
+sub-section), the first declared section's :id is substituted so the
+annotation still counts toward an actual section row.  Returns a vector
+of annotation plists, or nil if path unreadable / parse fails."
+  (when (and edn-path (file-readable-p edn-path))
+    (condition-case _
+        (let* ((data (arxana-browser-rewrites--read-edn-file edn-path))
+               (anns (plist-get data :annotations))
+               (sections (plist-get data :sections))
+               (section-ids (mapcar (lambda (s) (plist-get s :id))
+                                    (append sections nil)))
+               (default-section (car section-ids)))
+          (when anns
+            (vconcat
+             (delq nil
+                   (mapcar
+                    (lambda (ann)
+                      (let* ((eps (plist-get ann :endpoints))
+                             (annotated-ep
+                              (cl-some (lambda (ep)
+                                         (when (eq (plist-get ep :role) :annotated)
+                                           ep))
+                                       (append eps nil)))
+                             (raw-sid (and annotated-ep
+                                           (plist-get annotated-ep :section-id)))
+                             (sid (if (and raw-sid (member raw-sid section-ids))
+                                      raw-sid
+                                    default-section)))
+                        (when annotated-ep
+                          (let* ((kw->str (lambda (v)
+                                            (cond ((keywordp v)
+                                                   (substring (symbol-name v) 1))
+                                                  ((symbolp v)
+                                                   (symbol-name v))
+                                                  (t v))))
+                                 ;; Fallback :note synthesis for v2 shapes that
+                                 ;; don't carry :note directly (e.g.
+                                 ;; :foreword/synthetic-question carries
+                                 ;; :question + :expected-answer-area instead).
+                                 (note-raw (plist-get ann :note))
+                                 (question (plist-get ann :question))
+                                 (expected (plist-get ann :expected-answer-area))
+                                 (discharge (plist-get ann :discharge-procedure))
+                                 (note
+                                  (or note-raw
+                                      (string-join
+                                       (delq nil
+                                             (list (when question
+                                                     (concat "Q: " question))
+                                                   (when expected
+                                                     (concat "Expected answer area: "
+                                                             expected))
+                                                   (when discharge
+                                                     (concat "Discharge: "
+                                                             discharge))))
+                                       "\n\n"))))
+                            (list :id (plist-get ann :id)
+                                  :hx-type (funcall kw->str (plist-get ann :hx-type))
+                                  :annotated
+                                  (list :entity-id sid
+                                        :passage (plist-get annotated-ep :passage))
+                                  :source (list :pattern-name nil :passage nil)
+                                  :note note
+                                  :severity (funcall kw->str (plist-get ann :severity))
+                                  :status (funcall kw->str (plist-get ann :status)))))))
+                    (append anns nil))))))
+      (error nil))))
+
 (defun arxana-browser-essays--load-manifest-file (path)
-  "Load PATH (Elisp file) and return the first `defconst' value it defines."
-  (let ((symbol nil))
-    (with-temp-buffer
-      (insert-file-contents path)
+  "Load PATH (Elisp file) and return the first `defconst' value it defines.
+Returns nil if PATH is not readable.
+
+If a sibling `annotations.edn' is present, its `:annotations' are
+converted to `.el' shape and used to AUGMENT (replace) the manifest's
+own `:annotations' field — so the .edn becomes the authoritative source
+for annotation data while the .el remains the manifest of sections."
+  (when (and (stringp path) (file-readable-p path))
+    (let ((symbol nil))
+      (with-temp-buffer
+        (insert-file-contents path)
       (goto-char (point-min))
       (condition-case nil
           (while (and (not symbol) (not (eobp)))
@@ -85,13 +172,176 @@ Used to resolve missing pattern entities (looked up by pattern-name +
         (end-of-file nil))
       (when symbol
         (load path nil t)
-        (symbol-value symbol)))))
+        (let* ((m (symbol-value symbol))
+               (edn-path (expand-file-name
+                          "annotations.edn"
+                          (file-name-directory path)))
+               (edn-anns (arxana-browser-essays--edn-annotations-as-el
+                          edn-path)))
+          (if edn-anns
+              (plist-put (copy-sequence m) :annotations edn-anns)
+            m)))))))
+
+(defun arxana-browser-essays--manifest-records ()
+  "Return configured manifest files as `(:path PATH :manifest PLIST)' records."
+  (delq nil
+        (mapcar
+         (lambda (path)
+           (let ((manifest (arxana-browser-essays--load-manifest-file path)))
+             (when manifest
+               (list :path path :manifest manifest))))
+         arxana-browser-essays-manifest-files)))
 
 (defun arxana-browser-essays--all-manifests ()
   "Return the list of manifest plists loaded from the configured files."
-  (delq nil
-        (mapcar #'arxana-browser-essays--load-manifest-file
-                arxana-browser-essays-manifest-files)))
+  (mapcar (lambda (record) (plist-get record :manifest))
+          (arxana-browser-essays--manifest-records)))
+
+(defconst arxana-browser-essays--xtdb-catalog-cache-unset
+  :unset
+  "Sentinel marking an uncached XTDB essay catalog projection.")
+
+(defvar arxana-browser-essays--xtdb-catalog-cache
+  arxana-browser-essays--xtdb-catalog-cache-unset
+  "Cached XTDB-projected essay catalog entries.")
+
+(defun arxana-browser-essays--clear-catalog-cache ()
+  "Invalidate the cached XTDB essay catalog projection."
+  (setq arxana-browser-essays--xtdb-catalog-cache
+        arxana-browser-essays--xtdb-catalog-cache-unset))
+
+(defun arxana-browser-essays--reload-manifests-and-cache ()
+  "Reload current manifest files and clear the XTDB catalog cache.
+Unlike `arxana-browser-essays-refresh', this preserves any runtime
+overrides of `arxana-browser-essays-catalogs' so save/reopen flows can
+operate against copied or generated catalogs without being reset to the
+defcustom value."
+  (dolist (path arxana-browser-essays-manifest-files)
+    (when (file-readable-p path)
+      (load path nil t)))
+  (arxana-browser-essays--clear-catalog-cache))
+
+(defun arxana-browser-essays--resolve-source-file (source-file &optional manifest-file)
+  "Resolve SOURCE-FILE to an absolute path when possible.
+Relative paths are anchored to MANIFEST-FILE when given, else the legacy
+`~/npt/working-paper/' root for backwards compatibility."
+  (cond
+   ((not (stringp source-file)) nil)
+   ((file-name-absolute-p source-file) source-file)
+   ((stringp manifest-file)
+    (expand-file-name source-file (file-name-directory manifest-file)))
+   (t
+    (expand-file-name source-file "~/npt/working-paper/"))))
+
+(defun arxana-browser-essays--entity-props (entity)
+  "Return ENTITY's props alist, normalizing common key variants."
+  (and (listp entity)
+       (or (alist-get :props entity)
+           (alist-get 'props entity))))
+
+(defun arxana-browser-essays--catalog-id-for-essay (essay-id)
+  "Return a stable Lisp symbol id for ESSAY-ID."
+  (intern (replace-regexp-in-string
+           "[^[:alnum:]]+"
+           "-"
+           (downcase (or essay-id "")))))
+
+(defconst arxana-browser-essays--catalog-override-keys
+  '(:manifest-file :manifest-symbol :source-file)
+  "Catalog keys whose explicit runtime values override XTDB projections.")
+
+(defun arxana-browser-essays--merge-catalog-entry (primary fallback)
+  "Merge FALLBACK catalog fields into PRIMARY.
+XTDB remains authoritative for identity and descriptive metadata, but
+explicit runtime file-path overrides from `arxana-browser-essays-catalogs'
+win for the catalog keys in
+`arxana-browser-essays--catalog-override-keys'."
+  (let ((result (copy-sequence primary))
+        (plist fallback))
+    (while plist
+      (let ((key (pop plist))
+            (value (pop plist)))
+        (when (and key
+                   value)
+          (when (or (memq key arxana-browser-essays--catalog-override-keys)
+                    (not (plist-member result key))
+                    (null (plist-get result key)))
+            (setq result (plist-put result key value))))))
+    result))
+
+(defun arxana-browser-essays--dedupe-catalogs (catalogs)
+  "Return CATALOGS deduplicated by `:essay-id', merging later fallbacks."
+  (let ((seen (make-hash-table :test 'equal))
+        kept)
+    (dolist (cat catalogs)
+      (let ((essay-id (plist-get cat :essay-id)))
+        (when (stringp essay-id)
+          (let ((cell (gethash essay-id seen)))
+            (if cell
+                (setcar cell
+                        (arxana-browser-essays--merge-catalog-entry
+                         (car cell) cat))
+              (let ((new (list cat)))
+                (puthash essay-id new seen)
+                (push new kept)))))))
+    (mapcar #'car (nreverse kept))))
+
+(defun arxana-browser-essays--xtdb-catalog-entry (entity)
+  "Project essay ENTITY from XTDB into a browser catalog plist."
+  (let* ((essay-id (arxana-browser-essays--entity-id entity))
+         (props (arxana-browser-essays--entity-props entity))
+         (name (arxana-browser-essays--entity-name entity))
+         (label (or (and (listp props) (alist-get :label props))
+                    name))
+         (description (and (listp props) (alist-get :description props)))
+         (manifest-file (and (listp props) (alist-get :manifest-file props)))
+         (source-file (arxana-browser-essays--resolve-source-file
+                       (and (listp props) (alist-get :source-file props))
+                       manifest-file)))
+    (when (stringp essay-id)
+      (list :id (arxana-browser-essays--catalog-id-for-essay essay-id)
+            :label label
+            :description description
+            :essay-id essay-id
+            :manifest-file manifest-file
+            :source-file source-file))))
+
+(defun arxana-browser-essays--xtdb-catalog ()
+  "Return the cached XTDB-projected essay catalog."
+  (if (eq arxana-browser-essays--xtdb-catalog-cache
+          arxana-browser-essays--xtdb-catalog-cache-unset)
+      (setq arxana-browser-essays--xtdb-catalog-cache
+            (let* ((response (and (arxana-store-sync-enabled-p)
+                                  (arxana-store-fetch-entities-latest
+                                   :type "arxana/essay"
+                                   :limit arxana-browser-essays-catalog-query-limit)))
+                   (entities (arxana-browser-essays--unwrap-entities response)))
+              (delq nil
+                    (mapcar #'arxana-browser-essays--xtdb-catalog-entry
+                            entities))))
+    arxana-browser-essays--xtdb-catalog-cache))
+
+(defun arxana-browser-essays--catalogs ()
+  "Return the effective essay catalog list.
+XTDB is authoritative; `arxana-browser-essays-catalogs' is a fallback
+augmentation layer used for pre-import manifests and explicit operator
+overrides."
+  (arxana-browser-essays--dedupe-catalogs
+   (append (arxana-browser-essays--xtdb-catalog)
+           arxana-browser-essays-catalogs)))
+
+(defun arxana-browser-essays--manifest-file-for-essay-id (essay-id)
+  "Return the manifest file configured for ESSAY-ID, or nil."
+  (let ((cat (arxana-browser-essays--catalog-spec essay-id)))
+    (or (plist-get cat :manifest-file)
+        (let ((record
+               (seq-find
+                (lambda (entry)
+                  (let* ((manifest (plist-get entry :manifest))
+                         (essay (and manifest (plist-get manifest :essay))))
+                    (string= essay-id (and essay (plist-get essay :id)))))
+                (arxana-browser-essays--manifest-records))))
+          (and record (plist-get record :path))))))
 
 ;;;###autoload
 (defun arxana-browser-essays-refresh ()
@@ -103,17 +353,14 @@ up the latest content without restarting Emacs."
   ;; dynamically (e.g. generated Wikibooks imports).  Load them first so a
   ;; plain refresh is enough to surface their manifests.
   (require 'arxana-browser-essays-wikibooks nil t)
-  ;; Re-load each manifest file; defconst will re-evaluate.
-  (dolist (path arxana-browser-essays-manifest-files)
-    (when (file-readable-p path)
-      (load path nil t)))
+  (arxana-browser-essays--reload-manifests-and-cache)
   ;; Re-apply the catalog defcustom value from this file's source.  Without
   ;; this, defcustom keeps its previously-loaded value even after eval-buffer.
   (custom-reevaluate-setting 'arxana-browser-essays-catalogs)
   (when (called-interactively-p 'interactive)
     (message "Refreshed %d manifest(s); %d catalog(s)"
              (length arxana-browser-essays-manifest-files)
-             (length arxana-browser-essays-catalogs))))
+             (length (arxana-browser-essays--catalogs)))))
 
 ;;; ─────────────────────────────────────────────────────────────
 ;;; Pattern resolution
@@ -200,15 +447,40 @@ when the store contains many `pattern/library' entities."
 ;;; Entity + annotation import
 ;;; ─────────────────────────────────────────────────────────────
 
-(defun arxana-browser-essays--ensure-essay (essay dry-run)
+(defun arxana-browser-essays--ensure-essay (essay manifest-file dry-run)
   "Upsert ESSAY entity unless DRY-RUN."
   (if dry-run
       (message "[dry-run] ensure-essay %s" (plist-get essay :id))
-    (arxana-store-ensure-entity
-     :id (plist-get essay :id)
-     :name (plist-get essay :name)
-     :type (plist-get essay :type)
-     :props (plist-get essay :props))))
+    (let* ((essay-id (plist-get essay :id))
+           (augment (seq-find
+                     (lambda (cat)
+                       (string= essay-id (plist-get cat :essay-id)))
+                     arxana-browser-essays-catalogs))
+           (props (copy-tree (plist-get essay :props)))
+           (label (or (plist-get augment :label)
+                      (plist-get essay :name)))
+           (description (or (plist-get augment :description)
+                            (alist-get 'description props)))
+           (source-file
+            (arxana-browser-essays--resolve-source-file
+             (plist-get essay :source-file)
+             manifest-file))
+           (stored-props
+            (append
+             (delq nil
+                   (list (cons 'label label)
+                         (when description
+                           (cons 'description description))
+                         (when source-file
+                           (cons 'source-file source-file))
+                         (when manifest-file
+                           (cons 'manifest-file manifest-file))))
+             props)))
+      (arxana-store-ensure-entity
+       :id essay-id
+       :name (plist-get essay :name)
+       :type (plist-get essay :type)
+       :props stored-props))))
 
 (defun arxana-browser-essays--ensure-section (section dry-run)
   "Upsert SECTION entity unless DRY-RUN."
@@ -253,14 +525,14 @@ on demand if the entity is not yet in the store."
                      (append base (list "annotation/retracted"))
                    base))))))
 
-(defun arxana-browser-essays--import-manifest (manifest dry-run)
+(defun arxana-browser-essays--import-manifest (manifest manifest-file dry-run)
   "Import essay, sections, and annotations from MANIFEST plist.
 When DRY-RUN is non-nil, log intentions without writing.  Returns a
 plist summary: :essay, :section-count, :annotation-count."
   (let* ((essay (plist-get manifest :essay))
          (sections (plist-get manifest :sections))
          (annotations (plist-get manifest :annotations)))
-    (arxana-browser-essays--ensure-essay essay dry-run)
+    (arxana-browser-essays--ensure-essay essay manifest-file dry-run)
     (dolist (section sections)
       (arxana-browser-essays--ensure-section section dry-run))
     (dolist (annotation annotations)
@@ -278,15 +550,20 @@ making any changes."
   (unless dry-run
     (unless (arxana-store-ensure-sync)
       (user-error "Futon sync is disabled; enable futon4-enable-sync first")))
-  (let ((manifests (arxana-browser-essays--all-manifests))
+  (let ((records (arxana-browser-essays--manifest-records))
         (summaries nil))
-    (unless manifests
+    (unless records
       (user-error "No Essay manifests found in %s"
                   arxana-browser-essays-manifest-files))
-    (dolist (manifest manifests)
-      (push (arxana-browser-essays--import-manifest manifest dry-run)
+    (dolist (record records)
+      (push (arxana-browser-essays--import-manifest
+             (plist-get record :manifest)
+             (plist-get record :path)
+             dry-run)
             summaries))
     (setq summaries (nreverse summaries))
+    (unless dry-run
+      (arxana-browser-essays--clear-catalog-cache))
     (when (called-interactively-p 'interactive)
       (dolist (s summaries)
         (message "%s Essay %s: %d section%s, %d annotation%s"
@@ -308,11 +585,14 @@ making any changes."
      :description "Annotated edition of the UKRN WP draft v5."
      :essay-id "arxana/essay/ukrn-wp"
      :manifest-symbol arxana-browser-essays-ukrn-wp-manifest
+     :manifest-file "/home/joe/npt/working-paper/annotations.el"
      :source-file "/home/joe/npt/working-paper/UKRN_WP_draft_v5.md"))
-  "Catalog definitions surfaced under the Essays browser menu.
-Each entry is a plist with :id, :label, :description, :essay-id,
-:manifest-symbol (the defconst holding the manifest), and :source-file
-(the markdown file the essay reads from)."
+  "Fallback catalog augmentations surfaced under the Essays browser menu.
+XTDB-projected essay entities are authoritative.  Each plist here can
+augment or override that projection by `:essay-id', and also provides a
+transitional path for manifests that exist on disk but have not yet been
+imported to XTDB.  Supported keys include :id, :label, :description,
+:essay-id, :manifest-file, :manifest-symbol, and :source-file."
   :type 'sexp
   :group 'arxana-browser-essays)
 
@@ -366,23 +646,52 @@ Each entry is a plist with :id, :label, :description, :essay-id,
   "Face for the inline marker on comment annotations."
   :group 'arxana-browser-essays)
 
+(defface arxana-browser-essays-retracted-face
+  '((t :strike-through t :foreground "#888"))
+  "Face for retracted annotation entries in the notes buffer."
+  :group 'arxana-browser-essays)
+
 (defun arxana-browser-essays--catalog-spec (essay-id)
   "Return the catalog spec whose :essay-id matches ESSAY-ID."
   (seq-find
    (lambda (cat) (string= (plist-get cat :essay-id) essay-id))
-   arxana-browser-essays-catalogs))
+   (arxana-browser-essays--catalogs)))
 
 (defun arxana-browser-essays--manifest-for (essay-id)
-  "Return the loaded manifest plist for ESSAY-ID, or nil."
+  "Return the loaded manifest plist for ESSAY-ID, or nil.
+
+Resolution order:
+  1. :manifest-file in the catalog spec (explicit pointer).
+  2. :manifest-symbol bound at load time.
+  3. Lazy-load via `--all-manifests' + re-check :manifest-symbol.
+  4. Sibling `annotations.el' next to :source-file (the essay-corpus-substrate
+     convention; allows essays in `~/code/futonN/essays/<slug>/' to be
+     discovered without explicit catalog manifest-file wiring).
+
+`--load-manifest-file' itself augments the manifest's `:annotations' from
+sibling `annotations.edn' when present, so v2 annotation passes flow
+through this lookup without further wiring."
   (let ((cat (arxana-browser-essays--catalog-spec essay-id)))
     (when cat
-      (or (and (boundp (plist-get cat :manifest-symbol))
+      (or (let ((manifest-file (plist-get cat :manifest-file)))
+            (and (stringp manifest-file)
+                 (file-readable-p manifest-file)
+                 (arxana-browser-essays--load-manifest-file manifest-file)))
+          (and (boundp (plist-get cat :manifest-symbol))
                (symbol-value (plist-get cat :manifest-symbol)))
           (progn
             ;; Lazy-load from the configured manifest files if not already bound.
             (arxana-browser-essays--all-manifests)
             (and (boundp (plist-get cat :manifest-symbol))
-                 (symbol-value (plist-get cat :manifest-symbol))))))))
+                 (symbol-value (plist-get cat :manifest-symbol))))
+          ;; Sibling-annotations.el fallback (essay-corpus-substrate convention).
+          (let* ((source (plist-get cat :source-file))
+                 (el-path (and source
+                               (expand-file-name
+                                "annotations.el"
+                                (file-name-directory source)))))
+            (and el-path (file-readable-p el-path)
+                 (arxana-browser-essays--load-manifest-file el-path)))))))
 
 (defun arxana-browser-essays--annotation-retracted-p (ann)
   "Return non-nil if ANN is marked retracted in the manifest.
@@ -390,6 +699,29 @@ Retracted annotations remain in the manifest as hypergraph citizens
 (they carry provenance and may be re-attached later) but are filtered
 out of the render and overlay passes."
   (plist-get ann :retracted))
+
+(defun arxana-browser-essays--annotation-retraction-marker (ann)
+  "Return a human-readable retraction marker for ANN, or nil."
+  (when (arxana-browser-essays--annotation-retracted-p ann)
+    (let* ((kind (plist-get ann :retraction-kind))
+           (at (plist-get ann :retracted-at))
+           (kind-str (cond
+                      ((stringp kind) kind)
+                      ((and kind (symbolp kind)) (symbol-name kind))
+                      (t nil)))
+           (at-str (cond
+                    ((stringp at) at)
+                    ((numberp at) (format "%s" at))
+                    (t nil))))
+      (cond
+       ((and kind-str at-str)
+        (format "[retracted: %s @ %s]" kind-str at-str))
+       (kind-str
+        (format "[retracted: %s]" kind-str))
+       (at-str
+        (format "[retracted @ %s]" at-str))
+       (t
+        "[retracted]")))))
 
 (defun arxana-browser-essays--annotations-for-section (manifest section-id &optional include-retracted)
   "Return live annotations from MANIFEST targeting SECTION-ID.
@@ -453,16 +785,20 @@ the currently open `*Arxana Essay*' buffer."
             (count-annotations (or (plist-get summary :live) 0)))
        (list :type 'essays-essay
              :label (plist-get cat :label)
-             :description (format "%s (%d section%s, %d annotation%s)"
-                                  (plist-get cat :description)
-                                  count-sections
-                                  (if (= count-sections 1) "" "s")
-                                  count-annotations
-                                  (if (= count-annotations 1) "" "s"))
+             :description
+             (let ((prefix (plist-get cat :description)))
+               (string-trim
+                (format "%s%s(%d section%s, %d annotation%s)"
+                        (or prefix "")
+                        (if prefix " " "")
+                        count-sections
+                        (if (= count-sections 1) "" "s")
+                        count-annotations
+                        (if (= count-annotations 1) "" "s"))))
              :annotation-count count-annotations
              :view 'essays-essay
              :essay-id (plist-get cat :essay-id))))
-   arxana-browser-essays-catalogs))
+   (arxana-browser-essays--catalogs)))
 
 (defun arxana-browser-essays-format (&optional context)
   "Return tabulated-list format for the Essays browser CONTEXT."
@@ -595,15 +931,18 @@ the currently open `*Arxana Essay*' buffer."
 
 (defun arxana-browser-essays--catalog-source-file (essay-id)
   "Return the source-file path for the catalog matching ESSAY-ID.
-Falls back to the manifest's :essay :source-file (resolved against
-~/npt/working-paper/) if the catalog spec lacks :source-file."
+Falls back to the manifest's `:essay :source-file', resolved against the
+manifest file location when known."
   (let* ((cat (arxana-browser-essays--catalog-spec essay-id))
          (cat-path (and cat (plist-get cat :source-file))))
     (or cat-path
         (let* ((manifest (arxana-browser-essays--manifest-for essay-id))
-	       (essay (and manifest (plist-get manifest :essay)))
-	       (rel (and essay (plist-get essay :source-file))))
-	  (and rel (expand-file-name rel "~/npt/working-paper/"))))))
+               (essay (and manifest (plist-get manifest :essay)))
+               (manifest-file (arxana-browser-essays--manifest-file-for-essay-id
+                               essay-id)))
+          (arxana-browser-essays--resolve-source-file
+           (and essay (plist-get essay :source-file))
+           manifest-file)))))
 
 (defun arxana-browser-essays--essay-id-candidates ()
   "Return completion candidates for configured essay catalogs.
@@ -612,7 +951,7 @@ Each entry is a cons of display label and essay-id."
             (cons (or (plist-get cat :label)
                       (plist-get cat :essay-id))
                   (plist-get cat :essay-id)))
-          arxana-browser-essays-catalogs))
+          (arxana-browser-essays--catalogs)))
 
 (defun arxana-browser-essays--read-essay-id ()
   "Prompt for an essay id from `arxana-browser-essays-catalogs'."
@@ -660,19 +999,31 @@ Otherwise leave SECTION-NAME unchanged."
   "Read SOURCE-FILE and return text under the markdown `## HEADING-TEXT`.
 Allows an optional `N.` number prefix between `##` and HEADING-TEXT, so a
 heading-text of \"The synthesis...\" matches `## 5. The synthesis...`.
-Returns text from the `##` line up to (but not including) the next `## ` line."
+Returns text from the `##` line up to (but not including) the next `## ` line.
+
+Fallback: when the source file contains NO `##` headings at all (the
+essay has been de-sectioned, e.g. an H2-stripped foreword), returns the
+whole file content as the section.  Each declared section then maps to
+the same whole-essay text — the manifest's section structure becomes
+metadata-only rather than text-extraction targets."
   (when (and source-file (file-readable-p source-file) heading-text)
     (with-temp-buffer
       (insert-file-contents source-file)
       (goto-char (point-min))
       (let ((heading-re (format "^##[[:space:]]+\\(?:[0-9]+\\.[[:space:]]+\\)?%s"
                                 (regexp-quote heading-text))))
-        (when (re-search-forward heading-re nil t)
+        (cond
+         ;; Specific H2 found → extract its section.
+         ((re-search-forward heading-re nil t)
           (let ((start (match-beginning 0))
                 (end (or (and (re-search-forward "^## " nil t)
                               (match-beginning 0))
                          (point-max))))
-            (buffer-substring-no-properties start end)))))))
+            (buffer-substring-no-properties start end)))
+         ;; No H2s anywhere → essay de-sectioned; return whole file.
+         ((progn (goto-char (point-min))
+                 (not (re-search-forward "^## " nil t)))
+          (buffer-substring-no-properties (point-min) (point-max))))))))
 
 (defun arxana-browser-essays--locate-passage-bounds (passage)
   "Search for PASSAGE in the current buffer; return (BEG . END) or nil.
@@ -1064,12 +1415,13 @@ Returns non-nil when a rebuild was attempted."
   "Reconcile annotation overlays with text-property runs of the same id.
 Render time writes `arxana-essay-annotation-id' and
 `arxana-essay-annotation-index' as text properties on each annotated
-passage, mirroring the overlay.  Kill and yank carry the text
-properties through the kill ring natively; the overlay does not
-follow.  This pass finds any contiguous text-property run whose
-overlay is absent or mis-placed and creates or moves the overlay to
-match, so a cut-paste of an annotated region inside the buffer keeps
-its face + `[N]' marker."
+  passage, mirroring the overlay.  Kill and yank carry the text
+  properties through the kill ring natively; the overlay does not
+  follow.  This pass finds any contiguous text-property run whose
+  overlay is absent or mis-placed and creates or moves the overlay to
+  match.  Intended effect: preserve annotation display across
+  kill/yank-driven moves.  Known limitation: this is not yet reliable
+  for all cut-yank workflows inside the section editor."
   (arxana-browser-essays--ensure-text-sync-hooks)
   (arxana-browser-essays--self-heal-after-undo)
   (save-excursion
@@ -1191,7 +1543,7 @@ stranded highlight where the annotation used to live."
               (when (and beg end (< beg end))
                 (let ((ov (make-overlay beg end)))
                   (overlay-put ov 'face
-                               '(:strike-through t :foreground "#888"))
+                               'arxana-browser-essays-retracted-face)
                   (overlay-put ov 'arxana-essays-retracted t)
                   (overlay-put ov 'priority 20)
                   (overlay-put ov 'help-echo
@@ -1668,7 +2020,7 @@ into the manifest automatically."
               (message "[essays] Synced %s: manifest passage updated (%d→%d chars)"
                        id (length stored) (length current)))))))
     (when updated-ids
-      (arxana-browser-essays-refresh))
+      (arxana-browser-essays--reload-manifests-and-cache))
     (nreverse updated-ids)))
 
 (defun arxana-browser-essays--sync-annotations-to-xtdb (ann-ids)
@@ -1788,7 +2140,7 @@ re-anchor pass for any annotation whose bounds are now stale.  Leaves a
                     (cl-incf n)
                     (message "[essays] Marked %s retracted (overlay was empty)" id)))))
             (when (> n 0)
-              (arxana-browser-essays-refresh))
+              (arxana-browser-essays--reload-manifests-and-cache))
             n))
          (updated-heading
           (when heading-changed
@@ -1809,7 +2161,7 @@ re-anchor pass for any annotation whose bounds are now stale.  Leaves a
                 (setq-local arxana-browser-essays--heading-text new-heading)
                 (when new-name
                   (setq-local arxana-browser-essays--section-name new-name))
-                (arxana-browser-essays-refresh)
+                (arxana-browser-essays--reload-manifests-and-cache)
                 t))))
          (updated-ids (arxana-browser-essays--sync-overlays-to-manifest))
          (synced (length updated-ids))
@@ -2112,7 +2464,7 @@ changes back to disk and re-render."
                    path (plist-get rw :id) (plist-get rw :new))
                   (message "[essays] Re-anchored %s (%s): manifest updated"
                            (plist-get rw :id) (plist-get rw :quality)))))
-            (arxana-browser-essays-refresh)))
+            (arxana-browser-essays--reload-manifests-and-cache)))
         (setq-local arxana-browser-essays--unresolved
                     (nreverse arxana-browser-essays--unresolved))
         (goto-char (point-min))
@@ -2158,10 +2510,10 @@ buffer's own sync hook can find the id at point."
                      (hx-short (replace-regexp-in-string
                                 "^annotation/" "" (or hx-type "")))
                      (id (plist-get ann :id)))
-                (let* ((is-comment (string= hx-type "annotation/comment"))
-                       (is-critique (and is-comment
-                                         (member "annotation/critique"
-                                                 (plist-get ann :labels))))
+                 (let* ((is-comment (string= hx-type "annotation/comment"))
+                        (is-critique (and is-comment
+                                          (member "annotation/critique"
+                                                  (plist-get ann :labels))))
                        (is-writing-coherence
                         (and is-comment
                              (member "annotation/writing-coherence"
@@ -2175,35 +2527,46 @@ buffer's own sync hook can find the id at point."
                              (member "annotation/collaboration-coherence"
                                      (plist-get ann :labels))))
                        (is-closed (plist-get ann :closure))
-                       (closed-prefix (if is-closed "✓ " "")))
+                       (closed-prefix (if is-closed "✓ " ""))
+                       (retracted-marker
+                        (arxana-browser-essays--annotation-retraction-marker ann))
+                       (entry-prefix
+                        (if retracted-marker
+                            (concat retracted-marker " ")
+                          "")))
                   (cond
                    (is-writing-coherence
-                    (insert (format "* %s🤖%d Writing coherence%s\n" closed-prefix index
+                    (insert (format "* %s%s🤖%d Writing coherence%s\n"
+                                    entry-prefix closed-prefix index
                                     (if is-closed " (closed)" "")))
                     (when note
                       (insert (format "%s\n" note))))
                    (is-critique
-                    (insert (format "* %s🔍%d Critique%s\n" closed-prefix index
+                    (insert (format "* %s%s🔍%d Critique%s\n"
+                                    entry-prefix closed-prefix index
                                     (if is-closed " (closed)" "")))
                     (when note
                       (insert (format "%s\n" note))))
                    (is-peeragogy
-                    (insert (format "* %s🗪%d Peeragogy%s\n" closed-prefix index
+                    (insert (format "* %s%s🗪%d Peeragogy%s\n"
+                                    entry-prefix closed-prefix index
                                     (if is-closed " (closed)" "")))
                     (when note
                       (insert (format "%s\n" note))))
                    (is-collaboration-coherence
-                    (insert (format "* %s🗫%d Collaboration coherence%s\n" closed-prefix index
+                    (insert (format "* %s%s🗫%d Collaboration coherence%s\n"
+                                    entry-prefix closed-prefix index
                                     (if is-closed " (closed)" "")))
                     (when note
                       (insert (format "%s\n" note))))
                    (is-comment
-                    (insert (format "* %s💬%d Author comment%s\n" closed-prefix index
+                    (insert (format "* %s%s💬%d Author comment%s\n"
+                                    entry-prefix closed-prefix index
                                     (if is-closed " (closed)" "")))
                     (when note
                       (insert (format "  %s\n" note))))
                    (t
-                    (insert (format "* [%d] " index))
+                    (insert (format "* %s[%d] " entry-prefix index))
                     (if pattern
                         (insert
                          (propertize
@@ -2223,6 +2586,17 @@ buffer's own sync hook can find the id at point."
                     (when note
                       (insert (format "  - Gloss: %s\n" note)))))
                   (insert "\n"))
+                (let ((retracted-marker
+                       (arxana-browser-essays--annotation-retraction-marker ann)))
+                  (when retracted-marker
+                  (add-face-text-property
+                   entry-start (point)
+                   'arxana-browser-essays-retracted-face
+                   'append)
+                  (put-text-property
+                   entry-start (point)
+                   'help-echo
+                   (or retracted-marker "Retracted annotation"))))
                 ;; Tag the whole entry with the annotation-id so the
                 ;; notes-side sync hook can find which annotation point is on.
                 (put-text-property entry-start (point)
@@ -2270,12 +2644,14 @@ active (notes in a side window)."
                                    (or heading-text "<no heading-text in section props>"))))
          (annotations (arxana-browser-essays--annotations-for-section
                        manifest section-id))
+         (notes-annotations (arxana-browser-essays--annotations-for-section
+                             manifest section-id t))
          (text-buf (arxana-browser-essays--render-section-text
                     essay-id section-id section-name
                     source-file heading-text
                     section-text annotations))
          (notes-buf (arxana-browser-essays--render-section-notes
-                     section-name annotations)))
+                     section-name notes-annotations)))
     (arxana-browser-essays--display-section-buffers text-buf notes-buf)))
 
 (defun arxana-browser-essays-location (item)
@@ -2697,6 +3073,12 @@ Re-renders the section."
       (when (and essay-id section-id section-name)
         (arxana-browser-essays--open-section essay-id section-id section-name))
       (message "[essays] Restored checkpoint %s" checkpoint-id))))
+
+;; Pull in the compiled-view surface so the `?`-hydra (with `c` for
+;; compiled-view, `R` for rewrites, etc.) is wired whenever the essays
+;; browser is active.  The require is soft (`nil t`) so the essays
+;; browser still loads if the compiled-view file is unavailable.
+(require 'arxana-browser-essays-compiled nil t)
 
 (provide 'arxana-browser-essays)
 ;;; arxana-browser-essays.el ends here
