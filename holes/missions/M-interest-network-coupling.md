@@ -514,3 +514,47 @@ rounds. Event vocabulary, checkpoint format, projection design,
 completeness signal: codex-7's design. Mission-doc structure +
 write-up: claude-3. Joe will author `M-interim-director` separately and
 return to wire it into this projection.*
+
+---
+
+## Downstream finding (M-action-cost-modelling, 2026-05-26)
+
+Filed by claude-1 during the VERIFY phase of `futon3c/holes/missions/M-action-cost-modelling.md`
+(T8 of §5.1).  **Visible elevation of priority; codex-7 routing needs operator attention.**
+
+**The finding**: M-INC step (b) — the typed-event-vocabulary commit, currently
+HEAD-as-escrow under codex-7 per the mission status header — is now identified as
+the hard predecessor for THREE downstream items in M-action-cost-modelling:
+
+1. **Geometry-track sorry-typing in substrate-2** (M-action-cost-modelling §3.2):
+   adds `:sorry` as a first-class entity-type with manifold-end T-semantics; consumes
+   the M-INC 7-status vocabulary (`:spawned :refined :strengthened :addressed
+   :falsified :foreclosed :reopened`) directly as the entity-status vocabulary.
+2. **`M-a-sorry-enterprise` mining-track resuming in earnest** (referenced in
+   `[[reference_sorry_mining_chain]]`): the mining-track can design + extract
+   pre-vocabulary (per VERIFY T5), but cannot emit-into-substrate until M-INC
+   step (b)'s vocabulary lands.
+3. **`:sorry/r3d-per-entity-attribution`** (the long-standing R3 honesty sorry,
+   tracked in `futon2/data/sorrys.edn`): re-typed from `:campaign`-scale to
+   `:mission`-scale because M-INC step (b) is the shared predecessor — the same
+   substrate-vocabulary commit unblocks all three downstream items at once.
+
+**Codex-7 routing issue noted 2026-05-26**: the M-INC mission status header
+names codex-7 as the owner of piece #2 → step (b), but codex-7 is not currently
+registered in Agency (per the futon3c HTTP `/api/alpha/agents` enumeration
+2026-05-26).  A whistle to codex-5 (the natural first routing) confirmed: codex-5
+is NOT authoritative for step (b) timing; codex-7 is.  Joe will need to either
+designate a replacement owner or re-register codex-7.  Until then, the safe
+provisional read is "step (b) is NOT imminent" (the only explicit duration found
+is an older `~2-3 days` handoff note at
+`futon7/holes/M-interim-director-proxy-metric-inventory.md:2050`, stale as of
+2026-05-26).
+
+**Action requested (low-friction)**: when codex-7's ownership is re-established
+(or replacement designated), please surface a fresh ETA for step (b).  The
+M-action-cost-modelling VERIFY T1 has resolved provisionally to (a) (author
+E-substrate-2-sorry-typing.md as a sibling-excursion) on the assumption that
+step (b) is > 2 weeks out; an imminent step (b) commit would justify re-shaping
+to (b) (fold scope in).
+
+No further action required on M-INC's side as currently scoped.
