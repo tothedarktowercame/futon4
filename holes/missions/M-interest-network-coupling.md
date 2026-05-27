@@ -1,8 +1,8 @@
 # Mission: Interest-Network Coupling
 
 **Date:** 2026-05-14
-**Status:** **Design-frozen v1 (2026-05-14).** IDENTIFY through VERIFY are complete on paper (§§1–4). Codex-7's sign-off-final landed after a second whistle round resolved four loose ends: daily-cadence-without-synthetic-churn discipline (§2.2), checkpoint phase as metadata not id-prefix (§2.0), VC-7 replay/idempotence (§4), and HEAD-as-escrow named as a surfaced pattern (§3.5). Next meaningful review point is the actual step (b) artefact (event vocabulary committed as flexiarg/schema), not another prose pass. Awaiting codex-7's piece #2 → step (b) sequencing.
-**Sequencing role:** **predecessor mission to `~/code/futon7/holes/M-interim-director.md`** (HEAD authored 2026-05-14 via eoi-new). Step (b) (event vocabulary v1 committed under `library/`) is a *hard predecessor* for M-interim-director *emitting* checkpoint delta-batches — but **not** for its HEAD declaring intentions: Joe used a HEAD-as-escrow pattern (T2 of the HEAD) to crystallise intentions without committing to data shape, decoupling the HEAD-authoring from the vocabulary commit. Steps (c)/(d)/(f) can land in parallel with M-interim-director's checkpoint cycle once it starts (they consume the already-fixed vocabulary). Realistic pipeline: codex-7 piece #2 lands → step (b) lands → M-interim-director starts emitting → step (c)+(d) land in parallel → M-interim-director closes (~2 weeks out) → downstream validation-execution phase becomes a second checkpoint source.
+**Status:** **Design-frozen v1 (2026-05-14).** IDENTIFY through VERIFY are complete on paper (§§1–4). Codex-7's sign-off-final landed after a second whistle round resolved four loose ends: daily-cadence-without-synthetic-churn discipline (§2.2), checkpoint phase as metadata not id-prefix (§2.0), VC-7 replay/idempotence (§4), and HEAD-as-escrow named as a surfaced pattern (§3.5). Next meaningful review point is the actual step (b) artefact (event vocabulary committed as flexiarg/schema), not another prose pass. **Ownership transfer 2026-05-26:** codex-7's outstanding INSTANTIATE scope — steps (a)/(b)/(c)/(d) plus the deferred piece #2 (single-essay diachronic / lifecycle work) — transferred to claude-3 (this session); see §Downstream finding for the routing context. Pipeline sequencing in §Sequencing role and §5 INSTANTIATE subject to revision as part of claude-3 step (a) re-sign-off. **Step (a) re-sign-off and step (b) artefact both landed 2026-05-26** (see §5.1); step (b) artefact at `~/code/futon3/library/structure/interest-event-vocabulary.flexiarg`. Step (e) now unblocked; steps (c)/(d) ready to start.
+**Sequencing role:** **predecessor mission to `~/code/futon7/holes/M-interim-director.md`** (HEAD authored 2026-05-14 via eoi-new). Step (b) (event vocabulary v1 committed under `library/`) is a *hard predecessor* for M-interim-director *emitting* checkpoint delta-batches — but **not** for its HEAD declaring intentions: Joe used a HEAD-as-escrow pattern (T2 of the HEAD) to crystallise intentions without committing to data shape, decoupling the HEAD-authoring from the vocabulary commit. Steps (c)/(d)/(f) can land in parallel with M-interim-director's checkpoint cycle once it starts (they consume the already-fixed vocabulary). Realistic pipeline: piece #2 lands → step (b) lands → M-interim-director starts emitting → step (c)+(d) land in parallel → M-interim-director closes (~2 weeks out) → downstream validation-execution phase becomes a second checkpoint source. (Owner attribution: piece #2 + steps (a)/(b)/(c)/(d) now claude-3 as of 2026-05-26; pipeline-ordering may be reshuffled at step (a) re-sign-off — step (b) elevation surfaced by M-action-cost-modelling downstream finding makes vocabulary-first a plausible reshuffle.)
 **Owner:** futon4 (event/projection model + WebArxana surface), with
   ingress from futon5a (EoI corpus) and futon7 (mission checkpoints as
   posterior update source).
@@ -16,7 +16,10 @@
   - Future dependency: `~/code/futon7/holes/M-interim-director.md` — to be
     authored. Will be the first concrete posterior-update source.
 **Authors:** thrashed out by claude-3 + codex-7 on 2026-05-14 via three
-  whistle rounds; codex-7's sign-off owed.
+  whistle rounds; codex-7's sign-off-final landed 2026-05-14 (see §Status).
+  Ownership of outstanding INSTANTIATE scope (steps (a)/(b)/(c)/(d) + piece
+  #2) transferred to claude-3 on 2026-05-26 (see §Status and §Downstream
+  finding).
 
 ## 1. IDENTIFY
 
@@ -485,25 +488,247 @@ each demonstrated at least once with real data, plus at least one
 instance of VC-6 with operator/projection agreement at the case
 level.
 
-## 5. INSTANTIATE — _pending_
+## 5. INSTANTIATE — _(a) and (b) landed 2026-05-26; (e) unblocked; (c)/(d) ready; (f) pending_
 
 Order (codex-7's revised sequence — vocabulary first, then Joe is
 unblocked to produce valid checkpoints without waiting on projection or
 rendering):
 
-- **(a)** Codex-7 sign-off on this plan.
-- **(b)** Write event vocabulary into a flexiarg or schema file under
-  `library/` (codex-7 owns).
+- **(a)** ✓ **Claude-3 re-sign-off on this plan** (landed 2026-05-26
+  by claude-3; see §5.1 below for sign-off log).
+- **(b)** ✓ Event vocabulary committed as flexiarg under `library/`
+  (landed 2026-05-26 at
+  `~/code/futon3/library/structure/interest-event-vocabulary.flexiarg`;
+  see §5.1 for completion log). Was codex-7's slot.
 - **(e)** Author `M-interim-director.md` (futon7) using this plan's
   checkpoint format from the first checkpoint onward (Joe owns). Once
   the vocabulary and checkpoint format are fixed, Joe should not wait
   on projection or rendering to begin producing valid delta-batches.
-- **(c)** Wire projection into XTDB (codex-7 owns; shares infrastructure
-  with single-essay lifecycle piece #2).
-- **(d)** WebArxana `arxana://view/interest-network` route (codex-7
-  owns; sibling of essay-lifecycle surface).
+  **Unblocked as of 2026-05-26.**
+- **(c)** Wire projection into XTDB (claude-3 owns; was codex-7; shares
+  infrastructure with single-essay lifecycle piece #2). **Ready to start
+  as of 2026-05-26.**
+- **(d)** WebArxana `arxana://view/interest-network` route (claude-3
+  owns; was codex-7; sibling of essay-lifecycle surface). **Ready to
+  start as of 2026-05-26.**
 - **(f)** First posterior update lands; verify projection consumes it
   correctly.
+
+### 5.1 Progress log
+
+**2026-05-26 — Step (a) claude-3 re-sign-off.** Design held end-to-end;
+no changes to vocabulary, payload schema, projection design, or
+verification cases. Three forward-look items recorded as non-blocking
+observations:
+
+1. **EoI engine ↔ M-INC vocabulary alignment.** EoI engine runs produce
+   state-changes fitting the vocabulary cleanly (`state/spawned` for new
+   `eoi_instances[i]`, `state/refined` for parent
+   `tech_debt_carried_forward[]` updates, `link/asserted` for parent/child
+   instance relations). EoI engine becomes a candidate third event source
+   alongside M-interim-director's design + execution phases. Decision
+   deferred to step (e) or to a separate EoI-engine integration ticket.
+2. **Granularity-enum extension candidate.** Carry-forward entries on
+   parent EoI instances fit closest to `:annotation` but are not
+   text-annotations. Either extend the enum (`:tension`,
+   `:tech-debt-entry`) OR add an `:annotation/subtype` discriminator.
+   Non-blocking for step (b); resolved at step (c) projection time.
+3. **Parent/child instance relations.** Scenario C run today
+   (`vsat-poc-2026-q2-q3-scenario-c-vsatlatarium`, 2026-05-25 in EoI
+   bucket) created a child `eoi_instances[i]` with explicit
+   `parent_instance_ref`. Fits `link/asserted` (`:link/src` = child,
+   `:link/dst` = parent) cleanly; no vocabulary change. Surface in §2.4
+   WebArxana node-decoration should distinguish parent/child relations
+   from other link types (deferred to step (d)).
+
+**Pipeline reshuffle (de facto effected; pending Joe formal confirmation).**
+Original codex-7 plan: `piece #2 → step (b)`. The M-action-cost-modelling
+downstream finding (§Downstream finding above) makes step (b) the hard
+predecessor for THREE additional items beyond M-interim-director, so
+the reshuffle was: step (b) FIRST, then piece #2 in parallel with step
+(c). With step (b) now landed, this is *de facto* the new sequence.
+
+**2026-05-26 — Step (b) artefact landed.** Written to
+`~/code/futon3/library/structure/interest-event-vocabulary.flexiarg`.
+Operator decision: flexiarg as the canonical design substrate; EDN
+procedural form deferred to step (c) (war-machine vocabulary EDNs at
+`~/code/futon5a/data/war-machine-*-vocabulary.edn` are the structural
+reference for the EDN derivation). The flexiarg covers: 8-event
+vocabulary (`state/{spawned,refined,strengthened,addressed,falsified,foreclosed,reopened}`
++ `link/asserted`), payload schema, emission discipline (append-only,
+no-op-days-emit-nothing, operator-asserted-boundary, validation-blocks).
+Cross-mission consumers named in the flexiarg's NEXT-STEPS:
+substrate-2 sorry-typing (M-action-cost-modelling §3.2),
+M-a-sorry-enterprise mining-track, `:sorry/r3d-per-entity-attribution`.
+M-action-cost-modelling VERIFY T1's (a) provisional resolution may
+now be reconsidered (the imminent-step-(b) branch is now actual).
+
+### 5.2 Checkpoint 1 — Interest Network materialises as bipartite graph (2026-05-26)
+
+**Trigger:** the data layer matured ahead of the wiring (steps (c)/(d)
+parked per Joe 2026-05-26 "data-first perspective"). The bipartite
+graph the mission specified abstractly is now a concrete artefact at
+`~/code/atthangika-interest-surface-v1.edn` (v1.2). Recording this as
+the mission's first concrete posterior-update — the **Interest Network
+worthy of the name** referred to in Joe's 2026-05-26 cue.
+
+**What landed (2026-05-25 through 2026-05-26):**
+
+- **6 essays finalised as `<repo>/essays/<slug>/annotations.edn`** (or
+  `eoi-annotations.edn` where the directory already had an
+  Emacs-Lisp / foreword-flavoured annotations file): anthropic-institute-analyst,
+  glasgow-cogito-neurotech-RA, hyperreal-director-side-a,
+  hyperreal-director-side-b, vsat-poc-scenarios-2026-q2-q3,
+  operator-foreword.
+- **30 distinct interest-territories tagged** across the corpus; 48
+  deduplicated bipartite edges; degree distribution shows clear
+  hierarchy (peer-learning-and-distributed-collaboration: 6;
+  cross-substrate-invariance: 5; agentic-coding-as-research-record: 5;
+  4 territories at degree 2; 22 singletons).
+- **The eoi-finalisation algorithm** is written at
+  `~/code/algorithms/eoi-finalisation.md` (v0.1, sibling to
+  `eoi-engine.md`).
+- **Forward-pass experiments** at `~/code/futon5a/interest-scanning/`:
+  Glasgow (NOT-interest-bearing, −6.25 against v1.2 REDUCE); Anthropic
+  Fellows (STRUCTURALLY INTERESTING, +9.75); score-spread between
+  candidates widens 60% when the Foreword's territories are added —
+  the bipartite graph is producing predictive signal.
+- **Edit-proposal experiment** at
+  `~/code/futon5a/interest-scanning/edit-proposals-operator-foreword-2026-05-26.md`:
+  7 gap-anchored proposals for the Foreword, ingested as new
+  `:hx-type :foreword/eoi-edit-proposal` annotations with
+  `:subtype` discriminator (`:high-leverage` / `:structural` /
+  `:factual-anchor` / `:open-frontier`) in
+  `~/code/futon7a/essays/operator-foreword/annotations.edn` for Joe's
+  Arxana editorial-surface workflow.
+
+**What this Interest Network unlocks (mission's "what it might unlock"
+exploration, per Joe 2026-05-26):**
+
+- **Predictive utility against new candidates.** Forward-pass against
+  the bipartite graph scores candidate-EOIs (job postings,
+  collaboration invitations, basin probes) against Joe's
+  corpus-revealed interest map. Two candidates assessed against the
+  same REDUCE set yield 16-point score spread (v1.2) — clearly
+  discriminating signal, not noise. The bipartite graph is **not just
+  descriptive but predictive**.
+- **Self-improvement via edit proposals.** Inverting the forward pass:
+  score an existing essay against the REDUCE set to find territories
+  it under-represents. The Foreword (degree 13, highest essay-degree)
+  yielded 7 proposals; same method applies to any corpus essay. New
+  algorithm sibling-candidate: `eoi-edit-proposal.md`.
+- **Operator-self-clarification.** The degree distribution surfaces
+  Joe's load-bearing interests (peer-learning, cross-substrate-invariance,
+  agentic-coding) by recurrence — the philosophical question
+  Joe posed ("what do I wake up curious about?") now has a structural
+  answer. Whether the answer SURPRISES Joe is itself diagnostic.
+- **A new artefact class (forward-pass + edit-proposal) generalises**
+  to any operator-decision substrate where the operator has a
+  corpus-of-prior-statements and is considering a candidate-against-that-prior.
+  The Interest Network is the substrate; forward-pass + edit-proposal
+  are the apparatus operating on it.
+
+**What it doesn't yet do (honest):**
+
+- Not hooked to a continuous-learning loop (the M-pattern-application-diagnostic
+  A→B turns + M-a-sorry-enterprise B→A turns are at agent-coding-turn
+  granularity; the Interest Network is at operator-essay granularity).
+- Not wired into XTDB projection (step (c) parked).
+- No WebArxana surface (step (d) parked).
+- No event log emission yet — this checkpoint is the **first
+  concrete event-bearing artefact** the mission has produced, and its
+  events are recorded below (in markdown narrative; the EDN
+  delta-batch convention awaits step (b)'s vocabulary's projection
+  consumer at step (c)).
+
+**Conceptual placement (Joe 2026-05-26 "Interest Network IS"
+framing):** the Interest Network is structurally **adjacent to
+`M-a-sorry-enterprise` but at a different granularity**.
+
+- `M-pattern-application-diagnostic` = **A→B turns** (pattern selected
+  → pattern used → outcome observed → posterior over patterns
+  updated); at **agent-coding-turn** granularity.
+- `M-a-sorry-enterprise` = **B→A turns** (sorry-as-typed-hole →
+  pattern proposal → pattern landed → posterior over pattern-library
+  refined); at **agent-coding-turn** granularity.
+- **Interest Network** = something **B→A-shaped** but at
+  **operator-life-decision** granularity (interest → essay → essay's
+  position in the bipartite graph → posterior-shift over Joe's
+  interest map → operator-decisions about which essays to write,
+  basins to engage, candidates to apply to).
+
+The structural parallel: all three are evidence-accumulation-shapes
+where downstream observations update upstream commitments. The
+granularity is what differs — agent-coding-turns vs operator-essays
+vs operator-life-decisions. The Interest Network is "M-a-sorry-enterprise
+but for career-moves and other such things" (Joe's verbatim phrasing).
+
+**Affective events / Evidence Landscape connection (deferred but
+named):** Joe noted that "affective events" are modelled with respect
+to the Evidence Landscape — and even if currently not turned on, this
+would be a candidate landing-pad for wiring in a continuous-learning
+Interest Network. NOT proposed for INSTANTIATE now (would require
+verifying the affective-events surface is live + designing the
+operator-interest event-emission boundary), but worth carrying forward
+as a v0.2 candidate for the projection layer (step (c)).
+
+**Pipeline implications:**
+
+- Steps (c), (d), (f) remain parked but their conceptual ground is
+  more solid: the data layer they would project IS now real, with 48
+  edges + 30 territories at v1.2.
+- The eoi-finalisation algorithm is itself a candidate first-emitter
+  into M-INC's event vocabulary when step (c) lands — each finalised
+  essay emits `:state/spawned` for new annotations, `:link/asserted`
+  for cross-essay-links surfaced at the per-annotation level.
+- M-interim-director's validation-execution phase (June–August 2026)
+  could use the Interest Network's forward-pass apparatus to
+  systematically score candidate engagements as they arise during
+  validation — closing the loop between the bipartite graph
+  (descriptive) and M-interim-director's posterior-update generation
+  (likelihood). The two missions compose more concretely than they
+  did at design-freeze.
+
+### 5.3 Checkpoint 2 — v0.2 inline-at-assembly + N=10 corpus + visual surface (2026-05-27)
+
+**Trigger:** three improvements landed during the supervised parallel-EoI run (2026-05-26) and its 2026-05-27 follow-on session that bear directly on remaining steps (c), (d), (f).
+
+**(a) v0.2 inline-at-assembly-time policy = step-(c)'s "easy half".**
+`~/code/algorithms/eoi-finalisation.md` promoted to v0.2 on 2026-05-27 with a new policy: annotations.edn is emitted by the eoi-engine at assembly time (alongside annotations.el), not as a separate post-hoc finalisation pass. The eoi-new launcher (`~/code/futon0/scripts/eoi-new`) was extended with a "Structured-finalisation landing rule" instructing the engine to emit the sidecar. The minimum-coverage rule (path-arrow witness per arrow named in `arrow_components`, institution-object-ref for `institution_object_ref`, operator-doubt per doubt-flavoured tension) is now enforced at engine-emit time.
+
+**Why this bears on (c):** the natural emission point for M-INC events has moved from "post-hoc replay over the file" to "engine close-out". A future step-(c) implementation can hook into the same close-out and push `:state/spawned`-on-annotation events into XTDB in the same write. The launcher rule is structurally a partial step-(c) (file gets written); only the XTDB push is missing.
+
+**(b) N=10 corpus + 5 friction edges = step-(b) vocabulary's empirical test.**
+Corpus grew from N=2 (v1.0 REDUCE) → N=5 (v1.1) → N=6 (v1.2) → **N=10 (v1.3, 2026-05-27)**: 49 distinct interest-territories, 97 bipartite edges, top-3 territories at degree 10/8/7. Critically, the v1.3 REDUCE now contains **5 friction-polarity edges**:
+- Anthropic Fellows v1 → `held-space-analytic-practice` (`:friction`)
+- Anthropic Fellows v1 → `non-financial-progress-indicators` (`:friction`)
+- Glasgow round-2 formal-application v1 → `held-space-analytic-practice` (`:friction`)
+- VSAT POC scenarios trio v1 → `speculative-vs-grounded-design` (`:friction`)
+- VSAT Scenario A (VSATELIER) v1 → `speculative-vs-grounded-design` (`:friction`)
+
+**Why this bears on (b):** the step-(b) vocabulary (`~/code/futon3/library/structure/interest-event-vocabulary.flexiarg`) anticipates `:link/asserted` carrying a `:polarity` slot but doesn't have an empirical case for polarity changes over time. The corpus now has one: the Glasgow round-1 → round-2 transition flipped polarity on `held-space-analytic-practice` (round-1 outreach treated held-space as a fit signal; round-2 formal-application treats Lead-framing as friction against held-space — see anthropic-institute-analyst's polarity differential preserved in v1.0 REDUCE). **Question for v0.2 of the step-(b) vocabulary:** is a single `:link/asserted` with `:polarity :friction` sufficient, or does the round-1 → round-2 flip want its own `:link/polarity-changed` event? Not blocking; capture as a v0.2 vocabulary candidate.
+
+**(c) Bipartite-graph visualization = step-(d) renderer-substrate, static cut.**
+First-cut visual rendering of the full Interest Network landed 2026-05-27 at `~/code/futon5a/interest-scanning/interest-network-bipartite-graph-v1.{bb,tex,pdf}`. A2 landscape, 10 essays grouped by family (Foreword / Anthropic / Glasgow / Hyperreal / VSAT) on the left, 49 territories sorted by degree on the right, 97 edges between them (friction edges dashed). Style cribbed from the `vsat-poc-scenarios-2026-q2-q3-twopager.tex` Stakeholder-landscape figure.
+
+**Why this bears on (d):** the .bb generator IS the rendering apparatus a step-(d) WebArxana surface would need — only the data-source swap (EDN file → XTDB query) is missing. The data-shape transformations are settled:
+- Essay → family colour (5 families × RGB triple)
+- Territory → tier-by-degree (tier-1 ≥ 7, tier-2 ≥ 3, tier-3 = 1–2; visual treatment differentiated)
+- Edge → coloured-by-source-family + dashed-if-friction
+
+Step (d) is now mostly a "swap EDN-file slurp for an XTDB query + render to live WebArxana surface instead of LaTeX" — the design questions are answered.
+
+**Recommendation refresh for the parked steps:**
+
+| Step | Status before | Status after this checkpoint |
+|---|---|---|
+| (c) Wire projection into XTDB | parked, ready | **structural design clarified** — write-event-on-engine-close hook; reuses the v0.2 launcher emission point |
+| (d) WebArxana surface | parked, ready | **design questions answered** — .bb's data-shape transformations transfer; only swap EDN→XTDB query |
+| (f) First posterior update | parked | **unblocked by polarity-flip case** — Glasgow round-1 → round-2 `held-space` polarity flip is the test posterior-update |
+
+**Test state:** No test files in this mission; verification is by inspection of the artefacts named above (the .pdf renders cleanly; the .edn parses; the algorithm + launcher .sh syntax-check).
+
+**Next:** Joe's call whether to start (c) directly (XTDB write-hook on engine close-out) or to let the v0.2 launcher rule generate more substrate before wiring projection.
 
 ## 6. DOCUMENT — _pending_
 
@@ -543,18 +768,27 @@ the hard predecessor for THREE downstream items in M-action-cost-modelling:
 names codex-7 as the owner of piece #2 → step (b), but codex-7 is not currently
 registered in Agency (per the futon3c HTTP `/api/alpha/agents` enumeration
 2026-05-26).  A whistle to codex-5 (the natural first routing) confirmed: codex-5
-is NOT authoritative for step (b) timing; codex-7 is.  Joe will need to either
-designate a replacement owner or re-register codex-7.  Until then, the safe
-provisional read is "step (b) is NOT imminent" (the only explicit duration found
-is an older `~2-3 days` handoff note at
-`futon7/holes/M-interim-director-proxy-metric-inventory.md:2050`, stale as of
-2026-05-26).
+is NOT authoritative for step (b) timing; codex-7 is.
 
-**Action requested (low-friction)**: when codex-7's ownership is re-established
-(or replacement designated), please surface a fresh ETA for step (b).  The
-M-action-cost-modelling VERIFY T1 has resolved provisionally to (a) (author
-E-substrate-2-sorry-typing.md as a sibling-excursion) on the assumption that
-step (b) is > 2 weeks out; an imminent step (b) commit would justify re-shaping
-to (b) (fold scope in).
+**Ownership transition 2026-05-26 (Joe, emacs-repl)**: **`claude-3` is now
+assigned to help with M-INC**, picking up codex-7's role for the step (b) ownership
+and downstream sequencing.
+
+**Step (b) DONE 2026-05-26 (claude-3, same day)**: the typed event vocabulary
+landed as `futon3/library/structure/interest-event-vocabulary.flexiarg` —
+8 event types + payload schema + emission discipline + cross-mission consumers,
+in flexiarg format mirroring `unresolved-tensions-at-closure.flexiarg`'s shape.
+Steps (a) and (b) are both done; (c)/(d) ready to start; (e) unblocked pending
+Joe's move on M-interim-director.
+
+**Downstream consequences for M-action-cost-modelling** (re-evaluated 2026-05-26
+after step (b) landed): VERIFY T1's (a)-provisional resolution stays in
+execution (codex-5 already belled with HEAD+IDENTIFY authoring of
+E-substrate-2-sorry-typing.md), but with the (a) artefact's scope NARROWED —
+it now consumes `interest-event-vocabulary.flexiarg` as theoretical anchoring
+rather than treating it as predecessor-to-define-later.  VERIFY T5 (mining-track
+sequence) becomes fully UNBLOCKED.  `:sorry/r3d-per-entity-attribution` re-typing
+from `:campaign`-scale to `:mission`-scale now stands on actual rather than
+hypothetical predecessor satisfaction.
 
 No further action required on M-INC's side as currently scoped.
