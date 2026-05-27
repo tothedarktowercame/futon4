@@ -65,6 +65,10 @@ the variable.  Prefer `arxana-browser-rewrites-corpora'."
      :name "Hyperreal Side B"
      :annotations-file "/home/joe/npt/applications/hyperreal-director-side-b/annotations.el"
      :default? nil)
+    (:id :vsatarcs-alignment-completeness
+     :name "VSATARCS alignment completeness (R-criteria)"
+     :annotations-file "/home/joe/code/futon4/docs/vsatarcs-alignment-completeness.aif.edn"
+     :default? nil)
     ;; (:id :futon-stack
     ;;  :name "Futon-Stack Descriptive Essay"
     ;;  :annotations-file "/home/joe/.../annotations.edn"
@@ -235,6 +239,29 @@ already present in BASE (for example \"A\" or \"Rule\")."
     (skip-chars-forward "a-zA-Z0-9_/.?!*+-")
     (intern (buffer-substring-no-properties start (point)))))
 
+(defun arxana-browser-rewrites--edn-read-tagged-or-set ()
+  "Handle `#' dispatch: `#{...}' as a list, `#tag form' as the form (tag discarded).
+The discriminator after `#' is either `{' for a set or a tag symbol
+(e.g. `inst', `uuid').  The tagged-value path consumes the tag and the
+following form, returning only the form; this preserves tag-bearing
+values' content without modelling tags as elisp values yet."
+  (forward-char 1) ; skip #
+  (cond
+   ((eq (char-after) ?\{)
+    ;; #{...} — set; read as list since order is irrelevant for our consumers.
+    (forward-char 1) ; skip {
+    (let (elts)
+      (arxana-browser-rewrites--edn-skip-ws)
+      (while (not (eq (char-after) ?\}))
+        (push (arxana-browser-rewrites--edn-read-form) elts)
+        (arxana-browser-rewrites--edn-skip-ws))
+      (forward-char 1) ; skip }
+      (nreverse elts)))
+   (t
+    ;; #tag form — read and discard the tag, return the form
+    (arxana-browser-rewrites--edn-read-symbol)
+    (arxana-browser-rewrites--edn-read-form))))
+
 (defun arxana-browser-rewrites--edn-read-form ()
   "Read one EDN form at point."
   (arxana-browser-rewrites--edn-skip-ws)
@@ -243,6 +270,7 @@ already present in BASE (for example \"A\" or \"Rule\")."
    ((eq (char-after) ?\{) (arxana-browser-rewrites--edn-read-map))
    ((eq (char-after) ?\[) (arxana-browser-rewrites--edn-read-vector))
    ((eq (char-after) ?\() (arxana-browser-rewrites--edn-read-list))
+   ((eq (char-after) ?\#) (arxana-browser-rewrites--edn-read-tagged-or-set))
    ((eq (char-after) ?\") (arxana-browser-rewrites--edn-read-string))
    ((eq (char-after) ?\:) (arxana-browser-rewrites--edn-read-keyword))
    ((looking-at "nil\\b") (forward-char 3) nil)
@@ -563,6 +591,7 @@ otherwise fall back to a single blob with diff-removed face."
         (augmentation (plist-get closure :augmentation))
         (delta (plist-get closure :invariant-delta))
         (verification (plist-get closure :verification))
+        (enables (plist-get closure :enables))
         (decided-by (plist-get closure :decided-by))
         (timestamp (plist-get closure :timestamp))
         (severity (plist-get annotation :severity))
@@ -680,6 +709,27 @@ otherwise fall back to a single blob with diff-removed face."
                             (let ((v (cadr pl)))
                               (if (stringp v) v (format "%S" v)))))
             (setq pl (cddr pl)))))
+      (when enables
+        (insert "\nEnables (one-step-lookahead integration points):\n")
+        (cl-loop for e across enables do
+                 (let ((point (plist-get e :point))
+                       (desc (plist-get e :description))
+                       (status (plist-get e :status))
+                       (blocker (plist-get e :blocker)))
+                   (insert (format "  %s\n" (or point "?")))
+                   (when desc
+                     (let ((start (point)))
+                       (insert (format "    description: %s\n" desc))
+                       (arxana-browser-rewrites--fill-paragraph-region start (point))))
+                   (when status
+                     (insert (format "    status: %s\n" status)))
+                   (when blocker
+                     (let ((start (point)))
+                       (insert (format "    blocker: %s\n"
+                                       (if (stringp blocker)
+                                           blocker
+                                         (format "%S" blocker))))
+                       (arxana-browser-rewrites--fill-paragraph-region start (point)))))))
       (insert "\n")
       (arxana-browser-rewrites--insert-field "Decided-by" decided-by)
       (arxana-browser-rewrites--insert-field "Timestamp" timestamp)
