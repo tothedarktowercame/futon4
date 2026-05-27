@@ -317,7 +317,33 @@
      :instruments ("vocal" "vocal2" "piano" "bass"))
     ("vocal1+vocal2+piano+harmonica"
      :script "scripts/bounce_vocal_vocal2_piano_harmonica_vocal_forward.sh"
-     :instruments ("vocal" "vocal2" "piano" "harmonica"))))
+     :instruments ("vocal" "vocal2" "piano" "harmonica"))
+    ("vocal1+vocal2+vocal3+guitar"
+     :script "scripts/bounce_vocal_vocal2_vocal3_guitar.sh"
+     :instruments ("vocal" "vocal2" "vocal3" "guitar"))
+    ("vocal+piano+guitar+harmonica"
+     :script "scripts/bounce_vocal_piano_guitar_harmonica.sh"
+     :instruments ("vocal" "piano" "guitar" "harmonica"))
+    ("vocal+drum+piano+guitar"
+     :script "scripts/bounce_vocal_drum_piano_guitar.sh"
+     :instruments ("vocal" "drum" "piano" "guitar"))
+    ("vocal+piano+dbass+drum"
+     :script "scripts/bounce_vocal_piano_dbass_drum.sh"
+     :instruments ("vocal" "piano" "dbass" "drum")
+     :instrument-aliases (("bass" . "dbass")
+                          ("double-bass" . "dbass")
+                          ("doublebass" . "dbass")
+                          ("upright" . "dbass")))
+    ("vocal+vocal2+mandola+dbass"
+     :script "scripts/bounce_vocal_vocal2_mandola_dbass.sh"
+     :instruments ("vocal" "vocal2" "mandola" "dbass")
+     :instrument-aliases (("bass" . "dbass")
+                          ("double-bass" . "dbass")
+                          ("doublebass" . "dbass")
+                          ("upright" . "dbass")))
+    ("vocal+guitar+guitar2+mandola"
+     :script "scripts/bounce_vocal_guitar_guitar2_mandola.sh"
+     :instruments ("vocal" "guitar" "guitar2" "mandola"))))
 
 (defcustom arxana-media-bounce-profiles arxana-media--bounce-profiles-default
   "Profiles for multi-track bounce workflows.
@@ -343,7 +369,11 @@ Each entry is (PROFILE-NAME :script PATH [:instruments (\"vocal\" ...)])."
     ("gtr" . "guitar")
     ("vocal1" . "vocal")
     ("vocals" . "vocal")
-    ("vox" . "vocal"))
+    ("vox" . "vocal")
+    ("voice" . "vocal")
+    ("voice1" . "vocal")
+    ("voice2" . "vocal2")
+    ("voice3" . "vocal3"))
   "Aliases used when matching bounce instruments from filenames."
   :type '(repeat (cons (string :tag "Alias")
                        (string :tag "Canonical")))
@@ -2472,7 +2502,20 @@ Returns the number of publications updated."
 
       button.addEventListener('click', () => {
         if (!audio.paused) {
-          stopAllTracks();
+          audio.pause();
+          button.textContent = 'Resume';
+          button.classList.remove('is-playing');
+          return;
+        }
+        if (audio === currentAudio) {
+          Promise.resolve(audio.play())
+            .then(() => {
+              button.textContent = 'Pause';
+              button.classList.add('is-playing');
+            })
+            .catch(() => {
+              button.textContent = 'Resume';
+            });
           return;
         }
         const index = trackRows.findIndex((item) => item.audio === audio);
@@ -2702,16 +2745,39 @@ Returns the number of publications updated."
                                       (append names (list create-label)) nil t)
                    create-label)))
     (if (string= choice create-label)
-        (let* ((name (string-trim (read-string "New EP name: "))))
-          (when (string-empty-p name)
-            (user-error "EP name cannot be empty"))
-          (let* ((slug (arxana-media--slug name))
-                 (dest (file-name-as-directory
-                        (expand-file-name slug arxana-media-ep-staging-root))))
-            (make-directory dest t)
-            (arxana-media--write-publication-metadata dest name "")
-            dest))
+        (arxana-media--create-ep-staging-directory
+         (read-string "New EP name: "))
       (file-name-as-directory (expand-file-name choice arxana-media-ep-staging-root)))))
+
+(defun arxana-media--create-ep-staging-directory (name)
+  "Create a new EP staging directory named NAME and return its path."
+  (let* ((name (string-trim (or name ""))))
+    (when (string-empty-p name)
+      (user-error "EP name cannot be empty"))
+    (let* ((slug (arxana-media--slug name))
+           (dest (file-name-as-directory
+                  (expand-file-name slug arxana-media-ep-staging-root))))
+      (when (file-exists-p dest)
+        (user-error "EP staging already exists: %s" dest))
+      (make-directory dest t)
+      (arxana-media--write-publication-metadata dest name "")
+      dest)))
+
+(defun arxana-media-create-ep-staging ()
+  "Create a new empty EP staging directory and open it in the browser."
+  (interactive)
+  (let* ((name (string-trim (read-string "New EP name: ")))
+         (dest (arxana-media--create-ep-staging-directory name)))
+    (when (boundp 'arxana-browser--stack)
+      (setq arxana-browser--stack
+            (cons (list :view 'media-ep-staging-ep
+                        :label name
+                        :ep-staging-path dest)
+                  arxana-browser--stack)))
+    (when (fboundp 'arxana-browser--render)
+      (arxana-browser--render))
+    (message "Created EP staging %s" name)
+    dest))
 
 (defun arxana-media--misc-directories ()
   (let ((root (file-name-as-directory (expand-file-name arxana-media-misc-root))))
@@ -4089,8 +4155,8 @@ Return non-nil when the in-place update succeeds."
                                  (and instrument-order (length instrument-order)))))
            (instrument-order (plist-get (cdr profile) :instruments))
            (use-marked-order (plist-get (cdr profile) :use-marked-order))
-           (instrument-aliases (or (plist-get (cdr profile) :instrument-aliases)
-                                   arxana-media-bounce-instrument-aliases)))
+           (instrument-aliases (append (plist-get (cdr profile) :instrument-aliases)
+                                       arxana-media-bounce-instrument-aliases)))
       (when (and expected-count (/= (length entries) expected-count))
         (user-error "Bounce expects %d track%s (got %d)"
                     expected-count
@@ -4333,7 +4399,8 @@ When URL is provided, write it to the publication metadata."
                   (puthash dest-lyrics-id t arxana-media--lyrics-cache)))))))
       (when (and url (stringp url) (not (string-empty-p url)))
         (arxana-media--write-publication-metadata dest-dir name url))
-      (arxana-media--write-publication-tracks dest-dir (nreverse tracks))
+      (setq tracks (nreverse tracks))
+      (arxana-media--write-publication-tracks dest-dir tracks)
       (arxana-media--write-publications-index)
       (when entries
         (arxana-media--tag-entries entries tag))
