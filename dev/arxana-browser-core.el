@@ -483,7 +483,11 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         (list :type 'menu
               :label "Ledger"
               :description "Billable-hours ledger (Hyperreal) — Historical / Current / Future."
-              :view 'ledger)))
+              :view 'ledger)
+        (list :type 'menu
+              :label "Sales"
+              :description "Sales pipeline (Hyperreal) — clients by stage + Rolodex. Dual of the Ledger."
+              :view 'sales)))
 
 (defun arxana-browser--evidence-menu-items ()
   (if (require 'arxana-browser-evidence nil t)
@@ -1373,6 +1377,10 @@ Other views show the description in `mode-line-format'.")
                      (arxana-ledger--home-items)
                    (list (list :type 'info :label "Ledger module unavailable"
                                :description "Load arxana-vsatarcs-ledger.el"))))
+        ('sales (if (require 'arxana-vsatarcs-sales nil t)
+                    (arxana-sales--home-items)
+                  (list (list :type 'info :label "Sales module unavailable"
+                              :description "Load arxana-vsatarcs-sales.el"))))
         (_ (arxana-browser--menu-items))))
      (t
       (arxana-browser--require-patterns)
@@ -1971,6 +1979,10 @@ Other views show the description in `mode-line-format'.")
        (if (fboundp 'arxana-ledger-open-stratum)
            (arxana-ledger-open-stratum item)
          (message "Ledger module unavailable")))
+      ((or 'sales-stage 'sales-rolodex)
+       (if (fboundp 'arxana-sales-open-stage)
+           (arxana-sales-open-stage item)
+         (message "Sales module unavailable")))
       ('essays-essay
        (setq arxana-browser--stack
              (cons (list :view 'essays-essay

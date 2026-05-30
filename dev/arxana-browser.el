@@ -14,6 +14,7 @@
 (require 'arxana-browser-marks)
 (require 'arxana-browser-vsatarcs)
 (require 'arxana-vsatarcs-ledger)
+(require 'arxana-vsatarcs-sales)
 (require 'arxana-browser-scans)
 (require 'arxana-media)
 (require 'arxana-browser-browse)
