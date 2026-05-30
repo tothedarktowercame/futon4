@@ -163,5 +163,27 @@
                            (arxana-ledger--sum paid (lambda (it) (plist-get it :item/hours)))
                            (length paid)))))))))
 
+;; ---------------------------------------------------- home integration ----
+;; Wired into arxana-browser-core's home as the 'ledger view: three stratum
+;; rows (rendered via the default menu-row), each opening its frame on RET.
+
+(defun arxana-ledger--home-items ()
+  "Return the three stratum entries for the browser home `ledger' view."
+  (let ((items (arxana-ledger--items (arxana-ledger--read))))
+    (mapcar
+     (lambda (spec)
+       (let* ((sub (arxana-ledger--by-status items (nth 1 spec)))
+              (tot (arxana-ledger--sum sub #'arxana-ledger--amount)))
+         (list :type 'ledger-stratum
+               :label (nth 2 spec)
+               :stratum (nth 0 spec)
+               :description (format "%d item(s), £%.2f — %s"
+                                    (length sub) tot (nth 3 spec)))))
+     arxana-ledger--strata)))
+
+(defun arxana-ledger-open-stratum (item)
+  "Open the stratum named by ITEM (a `ledger-stratum' home item)."
+  (arxana-ledger--render-stratum (plist-get item :stratum)))
+
 (provide 'arxana-vsatarcs-ledger)
 ;;; arxana-vsatarcs-ledger.el ends here

@@ -479,7 +479,11 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         (list :type 'menu
               :label "Invariants"
               :description "Live invariant families first, with violations and candidates as secondary views."
-              :view 'invariants-home)))
+              :view 'invariants-home)
+        (list :type 'menu
+              :label "Ledger"
+              :description "Billable-hours ledger (Hyperreal) — Historical / Current / Future."
+              :view 'ledger)))
 
 (defun arxana-browser--evidence-menu-items ()
   (if (require 'arxana-browser-evidence nil t)
@@ -1365,6 +1369,10 @@ Other views show the description in `mode-line-format'.")
                     (arxana-browser-scans-items)
                   (list (list :type 'info :label "Scans module unavailable"
                               :description "Load arxana-browser-scans.el"))))
+        ('ledger (if (require 'arxana-vsatarcs-ledger nil t)
+                     (arxana-ledger--home-items)
+                   (list (list :type 'info :label "Ledger module unavailable"
+                               :description "Load arxana-vsatarcs-ledger.el"))))
         (_ (arxana-browser--menu-items))))
      (t
       (arxana-browser--require-patterns)
@@ -1959,6 +1967,10 @@ Other views show the description in `mode-line-format'.")
        (if (fboundp 'arxana-browser-scans-open)
            (arxana-browser-scans-open item)
          (message "Scans module unavailable")))
+      ('ledger-stratum
+       (if (fboundp 'arxana-ledger-open-stratum)
+           (arxana-ledger-open-stratum item)
+         (message "Ledger module unavailable")))
       ('essays-essay
        (setq arxana-browser--stack
              (cons (list :view 'essays-essay
