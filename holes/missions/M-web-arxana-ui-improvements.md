@@ -444,6 +444,15 @@ MAP is complete enough for DERIVE, with one blocked live check recorded below.
   this shell. This does not invalidate the evidence-store design, but it does
   mean the WebArxana DERIVE contract must not assume the browser can directly
   read futon3c evidence without a local projection endpoint and failure state.
+- Follow-up diagnosis in the same session: `GET /agency/connected` on the
+  same server returned a fast 404, proving the server can respond; `GET
+  /health`, `GET /api/alpha/evidence/count`, and `GET
+  /api/alpha/evidence?tag=codex&limit=1` all timed out. Code inspection shows
+  `futon3c.evidence.xtdb-backend/-query` calls `query-all-entries` and then
+  filters/sorts in memory, and `handle-evidence-query` applies `author`,
+  `session-id`, and `pattern-id` filters after `estore/query*`. That makes
+  this a likely evidence-query performance / indexing fix-up, not simply a
+  wrong URL.
 
 Remaining concrete checks before INSTANTIATE:
 
@@ -454,6 +463,14 @@ Remaining concrete checks before INSTANTIATE:
   in commit `d52287b` and may not yet be in substrate-2.
 - Decide whether the first projection consumes mission markdown snapshots,
   evidence snapshots, or both.
+
+### Integration fix-up issues discovered during MAP/DERIVE
+
+| Issue | Evidence | Required investigation |
+|---|---|---|
+| `F-1 evidence-query-timeout` | `127.0.0.1:7070` responds to unknown routes, but `/health`, `/api/alpha/evidence/count`, and filtered `/api/alpha/evidence` calls timed out at 2-3s. | Check whether XTDB evidence queries are doing full-store scans; add indexed/limited query paths or server-side pagination before WebArxana depends on evidence reads. |
+| `F-2 evidence-filter-boundary` | `handle-evidence-query` builds a partial `EvidenceQuery`, then filters `author`, `session-id`, and `pattern-id` after `estore/query*`. | Decide which filters belong in `EvidenceQuery` / backend-level query so `limit=1` and session-scoped reads do not require reading the whole evidence landscape. |
+| `F-3 health-coupling` | `/health` also timed out; `handle-health` computes `evidence-count` with `(count (estore/query* evidence-store {}))`, so health is coupled to a full evidence-store scan. | Health should expose degraded evidence state without blocking the whole endpoint; count should use an indexed/count path or a bounded/timeout-protected check. |
 
 ## 3. DERIVE — 2026-05-30 draft
 
@@ -686,6 +703,26 @@ Refusal shape:
   role and focus context, not only degree threshold.
 - Keep full-corpus route as an inspection mode if needed, but document it as
   full-corpus overview, not the main operator workbench.
+
+### Verification methodology
+
+Visual features should be verified in two stages:
+
+1. **Playwright first.** Use automated browser checks to catch blank screens,
+   broken routes, JavaScript exceptions, unreadable default density, missing
+   labels, failed click actions, and API failure states. For graph views, the
+   Playwright check should include a screenshot or canvas/SVG element count so
+   "route loaded" cannot pass while the visual surface is empty.
+2. **Live QA with Joe.** After Playwright passes, run the surface live with Joe
+   because the target property is operator usability: whether the mission
+   graph, search handoff, and interest-network filter make the stack easier to
+   navigate while actual work is happening. Joe's QA observations should be
+   recorded back into this mission as evidence or fix-up issues, not treated as
+   informal polish notes.
+
+This methodology is part of the mission design. For visual graph work,
+automated tests are necessary but not sufficient; the completion proof needs
+both mechanical evidence and operator-readability evidence.
 
 ### Fidelity contract
 
