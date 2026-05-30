@@ -32,12 +32,14 @@
 
 (defconst arxana-ledger--strata
   '((:current    :unbilled-draft "Current"    "drafted, not yet invoiced (this billing cycle)")
+    (:invoiced   :invoiced       "Invoiced"   "on an issued invoice, awaiting payment")
     (:historical :billed-paid    "Historical" "billed + paid (by invoice)")
-    (:future     :speculative    "Future"     "antedated speculations")
-    (:archived   :archived       "Archived"   "older, set aside"))
-  "Entry-point → (status title blurb).  Lifecycle echoes the media EP flow:
-Current (≈ EP staging) → Historical (≈ released EPs, grouped by invoice) →
-Archived (set aside); Future holds forward speculations.")
+    (:archived   :archived       "Archived"   "older, set aside")
+    (:future     :speculative    "Future"     "antedated speculations"))
+  "Entry-point → (status title blurb), in time-linear pipeline order so items
+are seen moving through the system: Current (work done) → Invoiced (issued,
+awaiting pay) → Historical (paid, by invoice) → Archived (set aside); Future
+holds forward speculations.  Echoes the media EP flow (staging → released EPs).")
 
 ;; ---------------------------------------------------------------- data ----
 
@@ -189,6 +191,17 @@ comments.  Signals an error if the item is not found."
       (message "%s archived" id)
       (arxana-ledger-refresh))))
 
+(defun arxana-ledger-print-invoice (inv-id)
+  "Generate a draft invoice .docx for INV-ID (default 202504) via
+~/code/ledger/print_invoice.bb (Markdown → pandoc --reference-doc=template).
+Writes to ~/code/invoices/."
+  (interactive (list (read-string "Print invoice id: " "202504")))
+  (let ((out (shell-command-to-string
+              (format "bb %s %s"
+                      (shell-quote-argument (expand-file-name "~/code/ledger/print_invoice.bb"))
+                      (shell-quote-argument inv-id)))))
+    (message "Print Invoice: %s" (string-trim out))))
+
 (defvar arxana-ledger-mode-map
   (let ((m (make-sparse-keymap)))
     (define-key m "g" #'arxana-ledger-refresh)
@@ -196,6 +209,7 @@ comments.  Signals an error if the item is not found."
     (define-key m "d" #'arxana-ledger-set-description-at-point)
     (define-key m "s" #'arxana-ledger-set-status-at-point)
     (define-key m "a" #'arxana-ledger-archive-at-point)
+    (define-key m "P" #'arxana-ledger-print-invoice)
     (define-key m "E" #'arxana-ledger-edit-file)
     m)
   "Keymap for `arxana-ledger-mode'.")
@@ -304,7 +318,9 @@ are flat item lists."
                                (length sub) tot (if paid? " · paid" "")))))
            (insert "\n"))
          (lambda () (arxana-ledger--render-stratum :historical)))
-      (let ((sub (arxana-ledger--by-status items status)))
+      (let ((sub (sort (arxana-ledger--by-status items status)
+                       (lambda (a b) (string< (or (plist-get a :item/date) "9999")
+                                              (or (plist-get b :item/date) "9999"))))))
         (arxana-ledger--render-frame
          (lambda ()
            (insert (format "Arxana Ledger — %s  (%s)\n\n" (nth 2 spec) (nth 3 spec)))
@@ -351,7 +367,7 @@ are flat item lists."
          (arxana-ledger--button "[edit ledger.edn]"
                                 (lambda (_) (arxana-ledger-edit-file))
                                 "Open the ledger EDN to edit; g to refresh after save")
-         (insert "   — on an item:  e=hours  d=desc  s=status  a=archive  ·  g=refresh  ·  E=raw EDN\n")))
+         (insert "   — item: e=hours d=desc s=status a=archive  ·  P=print invoice  ·  g=refresh  E=raw EDN\n")))
    #'arxana-ledger-browse)))
 
 ;; ---------------------------------------------------- home integration ----
