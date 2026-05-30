@@ -181,6 +181,7 @@ VALUE-STR (inserting KEY after ANCHOR if absent).  Targeted; preserves comments.
     (let ((org (plist-get card :card/org)))
       (when (and (stringp org) (not (string-empty-p org))) (insert (format " · %s" org))))
     (when kind (insert (format "  [%s]" (arxana-sales--sym-str kind))))
+    (when (plist-get card :card/in-pipeline?) (insert "  ☑ in pipeline"))
     (insert "\n")
     (dolist (f '((:card/role           "role")
                  (:card/email          "email")
@@ -293,6 +294,60 @@ VALUE-STR (inserting KEY after ANCHOR if absent).  Targeted; preserves comments.
              (arxana-sales--insert-card c)))))
      #'arxana-sales--render-rolodex)))
 
+;; --- leads frame (Rolodex → Prospect feed) ---------------------------------
+
+(defun arxana-sales--render-leads ()
+  "Harvest lead sources: live/latent referral edges across all cards, plus
+contacts not yet in the pipeline.  Each can be promoted into a Prospect."
+  (let* ((data (arxana-sales--read))
+         (cards (arxana-sales--rolodex data)))
+    (arxana-sales--render-frame
+     (lambda ()
+       (insert "Arxana Sales — Leads  (Rolodex → Prospect feed)\n")
+       (insert "The lead-gen gradient: the network's edges become pipeline prospects.\n\n")
+       (arxana-sales--button "[← entry points]" (lambda (_) (arxana-sales-browse)))
+       (insert "\n\n")
+       ;; 1) referral edges (live ● / latent ○) across all cards
+       (insert "Referral edges — candidate leads via connectors:\n\n")
+       (let ((any nil))
+         (dolist (card cards)
+           (let ((cname (or (plist-get card :card/name) "?"))
+                 (trust (plist-get card :card/relationship)))
+             (dolist (r (append (plist-get card :card/referrals) nil))
+               (when (memq (plist-get r :status) '(:live :latent))
+                 (setq any t)
+                 (insert (format "  %s %s\n"
+                                 (arxana-sales--referral-glyph (plist-get r :status))
+                                 (or (plist-get r :to) "?")))
+                 (insert (format "      via %s%s\n" cname
+                                 (if trust (format "  —  %s" trust) "")))
+                 (when (plist-get r :note)
+                   (insert (format "      %s\n" (plist-get r :note))))
+                 (arxana-sales--button "      [promote → Prospect]"
+                                       (let ((cn cname) (e r))
+                                         (lambda (_) (arxana-sales-promote-edge cn e)))
+                                       "Create a Prospect card + client from this referral")
+                 (insert "\n\n")))))
+         (unless any (insert "  (no live/latent edges)\n\n")))
+       ;; 2) contacts not yet in the pipeline — promote directly
+       (insert "Contacts not yet in the pipeline — promote directly:\n\n")
+       (let ((any nil))
+         (dolist (card cards)
+           (unless (or (plist-get card :card/in-pipeline?) (plist-get card :card/client))
+             (setq any t)
+             (let ((beg (point)))
+               (insert (format "  ▸ %s%s\n" (or (plist-get card :card/name) "?")
+                               (let ((org (plist-get card :card/org)))
+                                 (if (and (stringp org) (not (string-empty-p org)))
+                                     (format "  ·  %s" org) ""))))
+               (arxana-sales--button "      [promote → Prospect]"
+                                     (let ((c card)) (lambda (_) (arxana-sales-promote-card c)))
+                                     "Tick in-pipeline + add a :prospect client (or press p)")
+               (insert "\n\n")
+               (add-text-properties beg (point) (list 'arxana-sales-card card)))))
+         (unless any (insert "  (all carded contacts are already in the pipeline)\n"))))
+     #'arxana-sales--render-leads)))
+
 ;; --- editing commands ------------------------------------------------------
 
 (defconst arxana-sales--card-fields
@@ -330,22 +385,76 @@ VALUE-STR (inserting KEY after ANCHOR if absent).  Targeted; preserves comments.
       (message "%s → %s" (arxana-sales--sym-str id) stage)
       (arxana-sales-refresh))))
 
+(defun arxana-sales--insert-after-vector! (vec-key text)
+  "Insert TEXT just inside the EDN vector named VEC-KEY (e.g. \":clients\")."
+  (with-temp-buffer
+    (insert-file-contents arxana-sales-file)
+    (goto-char (point-min))
+    (unless (re-search-forward (concat (regexp-quote vec-key) "[ \t\n]*\\[") nil t)
+      (error "Sales: vector %s not found" vec-key))
+    (insert text)
+    (write-region (point-min) (point-max) arxana-sales-file nil 'quiet)))
+
 (defun arxana-sales-add-card ()
   "Add a blank Rolodex card (prompts id + name); appends to :rolodex."
   (interactive)
   (let* ((id (read-string "New card id (kebab, no colon): "))
          (name (read-string "Name: ")))
     (when (string-empty-p id) (user-error "Need an id"))
-    (with-temp-buffer
-      (insert-file-contents arxana-sales-file)
-      (goto-char (point-min))
-      (unless (re-search-forward ":rolodex[ \t\n]*\\[" nil t)
-        (error "Sales: :rolodex vector not found"))
-      (insert (format "\n  {:card/id :%s :card/client nil\n   :card/name %s :card/org \"\" :card/role \"\"\n   :card/email \"\" :card/phone \"\" :card/links []\n   :card/first-contact \"\" :card/referred-by \"\"\n   :card/how-we-met \"\" :card/interest-territories [] :card/notes \"\"}\n"
-                      id (arxana-sales--edn-string name)))
-      (write-region (point-min) (point-max) arxana-sales-file nil 'quiet))
+    (arxana-sales--insert-after-vector! ":rolodex"
+      (format "\n  {:card/id :%s :card/client nil\n   :card/name %s :card/org \"\" :card/role \"\"\n   :card/email \"\" :card/phone \"\" :card/links []\n   :card/first-contact \"\" :card/referred-by \"\"\n   :card/how-we-met \"\" :card/interest-territories [] :card/notes \"\"}\n"
+              id (arxana-sales--edn-string name)))
     (message "Added card :%s" id)
     (arxana-sales--render-rolodex)))
+
+;; --- Rolodex → Prospect: promote a card / a referral edge into the pipeline -
+
+(defun arxana-sales--client-id-exists-p (data id)
+  "Non-nil if DATA already has a client with :client/id ID (a keyword)."
+  (cl-some (lambda (c) (eq (plist-get c :client/id) id)) (arxana-sales--clients data)))
+
+(defun arxana-sales-promote-card (card)
+  "Promote CARD into the pipeline as a Prospect: tick :card/in-pipeline?, link
+:card/client, and append a :prospect client entry if none exists."
+  (let* ((id (plist-get card :card/id))
+         (idstr (arxana-sales--sym-str id))
+         (name (or (plist-get card :card/name) idstr)))
+    (unless id (user-error "Card has no id"))
+    (when (y-or-n-p (format "Promote %s into the pipeline as a Prospect? " name))
+      (unless (arxana-sales--client-id-exists-p (arxana-sales--read) id)
+        (arxana-sales--insert-after-vector! ":clients"
+          (format "\n  {:client/id :%s :client/name %s :client/stage :prospect :client/engagement :tbd}\n"
+                  idstr (arxana-sales--edn-string name))))
+      (arxana-sales--set-field! (format ":card/id :%s" idstr) ":card/in-pipeline?" "true")
+      (arxana-sales--set-field! (format ":card/id :%s" idstr) ":card/client" (format ":%s" idstr))
+      (message "Promoted %s → Prospect" name)
+      (arxana-sales--render-leads))))
+
+(defun arxana-sales-promote-card-at-point ()
+  "Promote the Rolodex card at point into the pipeline as a Prospect."
+  (interactive)
+  (let ((card (arxana-sales--prop-at-point 'arxana-sales-card)))
+    (unless card (user-error "No Rolodex card at point"))
+    (arxana-sales-promote-card card)))
+
+(defun arxana-sales-promote-edge (connector-name edge)
+  "Promote a referral EDGE (a `:card/referrals' entry) emitted by CONNECTOR-NAME
+into the pipeline: create a Prospect card (referred-by the connector) + a
+:prospect client.  Prompts for the new contact's name + id."
+  (let* ((to (or (plist-get edge :to) ""))
+         (seed (if (string-prefix-p "(" to) "" to))
+         (name (read-string "Prospect name: " seed))
+         (id (read-string "Prospect id (kebab, no colon): ")))
+    (when (or (string-empty-p name) (string-empty-p id))
+      (user-error "Need a name and an id"))
+    (arxana-sales--insert-after-vector! ":rolodex"
+      (format "\n  {:card/id :%s :card/client :%s :card/kind :prospect :card/in-pipeline? true\n   :card/name %s :card/org \"\" :card/role \"\"\n   :card/email \"\" :card/phone \"\" :card/links []\n   :card/first-contact \"\" :card/referred-by %s\n   :card/how-we-met \"\" :card/relationship \"\" :card/friendly-interest \"\"\n   :card/interest-territories [] :card/notes \"\"}\n"
+              id id (arxana-sales--edn-string name) (arxana-sales--edn-string connector-name)))
+    (arxana-sales--insert-after-vector! ":clients"
+      (format "\n  {:client/id :%s :client/name %s :client/stage :prospect :client/engagement :tbd}\n"
+              id (arxana-sales--edn-string name)))
+    (message "Promoted referral via %s → Prospect: %s" connector-name name)
+    (arxana-sales--render-leads)))
 
 (defvar arxana-sales-mode-map
   (let ((m (make-sparse-keymap)))
@@ -353,6 +462,8 @@ VALUE-STR (inserting KEY after ANCHOR if absent).  Targeted; preserves comments.
     (define-key m "e" #'arxana-sales-edit-card-field)
     (define-key m "s" #'arxana-sales-set-stage-at-point)
     (define-key m "+" #'arxana-sales-add-card)
+    (define-key m "p" #'arxana-sales-promote-card-at-point)
+    (define-key m "L" #'arxana-sales--render-leads)
     (define-key m "E" #'arxana-sales-edit-file)
     m)
   "Keymap for `arxana-sales-mode'.")
@@ -380,10 +491,14 @@ VALUE-STR (inserting KEY after ANCHOR if absent).  Targeted; preserves comments.
          (arxana-sales--button "▸ Rolodex"
                                (lambda (_) (arxana-sales--render-rolodex))
                                "All contact cards (clients + pre-clients)")
-         (insert (format "   — %d card(s)\n\n" (length (arxana-sales--rolodex data))))
+         (insert (format "   — %d card(s)\n" (length (arxana-sales--rolodex data))))
+         (arxana-sales--button "▸ Leads  (Rolodex → Prospect)"
+                               (lambda (_) (arxana-sales--render-leads))
+                               "Referral edges + un-promoted contacts → pipeline prospects")
+         (insert "   — the lead-gen gradient\n\n")
          (arxana-sales--button "[edit sales.edn]" (lambda (_) (arxana-sales-edit-file))
                                "Open the sales EDN to edit; g to refresh after save")
-         (insert "   — card: e=edit field +=add  ·  client: s=set stage  ·  g=refresh  E=raw EDN\n")))
+         (insert "   — card: e=edit field +=add p=promote  ·  client: s=set stage  ·  L=leads  g=refresh  E=raw EDN\n")))
      #'arxana-sales-browse)))
 
 ;; ---------------------------------------------------- home integration ----
@@ -403,13 +518,17 @@ VALUE-STR (inserting KEY after ANCHOR if absent).  Targeted; preserves comments.
       arxana-sales--stages)
      (list (list :type 'sales-rolodex
                  :label "Rolodex"
-                 :description (format "%d contact card(s)" (length (arxana-sales--rolodex data))))))))
+                 :description (format "%d contact card(s)" (length (arxana-sales--rolodex data))))
+           (list :type 'sales-leads
+                 :label "Leads (Rolodex → Prospect)"
+                 :description "Referral edges + un-promoted contacts → pipeline prospects")))))
 
 (defun arxana-sales-open-stage (item)
-  "Open the stage (or Rolodex) named by ITEM, a `sales-stage'/`sales-rolodex' home item."
-  (if (eq (plist-get item :type) 'sales-rolodex)
-      (arxana-sales--render-rolodex)
-    (arxana-sales--render-stage (plist-get item :stage))))
+  "Open the stage / Rolodex / Leads named by ITEM (a `sales-*' home item)."
+  (pcase (plist-get item :type)
+    ('sales-rolodex (arxana-sales--render-rolodex))
+    ('sales-leads   (arxana-sales--render-leads))
+    (_              (arxana-sales--render-stage (plist-get item :stage)))))
 
 (provide 'arxana-vsatarcs-sales)
 ;;; arxana-vsatarcs-sales.el ends here
