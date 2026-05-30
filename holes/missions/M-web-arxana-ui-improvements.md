@@ -1,7 +1,8 @@
 # Mission: WebArxana UI Improvements
 
 **Date:** 2026-05-30
-**Status:** HEAD complete; IDENTIFY complete 2026-05-30; MAP started
+**Status:** HEAD complete; IDENTIFY complete 2026-05-30; MAP pass complete
+enough for DERIVE; DERIVE drafted 2026-05-30
 **Owner:** futon4 (Arxana browser + WebArxana web surfaces + data layer),
   with ingress from futon3c (REPL / Evidence Store, Mission structure) and
   the substrate-2 / mission projection.
@@ -431,14 +432,283 @@ state. Force tuning is necessary but secondary.
 
 ### MAP exit status
 
-MAP is not complete. Remaining concrete checks before DERIVE:
+MAP is complete enough for DERIVE, with one blocked live check recorded below.
+2026-05-30 live checks:
 
-- Inspect the active futon1a/substrate-2 API response for one real
-  `code/v05/mission-doc` hyperedge and one evidence query for this session.
+- `http://127.0.0.1:7071/api/alpha/entities/latest?type=interest-event&limit=1`
+  returned a real `interest-event` entity from `M-interest-network-coupling`.
+- `http://127.0.0.1:7071/api/alpha/hyperedges?type=code/v05/mission-doc&limit=1`
+  returned a real `code/v05/mission-doc` hyperedge carrying mission id,
+  phase, status, path, cross-refs, PSRs/PURs, code paths, and summary.
+- `http://127.0.0.1:7070/api/alpha/evidence?limit=3` timed out after 3s from
+  this shell. This does not invalidate the evidence-store design, but it does
+  mean the WebArxana DERIVE contract must not assume the browser can directly
+  read futon3c evidence without a local projection endpoint and failure state.
+
+Remaining concrete checks before INSTANTIATE:
+
 - Confirm whether WebArxana can reach the same evidence store as the current
   Emacs REPL surface without a new auth or network boundary.
 - Inspect the current `M-web-arxana-ui-improvements` mission record after the
-  next mission-sync/backfill pass, because this file is currently untracked in
-  the futon4 Git worktree and may not yet be in substrate-2.
+  next mission-sync/backfill pass, because this mission file was newly added
+  in commit `d52287b` and may not yet be in substrate-2.
 - Decide whether the first projection consumes mission markdown snapshots,
   evidence snapshots, or both.
+
+## 3. DERIVE — 2026-05-30 draft
+
+### Design target
+
+Build a **live mission graph projection** inside WebArxana, then make Mission
+Search and Interest Network feed into that central graph instead of remaining
+isolated feature pages.
+
+The first build should prove one loop:
+
+```text
+mission doc / substrate-2 mission hyperedge / evidence snapshot
+  -> WebArxana mission graph projection
+  -> browser click on mission/phase/evidence node
+  -> typed Emacs open/edit request
+  -> acknowledgement or visible refusal
+```
+
+This is a projection and action contract, not a replacement graph renderer.
+
+### Entity types
+
+| Entity | Identity | Source | Notes |
+|---|---|---|---|
+| Mission | `mission/<mission-id>@<repo>` or existing LC1 mission id | substrate-2 `code/v05/mission-doc` hyperedge props, with fallback to mission records cache | Reuse existing `futon.missions` identity where possible. |
+| Mission phase | `mission-phase/<mission-id>/<phase>` | derived from lifecycle headings, mission status/phase, or mission-state cycle phase | HEAD, IDENTIFY, MAP, DERIVE, ARGUE, VERIFY, INSTANTIATE, DOCUMENT. |
+| Mission section | `mission-section/<mission-id>/<heading-slug>` | parsed mission doc or substrate props when available | Optional in v1; useful for opening exact headings in Emacs. |
+| Evidence session | `evidence-session/<session-id>` | evidence entries or REPL metadata | Represents a REPL/thread context attached to a mission. |
+| Evidence turn | `evidence/<evidence-id>` | evidence API/projection | User/assistant turns, snapshots, PSR/PUR/PAR entries. |
+| Pattern record | `pattern-record/<evidence-id>` or `pattern/<pattern-id>` | PSR/PUR evidence or mission-embedded PSR/PUR extraction | Kept separate from pattern definition nodes. |
+| Projection filter | `projection-filter/<kind>/<id>` | Mission Search or Interest Network selection | A transient or durable node that records how the current graph was assembled. |
+
+### Relation types
+
+| Relation | Source -> target | Meaning |
+|---|---|---|
+| `mission/has-phase` | Mission -> Mission phase | Lifecycle structure. |
+| `mission/current-phase` | Mission -> Mission phase | Current derived phase; at most one current phase per projection snapshot. |
+| `mission/has-section` | Mission -> Mission section | Opens exact doc heading when known. |
+| `phase/evidenced-by` | Mission phase -> Evidence turn/session/snapshot | A phase transition or phase content has durable evidence. |
+| `session/has-turn` | Evidence session -> Evidence turn | Conversation chain projection. |
+| `turn/in-reply-to` | Evidence turn -> Evidence turn | Evidence chain order. |
+| `turn/activates-pattern` | Evidence turn -> Pattern record | PSR/PUR/PAR or mined pattern application. |
+| `search/selected` | Projection filter -> Mission | Mission Search result became a graph selection. |
+| `interest/contextualizes` | Projection filter -> Mission/essay/entity | Interest Network adds posterior context around a selected graph focus. |
+
+### Invariant rules
+
+1. **Source authority invariant:** Browser-local graph state is never the
+   authority for mission phase, evidence, or pattern status. It is a projection
+   of mission records, substrate-2 hyperedges, mission-state EDN, and/or
+   evidence entries.
+2. **No duplicate parser invariant:** WebArxana must not introduce a second
+   mission markdown parser if `mission_control_backend.clj` or substrate-2
+   mission-doc hyperedges already carry the needed field. Missing fields should
+   be added upstream or in a shared projection layer.
+3. **Typed action invariant:** Browser-to-Emacs actions must use an action
+   envelope, not a bare ambiguous URI, whenever the target is mission/evidence
+   state.
+4. **Round-trip witness invariant:** Every action that claims to open/edit a
+   live graph node must return `{:ok true ...}` or a structured refusal that
+   can be rendered in the UI.
+5. **Projection provenance invariant:** Every mission graph node/edge must
+   carry enough source metadata to answer "why is this here?" - source path,
+   hyperedge id, evidence id, session id, or projection id.
+6. **Feature-is-filter invariant:** Mission Search and Interest Network may
+   remain as pages only if each can also hand selected results to the central
+   graph as a projection/filter. A standalone page with no graph handoff is
+   incomplete.
+
+### Data flow
+
+```text
+futon1a / substrate-2
+  code/v05/mission-doc hyperedges
+  interest-event entities
+        |
+        v
+WebArxana server projection endpoints
+  /api/mission-graph/:mission-id
+  /api/mission-search
+  /api/interest-network
+        |
+        v
+WebArxana client local graph cache
+  graph page / mission projection mode
+        |
+        v
+/api/emacs/action
+  typed open/edit request to emacsclient
+```
+
+Evidence has two possible ingestion paths:
+
+```text
+Preferred v1:
+futon3c evidence API or XTDB-backed evidence store
+  -> WebArxana server /api/mission-graph/:mission-id
+  -> graph nodes with evidence ids
+
+Fallback v1:
+futon3c data/repl-traces/*.edn
+  -> WebArxana server reads configured trace dir
+  -> graph nodes tagged as file-derived, not evidence-derived
+```
+
+The preferred path is semantically cleaner. The fallback is useful only if the
+evidence endpoint remains unavailable during implementation, and must be marked
+as file-derived so it does not masquerade as canonical evidence.
+
+### IF / HOWEVER / THEN / BECAUSE decisions
+
+**D1 - projection endpoint.**
+
+IF WebArxana needs live mission/evidence graph data, HOWEVER the evidence API
+may be slow/unavailable from this process and raw evidence entries are not UI
+graph records, THEN add a WebArxana server projection endpoint, BECAUSE the
+browser should receive graph-shaped data with provenance and explicit failure
+states.
+
+**D2 - mission phase source.**
+
+IF mission phase appears in markdown, substrate-2 mission-doc hyperedges, and
+mission-state EDN, HOWEVER duplicating mission parsing in WebArxana would
+weaken coherence, THEN use substrate-2 mission-doc hyperedges as the inventory
+source and evidence/snapshot records as change-history source, BECAUSE that
+keeps WebArxana as a consumer of canonical projections.
+
+**D3 - browser-to-Emacs action.**
+
+IF `/api/emacs/open` already opens `arxana://`, `docbook://`, and file paths,
+HOWEVER live mission/evidence nodes require action semantics beyond location
+strings, THEN introduce `/api/emacs/action` or extend `/api/emacs/open` with
+an action envelope, BECAUSE org-protocol-style URI dispatch is exactly where
+the org-roam-server#35 prior art showed ambiguity.
+
+**D4 - Mission Search integration.**
+
+IF Mission Search is already useful and carries date/phase/path metadata,
+HOWEVER it is currently a separate results page, THEN add a "send to graph"
+path that pins selected results or opens a mission graph projection, BECAUSE
+search should select graph context rather than become a competing surface.
+
+**D5 - Interest Network integration.**
+
+IF Interest Network already has a meaningful posterior projection, HOWEVER its
+default view is too dense and semantically mixed, THEN make it a filtered graph
+mode by default and retain the standalone page only for full-corpus inspection,
+BECAUSE operator navigation needs readable local context more than a total
+hairball.
+
+**D6 - trace fallback.**
+
+IF REPL trace files are canonical for the REPL spec, HOWEVER evidence entries
+are the durable cross-system record, THEN trace-file ingestion may be used as a
+fallback/spike but evidence-backed projection remains the completion target,
+BECAUSE otherwise the browser would display a parallel record rather than the
+stack's evidence landscape.
+
+### View / UI specifications
+
+#### Central graph mission mode
+
+Add a graph mode or route such as:
+
+```text
+/wa#/mission/<mission-id>
+/wa#/mission/<mission-id>/session/<session-id>
+```
+
+Expected view behavior:
+
+- Mission node is pinned/focused.
+- Lifecycle phase nodes are arranged in order, not arbitrary force placement.
+- Current phase has a clear visual state.
+- Evidence/session nodes attach below or beside the relevant phase.
+- Pattern records attach to the evidence turn or phase that activated them.
+- Each node exposes source provenance in tooltip/card metadata.
+- Empty/missing evidence is shown as absence with reason, not hidden.
+
+#### Browser-to-Emacs action envelope
+
+Proposed request shape:
+
+```edn
+{:action/type :mission/open-section
+ :target/type :mission-phase
+ :target/id "mission-phase/M-web-arxana-ui-improvements/derive"
+ :mission/id "M-web-arxana-ui-improvements"
+ :source/path "/home/joe/code/futon4/holes/missions/M-web-arxana-ui-improvements.md"
+ :source/heading "3. DERIVE"
+ :session/id nil}
+```
+
+Response shape:
+
+```edn
+{:ok true
+ :action/type :mission/open-section
+ :target/id "mission-phase/M-web-arxana-ui-improvements/derive"
+ :opened {:kind :file-heading
+          :path "/home/joe/code/futon4/holes/missions/M-web-arxana-ui-improvements.md"
+          :heading "3. DERIVE"}}
+```
+
+Refusal shape:
+
+```edn
+{:ok false
+ :reason :heading-not-found
+ :message "Mission heading was not found in the current file."
+ :target/id "mission-phase/M-web-arxana-ui-improvements/derive"}
+```
+
+#### Mission Search
+
+- Keep text query.
+- Add recent/date mode server-side, using existing `:date` metadata.
+- Add result command: "Open graph" or equivalent icon action that routes to
+  `#/mission/<mission-id>` or pins the result into graph state.
+- Preserve confidence/top-k controls, but avoid making confidence the only
+  clutter control.
+
+#### Interest Network
+
+- Add local-context mode: when a mission/essay/entity is focused, show only
+  interest-network nodes within an operator-readable radius or selected kinds.
+- Increase label legibility for visible nodes; labels should be based on graph
+  role and focus context, not only degree threshold.
+- Keep full-corpus route as an inspection mode if needed, but document it as
+  full-corpus overview, not the main operator workbench.
+
+### Fidelity contract
+
+This mission extends existing WebArxana behavior, so these capabilities must
+be preserved or adapted:
+
+| Existing capability | Preserve/adapt/drop | Tripwire |
+|---|---|---|
+| Graph view pins/focus/type hash routing | Preserve | Existing graph hashes still restore pins/focus/type. |
+| `#/mission-search/<query>` deep link | Preserve | Existing mission-search URL still runs a query. |
+| Mission Search confidence/top-k/agreement controls | Preserve | Controls still affect server query parameters. |
+| Mission Search result click telemetry | Preserve | Click event still posts to `/api/mission-search/event`. |
+| `/api/emacs/open` for `arxana://`, `docbook://`, and file paths | Preserve | Existing essay/section open still works. |
+| Interest Network standalone route | Adapt | Route may remain, but selected context can also be sent to graph. |
+| Interest Network completeness 3-vector | Preserve | Full-corpus route still renders the 3-vector when data includes it. |
+| WebArxana `/api/futon/*` proxy | Preserve | Existing graph entity/hyperedge reads still work. |
+
+### DERIVE exit status
+
+Drafted, not frozen. Before ARGUE/VERIFY, this design needs a human check on
+two choices:
+
+1. Should the typed Emacs action be a new `/api/emacs/action` endpoint, or an
+   extension of `/api/emacs/open`?
+2. Should the first implementation target a mission graph route first, or the
+   Mission Search "send to graph" path first?
