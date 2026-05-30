@@ -14,6 +14,7 @@
 ;;
 ;; Usage:
 ;;   bb ~/code/futon4/scripts/lift_unlifted_stories.bb [--dry-run]
+;;   bb ~/code/futon4/scripts/lift_unlifted_stories.bb [--dry-run] --only leaf-1.md
 ;;
 ;; A backup of stack-annotations.edn is written to
 ;;   ~/code/futon5a/holes/stack-annotations.edn~arxana~
@@ -32,6 +33,19 @@
     (if (fs/exists? res) res old)))
 (def STUB-SORRY-ID :sorry/stub-lifts-pending-aif-edn)
 (def DRY-RUN? (some #{"--dry-run"} *command-line-args*))
+(def ONLY
+  (when-let [[_ value] (some (fn [[arg next-arg]]
+                               (when (= "--only" arg)
+                                 [arg next-arg]))
+                             (partition 2 1 (concat *command-line-args* [nil])))]
+    value))
+
+(defn selected-story?
+  "When --only is supplied, match either the story filename or its repo-relative ref."
+  [ref]
+  (or (nil? ONLY)
+      (= ONLY ref)
+      (= ONLY (fs/file-name ref))))
 
 ;; ---------- read / parse ----------
 
@@ -56,6 +70,7 @@
 (defn unlifted-stories [stack-ann]
   (let [lifted (lifted-refs stack-ann)]
     (->> (story-files STORIES-DIR)
+         (filter #(selected-story? (ref-for-story %)))
          (remove #(lifted (ref-for-story %))))))
 
 ;; ---------- naming ----------
@@ -223,6 +238,7 @@
   (let [code-root (fs/expand-home "~/code")]
     (->> (:sections stack-ann)
          (filter stub-section?)
+         (filter #(selected-story? (:ref %)))
          (keep (fn [section]
                  (let [story-path (str (fs/path code-root (:ref section)))
                        aif-path (aif-path-for story-path)]
@@ -268,7 +284,7 @@
    with the full decomposition (since .aif.edn now exists)."
   [text stack-ann]
   (let [stubs (upgradable-stubs stack-ann)]
-    (loop [text text count 0 stories [] remaining stubs]
+    (loop [text text n 0 stories [] remaining stubs]
       (if-let [{:keys [section]} (first remaining)]
         (let [target (str ":id \"" (:id section) "\"")
               bounds (find-entry-bounds text target)]
@@ -285,10 +301,10 @@
                            (recur (inc j))
                            j))]
               (recur (str (subs text 0 start) (subs text end'))
-                     (inc count)
+                     (inc n)
                      (conj stories (:ref section))
                      (rest remaining)))))
-        {:text text :upgraded-count count :upgraded-stories stories}))))
+        {:text text :upgraded-count n :upgraded-stories stories}))))
 
 ;; ---------- sorrys.edn :links update ----------
 
@@ -344,12 +360,13 @@
           {:result :sorry-not-located}
           (let [[s e] bounds
                 sorry-text (subs text s e)
-                ;; Replace :status :foo with :status NEW-STATUS
-                sorry-text1 (str/replace sorry-text
-                                         #":status\s+:[A-Za-z-]+"
-                                         (str ":status " (pr-str new-status)))
+                ;; Replace the top-level :status key. Do not rewrite
+                ;; keyword-looking text inside the rationale string.
+                sorry-text1 (str/replace-first sorry-text
+                                               #"(?m)^(\s*:status\s+):[A-Za-z-]+"
+                                               (str "$1" (pr-str new-status)))
                 ;; Replace :links [...] vector
-                links-idx (str/index-of sorry-text1 ":links")
+                links-idx (str/index-of sorry-text1 "\n   :links ")
                 vec-open (str/index-of sorry-text1 "[" links-idx)
                 vec-close (find-matching-close-bracket sorry-text1 vec-open)
                 links-rendered (str "[" (str/join (str "\n" (apply str (repeat 11 " ")))
