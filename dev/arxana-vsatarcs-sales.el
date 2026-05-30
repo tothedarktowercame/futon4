@@ -170,25 +170,44 @@ VALUE-STR (inserting KEY after ANCHOR if absent).  Targeted; preserves comments.
       (insert (format "      match: %s\n" (plist-get e :event/interest-match))))
     (insert "\n")))
 
+(defun arxana-sales--referral-glyph (status)
+  (pcase status (:live "●") (:latent "○") (:withdrawn "✗") (_ "·")))
+
 (defun arxana-sales--insert-card (card)
   "Insert a Rolodex CARD (tagged for at-point editing)."
-  (let ((beg (point)))
+  (let ((beg (point))
+        (kind (plist-get card :card/kind)))
     (insert (format "  ┌─ Rolodex: %s" (or (plist-get card :card/name) "?")))
-    (when (plist-get card :card/org) (insert (format " · %s" (plist-get card :card/org))))
+    (let ((org (plist-get card :card/org)))
+      (when (and (stringp org) (not (string-empty-p org))) (insert (format " · %s" org))))
+    (when kind (insert (format "  [%s]" (arxana-sales--sym-str kind))))
     (insert "\n")
-    (dolist (f '((:card/role        "role")
-                 (:card/email       "email")
-                 (:card/phone       "phone")
-                 (:card/first-contact "first-contact")
-                 (:card/referred-by "referred-by")
-                 (:card/how-we-met  "how-we-met")
-                 (:card/notes       "notes")))
+    (dolist (f '((:card/role           "role")
+                 (:card/email          "email")
+                 (:card/phone          "phone")
+                 (:card/first-contact  "first-contact")
+                 (:card/referred-by    "referred-by")
+                 (:card/how-we-met     "how-we-met")
+                 (:card/relationship   "relationship")
+                 (:card/friendly-interest "friendly-interest")
+                 (:card/notes          "notes")))
       (let ((v (plist-get card (car f))))
-        (insert (format "  │ %-13s %s\n" (cadr f)
+        (insert (format "  │ %-17s %s\n" (cadr f)
                         (if (and (stringp v) (string-empty-p v)) "—" (or v "—"))))))
     (let ((terr (append (plist-get card :card/interest-territories) nil)))
-      (when terr (insert (format "  │ %-13s %s\n" "territories"
+      (when terr (insert (format "  │ %-17s %s\n" "territories"
                                  (mapconcat #'identity terr ", ")))))
+    (let ((refs (append (plist-get card :card/referrals) nil)))
+      (when refs
+        (insert "  │ referrals (edges = lead sources):\n")
+        (dolist (r refs)
+          (insert (format "  │   %s %s%s\n"
+                          (arxana-sales--referral-glyph (plist-get r :status))
+                          (or (plist-get r :to) "?")
+                          (let ((rs (plist-get r :reason)))
+                            (if rs (format "  [%s]" (arxana-sales--sym-str rs)) ""))))
+          (when (plist-get r :note)
+            (insert (format "  │       %s\n" (plist-get r :note)))))))
     (insert "  └─ (e: edit a field)\n\n")
     (add-text-properties beg (point) (list 'arxana-sales-card card))))
 
@@ -278,8 +297,10 @@ VALUE-STR (inserting KEY after ANCHOR if absent).  Targeted; preserves comments.
 
 (defconst arxana-sales--card-fields
   '(":card/role" ":card/email" ":card/phone" ":card/first-contact"
-    ":card/referred-by" ":card/how-we-met" ":card/notes")
-  "String-valued Rolodex card fields offered for editing.")
+    ":card/referred-by" ":card/how-we-met" ":card/relationship"
+    ":card/friendly-interest" ":card/notes")
+  "String-valued Rolodex card fields offered for editing.
+\(Structured :card/referrals edges are edited via E: raw EDN for now.)")
 
 (defun arxana-sales-edit-card-field ()
   "Edit a field on the Rolodex card at point (in-place, comment-preserving)."
