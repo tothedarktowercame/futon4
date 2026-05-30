@@ -51,6 +51,7 @@ moving through acquisition.  Dual of the Ledger's invoice strata.")
 (defun arxana-sales--clients (data) (append (plist-get data :clients) nil))
 (defun arxana-sales--journey (data) (append (plist-get data :journey) nil))
 (defun arxana-sales--rolodex (data) (append (plist-get data :rolodex) nil))
+(defun arxana-sales--demos (data) (append (plist-get data :demos) nil))
 
 (defun arxana-sales--clients-at (clients stage)
   (cl-remove-if-not (lambda (c) (eq (plist-get c :client/stage) stage)) clients))
@@ -348,6 +349,61 @@ contacts not yet in the pipeline.  Each can be promoted into a Prospect."
          (unless any (insert "  (all carded contacts are already in the pipeline)\n"))))
      #'arxana-sales--render-leads)))
 
+;; --- demos frame (scan → demo → call, indexed) -----------------------------
+
+(defun arxana-sales--demo-glyph (outcome)
+  (pcase outcome
+    (:landed "✓") (:no-interest "✗") (:built-not-shown "⚠")
+    (:pending "⋯") (:idea "○") (_ "·")))
+
+(defconst arxana-sales--demo-built '(:landed :no-interest :built-not-shown)
+  "Outcomes that mean a demo was actually built (cost was spent).")
+
+(defun arxana-sales--render-demos ()
+  "Index the demos: each carries a dual warrant (eoi-new ⊗ territory-match),
+a build cost, and an outcome.  Shows the depositing ratio (landed / built)
+and the hermit risk (built but never shown)."
+  (let* ((data (arxana-sales--read))
+         (demos (arxana-sales--demos data))
+         (built (cl-remove-if-not
+                 (lambda (d) (memq (plist-get d :demo/outcome) arxana-sales--demo-built)) demos))
+         (landed (cl-remove-if-not (lambda (d) (eq (plist-get d :demo/outcome) :landed)) demos))
+         (hermit (cl-remove-if-not (lambda (d) (eq (plist-get d :demo/outcome) :built-not-shown)) demos))
+         (cost (apply #'+ 0.0 (delq nil (mapcar (lambda (d) (plist-get d :demo/build-cost-hours)) demos)))))
+    (arxana-sales--render-frame
+     (lambda ()
+       (insert "Arxana Sales — Demos  (scan → demo → call)\n")
+       (insert "A demo is the :demonstrate hinge. Dual warrant = eoi-new ⊗ territory-match\n")
+       (insert "→ positive EV even at low conversion (platform-value floor is non-zero).\n\n")
+       (arxana-sales--button "[← entry points]" (lambda (_) (arxana-sales-browse)))
+       (insert "\n\n")
+       (insert (format "  Built: %d   Landed: %d   Depositing ratio: %s   Hermit (built, not shown): %d   Σcost: %.1fh\n\n"
+                       (length built) (length landed)
+                       (if (> (length built) 0)
+                           (format "%.0f%%" (* 100.0 (/ (float (length landed)) (length built))))
+                         "—")
+                       (length hermit) cost))
+       (if (null demos)
+           (insert "  (none)\n")
+         (dolist (d demos)
+           (let* ((w (plist-get d :demo/warrant))
+                  (terr (append (plist-get w :territory-match) nil))
+                  (c (plist-get d :demo/build-cost-hours)))
+             (insert (format "  %s %s\n" (arxana-sales--demo-glyph (plist-get d :demo/outcome))
+                             (or (plist-get d :demo/title) "?")))
+             (insert (format "      for: %s   outcome: %s%s\n"
+                             (arxana-sales--sym-str (plist-get d :demo/for))
+                             (arxana-sales--sym-str (plist-get d :demo/outcome))
+                             (if c (format "   cost: %sh" c) "")))
+             (when (plist-get w :eoi-new)
+               (insert (format "      eoi-new: %s\n" (plist-get w :eoi-new))))
+             (when terr
+               (insert (format "      territory-match: %s\n" (mapconcat #'identity terr ", "))))
+             (when (plist-get d :demo/note)
+               (insert (format "      %s\n" (plist-get d :demo/note))))
+             (insert "\n")))))
+     #'arxana-sales--render-demos)))
+
 ;; --- editing commands ------------------------------------------------------
 
 (defconst arxana-sales--card-fields
@@ -464,6 +520,7 @@ into the pipeline: create a Prospect card (referred-by the connector) + a
     (define-key m "+" #'arxana-sales-add-card)
     (define-key m "p" #'arxana-sales-promote-card-at-point)
     (define-key m "L" #'arxana-sales--render-leads)
+    (define-key m "D" #'arxana-sales--render-demos)
     (define-key m "E" #'arxana-sales-edit-file)
     m)
   "Keymap for `arxana-sales-mode'.")
@@ -495,7 +552,11 @@ into the pipeline: create a Prospect card (referred-by the connector) + a
          (arxana-sales--button "▸ Leads  (Rolodex → Prospect)"
                                (lambda (_) (arxana-sales--render-leads))
                                "Referral edges + un-promoted contacts → pipeline prospects")
-         (insert "   — the lead-gen gradient\n\n")
+         (insert "   — the lead-gen gradient\n")
+         (arxana-sales--button "▸ Demos  (scan → demo → call)"
+                               (lambda (_) (arxana-sales--render-demos))
+                               "Dual-warranted demos; depositing ratio")
+         (insert (format "   — %d indexed\n\n" (length (arxana-sales--demos data))))
          (arxana-sales--button "[edit sales.edn]" (lambda (_) (arxana-sales-edit-file))
                                "Open the sales EDN to edit; g to refresh after save")
          (insert "   — card: e=edit field +=add p=promote  ·  client: s=set stage  ·  L=leads  g=refresh  E=raw EDN\n")))
@@ -521,13 +582,18 @@ into the pipeline: create a Prospect card (referred-by the connector) + a
                  :description (format "%d contact card(s)" (length (arxana-sales--rolodex data))))
            (list :type 'sales-leads
                  :label "Leads (Rolodex → Prospect)"
-                 :description "Referral edges + un-promoted contacts → pipeline prospects")))))
+                 :description "Referral edges + un-promoted contacts → pipeline prospects")
+           (list :type 'sales-demos
+                 :label "Demos (scan → demo → call)"
+                 :description (format "%d dual-warranted demos; depositing ratio"
+                                      (length (arxana-sales--demos data))))))))
 
 (defun arxana-sales-open-stage (item)
-  "Open the stage / Rolodex / Leads named by ITEM (a `sales-*' home item)."
+  "Open the stage / Rolodex / Leads / Demos named by ITEM (a `sales-*' home item)."
   (pcase (plist-get item :type)
     ('sales-rolodex (arxana-sales--render-rolodex))
     ('sales-leads   (arxana-sales--render-leads))
+    ('sales-demos   (arxana-sales--render-demos))
     (_              (arxana-sales--render-stage (plist-get item :stage)))))
 
 (provide 'arxana-vsatarcs-sales)
