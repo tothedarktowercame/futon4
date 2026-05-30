@@ -26,7 +26,10 @@
 
 (def STORIES-DIR (str (fs/expand-home "~/code/futon5a/holes/stories")))
 (def STACK-ANN-PATH (str (fs/expand-home "~/code/futon5a/holes/stack-annotations.edn")))
-(def SORRYS-PATH (str (fs/expand-home "~/code/futon2/data/sorrys.edn")))
+(def SORRYS-PATH ;; R-A.1: relocated data/ → resources/; prefer resources, fall back to data
+  (let [res (str (fs/expand-home "~/code/futon2/resources/sorrys.edn"))
+        old (str (fs/expand-home "~/code/futon2/data/sorrys.edn"))]
+    (if (fs/exists? res) res old)))
 (def STUB-SORRY-ID :sorry/stub-lifts-pending-aif-edn)
 (def DRY-RUN? (some #{"--dry-run"} *command-line-args*))
 

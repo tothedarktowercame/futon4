@@ -51,7 +51,11 @@
   :group 'arxana-vsatarcs)
 
 (defcustom arxana-vsatarcs-sorrys-file
-  (expand-file-name "~/code/futon2/data/sorrys.edn")
+  ;; R-A.1 (M-war-machine-first-outing): registry relocated data/ → resources/
+  ;; (tracked). Prefer resources/, fall back to data/ for transition-safety.
+  (let ((res (expand-file-name "~/code/futon2/resources/sorrys.edn"))
+        (old (expand-file-name "~/code/futon2/data/sorrys.edn")))
+    (if (file-exists-p res) res old))
   "Path to the hand-curated sorry registry.
 Read on every snapshot call; no in-memory cache is held."
   :type 'file
