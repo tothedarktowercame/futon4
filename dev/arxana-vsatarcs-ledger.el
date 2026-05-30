@@ -31,15 +31,17 @@
 (defvar arxana-ledger--buffer "*Arxana Ledger*")
 
 (defconst arxana-ledger--strata
-  '((:current    :unbilled-draft "Current"    "drafted, not yet invoiced (this billing cycle)")
-    (:invoiced   :invoiced       "Invoiced"   "on an issued invoice, awaiting payment")
-    (:historical :billed-paid    "Historical" "billed + paid (by invoice)")
-    (:archived   :archived       "Archived"   "older, set aside")
-    (:future     :speculative    "Future"     "antedated speculations"))
+  '((:current       :unbilled-draft "Current"       "drafted, not yet invoiced (this billing cycle)")
+    (:invoice-ready :invoice-ready  "Invoice Ready" "staged for the next invoice; draft .docx generated")
+    (:invoiced      :invoiced       "Invoiced"      "on an issued invoice, awaiting payment")
+    (:historical    :billed-paid    "Historical"    "billed + paid (by invoice)")
+    (:archived      :archived       "Archived"      "older, set aside")
+    (:future        :speculative    "Future"        "antedated speculations"))
   "Entry-point → (status title blurb), in time-linear pipeline order so items
-are seen moving through the system: Current (work done) → Invoiced (issued,
-awaiting pay) → Historical (paid, by invoice) → Archived (set aside); Future
-holds forward speculations.  Echoes the media EP flow (staging → released EPs).")
+are seen moving through the system: Current (work done) → Invoice Ready
+(staged + draft .docx) → Invoiced (issued, awaiting pay) → Historical (paid,
+by invoice) → Archived (set aside); Future holds forward speculations.
+Echoes the media EP flow (staging → released EPs).")
 
 ;; ---------------------------------------------------------------- data ----
 
@@ -192,15 +194,27 @@ comments.  Signals an error if the item is not found."
       (arxana-ledger-refresh))))
 
 (defun arxana-ledger-print-invoice (inv-id)
-  "Generate a draft invoice .docx for INV-ID (default 202504) via
-~/code/ledger/print_invoice.bb (Markdown → pandoc --reference-doc=template).
-Writes to ~/code/invoices/."
+  "Generate a draft invoice .docx for INV-ID via ~/code/ledger/print_invoice.bb
+(Markdown → pandoc --reference-doc=template; writes to ~/code/invoices/), then
+offer to STAGE the Current items into Invoice Ready — setting :invoice-ready +
+:item/invoice and clearing Current."
   (interactive (list (read-string "Print invoice id: " "202504")))
   (let ((out (shell-command-to-string
               (format "bb %s %s"
                       (shell-quote-argument (expand-file-name "~/code/ledger/print_invoice.bb"))
                       (shell-quote-argument inv-id)))))
-    (message "Print Invoice: %s" (string-trim out))))
+    (message "Print Invoice: %s" (string-trim out))
+    (let ((current (arxana-ledger--by-status
+                    (arxana-ledger--items (arxana-ledger--read)) :unbilled-draft)))
+      (when (and current
+                 (y-or-n-p (format "Move %d Current item(s) → Invoice Ready (invoice %s)? "
+                                   (length current) inv-id)))
+        (dolist (it current)
+          (let ((id (plist-get it :item/id)))
+            (arxana-ledger--set-field! id ":item/invoice" (format "\"%s\"" inv-id))
+            (arxana-ledger--set-field! id ":item/status" ":invoice-ready")))
+        (message "Staged %d item(s) into Invoice Ready (invoice %s)" (length current) inv-id)))
+    (arxana-ledger-refresh)))
 
 (defvar arxana-ledger-mode-map
   (let ((m (make-sparse-keymap)))
@@ -278,6 +292,25 @@ Writes to ~/code/invoices/."
   (cl-remove-if-not (lambda (it) (equal inv (plist-get it :item/invoice)))
                     (arxana-ledger--by-status items :billed-paid)))
 
+(defun arxana-ledger--draft-docx-path (inv-id)
+  "Path of the draft .docx print_invoice.bb writes for INV-ID."
+  (expand-file-name
+   (format "~/code/invoices/VSAT proof of concept project Invoice #%s (draft).docx" inv-id)))
+
+(defun arxana-ledger-open-docx (path)
+  "Open PATH in the external viewer (LibreOffice via xdg-open)."
+  (if (file-exists-p path)
+      (call-process "xdg-open" nil 0 nil path)
+    (user-error "No draft .docx yet (press P to generate): %s" path)))
+
+(defun arxana-ledger--invoice-ids-of (items status)
+  "Distinct :item/invoice ids among ITEMS of STATUS (first-seen order)."
+  (let (order)
+    (dolist (it (arxana-ledger--by-status items status))
+      (let ((inv (or (plist-get it :item/invoice) "unassigned")))
+        (unless (member inv order) (push inv order))))
+    (nreverse order)))
+
 (defun arxana-ledger--render-invoice (inv)
   "Render the work-items for invoice INV (Historical subsection)."
   (let* ((items (arxana-ledger--items (arxana-ledger--read)))
@@ -300,24 +333,51 @@ are flat item lists."
   (let* ((spec (assq stratum arxana-ledger--strata))
          (status (nth 1 spec))
          (items (arxana-ledger--items (arxana-ledger--read))))
-    (if (eq stratum :historical)
-        (arxana-ledger--render-frame
-         (lambda ()
-           (insert "Arxana Ledger — Historical (by invoice)\n\n")
-           (arxana-ledger--button "[← entry points]" (lambda (_) (arxana-ledger-browse)))
-           (insert "\n\n")
-           (dolist (inv (arxana-ledger--invoices items))
-             (let* ((sub (arxana-ledger--invoice-items items inv))
-                    (tot (arxana-ledger--sum sub #'arxana-ledger--amount))
-                    (paid? (cl-some (lambda (it) (plist-get it :item/paid?)) sub)))
-               (arxana-ledger--button
-                (format "▸ VSAT POC %s" inv)
-                (let ((i inv)) (lambda (_) (arxana-ledger--render-invoice i)))
-                (format "Open invoice %s" inv))
-               (insert (format "   — %d item(s), £%.2f%s\n"
-                               (length sub) tot (if paid? " · paid" "")))))
-           (insert "\n"))
-         (lambda () (arxana-ledger--render-stratum :historical)))
+    (cond
+     ((eq stratum :historical)
+      (arxana-ledger--render-frame
+       (lambda ()
+         (insert "Arxana Ledger — Historical (by invoice)\n\n")
+         (arxana-ledger--button "[← entry points]" (lambda (_) (arxana-ledger-browse)))
+         (insert "\n\n")
+         (dolist (inv (arxana-ledger--invoices items))
+           (let* ((sub (arxana-ledger--invoice-items items inv))
+                  (tot (arxana-ledger--sum sub #'arxana-ledger--amount))
+                  (paid? (cl-some (lambda (it) (plist-get it :item/paid?)) sub)))
+             (arxana-ledger--button
+              (format "▸ VSAT POC %s" inv)
+              (let ((i inv)) (lambda (_) (arxana-ledger--render-invoice i)))
+              (format "Open invoice %s" inv))
+             (insert (format "   — %d item(s), £%.2f%s\n"
+                             (length sub) tot (if paid? " · paid" "")))))
+         (insert "\n"))
+       (lambda () (arxana-ledger--render-stratum :historical))))
+     ((eq stratum :invoice-ready)
+      (arxana-ledger--render-frame
+       (lambda ()
+         (insert "Arxana Ledger — Invoice Ready\n\n")
+         (arxana-ledger--button "[← entry points]" (lambda (_) (arxana-ledger-browse)))
+         (insert "\n\n")
+         (let ((ready (arxana-ledger--by-status items :invoice-ready)))
+           (if (null ready)
+               (insert "  (none — stage Current items here with P: print invoice)\n")
+             (dolist (inv (arxana-ledger--invoice-ids-of items :invoice-ready))
+               (let* ((sub (cl-remove-if-not
+                            (lambda (it) (equal inv (or (plist-get it :item/invoice) "unassigned")))
+                            ready))
+                      (tot (arxana-ledger--sum sub #'arxana-ledger--amount))
+                      (docx (arxana-ledger--draft-docx-path inv)))
+                 (insert (format "Invoice #%s — %d item(s), £%.2f\n" inv (length sub) tot))
+                 (arxana-ledger--button
+                  (if (file-exists-p docx) "[open draft .docx ↗]"
+                    "[draft .docx not generated — press P]")
+                  (let ((p docx)) (lambda (_) (arxana-ledger-open-docx p)))
+                  "Open the draft invoice in LibreOffice (external viewer)")
+                 (insert "\n\n")
+                 (dolist (it sub) (arxana-ledger--insert-item it))
+                 (insert (format "  ── %s: £%.2f ──\n\n" inv tot)))))))
+       (lambda () (arxana-ledger--render-stratum :invoice-ready))))
+     (t
       (let ((sub (sort (arxana-ledger--by-status items status)
                        (lambda (a b) (string< (or (plist-get a :item/date) "9999")
                                               (or (plist-get b :item/date) "9999"))))))
@@ -332,7 +392,7 @@ are flat item lists."
              (insert (format "  ── %d item(s); £%.2f total ──\n"
                              (length sub)
                              (arxana-ledger--sum sub #'arxana-ledger--amount)))))
-         (let ((s stratum)) (lambda () (arxana-ledger--render-stratum s))))))))
+         (let ((s stratum)) (lambda () (arxana-ledger--render-stratum s)))))))))
 
 ;;;###autoload
 (defun arxana-ledger-browse ()
