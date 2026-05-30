@@ -31,10 +31,13 @@
 (defvar arxana-ledger--buffer "*Arxana Ledger*")
 
 (defconst arxana-ledger--strata
-  '((:historical :billed-paid    "Historical" "billed + paid")
-    (:current    :unbilled-draft "Current"    "drafted, not yet invoiced")
-    (:future     :speculative    "Future"     "antedated speculations"))
-  "Entry-point → (status title blurb).")
+  '((:current    :unbilled-draft "Current"    "drafted, not yet invoiced (this billing cycle)")
+    (:historical :billed-paid    "Historical" "billed + paid (by invoice)")
+    (:future     :speculative    "Future"     "antedated speculations")
+    (:archived   :archived       "Archived"   "older, set aside"))
+  "Entry-point → (status title blurb).  Lifecycle echoes the media EP flow:
+Current (≈ EP staging) → Historical (≈ released EPs, grouped by invoice) →
+Archived (set aside); Future holds forward speculations.")
 
 ;; ---------------------------------------------------------------- data ----
 
@@ -76,6 +79,13 @@
 (defun arxana-ledger--button (label action &optional help)
   (insert-text-button label 'follow-link t 'help-echo help 'action action))
 
+(defun arxana-ledger-edit-file ()
+  "Open the canonical ledger EDN for editing.
+After saving, press \\[arxana-ledger-browse] (or `g') to re-read.  v0 editing
+is raw-EDN; native field-edit / move-to-archived commands are the next step."
+  (interactive)
+  (find-file arxana-ledger-file))
+
 (defun arxana-ledger--render-frame (body-fn)
   (let ((buf (get-buffer-create arxana-ledger--buffer)))
     (with-current-buffer buf
@@ -116,22 +126,69 @@
     (when desc (insert (format "      %s\n" (arxana-ledger--truncate desc 160))))
     (insert "\n")))
 
-(defun arxana-ledger--render-stratum (stratum)
-  "Render the items for STRATUM (`:historical'/`:current'/`:future')."
-  (let* ((spec (assq stratum arxana-ledger--strata))
-         (status (nth 1 spec))
-         (items (arxana-ledger--by-status (arxana-ledger--items (arxana-ledger--read)) status)))
+(defun arxana-ledger--invoices (items)
+  "Distinct invoice ids among the billed+paid ITEMS, in first-seen order."
+  (let (order)
+    (dolist (it (arxana-ledger--by-status items :billed-paid))
+      (let ((inv (plist-get it :item/invoice)))
+        (when (and inv (not (member inv order))) (push inv order))))
+    (nreverse order)))
+
+(defun arxana-ledger--invoice-items (items inv)
+  "Billed+paid ITEMS belonging to invoice INV."
+  (cl-remove-if-not (lambda (it) (equal inv (plist-get it :item/invoice)))
+                    (arxana-ledger--by-status items :billed-paid)))
+
+(defun arxana-ledger--render-invoice (inv)
+  "Render the work-items for invoice INV (Historical subsection)."
+  (let* ((items (arxana-ledger--items (arxana-ledger--read)))
+         (sub (arxana-ledger--invoice-items items inv)))
     (arxana-ledger--render-frame
      (lambda ()
-       (insert (format "Arxana Ledger — %s  (%s)\n\n" (nth 2 spec) (nth 3 spec)))
+       (insert (format "Arxana Ledger — Historical — VSAT POC %s\n\n" inv))
+       (arxana-ledger--button "[← Historical]" (lambda (_) (arxana-ledger--render-stratum :historical)))
+       (insert "    ")
        (arxana-ledger--button "[← entry points]" (lambda (_) (arxana-ledger-browse)))
        (insert "\n\n")
-       (if (null items)
-           (insert "  (none)\n")
-         (dolist (it items) (arxana-ledger--insert-item it))
-         (insert (format "  ── %d item(s); £%.2f total ──\n"
-                         (length items)
-                         (arxana-ledger--sum items #'arxana-ledger--amount))))))))
+       (dolist (it sub) (arxana-ledger--insert-item it))
+       (insert (format "  ── %s: %d item(s); £%.2f ──\n"
+                       inv (length sub) (arxana-ledger--sum sub #'arxana-ledger--amount)))))))
+
+(defun arxana-ledger--render-stratum (stratum)
+  "Render STRATUM.  `:historical' groups by invoice (subsections); the others
+are flat item lists."
+  (let* ((spec (assq stratum arxana-ledger--strata))
+         (status (nth 1 spec))
+         (items (arxana-ledger--items (arxana-ledger--read))))
+    (if (eq stratum :historical)
+        (arxana-ledger--render-frame
+         (lambda ()
+           (insert "Arxana Ledger — Historical (by invoice)\n\n")
+           (arxana-ledger--button "[← entry points]" (lambda (_) (arxana-ledger-browse)))
+           (insert "\n\n")
+           (dolist (inv (arxana-ledger--invoices items))
+             (let* ((sub (arxana-ledger--invoice-items items inv))
+                    (tot (arxana-ledger--sum sub #'arxana-ledger--amount))
+                    (paid? (cl-some (lambda (it) (plist-get it :item/paid?)) sub)))
+               (arxana-ledger--button
+                (format "▸ VSAT POC %s" inv)
+                (let ((i inv)) (lambda (_) (arxana-ledger--render-invoice i)))
+                (format "Open invoice %s" inv))
+               (insert (format "   — %d item(s), £%.2f%s\n"
+                               (length sub) tot (if paid? " · paid" "")))))
+           (insert "\n")))
+      (let ((sub (arxana-ledger--by-status items status)))
+        (arxana-ledger--render-frame
+         (lambda ()
+           (insert (format "Arxana Ledger — %s  (%s)\n\n" (nth 2 spec) (nth 3 spec)))
+           (arxana-ledger--button "[← entry points]" (lambda (_) (arxana-ledger-browse)))
+           (insert "\n\n")
+           (if (null sub)
+               (insert "  (none)\n")
+             (dolist (it sub) (arxana-ledger--insert-item it))
+             (insert (format "  ── %d item(s); £%.2f total ──\n"
+                             (length sub)
+                             (arxana-ledger--sum sub #'arxana-ledger--amount))))))))))
 
 ;;;###autoload
 (defun arxana-ledger-browse ()
@@ -161,7 +218,12 @@
            (insert (format "Paid to date: £%.2f / %sh across %d items.\n"
                            (arxana-ledger--sum paid #'arxana-ledger--amount)
                            (arxana-ledger--sum paid (lambda (it) (plist-get it :item/hours)))
-                           (length paid)))))))))
+                           (length paid))))
+         (insert "\n")
+         (arxana-ledger--button "[edit ledger.edn]"
+                                (lambda (_) (arxana-ledger-edit-file))
+                                "Open the ledger EDN to edit; g to refresh after save")
+         (insert "   — edit raw EDN, then g to refresh (native edit/move = next step)\n"))))))
 
 ;; ---------------------------------------------------- home integration ----
 ;; Wired into arxana-browser-core's home as the 'ledger view: three stratum
