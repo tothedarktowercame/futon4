@@ -148,6 +148,22 @@ comments.  Signals an error if the item is not found."
       (message "%s: %sh = £%s" id h (* h rate))
       (arxana-ledger-refresh))))
 
+(defun arxana-ledger--edn-string (s)
+  "Render S as an EDN string literal (escaping \\ and \")."
+  (concat "\"" (replace-regexp-in-string "\\([\"\\\\]\\)" "\\\\\\1" s) "\""))
+
+(defun arxana-ledger-set-description-at-point ()
+  "Edit the description of the item at point (in-place, comment-preserving)."
+  (interactive)
+  (let* ((it (arxana-ledger--item-at-point))
+         (id (plist-get it :item/id)))
+    (unless id (user-error "No ledger item at point"))
+    (let ((new (read-string (format "Description for %s: " id)
+                            (or (plist-get it :item/description) ""))))
+      (arxana-ledger--set-field! id ":item/description" (arxana-ledger--edn-string new))
+      (message "%s description updated" id)
+      (arxana-ledger-refresh))))
+
 (defun arxana-ledger-set-status-at-point ()
   "Set the status (move between strata) of the item at point."
   (interactive)
@@ -177,6 +193,7 @@ comments.  Signals an error if the item is not found."
   (let ((m (make-sparse-keymap)))
     (define-key m "g" #'arxana-ledger-refresh)
     (define-key m "e" #'arxana-ledger-set-hours-at-point)
+    (define-key m "d" #'arxana-ledger-set-description-at-point)
     (define-key m "s" #'arxana-ledger-set-status-at-point)
     (define-key m "a" #'arxana-ledger-archive-at-point)
     (define-key m "E" #'arxana-ledger-edit-file)
@@ -334,7 +351,7 @@ are flat item lists."
          (arxana-ledger--button "[edit ledger.edn]"
                                 (lambda (_) (arxana-ledger-edit-file))
                                 "Open the ledger EDN to edit; g to refresh after save")
-         (insert "   — on an item:  e=hours  s=status  a=archive  ·  g=refresh  ·  E=raw EDN\n")))
+         (insert "   — on an item:  e=hours  d=desc  s=status  a=archive  ·  g=refresh  ·  E=raw EDN\n")))
    #'arxana-ledger-browse)))
 
 ;; ---------------------------------------------------- home integration ----
