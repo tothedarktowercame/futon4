@@ -81,24 +81,130 @@ Archived (set aside); Future holds forward speculations.")
 
 (defun arxana-ledger-edit-file ()
   "Open the canonical ledger EDN for editing.
-After saving, press \\[arxana-ledger-browse] (or `g') to re-read.  v0 editing
-is raw-EDN; native field-edit / move-to-archived commands are the next step."
+After saving, press `g' to re-read."
   (interactive)
   (find-file arxana-ledger-file))
 
-(defun arxana-ledger--render-frame (body-fn)
+;; ----------------------------------------------- native edit / move ----
+;; Surgical write-back: find the item's map by :item/id and replace only the
+;; targeted field's value via sexp navigation, leaving all comments and
+;; formatting intact (no full re-serialisation). The WM Clojure side reads
+;; the same file unchanged.
+
+(defun arxana-ledger--set-field! (id key value-str)
+  "In `arxana-ledger-file', set KEY (e.g. \":item/hours\") to literal
+VALUE-STR for the item whose :item/id is ID.  Targeted edit; preserves
+comments.  Signals an error if the item is not found."
+  (with-temp-buffer
+    (insert-file-contents arxana-ledger-file)
+    ;; treat EDN brackets as sexp delimiters so forward-sexp works
+    (modify-syntax-entry ?\{ "(}")
+    (modify-syntax-entry ?\} "){")
+    (modify-syntax-entry ?\[ "(]")
+    (modify-syntax-entry ?\] ")[")
+    (goto-char (point-min))
+    (unless (search-forward (format ":item/id \"%s\"" id) nil t)
+      (error "Ledger: item %s not found" id))
+    (let* ((idpt (point))
+           (mapbeg (save-excursion (goto-char idpt) (backward-up-list) (point)))
+           (mapend (save-excursion (goto-char mapbeg) (forward-sexp) (point))))
+      (save-restriction
+        (narrow-to-region mapbeg mapend)
+        (goto-char (point-min))
+        (if (re-search-forward (concat (regexp-quote key) "[ \t\n]+") nil t)
+            (let ((vbeg (point)))            ; replace the existing value sexp
+              (forward-sexp)
+              (delete-region vbeg (point))
+              (goto-char vbeg)
+              (insert value-str))
+          (goto-char (point-min))            ; key absent → insert after :item/id
+          (search-forward (format ":item/id \"%s\"" id))
+          (insert (format "\n   %s %s" key value-str)))))
+    (write-region (point-min) (point-max) arxana-ledger-file nil 'quiet)))
+
+(defun arxana-ledger--item-at-point ()
+  "Return the ledger item plist tagged at point (or just before)."
+  (or (get-text-property (point) 'arxana-ledger-item)
+      (and (> (point) (point-min))
+           (get-text-property (1- (point)) 'arxana-ledger-item))))
+
+(defun arxana-ledger-refresh ()
+  "Re-read the ledger and re-render the current view."
+  (interactive)
+  (if arxana-ledger--refresh-fn (funcall arxana-ledger--refresh-fn)
+    (arxana-ledger-browse)))
+
+(defun arxana-ledger-set-hours-at-point ()
+  "Set hours on the item at point; recompute amount = hours × rate."
+  (interactive)
+  (let* ((it (arxana-ledger--item-at-point))
+         (id (plist-get it :item/id)))
+    (unless id (user-error "No ledger item at point"))
+    (let* ((rate (or (plist-get it :item/rate-gbp) 75.0))
+           (h (read-number (format "Hours for %s (rate £%s): " id rate)
+                           (or (plist-get it :item/hours) 0))))
+      (arxana-ledger--set-field! id ":item/hours" (number-to-string h))
+      (arxana-ledger--set-field! id ":item/amount-gbp" (number-to-string (* h rate)))
+      (message "%s: %sh = £%s" id h (* h rate))
+      (arxana-ledger-refresh))))
+
+(defun arxana-ledger-set-status-at-point ()
+  "Set the status (move between strata) of the item at point."
+  (interactive)
+  (let* ((it (arxana-ledger--item-at-point))
+         (id (plist-get it :item/id)))
+    (unless id (user-error "No ledger item at point"))
+    (let ((status (completing-read
+                   (format "Status for %s: " id)
+                   '(":unbilled-draft" ":billed-paid" ":speculative" ":archived")
+                   nil t)))
+      (arxana-ledger--set-field! id ":item/status" status)
+      (message "%s → %s" id status)
+      (arxana-ledger-refresh))))
+
+(defun arxana-ledger-archive-at-point ()
+  "Move the item at point to the Archived stratum."
+  (interactive)
+  (let* ((it (arxana-ledger--item-at-point))
+         (id (plist-get it :item/id)))
+    (unless id (user-error "No ledger item at point"))
+    (when (y-or-n-p (format "Archive %s? " id))
+      (arxana-ledger--set-field! id ":item/status" ":archived")
+      (message "%s archived" id)
+      (arxana-ledger-refresh))))
+
+(defvar arxana-ledger-mode-map
+  (let ((m (make-sparse-keymap)))
+    (define-key m "g" #'arxana-ledger-refresh)
+    (define-key m "e" #'arxana-ledger-set-hours-at-point)
+    (define-key m "s" #'arxana-ledger-set-status-at-point)
+    (define-key m "a" #'arxana-ledger-archive-at-point)
+    (define-key m "E" #'arxana-ledger-edit-file)
+    m)
+  "Keymap for `arxana-ledger-mode'.")
+
+(define-derived-mode arxana-ledger-mode special-mode "Arxana-Ledger"
+  "Major mode for the Arxana Ledger view.
+\\{arxana-ledger-mode-map}")
+
+(defvar-local arxana-ledger--refresh-fn nil
+  "Thunk re-rendering the current Arxana Ledger view (bound to `g').")
+
+(defun arxana-ledger--render-frame (body-fn &optional refresh-fn)
   (let ((buf (get-buffer-create arxana-ledger--buffer)))
     (with-current-buffer buf
+      (unless (derived-mode-p 'arxana-ledger-mode) (arxana-ledger-mode))
       (let ((inhibit-read-only t))
         (erase-buffer)
         (funcall body-fn)
         (goto-char (point-min)))
-      (special-mode))
+      (when refresh-fn (setq arxana-ledger--refresh-fn refresh-fn)))
     (pop-to-buffer buf)))
 
 (defun arxana-ledger--insert-item (it)
-  "Insert one ledger item as a frame."
-  (let* ((id (plist-get it :item/id))
+  "Insert one ledger item as a frame (tagged with its id/plist for editing)."
+  (let* ((beg (point))
+         (id (plist-get it :item/id))
          (date (plist-get it :item/date))
          (hours (plist-get it :item/hours))
          (hint (plist-get it :item/hours-hint))
@@ -124,7 +230,9 @@ is raw-EDN; native field-edit / move-to-archived commands are the next step."
                           (plist-get pp :p))))
         (dolist (c conds) (insert (format "      ⟶ needs: %s\n" c)))))
     (when desc (insert (format "      %s\n" (arxana-ledger--truncate desc 160))))
-    (insert "\n")))
+    (insert "\n")
+    (add-text-properties beg (point)
+                         (list 'arxana-ledger-item it 'arxana-ledger-item-id id))))
 
 (defun arxana-ledger--invoices (items)
   "Distinct invoice ids among the billed+paid ITEMS, in first-seen order."
@@ -152,7 +260,8 @@ is raw-EDN; native field-edit / move-to-archived commands are the next step."
        (insert "\n\n")
        (dolist (it sub) (arxana-ledger--insert-item it))
        (insert (format "  ── %s: %d item(s); £%.2f ──\n"
-                       inv (length sub) (arxana-ledger--sum sub #'arxana-ledger--amount)))))))
+                       inv (length sub) (arxana-ledger--sum sub #'arxana-ledger--amount))))
+     (lambda () (arxana-ledger--render-invoice inv)))))
 
 (defun arxana-ledger--render-stratum (stratum)
   "Render STRATUM.  `:historical' groups by invoice (subsections); the others
@@ -176,7 +285,8 @@ are flat item lists."
                 (format "Open invoice %s" inv))
                (insert (format "   — %d item(s), £%.2f%s\n"
                                (length sub) tot (if paid? " · paid" "")))))
-           (insert "\n")))
+           (insert "\n"))
+         (lambda () (arxana-ledger--render-stratum :historical)))
       (let ((sub (arxana-ledger--by-status items status)))
         (arxana-ledger--render-frame
          (lambda ()
@@ -188,7 +298,8 @@ are flat item lists."
              (dolist (it sub) (arxana-ledger--insert-item it))
              (insert (format "  ── %d item(s); £%.2f total ──\n"
                              (length sub)
-                             (arxana-ledger--sum sub #'arxana-ledger--amount))))))))))
+                             (arxana-ledger--sum sub #'arxana-ledger--amount)))))
+         (let ((s stratum)) (lambda () (arxana-ledger--render-stratum s))))))))
 
 ;;;###autoload
 (defun arxana-ledger-browse ()
@@ -223,7 +334,8 @@ are flat item lists."
          (arxana-ledger--button "[edit ledger.edn]"
                                 (lambda (_) (arxana-ledger-edit-file))
                                 "Open the ledger EDN to edit; g to refresh after save")
-         (insert "   — edit raw EDN, then g to refresh (native edit/move = next step)\n"))))))
+         (insert "   — on an item:  e=hours  s=status  a=archive  ·  g=refresh  ·  E=raw EDN\n")))
+   #'arxana-ledger-browse)))
 
 ;; ---------------------------------------------------- home integration ----
 ;; Wired into arxana-browser-core's home as the 'ledger view: three stratum
