@@ -645,6 +645,13 @@
      "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"/>\n"
      "<link rel=\"stylesheet\" href=\"tufte.css\"/>\n"
      "<link rel=\"stylesheet\" href=\"latex.css\"/>\n"
+     "<style>\n"
+     ".fresh-badge{font-size:0.62em;font-weight:600;letter-spacing:0.02em;"
+     "vertical-align:middle;margin-left:0.5em;padding:0.1em 0.4em;border-radius:0.4em;"
+     "background:#dcfce7;color:#166534;border:1px solid #86efac;white-space:nowrap;}\n"
+     ".fresh-badge-stale{background:#fef3c7;color:#92400e;border-color:#fcd34d;}\n"
+     ".fresh-badge-none{background:#f3f4f6;color:#6b7280;border-color:#d1d5db;}\n"
+     "</style>\n"
      "</head>\n"
      "<body bgcolor=\"#F5F5F5\" vlink=\"blue\" link=\"blue\">\n"
      "<article>\n\n"
@@ -818,6 +825,30 @@
        (html-revisions-section)
        "</section>\n"))
 
+(defn fresh-badge-html
+  "Per-story freshness banner sourced from the generated prose's mtime:
+   [fresh: DD/MM/YY] when the .aif.md render is current with its .aif.edn
+   overlay, [stale — rendered DD/MM/YY] when the overlay is newer (re-render
+   owed), [no render] when no .aif.md exists. Mirrors the WM VSATARCS witness."
+  [path]
+  (let [base   (str/replace path #"\.md$" "")
+        aif-md (io/file (str base ".aif.md"))
+        aif-edn (io/file (str base ".aif.edn"))]
+    (if-not (.exists aif-md)
+      "<span class=\"fresh-badge fresh-badge-none\" title=\"No generated .aif.md\">[no render]</span>"
+      (let [md-t  (.lastModified aif-md)
+            d     (java.time.LocalDate/ofInstant
+                   (java.time.Instant/ofEpochMilli md-t)
+                   (java.time.ZoneId/systemDefault))
+            dd    (format "%02d/%02d/%02d" (.getDayOfMonth d) (.getMonthValue d)
+                          (mod (.getYear d) 100))
+            stale? (and (.exists aif-edn) (> (.lastModified aif-edn) md-t))]
+        (str "<span class=\"fresh-badge" (when stale? " fresh-badge-stale") "\" title=\""
+             (if stale?
+               "Overlay (.aif.edn) is newer than this render — re-render owed"
+               "Rendered prose is current with its .aif.edn overlay")
+             "\">[" (if stale? "stale — rendered " "fresh: ") dd "]</span>")))))
+
 (defn html-render-story [path]
   (let [story (parse-story path)
         section (section-for-story-basename (basename path))
@@ -827,7 +858,7 @@
     (try
       (str
        "<section id=\"" (html-escape stem) "\">\n"
-       "<h2>" (html-escape (:title story)) "</h2>\n"
+       "<h2>" (html-escape (:title story)) (fresh-badge-html path) "</h2>\n"
        ;; Source + TOC backlink lives in a `section > p` (55% width per
        ;; Tufte rule).  The marginnote is placed INSIDE this paragraph
        ;; so the right-float + -60% margin lands it in the wide right
