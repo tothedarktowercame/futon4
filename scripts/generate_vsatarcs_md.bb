@@ -651,6 +651,9 @@
      "background:#dcfce7;color:#166534;border:1px solid #86efac;white-space:nowrap;}\n"
      ".fresh-badge-stale{background:#fef3c7;color:#92400e;border-color:#fcd34d;}\n"
      ".fresh-badge-none{background:#f3f4f6;color:#6b7280;border-color:#d1d5db;}\n"
+     ".inv-badge{font-size:0.62em;font-weight:600;vertical-align:middle;margin-left:0.4em;"
+     "padding:0.1em 0.4em;border-radius:0.4em;background:#e0e7ff;color:#3730a3;"
+     "border:1px solid #a5b4fc;white-space:nowrap;}\n"
      "</style>\n"
      "</head>\n"
      "<body bgcolor=\"#F5F5F5\" vlink=\"blue\" link=\"blue\">\n"
@@ -825,6 +828,44 @@
        (html-revisions-section)
        "</section>\n"))
 
+;; ---- core.logic invariant decoration (M-vsatarcs-invariants-integration) ----
+(def INVENTORY-PATH (str (fs/expand-home "~/code/futon3c/docs/structural-law-inventory.sexp")))
+
+(defn- inv-read-forms [path]
+  (binding [*read-eval* false]
+    (with-open [r (java.io.PushbackReader. (io/reader path))]
+      (loop [acc []] (let [f (read {:eof ::eof} r)] (if (= f ::eof) acc (recur (conj acc f))))))))
+
+(defn- inv-walk [x p] (concat (when (p x) [x]) (when (coll? x) (mapcat #(inv-walk % p) x))))
+(defn- inv-id-of [f] (let [a (drop-while #(not= :id %) f)] (when (seq a) (str (second a)))))
+
+(def operational-invariant-ids
+  "Specific (hyphen/slash) core.logic-backed (operational) invariant + family ids
+   from the inventory's operational-families section. Single-word ids (e.g.
+   'existence') are dropped to avoid prose false-positives."
+  (delay
+   (try
+     (let [forms (inv-read-forms INVENTORY-PATH)
+           opf (first (filter #(and (seq? %) (= 'operational-families (first %)))
+                              (inv-walk forms seq?)))
+           ids (->> (inv-walk opf #(and (seq? %) (#{'family 'invariant} (first %))))
+                    (keep inv-id-of) set)]
+       (set (filter #(or (str/includes? % "-") (str/includes? % "/")) ids)))
+     (catch Exception _ #{}))))
+
+(defn invariant-badge-html
+  "Count the distinct operational core.logic invariants this story references
+   (story .md + its .aif.edn overlay). Emits [core.logic invariants: N] when N>=1;
+   the title lists which ones. The story-decoration half of the WM<->VSATARCS witness."
+  [path]
+  (let [base (str/replace path #"\.md$" "")
+        edn-f (io/file (str base ".aif.edn"))
+        text (str (slurp path) "\n" (if (.exists edn-f) (slurp edn-f) ""))
+        hits (sort (filter #(str/includes? text %) @operational-invariant-ids))]
+    (when (seq hits)
+      (str "<span class=\"inv-badge\" title=\"core.logic invariants decorating this story: "
+           (html-escape (str/join ", " hits)) "\">[core.logic invariants: " (count hits) "]</span>"))))
+
 (defn fresh-badge-html
   "Per-story freshness banner sourced from the generated prose's mtime:
    [fresh: DD/MM/YY] when the .aif.md render is current with its .aif.edn
@@ -858,7 +899,8 @@
     (try
       (str
        "<section id=\"" (html-escape stem) "\">\n"
-       "<h2>" (html-escape (:title story)) (fresh-badge-html path) "</h2>\n"
+       "<h2>" (html-escape (:title story)) (fresh-badge-html path)
+       (or (invariant-badge-html path) "") "</h2>\n"
        ;; Source + TOC backlink lives in a `section > p` (55% width per
        ;; Tufte rule).  The marginnote is placed INSIDE this paragraph
        ;; so the right-float + -60% margin lands it in the wide right
