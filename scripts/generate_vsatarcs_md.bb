@@ -651,6 +651,9 @@
      "background:#dcfce7;color:#166534;border:1px solid #86efac;white-space:nowrap;}\n"
      ".fresh-badge-stale{background:#fef3c7;color:#92400e;border-color:#fcd34d;}\n"
      ".fresh-badge-none{background:#f3f4f6;color:#6b7280;border-color:#d1d5db;}\n"
+     ".inv-badge{font-size:0.62em;font-weight:600;vertical-align:middle;margin-left:0.4em;"
+     "padding:0.1em 0.4em;border-radius:0.4em;background:#e0e7ff;color:#3730a3;"
+     "border:1px solid #a5b4fc;white-space:nowrap;}\n"
      "</style>\n"
      "</head>\n"
      "<body bgcolor=\"#F5F5F5\" vlink=\"blue\" link=\"blue\">\n"
@@ -825,6 +828,33 @@
        (html-revisions-section)
        "</section>\n"))
 
+;; ---- explicit story-decoration consumer (M-vsatarcs principle #8: EXPLICIT, not fuzzy) ----
+(def STORY-DECORATIONS-PATH
+  (str (fs/expand-home "~/code/futon5a/holes/stories/story-invariant-decorations.edn")))
+
+(def story-decorations
+  ;; {story-id -> sorted distinct invariant-ids} from the canonical explicit map.
+  ;; Consumes the decoration map (story-invariant-decorations.edn) — never fuzzy prose.
+  (delay
+   (try
+     (reduce (fn [acc d]
+               (update acc (:story/id d) (fnil into (sorted-set)) (:invariant/ids d)))
+             {} (:decorations (read-edn-file STORY-DECORATIONS-PATH)))
+     (catch Exception _ {}))))
+
+(defn invariant-badge-html
+  "Per-story invariant badge — counts the invariants the EXPLICIT decoration map
+   binds to this story (story-invariant-decorations.edn). No fuzzy prose matching
+   (principle #8). Witnessed-status grouping is available via the projection's
+   :story-decoration for a richer future display."
+  [path]
+  (let [sid (str/replace (basename path) #"\.md$" "")
+        invs (get @story-decorations sid)]
+    (when (seq invs)
+      (str "<span class=\"inv-badge\" title=\"explicit invariant decorations "
+           "(story-invariant-decorations.edn): " (html-escape (str/join ", " invs))
+           "\">[invariants: " (count invs) "]</span>"))))
+
 (defn fresh-badge-html
   "Per-story freshness banner sourced from the generated prose's mtime:
    [fresh: DD/MM/YY] when the .aif.md render is current with its .aif.edn
@@ -858,7 +888,8 @@
     (try
       (str
        "<section id=\"" (html-escape stem) "\">\n"
-       "<h2>" (html-escape (:title story)) (fresh-badge-html path) "</h2>\n"
+       "<h2>" (html-escape (:title story)) (fresh-badge-html path)
+       (or (invariant-badge-html path) "") "</h2>\n"
        ;; Source + TOC backlink lives in a `section > p` (55% width per
        ;; Tufte rule).  The marginnote is placed INSIDE this paragraph
        ;; so the right-float + -60% margin lands it in the wide right
