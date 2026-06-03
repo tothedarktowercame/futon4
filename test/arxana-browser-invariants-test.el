@@ -21,6 +21,8 @@
     (should (equal (plist-get root-item :description)
                    "Live invariant families first, with violations and candidates as secondary views."))
     (should (equal (plist-get first-item :label) "Live Invariants"))
+    (should (equal (plist-get first-item :description)
+                   "Derived invariant-state projection with claimed and witnessed status kept separate."))
     (should (equal (plist-get first-item :view) 'operational-families))))
 
 (ert-deftest arxana-browser-candidate-family-forms-reads-watchlist ()
@@ -99,7 +101,43 @@
                  :label "PROMOTE NEXT"
                  :description "Section header."))))
     (should (equal "PROMOTE NEXT" (aref row 0)))
-    (should (equal "Section header." (aref row 7)))))
+    (should (equal "Section header." (aref row 10)))))
+
+(ert-deftest arxana-browser-candidate-items-read-audited-projection ()
+  (cl-letf (((symbol-function 'arxana-browser--invariant-projection-candidate-queue)
+             (lambda ()
+               '(:rows
+                 ((:candidate/id "candidate-families/atomic-inspectable-units/checkout-before-work"
+                   :source/feed "candidate-families"
+                   :source/path "/tmp/inventory.sexp"
+                   :row/class "invariant-candidate"
+                   :family/id "atomic-inspectable-units"
+                   :invariant/id "checkout-before-work"
+                   :audit/value "needs-more-evidence"
+                   :audit/decision "defer"
+                   :priority/rank 7
+                   :priority/score 500
+                   :lucid/dream (:lucid/operator-outcome "Operator sees the boundary."
+                                 :lucid/agent-outcome "Agent sees the boundary."))
+                  (:candidate/id "watchlist/metadata"
+                   :source/feed "candidate-family-watchlist"
+                   :row/class "watchlist-metadata"
+                   :family/id "metadata"
+                   :audit/value "metadata-only"
+                   :audit/decision "exclude-from-row-denominator")))))
+            ((symbol-function 'arxana-browser--family-fired-summary)
+             (lambda () nil)))
+    (let* ((items (arxana-browser--candidate-invariants-items))
+           (rows (seq-filter (lambda (item)
+                               (eq (plist-get item :type)
+                                   'candidate-invariant-entry))
+                             items))
+           (row (car rows)))
+      (should (= 1 (length rows)))
+      (should (equal "checkout-before-work" (plist-get row :invariant)))
+      (should (equal "needs-more-evidence" (plist-get row :value-assessment)))
+      (should (equal "defer" (plist-get row :audit-decision)))
+      (should (equal "candidate" (plist-get row :lane))))))
 
 (ert-deftest arxana-browser-candidate-priority-map-reads-json-queue ()
   (let* ((path (make-temp-file "candidate-queue" nil ".json"))
@@ -232,15 +270,49 @@
   (should (arxana-browser--live-invariant-family-p '(:status ":operational-but-bypassable")))
   (should-not (arxana-browser--live-invariant-family-p '(:status ":candidate"))))
 
-(ert-deftest arxana-browser-operational-families-items-only-show-live-families ()
-  (cl-letf (((symbol-function 'arxana-browser--read-invariant-model)
+(ert-deftest arxana-browser-operational-families-items-read-projection-families ()
+  (cl-letf (((symbol-function 'arxana-browser--invariant-projection-summary)
              (lambda ()
-               "{:id :F-live :name \"Live\" :layer :I0 :status :operational :question \"Q\" :repos #{:R-futon1a}}\n\
-{:id :F-candidate :name \"Candidate\" :layer :I4 :status :candidate :question \"Q\" :repos #{:R-futon4}}")))
+               '(:source/inventory (:mtime "2026-06-02T00:00:00Z")
+                 :families
+                 ((:family/id "live"
+                   :source/section "operational-families"
+                   :claimed-status "operational"
+                   :witnessed-status "witnessed/missing"
+                   :invariants
+                   ((:invariant/id "live/check"
+                     :claimed-status "operational"
+                     :witnessed-status "witnessed/missing")))
+                  (:family/id "candidate"
+                   :source/section "candidate-families"
+                   :claimed-status "candidate"
+                   :witnessed-status "witnessed/missing"
+                   :invariants
+                   ((:invariant/id "candidate/check"
+                     :claimed-status "candidate"
+                     :witnessed-status "witnessed/missing")))))))
+            ((symbol-function 'arxana-browser--family-fired-summary)
+             (lambda () nil)))
     (let* ((items (arxana-browser--operational-families-items))
            (labels (mapcar (lambda (item) (plist-get item :label)) items)))
-      (should (member "Live" labels))
-      (should-not (member "Candidate" labels)))))
+      (should (member "live" labels))
+      (should (member "candidate" labels)))))
+
+(ert-deftest arxana-browser-story-decoration-summary-is-projection-backed ()
+  (cl-letf (((symbol-function 'arxana-browser--read-invariant-state-projection)
+             (lambda ()
+               '(:story-decoration
+                 (:stories
+                  ((:story/id "leaf-invariants"
+                    :decorations
+                    ((:decoration/status "candidate"
+                      :invariant/id "atomic-inspectable-units")
+                     (:decoration/status "witnessed/missing"
+                      :invariant/id "existence")))))))))
+    (should (equal "candidate:1 witnessed/missing:1"
+                   (arxana-browser--story-decoration-summary "leaf-invariants")))
+    (should (equal "none"
+                   (arxana-browser--story-decoration-summary "no-decorations")))))
 
 (ert-deftest arxana-browser-mi0-docs-code-report-is-currently-green ()
   (let ((report (arxana-browser--mi0-docs-code-report)))

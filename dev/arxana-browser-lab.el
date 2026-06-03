@@ -256,12 +256,70 @@ Otherwise, HTTP 5050 -> ws 5056, HTTPS 5051 -> wss 5057 (nginx SSL)."
   :type 'file
   :group 'arxana-browser)
 
+(defcustom arxana-browser-invariant-state-projection-script
+  "/home/joe/code/futon4/scripts/build-invariant-state-projection.bb"
+  "Read-only projection builder used by Arxana invariant views."
+  :type 'file
+  :group 'arxana-browser)
+
+(defun arxana-browser--read-invariant-state-projection ()
+  "Return the derived invariant-state projection as a JSON plist."
+  (when (file-readable-p arxana-browser-invariant-state-projection-script)
+    (with-temp-buffer
+      (let ((exit (process-file "bb" nil t nil
+                                arxana-browser-invariant-state-projection-script
+                                "--json")))
+        (when (zerop exit)
+          (arxana-lab--parse-json (buffer-string)))))))
+
+(defun arxana-browser--invariant-projection-summary ()
+  "Return `:invariant-state/summary' from the derived projection."
+  (plist-get (arxana-browser--read-invariant-state-projection)
+             :invariant-state/summary))
+
+(defun arxana-browser--invariant-projection-candidate-queue ()
+  "Return `:candidate-queue/audited' from the derived projection."
+  (plist-get (arxana-browser--read-invariant-state-projection)
+             :candidate-queue/audited))
+
+(defun arxana-browser--story-decorations-for-story (story-id)
+  "Return explicit invariant decorations for STORY-ID from the projection."
+  (let* ((projection (ignore-errors
+                       (arxana-browser--read-invariant-state-projection)))
+         (story-decoration (plist-get projection :story-decoration))
+         (stories (plist-get story-decoration :stories)))
+    (plist-get
+     (seq-find (lambda (story)
+                 (equal (plist-get story :story/id) story-id))
+               stories)
+     :decorations)))
+
+(defun arxana-browser--story-decoration-summary (story-id)
+  "Return a compact status-count summary for STORY-ID decorations."
+  (let ((decorations (arxana-browser--story-decorations-for-story story-id)))
+    (if decorations
+        (let ((counts (make-hash-table :test 'equal)))
+          (dolist (dec decorations)
+            (let ((status (or (plist-get dec :decoration/status) "missing")))
+              (puthash status (1+ (gethash status counts 0)) counts)))
+          (string-join
+           (delq nil
+                 (mapcar (lambda (status)
+                           (let ((n (gethash status counts 0)))
+                             (when (> n 0)
+                               (format "%s:%d" status n))))
+                         '("candidate" "witnessed/violation" "witnessed/inactive"
+                           "witnessed/error" "witnessed/missing" "witnessed/ok"
+                           "missing")))
+           " "))
+      "none")))
+
 (defun arxana-browser--invariants-menu-items ()
   "Return the Invariants sub-menu items."
   (list
    (list :type 'invariants-menu
          :label "Live Invariants"
-         :description "Working invariant families from futon-stack-invariant-model.edn — the checks the live system actually runs."
+         :description "Derived invariant-state projection with claimed and witnessed status kept separate."
          :view 'operational-families)
    (list :type 'invariants-menu
          :label "Live Violations"
@@ -269,7 +327,7 @@ Otherwise, HTTP 5050 -> ws 5056, HTTPS 5051 -> wss 5057 (nginx SSL)."
          :view 'violations)
    (list :type 'invariants-menu
          :label "Candidate Queue"
-         :description "Unwired invariant pressure from structural-law-inventory.sexp."
+         :description "Audited candidate rows from the derived projection: provenance, value assessment, and audit decision."
          :view 'candidate-invariants)
    (list :type 'invariants-menu
          :label "Invariant Guide"
@@ -1097,6 +1155,11 @@ all `devmap` forms rather than assuming a single well-nested repo-seeds block."
    ((equal lane "promote-next") 0)
    ((equal lane "family-watchlist") 1)
    ((equal lane "repo-pressure") 2)
+   ((equal lane "register-witness") 0)
+   ((equal lane "needs-witness") 1)
+   ((equal lane "work-item") 2)
+   ((equal lane "candidate") 3)
+   ((equal lane "priority-only") 4)
    (t 9)))
 
 (defun arxana-browser--candidate-lane-description (lane count)
@@ -1110,6 +1173,16 @@ all `devmap` forms rather than assuming a single well-nested repo-seeds block."
      (format "%d canonical law-shaped pressures from the structural-law inventory. Read these as the intended queue substrate, not repo-specific anecdotes." count))
     ("repo-pressure"
      (format "%d repo-seeded pressures and exemplars. These are useful evidence, but they need family-level consolidation before they become inhabitable policy." count))
+    ("register-witness"
+     (format "%d %s already have a known witness and should be registered against the projection." count item-word))
+    ("needs-witness"
+     (format "%d %s name plausible invariant pressure but need modeled witnesses before promotion." count item-word))
+    ("work-item"
+     (format "%d %s are useful work tracers, not invariants; keep them as audited work pressure." count item-word))
+    ("candidate"
+     (format "%d %s remain candidate fiction pending a value decision." count item-word))
+    ("priority-only"
+     (format "%d %s appear only in stale priority data and need reconciliation." count item-word))
     (_ (format "%d candidate %s." count item-word)))))
 
 (defun arxana-browser--candidate-lane-display (lane)
@@ -1118,6 +1191,11 @@ all `devmap` forms rather than assuming a single well-nested repo-seeds block."
     ("promote-next" "promote")
     ("family-watchlist" "watchlist")
     ("repo-pressure" "repo")
+    ("register-witness" "witness")
+    ("needs-witness" "needs-wit")
+    ("work-item" "work")
+    ("candidate" "candidate")
+    ("priority-only" "priority")
     (_ lane)))
 
 (defun arxana-browser--candidate-enrich-item (item family-meta priority-map)
@@ -1447,51 +1525,91 @@ opposite convention from rank). Used only for the displayed P column."
   (let ((rank (arxana-browser--tracer-priority-rank item)))
     (max 0 (- 100 rank))))
 
+(defun arxana-browser--projection-value-string (value)
+  "Return VALUE as a display string without keyword punctuation."
+  (cond
+   ((null value) nil)
+   ((keywordp value) (substring (symbol-name value) 1))
+   ((symbolp value) (symbol-name value))
+   ((stringp value) value)
+   (t (format "%s" value))))
+
+(defun arxana-browser--candidate-lane-from-audit (row)
+  "Return queue lane for audited projection ROW."
+  (pcase (arxana-browser--projection-value-string
+          (plist-get row :audit/decision))
+    ("register-witness" "register-witness")
+    ("needs-witness" "needs-witness")
+    ("convert-to-work-item" "work-item")
+    ("defer" "candidate")
+    (_ (if (equal (arxana-browser--projection-value-string
+                   (plist-get row :priority/join))
+                  "priority-only")
+           "priority-only"
+         "candidate"))))
+
+(defun arxana-browser--candidate-item-from-projection-row (row)
+  "Convert audited projection ROW into an Arxana browser item."
+  (let* ((family (arxana-browser--projection-value-string
+                  (plist-get row :family/id)))
+         (invariant (or (arxana-browser--projection-value-string
+                         (plist-get row :invariant/id))
+                        family
+                        (arxana-browser--projection-value-string
+                         (plist-get row :candidate/id))))
+         (decision (arxana-browser--projection-value-string
+                    (plist-get row :audit/decision)))
+         (value (arxana-browser--projection-value-string
+                 (plist-get row :audit/value)))
+         (feed (arxana-browser--projection-value-string
+                (plist-get row :source/feed)))
+         (source-path (plist-get row :source/path))
+         (lane (arxana-browser--candidate-lane-from-audit row))
+         (dream (plist-get row :lucid/dream))
+         (note (string-join
+                (delq nil
+                      (list (and value (format "value=%s" value))
+                            (and decision (format "decision=%s" decision))
+                            (plist-get dream :lucid/operator-outcome)
+                            (plist-get dream :lucid/agent-outcome)))
+                " | ")))
+    (list :type 'candidate-invariant-entry
+          :label invariant
+          :invariant invariant
+          :family (or family "?")
+          :source (or feed source-path "?")
+          :source-path source-path
+          :source-feed feed
+          :status (or decision "candidate")
+          :origin (arxana-browser--projection-value-string
+                   (plist-get row :origin))
+          :row-class (arxana-browser--projection-value-string
+                      (plist-get row :row/class))
+          :value-assessment value
+          :audit-decision decision
+          :description note
+          :note note
+          :lane lane
+          :lane-rank (arxana-browser--candidate-lane-rank lane)
+          :layer (arxana-browser--candidate-family-layer family)
+          :priority-rank (plist-get row :priority/rank)
+          :priority-score (plist-get row :priority/score))))
+
+(defun arxana-browser--candidate-projection-rows ()
+  "Return audited candidate rows from the derived projection."
+  (let* ((queue (arxana-browser--invariant-projection-candidate-queue))
+         (rows (plist-get queue :rows)))
+    (seq-filter
+     (lambda (row)
+       (not (equal (arxana-browser--projection-value-string
+                    (plist-get row :audit/decision))
+                   "exclude-from-row-denominator")))
+     rows)))
+
 (defun arxana-browser--candidate-invariants-items ()
-  "Return concrete candidate invariant queue items from the registry seed."
-  (let* ((inventory (ignore-errors (arxana-browser--read-structural-law-inventory)))
-         (priority-map (arxana-browser--candidate-priority-map))
-         (family-meta (and inventory
-                           (mapcar (lambda (family-form)
-                                     (let* ((plist (cdr family-form))
-                                            (id (plist-get plist :id)))
-                                       (cons (and id (symbol-name id))
-                                             (list :summary (plist-get plist :summary)
-                                                   :status (plist-get plist :status)))))
-                                   (arxana-browser--candidate-family-definition-forms inventory))))
-         (family-items (and inventory
-                            (mapcan #'arxana-browser--candidate-invariant-items-from-family-form
-                                    (arxana-browser--candidate-family-definition-forms inventory))))
-         (devmap-items (and inventory
-                            (mapcan #'arxana-browser--candidate-invariant-items-from-devmap-form
-                                    (arxana-browser--repo-seed-devmap-forms inventory))))
-         (regular-items (mapcar (lambda (item)
-                                  (arxana-browser--candidate-enrich-item item family-meta priority-map))
-                                (append family-items devmap-items)))
-         ;; Pre-enrich tracer items with sort fields so they survive
-         ;; `arxana-browser--candidate-section-items'. Priority is
-         ;; meaningful (days-to-target for pipeline-tracers, mid-range
-         ;; for deferred-stubs), so tracers intersperse with regular
-         ;; lane peers rather than bunching at top or bottom.
-         ;;
-         ;; Stamp `:type 'candidate-invariant-entry'` so the row-open
-         ;; dispatcher in arxana-browser-core.el (case on :type) routes
-         ;; to the candidate-invariant detail view rather than silently
-         ;; no-op'ing. Without this, opening any tracer row was a no-op
-         ;; — caught 2026-05-04 by arxana-dramaturge test
-         ;; `candidate-invariants-items-have-type'.
-         (tracer-items (mapcar (lambda (item)
-                                 (append (copy-sequence item)
-                                         (list :type 'candidate-invariant-entry
-                                               :lane-rank
-                                               (arxana-browser--candidate-lane-rank
-                                                (plist-get item :lane))
-                                               :priority-rank
-                                               (arxana-browser--tracer-priority-rank item)
-                                               :priority-score
-                                               (arxana-browser--tracer-priority-score item))))
-                               arxana-browser--invariant-queue-tracer-items))
-         (items (append tracer-items regular-items))
+  "Return concrete candidate invariant queue items from the projection."
+  (let* ((rows (ignore-errors (arxana-browser--candidate-projection-rows)))
+         (items (mapcar #'arxana-browser--candidate-item-from-projection-row rows))
          ;; Enrich with :last-fire-at / :last-violation-at /
          ;; :inactive-since from `:family-fired' evidence, joined on
          ;; the item's `:family' string against the family-fired
@@ -1508,7 +1626,7 @@ opposite convention from rank). Used only for the displayed P column."
         (arxana-browser--candidate-section-items items)
       (list (list :type 'info
                   :label "No candidate invariant queue"
-                  :description "Could not read candidate-family-watchlist from structural-law-inventory.sexp.")))))
+                  :description "Could not read :candidate-queue/audited from the invariant-state projection.")))))
 
 (defun arxana-browser--candidate-invariants-format ()
   "Column format for the candidate invariant queue."
@@ -1585,7 +1703,11 @@ they stand out against regular candidates."
         (insert (format "- Priority Rank :: %s\n" (or (plist-get item :priority-rank) "?")))
         (insert (format "- Priority Score :: %s\n" (or (plist-get item :priority-score) "?")))
         (insert (format "- Source :: %s\n" (or (plist-get item :source) "?")))
+        (when-let ((path (plist-get item :source-path)))
+          (insert (format "- Source Path :: %s\n" path)))
         (insert (format "- Status :: %s\n" (or (plist-get item :status) "?")))
+        (insert (format "- Value Assessment :: %s\n" (or (plist-get item :value-assessment) "?")))
+        (insert (format "- Audit Decision :: %s\n" (or (plist-get item :audit-decision) "?")))
         (insert (format "- Origin :: %s\n" (or (plist-get item :origin) "?")))
         (when-let ((family-summary (plist-get item :family-summary)))
           (insert (format "- Family Summary :: %s\n" family-summary)))
@@ -1767,14 +1889,42 @@ root \"archaeology-control\" used in `:family-id' keywords."
 
 (defun arxana-browser--operational-families-items ()
   "Return items for the operational families view.
-Reads from futon-stack-invariant-model.edn and shows all families
-grouped by layer with header rows. Enriches each item with
+Reads from the derived invariant-state projection and shows families
+grouped by source section with header rows. Enriches each item with
 `:last-fire-at', `:last-violation-at', `:inactive-since' derived from
 recent `:family-fired' evidence (track-4-3-arxana-view-columns)."
-  (let* ((model (arxana-browser--read-invariant-model))
-         (families (and model
-                        (seq-filter #'arxana-browser--live-invariant-family-p
-                                    (arxana-browser--edn-extract-families model))))
+  (let* ((summary (ignore-errors (arxana-browser--invariant-projection-summary)))
+         (source-meta (plist-get summary :source/inventory))
+         (families (mapcar
+                    (lambda (family)
+                      (let* ((invariants (plist-get family :invariants))
+                             (witnessed (or (plist-get family :witnessed-status)
+                                            "witnessed/missing"))
+                             (first-witnessed
+                              (seq-find (lambda (inv)
+                                          (plist-get inv :witness/kind))
+                                        invariants))
+                             (latest-run (plist-get first-witnessed
+                                                    :witness/latest-run)))
+                        (append family
+                                (list :type 'operational-family-entry
+                                      :id (plist-get family :family/id)
+                                      :name (plist-get family :family/id)
+                                      :label (plist-get family :family/id)
+                                      :status (plist-get family :claimed-status)
+                                      :source-section
+                                      (plist-get family :source/section)
+                                      :witnessed-status witnessed
+                                      :witness-kind
+                                      (or (plist-get first-witnessed :witness/kind)
+                                          "missing")
+                                      :last-checked
+                                      (plist-get latest-run :checked-at)
+                                      :source-freshness
+                                      (plist-get source-meta :mtime)
+                                      :invariant-count
+                                      (length invariants)))))
+                    (or (plist-get summary :families) nil)))
          (fire-by-root (arxana-browser--family-fired-summary)))
     (when fire-by-root
       (setq families
@@ -1787,70 +1937,77 @@ recent `:family-fired' evidence (track-4-3-arxana-view-columns)."
                           fam)))
                     families)))
     (if families
-        ;; Group by layer, insert layer headers
+        ;; Group by source section, insert projection headers.
         (let ((sorted (sort (copy-sequence families)
                             (lambda (a b)
-                              (string< (or (plist-get a :layer) "")
-                                       (or (plist-get b :layer) "")))))
-              (current-layer nil)
+                              (string< (or (plist-get a :source-section) "")
+                                       (or (plist-get b :source-section) "")))))
+              (current-section nil)
               (result nil))
           (dolist (fam sorted)
-            (let ((layer (plist-get fam :layer)))
-              (unless (equal layer current-layer)
-                (setq current-layer layer)
-                ;; Insert layer header
-                (let ((layer-info (seq-find (lambda (l) (equal (plist-get l :id) layer))
-                                            arxana-browser--invariant-layers)))
-                  (push (list :type 'info
-                              :label (format "%s: %s"
-                                             (or layer "?")
-                                             (or (and layer-info (plist-get layer-info :name)) ""))
-                              :description (or (and layer-info (plist-get layer-info :owner)) ""))
-                        result)))
+            (let ((section (plist-get fam :source-section)))
+              (unless (equal section current-section)
+                (setq current-section section)
+                (push (list :type 'info
+                            :label (format "%s" (or section "?"))
+                            :description "Derived projection section: claimed status is not evidence; witnessed status is separate.")
+                      result))
               (push fam result)))
           (nreverse result))
       (list (list :type 'info
                   :label "No invariant model"
-                  :description "Could not read futon-stack-invariant-model.edn.")))))
+                  :description "Could not read :invariant-state/summary from the derived projection.")))))
 
 (defun arxana-browser--operational-families-format ()
   "Column format for the operational families view."
   [("Family" 28 t)
-   ("Layer" 6 t)
-   ("Status" 12 t)
-   ("Repos" 10 t)
+   ("Claimed" 14 t)
+   ("Witnessed" 18 t)
+   ("Witness" 12 t)
    ("Checks" 6 t)
-   ("LastFire" 12 t)
+   ("Checked" 12 t)
+   ("Source" 12 t)
    ("LastViol" 12 t)
-   ("Inactive" 12 t)
-   ("Question" 0 nil)])
+   ("Note" 0 nil)])
 
 (defun arxana-browser--operational-families-row (item)
   "Row for operational family ITEM."
-  (let ((status (or (plist-get item :status) "?")))
+  (let ((status (or (plist-get item :status) "?"))
+        (witnessed (or (plist-get item :witnessed-status) "witnessed/missing")))
     (vector
      (arxana-lab--truncate (or (plist-get item :name) "") 27)
-     (or (plist-get item :layer) "?")
      (propertize status
                  'face (cond
-                        ((string= status ":operational")
+                        ((string= status "operational")
                          'arxana-violation-auto-fixable-face)
-                        ((string= status ":operational-but-bypassable")
+                        ((string= status "operational-but-bypassable")
                          'arxana-violation-needs-review-face)
-                        ((string= status ":candidate")
+                        ((string= status "candidate")
                          'arxana-violation-needs-review-face)
                         (t 'default)))
-     (arxana-lab--truncate
-      (arxana-browser--format-repos-display (plist-get item :repos))
-      9)
+     (propertize witnessed
+                 'face (cond
+                        ((string= witnessed "witnessed/ok")
+                         'arxana-violation-auto-fixable-face)
+                        ((member witnessed '("witnessed/violation"
+                                             "witnessed/inactive"
+                                             "witnessed/error"))
+                         'arxana-violation-needs-review-face)
+                        (t 'default)))
+     (arxana-lab--truncate (or (plist-get item :witness-kind) "missing") 11)
      (let ((n (plist-get item :invariant-count)))
        (if (and n (> n 0)) (number-to-string n) "-"))
-     (arxana-browser--format-iso-compact (plist-get item :last-fire-at))
+     (arxana-browser--format-iso-compact (plist-get item :last-checked))
+     (arxana-browser--format-iso-compact (plist-get item :source-freshness))
      (let ((lv (plist-get item :last-violation-at)))
        (propertize (arxana-browser--format-iso-compact lv)
                    'face (if lv 'arxana-violation-needs-review-face 'default)))
-     (arxana-browser--format-iso-compact (plist-get item :inactive-since))
-     (arxana-lab--truncate (or (plist-get item :question) "") 80))))
+     (arxana-lab--truncate
+      (format "section=%s last-fire=%s inactive=%s"
+              (or (plist-get item :source-section) "?")
+              (arxana-browser--format-iso-compact (plist-get item :last-fire-at))
+              (arxana-browser--format-iso-compact (plist-get item :inactive-since)))
+      80))))
 
 (defun arxana-browser-operational-family-location (item)
   "Return an Arxana URI for operational family ITEM."
@@ -1880,7 +2037,11 @@ recent `:family-fired' evidence (track-4-3-arxana-view-columns)."
         (when location
           (insert (format "- Location :: %s\n" location)))
         (insert (format "- Layer :: %s\n" (or (plist-get item :layer) "?")))
-        (insert (format "- Status :: %s\n" (or (plist-get item :status) "?")))
+        (insert (format "- Claimed Status :: %s\n" (or (plist-get item :status) "?")))
+        (insert (format "- Witnessed Status :: %s\n" (or (plist-get item :witnessed-status) "?")))
+        (insert (format "- Witness Kind :: %s\n" (or (plist-get item :witness-kind) "?")))
+        (insert (format "- Last Checked :: %s\n" (or (plist-get item :last-checked) "?")))
+        (insert (format "- Source Freshness :: %s\n" (or (plist-get item :source-freshness) "?")))
         (insert (format "- Question :: %s\n" (or (plist-get item :question) "?")))
         (insert (format "- Repos :: %s\n"
                         (arxana-browser--format-repos-display
@@ -1910,6 +2071,17 @@ recent `:family-fired' evidence (track-4-3-arxana-view-columns)."
         (let ((n (plist-get item :invariant-count)))
           (when (and n (> n 0))
             (insert (format "- Invariant count :: %d\n" n))))
+        (when-let ((invariants (plist-get item :invariants)))
+          (insert "\n** Projection Rows\n\n")
+          (dolist (inv invariants)
+            (insert (format "- %s :: claimed=%s witnessed=%s witness=%s checked=%s\n"
+                            (or (plist-get inv :invariant/id) "?")
+                            (or (plist-get inv :claimed-status) "?")
+                            (or (plist-get inv :witnessed-status) "?")
+                            (or (plist-get inv :witness/kind) "missing")
+                            (or (plist-get (plist-get inv :witness/latest-run)
+                                           :checked-at)
+                                "?")))))
         (when implemented-in
           (insert "\n** Code Pointers\n\n")
           (dolist (path implemented-in)
@@ -1927,16 +2099,12 @@ recent `:family-fired' evidence (track-4-3-arxana-view-columns)."
         (let ((status (or (plist-get item :status) "")))
           (insert "\n** Interpretation\n\n")
           (cond
-           ((string= status ":operational")
-            (insert "This family has wired invariant checks that run in production.\n")
-            (insert "Violations are detected and surfaced as live violation hyperedges.\n"))
-           ((string= status ":operational-but-bypassable")
-            (insert "This family has real code and tests, but normal live stack behavior can still route around it.\n")
-            (insert "Treat it as implemented but not fully inhabited on the current live path.\n"))
-           ((string= status ":candidate")
-            (insert "This family has identified structural pressures but no operational checks.\n")
-            (insert "The invariants are law-shaped tendencies, not yet enforced.\n")
-            (insert "Wiring these checks would promote them from candidate to operational.\n"))))
+           ((string= status "operational")
+            (insert "The source inventory claims operational status. Trust the separate witnessed-status row for evidence.\n"))
+           ((string= status "operational-but-bypassable")
+            (insert "The source inventory claims real code and tests, but notes a bypassable live path. Trust witnessed-status for current evidence.\n"))
+           ((string= status "candidate")
+            (insert "This family has identified structural pressure, but it is not yet an enforced invariant.\n"))))
         (setq-local arxana-browser--invariant-code-targets (nreverse code-targets))
         (setq-local arxana-browser--invariant-last-target nil)
         (setq-local arxana-browser--invariant-source-buffer nil)

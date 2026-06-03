@@ -24,6 +24,7 @@
 (require 'arxana-vsatarcs-xtdb-clicks)
 (require 'arxana-vsatarcs-lifting-queue)
 (require 'arxana-vsatarcs-essay-revision-queue)
+(require 'arxana-browser-lab nil t)
 
 (defgroup arxana-vsatarcs nil
   "VSATARCS reading support for VSAT-shaped stories."
@@ -206,6 +207,63 @@ Return a plist with `:title', `:source-file', `:metadata', and `:scenes'."
   (dolist (line (split-string (or text "") "\n"))
     (arxana-vsatarcs--insert-markdown-line line)))
 
+(defun arxana-vsatarcs--story-id (story)
+  "Return the projection story id for STORY."
+  (when-let ((source (plist-get story :source-file)))
+    (file-name-base source)))
+
+(defun arxana-vsatarcs--decoration-status-counts (decorations)
+  "Return status counts for invariant DECORATIONS."
+  (let ((counts (make-hash-table :test 'equal)))
+    (dolist (dec decorations)
+      (let ((status (or (plist-get dec :decoration/status) "missing")))
+        (puthash status (1+ (gethash status counts 0)) counts)))
+    counts))
+
+(defun arxana-vsatarcs--insert-invariant-decoration-strip (story)
+  "Insert projection-backed invariant decorations for STORY."
+  (let* ((story-id (arxana-vsatarcs--story-id story))
+         (decorations (and story-id
+                           (fboundp 'arxana-browser--story-decorations-for-story)
+                           (ignore-errors
+                             (arxana-browser--story-decorations-for-story story-id)))))
+    (insert "Story invariants")
+    (if (not decorations)
+        (insert ": none\n\n")
+      (let ((counts (arxana-vsatarcs--decoration-status-counts decorations)))
+        (insert ": "
+                (string-join
+                 (delq nil
+                       (mapcar (lambda (status)
+                                 (let ((n (gethash status counts 0)))
+                                   (when (> n 0)
+                                     (format "%s:%d" status n))))
+                               '("candidate" "witnessed/violation"
+                                 "witnessed/inactive" "witnessed/error"
+                                 "witnessed/missing" "witnessed/ok"
+                                 "missing")))
+                 " ")
+                "\n")
+        (dolist (status '("candidate" "witnessed/violation"
+                          "witnessed/inactive" "witnessed/error"
+                          "witnessed/missing" "witnessed/ok" "missing"))
+          (let ((rows (seq-filter (lambda (dec)
+                                    (equal (or (plist-get dec :decoration/status)
+                                               "missing")
+                                           status))
+                                  decorations)))
+            (when rows
+              (insert (format "  %s: " status))
+              (insert
+               (mapconcat (lambda (dec)
+                            (format "%s/%s"
+                                    (or (plist-get dec :node/id) "?")
+                                    (or (plist-get dec :invariant/id) "?")))
+                          rows
+                          ", "))
+              (insert "\n"))))
+        (insert "\n")))))
+
 (defun arxana-vsatarcs--scene-at-index (story index)
   (nth index (arxana-vsatarcs--scenes story)))
 
@@ -297,6 +355,7 @@ RETURN-BUFFER and RETURN-CONFIG, when non-nil, are used by
         (arxana-vsatarcs--insert-xtdb-clicks-snapshot)
         (arxana-vsatarcs--insert-lifting-queue-snapshot)
         (arxana-vsatarcs--insert-essay-revision-queue-snapshot)
+        (arxana-vsatarcs--insert-invariant-decoration-strip story)
         (insert (make-string 72 ?-) "\n\n")
         (arxana-vsatarcs--insert-markdown (plist-get scene :body))
         (goto-char (point-min)))
@@ -613,35 +672,39 @@ correspondence records (vsatarcs ↔ wm pairs grouped by
 inserted instead.  A ★ marker on a row indicates the entry carries
 `:protocol-witnesses' (cross-side coordination audit trail captured
 in the source)."
-  (let* ((snap (arxana-vsatarcs-bilateral-snapshot))
-         (entries (plist-get snap :entries))
-         (total (plist-get snap :total))
-         (kc (plist-get snap :kind-counts))
-         (wc (plist-get snap :witness-count)))
-    (insert (format "Bilateral evidence (total %d; with protocol-witnesses: %d; by kind: %s)\n"
-                    total wc
-                    (mapconcat (lambda (c)
-                                 (format "%s=%d"
-                                         (if (keywordp (car c))
-                                             (substring (symbol-name (car c)) 1)
-                                           (car c))
-                                         (cdr c)))
-                               (cl-remove-if (lambda (c) (zerop (cdr c))) kc)
-                               " ")))
-    (cond
-     ((not (plist-get snap :block-loaded?))
-      (insert "  (aif file not readable: "
-              arxana-vsatarcs-bilateral-aif-file ")\n\n"))
-     ((null entries)
-      (insert "  (no bilateral-evidence entries)\n\n"))
-     (t
-      (dolist (e entries)
-        (insert (format "  %s%s  [%s]  %s\n"
-                        (or (plist-get e :principle) "?")
-                        (if (plist-get e :has-protocol-witnesses?) " ★" "")
-                        (or (plist-get e :evidence-kind) "?")
-                        (or (plist-get e :landed) "?"))))
-      (insert "\n")))))
+  (condition-case err
+      (let* ((snap (arxana-vsatarcs-bilateral-snapshot))
+             (entries (plist-get snap :entries))
+             (total (plist-get snap :total))
+             (kc (plist-get snap :kind-counts))
+             (wc (plist-get snap :witness-count)))
+        (insert (format "Bilateral evidence (total %d; with protocol-witnesses: %d; by kind: %s)\n"
+                        total wc
+                        (mapconcat (lambda (c)
+                                     (format "%s=%d"
+                                             (if (keywordp (car c))
+                                                 (substring (symbol-name (car c)) 1)
+                                               (car c))
+                                             (cdr c)))
+                                   (cl-remove-if (lambda (c) (zerop (cdr c))) kc)
+                                   " ")))
+        (cond
+         ((not (plist-get snap :block-loaded?))
+          (insert "  (aif file not readable: "
+                  arxana-vsatarcs-bilateral-aif-file ")\n\n"))
+         ((null entries)
+          (insert "  (no bilateral-evidence entries)\n\n"))
+         (t
+          (dolist (e entries)
+            (insert (format "  %s%s  [%s]  %s\n"
+                            (or (plist-get e :principle) "?")
+                            (if (plist-get e :has-protocol-witnesses?) " ★" "")
+                            (or (plist-get e :evidence-kind) "?")
+                            (or (plist-get e :landed) "?"))))
+          (insert "\n"))))
+    (error
+     (insert (format "Bilateral evidence unavailable: %s\n\n"
+                     (error-message-string err))))))
 
 (defun arxana-vsatarcs--insert-sorrys-snapshot ()
   "Insert the sorry-registry snapshot block (reader-criterion Q4).
@@ -847,6 +910,7 @@ on stories, not stories themselves.  See `README-vsatarcs.md' for the
   [("Story" 36 t)
    ("Scenes" 7 t)
    ("Opening" 26 t)
+   ("Invariants" 28 t)
    ("Path" 0 nil)])
 
 (defun arxana-browser-vsatarcs-row (item)
@@ -854,6 +918,7 @@ on stories, not stories themselves.  See `README-vsatarcs.md' for the
   (vector (or (plist-get item :label) "")
           (format "%s" (or (plist-get item :scene-count) 0))
           (or (plist-get item :opening) "-")
+          (or (plist-get item :invariant-status) "none")
           (or (plist-get item :path) "")))
 
 (defun arxana-browser-vsatarcs-items ()
@@ -869,13 +934,21 @@ on stories, not stories themselves.  See `README-vsatarcs.md' for the
                        :label (plist-get story :title)
                        :path path
                        :scene-count (length (arxana-vsatarcs--scenes story))
-                       :opening (and opening (plist-get opening :title))))
+                       :opening (and opening (plist-get opening :title))
+                       :invariant-status
+                       (if (fboundp 'arxana-browser--story-decoration-summary)
+                           (or (ignore-errors
+                                 (arxana-browser--story-decoration-summary
+                                  (file-name-base path)))
+                               "none")
+                         "none")))
              (error
               (list :type 'vsatarcs-story
                     :label (file-name-base path)
                     :path path
                     :scene-count 0
-                    :opening (format "parse error: %s" (error-message-string err))))))
+                    :opening (format "parse error: %s" (error-message-string err))
+                    :invariant-status "none"))))
          paths)
       (list (list :type 'info
                   :label "No VSATARCS stories"
