@@ -1051,12 +1051,50 @@ INSTANTIATE-0 produces the enumerator output and audit ledger.
 - [x] **1. Projection schema/spec:** EDN specs for invariant-state projection,
   invariant-state summary, witness run, candidate value assessment,
   story-grounding map, and story-decoration map.
-- [ ] **2. Tripwire tests:** fidelity matrix converted into tests/checks before
-  production projection code.
+- [x] **2. Tripwire tests:** fidelity matrix converted into projection tripwires
+  (see clean-exit closure below) — 6 green: claimed+witnessed present, witnessed
+  domain, no-asserted-operationality, stale-projection-currency-before-claims,
+  render-hash-content-based, story-decoration-explicit-map-resolves.
 - [x] **3. Read-only projection builder:** build projection from current sources
   without making it authoritative.
-- [ ] **4. Consumer migration:** Arxana/VSATARCS read projection after tripwires
-  exist.
+- [x] **4. Consumer migration:** Arxana reads the one projection (Live Invariants
+  claimed+witnessed columns, audited Candidate Queue, story-decoration strips);
+  War Machine consumes `:vsatarcs-status`. See clean-exit closure below.
+
+### Clean-exit gap closure (2026-06-02, claude-3 orchestration + codex-2 implementation)
+
+A DERIVE↔INSTANTIATE gap pass (with Joe) found the mission's **central deliverable
+was not built**: the projection emitted `claimed-status` only, no `witnessed-status`
+— so the claim/evidence split (the mission's reason to exist) was unrealized, and
+consumers rendered off a status-less projection. Five gaps were fixed in the
+VERIFY-mandated order (witnessed-status before tripwires before consumers):
+
+- **GAP C — witnessed-status from witness-runs:** per-invariant rows now carry
+  `:claimed-status` + `:witnessed-status` (+ witness id/kind/latest-run); the 3
+  modeled `single-locus/*` witnesses render `:witnessed/ok`, unmodeled
+  `:witnessed/missing` (D3, no demotion); families roll up honestly
+  (`atomic-inspectable-units` now correctly *mixed*: 3 ok / 3 missing).
+- **GAP A — tripwire suite:** the fidelity matrix as live checks (the 6 above).
+- **GAP B — explicit story-decoration map:** `futon5a/holes/stories/story-invariant-decorations.edn`
+  (story-id + AIF node-id → invariant-id, **explicit, not fuzzy** — principle #8 / D4);
+  projection emits `:story-decoration` resolved against witnessed-status. (A prior
+  fuzzy prose-substring badge was reverted, futon4 `e58be4f`.)
+- **GAP D — Arxana consumer migration:** Arxana reads the one projection (principle
+  #7); the browser-local tracer var is demoted to audit-input only, no longer
+  authoritative for rendering. Tests: 26/26 (invariants) + 11/11 (vsatarcs).
+- **GAP E — content-based freshness:** `render_leaf_prose.clj` stamps
+  `<!-- aif-source-sha256: … -->`; the `:render-hash-current` chain is now
+  `:live-test` (sha256 compare, not mtime), so a touched-but-unchanged overlay
+  no longer false-positives and a no-op re-render cannot clear a genuine stale.
+
+**Verification:** `bb scripts/build-invariant-state-projection.bb --check` exit 0;
+6 tripwires `:ok`; 55 invariant rows `{:ok 3, :missing 52}`. **Commits:** futon4
+`a71a52b` (projection + Arxana + tests), futon5a `88afe62` (decoration map + render
+hash). Implemented as five small sequenced whistle handoffs to codex-2.
+
+**Net:** the mission's clean-exit deliverables are built — INSTANTIATE 2 & 4 done;
+witnessed-status, the explicit decoration map, Arxana-on-projection, and a robust
+content freshness witness all in place and verified.
 
 ### INSTANTIATE-0 row classes
 
