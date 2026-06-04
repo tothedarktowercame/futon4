@@ -3,6 +3,19 @@
 import { chromium } from 'playwright';
 
 const BASE = 'http://localhost:3100/wa';
+const COGITO_LABELS = [
+  'Epistemology ⋈ ethics in practice',
+  'Agentic loop "eats its own tail"',
+  'Primary research record',
+  'Distributed / extended mind',
+  'Knowledge via dialogue & co-design',
+  'Design patterns as guidance',
+  'Formal reasoning',
+  'Research-entrepreneur / missing customer',
+  'Bridge → analytic epistemology',
+  'Tension: free-solo vs funding-pursuit',
+];
+
 const CONSTELLATION_LABELS = [
   'Epistemology ⋈ ethics in practice',
   'Agentic loop / closing the loop',
@@ -22,9 +35,9 @@ const shortLabel = s => s.length > 16 ? `${s.slice(0, 14)}...` : s;
 
 const TARGETS = [
   { name: 'COGITO Interests', frag: '#/diagram/COGITO%20Interests/compressed', mode: 'compressed', min: 9, max: 14 },
-  { name: 'COGITO Interests', frag: '#/diagram/COGITO%20Interests/expanded', mode: 'expanded', min: 20, max: 80 },
+  { name: 'COGITO Interests', frag: '#/diagram/COGITO%20Interests/expanded', mode: 'expanded', min: 20, max: 80, expectedLabels: COGITO_LABELS, hiddenDiagramLabel: 'COGITO Interests', fixedScreenshot: '/tmp/cogito-fixed.png' },
   { name: 'Interest Constellation', frag: '#/diagram/Interest%20Constellation/compressed', mode: 'compressed', min: 11, max: 16, expectedLabels: CONSTELLATION_LABELS },
-  { name: 'Interest Constellation', frag: '#/diagram/Interest%20Constellation/expanded', mode: 'expanded', min: 20, max: 80 },
+  { name: 'Interest Constellation', frag: '#/diagram/Interest%20Constellation/expanded', mode: 'expanded', min: 20, max: 80, expectedLabels: CONSTELLATION_LABELS, hiddenDiagramLabel: 'Interest Constellation', fixedScreenshot: '/tmp/constellation-fixed.png' },
 ];
 
 const browser = await chromium.launch();
@@ -54,17 +67,24 @@ for (const target of TARGETS) {
   const expectedShortLabels = (target.expectedLabels || []).map(shortLabel);
   const missingExpectedLabels = expectedShortLabels.filter(label => !allLabels.includes(label));
   const prefixedConstellationLabels = allLabels.filter(label => label.startsWith('Constellation:'));
-  const labelOk = !target.expectedLabels ||
-    (missingExpectedLabels.length === 0 && prefixedConstellationLabels.length === 0);
+  const visibleHiddenDiagramLabels = target.hiddenDiagramLabel
+    ? allLabels.filter(label => label === target.hiddenDiagramLabel || label === shortLabel(target.hiddenDiagramLabel))
+    : [];
+  const visibleContainerEdges = target.hiddenDiagramLabel
+    ? allLabels.filter(label => label === 'diagram/core' || label === 'diagram/includes')
+    : [];
+  const labelOk = (!target.expectedLabels ||
+    (missingExpectedLabels.length === 0 && prefixedConstellationLabels.length === 0)) &&
+    visibleHiddenDiagramLabels.length === 0 && visibleContainerEdges.length === 0;
 
   const bodyText = await page.evaluate(() =>
     document.body.innerText.split('\n').map(s => s.trim()).filter(Boolean).slice(0, 16));
-  const screenshot = `/tmp/diagram-${target.name.toLowerCase().replaceAll(' ', '-')}-${target.mode}.png`;
+  const screenshot = target.fixedScreenshot || `/tmp/diagram-${target.name.toLowerCase().replaceAll(' ', '-')}-${target.mode}.png`;
   await page.screenshot({ path: screenshot });
 
   const ok = login === 200 && errors.length === 0 && labelOk && circles >= target.min && circles <= target.max;
   if (!ok) failed = true;
-  out.runs.push({ ...target, login, finalUrl: page.url(), circles, lines, errors, ok, labels, expectedFullLabels: target.expectedLabels || [], missingExpectedLabels, prefixedConstellationLabels, bodyText, screenshot });
+  out.runs.push({ ...target, login, finalUrl: page.url(), circles, lines, errors, ok, labels, expectedFullLabels: target.expectedLabels || [], missingExpectedLabels, prefixedConstellationLabels, visibleHiddenDiagramLabels, visibleContainerEdges, bodyText, screenshot });
   await ctx.close();
 }
 

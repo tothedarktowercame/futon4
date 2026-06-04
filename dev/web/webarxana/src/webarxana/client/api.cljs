@@ -225,14 +225,16 @@
                   ;; Find the other endpoint(s)
                   other-ends (remove #(= entity-id (:entity-id %)) ends)]
               (doseq [ep other-ends]
-                (let [ep-id (:entity-id ep)]
-                  (when ep-id
-                    ;; Ingest a minimal nema for the other endpoint
-                    (state/ingest-entity! {:id ep-id
-                                          :name (or (:passage ep) ep-id)
-                                          :type (or (:role ep) "endpoint")})
-                    ;; Create a link from the focused entity to the other endpoint
-                    (state/ingest-relation!
+	                (let [ep-id (:entity-id ep)]
+	                  (when ep-id
+	                    ;; Hyperedge endpoints only carry local passage/role context.
+	                    ;; Do not let that placeholder overwrite a real entity label.
+	                    (when-not (state/get-nema ep-id)
+	                      (state/ingest-entity! {:id ep-id
+	                                            :name (or (:passage ep) ep-id)
+	                                            :type (or (:role ep) "endpoint")}))
+	                    ;; Create a link from the focused entity to the other endpoint
+	                    (state/ingest-relation!
                      {:id   (str hx-id "->" ep-id)
                       :type hx-type
                       :src  entity-id

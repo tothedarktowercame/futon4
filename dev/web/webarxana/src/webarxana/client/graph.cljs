@@ -630,6 +630,8 @@
                                                             section-ids)))
                                              vec)
                             raw-hood (update raw-hood :links into essay-links)
+                            active-diagram-id (get-in @state/ui-state [:diagram-route :diagram-id])
+                            expanded-diagram? (= :expanded (get-in @state/ui-state [:diagram-route :mode]))
                             ;; Diagrams that are pinned (compressed view)
                             pinned-diagrams (->> (:nemas raw-hood)
                                                  (filter #(and (= "diagram" (:nema/type %))
@@ -660,15 +662,23 @@
                                             (map #(get-in % [:link/dst :nema/id]))
                                             (remove core-ids)
                                             set)
-                            ;; Hide: neighbour diagrams + non-core content of pinned diagrams
-                            hide-ids (into neighbour-diagrams content-ids)]
+                            route-diagrams (if (and expanded-diagram? active-diagram-id)
+                                             #{active-diagram-id}
+                                             #{})
+                            ;; Hide: neighbour diagrams + non-core content of pinned diagrams.
+                            ;; In expanded diagram routes, also hide the active diagram apex:
+                            ;; the diagram is the frame, not a peer node in its own contents.
+                            hide-ids (into (into neighbour-diagrams content-ids) route-diagrams)]
                         {:nemas (remove #(contains? hide-ids (:nema/id %)) (:nemas raw-hood))
                          :links (remove #(or (= "diagram/includes" (:link/type %))
+                                            (and expanded-diagram?
+                                                 (= "diagram/core" (:link/type %))
+                                                 (= active-diagram-id (get-in % [:link/src :nema/id])))
                                             (contains? neighbour-diagrams (get-in % [:link/src :nema/id]))
                                             (contains? neighbour-diagrams (get-in % [:link/dst :nema/id]))
-                                            ;; Also hide links to/from hidden content nodes
-                                            (contains? content-ids (get-in % [:link/src :nema/id]))
-                                            (contains? content-ids (get-in % [:link/dst :nema/id])))
+                                            ;; Also hide links to/from hidden content/container nodes.
+                                            (contains? hide-ids (get-in % [:link/src :nema/id]))
+                                            (contains? hide-ids (get-in % [:link/dst :nema/id])))
                                         (:links raw-hood))
                          :pins (:pins raw-hood)}))
         filtered-hood (some-> merged-hood
