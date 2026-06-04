@@ -642,14 +642,25 @@
                                                                  (not (contains? pin-id-set (:nema/id %)))))
                                                     (map :nema/id)
                                                     set)
+                            ;; Core entities of pinned diagrams stay visible in compressed mode.
+                            ;; This is the reduced-star layer: a diagram/core edge says "show this
+                            ;; as part of the cone", while diagram/includes remains the unfurl layer.
+                            core-ids (->> (:links raw-hood)
+                                          (filter #(and (= "diagram/core" (:link/type %))
+                                                       (contains? pinned-diagrams
+                                                                  (get-in % [:link/src :nema/id]))))
+                                          (map #(get-in % [:link/dst :nema/id]))
+                                          set)
                             ;; Content entities of pinned diagrams (targets of diagram/includes)
+                            ;; are hidden in compressed mode unless also explicitly marked core.
                             content-ids (->> (:links raw-hood)
                                             (filter #(and (= "diagram/includes" (:link/type %))
                                                          (contains? pinned-diagrams
                                                                     (get-in % [:link/src :nema/id]))))
                                             (map #(get-in % [:link/dst :nema/id]))
+                                            (remove core-ids)
                                             set)
-                            ;; Hide: neighbour diagrams + content of pinned diagrams
+                            ;; Hide: neighbour diagrams + non-core content of pinned diagrams
                             hide-ids (into neighbour-diagrams content-ids)]
                         {:nemas (remove #(contains? hide-ids (:nema/id %)) (:nemas raw-hood))
                          :links (remove #(or (= "diagram/includes" (:link/type %))

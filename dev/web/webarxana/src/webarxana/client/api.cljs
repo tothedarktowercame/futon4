@@ -151,7 +151,7 @@
              {:type (:type rel-info)
               :src  (:id entity)
               :dst  (:id dst-entity)
-              :id   (str (:id entity) "->" (:id dst-entity))}))))
+              :id   (str (:id entity) "->" (:type rel-info) "->" (:id dst-entity))}))))
       ;; Incoming relations
       (doseq [entry incoming]
         (let [src-entity (:entity entry)
@@ -163,7 +163,7 @@
              {:type (:type rel-info)
               :src  (:id src-entity)
               :dst  (:id entity)
-              :id   (str (:id src-entity) "->" (:id entity))})))))
+              :id   (str (:id src-entity) "->" (:type rel-info) "->" (:id entity))})))))
     entity))
 
 (defn fetch-entity
