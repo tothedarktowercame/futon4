@@ -3080,5 +3080,10 @@ Re-renders the section."
 ;; browser still loads if the compiled-view file is unavailable.
 (require 'arxana-browser-essays-compiled nil t)
 
+;; Autoload the compiled essay-pair surface without forcing the full module
+;; during cold essay-browser startup.
+(autoload 'arxana-essay-side-by-side "arxana-essay-pair"
+  "Render two compiled essays side by side." t)
+
 (provide 'arxana-browser-essays)
 ;;; arxana-browser-essays.el ends here
