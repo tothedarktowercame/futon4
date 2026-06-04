@@ -8,6 +8,7 @@
 ;;         #/focus/<entity-id>  (legacy single-focus, auto-pins)
 ;;         #/type/<type>
 ;;         #/mission-search/<query>
+;;         #/diagram/<diagram-name>/<expanded|compressed>
 
 (defn- encode [s] (js/encodeURIComponent s))
 (defn- decode [s] (js/decodeURIComponent s))
@@ -19,26 +20,44 @@
   []
   (let [{:keys [page browse-type focus-id pins mission-search]} @state/ui-state
         pin-ids (map :id pins)
-        parts (if (= :mission-search page)
+        parts (cond
+                (= :mission-search page)
                 (cond-> ["mission-search"]
                   (seq (:query mission-search)) (conj (encode (:query mission-search))))
+                (= :interest-network page)
+                ["interest-network"]
+                (= :diagram-route page)
+                (cond-> ["diagram" (encode (get-in @state/ui-state [:diagram-route :name]))]
+                  (get-in @state/ui-state [:diagram-route :mode])
+                  (conj (clojure.core/name (get-in @state/ui-state [:diagram-route :mode]))))
+                :else
                 (cond-> []
                   (seq pin-ids) (into ["pins" (str/join "," (map encode pin-ids))])
                   focus-id      (into ["focus" (encode focus-id)])
-                  browse-type   (into ["type" (encode browse-type)])))]
-    (let [new-hash (if (seq parts)
-                     (str "#/" (str/join "/" parts))
-                     "#")]
-      (when (not= new-hash (.-hash js/location))
-        (.replaceState js/history nil "" new-hash)))))
+                  browse-type   (into ["type" (encode browse-type)])))
+        new-hash (if (seq parts)
+                   (str "#/" (str/join "/" parts))
+                   "#")]
+    (when (not= new-hash (.-hash js/location))
+      (.replaceState js/history nil "" new-hash))))
 
 (defn- parse-hash
   [hash-str]
   (let [s (str/replace hash-str #"^#/?" "")
         segments (str/split s #"/")]
-    (if (= "mission-search" (first segments))
+    (cond
+      (= "mission-search" (first segments))
       {:page :mission-search
        :query (decode (or (second segments) ""))}
+      (= "interest-network" (first segments))
+      {:page :interest-network}
+      (= "diagram" (first segments))
+      {:page :diagram-route
+       :diagram-name (decode (or (second segments) ""))
+       :diagram-mode (case (nth segments 2 nil)
+                       "compressed" :compressed
+                       :expanded)}
+      :else
       (loop [segs segments
            result {}]
         (if (< (count segs) 2)
@@ -58,13 +77,24 @@
   (let [hash (.-hash js/location)]
     (when (seq hash)
       (reset! restoring? true)
-      (let [{:keys [page query type focus pins]} (parse-hash hash)]
-        (if (= page :mission-search)
+      (let [{:keys [page query type focus pins diagram-name diagram-mode]} (parse-hash hash)]
+        (cond
+          (= page :mission-search)
           (do
             (swap! state/ui-state assoc :page :mission-search)
             (when (seq query)
               (api/mission-search! query))
             (js/setTimeout #(reset! restoring? false) 500))
+          (= page :interest-network)
+          (do
+            (swap! state/ui-state assoc :page :interest-network)
+            (api/fetch-interest-network!)
+            (js/setTimeout #(reset! restoring? false) 500))
+          (= page :diagram-route)
+          (do
+            (api/open-diagram-by-name! diagram-name diagram-mode)
+            (js/setTimeout #(reset! restoring? false) 3000))
+          :else
           (do
             (swap! state/ui-state assoc :page :graph)
             (when type

@@ -9,7 +9,7 @@
 
 (def base "/api/futon")
 
-(declare fetch-hyperedges save-entity! save-relation! fetch-types pin-entity! connect-ws! ws-send! save-diagram! fetch-recent expand-diagram! expand-essay! collapse-essay! entity-location open-in-emacs! open-location! mission-search! mission-search-event!)
+(declare fetch-hyperedges save-entity! save-relation! fetch-types pin-entity! connect-ws! ws-send! save-diagram! fetch-recent expand-diagram! compress-diagram! open-diagram-by-name! expand-essay! collapse-essay! entity-location open-in-emacs! open-location! mission-search! mission-search-event! fetch-interest-network!)
 
 (defn entity-location
   "Return an Emacs-openable location for ENTITY when one is known."
@@ -104,6 +104,22 @@
                                     :action action}
                       :with-credentials? true})))))
 
+(defn fetch-interest-network!
+  "Fetch the live interest-network projection (/api/interest-network) and store
+   it for the surface. Sets :page so the dispatcher shows the view."
+  []
+  (swap! state/ui-state assoc :page :interest-network)
+  (swap! state/ui-state assoc-in [:interest-network :loading?] true)
+  (swap! state/ui-state assoc-in [:interest-network :error] nil)
+  (go
+    (let [resp (<! (http/get "/api/interest-network" {:with-credentials? true}))]
+      (if (= 200 (:status resp))
+        (swap! state/ui-state assoc :interest-network
+               {:data (:body resp) :loading? false :error nil})
+        (swap! state/ui-state assoc :interest-network
+               {:data nil :loading? false
+                :error (or (get-in resp [:body :error]) "interest-network failed")})))))
+
 (defn ingest-ego!
   "Ingest an ego response (entity + outgoing + incoming) into Datascript."
   [ego]
@@ -192,7 +208,6 @@
             (let [ends     (or (:hx/ends hx) [])
                   hx-id    (or (:hx/id hx) (str (random-uuid)))
                   hx-type  (or (:hx/type hx) "hyperedge")
-                  note     (get-in hx [:hx/props :note])
                   ;; Find the other endpoint(s)
                   other-ends (remove #(= entity-id (:entity-id %)) ends)]
               (doseq [ep other-ends]
@@ -369,6 +384,51 @@ essay-expansion metadata used by the graph projection."
   (swap! state/ui-state assoc :pins [] :expanded-diagram nil)
   ;; Pin normally — the graph filter handles hiding diagram/includes content
   (pin-entity! diagram-id diagram-id))
+
+(defn open-diagram-by-name!
+  "Open the named diagram in MODE, either :expanded or :compressed."
+  [diagram-name mode]
+  (let [trimmed (str/trim (or diagram-name ""))
+        mode* (if (= mode :compressed) :compressed :expanded)]
+    (swap! state/ui-state assoc
+           :page :graph
+           :diagram-route {:name trimmed
+                           :mode mode*
+                           :diagram-id nil
+                           :loading? true
+                           :error nil})
+    (go
+      (let [resp (<! (http/get (str base "/entities/latest")
+                               {:query-params {:type "diagram" :limit 500}
+                                :with-credentials? true}))]
+        (if (= 200 (:status resp))
+          (let [entities (get-in resp [:body :entities])
+                diagram (some (fn [e]
+                                (when (= trimmed (:name e))
+                                  e))
+                              entities)]
+            (if diagram
+              (let [diagram-id (or (:id diagram) (:entity/id diagram))]
+                (state/ingest-entity! diagram)
+                (swap! state/ui-state assoc
+                       :diagram-route {:name trimmed
+                                       :mode mode*
+                                       :diagram-id diagram-id
+                                       :loading? false
+                                       :error nil})
+                (if (= mode* :compressed)
+                  (compress-diagram! diagram-id)
+                  (expand-diagram! diagram-id)))
+              (swap! state/ui-state assoc-in
+                     [:diagram-route :error]
+                     (str "No diagram named " trimmed))))
+          (swap! state/ui-state assoc
+                 :diagram-route {:name trimmed
+                                 :mode mode*
+                                 :diagram-id nil
+                                 :loading? false
+                                 :error (or (get-in resp [:body :error])
+                                            "diagram lookup failed")}))))))
 
 (defn fetch-recent
   "Fetch recent entities across key types for the activity feed."

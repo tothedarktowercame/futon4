@@ -1,5 +1,6 @@
 (ns webarxana.client.state
-  (:require [datascript.core :as d]
+  (:require [clojure.set :as set]
+            [datascript.core :as d]
             [reagent.core :as r]))
 
 ;; Datascript schema for the local graph cache.
@@ -36,6 +37,11 @@
            :sidebar-open false   ;; sidebar visibility
            :expanded-essays #{}  ;; essay ids expanded to show section neighbourhoods
            :expanded-essay-sections {} ;; essay id -> ordered section-id vector
+           :diagram-route {:name nil
+                           :mode nil
+                           :diagram-id nil
+                           :loading? false
+                           :error nil}
            :scratchpad  []       ;; newly created nodes awaiting connection
            :connecting  nil      ;; {:node-id "..."} when waiting to pick a target
            :mission-search {:query ""
@@ -136,7 +142,7 @@
                                 [?l :link/src ?s]
                                 [?s :nema/id ?sid]]
                               db (vec frontier))
-                next-frontier (clojure.set/difference
+                next-frontier (set/difference
                                (into (set outgoing) incoming)
                                new-visited)]
             (recur next-frontier new-visited (inc depth))))))))
