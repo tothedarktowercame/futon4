@@ -482,9 +482,12 @@ typed precondition that surfaced it no longer holds in the post-state.
   Until then, synonyms are tolerated.
 - **The EDN reader is a minimal subset.** Maps, vectors, lists,
   strings (with `\\n`/`\\t`/`\\\\` escapes), namespaced keywords,
-  numbers, nil/true/false, line comments. No tagged literals
-  (`#inst`), no sets (`#{...}`), no character literals
-  (`\\u00e9`). If you need them, the reader needs extending.
+  numbers, nil/true/false, line comments. Tagged literals
+  (`#inst "..."`) are read with the tag discarded — the form is
+  returned bare. Sets (`#{...}`) are read as lists (order
+  irrelevant for our consumers). Character literals (`\\u00e9`)
+  are still not supported; if you need them, the reader needs
+  extending.
 - **Bracket-balance on edits matters.** Edits that drop closing
   brackets at the end of a replaced segment will break the parser.
   `check-parens` catches global imbalances; structural misplacement
@@ -511,6 +514,10 @@ typed precondition that surfaced it no longer holds in the post-state.
 - Review surface: `dev/arxana-browser-rewrites.el`
 - Worked corpus (UKRN working-paper v12, twelve closed rewrites):
   `~/npt/working-paper/annotations-v12.edn`
+- Mission-scoped worked instance (`M-stack-essay-code-alignment`,
+  VSATARCS-side, R-criteria typing axis): `docs/vsatarcs-alignment-completeness.aif.edn`.
+  Refactors the npt v12 shape from AIF² invariants (I1-I6) onto R-criteria
+  (R1-R12); the contract doc it overlays is `docs/vsatarcs-alignment-completeness.md`.
 - Companion `.el` adapter (current Arxana import surface):
   `~/npt/working-paper/annotations.el` (v5/v6 era; v12-adapter pending)
 - Essays browser: `dev/arxana-browser-essays.el`
@@ -539,6 +546,25 @@ Findings recorded during the UKRN v12 pass, awaiting absorption into
 9. Edit-time bracket-balance preservation (operational; the eventual
    mutate-through-typed-API surface).
 10. Status enums vs descriptive strings in the invariant-audit.
+11. **Code-side entity convention for `:operations :with-entities`.**
+    The npt v12 corpus rewrites prose, with entities typed as prose
+    spans (e.g. `:role-bullet-with-handoff-stack`,
+    `:closing-paragraph`) and bodies in `:text`. Code-side closures
+    (first instance: `hx:vsatarcs-align:v0-2:r1-chrome-integration-closure`
+    in `docs/vsatarcs-alignment-completeness.aif.edn`) rewrite code
+    files, with entities that are elisp / clj symbols — defuns,
+    defvars, require-clauses, ert-deftests. The first code-side
+    closure was refactored to fit the npt field shape
+    (`:id`/`:type`/`:from-augmentation`/`:text`) by stringifying the
+    function-name list into `:text`; this works but loses the
+    structured handle on the underlying symbols. The renderer in
+    `dev/arxana-browser-rewrites.el` (line ~640, `:with-entities`
+    cl-loop) reads only the four prose-oriented fields and would
+    benefit from a code-side dispatch — e.g. a richer entity type
+    namespace (`:elisp-defun`, `:elisp-require-clause`, `:ert-deftest-block`)
+    plus structured fields (`:symbol`, `:tests`, `:insertion-point`)
+    rendered with appropriate faces. Lifting this becomes worth doing
+    once we accumulate a second code-side closure to compare.
 
 Each is small. Together they sharpen the typed-rewrite discipline
 without changing its shape.

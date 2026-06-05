@@ -401,6 +401,7 @@ scope (left to the wikitext-corpus refresh script and the operator)."
       (dolist (path (directory-files dir t "\\`[^.]"))
         (when (and (file-regular-p path)
                    (or (string-suffix-p ".mw" path)
+                       (string-suffix-p ".md" path)
                        (string-suffix-p "-manifest.el" path))
                    (not (member (expand-file-name path) expected)))
           (delete-file path))))))

@@ -1330,53 +1330,30 @@ peers as the deadline approaches."
     ;; staggered by track character — smaller/concrete items earlier
     ;; (closer deadline = lower priority-rank = higher visibility),
     ;; larger/blocked items later. As work moves, the tracers shift.
-    (:invariant "track-4-2-snapshot-as-evidence"
-     :family "evidence-per-turn"
-     :lane "family-watchlist"
-     :layer "I0"
-     :source "futon3c/logic/tracer.clj"
-     :note "Snapshot-as-evidence convention. Target 2026-05-02 (small)."
-     :target-date "2026-05-02"
-     :tracer? t :tracer-kind "pipeline-tracer")
-    (:invariant "track-4-3-arxana-view-columns"
-     :family "family-canary"
-     :lane "family-watchlist"
-     :layer "I0"
-     :source "futon4/dev/arxana-browser-*.el"
-     :note "Arxana view: last-fire-at columns. Target 2026-05-04."
-     :target-date "2026-05-04"
-     :tracer? t :tracer-kind "pipeline-tracer")
+    ;; ── 2026-06-01 (claude-2): de-staled the I0 tracer block. The overdue
+    ;; :target-dates here (all ~1 month past) were the source of the negative
+    ;; rows topping the Candidate View. Four tracks verified DONE and removed:
+    ;;   track-4-2-snapshot-as-evidence → futon3c/src/futon3c/logic/snapshot.clj exists
+    ;;   track-4-3-arxana-view-columns  → LastFire/LastViol columns shipped (this file)
+    ;;   track-1-substrate-2-lift       → probe_taps.clj carries the L1 substrate-2 checks
+    ;;   track-2-war-machine-aif-lift   → M-war-machine-first-outing CLOSED 2026-05-30
+    ;; Two genuinely-pending tracks retained, re-dated to current targets
+    ;; (status still to confirm — these are honest forward dates, not claims of work):
     (:invariant "track-3-write-class-scoping"
      :family "single-boundary"
      :lane "family-watchlist"
      :layer "I0"
      :source "futon3c/docs/boundary-pattern.md"
-     :note "Write-class generalization sub-mission stubs. Target 2026-05-06."
-     :target-date "2026-05-06"
-     :tracer? t :tracer-kind "pipeline-tracer")
-    (:invariant "track-1-substrate-2-lift"
-     :family "substrate-2-phase-1"
-     :lane "family-watchlist"
-     :layer "I0"
-     :source "M-live-geometric-stack/tests"
-     :note "Substrate-2 phase-1 lift (≥3 of 6 — concrete work). Target 2026-05-09."
-     :target-date "2026-05-09"
-     :tracer? t :tracer-kind "pipeline-tracer")
-    (:invariant "track-2-war-machine-aif-lift"
-     :family "war-machine-aif"
-     :lane "family-watchlist"
-     :layer "I0"
-     :source "M-war-machine"
-     :note "War-Machine AIF lift (blocked on M-war-machine). Target 2026-05-13."
-     :target-date "2026-05-13"
+     :note "Write-class generalization sub-mission stubs. Target 2026-06-30 (re-dated 2026-06-01; status unverified)."
+     :target-date "2026-06-30"
      :tracer? t :tracer-kind "pipeline-tracer")
     (:invariant "track-5-vsatarcs"
      :family "vsatarcs"
      :lane "family-watchlist"
      :layer "I0"
      :source "M-stack-geometry-anthology"
-     :note "VSATARCS narrative coherence (parked, slow tracer). Target 2026-05-20."
-     :target-date "2026-05-20"
+     :note "VSATARCS narrative coherence (parked, slow tracer). Target 2026-07-15 (re-dated 2026-06-01)."
+     :target-date "2026-07-15"
      :tracer? t :tracer-kind "pipeline-tracer")
     ;; Substrate-2 phase-1 deferred-stubs (M-live-geometric-stack source).
     ;; Lane: family-watchlist — canonical cross-stack pressure pending lift.

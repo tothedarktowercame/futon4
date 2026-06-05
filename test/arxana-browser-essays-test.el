@@ -210,7 +210,7 @@ The result plist includes `:root', `:golden-dir', `:live-dir',
                       ((symbol-function 'message)
                        (lambda (&rest _args) nil))
                       ((symbol-function 'arxana-browser-essays--backup-manifest-files)
-                       (lambda () nil))
+                       (lambda (&rest _args) nil))
                       ((symbol-function 'arxana-browser-essays--retracted-ids-in-this-section)
                        (lambda () nil))
                       ((symbol-function 'arxana-browser-essays--sync-overlays-to-manifest)
@@ -386,7 +386,7 @@ The result plist includes `:root', `:golden-dir', `:live-dir',
                       ((symbol-function 'message)
                        (lambda (&rest _args) nil))
                       ((symbol-function 'arxana-browser-essays--backup-manifest-files)
-                       (lambda () nil))
+                       (lambda (&rest _args) nil))
                       ((symbol-function 'arxana-browser-essays--sync-overlays-to-manifest)
                        (lambda () nil))
                       ((symbol-function 'arxana-browser-essays--sync-annotations-to-xtdb)
@@ -449,7 +449,7 @@ The result plist includes `:root', `:golden-dir', `:live-dir',
                       ((symbol-function 'message)
                        (lambda (&rest _args) nil))
                       ((symbol-function 'arxana-browser-essays--backup-manifest-files)
-                       (lambda () nil))
+                       (lambda (&rest _args) nil))
                       ((symbol-function 'arxana-browser-essays--sync-overlays-to-manifest)
                        (lambda () nil))
                       ((symbol-function 'arxana-browser-essays--sync-annotations-to-xtdb)
@@ -527,11 +527,14 @@ The result plist includes `:root', `:golden-dir', `:live-dir',
           (with-current-buffer buf
             (goto-char (point-min))
             (should (search-forward "[retracted: manual @ 2026-05-14]" nil t))
-            (let ((face (get-text-property (match-beginning 0) 'face)))
-              (should (arxana-browser-essays-test--face-has-p
-                       face
-                       'arxana-browser-essays-retracted-face)))
-            (should (search-forward "pattern/retracted" nil t))))
+            (should (search-forward "pattern/retracted" nil t))
+            (should
+             (seq-some
+              (lambda (ov)
+                (arxana-browser-essays-test--face-has-p
+                 (overlay-get ov 'face)
+                 'arxana-browser-essays-retracted-face))
+              (overlays-at (point))))))
       (when (buffer-live-p buf)
         (kill-buffer buf)))))
 
@@ -567,8 +570,8 @@ The result plist includes `:root', `:golden-dir', `:live-dir',
                  (setq text-annotations (nth 6 args))
                  (get-buffer-create " *essays-open-section-text*")))
               ((symbol-function 'arxana-browser-essays--render-section-notes)
-               (lambda (_section-name annotations)
-                 (setq notes-annotations annotations)
+               (lambda (&rest args)
+                 (setq notes-annotations (nth 1 args))
                  (get-buffer-create " *essays-open-section-notes*")))
               ((symbol-function 'arxana-browser-essays--display-section-buffers)
                (lambda (&rest _args) nil)))
@@ -733,8 +736,8 @@ The result plist includes `:root', `:golden-dir', `:live-dir',
                        manifest)))
             (let ((item (car (arxana-browser-essays-items
                               '(:view essays-essay :essay-id "essay:alpha")))))
-              (should (equal "1(0+1)" (plist-get item :annotation-count)))
-              (should (equal "1 live annotation, 1 pending retraction"
+              (should (equal "2(0+1)" (plist-get item :annotation-count)))
+              (should (equal "2 live annotations, 1 pending retraction"
                              (plist-get item :description))))))
       (when (buffer-live-p buf)
         (kill-buffer buf)))))
@@ -1079,7 +1082,7 @@ The result plist includes `:root', `:golden-dir', `:live-dir',
                       ((symbol-function 'message)
                        (lambda (&rest _args) nil))
                       ((symbol-function 'arxana-browser-essays--backup-manifest-files)
-                       (lambda () nil))
+                       (lambda (&rest _args) nil))
                       ((symbol-function 'arxana-browser-essays--retracted-ids-in-this-section)
                        (lambda () nil))
                       ((symbol-function 'arxana-browser-essays--sync-overlays-to-manifest)

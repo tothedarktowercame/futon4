@@ -28,3 +28,11 @@ Arxana hypertext system — Emacs browser, web surfaces (WebArxana), and data ac
   in `dev/arxana-browser-missions.el`.
 - Mission docs live in `holes/missions/M-*.md` and follow the lifecycle
   in `holes/mission-lifecycle.md`.
+- **Ingesting an essay into Arxana Essays? Read `README-essays.md` first.**
+  It documents the non-obvious file-role convention: the source `.md` is
+  canonical and read-only (annotations are a *render*, never baked into the
+  body); `annotations.edn` is the authoritative annotation layer (verbatim
+  `:passage` anchors); `annotations.el` is a thin sections-only manifest that
+  the loader augments from the `.edn`. Section headings must be flat `##`
+  (nesting lives in the manifest `:index`). Verify any ingest with `M-x
+  arxana-browser-essays-audit-passages` before trusting it.

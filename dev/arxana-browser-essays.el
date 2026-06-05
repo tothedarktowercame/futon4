@@ -120,59 +120,101 @@ of annotation plists, or nil if path unreadable / parse fails."
                                     (append sections nil)))
                (default-section (car section-ids)))
           (when anns
-            (vconcat
-             (delq nil
-                   (mapcar
-                    (lambda (ann)
-                      (let* ((eps (plist-get ann :endpoints))
+            (delq nil
+                  (mapcar
+                   (lambda (ann)
+                      (let* ((kw->str (lambda (v)
+                                        (cond ((keywordp v)
+                                               (substring (symbol-name v) 1))
+                                              ((symbolp v)
+                                               (symbol-name v))
+                                              (t v))))
+                             (eps (plist-get ann :endpoints))
                              (annotated-ep
                               (cl-some (lambda (ep)
                                          (when (eq (plist-get ep :role) :annotated)
                                            ep))
                                        (append eps nil)))
-                             (raw-sid (and annotated-ep
-                                           (plist-get annotated-ep :section-id)))
+                             ;; Direct EDN shape used by review manifests:
+                             ;; {:section-id ... :passage ... :patterns [...]}
+                             ;; Older EDN shapes use :endpoints instead.
+                             (direct-sid (plist-get ann :section-id))
+                             (direct-passage (plist-get ann :passage))
+                             (raw-sid (or (and annotated-ep
+                                               (plist-get annotated-ep :section-id))
+                                          direct-sid))
                              (sid (if (and raw-sid (member raw-sid section-ids))
                                       raw-sid
-                                    default-section)))
-                        (when annotated-ep
-                          (let* ((kw->str (lambda (v)
-                                            (cond ((keywordp v)
-                                                   (substring (symbol-name v) 1))
-                                                  ((symbolp v)
-                                                   (symbol-name v))
-                                                  (t v))))
-                                 ;; Fallback :note synthesis for v2 shapes that
-                                 ;; don't carry :note directly (e.g.
-                                 ;; :foreword/synthetic-question carries
-                                 ;; :question + :expected-answer-area instead).
-                                 (note-raw (plist-get ann :note))
-                                 (question (plist-get ann :question))
-                                 (expected (plist-get ann :expected-answer-area))
-                                 (discharge (plist-get ann :discharge-procedure))
-                                 (note
-                                  (or note-raw
-                                      (string-join
-                                       (delq nil
-                                             (list (when question
-                                                     (concat "Q: " question))
-                                                   (when expected
-                                                     (concat "Expected answer area: "
-                                                             expected))
-                                                   (when discharge
-                                                     (concat "Discharge: "
-                                                             discharge))))
-                                       "\n\n"))))
-                            (list :id (plist-get ann :id)
-                                  :hx-type (funcall kw->str (plist-get ann :hx-type))
-                                  :annotated
-                                  (list :entity-id sid
-                                        :passage (plist-get annotated-ep :passage))
-                                  :source (list :pattern-name nil :passage nil)
-                                  :note note
-                                  :severity (funcall kw->str (plist-get ann :severity))
-                                  :status (funcall kw->str (plist-get ann :status)))))))
-                    (append anns nil))))))
+                                    default-section))
+                             (passage (or (and annotated-ep
+                                               (plist-get annotated-ep :passage))
+                                          direct-passage))
+                             (patterns (plist-get ann :patterns))
+                             (source-pattern
+                              (cond
+                               ((and (vectorp patterns) (> (length patterns) 0))
+                                (aref patterns 0))
+                               ((consp patterns)
+                                (car patterns))
+                               ((stringp patterns)
+                                (car (split-string patterns "[ ,]+" t)))))
+                             (source-passage
+                              (or (plist-get ann :source-passage)
+                                  (plist-get ann :pattern-passage)))
+                             ;; Fallback :note synthesis for v2 shapes that
+                             ;; don't carry :note directly (e.g.
+                             ;; :foreword/synthetic-question carries
+                             ;; :question + :expected-answer-area instead).
+                             (note-raw (plist-get ann :note))
+                             (suggestion (plist-get ann :suggestion))
+                             (question (plist-get ann :question))
+                             (expected (plist-get ann :expected-answer-area))
+                             (discharge (plist-get ann :discharge-procedure))
+                             (note
+                              (or note-raw
+                                  suggestion
+                                  (string-join
+                                   (delq nil
+                                         (list (when question
+                                                 (concat "Q: " question))
+                                               (when expected
+                                                 (concat "Expected answer area: "
+                                                         expected))
+                                               (when discharge
+                                                 (concat "Discharge: "
+                                                         discharge))))
+                                   "\n\n"))))
+                        ;; Essay annotations are hyperedges from the annotated
+                        ;; section/passage to a source pattern.  Skip EDN rows
+                        ;; that do not name a pattern source rather than
+                        ;; attempting to resolve an empty `.flexiarg' path.
+                        (when (and sid passage source-pattern)
+                          (list :id (plist-get ann :id)
+                                :hx-type (funcall kw->str (plist-get ann :hx-type))
+                                :annotated
+                                (list :entity-id sid
+                                      :passage passage)
+                                :source
+                                (list :pattern-name source-pattern
+                                      :passage source-passage)
+                                :note note
+                                :severity (funcall kw->str (plist-get ann :severity))
+                                :status (funcall kw->str (plist-get ann :status))
+                                ;; Carry resolution/retraction state from the
+                                ;; .edn through to the rendered manifest so the
+                                ;; ✅ (closure) and retraction markers show.
+                                :closure (plist-get ann :closure)
+                                :closure-kind (plist-get ann :closure-kind)
+                                :closure-at (plist-get ann :closure-at)
+                                ;; Carry the discharge note as its OWN field
+                                ;; (not only via the `note' fallback, which is
+                                ;; shadowed when the annotation has a :suggestion)
+                                ;; so the renderer's "Addressed:" line can find it.
+                                :discharge-procedure (plist-get ann :discharge-procedure)
+                                :retracted (plist-get ann :retracted)
+                                :retraction-kind (plist-get ann :retraction-kind)
+                                :retracted-at (plist-get ann :retracted-at)))))
+                   (append anns nil)))))
       (error nil))))
 
 (defun arxana-browser-essays--load-manifest-file (path)
@@ -878,6 +920,11 @@ imported to XTDB.  Supported keys include :id, :label, :description,
   "Face for the inline marker on comment annotations."
   :group 'arxana-browser-essays)
 
+(defface arxana-browser-essays-frozen-header-face
+  '((t :inherit shadow :weight bold))
+  "Face for the frozen, non-editable `Section: …' header banner."
+  :group 'arxana-browser-essays)
+
 (defface arxana-browser-essays-retracted-face
   '((t :strike-through t :foreground "#888"))
   "Face for retracted annotation entries in the notes buffer."
@@ -932,6 +979,16 @@ Retracted annotations remain in the manifest as hypergraph citizens
 out of the render and overlay passes."
   (plist-get ann :retracted))
 
+(defun arxana-browser-essays--annotation-disposed-p (ann)
+  "Return non-nil if ANN is no longer OPEN — i.e. resolved or retracted.
+An annotation is `live'/open only when it is neither closed (`:closure')
+nor retracted (`:retracted').  The index and summary counts use this so a
+RESOLVED annotation stops counting as outstanding work (closing the
+\"2(2) even though I closed everything\" miscount, where closure was
+ignored and only retraction subtracted)."
+  (or (plist-get ann :closure)
+      (plist-get ann :retracted)))
+
 (defun arxana-browser-essays--annotation-retraction-marker (ann)
   "Return a human-readable retraction marker for ANN, or nil."
   (when (arxana-browser-essays--annotation-retracted-p ann)
@@ -977,11 +1034,15 @@ so the summary matches the per-section counts shown one level down."
     (dolist (section (plist-get manifest :sections))
       (let* ((all (arxana-browser-essays--annotations-for-section
                    manifest (plist-get section :id) t))
+             ;; live = open = neither resolved nor retracted
              (live-count (length (seq-remove
-                                  #'arxana-browser-essays--annotation-retracted-p
-                                  all))))
+                                  #'arxana-browser-essays--annotation-disposed-p
+                                  all)))
+             (retracted-count (length (seq-filter
+                                       #'arxana-browser-essays--annotation-retracted-p
+                                       all))))
         (setq live (+ live live-count)
-              retracted (+ retracted (- (length all) live-count)))))
+              retracted (+ retracted retracted-count))))
     (list :live live :retracted retracted)))
 
 (defun arxana-browser-essays--open-section-buffer-state (essay-id section-id)
@@ -1067,14 +1128,22 @@ the currently open `*Arxana Essay*' buffer."
 	                     (whole-file (eq (alist-get 'render-whole-file props) t))
 	                     (all (arxana-browser-essays--annotations-for-section
 	                           manifest sid t))
+	                     ;; live = open (neither resolved nor retracted);
+	                     ;; the (M) parenthetical reports retracted only.
 	                     (manifest-live (seq-remove
-	                                     #'arxana-browser-essays--annotation-retracted-p all))
-	                     (retracted (- (length all) (length manifest-live)))
+	                                     #'arxana-browser-essays--annotation-disposed-p all))
+	                     (retracted (length (seq-filter
+	                                         #'arxana-browser-essays--annotation-retracted-p all)))
 	                     (live-state (arxana-browser-essays--open-section-buffer-state
 	                                  essay-id sid))
 	                     (pending (or (plist-get live-state :pending-retraction) 0))
-	                     (live-count (or (plist-get live-state :live)
-	                                     (length manifest-live)))
+	                     ;; The manifest is authoritative for the live (open)
+	                     ;; count; the open-buffer's overlay tally counts ALL
+	                     ;; annotation overlays (resolved ones still highlight
+	                     ;; with a ✅), so it would over-count.  Use the
+	                     ;; manifest count and let `pending' carry in-flight
+	                     ;; retractions not yet saved.
+	                     (live-count (length manifest-live))
 	                     (count-str
 	                      (cond
 	                       (whole-file
@@ -1362,15 +1431,28 @@ anchor exactly."
                       :quality (intern (format "suffix-%d" (cdr sm)))))))))))))
 
 (defun arxana-browser-essays--manifest-file-for-annotation (ann-id)
-  "Return the path to the manifest file containing ANN-ID, or nil."
-  (seq-find
-   (lambda (path)
-     (and (file-readable-p path)
-          (with-temp-buffer
-            (insert-file-contents path)
-            (goto-char (point-min))
-            (search-forward (format ":id %S" ann-id) nil t))))
-   arxana-browser-essays-manifest-files))
+  "Return the path to the file that actually contains ANN-ID, or nil.
+Searches each registered manifest `.el' AND its sibling
+`annotations.edn'.  When an essay keeps its authoritative annotations in
+the `.edn' (the `.el' carrying only the section manifest), the id lives
+in the `.edn', so it is checked first."
+  (let ((candidates
+         (delete-dups
+          (apply #'append
+                 (mapcar
+                  (lambda (path)
+                    (list (expand-file-name "annotations.edn"
+                                            (file-name-directory path))
+                          path))
+                  arxana-browser-essays-manifest-files)))))
+    (seq-find
+     (lambda (path)
+       (and (file-readable-p path)
+            (with-temp-buffer
+              (insert-file-contents path)
+              (goto-char (point-min))
+              (search-forward (format ":id %S" ann-id) nil t))))
+     candidates)))
 
 (defun arxana-browser-essays--rewrite-manifest-passage (manifest-file ann-id new-passage)
   "In MANIFEST-FILE, rewrite the annotation with ANN-ID to use NEW-PASSAGE.
@@ -1600,7 +1682,11 @@ pass with no surviving trace to attach to."
               (let* ((marker-label (if is-comment
                                        (format " 💬%d" index)
                                      (format " [%d]" index)))
-                     (ov (make-overlay (car bounds) (cdr bounds))))
+                     ;; FRONT-ADVANCE t: text typed at the overlay's START
+                     ;; boundary stays OUTSIDE the annotation (editor-standard),
+                     ;; so inserting adjacent prose no longer churns/re-anchors
+                     ;; the annotation.  Insertions strictly inside still grow it.
+                     (ov (make-overlay (car bounds) (cdr bounds) nil t nil)))
                 (overlay-put ov 'face
                              (if is-comment
                                  'arxana-browser-essays-comment-face
@@ -1691,7 +1777,9 @@ Render time writes `arxana-essay-annotation-id' and
                  (overlay-put ov 'arxana-essay-annotation-index idx))
                (move-overlay ov beg end))
               (t
-               (let ((new (make-overlay beg end)))
+               ;; FRONT-ADVANCE t — see note at the primary render site:
+               ;; keep boundary insertions outside the annotation span.
+               (let ((new (make-overlay beg end nil t nil)))
                  (overlay-put new 'face 'arxana-browser-essays-annotation-face)
                  (overlay-put new 'arxana-essay-annotation-id id)
                  (when idx
@@ -1843,14 +1931,25 @@ requiring the user to toggle the minor mode."
                 #'arxana-browser-essays--refresh-notes-retractions nil t))))
 
 (defun arxana-browser-essays-left-or-return ()
-  "Move point left; at point-min, return to the prior window layout.
+  "Move point left; at point-min, return to the parent Essay section list.
 Mirrors `arxana-browser-songs-left-or-return'.  Restores the window
 configuration captured at `arxana-browser-essays-open' time, falling
 through to `arxana-ui-left-or-return' if no local return is set."
   (interactive)
   (cond
-   ((> (point) (point-min))
+   ;; Return to the section list when point is at the TOP of the editable
+   ;; body — i.e. at/above `content-start'.  The `Section: …' banner above
+   ;; is a frozen (read-only/intangible) header, so `point-min' itself is
+   ;; unreachable; testing against content-start (not point-min) keeps the
+   ;; songs-equivalent "<left> at the top goes back" behaviour intact.
+   ((> (point)
+       (or (and arxana-browser-essays--content-start
+                (marker-position arxana-browser-essays--content-start))
+           (point-min)))
     (backward-char))
+   ((and arxana-browser-essays--essay-id
+         (fboundp 'arxana-browser-essays-open-section-list))
+    (arxana-browser-essays-open-section-list arxana-browser-essays--essay-id))
    ((and (boundp 'arxana-ui-return-window-config)
          (window-configuration-p arxana-ui-return-window-config))
     (set-window-configuration arxana-ui-return-window-config))
@@ -1861,12 +1960,74 @@ through to `arxana-ui-left-or-return' if no local return is set."
     (arxana-ui-left-or-return))
    (t (message "No return target available"))))
 
+(defun arxana-browser-essays-open-section-list (&optional essay-id)
+  "Open the section list for ESSAY-ID in the Arxana browser.
+When ESSAY-ID is nil, use the current Essay buffer's
+`arxana-browser-essays--essay-id'."
+  (interactive)
+  (let ((eid (or essay-id arxana-browser-essays--essay-id)))
+    (unless eid
+      (user-error "No essay id available for parent navigation"))
+    (unless (and (boundp 'arxana-browser--buffer)
+                 (fboundp 'arxana-browser--render))
+      (user-error "Arxana browser core is not loaded"))
+    (let ((buf (get-buffer-create arxana-browser--buffer)))
+      (switch-to-buffer buf)
+      (setq arxana-browser--stack (list (list :view 'essays-essay
+                                              :essay-id eid)
+                                        '(:view essays-home))
+            arxana-browser--context (car arxana-browser--stack))
+      (arxana-browser--render))))
+
+(defun arxana-browser-essays-help ()
+  "Show the local help hydra for `*Arxana Essay*' buffers."
+  (interactive)
+  (if (and (or (fboundp 'defhydra)
+               (require 'hydra nil t))
+           (fboundp 'defhydra))
+      (progn
+        ;; (Re)define on every call rather than guarding with `unless
+        ;; fboundp' — otherwise a reload that changes the hydra body has no
+        ;; effect, because the old hydra from the prior session persists.
+        ;; The cost is negligible: this only runs on a help keypress.
+        ;; `:color blue' = every head EXITS the hydra as soon as it fires,
+        ;; and any non-head key also exits (no `:foreign-keys run', which
+        ;; would keep the hydra alive and swallow/repeat subsequent keys —
+        ;; the cause of "e still activates after I closed the menu").  This
+        ;; is a one-shot action menu, not a repeating hydra.
+        (eval
+         '(defhydra arxana-browser-essays-help-hydra
+            (:hint nil :color blue)
+            "
+Arxana Essay
+Navigation: _<left>_: up to sections  _RET_: follow pattern in notes
+Editing:    _e_: edit section         _C-c C-c_: save edit
+Actions:    _a_: annotate w/ pattern   _c_: add comment   _r_: resolve (✅)   _k_: kill (✗)   _q_: quit
+"
+            ("<left>" arxana-browser-essays-left-or-return)
+            ("e" arxana-browser-essays-edit-mode)
+            ("a" arxana-browser-essays-annotate-with-pattern)
+            ("c" arxana-browser-essays-add-comment)
+            ("r" arxana-browser-essays-resolve-annotation-at-point)
+            ("k" arxana-browser-essays-kill-annotation-at-point)
+            ("q" nil)))
+        (arxana-browser-essays-help-hydra/body))
+    (message "Arxana Essay: <left> up to sections; e edit; C-c C-c save; c comment")))
+
 (defvar arxana-browser-essays-text-sync-mode-map nil
   "Keymap for `arxana-browser-essays-text-sync-mode'.")
 
 (setq arxana-browser-essays-text-sync-mode-map
       (let ((map (make-sparse-keymap)))
         (define-key map (kbd "<left>") #'arxana-browser-essays-left-or-return)
+        (define-key map (kbd "?") #'arxana-browser-essays-help)
+        (define-key map (kbd "🥨") #'arxana-browser-essays-help)
+        ;; Annotate the selected passage with a pattern.  This map is live
+        ;; in BOTH read and edit mode, so do NOT bind a bare letter here —
+        ;; it would fire while typing prose ("appeared", "Appalachian").
+        ;; Reach annotate via the 🥨 hydra, the 🍐 super-key, or `C-c a'
+        ;; (bound in `arxana-browser-essays-edit-mode-map').
+        (define-key map (kbd "🍐") #'arxana-browser-essays-annotate-with-pattern)
         map))
 
 (define-minor-mode arxana-browser-essays-text-sync-mode
@@ -1946,6 +2107,16 @@ Partner to `arxana-browser-essays-delete-region-or-backward-char' for
                     #'arxana-browser-essays-delete-region-or-forward-char)
         (define-key map (kbd "C-c c")
                     #'arxana-browser-essays-add-comment)
+        (define-key map (kbd "C-c a")
+                    #'arxana-browser-essays-annotate-with-pattern)
+        ;; Edit mode also enables `text-sync-mode', whose map binds `?' to
+        ;; the help hydra — which makes a literal `?' impossible to type
+        ;; while writing.  Bind `?' to self-insert here (edit-mode-map takes
+        ;; precedence as the later-loaded minor mode); the hydra stays
+        ;; reachable via `C-c ?' and via 🥨 (Joe's reliable super-key).
+        (define-key map (kbd "?") #'self-insert-command)
+        (define-key map (kbd "C-c ?") #'arxana-browser-essays-help)
+        (define-key map (kbd "🥨") #'arxana-browser-essays-help)
         map))
 
 (define-minor-mode arxana-browser-essays-edit-mode
@@ -2081,15 +2252,29 @@ line of separation to match the file's hand-authored structure."
   t)
 
 (defun arxana-browser-essays--manifest-file-for-section (section-id)
-  "Return the path to the manifest file containing SECTION-ID, or nil."
-  (seq-find
-   (lambda (path)
-     (and (file-readable-p path)
-          (with-temp-buffer
-            (insert-file-contents path)
-            (goto-char (point-min))
-            (search-forward (format ":id %S" section-id) nil t))))
-   arxana-browser-essays-manifest-files))
+  "Return the path to the file that actually contains SECTION-ID, or nil.
+Checks each registered manifest `.el' AND its sibling `annotations.edn'
+\(the `.edn' first), because when an essay keeps its authoritative
+sections in the `.edn' a heading rename must rewrite there — not the
+derived `.el', where it would be lost on the next regeneration.  Mirrors
+`--manifest-file-for-annotation'."
+  (let ((candidates
+         (delete-dups
+          (apply #'append
+                 (mapcar
+                  (lambda (path)
+                    (list (expand-file-name "annotations.edn"
+                                            (file-name-directory path))
+                          path))
+                  arxana-browser-essays-manifest-files)))))
+    (seq-find
+     (lambda (path)
+       (and (file-readable-p path)
+            (with-temp-buffer
+              (insert-file-contents path)
+              (goto-char (point-min))
+              (search-forward (format ":id %S" section-id) nil t))))
+     candidates)))
 
 (defun arxana-browser-essays--rewrite-manifest-section-heading
     (manifest-file section-id new-heading &optional new-name)
@@ -2122,17 +2307,22 @@ Returns non-nil if the file changed."
                                (goto-char form-start)
                                (forward-sexp)
                                (point))))))
+        ;; The `(heading-text . "...")' prop exists only in the `.el'
+        ;; manifest shape; the authoritative `.edn' section carries the
+        ;; heading in `:name' (rewritten above) and has no heading-text
+        ;; prop.  So rewrite heading-text when present, but don't error
+        ;; when it's absent (the `.edn' case) — `:name' is then the
+        ;; single source of truth and was already updated.
         (goto-char form-start)
-        (unless (re-search-forward "(heading-text[[:space:]]*\\.[[:space:]]*" form-end t)
-          (error "[essays] No heading-text prop in section %s" section-id))
-        (let* ((str-start (point))
-               (str-end (progn (forward-sexp) (point)))
-               (current (read (buffer-substring str-start str-end))))
-          (unless (string= current new-heading)
-            (delete-region str-start str-end)
-            (goto-char str-start)
-            (prin1 new-heading (current-buffer))
-            (setq changed t))))
+        (when (re-search-forward "(heading-text[[:space:]]*\\.[[:space:]]*" form-end t)
+          (let* ((str-start (point))
+                 (str-end (progn (forward-sexp) (point)))
+                 (current (read (buffer-substring str-start str-end))))
+            (unless (string= current new-heading)
+              (delete-region str-start str-end)
+              (goto-char str-start)
+              (prin1 new-heading (current-buffer))
+              (setq changed t)))))
       (when changed
         (write-region (point-min) (point-max) manifest-file nil 'silent)))
     changed))
@@ -2166,6 +2356,518 @@ Preserves all other fields and the file's hand-authored structure."
       (when changed
         (write-region (point-min) (point-max) manifest-file nil 'silent)))
     changed))
+
+(defun arxana-browser-essays--mark-manifest-annotation-closed (manifest-file ann-id closed-at &optional discharge)
+  "Mark annotation ANN-ID as resolved/closed in MANIFEST-FILE.
+Writes `:closure t', `:closure-kind :resolved', and `:closure-at
+CLOSED-AT' into the annotation's form, just inside its closing paren.
+When DISCHARGE is a non-empty string, also writes `:discharge-procedure
+DISCHARGE' — a free-text record of HOW the annotation was addressed,
+which the renderer surfaces next to the ✅ so a reviewer can see the
+resolution was substantive, not a deflection.
+Unlike retraction, a closed annotation REMAINS in live views.  Returns t
+if the file changed; nil if already closed or not found.
+
+Mirrors `arxana-browser-essays--mark-manifest-annotation-retracted':
+a textual edit that preserves all other fields and the file's
+hand-authored structure."
+  (let ((changed nil))
+    (with-temp-buffer
+      (insert-file-contents manifest-file)
+      (goto-char (point-min))
+      (when (search-forward (format ":id %S" ann-id) nil t)
+        (goto-char (match-beginning 0))
+        (backward-up-list)
+        (let ((form-start (point))
+              (form-end (save-excursion (forward-sexp) (point))))
+          (goto-char form-start)
+          (unless (re-search-forward ":closure[[:space:]]+t" form-end t)
+            (goto-char form-end)
+            (backward-char)                     ; position at close-paren
+            (skip-chars-backward " \t\n")
+            (insert (format "\n      :closure t :closure-kind :resolved :closure-at %S"
+                            closed-at))
+            (when (and (stringp discharge)
+                       (> (length (string-trim discharge)) 0))
+              (insert (format "\n      :discharge-procedure %S"
+                              (string-trim discharge))))
+            (setq changed t))))
+      (when changed
+        (write-region (point-min) (point-max) manifest-file nil 'silent)))
+    changed))
+
+(defun arxana-browser-essays--commit-text-buffer-if-dirty ()
+  "Save the essay text buffer if it is in edit mode with unsaved changes.
+The disposition/annotate commands trigger a text-buffer re-render
+\(`--open-section'), which erases the text buffer and re-reads it from
+disk.  If the author has unsaved edits — e.g. a freshly typed paragraph
+— that text would be DESTROYED by the re-read.  resolve/kill are run
+from the NOTES buffer, so they would silently nuke unsaved work in the
+separate text buffer; this commits it first.  No-op if the text buffer
+is absent, not in edit mode, or unmodified."
+  (let ((buf (get-buffer arxana-browser-essays-text-buffer)))
+    (when (buffer-live-p buf)
+      (with-current-buffer buf
+        (when (and (bound-and-true-p arxana-browser-essays-edit-mode)
+                   (buffer-modified-p))
+          (arxana-browser-essays-save-section))))))
+
+(defun arxana-browser-essays-resolve-annotation-at-point ()
+  "Mark the annotation under point (in the notes buffer) as resolved.
+Writes `:closure t' to the annotation's entry in `annotations.edn' (the
+authoritative manifest for the current essay), re-loads the manifest,
+and re-renders so the entry shows its ✅ resolved marker.  The
+annotation stays visible — resolution is a record, not a deletion (for
+that, retract instead).
+
+Optionally records HOW the annotation was addressed (a free-text
+discharge note), surfaced next to the ✅ for checking/final revision —
+leave it blank for a bare resolve.
+
+Run this with point on an annotation entry in `*Arxana Essay Notes*'."
+  (interactive)
+  (let ((id (or (arxana-browser-essays--annotation-id-in-notes-at-point)
+                (arxana-browser-essays--annotation-id-at-point))))
+    (unless id
+      (user-error "No annotation at point (put point on a notes entry)"))
+    ;; Prompt BEFORE committing/re-rendering (the re-render would move point).
+    (let ((discharge (read-string "How addressed? (optional): ")))
+      ;; Commit any unsaved text-buffer edits before the re-render erases them.
+      (arxana-browser-essays--commit-text-buffer-if-dirty)
+      (let* ((manifest-file
+              (or (arxana-browser-essays--manifest-file-for-annotation id)
+                  (user-error "Cannot find manifest file for %s" id)))
+             ;; Stamp from the system clock at call time (interactive only,
+             ;; so this is not in any replay/resume path).
+             (closed-at (format-time-string "%Y-%m-%dT%H:%M:%S%z"))
+             (changed (arxana-browser-essays--mark-manifest-annotation-closed
+                       manifest-file id closed-at discharge)))
+      (if (not changed)
+          (message "[essays] %s was already resolved" id)
+        (arxana-browser-essays--reload-manifests-and-cache)
+        ;; Re-render the current section so the ✅ shows immediately.
+        (let ((essay-id arxana-browser-essays--essay-id)
+              (section-id arxana-browser-essays--section-id)
+              (section-name arxana-browser-essays--section-name))
+          (when (and essay-id section-id)
+            (ignore-errors
+              (arxana-browser-essays--open-section
+               essay-id section-id section-name))))
+        (message "[essays] ✅ resolved %s" id))))))
+
+(defun arxana-browser-essays--mark-manifest-annotation-killed (manifest-file ann-id reason killed-at)
+  "Mark annotation ANN-ID as killed/orphaned in MANIFEST-FILE.
+Writes `:retracted t', `:retraction-kind REASON' (a keyword, e.g.
+`:not-relevant'), and `:retracted-at KILLED-AT' into the annotation's
+form, just inside its closing paren.  A killed annotation is retracted —
+it renders struck-through with a `[retracted: …]' marker and NO ✅, and
+its passage overlay drops from the essay text — but it remains in the
+manifest as a provenance citizen.  Returns t if the file changed; nil if
+the annotation was already retracted or wasn't found.
+
+Distinct from `--mark-manifest-annotation-retracted' (the save pipeline's
+plain auto-retract) only in that it records a reason and timestamp."
+  (let ((changed nil))
+    (with-temp-buffer
+      (insert-file-contents manifest-file)
+      (goto-char (point-min))
+      (when (search-forward (format ":id %S" ann-id) nil t)
+        (goto-char (match-beginning 0))
+        (backward-up-list)
+        (let ((form-start (point))
+              (form-end (save-excursion (forward-sexp) (point))))
+          (goto-char form-start)
+          (unless (re-search-forward ":retracted[[:space:]]+t" form-end t)
+            (goto-char form-end)
+            (backward-char)                     ; position at close-paren
+            (skip-chars-backward " \t\n")
+            (insert (format "\n      :retracted t :retraction-kind %s :retracted-at %S"
+                            reason killed-at))
+            (setq changed t))))
+      (when changed
+        (write-region (point-min) (point-max) manifest-file nil 'silent)))
+    changed))
+
+(defun arxana-browser-essays-kill-annotation-at-point ()
+  "Kill (retract/orphan) the annotation under point in the notes buffer.
+Use this for an annotation that is simply not relevant — misplaced or
+inapplicable — rather than one you have addressed.  Unlike resolve, this
+gives NO ✅: the entry renders struck-through with a `[retracted]'
+marker and its passage highlight is removed from the essay text, but it
+is kept in the manifest as a provenance citizen.
+
+Writes `:retracted t :retraction-kind :not-relevant' to the annotation's
+entry in `annotations.edn', reloads, and re-renders.  Run with point on
+an annotation entry in `*Arxana Essay Notes*'."
+  (interactive)
+  (let ((id (or (arxana-browser-essays--annotation-id-in-notes-at-point)
+                (arxana-browser-essays--annotation-id-at-point))))
+    (unless id
+      (user-error "No annotation at point (put point on a notes entry)"))
+    ;; Commit any unsaved text-buffer edits before the re-render erases them.
+    (arxana-browser-essays--commit-text-buffer-if-dirty)
+    (let* ((manifest-file
+            (or (arxana-browser-essays--manifest-file-for-annotation id)
+                (user-error "Cannot find manifest file for %s" id)))
+           (killed-at (format-time-string "%Y-%m-%dT%H:%M:%S%z"))
+           (changed (arxana-browser-essays--mark-manifest-annotation-killed
+                     manifest-file id :not-relevant killed-at)))
+      (if (not changed)
+          (message "[essays] %s was already retracted" id)
+        (arxana-browser-essays--reload-manifests-and-cache)
+        (let ((essay-id arxana-browser-essays--essay-id)
+              (section-id arxana-browser-essays--section-id)
+              (section-name arxana-browser-essays--section-name))
+          (when (and essay-id section-id)
+            (ignore-errors
+              (arxana-browser-essays--open-section
+               essay-id section-id section-name))))
+        (message "[essays] ✗ killed (not relevant) %s" id)))))
+
+(defun arxana-browser-essays--edn-escape (s)
+  "Escape S for inclusion inside an EDN double-quoted string."
+  (mapconcat (lambda (c)
+               (cond ((eq c ?\") "\\\"")
+                     ((eq c ?\\) "\\\\")
+                     (t (char-to-string c))))
+             (or s "") ""))
+
+(defun arxana-browser-essays--essay-pattern-libraries (essay-id)
+  "Return the list of pattern-library namespaces declared for ESSAY-ID.
+Reads the `pattern-libraries' prop from the essay's manifest; falls back
+to the two libraries this essay corpus uses."
+  (let* ((m (arxana-browser-essays--manifest-for essay-id))
+         (props (plist-get (plist-get m :essay) :props))
+         (libs (and props (alist-get 'pattern-libraries props))))
+    (if (and (stringp libs) (> (length libs) 0))
+        (split-string libs "[ ,]+" t)
+      '("plos-npt-with-small-n" "writing-coherence"))))
+
+(defun arxana-browser-essays--available-patterns (essay-id)
+  "Return sorted `namespace/pattern' strings available to ESSAY-ID.
+Enumerates `.flexiarg' files under each declared pattern library, below
+`arxana-browser-essays-pattern-library-root'."
+  (let (out)
+    (dolist (lib (arxana-browser-essays--essay-pattern-libraries essay-id))
+      (let ((dir (expand-file-name lib arxana-browser-essays-pattern-library-root)))
+        (when (file-directory-p dir)
+          (dolist (f (directory-files dir nil "\\.flexiarg\\'"))
+            (push (concat lib "/" (file-name-sans-extension f)) out)))))
+    (sort out #'string<)))
+
+(defun arxana-browser-essays--pattern-conclusion (pattern)
+  "Return a one-line gist for PATTERN (a `namespace/name' string), or nil.
+Different flexiarg dialects carry the gist in different fields, so try in
+order: `! conclusion:' (plos-npt-with-small-n), `@claim' then `@title'
+(writing-coherence).  Returns the first sentence, trimmed, so the hint
+stays to one line in the completion UI."
+  (let ((path (expand-file-name (concat pattern ".flexiarg")
+                                arxana-browser-essays-pattern-library-root)))
+    (when (file-readable-p path)
+      (with-temp-buffer
+        (insert-file-contents path)
+        (let ((line
+               (catch 'hit
+                 (dolist (re '("^! conclusion:[ \t]*\\(.+\\)"
+                               "^@claim[ \t]+\\(.+\\)"
+                               "^@title[ \t]+\\(.+\\)"))
+                   (goto-char (point-min))
+                   (when (re-search-forward re nil t)
+                     (throw 'hit (match-string 1)))))))
+          (when line
+            ;; first sentence only, to keep the hint to one line
+            (string-trim
+             (if (string-match "\\.\\(?:[ \t]\\|$\\)" line)
+                 (substring line 0 (match-beginning 0))
+               line))))))))
+
+(defun arxana-browser-essays--read-pattern (patterns)
+  "Prompt for one of PATTERNS, showing each one's `! conclusion:' as a hint.
+Uses an `annotation-function' so the flexiarg's claim appears, greyed,
+after the pattern name in the completion UI — making it easy to pick the
+pattern whose conclusion actually matches the selected passage."
+  (let* ((hints (make-hash-table :test 'equal))
+         (table
+          (lambda (string pred action)
+            (if (eq action 'metadata)
+                `(metadata
+                  (annotation-function
+                   . ,(lambda (cand)
+                        (let ((c (or (gethash cand hints)
+                                     (puthash cand
+                                              (or (arxana-browser-essays--pattern-conclusion cand)
+                                                  "")
+                                              hints))))
+                          (if (and c (> (length c) 0))
+                              (concat "  —  "
+                                      (propertize c 'face 'shadow))
+                            "")))))
+              (complete-with-action action patterns string pred)))))
+    (completing-read "Pattern: " table nil t)))
+
+(defun arxana-browser-essays--append-edn-annotation (edn-file entry-string)
+  "Insert ENTRY-STRING before the closing `]' of the `:annotations'
+vector in EDN-FILE.  EDN-FILE keeps annotations as a `[...]' vector (the
+authoritative shape), unlike the `.el' manifest's `(...)' list, so this
+is the vector-aware sibling of `--append-manifest-annotation'.  The
+caller is responsible for verify-or-restore."
+  (unless (file-writable-p edn-file)
+    (user-error "EDN not writable: %s" edn-file))
+  (with-temp-buffer
+    (insert-file-contents edn-file)
+    (goto-char (point-min))
+    ;; Find the REAL `:annotations [' key, skipping any `;;'-comment
+    ;; mentions of the word (the file's header comment references it).
+    (let ((found nil))
+      (while (and (not found)
+                  (re-search-forward ":annotations[ \t\n]*\\[" nil t))
+        (save-excursion
+          (goto-char (match-beginning 0))
+          (unless (nth 4 (syntax-ppss))   ; not inside a comment
+            (setq found t))))
+      (unless found
+        (user-error "No `:annotations [' vector in %s" edn-file))
+      ;; Point is just past the `[' — back up onto it for forward-sexp.
+      (goto-char (1- (point))))
+    (let ((vec-end (save-excursion (forward-sexp) (point))))
+      (goto-char vec-end)
+      (backward-char)                     ; position at the closing `]'
+      (skip-chars-backward " \t\n")
+      (insert "\n\n  " entry-string))
+    (write-region (point-min) (point-max) edn-file nil 'silent))
+  t)
+
+;;; ─────────────────────────────────────────────────────────────
+;;; Section-level manifest mutation (native; replaces ad-hoc edits)
+;;; ─────────────────────────────────────────────────────────────
+;; These operate on the authoritative `annotations.edn' by textual edit,
+;; matching the annotation-level writers (preserves comments + hand
+;; formatting).  Together with `--rehome-edn-annotation' and
+;; `--regenerate-el-from-edn' they make the "delete a section, move its
+;; annotations, regenerate the .el" flow fully native — no external
+;; python/bb steps.  Each returns t on change, nil if the target was
+;; absent; callers do their own verify-or-restore.
+
+(defun arxana-browser-essays--remove-edn-section (edn-file section-id)
+  "Remove the `:sections' entry whose `:id' is SECTION-ID from EDN-FILE.
+Deletes only the one `{:id SECTION-ID ...}' map inside the `:sections'
+vector; annotations are untouched (re-home them separately first).
+Returns t if a section was removed, nil if not found."
+  (let ((changed nil))
+    (with-temp-buffer
+      (insert-file-contents edn-file)
+      (goto-char (point-min))
+      ;; Find the `:sections [' vector, then the section map by :id within it.
+      (when (re-search-forward ":sections[ \t\n]*\\[" nil t)
+        (let ((vec-start (1- (point)))
+              (vec-end (save-excursion (goto-char (1- (point)))
+                                       (forward-sexp) (point))))
+          (goto-char vec-start)
+          (when (re-search-forward
+                 (concat "{[ \t\n]*:id[ \t\n]+\"" (regexp-quote section-id) "\"")
+                 vec-end t)
+            (goto-char (match-beginning 0))
+            (let ((map-start (point))
+                  (map-end (save-excursion (forward-sexp) (point))))
+              ;; also swallow surrounding blank line(s) for tidiness
+              (goto-char map-end)
+              (skip-chars-forward " \t")
+              (when (looking-at "\n") (forward-char))
+              (setq map-end (point))
+              (goto-char map-start)
+              (skip-chars-backward " \t")
+              (delete-region (point) map-end)
+              (setq changed t)))))
+      (when changed
+        (write-region (point-min) (point-max) edn-file nil 'silent)))
+    changed))
+
+(defun arxana-browser-essays--rehome-edn-annotation (edn-file ann-id new-section-id &optional new-passage)
+  "Repoint annotation ANN-ID to NEW-SECTION-ID in EDN-FILE.
+Rewrites that annotation's `:section-id' value; when NEW-PASSAGE is a
+string, also rewrites its `:passage' (needed when the text the
+annotation anchored to has moved to a new section).  Returns t if
+changed, nil if the annotation was not found."
+  (let ((changed nil))
+    (with-temp-buffer
+      (insert-file-contents edn-file)
+      (goto-char (point-min))
+      (when (search-forward (format ":id %S" ann-id) nil t)
+        (let* ((form-start (save-excursion (goto-char (match-beginning 0))
+                                           (backward-up-list) (point)))
+               (form-end (save-excursion (goto-char form-start)
+                                         (forward-sexp) (point))))
+          ;; :section-id
+          (goto-char form-start)
+          (when (re-search-forward ":section-id[ \t\n]+\"\\([^\"]*\\)\"" form-end t)
+            (replace-match new-section-id t t nil 1)
+            (setq changed t)
+            ;; recompute form-end after edit
+            (setq form-end (save-excursion (goto-char form-start)
+                                           (forward-sexp) (point))))
+          (when (stringp new-passage)
+            (goto-char form-start)
+            (when (re-search-forward ":passage[ \t\n]+\"\\(\\(?:[^\"\\]\\|\\\\.\\)*\\)\"" form-end t)
+              (replace-match (replace-regexp-in-string
+                              "\\([\"\\\\]\\)" "\\\\\\1" new-passage)
+                             t t nil 1)
+              (setq changed t)))))
+      (when changed
+        (write-region (point-min) (point-max) edn-file nil 'silent)))
+    changed))
+
+(defun arxana-browser-essays--regenerate-el-from-edn (edn-file el-file essay-name)
+  "Regenerate the thin `.el' manifest EL-FILE from EDN-FILE's sections.
+The `.el' carries only the essay + section manifest with an empty
+`:annotations' value; the loader fills annotations from the sibling
+`.edn'.  ESSAY-NAME is the human label for the defconst's :essay :name.
+Keeps the two files in sync after a section change, natively."
+  (let* ((data (arxana-browser-rewrites--read-edn-file edn-file))
+         (essay-id (plist-get data :essay-id))
+         (source-file (plist-get data :source-file))
+         (sections (append (plist-get data :sections) nil))
+         ;; Symbol the catalog/loader references is derived from the essay
+         ;; id's last path segment: arxana/essay/<slug> ->
+         ;; arxana-browser-essays-<slug>-manifest.  (Hardcoding a generic
+         ;; name was a bug — nothing found the manifest.)
+         (slug (car (last (split-string (or essay-id "") "/"))))
+         (sym (intern (format "arxana-browser-essays-%s-manifest" slug)))
+         (feature (intern (file-name-base el-file)))
+         ;; Build the manifest as a Lisp STRUCTURE and pretty-print it,
+         ;; rather than hand-mashing parens in a format string (which
+         ;; produced an off-by-one paren / `quote 2' error).
+         (manifest
+          (list :version 2
+                :essay (list :id essay-id
+                             :name essay-name
+                             :type "arxana/essay"
+                             :source-file source-file
+                             :props '((annotation-source . "annotations.edn")))
+                :sections
+                (mapcar
+                 (lambda (s)
+                   (let ((name (plist-get s :name)))
+                     (list :id (plist-get s :id)
+                           :name name
+                           :type "arxana/essay-section"
+                           :props (list (cons 'index
+                                              (mapconcat #'number-to-string
+                                                         (append (plist-get s :index) nil) "."))
+                                        (cons 'heading-level (plist-get s :heading-level))
+                                        (cons 'heading-text name)))))
+                 sections)
+                :annotations nil)))
+    (with-temp-buffer
+      (insert ";;; " (file-name-nondirectory el-file)
+              " --- Arxana Essays MANIFEST (sections only) -*- lexical-binding: t; -*-\n;;\n")
+      (insert ";; Generated from annotations.edn by"
+              " `arxana-browser-essays--regenerate-el-from-edn'.\n")
+      (insert ";; Edit annotations in the .edn; this file is derived.\n\n")
+      (insert (format "(defconst %s\n  '" sym))
+      (let ((print-quoted t) (print-length nil) (print-level nil))
+        (pp manifest (current-buffer)))
+      (insert ")\n\n")
+      (insert (format "(provide '%s)\n" feature))
+      (insert ";;; " (file-name-nondirectory el-file) " ends here\n")
+      (write-region (point-min) (point-max) el-file nil 'silent)))
+  t)
+
+(defun arxana-browser-essays-annotate-with-pattern (start end pattern note)
+  "Annotate the selected region with a design PATTERN from the repertoire.
+Select a passage in the essay text buffer, then run this; pick a pattern
+from the essay's declared libraries and add an optional note.  Writes a
+new annotation to the authoritative `annotations.edn', verifies it still
+parses (restoring from backup if not), reloads, and re-renders so the
+new entry appears in the notes pane and highlights the passage.
+
+This is how the author validates that the prose is doing what a pattern
+says it should — a `:polarity :fit' annotation linking passage→pattern."
+  (interactive
+   (if (use-region-p)
+       (let* ((eid arxana-browser-essays--essay-id)
+              (_ (unless eid (user-error "Not in an essay text buffer")))
+              (patterns (arxana-browser-essays--available-patterns eid)))
+         (unless patterns
+           (user-error "No patterns found under %s"
+                       arxana-browser-essays-pattern-library-root))
+         (list (region-beginning) (region-end)
+               (arxana-browser-essays--read-pattern patterns)
+               (read-string "Note (optional): ")))
+     (user-error "Select the passage to annotate first")))
+  (unless (and arxana-browser-essays--section-id
+               arxana-browser-essays--source-file)
+    (user-error "Not in an essay text buffer"))
+  (let* ((cs (or arxana-browser-essays--content-start (point-min)))
+         (passage-start (max start (marker-position cs)))
+         (passage-end (max passage-start end))
+         (passage (string-trim
+                   (buffer-substring-no-properties passage-start passage-end)))
+         (section-id arxana-browser-essays--section-id)
+         (essay-id arxana-browser-essays--essay-id)
+         (section-name arxana-browser-essays--section-name)
+         (source-file arxana-browser-essays--source-file)
+         (edn-file (expand-file-name "annotations.edn"
+                                     (file-name-directory source-file)))
+         (pattern-last (car (last (split-string pattern "/"))))
+         (ts (format-time-string "%Y%m%d%H%M%S"))
+         (id (format "hx:applied:%s-%s" pattern-last ts))
+         (note* (if (string-empty-p (string-trim note))
+                    "Author-applied pattern (validation)."
+                  note))
+         (entry (format (concat "{:id %S\n"
+                                "   :hx-type :writing/critique\n"
+                                "   :section-id %S\n"
+                                "   :passage \"%s\"\n"
+                                "   :patterns [\"%s\"]\n"
+                                "   :severity :medium :status :open :polarity :fit\n"
+                                "   :suggestion \"%s\"}")
+                        id section-id
+                        (arxana-browser-essays--edn-escape passage)
+                        pattern
+                        (arxana-browser-essays--edn-escape note*))))
+    (when (string-empty-p passage)
+      (user-error "Selected region is empty"))
+    (unless (file-readable-p edn-file)
+      (user-error "No annotations.edn beside %s" source-file))
+    ;; The passage must live in the ON-DISK source for the annotation to
+    ;; anchor.  If we are in edit mode with unsaved text (e.g. a freshly
+    ;; typed paragraph), save the section first — otherwise the re-render
+    ;; at the end would erase the unsaved text (the bug Joe hit) AND the
+    ;; annotation could not attach to disk.  Saving here makes annotate a
+    ;; clean commit-then-validate step.
+    (when (and (bound-and-true-p arxana-browser-essays-edit-mode)
+               (buffer-modified-p))
+      (arxana-browser-essays-save-section))
+    ;; Refuse rather than write an annotation that cannot anchor.
+    (let ((saved-text (arxana-browser-essays--extract-section-text
+                       source-file
+                       (arxana-browser-essays--section-heading-text
+                        (arxana-browser-essays--manifest-for essay-id)
+                        section-id))))
+      (unless (and saved-text (string-match-p (regexp-quote passage) saved-text))
+        (user-error "Passage not found in saved source — save the section (C-c C-c), then annotate")))
+    ;; Backup, append, verify-or-restore (the .edn is hand-authored and
+    ;; authoritative — a malformed write must not survive).
+    (let ((backup (concat edn-file ".addbak")))
+      (copy-file edn-file backup t)
+      (arxana-browser-essays--append-edn-annotation edn-file entry)
+      (let* ((after (arxana-browser-essays--edn-annotations-as-el edn-file))
+             (ok (and after
+                      (seq-find (lambda (a) (string= (plist-get a :id) id))
+                                after))))
+        (if (not ok)
+            (progn
+              (copy-file backup edn-file t)
+              (delete-file backup)
+              (user-error "Annotation write did not parse; restored .edn unchanged"))
+          (delete-file backup)
+          (arxana-browser-essays--reload-manifests-and-cache)
+          (when (and essay-id section-id)
+            (ignore-errors
+              (arxana-browser-essays--open-section
+               essay-id section-id section-name)))
+          (message "[essays] + annotated with %s (%s)" pattern id)
+          id)))))
 
 (defun arxana-browser-essays--dead-overlay-ids ()
   "Return annotation-ids whose overlays in the current buffer have zero length.
@@ -2207,8 +2909,13 @@ Does not modify the manifest or touch XTDB — it only cleans display."
       (message "[essays] Removed %d stale overlay(s)" removed))
     removed))
 
-(defun arxana-browser-essays--backup-manifest-files ()
-  "Copy each configured manifest file to FILE~arxana~.
+(defun arxana-browser-essays--backup-manifest-files (&optional files)
+  "Copy manifest files to FILE~arxana~.
+FILES is the list of manifest paths to back up.  When nil, falls back to
+all of `arxana-browser-essays-manifest-files' (the old global behaviour).
+Callers that know which essay they are mutating should pass only that
+essay's manifest, so editing essay A does not leave ~arxana~ backups in
+essay B's directory.
 Returns an alist ((PATH . BACKUP-PATH) ...) for the files actually
 backed up (readable, size > 0).  Called before any sync that may
 mutate manifests, so the backup always reflects the pre-save state."
@@ -2220,7 +2927,7 @@ mutate manifests, so the backup always reflects the pre-save state."
              (let ((backup (concat path "~arxana~")))
                (copy-file path backup t)
                (cons path backup))))
-         arxana-browser-essays-manifest-files)))
+         (or files arxana-browser-essays-manifest-files))))
 
 (defun arxana-browser-essays--sync-overlays-to-manifest ()
   "Walk annotation overlays in the current text buffer and sync text to manifest.
@@ -2349,12 +3056,20 @@ re-anchor pass for any annotation whose bounds are now stale.  Leaves a
                      (format "Overwrite and change title from \"%s\" to \"%s\"? "
                              heading new-heading))
               (user-error "Save cancelled"))))
-         ;; Snapshot manifests BEFORE the sync pass — overlay-to-passage
+         ;; Snapshot the manifest BEFORE the sync pass — overlay-to-passage
          ;; rewriting can move annotations around in unexpected ways when
          ;; edits cross paragraph boundaries; the ~arxana~ sibling gives
          ;; us a pre-save state to roll back to via
-         ;; `arxana-browser-essays-undo-last-save'.
-         (_manifest-backups (arxana-browser-essays--backup-manifest-files))
+         ;; `arxana-browser-essays-undo-last-save'.  Scoped to THIS essay's
+         ;; manifest so saving essay A leaves no backups in essay B's dir;
+         ;; falls back to the global sweep only if the essay's manifest
+         ;; can't be resolved.
+         (_manifest-backups
+          (arxana-browser-essays--backup-manifest-files
+           (let ((mf (and essay-id
+                          (arxana-browser-essays--manifest-file-for-essay-id
+                           essay-id))))
+             (and mf (list mf)))))
          ;; Identify annotations that no longer have a live overlay in
          ;; this section.  `evaporate t' deletes the overlay outright
          ;; when its span collapses, so we can't rely on zero-length
@@ -2592,7 +3307,28 @@ changes back to disk and re-render."
         (setq-local arxana-browser-essays--section-name section-name)
         (setq-local arxana-browser-essays--source-file source-file)
         (setq-local arxana-browser-essays--heading-text heading-text)
-        (insert (format "Section: %s\n\n" section-name))
+        ;; Frozen header block: the injected `Section: …' banner is NOT
+        ;; part of the editable region and is never written back to disk.
+        ;; Mark it read-only + cursor-intangible so it cannot be edited,
+        ;; point cannot land in it, and (critically) edits at the top of
+        ;; the body cannot drift `content-start' up into it — the bug
+        ;; behind "Edit region no longer starts with a `##' heading".
+        (let ((hdr-start (point)))
+          (insert (format "Section: %s\n\n" section-name))
+          (let ((hdr-end (point)))
+            (add-text-properties
+             hdr-start hdr-end
+             '(read-only t
+               front-sticky t
+               rear-nonsticky t
+               cursor-intangible t
+               face arxana-browser-essays-frozen-header-face))))
+        ;; content-start marks the START of the editable body.  Insertion
+        ;; type nil so the marker stays put when the body text is inserted
+        ;; just after it (type t would ride the marker to the END of the
+        ;; insert, collapsing the editable region — that bug).  Typing at
+        ;; the body's very start can't drift into the header because the
+        ;; header above is read-only/intangible.
         (setq-local arxana-browser-essays--content-start (point-marker))
         (set-marker-insertion-type arxana-browser-essays--content-start nil)
         (insert section-text)
@@ -2602,6 +3338,10 @@ changes back to disk and re-render."
               (auto-rewrites nil))
           (dolist (ann annotations)
             (cl-incf index)
+            ;; Prefer the stable cross-buffer number assigned in
+            ;; `--open-section'; fall back to the local counter only if a
+            ;; caller invoked this renderer without pre-stamping.
+            (setq index (or (plist-get ann :render-index) index))
             (let* ((ann-id (plist-get ann :id))
                    (passage (plist-get (plist-get ann :annotated) :passage))
                    (result (arxana-browser-essays--locate-passage-bounds-lax passage))
@@ -2652,10 +3392,12 @@ changes back to disk and re-render."
                                     (t nil)))
                        (marker-label (if base-emoji
                                          (format " %s%s%d"
-                                                 (if is-closed "✓" "")
+                                                 (if is-closed "✅" "")
                                                  base-emoji index)
                                        (format " [%d]" index))))
-                  (let ((ov (make-overlay (car bounds) (cdr bounds))))
+                  ;; FRONT-ADVANCE t — see note at the primary render site:
+                  ;; boundary insertions stay outside the annotation span.
+                  (let ((ov (make-overlay (car bounds) (cdr bounds) nil t nil)))
                   (overlay-put ov 'face passage-face)
                   (overlay-put ov 'arxana-essay-annotation-id ann-id)
                   (overlay-put ov 'arxana-essay-annotation-index index)
@@ -2699,7 +3441,13 @@ changes back to disk and re-render."
             (arxana-browser-essays--reload-manifests-and-cache)))
         (setq-local arxana-browser-essays--unresolved
                     (nreverse arxana-browser-essays--unresolved))
-        (goto-char (point-min))
+        ;; Honour the frozen header's `cursor-intangible' property so point
+        ;; skips over the `Section: …' banner into the editable body.
+        (cursor-intangible-mode 1)
+        ;; Start point in the editable body, past the frozen header.
+        (goto-char (or (and arxana-browser-essays--content-start
+                            (marker-position arxana-browser-essays--content-start))
+                       (point-min)))
         (view-mode 1)
         (setq-local truncate-lines nil)
         (set-buffer-modified-p nil)
@@ -2711,7 +3459,8 @@ changes back to disk and re-render."
           (arxana-browser-essays-edit-mode 1))))
     buf))
 
-(defun arxana-browser-essays--render-section-notes (section-name annotations)
+(defun arxana-browser-essays--render-section-notes
+    (section-name annotations &optional essay-id section-id)
   "Render notes for ANNOTATIONS into the notes buffer.
 Builds a buffer-local note-index mapping annotation-id to (start-marker
 . end-marker) bounds, used by the text buffer's sync hook.  Each entry
@@ -2727,12 +3476,18 @@ buffer's own sync hook can find the id at point."
                     (make-hash-table :test 'equal))
         (setq-local arxana-browser-essays--note-highlight-overlay nil)
         (setq-local arxana-browser-essays--last-active-id nil)
+        (setq-local arxana-browser-essays--essay-id essay-id)
+        (setq-local arxana-browser-essays--section-id section-id)
+        (setq-local arxana-browser-essays--section-name section-name)
         (insert (format "#+TITLE: Notes for %s\n\n" section-name))
         (if (null annotations)
             (insert "- (no annotations on this section)\n")
           (let ((index 0))
             (dolist (ann annotations)
               (cl-incf index)
+              ;; Use the stable cross-buffer number (see `--open-section');
+              ;; fall back to the local counter if unstamped.
+              (setq index (or (plist-get ann :render-index) index))
               (let* ((entry-start (point))
                      (source (plist-get ann :source))
                      (pattern (plist-get source :pattern-name))
@@ -2759,9 +3514,20 @@ buffer's own sync hook can find the id at point."
                              (member "annotation/collaboration-coherence"
                                      (plist-get ann :labels))))
                        (is-closed (plist-get ann :closure))
-                       (closed-prefix (if is-closed "✓ " ""))
+                       (closed-prefix (if is-closed "✅ " ""))
+                       (discharge (plist-get ann :discharge-procedure))
+                       ;; Closure beats a bare auto-orphan retraction: if an
+                       ;; annotation was resolved AND later auto-retracted
+                       ;; because its anchor text was edited away (retraction
+                       ;; -kind nil, the save pipeline's doing), show it as
+                       ;; RESOLVED, not struck-through — an addressed item
+                       ;; orphaned *because* it was addressed is the opposite
+                       ;; of a deflection.  A deliberate kill (kind present,
+                       ;; e.g. :not-relevant) still shows as retracted.
                        (retracted-marker
-                        (arxana-browser-essays--annotation-retraction-marker ann))
+                        (unless (and is-closed
+                                     (null (plist-get ann :retraction-kind)))
+                          (arxana-browser-essays--annotation-retraction-marker ann)))
                        (entry-prefix
                         (if retracted-marker
                             (concat retracted-marker " ")
@@ -2798,7 +3564,7 @@ buffer's own sync hook can find the id at point."
                     (when note
                       (insert (format "  %s\n" note))))
                    (t
-                    (insert (format "* %s[%d] " entry-prefix index))
+                    (insert (format "* %s%s[%d] " entry-prefix closed-prefix index))
                     (if pattern
                         (insert
                          (propertize
@@ -2812,23 +3578,50 @@ buffer's own sync hook can find the id at point."
                           'help-echo
                           (format "RET / mouse-1: open pattern %s" pattern)))
                       (insert "(no pattern)"))
-                    (insert (format " (%s)\n" hx-short))
+                    (insert (format " (%s)%s\n" hx-short
+                                    (if is-closed " (closed)" "")))
                     (when source-passage
                       (insert (format "  %s\n" source-passage)))
                     (when note
                       (insert (format "  - Gloss: %s\n" note)))))
+                  ;; How the annotation was addressed (closure discharge note),
+                  ;; surfaced under the entry so resolution reads as substantive.
+                  (when (and is-closed
+                             (stringp discharge)
+                             (> (length discharge) 0))
+                    (insert (format "  - Addressed: %s\n" discharge)))
                   (insert "\n"))
+                ;; Strike-through for retracted entries — but honour the same
+                ;; closure-beats-auto-orphan precedence as the display marker
+                ;; above, so a resolved-then-orphaned entry is not struck out.
                 (let ((retracted-marker
-                       (arxana-browser-essays--annotation-retraction-marker ann)))
+                       (unless (and (plist-get ann :closure)
+                                    (null (plist-get ann :retraction-kind)))
+                         (arxana-browser-essays--annotation-retraction-marker ann))))
                   (when retracted-marker
-                  (add-face-text-property
-                   entry-start (point)
-                   'arxana-browser-essays-retracted-face
-                   'append)
-                  (put-text-property
-                   entry-start (point)
-                   'help-echo
-                   (or retracted-marker "Retracted annotation"))))
+                    ;; Apply the strike-through via an OVERLAY, not a text
+                    ;; property: this buffer is `org-mode' with font-lock on,
+                    ;; and org re-fontifies the `* ' heading line with
+                    ;; `org-level-1', which clobbers a `face' text property.
+                    ;; An overlay face merges on top of font-lock, so the
+                    ;; strike-through survives on the heading line too.
+                    ;; `evaporate' removes it when the next render erases the
+                    ;; buffer (the region collapses to zero length).
+                    ;; Start the strike AFTER the `[retracted: …]' marker —
+                    ;; that designator is endorsed, not struck through.
+                    (let* ((strike-start
+                            (save-excursion
+                              (goto-char entry-start)
+                              (if (search-forward retracted-marker
+                                                  (line-end-position) t)
+                                  (point)
+                                entry-start)))
+                           (ov (make-overlay strike-start (point))))
+                      (overlay-put ov 'face 'arxana-browser-essays-retracted-face)
+                      (overlay-put ov 'priority 20)
+                      (overlay-put ov 'evaporate t)
+                      (overlay-put ov 'help-echo
+                                   (or retracted-marker "Retracted annotation")))))
                 ;; Tag the whole entry with the annotation-id so the
                 ;; notes-side sync hook can find which annotation point is on.
                 (put-text-property entry-start (point)
@@ -2874,16 +3667,28 @@ active (notes in a side window)."
                            (format "(Could not extract section text from %s.\n See heading: %s)\n"
                                    (or source-file "<no source-file in catalog>")
                                    (or heading-text "<no heading-text in section props>"))))
-         (annotations (arxana-browser-essays--annotations-for-section
-                       manifest section-id))
-         (notes-annotations (arxana-browser-essays--annotations-for-section
-                             manifest section-id t))
+         ;; Number ALL annotations once, over the full (retracted-included)
+         ;; list, and stamp each with a stable `:render-index'.  Both
+         ;; renderers then display that number instead of counting locally,
+         ;; so the text-buffer marker [N] and the notes entry [N] always
+         ;; refer to the same annotation — even when the text buffer skips a
+         ;; retracted entry (its number is simply absent there, not reused).
+         (notes-annotations
+          (let ((i 0))
+            (mapcar (lambda (a)
+                      (setq i (1+ i))
+                      (plist-put (copy-sequence a) :render-index i))
+                    (arxana-browser-essays--annotations-for-section
+                     manifest section-id t))))
+         (annotations (seq-remove
+                       #'arxana-browser-essays--annotation-retracted-p
+                       notes-annotations))
          (text-buf (arxana-browser-essays--render-section-text
                     essay-id section-id section-name
                     source-file heading-text
                     section-text annotations))
          (notes-buf (arxana-browser-essays--render-section-notes
-                     section-name notes-annotations)))
+                     section-name notes-annotations essay-id section-id)))
     (arxana-browser-essays--display-section-buffers text-buf notes-buf)))
 
 (defun arxana-browser-essays-location (item)
@@ -2910,23 +3715,41 @@ active (notes in a side window)."
       (_ nil))))
 
 ;;;###autoload
-(defun arxana-browser-essays-audit-passages ()
-  "Audit every annotation in every loaded essay manifest.
+(defun arxana-browser-essays-audit-passages (&optional all)
+  "Audit annotation passages for the current essay.
 For each annotation, attempts to locate `:annotated :passage' in the
 corresponding section's source text.  Reports passages that could not
-be found, by section.  Useful after editing annotations.el to verify
-the highlight overlays will actually attach in the reading view."
-  (interactive)
-  (let ((report-buf (get-buffer-create "*Arxana Essays Audit*"))
-        (total 0)
-        (found 0)
-        (missing nil))
+be found, by section.  Useful after editing annotations to verify the
+highlight overlays will actually attach in the reading view.
+
+By default audits only the essay of the current buffer (via
+`arxana-browser-essays--essay-id').  With a prefix argument ALL — or
+when no current essay can be determined — audits every loaded manifest.
+Scoping the default to one essay keeps the report from being dominated
+by unrelated essays you happen to have registered."
+  (interactive "P")
+  (let* ((report-buf (get-buffer-create "*Arxana Essays Audit*"))
+         (total 0)
+         (found 0)
+         (missing nil)
+         (this-essay (and (not all) arxana-browser-essays--essay-id))
+         (manifests
+          (if this-essay
+              (seq-filter
+               (lambda (m)
+                 (string= this-essay
+                          (plist-get (plist-get m :essay) :id)))
+               (arxana-browser-essays--all-manifests))
+            (arxana-browser-essays--all-manifests))))
     (with-current-buffer report-buf
       (let ((inhibit-read-only t))
         (erase-buffer)
         (insert "Arxana Essays — passage audit\n")
+        (insert (if this-essay
+                    (format "(current essay: %s)\n" this-essay)
+                  "(all registered essays — pass no prefix to scope to one)\n"))
         (insert "==============================\n\n")
-        (dolist (manifest (arxana-browser-essays--all-manifests))
+        (dolist (manifest manifests)
           (let* ((essay (plist-get manifest :essay))
                  (essay-id (plist-get essay :id))
                  (source-file (arxana-browser-essays--catalog-source-file
@@ -3059,6 +3882,12 @@ is present.  `<left>' at point-min returns to the prior layout.")
         (define-key map [mouse-1] #'arxana-browser-essays-follow-pattern-at-point)
         (define-key map [mouse-2] #'arxana-browser-essays-follow-pattern-at-point)
         (define-key map (kbd "<left>") #'arxana-browser-essays-left-or-return)
+        (define-key map (kbd "?") #'arxana-browser-essays-help)
+        (define-key map (kbd "🥨") #'arxana-browser-essays-help)
+        ;; Resolve / kill the annotation at point (also offered from the hydra).
+        (define-key map (kbd "r") #'arxana-browser-essays-resolve-annotation-at-point)
+        (define-key map (kbd "k") #'arxana-browser-essays-kill-annotation-at-point)
+        (define-key map (kbd "🗝️") #'arxana-browser-essays-kill-annotation-at-point)
         map))
 
 (define-minor-mode arxana-browser-essays-notes-mode
@@ -3287,7 +4116,11 @@ Re-renders the section."
            (annotations  (alist-get :annotations props))
            (essay-id     (alist-get :essay-id props))
            (section-name (alist-get :section-name props)))
-      (arxana-browser-essays--backup-manifest-files)
+      (arxana-browser-essays--backup-manifest-files
+       (let ((mf (and essay-id
+                      (arxana-browser-essays--manifest-file-for-essay-id
+                       essay-id))))
+         (and mf (list mf))))
       (when (and source-file (file-writable-p source-file))
         (copy-file source-file (concat source-file "~arxana~") t))
       (when (and source-file heading section-text)
@@ -3306,6 +4139,13 @@ Re-renders the section."
         (arxana-browser-essays--open-section essay-id section-id section-name))
       (message "[essays] Restored checkpoint %s" checkpoint-id))))
 
+;; Provide BEFORE the soft back-require below: the compiled-view file
+;; `(require 'arxana-browser-essays)' in turn, so without an already-
+;; registered feature here a cold load recurses ("Recursive require").
+;; Providing first breaks the cycle — the back-require sees this feature
+;; satisfied and loads the compiled surface as a leaf.
+(provide 'arxana-browser-essays)
+
 ;; Pull in the compiled-view surface so the `?`-hydra (with `c` for
 ;; compiled-view, `R` for rewrites, etc.) is wired whenever the essays
 ;; browser is active.  The require is soft so the essays browser still loads
@@ -3318,5 +4158,40 @@ Re-renders the section."
 (autoload 'arxana-essay-side-by-side "arxana-essay-pair"
   "Render two compiled essays side by side." t)
 
-(provide 'arxana-browser-essays)
 ;;; arxana-browser-essays.el ends here
+
+;; ─────────────────────────────────────────────────────────────
+;; FOLLOW-UP (deferred): adopt the chapbook header-line pattern
+;; ─────────────────────────────────────────────────────────────
+;; `arxana-browser-songs' renders its "Songs …" banner via
+;; `header-line-format' (Emacs chrome), NOT as buffer text.  Essays
+;; instead inserts a "Section: …" banner into the buffer and (as of this
+;; session) marks it read-only + cursor-intangible — a frozen-header hack
+;; that caused a chain of bugs: point-min unreachable, content-start
+;; marker drift, "edit region no longer starts with ##", and the
+;; `<left>'-at-top regression (patched to test content-start, not
+;; point-min).  The clean fix is to MOVE the banner into
+;; `header-line-format' like songs: then point-min == content start, the
+;; frozen-text apparatus + content-start gymnastics can be deleted, and
+;; `--left-or-return' can revert to the simple `(> (point) (point-min))'
+;; songs form.  Deferred deliberately (touches the render hot-path mid
+;; document); do it as a tested refactor with the disposition ERT suite
+;; green before and after.  See arxana-browser-songs--text-header-line /
+;; --notes-header-line / --refresh-header-lines for the reference impl.
+
+;; ─────────────────────────────────────────────────────────────
+;; FOLLOW-UP (deferred): surface silent orphaning at edit time
+;; ─────────────────────────────────────────────────────────────
+;; Orphaning is only DISCOVERED at render: when an edit removes/renames
+;; the text an annotation's `:passage' anchored to (e.g. a heading
+;; retitle), the annotation becomes unanchorable immediately, but its
+;; overlay keeps showing until the NEXT re-render — so a later, unrelated
+;; action (pressing `r' on a sibling annotation, which commits+rerenders)
+;; appears to "cause" the orphan.  Confusing timing, observed live:
+;; resolving quote-2 surfaced quote-3's already-dead anchor from an
+;; earlier retitle.  Fix: on save/re-render (and ideally on the
+;; after-change hook), detect annotations whose `:passage' no longer
+;; matches the section source and REPORT them (a transient message or a
+;; marker in the notes buffer) rather than silently dropping the overlay
+;; — so orphaning is surfaced at the edit that causes it, not at the next
+;; unrelated render.  Pairs with the header-line refactor note above.

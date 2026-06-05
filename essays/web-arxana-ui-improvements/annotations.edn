@@ -1,0 +1,224 @@
+;; annotations.edn --- v1 engine-emitted finalisation for the WebArxana UI Improvements mission HEAD
+;;
+;; Source prose: /home/joe/code/futon4/holes/missions/M-web-arxana-ui-improvements.md
+;; Buckets entry: eoi_instances/web-arxana-ui-improvements-HEAD-2026-05-30
+;; Institution-object: :node/web-arxana-live-interface (self-authored, constituted)
+;; Algorithm: ~/code/algorithms/eoi-finalisation.md (v0.2, engine-emitted at assembly time)
+;; Engine: claude-7, emacs-claude-repl, eoi-mission-head flash (Right-View-only; round-collapse false).
+;; Sibling Arxana manifest: annotations.el (thin sections-only editorial surface; this .edn is authoritative for annotations).
+
+{:version 1
+ :paper "/home/joe/code/futon4/holes/missions/M-web-arxana-ui-improvements.md"
+ :essay-id "arxana/essay/web-arxana-ui-improvements-v1"
+ :eoi-instance-ref "web-arxana-ui-improvements-HEAD-2026-05-30"
+ :institution-object-ref ":node/web-arxana-live-interface"
+ :generated "2026-05-30"
+ :pass-status :v1-finalisation-engine-emitted
+ :pass-purpose "Per-essay interest-territory + the single Right-View path-arrow witness + institution-object ref + operator-doubts + cross-mission links for the WebArxana UI Improvements HEAD. Records the coherent-live-interface invariant, the Emacs<->browser bidirectional live contract, the Evidence-Store<->Mission integration as the proof-point (friction-flagged: 'doesn't look like part of WebArxana'), and the embedding-based Meaning Map warm-up."
+
+ :sections
+ [{:id "arxana/essay/web-arxana-ui-improvements-v1/section/1-head"
+   :name "§1. HEAD"
+   :index [1] :heading-level 2 :aif-region :internal :path-arrow nil}
+  {:id "arxana/essay/web-arxana-ui-improvements-v1/section/2-right-view"
+   :name "§2. Right View — the invariant"
+   :index [2] :heading-level 2 :aif-region :internal :path-arrow :right-view}
+  {:id "arxana/essay/web-arxana-ui-improvements-v1/section/3-already-felt-true"
+   :name "§3. What's already felt to be true"
+   :index [3] :heading-level 2 :aif-region :internal :path-arrow nil}
+  {:id "arxana/essay/web-arxana-ui-improvements-v1/section/4-clarity-gap"
+   :name "§4. Clarity-gap — what isn't yet clear"
+   :index [4] :heading-level 2 :aif-region :internal :path-arrow nil}
+  {:id "arxana/essay/web-arxana-ui-improvements-v1/section/5-live-contract"
+   :name "§5. The \"live\" contract (Emacs <-> browser, both directions)"
+   :index [5] :heading-level 2 :aif-region :active-surface :path-arrow nil}
+  {:id "arxana/essay/web-arxana-ui-improvements-v1/section/6-integration-proof-point"
+   :name "§6. Integration is the proof-point, not UI polish"
+   :index [6] :heading-level 2 :aif-region :active-surface :path-arrow nil}
+  {:id "arxana/essay/web-arxana-ui-improvements-v1/section/7-carried-forward-tensions"
+   :name "§7. Carried-forward tensions"
+   :index [7] :heading-level 2 :aif-region :internal :path-arrow nil}
+  {:id "arxana/essay/web-arxana-ui-improvements-v1/section/8-phase-outline"
+   :name "§8. Phase outline (post-HEAD)"
+   :index [8] :heading-level 2 :aif-region :active-surface :path-arrow nil}]
+
+ :annotations
+ [;; ---------------------------------------------------------------
+  ;; Path-arrow witness — the single arrow for a Right-View-only HEAD.
+  ;; ---------------------------------------------------------------
+
+  {:id "hx:webarxana-ui:path-arrow:right-view"
+   :hx-type :eoi/path-arrow-witness
+   :endpoints [{:role :annotated
+                :section-id "arxana/essay/web-arxana-ui-improvements-v1/section/2-right-view"
+                :passage "WebArxana provides a coherent visual interface to live graph-structured information about the stack, both for reading and writing"}
+               {:role :target :section-id "arxana/path-arrow/right-view"}]
+   :note "The HEAD's invariance claim, verbatim. Two failure-words are baked in by Joe's own gloss: 'incoherent' (the current UI is not coherent) and 'not-live' (no REPL coupling, so the viewer is not truly live). Right-View-only flash: this is the sole composite-arrow component for this HEAD."
+   :severity :high :status :open :polarity :fit}
+
+  ;; ---------------------------------------------------------------
+  ;; Institution-object ref — the self-authored, constituted institution.
+  ;; ---------------------------------------------------------------
+
+  {:id "hx:webarxana-ui:institution-ref:web-arxana-live-interface"
+   :hx-type :eoi/institution-object-ref
+   :endpoints [{:role :annotated
+                :section-id "arxana/essay/web-arxana-ui-improvements-v1/section/2-right-view"
+                :passage "the REPL integration (currently non-extant, so the viewer is not truly \"live\")"}
+               {:role :target :section-id ":node/web-arxana-live-interface"}]
+   :note "Self-authored institution-object (subtype self-authored; stance constituted) — WebArxana-as-coherent-live-interface, the thing this mission constitutes. The 'currently non-extant' clause is the constituted-stance commitment: the institution is brought into being by making the viewer actually live."
+   :severity :high :status :open :polarity :fit}
+
+  ;; ---------------------------------------------------------------
+  ;; Interest-territories — recurring interests this HEAD surfaces.
+  ;; ---------------------------------------------------------------
+
+  {:id "hx:webarxana-ui:interest:coherent-visual-interface-to-the-stack"
+   :hx-type :eoi/interest-territory
+   :endpoints [{:role :annotated
+                :section-id "arxana/essay/web-arxana-ui-improvements-v1/section/2-right-view"
+                :passage "a coherent visual interface to live graph-structured information about the stack"}
+               {:role :target :section-id "arxana/interest-territory/coherent-visual-interface-to-the-stack"}]
+   :note "The invariant-as-territory: coherence + liveness of the visual interface to the stack's graph structure. Subsumes the Interest Network and Mission Search as views/filters rather than independent features (engine read confirmed by Joe at Q1-continued)."
+   :severity :high :status :open :polarity :fit}
+
+  {:id "hx:webarxana-ui:interest:live-graph-coupled-to-repl"
+   :hx-type :eoi/interest-territory
+   :endpoints [{:role :annotated
+                :section-id "arxana/essay/web-arxana-ui-improvements-v1/section/3-already-felt-true"
+                :passage "a graph view integrated directly with the running REPL so that we can see, for example, a mission starting to fill in as we move from HEAD to IDENTIFY and so on"}
+               {:role :target :section-id "arxana/interest-territory/live-graph-coupled-to-repl"}]
+   :note "The spine of the mission: a Graph view wired to the live REPL, missions visibly filling in across lifecycle phases, patterns lighting up as they activate (in REPL or as PSRs in the mission doc). This is the 'live' half of the invariant."
+   :severity :high :status :open :polarity :fit}
+
+  {:id "hx:webarxana-ui:interest:emacs-web-bidirectional-sync"
+   :hx-type :eoi/interest-territory
+   :endpoints [{:role :annotated
+                :section-id "arxana/essay/web-arxana-ui-improvements-v1/section/5-live-contract"
+                :passage "how clicking around in the WebArxana nodes can start Emacs-based editing processes"}
+               {:role :target :section-id "arxana/interest-territory/emacs-web-bidirectional-sync"}]
+   :note "The 'both for reading and writing' clause of the invariant, concretised: Emacs->Firefox live-visualisation AND WebArxana-node-click->Emacs-side editing. Prior art Joe names: Org Roam keeping Emacs and browser in sync; org-roam-server#35 as the candidate route (see operator-doubt)."
+   :severity :high :status :open :polarity :fit}
+
+  {:id "hx:webarxana-ui:interest:evidence-store-mission-bridge"
+   :hx-type :eoi/interest-territory
+   :endpoints [{:role :annotated
+                :section-id "arxana/essay/web-arxana-ui-improvements-v1/section/4-clarity-gap"
+                :passage "we have to bridge between the Evidence Store (REPL interactions) and Mission structure, which initially doesn't \"look like\" it's part of Web Arxana at all"}
+               {:role :target :section-id "arxana/interest-territory/evidence-store-mission-bridge"}]
+   :note "The deepest tension: making the viewer truly live requires bridging the Evidence Store (REPL interactions) and Mission structure — work that doesn't initially present as WebArxana work. Friction-flagged: the bridge is load-bearing for the invariant but sits outside the apparent WebArxana boundary."
+   :severity :high :status :open :polarity :friction}
+
+  {:id "hx:webarxana-ui:interest:views-as-filters-not-features"
+   :hx-type :eoi/interest-territory
+   :endpoints [{:role :annotated
+                :section-id "arxana/essay/web-arxana-ui-improvements-v1/section/3-already-felt-true"
+                :passage "I somewhat question if it should be a \"feature\" or possibly a \"filter\" on the standard Graph view"}
+               {:role :target :section-id "arxana/interest-territory/views-as-filters-not-features"}]
+   :note "Architectural interest: the Interest Network (and by extension Mission Search) may be better expressed as filters on the central Graph view than as standalone features. Decision-debt (T3) deferred to IDENTIFY/DERIVE; the territory is the recurring 'one coherent surface, many filters' shape."
+   :severity :medium :status :open :polarity :fit}
+
+  {:id "hx:webarxana-ui:interest:embedding-based-meaning-map"
+   :hx-type :eoi/interest-territory
+   :endpoints [{:role :annotated
+                :section-id "arxana/essay/web-arxana-ui-improvements-v1/section/3-already-felt-true"
+                :passage "creating a 2D visualisation of the joint Mission + Pattern projection as a stand-alone Meaning Map of what's in the Futon stack"}
+               {:role :target :section-id "arxana/interest-territory/embedding-based-meaning-map"}]
+   :note "Warm-up exercise (T5): a 2D embedding-based Meaning Map of the joint Mission + Pattern projection. Joe's hypothesis is methodological — holding an embedding map in mind makes the hypergraph visualisation easier to understand. Connects to embedding/retrieval interests across the stack (BGE retrieval; mission-clustering)."
+   :severity :medium :status :open :polarity :fit}
+
+  ;; ---------------------------------------------------------------
+  ;; Cross-mission links — explicit named surfaces referenced in the body.
+  ;; ---------------------------------------------------------------
+
+  {:id "hx:webarxana-ui:link:interest-network-coupling"
+   :hx-type :eoi/cross-essay-link
+   :endpoints [{:role :annotated
+                :section-id "arxana/essay/web-arxana-ui-improvements-v1/section/3-already-felt-true"
+                :passage "an Interest Network visualiser"}
+               {:role :target
+                :section-id "futon4/holes/missions/M-interest-network-coupling.md"
+                :passage-pattern "Interest-Network Coupling (the visualiser this mission rescales / may demote to a filter)"}]
+   :note "The Interest Network visualiser is the deliverable of M-interest-network-coupling (CLOSED 2026-05-29). This HEAD proposes to rescale it (too-small items) and possibly demote it from feature to filter — a follow-on touching that mission's surface."
+   :severity :high :status :open :polarity :fit}
+
+  {:id "hx:webarxana-ui:link:self-documenting-stack"
+   :hx-type :eoi/cross-essay-link
+   :endpoints [{:role :annotated
+                :section-id "arxana/essay/web-arxana-ui-improvements-v1/section/3-already-felt-true"
+                :passage "the mission search is highly cluttered in the out-of-the-box view"}
+               {:role :target
+                :section-id "futon3/holes/missions/M-self-documenting-stack.md"
+                :passage-pattern "LC1 mission-search UI (the search surface this mission makes more usable)"}]
+   :note "Mission Search is the LC1 deliverable of M-self-documenting-stack (POC CLOSED 2026-05-21). The Confidence slider was its retrieval-tuning control. This HEAD proposes usability work + new search approaches (recent-missions/date) on that surface."
+   :severity :medium :status :open :polarity :fit}
+
+  {:id "hx:webarxana-ui:link:a-sorry-enterprise"
+   :hx-type :eoi/cross-essay-link
+   :endpoints [{:role :annotated
+                :section-id "arxana/essay/web-arxana-ui-improvements-v1/section/3-already-felt-true"
+                :passage "mission-search/a%20sorry%20enterprise"}
+               {:role :target
+                :section-id "futon3c/holes/missions/M-a-sorry-enterprise.md"
+                :passage-pattern "'a sorry enterprise' — the live query Joe used as the Mission Search example"}]
+   :note "The example query in the Mission Search URL is 'a sorry enterprise', the sorry-mining mission whose name doubles as the validated combining-methods-as-diagnostic test query. Recorded as the concrete query-shape the search surface is being judged against."
+   :severity :low :status :open :polarity :fit}
+
+  ;; ---------------------------------------------------------------
+  ;; Operator-doubts — Joe-side uncertainties as first-class entities.
+  ;; ---------------------------------------------------------------
+
+  {:id "hx:webarxana-ui:doubt:what-live-usefully-means"
+   :hx-type :eoi/operator-doubt
+   :endpoints [{:role :annotated
+                :section-id "arxana/essay/web-arxana-ui-improvements-v1/section/4-clarity-gap"
+                :passage "developing some new thinking about what the \"live\" contract actually looks like"}]
+   :note "The headline doubt (clarity-probe): org-roam-server#35 has been referenced across several turns/missions but never made live; the open question is not 'why hasn't it landed' but what the 'live' contract usefully IS. Discharge-procedure: IDENTIFY digs into #35 and articulates the contract, both directions. T1, address-now."
+   :severity :high :status :open}
+
+  {:id "hx:webarxana-ui:doubt:feature-vs-filter"
+   :hx-type :eoi/operator-doubt
+   :endpoints [{:role :annotated
+                :section-id "arxana/essay/web-arxana-ui-improvements-v1/section/3-already-felt-true"
+                :passage "I somewhat question if it should be a \"feature\" or possibly a \"filter\" on the standard Graph view"}]
+   :note "Architectural doubt explicitly named by Joe: is the Interest Network a feature or a filter on the central Graph view? Decision-debt (T3), deferred to IDENTIFY/DERIVE. Discharge: an IF/HOWEVER/THEN/BECAUSE decision in DERIVE."
+   :severity :medium :status :open}
+
+  {:id "hx:webarxana-ui:doubt:how-integration-can-be-done"
+   :hx-type :eoi/operator-doubt
+   :endpoints [{:role :annotated
+                :section-id "arxana/essay/web-arxana-ui-improvements-v1/section/6-integration-proof-point"
+                :passage "this mission isn't just about UI polish but about proving out *how* that integration can be done"}]
+   :note "The proof-point doubt: the groundwork for importing Missions + REPL turns into XTDB is laid but not integrated, and HOW to integrate is unproven. Discharge: the integration itself is the mission's main proof-point; 'affective events' and PSR/PUR-in-Missions are the prior art to draw on. T2, address-now."
+   :severity :high :status :open}
+
+  ;; ---------------------------------------------------------------
+  ;; Synthetic questions — needle-in-haystack tests derivable from this HEAD.
+  ;; ---------------------------------------------------------------
+
+  {:id "hx:webarxana-ui:synth:org-roam-server-35-direction"
+   :hx-type :eoi/synthetic-question
+   :endpoints [{:role :annotated
+                :section-id "arxana/essay/web-arxana-ui-improvements-v1/section/4-clarity-gap"
+                :passage "I have mentioned `https://github.com/org-roam/org-roam-server/issues/35` in several turns/missions"}]
+   :question "What does org-roam/org-roam-server#35 actually demonstrate about Emacs<->browser sync, and which of the two directions (Emacs->Firefox visualise vs browser->Emacs edit) is the harder half to achieve here?"
+   :expected-answer-area "org-roam-server issue #35 + Joe's earlier Org Roam experience; resolvable in IDENTIFY (T1 dig). The harder-half answer likely lands on browser->Emacs editing-process initiation rather than Emacs->browser visualisation."
+   :severity :informational :status :open}
+
+  {:id "hx:webarxana-ui:synth:xtdb-import-groundwork-gap"
+   :hx-type :eoi/synthetic-question
+   :endpoints [{:role :annotated
+                :section-id "arxana/essay/web-arxana-ui-improvements-v1/section/6-integration-proof-point"
+                :passage "We have laid the groundwork for importing Missions and REPL turns into XTDB, but we haven't integrated them yet"}]
+   :question "Where in the futon stack is the groundwork for importing Missions and REPL turns into XTDB, and what is the precise gap between groundwork and live integration?"
+   :expected-answer-area "futon3c XTDB import code + 'affective events' prior art (mining REPL turns) + PSR/PUR-in-Missions extraction; answerable at MAP-phase inventory."
+   :severity :informational :status :open}
+
+  {:id "hx:webarxana-ui:synth:meaning-map-vs-hypergraph"
+   :hx-type :eoi/synthetic-question
+   :endpoints [{:role :annotated
+                :section-id "arxana/essay/web-arxana-ui-improvements-v1/section/3-already-felt-true"
+                :passage "creating a 2D visualisation of the joint Mission + Pattern projection as a stand-alone Meaning Map of what's in the Futon stack"}]
+   :question "What would a 2D embedding map of the joint Mission + Pattern projection reveal that the current hypergraph view does not — and does having it in mind actually make the hypergraph easier to think about?"
+   :expected-answer-area "The warm-up exercise (T5); a joint embedding of missions × patterns. Tests Joe's methodological hypothesis that an embedding-based map scaffolds comprehension of the hypergraph."
+   :severity :informational :status :open}]}

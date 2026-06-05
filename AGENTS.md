@@ -33,6 +33,19 @@ to quickly detect paren/quote mismatches before or after edits. Example:
 - `dev/docs-backlog.org` flags drift between `dev/` code and XTDB-backed
   docs, plus any temporary filesystem snapshots that still need ingesting.
 
+## Ingesting essays into Arxana Essays
+
+- **Read `README-essays.md` before ingesting or annotating an essay.** It
+  spells out the file-role convention that is easy to get wrong: the source
+  `.md` is canonical and read-only (an annotated edition is a *render*, never
+  blockquotes baked into the body); `annotations.edn` is the authoritative
+  annotation layer with **verbatim** `:passage` anchors; `annotations.el` is a
+  thin sections-only manifest that the loader augments from the `.edn`.
+- Section headings in the source must be flat `##`; logical nesting lives in
+  the manifest's `:index`, not in `#`/`###` markdown depth.
+- Verify every ingest with `M-x arxana-browser-essays-audit-passages`, which
+  reports per-section whether each annotation's passage actually anchors.
+
 * Logical model
 
 Arxana manages a single logical hypergraph. The core primitives are:
