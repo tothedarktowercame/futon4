@@ -57,6 +57,32 @@ directly if a file-based flow is not wanted."
   :type '(repeat file)
   :group 'arxana-browser-essays)
 
+(defcustom arxana-browser-essays-rounds-root
+  (expand-file-name "~/npt/essays-rounds")
+  "Root directory where writable live essay rounds are minted."
+  :type 'directory
+  :group 'arxana-browser-essays)
+
+(defcustom arxana-browser-essays-diachronic-seeds
+  `((:seed-id "hyperreal-director-side-a-v1"
+     :essay-id "arxana/essay/hyperreal-director-side-a-v1"
+     :md ,(expand-file-name
+           "~/npt/applications/hyperreal-director-side-a/hyperreal-director-side-a-v1.md")
+     :manifest ,(expand-file-name
+                 "~/npt/applications/hyperreal-director-side-a/annotations.el")
+     :edn ,(expand-file-name
+            "~/npt/applications/hyperreal-director-side-a/eoi-annotations.edn")))
+  "Known immutable golden essay seeds for diachronic live-round minting."
+  :type '(repeat plist)
+  :group 'arxana-browser-essays)
+
+(defconst arxana-browser-essays-hyperreal-seed-id
+  "hyperreal-director-side-a-v1"
+  "Seed id for the first Hyperreal Director Side A diachronic round.")
+
+(defvar arxana-browser-essays--mint-live-round-counter 0
+  "Monotonic suffix used to keep default live round ids unique.")
+
 (defcustom arxana-browser-essays-pattern-library-root
   (expand-file-name "~/code/futon3/library")
   "Directory under which pattern `.flexiarg' files are located.
@@ -196,6 +222,212 @@ for annotation data while the .el remains the manifest of sections."
   "Return the list of manifest plists loaded from the configured files."
   (mapcar (lambda (record) (plist-get record :manifest))
           (arxana-browser-essays--manifest-records)))
+
+;;; ─────────────────────────────────────────────────────────────
+;;; Diachronic seed/live round minting
+;;; ─────────────────────────────────────────────────────────────
+
+(defun arxana-browser-essays--seed-record (seed-id)
+  "Return the configured golden seed record for SEED-ID."
+  (seq-find (lambda (seed)
+              (string= seed-id (plist-get seed :seed-id)))
+            arxana-browser-essays-diachronic-seeds))
+
+(defun arxana-browser-essays--file-sha256 (path)
+  "Return SHA256 hex digest for PATH's literal file bytes."
+  (with-temp-buffer
+    (set-buffer-multibyte nil)
+    (insert-file-contents-literally path)
+    (secure-hash 'sha256 (current-buffer))))
+
+(defun arxana-browser-essays--read-file-literal (path)
+  "Return PATH contents as a unibyte string."
+  (with-temp-buffer
+    (set-buffer-multibyte nil)
+    (insert-file-contents-literally path)
+    (buffer-string)))
+
+(defun arxana-browser-essays--iso-timestamp ()
+  "Return an ISO-like local timestamp for lifecycle documents."
+  (format-time-string "%FT%T%z"))
+
+(defun arxana-browser-essays--default-round-id (seed-id)
+  "Return a unique default live round id for SEED-ID."
+  (setq arxana-browser-essays--mint-live-round-counter
+        (1+ arxana-browser-essays--mint-live-round-counter))
+  (format "%s-round-%s-%04d"
+          seed-id
+          (format-time-string "%Y%m%dT%H%M%S")
+          arxana-browser-essays--mint-live-round-counter))
+
+(defun arxana-browser-essays--round-dir (seed-id round-id)
+  "Return the live round directory for SEED-ID and ROUND-ID."
+  (expand-file-name
+   (file-name-as-directory round-id)
+   (expand-file-name
+    (file-name-as-directory seed-id)
+    arxana-browser-essays-rounds-root)))
+
+(defun arxana-browser-essays--copy-seed-file (source round-dir)
+  "Copy SOURCE into ROUND-DIR and return the copied path."
+  (let ((dest (expand-file-name (file-name-nondirectory source) round-dir)))
+    (copy-file source dest nil t t)
+    dest))
+
+(defun arxana-browser-essays--merge-props (existing props)
+  "Return EXISTING props with PROPS merged over them."
+  (let ((merged (copy-tree existing)))
+    (dolist (prop props)
+      (let* ((key (car prop))
+             (name (cond
+                    ((keywordp key) (substring (symbol-name key) 1))
+                    ((symbolp key) (symbol-name key))
+                    ((stringp key) key)))
+             (variants (delq nil
+                             (list key
+                                   (and name (intern name))
+                                   (and name (intern (concat ":" name)))
+                                   name))))
+        (dolist (variant variants)
+          (setq merged (if (stringp variant)
+                           (cl-remove variant merged
+                                      :key #'car
+                                      :test #'equal)
+                         (assq-delete-all variant merged)))))
+      (push prop merged))
+    (nreverse merged)))
+
+(defun arxana-browser-essays--fetched-entity-props (response)
+  "Return entity props from store fetch RESPONSE, or nil."
+  (when (listp response)
+    (let* ((entity (or (alist-get :entity response)
+                       (alist-get 'entity response)))
+           (props (and (listp entity)
+                       (or (alist-get :props entity)
+                           (alist-get 'props entity)))))
+      (and (listp props) props))))
+
+(defun arxana-browser-essays--ensure-dataset-entity (id name type props)
+  "Fetch-merge-upsert dataset entity ID with PROPS when sync is enabled."
+  (when (arxana-store-sync-enabled-p)
+    (let* ((existing (arxana-browser-essays--fetched-entity-props
+                      (arxana-store-fetch-entity id)))
+           (merged (arxana-browser-essays--merge-props existing props)))
+      (arxana-store-ensure-entity
+       :id id
+       :name name
+       :type type
+       :props merged))))
+
+(defun arxana-browser-essays--sync-minted-live-round (round)
+  "Persist XTDB dataset-seed, dataset-round, and seed event docs for ROUND."
+  (when (arxana-store-sync-enabled-p)
+    (let* ((seed-id (plist-get round :seed-id))
+           (round-id (plist-get round :round-id))
+           (essay-id (plist-get round :essay-id))
+           (minted-at (plist-get round :minted-at))
+           (seed-doc-id (format "arxana/dataset-seed/%s" seed-id))
+           (round-doc-id (format "arxana/dataset-round/%s" round-id))
+           (event-id (format "arxana/event/dataset-round-seeded/%s" round-id))
+           (md-sha (plist-get round :seed-md-sha256))
+           (manifest-sha (plist-get round :seed-manifest-sha256)))
+      (arxana-browser-essays--ensure-dataset-entity
+       seed-doc-id
+       seed-id
+       "arxana/dataset-seed"
+       `((md-path . ,(plist-get round :seed-md))
+         (manifest-path . ,(plist-get round :seed-manifest))
+         (md-sha256 . ,md-sha)
+         (manifest-sha256 . ,manifest-sha)
+         (registered-at . ,minted-at)))
+      (arxana-browser-essays--ensure-dataset-entity
+       round-doc-id
+       round-id
+       "arxana/dataset-round"
+       `((seed-id . ,seed-id)
+         (seed-md-sha256 . ,md-sha)
+         (seed-manifest-sha256 . ,manifest-sha)
+         (round-dir . ,(plist-get round :round-dir))
+         (essay-id . ,essay-id)
+         (minted-at . ,minted-at)))
+      (arxana-store-ensure-entity
+       :id event-id
+       :name event-id
+       :type "arxana/lifecycle-event"
+       :props `((essay-id . ,essay-id)
+                (dataset-round-id . ,round-doc-id)
+                (event-kind . "dataset-round-seeded")
+                (timestamp . ,minted-at)
+                (operator . "arxana-browser-essays-mint-live-round")
+                (provenance . "golden-seed-copy")
+                (seed-id . ,seed-id)
+                (seed-md-sha256 . ,md-sha)
+                (seed-manifest-sha256 . ,manifest-sha))))))
+
+(defun arxana-browser-essays--mint-live-round (seed-id &optional round-id)
+  "Mint a writable live round from immutable golden SEED-ID.
+The golden source files are copied, never moved or symlinked.  Return a plist
+describing the minted round."
+  (let* ((seed (or (arxana-browser-essays--seed-record seed-id)
+                   (user-error "Unknown essay seed id: %s" seed-id)))
+         (seed-md (expand-file-name (plist-get seed :md)))
+         (seed-manifest (expand-file-name (plist-get seed :manifest)))
+         (seed-edn (when-let ((edn (plist-get seed :edn)))
+                     (expand-file-name edn)))
+         (essay-id (plist-get seed :essay-id)))
+    (unless (file-readable-p seed-md)
+      (user-error "Seed markdown is not readable: %s" seed-md))
+    (unless (file-readable-p seed-manifest)
+      (user-error "Seed manifest is not readable: %s" seed-manifest))
+    (when (and seed-edn (not (file-readable-p seed-edn)))
+      (setq seed-edn nil))
+    (let* ((md-before (arxana-browser-essays--file-sha256 seed-md))
+           (manifest-before (arxana-browser-essays--file-sha256 seed-manifest))
+           (rid (or round-id (arxana-browser-essays--default-round-id seed-id)))
+           (round-dir (arxana-browser-essays--round-dir seed-id rid))
+           md-copy manifest-copy edn-copy)
+      (when (file-exists-p round-dir)
+        (user-error "Live round already exists: %s" round-dir))
+      (make-directory round-dir t)
+      (setq md-copy (arxana-browser-essays--copy-seed-file seed-md round-dir))
+      (setq manifest-copy
+            (arxana-browser-essays--copy-seed-file seed-manifest round-dir))
+      (when seed-edn
+        (setq edn-copy (arxana-browser-essays--copy-seed-file seed-edn round-dir)))
+      (unless (and (string= md-before
+                            (arxana-browser-essays--file-sha256 seed-md))
+                   (string= manifest-before
+                            (arxana-browser-essays--file-sha256 seed-manifest)))
+        (user-error "Golden seed changed while minting %s" seed-id))
+      (let ((round (delq nil
+                         (list :round-id rid
+                               :seed-id seed-id
+                               :round-dir (file-name-as-directory round-dir)
+                               :md md-copy
+                               :manifest manifest-copy
+                               (when edn-copy :edn)
+                               edn-copy
+                               :seed-md seed-md
+                               :seed-manifest seed-manifest
+                               :seed-md-sha256 md-before
+                               :seed-manifest-sha256 manifest-before
+                               :minted-at (arxana-browser-essays--iso-timestamp)
+                               :essay-id essay-id))))
+        (arxana-browser-essays--sync-minted-live-round round)
+        round))))
+
+;;;###autoload
+(defun arxana-browser-essays-mint-live-round (&optional seed-id round-id)
+  "Mint a writable live round for SEED-ID, defaulting to Hyperreal Side A."
+  (interactive (list arxana-browser-essays-hyperreal-seed-id nil))
+  (let ((round (arxana-browser-essays--mint-live-round
+                (or seed-id arxana-browser-essays-hyperreal-seed-id)
+                round-id)))
+    (message "Minted %s from %s at %s"
+             (plist-get round :round-id)
+             (plist-get round :seed-id)
+             (plist-get round :round-dir))
+    round))
 
 (defconst arxana-browser-essays--xtdb-catalog-cache-unset
   :unset
@@ -3076,9 +3308,10 @@ Re-renders the section."
 
 ;; Pull in the compiled-view surface so the `?`-hydra (with `c` for
 ;; compiled-view, `R` for rewrites, etc.) is wired whenever the essays
-;; browser is active.  The require is soft (`nil t`) so the essays
-;; browser still loads if the compiled-view file is unavailable.
-(require 'arxana-browser-essays-compiled nil t)
+;; browser is active.  The require is soft so the essays browser still loads
+;; if the compiled-view file or one of its optional dependencies is unavailable.
+(ignore-errors
+  (require 'arxana-browser-essays-compiled nil t))
 
 ;; Autoload the compiled essay-pair surface without forcing the full module
 ;; during cold essay-browser startup.
