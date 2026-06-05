@@ -662,13 +662,15 @@
                                             (map #(get-in % [:link/dst :nema/id]))
                                             (remove core-ids)
                                             set)
-                            route-diagrams (if (and expanded-diagram? active-diagram-id)
-                                             #{active-diagram-id}
-                                             #{})
-                            ;; Hide: neighbour diagrams + non-core content of pinned diagrams.
-                            ;; In expanded diagram routes, also hide the active diagram apex:
-                            ;; the diagram is the frame, not a peer node in its own contents.
-                            hide-ids (into (into neighbour-diagrams content-ids) route-diagrams)]
+                            ;; Hide: neighbour diagrams + non-core content of pinned diagrams,
+                            ;; AND the pinned diagram apexes themselves. A diagram node is a
+                            ;; container / cone-apex: whenever its contents are in view it is the
+                            ;; FRAME, never a peer node in its own contents (Joe 2026-06-04) — in
+                            ;; every mode/route (compressed, expanded, and ad-hoc /pins). It would
+                            ;; only render as a peer inside a diagram-OF-diagrams. Hiding the apex
+                            ;; also drops its diagram/core + diagram/includes hub-spokes via the
+                            ;; links filter below (which removes links touching hidden nodes).
+                            hide-ids (into (into neighbour-diagrams content-ids) pinned-diagrams)]
                         {:nemas (remove #(contains? hide-ids (:nema/id %)) (:nemas raw-hood))
                          :links (remove #(or (= "diagram/includes" (:link/type %))
                                             (and expanded-diagram?
