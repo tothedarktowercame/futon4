@@ -11,6 +11,7 @@
    :nema/type     {}
    :nema/text     {}
    :nema/authors  {}
+   :nema/props    {}
    :nema/payload  {}
    ;; Relations (links between nemas — themselves nemas)
    :link/id       {:db/unique :db.unique/identity}
@@ -37,6 +38,7 @@
            :sidebar-open false   ;; sidebar visibility
            :expanded-essays #{}  ;; essay ids expanded to show section neighbourhoods
            :expanded-essay-sections {} ;; essay id -> ordered section-id vector
+           :view-mode :organic ;; Interest Constellation renderer mode.
            :diagram-route {:name nil
                            :mode nil
                            :diagram-id nil
@@ -170,11 +172,20 @@
 
 ;; --- Ingest ---
 
+(defn- type-name [t]
+  (cond
+    (keyword? t) (if-let [ns-part (namespace t)]
+                   (str ns-part "/" (name t))
+                   (name t))
+    (string? t) t
+    (some? t) (str t)
+    :else nil))
+
 (defn ingest-entity! [entity]
   (let [nema {:nema/id   (or (:entity/id entity) (:id entity) (str (:xt/id entity)))
               :nema/name (or (:entity/name entity) (:name entity) "")
-              :nema/type (or (some-> (:entity/type entity) name)
-                             (some-> (:type entity) name)
+              :nema/type (or (type-name (:entity/type entity))
+                             (type-name (:type entity))
                              "unknown")
               :nema/text (or (:entity/text entity)
                              (:source entity)
@@ -182,7 +193,10 @@
                              (:notes entity)
                              "")
               :nema/authors (or (get-in entity [:props :authors])
-                                [])}]
+                                [])
+              :nema/props (or (:props entity)
+                              (:entity/props entity)
+                              {})}]
     (d/transact! conn [nema])))
 
 (defn ingest-relation! [rel]

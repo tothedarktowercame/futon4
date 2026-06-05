@@ -1,11 +1,149 @@
 (ns webarxana.client.graph
-  (:require [reagent.core :as r]
+  (:require [clojure.string :as str]
             [webarxana.client.state :as state]
             [webarxana.client.api :as api]
             ["d3-force" :as d3]))
 
 (def svg-width 1200)
 (def svg-height 800)
+
+(def view-modes
+  [{:id :organic :label "A Organic"}
+   {:id :layered :label "B Layered"}
+   {:id :witnesses :label "C Witnesses"}
+   {:id :zoom-lod :label "D Zoom"}])
+
+(defn- prop-value
+  [m k]
+  (or (get m k)
+      (get m (name k))))
+
+(defn- numeric-prop
+  [m k]
+  (let [v (prop-value m k)]
+    (cond
+      (number? v) v
+      (string? v) (let [parsed (js/parseFloat v)]
+                    (when-not (js/isNaN parsed) parsed))
+      :else nil)))
+
+(defn- clamp [lo hi x]
+  (max lo (min hi x)))
+
+(defn- node-kind
+  [nema]
+  (let [nema-id (or (:nema/id nema) "")
+        nema-type (or (:nema/type nema) "unknown")
+        props (:nema/props nema)
+        kind (some-> (prop-value props :node-kind) str/lower-case)]
+    (cond
+      (or (= "design-pattern" kind)
+          (= "pattern-peer" kind)
+          (= "arxana/design-pattern" nema-type)
+          (= "design-pattern" nema-type))
+      :pattern-peer
+
+      (or (= "figure-tag" kind)
+          (str/includes? nema-type "figure"))
+      :figure-tag
+
+      (or (= "interest-star" kind)
+          (str/includes? nema-type "interest")
+          (str/includes? nema-id "/interest/"))
+      :interest-star
+
+      :else
+      :generic)))
+
+(defn- node-magnitude
+  [nema]
+  (or (numeric-prop (:nema/props nema) :magnitude)
+      1))
+
+(defn- magnitude-radius
+  [magnitude]
+  (+ 22 (* 6 (dec (clamp 1 5 magnitude)))))
+
+(defn- node-radius
+  [nema is-focus is-pin]
+  (let [base (case (node-kind nema)
+               :pattern-peer 28
+               :figure-tag 22
+               :interest-star (magnitude-radius (node-magnitude nema))
+               :generic 28)
+        pin-bump (if is-pin 2 0)
+        focus-bump (if is-focus 5 0)]
+    (+ base pin-bump focus-bump)))
+
+(defn- node-fill
+  [nema]
+  (case (node-kind nema)
+    :pattern-peer "#f59e0b"
+    :figure-tag "#a78bfa"
+    :interest-star "#38bdf8"
+    (case (or (:nema/type nema) "unknown")
+      "article"  "#4a9eff"
+      "question" "#ff6b6b"
+      "claim"    "#51cf66"
+      "evidence" "#ffd43b"
+      "pattern"  "#cc5de8"
+      "#8899aa")))
+
+(defn- diamond-points
+  [x y r]
+  (str x "," (- y r) " "
+       (+ x r) "," y " "
+       x "," (+ y r) " "
+       (- x r) "," y))
+
+(defn- node-glyph
+  [{:keys [kind x y r fill opacity stroke stroke-width class-name]}]
+  (case kind
+    :pattern-peer
+    [:polygon {:points (diamond-points x y r)
+               :fill fill
+               :opacity opacity
+               :stroke stroke
+               :stroke-width stroke-width
+               :class class-name}]
+
+    [:circle {:cx x :cy y :r r
+              :fill fill
+              :opacity opacity
+              :stroke stroke
+              :stroke-width stroke-width
+              :class class-name}]))
+
+(defn- view-mode-selector []
+  (let [current (:view-mode @state/ui-state)]
+    [:foreignObject {:x 18 :y 16 :width 232 :height 46}
+     [:div {:style {:display "inline-flex"
+                    :align-items "center"
+                    :gap "8px"
+                    :padding "8px 10px"
+                    :border "1px solid rgba(148, 163, 184, 0.35)"
+                    :border-radius "6px"
+                    :background "rgba(15, 23, 42, 0.86)"
+                    :box-shadow "0 8px 24px rgba(0,0,0,0.22)"
+                    :font-family "sans-serif"}}
+      [:span {:style {:color "#cbd5e1"
+                      :font-size "12px"
+                      :font-weight 700}}
+       "View"]
+      [:select {:value (name (or current :organic))
+                :on-change (fn [e]
+                             (swap! state/ui-state assoc
+                                    :view-mode
+                                    (keyword (.. e -target -value))))
+                :style {:background "#0f172a"
+                        :color "#e5e7eb"
+                        :border "1px solid rgba(148, 163, 184, 0.45)"
+                        :border-radius "4px"
+                        :font-size "12px"
+                        :padding "4px 6px"}}
+       (for [{:keys [id label]} view-modes]
+         ^{:key (name id)}
+         [:option {:value (name id)} label])]]]))
 
 ;; --- Force-directed layout ---
 
@@ -18,7 +156,7 @@
         real-nodes (mapv (fn [n]
                            (let [nid (:nema/id n)
                                  pin-pos (get pin-centres nid)]
-                             (cond-> {:id nid :radius 40}
+                             (cond-> {:id nid :radius (+ 10 (node-radius n false false))}
                                pin-pos (assoc :x (first pin-pos)
                                              :y (second pin-pos)))))
                          nemas)
@@ -135,7 +273,9 @@
      [:line {:x1 x1 :y1 y1 :x2 ax2 :y2 ay2
              :stroke (if is-editing "#ffd43b" "#6688aa")
              :stroke-width (if is-editing 2.5 1.5)
-             :stroke-dasharray (when (= link-type "scholium") "4,4")
+             :stroke-dasharray (cond
+                                 (= link-type "scholium") "4,4"
+                                 (= link-type "pattern/tensions") "6,5")
              :opacity 0.7
              :marker-end "url(#arrowhead)"}]
      [:g {:on-click (fn [e]
@@ -160,9 +300,12 @@
         nema-id (:nema/id nema)
         nema-name (or (:nema/name nema) nema-id)
         nema-type (or (:nema/type nema) "unknown")
+        kind (node-kind nema)
         connecting (:connecting @state/ui-state)
-        r (cond is-focus 40 is-pin 34 :else 28)]
+        r (node-radius nema is-focus is-pin)
+        magnitude (node-magnitude nema)]
     [:g {:key nema-id
+         :class (str "graph-node node " (name kind))
          :on-click (fn []
                      (if connecting
                        (api/connect-nodes! (:node-id connecting) nema-id nil)
@@ -180,22 +323,29 @@
          :style {:cursor (if connecting "crosshair" "pointer")}}
      ;; Pin ring
      (when is-pin
-       [:circle {:cx x :cy y :r (+ r 5)
-                 :fill "none"
-                 :stroke (if is-focus "#ffffff" "#aaaacc")
-                 :stroke-width (if is-focus 2.5 1.5)
-                 :opacity (if is-focus 0.8 0.4)}])
-     ;; Node circle
-     [:circle {:cx x :cy y :r r
-               :fill (nema-color nema-type)
-               :opacity (if is-pin 1.0 0.7)
-               :stroke "none"
-               :stroke-width 0}]
+       [node-glyph {:kind kind
+                    :x x :y y :r (+ r 6)
+                    :fill "none"
+                    :opacity (if is-focus 0.8 0.4)
+                    :stroke (if is-focus "#ffffff" "#aaaacc")
+                    :stroke-width (if is-focus 2.5 1.5)
+                    :class-name "node-ring"}])
+     ;; Node shape
+     [node-glyph {:kind kind
+                  :x x :y y :r r
+                  :fill (node-fill nema)
+                  :opacity (if is-pin 1.0 0.78)
+                  :stroke (when (= kind :pattern-peer) "#fed7aa")
+                  :stroke-width (if (= kind :pattern-peer) 1.5 0)
+                  :class-name (str "node-shape " (name kind))}]
      ;; Type badge
      [:text {:x x :y (- y 6) :text-anchor "middle"
              :fill "#ffffff" :font-size 11 :font-family "monospace"
              :opacity 0.7}
-      nema-type]
+      (case kind
+        :pattern-peer "design-pattern"
+        :interest-star (str "m" magnitude)
+        nema-type)]
      ;; Name label
      [:text {:x x :y (+ y 10) :text-anchor "middle"
              :fill "#ffffff" :font-size 13 :font-weight "bold"
@@ -297,6 +447,7 @@
           [:marker {:id "arrowhead" :markerWidth 10 :markerHeight 8
                     :refX 9 :refY 4 :orient "auto" :markerUnits "strokeWidth"}
            [:path {:d "M0,0 L10,4 L0,8 L3,4 Z" :fill "#99aabb"}]]]
+         [view-mode-selector]
          ;; Links
          (when merged-hood
            (doall
