@@ -1,7 +1,7 @@
 # Mission: Interest-Network Coupling
 
 **Date:** 2026-05-14
-**Status:** **Design-frozen v1 (2026-05-14).** IDENTIFY through VERIFY are complete on paper (§§1–4). Codex-7's sign-off-final landed after a second whistle round resolved four loose ends: daily-cadence-without-synthetic-churn discipline (§2.2), checkpoint phase as metadata not id-prefix (§2.0), VC-7 replay/idempotence (§4), and HEAD-as-escrow named as a surfaced pattern (§3.5). Next meaningful review point is the actual step (b) artefact (event vocabulary committed as flexiarg/schema), not another prose pass. **Ownership transfer 2026-05-26:** codex-7's outstanding INSTANTIATE scope — steps (a)/(b)/(c)/(d) plus the deferred piece #2 (single-essay diachronic / lifecycle work) — transferred to claude-3 (this session); see §Downstream finding for the routing context. Pipeline sequencing in §Sequencing role and §5 INSTANTIATE subject to revision as part of claude-3 step (a) re-sign-off. **Step (a) re-sign-off and step (b) artefact both landed 2026-05-26** (see §5.1); step (b) artefact at `~/code/futon3/library/structure/interest-event-vocabulary.flexiarg`. Step (e) now unblocked; steps (c)/(d) ready to start.
+**Status:** **CLOSED 2026-05-29** — all four completion criteria met live + VC-1..7 pass; WM-AIF coupling capstone wired live into the War Machine judge path (§6 DOCUMENT). [History: Design-frozen v1 (2026-05-14).] IDENTIFY through VERIFY are complete on paper (§§1–4). Codex-7's sign-off-final landed after a second whistle round resolved four loose ends: daily-cadence-without-synthetic-churn discipline (§2.2), checkpoint phase as metadata not id-prefix (§2.0), VC-7 replay/idempotence (§4), and HEAD-as-escrow named as a surfaced pattern (§3.5). Next meaningful review point is the actual step (b) artefact (event vocabulary committed as flexiarg/schema), not another prose pass. **Ownership transfer 2026-05-26:** codex-7's outstanding INSTANTIATE scope — steps (a)/(b)/(c)/(d) plus the deferred piece #2 (single-essay diachronic / lifecycle work) — transferred to claude-3 (this session); see §Downstream finding for the routing context. Pipeline sequencing in §Sequencing role and §5 INSTANTIATE subject to revision as part of claude-3 step (a) re-sign-off. **Step (a) re-sign-off and step (b) artefact both landed 2026-05-26** (see §5.1); step (b) artefact at `~/code/futon3/library/structure/interest-event-vocabulary.flexiarg`. Step (e) now unblocked; steps (c)/(d) ready to start.
 **Sequencing role:** **predecessor mission to `~/code/futon7/holes/M-interim-director.md`** (HEAD authored 2026-05-14 via eoi-new). Step (b) (event vocabulary v1 committed under `library/`) is a *hard predecessor* for M-interim-director *emitting* checkpoint delta-batches — but **not** for its HEAD declaring intentions: Joe used a HEAD-as-escrow pattern (T2 of the HEAD) to crystallise intentions without committing to data shape, decoupling the HEAD-authoring from the vocabulary commit. Steps (c)/(d)/(f) can land in parallel with M-interim-director's checkpoint cycle once it starts (they consume the already-fixed vocabulary). Realistic pipeline: piece #2 lands → step (b) lands → M-interim-director starts emitting → step (c)+(d) land in parallel → M-interim-director closes (~2 weeks out) → downstream validation-execution phase becomes a second checkpoint source. (Owner attribution: piece #2 + steps (a)/(b)/(c)/(d) now claude-3 as of 2026-05-26; pipeline-ordering may be reshuffled at step (a) re-sign-off — step (b) elevation surfaced by M-action-cost-modelling downstream finding makes vocabulary-first a plausible reshuffle.)
 **Owner:** futon4 (event/projection model + WebArxana surface), with
   ingress from futon5a (EoI corpus) and futon7 (mission checkpoints as
@@ -730,7 +730,93 @@ Step (d) is now mostly a "swap EDN-file slurp for an XTDB query + render to live
 
 **Next:** Joe's call whether to start (c) directly (XTDB write-hook on engine close-out) or to let the v0.2 launcher rule generate more substrate before wiring projection.
 
-## 6. DOCUMENT — _pending_
+## 6. DOCUMENT — landed end-to-end 2026-05-29 (mission-close = Joe's call)
+
+The mission ran end-to-end in one session (2026-05-29), driven from the
+M-interim-director deadline backward. All four completion criteria are met
+**live**; VC-1..VC-7 demonstrated. Status flag intentionally NOT flipped to
+CLOSED here — that is the operator's call (per `feedback_qa_means_qa`).
+
+### 6.1 Completion criteria — status
+
+| Criterion | Status |
+|---|---|
+| 1. Event vocabulary committed + used by a real M-interim-director checkpoint | **MET** — `CP-close` delta-batch authored in `M-interim-director.md` §8 (5 events) |
+| 2. Real checkpoint, EDN batch, projection consumes it; EoI entity standing changes with provenance | **MET** — `bb` consumer + live XTDB projection; 4 entities re-stood with `:evidence/refs`+`:operator/rationale` |
+| 3. WebArxana renders corpus-as-network, cross-essay edges visible | **MET (live)** — `arxana://view/interest-network` at `http://localhost:3100/wa#/interest-network`; 64 nodes / 98 edges |
+| 4. Completeness 3-vector rendered as a surface (not scalar) | **MET (live)** — resolution-path 1 · path 5/5 · basin 4/5 (missing `ineffable-intelligence-mts`); recomputed per request |
+
+| VC | Result |
+|---|---|
+| VC-1 round-trip schema | PASS (events queryable from XTDB) |
+| VC-2 prior/posterior consistency | PASS (deliberate mismatch flagged) |
+| VC-3 reopen reachability | PASS (`reopened`→`:live`, trail intact) |
+| VC-4 completeness responsiveness | PASS (resolution-path 1→2 as events land) |
+| VC-5 link/asserted rendered | PASS (live buyer edge on `/wa`) |
+| VC-6 operator agreement | PASS (Joe confirmed the CP-close diff, 2026-05-29) |
+| VC-7 replay / idempotence | PASS (deterministic; 5 unique, 5 dupes rejected) |
+
+### 6.2 What landed (the spine)
+
+- **(c) events resident in XTDB** — 5 interest-event entities written via futon1a
+  `POST /api/alpha/entity` (penholder `api`); read back by type. Pusher:
+  `futon5a/interest-scanning/interest-event-push-v1.bb` (DRY by default).
+- **(b)-consumer** — `interest-event-replay-v1.bb` + derived schema
+  `futon5a/data/interest-event-vocabulary.edn` (validate → replay → standing).
+- **(d) live surface** — server projection `webarxana.server.interest-network`
+  (merges the bipartite REDUCE + XTDB events + computes the 3-vector live) on a new
+  `/api/interest-network` route; CLJS page `webarxana.client.interest-network`.
+- **VC harness** — `futon5a/interest-scanning/interest-event-vc-verify.bb`.
+
+### 6.3 Serving change (recorded for provenance)
+
+WebArxana now serves at **`/wa`** with its own asset bundle **`/wa/wa.js`**
+(`shadow-cljs.edn` `:output-dir ../../../data/webarxana/public/wa`, module `:wa`;
+`wa.html`; `core.clj` `/wa` route serving generated assets from ignored
+`futon4/data`), so it no longer collides with the War Machine SPA at `/` (which
+the classpath serves via `public/index.html` + `/js/main.js`). The shadow watch
+was stopped; one-shot `shadow-cljs compile app` used. **One JVM at rest.** Minor:
+a transient `401` on one proxied resource during page load (non-blocking).
+
+### 6.4 The WM-AIF coupling extension (proof the mission does what it says on the tin)
+
+Per Joe's 2026-05-29 directive, M-INC was extended into WM-AIF territory (not a new
+mission). **Designed, proven offline, AND wired live (2026-05-29).**
+
+- Wiring diagram: `M-interest-network-coupling.aif-wiring.md` (the WM belief-layer
+  status-set already == M-INC vocab; per-candidate `:intrinsic-value` /
+  `:structural-pressure-per-action` seam at `war_machine.clj:~3269`; the entity-id
+  bridge `wm-target → territories` is the crux).
+- Offline proof: `futon2/scripts/futon2/aif/interest_coupling_demo.clj` — real EFE,
+  baseline-vs-coupled rank differential (M-interim-director climbs 4→1, ΔG fully
+  attributable to the interest signal).
+- **Landed live (2026-05-29).** Adapter
+  `futon2/src/futon2/aif/adapters/interest_network.clj` reads the live XTDB posterior
+  and emits per-mission bias (M-interim-director → intrinsic-value 0.15,
+  structural-pressure 0.6, traced to hyperreal/scenario-c `strengthened` + scenario-a
+  `refined`). Enrichment composed into `war_machine.clj`'s judge path (`:3269`, after
+  structural-pressure, before `rank-actions`). Live eval in the serving JVM:
+  M-interim-director's G-total dropped −5.1580 → −5.5180 (ΔG −0.36 = −0.15 intrinsic
+  + −0.21 structural), decisively out-ranking an otherwise-identical mission. WM-I1
+  (read-only observer) preserved — the adapter only reads.
+- **Honest gap (entity-id bridge, wiring §5).** The bridge is an explicit table, and
+  M-interim-director lives at `futon7/holes/` (not `*/holes/missions/`), so the live
+  `judge` proposer does not currently auto-enumerate it as a candidate — the demo used
+  a representative mission entry. For the live judge to auto-bias it: move
+  M-interim-director under `/holes/missions/`, or extend the bridge to enumerated
+  missions via per-mission territory tagging. The wiring is correct and live; this is
+  the *coverage* of the bridge, not its correctness.
+
+### 6.5 Carried forward (honest deferrals)
+
+- **v0.2 interest model** — rhizome / morphogenetic / genetic-exchange (express+acquire)
+  / spreading-activation (see `~/Downloads/interest-rhizome-third-column.md` and
+  `project_interest_network` memory). Out of scope for v1; feeds the morphogenetic
+  forward-pass for `eoi new`.
+- **Universes used for criterion 4**: path-arrow universe = the 5 composite arrows the
+  eoi-engine instantiates; basin universe = the 5 strawmen `.md`. Both recomputed live.
+- **Markov-blanket metaphor** (T5, `:metaphor/retained`) documented at
+  `futon7/README-blanket.md` + Friston diagram `futon7/blanket-aif.pdf`.
 
 ---
 

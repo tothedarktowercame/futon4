@@ -1,14 +1,18 @@
 (ns webarxana.server.core
-  (:require [org.httpkit.server :as hk]
+  (:require [clojure.java.io :as io]
+            [clojure.string :as str]
+            [org.httpkit.server :as hk]
             [reitit.ring :as ring]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.json :refer [wrap-json-body wrap-json-response]]
             [ring.util.response :as resp]
             [webarxana.server.auth :as auth]
             [webarxana.server.emacs :as emacs]
+            [webarxana.server.interest-network :as interest-network]
             [webarxana.server.mission-search :as mission-search]
             [webarxana.server.proxy :as proxy]
             [webarxana.server.ws :as ws])
+  (:import [java.io File])
   (:gen-class))
 
 (defonce !server (atom nil))
@@ -21,11 +25,32 @@
                     3100)
    :emacs-socket (or (System/getenv "EMACS_SOCKET") "server")
    :emacsclient-bin (or (System/getenv "EMACSCLIENT") "emacsclient")
+   :asset-root (or (System/getenv "WEBARXANA_ASSET_ROOT")
+                   "../../../data/webarxana/public")
    :session-secret (or (System/getenv "SESSION_SECRET")
                        "webarxana-dev-secret-change-me!!")})
 
 (def config
   (atom (default-config)))
+
+(defn- canonical-file
+  [path]
+  (.getCanonicalFile (io/file path)))
+
+(defn- data-asset-response
+  "Serve generated WebArxana assets from ignored futon4/data output.
+   The checked-in HTML shell remains on the classpath; Shadow runtime files do not."
+  [cfg uri]
+  (when (str/starts-with? uri "/wa/")
+    (let [root ^File (canonical-file (:asset-root cfg))
+          rel (subs uri (count "/wa/"))
+          target ^File (canonical-file (io/file root rel))
+          root-path (.getPath root)
+          target-path (.getPath target)]
+      (when (and (or (= root-path target-path)
+                     (str/starts-with? target-path (str root-path File/separator)))
+                 (.isFile target))
+        (resp/file-response target-path)))))
 
 (defn app-routes [cfg]
   (ring/ring-handler
@@ -40,6 +65,8 @@
                           :get (fn [req] (mission-search/search req))}]
       ["/mission-search/event" {:middleware [auth/wrap-require-auth]
                                 :post (fn [req] (mission-search/record-event req))}]
+      ["/interest-network" {:middleware [auth/wrap-require-auth]
+                            :get (fn [req] (interest-network/projection req cfg))}]
       ["/ws"          {:get  (fn [req] (ws/handler req))}]
       ;; Proxy all futon1a API calls — require auth
       ["/futon/*path" {:middleware [auth/wrap-require-auth]
@@ -51,6 +78,13 @@
                          wrap-json-response]}})
    ;; Default handler — serve static files or index.html
    (ring/routes
+    ;; WebArxana SPA served at /wa (its assets at /wa/wa.js), distinct from the
+    ;; War Machine SPA which the classpath serves at / via public/index.html.
+    ;; Runtime assets are generated under futon4/data so git ignores them.
+    (fn [req] (when (= "/wa" (:uri req))
+                (-> (resp/resource-response "public/wa.html")
+                    (resp/content-type "text/html"))))
+    (fn [req] (data-asset-response cfg (:uri req)))
     (ring/create-resource-handler {:path "/"})
     (ring/create-default-handler
      {:not-found (constantly (-> (resp/resource-response "public/index.html")
