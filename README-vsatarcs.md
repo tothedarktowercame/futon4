@@ -77,6 +77,51 @@ appear (e.g. `*.psr.md`, `*.trace.md`), extend the filter accordingly.
 - Testing: `dev/run-tests.sh` exercises
   `test/arxana-browser-vsatarcs-test.el`.
 
+## Belief surface (R1)
+
+VSATARCS carries an explicit per-entity belief state (per R1 of the
+standard AIF completeness contract — see
+`~/code/futon4/docs/vsatarcs-alignment-completeness.md` for the full
+R1-R12 grading). The belief module is `dev/arxana-vsatarcs-belief.el`;
+the reader's chrome surfaces it as a "Belief snapshot" block between
+the scenes navigator and the scene body when a story is open.
+
+**Status set.** Per-entity posteriors range over the M-INC v1
+`state/*` tags: `spawned`, `refined`, `strengthened`, `addressed`,
+`falsified`, `foreclosed`, `reopened`. The same set the WM-side
+`futon2.aif.belief` carries, so per-entity comparisons reduce to
+alist-lookup equality on shared entity-ids.
+
+**Persistence.** Belief is read from and written to
+`arxana-vsatarcs-belief-store-file` (default
+`~/.emacs.d/var/vsatarcs-belief.eld`). Belief survives Emacs
+sessions. The store file is a single readable elisp form holding
+the (entity-id . posterior) alist.
+
+**Reader keybindings (inside any VSATARCS buffer):**
+
+| Key | Action |
+|---|---|
+| `B` | Bootstrap belief from `~/code/futon5a/holes/stack-annotations.edn` (uniform priors for every `:sections[]` entity not already tracked), persist to store, re-render |
+| `R` | Reset in-memory belief (does NOT touch the store file); confirms before resetting |
+| `i` | Read an elisp list of M-INC-compatible events from the minibuffer, ingest, persist, re-render |
+
+Non-interactive entry points live in `dev/arxana-vsatarcs-belief.el`:
+`arxana-vsatarcs-belief-ingest-events`,
+`arxana-vsatarcs-belief-bootstrap-from-stack-annotations`,
+`arxana-vsatarcs-belief-snapshot`,
+`arxana-vsatarcs-belief-save` / `-load` / `-reset`,
+`arxana-vsatarcs-belief-compare` (bilateral drift report between two
+belief states; used by the alignment-mission apparatus).
+
+**What's not yet wired (deferred).** Live M-INC event ingestion
+(blocked on M-INC step (b) commit); story-scoped belief filtering
+(coupled to R2 / observation channels, planned v0.3); cross-side
+read of WM belief (blocked on a Drawbridge or analogous read path
+to `futon2.aif.belief`). Each gap is recorded as a structured
+`:enables` entry on the relevant closure in
+`docs/vsatarcs-alignment-completeness.aif.edn`.
+
 ## See also
 
 - `dev/arxana-browser-vsatarcs.el` — implementation

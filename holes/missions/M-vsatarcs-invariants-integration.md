@@ -1675,3 +1675,25 @@ Verification:
   Self-Watch VSATARCS card renders the `leaf-invariants` headline and its three
   chains: `render-hash unknown`, `feeder-heartbeat unknown`,
   `content-drift violation`.
+
+## Follow-up note: pipeline-tracer value is dubious (Joe, 2026-06-03)
+
+The `archaeology` family's **`pipeline-tracer`** check (and especially its
+`LOAD-TIME WARNING`) should probably be **unwired**. As of the 2026-06-03
+dev-laptop-env restart it fires on four tracks (`:track-5-vsatarcs`,
+`:track-2-war-machine-aif-lift`, `:track-1-substrate-2-lift`,
+`:track-3-write-class-scoping`) purely because they are past a stale
+`target-date 2026-05-06` with "no close-emit" — i.e. it is nagging about
+overdue *tracer bookkeeping*, not about any real obsolescence in the work.
+The warning's signal value looks low: the tracks it names are not actually
+the canonical record of that work (the missions are), so `I-obsolescence-
+recognition` is firing on a transient artifact that probably should not exist
+at boot at all.
+
+This is **not a one-off edit** — unwiring `pipeline-tracer` means deciding
+what (if anything) replaces it as the obsolescence signal, and pruning the
+four track artifacts, so it belongs inside this mission's scope rather than a
+drive-by. Captured here so the decision isn't lost. The sibling
+`mission-doc` (`I-bounded-disposition`) and `metabolic-balance` checks are
+**kept** — those warnings are valid; the separate work is making them surface
+in the War Machine UI self-watch window alongside the VSATARCS card above.

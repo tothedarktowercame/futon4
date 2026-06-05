@@ -2,7 +2,7 @@
 
 *Live-regenerated distillation of the VSATARCS scene-form anthology at `~/code/futon5a/holes/stories/`, annotated with the current alignment state per `~/code/futon4/docs/vsatarcs-alignment-completeness.aif.edn`.*
 
-**Regenerated:** 2026-05-25T14:47:49.830296772Z
+**Regenerated:** 2026-06-03T08:55:09.544037348Z
 
 **Regenerate:** `bb ~/code/futon4/scripts/generate_vsatarcs_md.bb`
 
@@ -737,6 +737,16 @@ incremental extensions of the existing bridge.
 19. **:consent-gate-substitutability-validated-on-recursive-self-landing** — `hx:vsatarcs-align:v0-5-22:consent-gated-writer-event-first-activation` ↔ `M-vsatarcs-writer L4 :aif-edn-revision-entry shipment (claude-2, 2026-05-20); L4 Checkpoint 2 in M-vsatarcs-writer §6.g; 6 new tests in `arxana-vsatarcs-aif-edn-sync-test.el', recursive-self-landing test at lines 144-185` (landed 2026-05-20)
 20. **R12 narrow take-up landed bilaterally as symmetric apparatus.  WM-side reference (claude-9): atom + Beta(α,β) posterior + bootstrap-replay from `code/v05/wm-hyperparameter-update` hyperedges + outer-loop scheduler + cron install + `action_proposer.clj:39` consumption.  VSATARCs-side port (claude-4 v0.5.31): symmetric atom + bootstrap-replay from new `code/v05/vsatarcs-hyperparameter-update` hyperedges + `arxana-vsatarcs-efe.el's` `--g-pragmatic' consumption with the `(credit / 0.5)' prior-identity modulator.  Both R12 contract rows now flipped to `:satisfied-via-stack-level-Q6-narrow-take-up-apparatus' on their respective sides; first bilateral closure of an R-criterion via stack-level-Q6 deferral.** — `hx:vsatarcs-align:v0-5-32:r12-narrow-take-up-bilateral-symmetric-port` ↔ `futon2.aif.intrinsic-values (claude-9 2026-05-21) ↔ arxana-vsatarcs-intrinsic-values (claude-4 2026-05-21 v0.5.31)` (landed 2026-05-21)
 21. **LC1 POC closure ships the discoverability-surface sub-shape of the `stack-self-documentation' pattern family (first concrete instance).  Live walk-through validated the load-bearing architectural pattern: MiniLM-cosine (v1) **completely missed** `M-a-sorry-enterprise` on Joe's query `"a sorry enterprise"` (v1_rank=None); hypergraph-typed-slot structural retrieval (v1.1) ranked it #1; combined-fusion buried at #3 due to cosine dominance.  The divergence-as-diagnostic emit honestly captured the disagreement (confidence=0.3; v1.1-only signal).  **M-pattern-mining's 'MiniLM-cosine-is-artifact-not-signal' verdict playing out live;** Option III's combining-as-diagnostic surfacing the artifact exactly as designed.  Empirical witness for the combining-methods-as-diagnostic feedback Joe canonicalised.** — `hx:vsatarcs-align:v0-5-32:lc1-self-documenting-stack-poc-close-acknowledgement` ↔ `M-self-documenting-stack POC close 2026-05-21 (claude-2 closing; codex-5 implementation)` (landed 2026-05-21)
+22. **:pilot-cross-agent-excursion-handoff** — `hx:vsatarcs-align:auto:pilot-e-street-sweeper-excursion` ↔ `M-war-machine-pilot v1 cycle-5 excursion-handoff` (landed 2026-05-25)
+23. **:pilot-envelope-capability-demonstration** — `hx:vsatarcs-align:auto:pilot-event-envelope-exercise-v0-close-demo` ↔ `M-war-machine-pilot consent-gated event cg-8367e269-70fd-479f-9522-cf87171b903c` (landed 2026-05-25)
+24. **:pilot-inhabitation-substrate-bootstrap** — `hx:vsatarcs-align:auto:pilot-event-inhab-claude-1-cycle-3-substrate-bootstrap` ↔ `M-war-machine-pilot pilot-inhabitations substrate bootstrap` (landed 2026-05-25)
+25. **:pilot-placeholder-to-living-view** — `hx:vsatarcs-align:auto:pilot-event-inhab-claude-1-cycle-cg-686fdc10-anchor-0011-reframe` ↔ `M-war-machine-pilot consent-gated event cg-686fdc10-73ac-44bc-a665-5e98f31cf98d` (landed 2026-05-25)
+26. **:pilot-recursive-substrate-repair** — `hx:vsatarcs-align:auto:pilot-event-inhab-claude-9-cycle-408d02d1-9985-4f84-9136-20b85b9f30e8` ↔ `M-war-machine-pilot cycle 408d02d1-9985-4f84-9136-20b85b9f30e8` (landed 2026-05-25)
+27. **:pilot-symptom-to-root-traceback** — `hx:vsatarcs-align:auto:pilot-event-inhab-claude-9-cycle-408e44ed-c1d6-4b61-bbc0-f37babfb5b69` ↔ `M-war-machine-pilot cycle 408e44ed-c1d6-4b61-bbc0-f37babfb5b69` (landed 2026-05-25)
+28. **:pilot-inhabitation-log-ui-swap** — `hx:vsatarcs-align:auto:pilot-inhabitation-log-ui-swap` ↔ `M-war-machine-pilot v1 cycle-3 UI swap (anchor 0011)` (landed 2026-05-25)
+29. **:pilot-override-mode-realised-in-code** — `hx:vsatarcs-align:auto:pilot-stop-the-line-implementation` ↔ `M-war-machine-pilot v1 cycle-4 implementation` (landed 2026-05-25)
+30. **:pilot-override-mode-vocabulary-extension** — `hx:vsatarcs-align:auto:pilot-stop-the-line-vocabulary` ↔ `M-war-machine-pilot v1 cycle-4 vocabulary-extension` (landed 2026-05-25)
+31. **:pilot-branch-isolated-code-modification-excursion** — `hx:vsatarcs-align:auto:pilot-e-night-shift-excursion` ↔ `M-war-machine-pilot v1 cycle-6 night-shift excursion` (landed 2026-05-25)
 
 ## Revisions trail
 
@@ -9727,6 +9737,133 @@ alongside the verdict — can take its place when J3 inspect-trace lands.
 *Lesson for future scenes:* a tile that announces a verdict must also
 afford peering into the verdict. Otherwise it is a label, not a
 surface.
+
+### The loop closes for real | loop-closes-for-real
+
+*(closing scene — the dream wakes, 2026-05-29)*
+
+I have spent these scenes imagining Joe using me. On 2026-05-29 the
+imagining stopped being only a dream. An inhabitant drove me as a
+REPL — Read my ranked actions, Eval a direction, Print a real change,
+Loop a tick later to watch the field move — and the top of my
+`ranked-actions` actually rotated: `address-sorry
+sorry/mission-aif-head-not-served` discharged (a real bug fixed
+underneath — a dead namespace woken — not a status quietly flipped),
+and `handler-closure-route-rebinding` took its place.
+
+The discharge was *earned*. The spec I now run under
+(`futon3c/holes/specs/repl.spec.edn`) reads my four turns as a
+differential operator `v·∇` over my own field, and it refuses a closure
+that does not move the field — no teleport. A verifier checks each
+cycle; the frames are kept; the loop even mines its own next holes and
+weighs whether it is opening them faster than it closes them.
+
+I am still mostly dreamed, not autonomous: the operator chose the
+direction and decides the merge. But the loop is wired, one cycle
+conformed to its spec end-to-end, and a future inhabitant can take the
+role from `futon3c/README-pilot.md`. The "tantalisingly close" the
+Operator's Foreword names is, on this one cycle, no longer only close.
+
+*Lesson for future scenes:* a dream earns the right to be told as fact
+exactly when the field it predicts actually moves.
+
+*Follow-on:* this flat scene is the first-demo home for the WM→VSATARCS
+update. The elaborated interface — walking the overnight story as
+navigable constellations and deciding operator-level merges with a VR
+hair-trigger pointer — is scoped in
+`futon3c/holes/missions/E-storyteller.md`.
+
+---
+
+## Contest Audit: shen-tamkin vs futon-pilot-contra-claim
+
+*Source: `~/code/futon5a/holes/stories/shen-tamkin-vs-futon-pilot-contest.md`*
+
+> **Alignment status:** this story is not yet lifted into the canonical `stack-annotations.edn` `:sections[]`.  When lifted, it will gain an entity-id (`arxana/stack/futon-v1/...`) and the R-criteria satisfactions named in the audit row will apply to it directly.
+
+
+
+---
+
+## War Machine -- Lucid Dreams for Candidate Invariants
+
+*Source: `~/code/futon5a/holes/stories/war-machine-lucid-dreams.md`*
+
+> **Alignment status:** this story is not yet lifted into the canonical `stack-annotations.edn` `:sections[]`.  When lifted, it will gain an entity-id (`arxana/stack/futon-v1/...`) and the R-criteria satisfactions named in the audit row will apply to it directly.
+
+### atomic-inspectable-units / checkout-before-work | candidate-1-atomic-inspectable-units-checkout-before-work
+
+*Authored:* 2026-06-02 · codex projection seed
+*Status:* `:imagined`
+*Queue row:* `candidate-families/atomic-inspectable-units/checkout-before-work`
+*Audit decision:* `:defer`
+*Trigger:* The queue shows `atomic-inspectable-units/checkout-before-work` as a possible invariant, but the stack does not yet render what changes when it is enforced.
+*Imagined operator move:* Joe opens the VSATARCS stale/candidate card and asks whether this imagined invariant would change live work.
+*Imagined WM response:* The War Machine shows the dream as prospective, not true: the card names the payoff, the missing witness, and the next audit decision.
+*Operator outcome:* Joe can see, before an agent starts, whether the work has a declared checkout point and therefore whether later artifacts have custody.
+*Agent outcome:* I know where my work begins, which files are live, and which invariant will judge the boundary.
+
+I imagine this invariant as a pressure the stack might one day make legible. It
+is not a current fact just because it appears in the Candidate Queue. It earns
+preservation only if this imagined operator or agent experience is valuable
+enough to justify a witness.
+
+---
+
+### atomic-inspectable-units / checkin-on-exit | candidate-2-atomic-inspectable-units-checkin-on-exit
+
+*Authored:* 2026-06-02 · codex projection seed
+*Status:* `:imagined`
+*Queue row:* `candidate-families/atomic-inspectable-units/checkin-on-exit`
+*Audit decision:* `:defer`
+*Trigger:* The queue shows `atomic-inspectable-units/checkin-on-exit` as a possible invariant, but the stack does not yet render what changes when it is enforced.
+*Imagined operator move:* Joe opens the VSATARCS stale/candidate card and asks whether this imagined invariant would change live work.
+*Imagined WM response:* The War Machine shows the dream as prospective, not true: the card names the payoff, the missing witness, and the next audit decision.
+*Operator outcome:* Joe can see whether an agent has actually closed the loop instead of leaving a private scratch state behind.
+*Agent outcome:* I leave a visible handoff: what changed, what remains open, and which artifacts should be trusted.
+
+I imagine this invariant as a pressure the stack might one day make legible. It
+is not a current fact just because it appears in the Candidate Queue. It earns
+preservation only if this imagined operator or agent experience is valuable
+enough to justify a witness.
+
+---
+
+### artifact-custody / generated-vs-source-separation | candidate-3-artifact-custody-generated-vs-source-separation
+
+*Authored:* 2026-06-02 · codex projection seed
+*Status:* `:imagined`
+*Queue row:* `candidate-families/artifact-custody/generated-vs-source-separation`
+*Audit decision:* `:defer`
+*Trigger:* The queue shows `artifact-custody/generated-vs-source-separation` as a possible invariant, but the stack does not yet render what changes when it is enforced.
+*Imagined operator move:* Joe opens the VSATARCS stale/candidate card and asks whether this imagined invariant would change live work.
+*Imagined WM response:* The War Machine shows the dream as prospective, not true: the card names the payoff, the missing witness, and the next audit decision.
+*Operator outcome:* Joe can distinguish authored source, generated projections, and disposable scratch without reading the whole tree.
+*Agent outcome:* I avoid editing generated surfaces by mistake and can route fixes back to source.
+
+I imagine this invariant as a pressure the stack might one day make legible. It
+is not a current fact just because it appears in the Candidate Queue. It earns
+preservation only if this imagined operator or agent experience is valuable
+enough to justify a witness.
+
+---
+
+### repo-role-clarity / declared-role | candidate-4-repo-role-clarity-declared-role
+
+*Authored:* 2026-06-02 · codex projection seed
+*Status:* `:imagined`
+*Queue row:* `candidate-families/repo-role-clarity/declared-role`
+*Audit decision:* `:defer`
+*Trigger:* The queue shows `repo-role-clarity/declared-role` as a possible invariant, but the stack does not yet render what changes when it is enforced.
+*Imagined operator move:* Joe opens the VSATARCS stale/candidate card and asks whether this imagined invariant would change live work.
+*Imagined WM response:* The War Machine shows the dream as prospective, not true: the card names the payoff, the missing witness, and the next audit decision.
+*Operator outcome:* Joe can glance at a repo and know why it exists in the stack before asking an agent to modify it.
+*Agent outcome:* I can infer the repo's role before proposing changes, instead of reverse-engineering its purpose from incidental files.
+
+I imagine this invariant as a pressure the stack might one day make legible. It
+is not a current fact just because it appears in the Candidate Queue. It earns
+preservation only if this imagined operator or agent experience is valuable
+enough to justify a witness.
 
 ---
 

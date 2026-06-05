@@ -17,6 +17,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'subr-x)
 (require 'arxana-browser-rewrites) ; shared EDN reader
 
 (defgroup arxana-vsatarcs-ledger nil
@@ -42,6 +43,10 @@ are seen moving through the system: Current (work done) → Invoice Ready
 (staged + draft .docx) → Invoiced (issued, awaiting pay) → Historical (paid,
 by invoice) → Archived (set aside); Future holds forward speculations.
 Echoes the media EP flow (staging → released EPs).")
+
+(defconst arxana-ledger--status-choices
+  '(":unbilled-draft" ":invoice-ready" ":invoiced" ":billed-paid" ":speculative" ":archived")
+  "EDN status literals accepted by manual ledger status editing.")
 
 ;; ---------------------------------------------------------------- data ----
 
@@ -176,7 +181,7 @@ comments.  Signals an error if the item is not found."
     (unless id (user-error "No ledger item at point"))
     (let ((status (completing-read
                    (format "Status for %s: " id)
-                   '(":unbilled-draft" ":billed-paid" ":speculative" ":archived")
+                   arxana-ledger--status-choices
                    nil t)))
       (arxana-ledger--set-field! id ":item/status" status)
       (message "%s → %s" id status)
@@ -193,28 +198,215 @@ comments.  Signals an error if the item is not found."
       (message "%s archived" id)
       (arxana-ledger-refresh))))
 
-(defun arxana-ledger-print-invoice (inv-id)
-  "Generate a draft invoice .docx for INV-ID via ~/code/ledger/print_invoice.bb
-(Markdown → pandoc --reference-doc=template; writes to ~/code/invoices/), then
-offer to STAGE the Current items into Invoice Ready — setting :invoice-ready +
-:item/invoice and clearing Current."
-  (interactive (list (read-string "Print invoice id: " "202504")))
-  (let ((out (shell-command-to-string
-              (format "bb %s %s"
-                      (shell-quote-argument (expand-file-name "~/code/ledger/print_invoice.bb"))
-                      (shell-quote-argument inv-id)))))
-    (message "Print Invoice: %s" (string-trim out))
-    (let ((current (arxana-ledger--by-status
-                    (arxana-ledger--items (arxana-ledger--read)) :unbilled-draft)))
-      (when (and current
-                 (y-or-n-p (format "Move %d Current item(s) → Invoice Ready (invoice %s)? "
-                                   (length current) inv-id)))
-        (dolist (it current)
-          (let ((id (plist-get it :item/id)))
-            (arxana-ledger--set-field! id ":item/invoice" (format "\"%s\"" inv-id))
-            (arxana-ledger--set-field! id ":item/status" ":invoice-ready")))
-        (message "Staged %d item(s) into Invoice Ready (invoice %s)" (length current) inv-id)))
+(defun arxana-ledger--generate-draft-invoice (inv-id)
+  "Generate a standard draft invoice .docx for INV-ID.
+Delegates to ~/code/ledger/print_invoice.bb, which uses the configured
+reference .docx template when present."
+  (let ((script (expand-file-name "~/code/ledger/print_invoice.bb")))
+    (with-temp-buffer
+      (let ((status (call-process "bb" nil t nil script inv-id))
+            (out (buffer-string)))
+        (unless (zerop status)
+          (user-error "Invoice generation failed (%s): %s" status (string-trim out)))
+        (message "Print Invoice: %s" (string-trim out))
+        out))))
+
+(defun arxana-ledger--current-invoice-id-default ()
+  "Infer the next invoice id from Current item ids, falling back to 202504."
+  (let* ((current (arxana-ledger--by-status
+                   (arxana-ledger--items (arxana-ledger--read)) :unbilled-draft))
+         (ids (delq nil
+                    (mapcar (lambda (it)
+                              (when-let ((id (plist-get it :item/id)))
+                                (and (string-match "\\`\\([0-9]+\\)-" id)
+                                     (match-string 1 id))))
+                            current))))
+    (or (car ids) "202504")))
+
+(defun arxana-ledger-ready-current-invoice (inv-id)
+  "Move all Current items into Invoice Ready under INV-ID and generate the docx.
+This is the main `r' lifecycle transition. It intentionally stages all Current
+items as one invoice for now."
+  (interactive (list (read-string "Ready Current as invoice id: "
+                                  (arxana-ledger--current-invoice-id-default))))
+  (let ((current (arxana-ledger--by-status
+                  (arxana-ledger--items (arxana-ledger--read)) :unbilled-draft)))
+    (unless current
+      (user-error "No Current item(s) to ready"))
+    (arxana-ledger--generate-draft-invoice inv-id)
+    (dolist (it current)
+      (let ((id (plist-get it :item/id)))
+        (arxana-ledger--set-field! id ":item/invoice" (format "\"%s\"" inv-id))
+        (arxana-ledger--set-field! id ":item/status" ":invoice-ready")
+        (arxana-ledger--set-field! id ":item/invoiced?" "false")
+        (arxana-ledger--set-field! id ":item/paid?" "false")))
+    (message "Readied %d Current item(s) into Invoice Ready (invoice %s)"
+             (length current) inv-id)
     (arxana-ledger-refresh)))
+
+(defun arxana-ledger-print-invoice (inv-id)
+  "Generate a draft invoice .docx for INV-ID, then optionally ready Current.
+Prefer `arxana-ledger-ready-current-invoice' (`r') for the normal lifecycle
+transition."
+  (interactive (list (read-string "Print invoice id: "
+                                  (arxana-ledger--current-invoice-id-default))))
+  (arxana-ledger--generate-draft-invoice inv-id)
+  (let ((current (arxana-ledger--by-status
+                  (arxana-ledger--items (arxana-ledger--read)) :unbilled-draft)))
+    (when (and current
+               (y-or-n-p (format "Move %d Current item(s) → Invoice Ready (invoice %s)? "
+                                 (length current) inv-id)))
+      (dolist (it current)
+        (let ((id (plist-get it :item/id)))
+          (arxana-ledger--set-field! id ":item/invoice" (format "\"%s\"" inv-id))
+          (arxana-ledger--set-field! id ":item/status" ":invoice-ready")))
+      (message "Staged %d item(s) into Invoice Ready (invoice %s)" (length current) inv-id)))
+  (arxana-ledger-refresh))
+
+(defun arxana-ledger--read-invoice-id-for-status (status prompt)
+  "Read an invoice id from ledger items currently in STATUS."
+  (let* ((items (arxana-ledger--items (arxana-ledger--read)))
+         (ids (cl-remove "unassigned"
+                         (arxana-ledger--invoice-ids-of items status)
+                         :test #'equal))
+         (point-invoice (plist-get (arxana-ledger--item-at-point) :item/invoice))
+         (default (or (and point-invoice (member point-invoice ids) point-invoice)
+                      (car ids))))
+    (unless ids
+      (user-error "No invoice(s) in %s" status))
+    (completing-read prompt ids nil t nil nil default)))
+
+(defun arxana-ledger--invoice-id-default (&optional status)
+  "Return a useful invoice id default.
+Prefer the item at point, then invoices in STATUS, then the next known draft id."
+  (or (plist-get (arxana-ledger--item-at-point) :item/invoice)
+      (car (arxana-ledger--invoice-ids-of
+            (arxana-ledger--items (arxana-ledger--read))
+            (or status :invoice-ready)))
+      "202504"))
+
+(defun arxana-ledger-open-draft-invoice (inv-id)
+  "Open the draft invoice .docx for INV-ID.
+Use `arxana-ledger-print-invoice' first if no draft exists yet."
+  (interactive (list (read-string "Open draft invoice id: "
+                                  (arxana-ledger--invoice-id-default))))
+  (arxana-ledger-open-docx (arxana-ledger--draft-docx-path inv-id)))
+
+(defun arxana-ledger-mark-invoice-sent (inv-id)
+  "Record that INV-ID was sent/issued.
+This moves matching `:invoice-ready' items to `:invoiced' and sets
+`:item/invoiced?' true. It does not send email; it records the external
+send once the operator has actually sent the draft invoice."
+  (interactive (list (arxana-ledger--read-invoice-id-for-status
+                      :invoice-ready "Record Invoice Ready as sent: ")))
+  (let* ((items (arxana-ledger--items (arxana-ledger--read)))
+         (ready (cl-remove-if-not
+                 (lambda (it)
+                   (and (eq (plist-get it :item/status) :invoice-ready)
+                        (equal inv-id (plist-get it :item/invoice))))
+                 items)))
+    (unless ready
+      (user-error "No Invoice Ready item(s) for invoice %s" inv-id))
+    (when (y-or-n-p (format "Record invoice %s as sent/issued for %d item(s)? "
+                            inv-id (length ready)))
+      (dolist (it ready)
+        (let ((id (plist-get it :item/id)))
+          (arxana-ledger--set-field! id ":item/status" ":invoiced")
+          (arxana-ledger--set-field! id ":item/invoiced?" "true")
+          (arxana-ledger--set-field! id ":item/paid?" "false")))
+      (message "Invoice %s recorded as sent/issued (%d item(s))"
+               inv-id (length ready))
+      (arxana-ledger-refresh))))
+
+(defun arxana-ledger-mark-invoice-historical (inv-id)
+  "Record that INV-ID was paid and move it from Invoiced to Historical."
+  (interactive (list (arxana-ledger--read-invoice-id-for-status
+                      :invoiced "Move Invoiced to Historical: ")))
+  (let* ((items (arxana-ledger--items (arxana-ledger--read)))
+         (invoiced (cl-remove-if-not
+                    (lambda (it)
+                      (and (eq (plist-get it :item/status) :invoiced)
+                           (equal inv-id (plist-get it :item/invoice))))
+                    items)))
+    (unless invoiced
+      (user-error "No Invoiced item(s) for invoice %s" inv-id))
+    (when (y-or-n-p (format "Record invoice %s as paid/Historical for %d item(s)? "
+                            inv-id (length invoiced)))
+      (dolist (it invoiced)
+        (let ((id (plist-get it :item/id)))
+          (arxana-ledger--set-field! id ":item/status" ":billed-paid")
+          (arxana-ledger--set-field! id ":item/invoiced?" "true")
+          (arxana-ledger--set-field! id ":item/paid?" "true")))
+      (message "Invoice %s moved to Historical (%d item(s))"
+               inv-id (length invoiced))
+      (arxana-ledger-refresh))))
+
+(defun arxana-ledger-show-bindings-help ()
+  "Show ledger-specific bindings and lifecycle help."
+  (interactive)
+  (with-help-window "*Arxana Ledger Help*"
+    (with-current-buffer standard-output
+      (insert "Arxana Ledger\n")
+      (insert "=============\n\n")
+      (insert "Workflow\n")
+      (insert "--------\n")
+      (insert "Current -> r generates the standard draft .docx and moves all Current items to Invoice Ready.\n")
+      (insert "Invoice Ready -> i records the chosen invoice as sent/issued and moves it to Invoiced.\n")
+      (insert "Invoiced -> h records the chosen invoice as paid and moves it to Historical.\n\n")
+      (insert "Bindings\n")
+      (insert "--------\n")
+      (insert " r  ready all Current items as one generated invoice\n")
+      (insert " i  record selected Invoice Ready invoice as sent/issued\n")
+      (insert " h  record selected Invoiced invoice as paid/Historical\n")
+      (insert " g  refresh\n")
+      (insert " e  edit hours at point\n")
+      (insert " d  edit description at point\n")
+      (insert " s  set status at point\n")
+      (insert " a  archive item at point\n")
+      (insert " P  print/regenerate draft invoice; optionally stage Current -> Invoice Ready\n")
+      (insert " O  open draft invoice .docx\n")
+      (insert " E  open raw ledger.edn\n")
+      (insert " ?  this help\n"))))
+
+(defun arxana-ledger--ensure-help-hydra ()
+  "Define or refresh the ledger help Hydra when Hydra is installed."
+  (when (or (fboundp 'defhydra)
+            (require 'hydra nil t))
+    ;; Reloading this file in a live Emacs should update the menu immediately.
+    (when (fboundp 'arxana-ledger-help-hydra/body)
+      (fmakunbound 'arxana-ledger-help-hydra/body))
+    (eval
+     '(defhydra arxana-ledger-help-hydra (:hint nil :foreign-keys run)
+        "
+Arxana Ledger
+  _r_: ready Current -> Invoice Ready         _i_: sent/issued -> Invoiced
+  _h_: paid -> Historical                     _O_: open draft .docx
+  _P_: print/regenerate                       _g_: refresh
+  _e_: hours   _d_: description   _s_: status   _a_: archive
+  _E_: raw EDN  _?_: full help
+  _q_: quit
+"
+        ("r" arxana-ledger-ready-current-invoice nil :exit t)
+        ("i" arxana-ledger-mark-invoice-sent nil :exit t)
+        ("h" arxana-ledger-mark-invoice-historical nil :exit t)
+        ("P" arxana-ledger-print-invoice nil :exit t)
+        ("O" arxana-ledger-open-draft-invoice nil :exit t)
+        ("g" arxana-ledger-refresh nil)
+        ("e" arxana-ledger-set-hours-at-point nil :exit t)
+        ("d" arxana-ledger-set-description-at-point nil :exit t)
+        ("s" arxana-ledger-set-status-at-point nil :exit t)
+        ("a" arxana-ledger-archive-at-point nil :exit t)
+        ("E" arxana-ledger-edit-file nil :exit t)
+        ("?" arxana-ledger-show-bindings-help "full help" :exit t)
+        ("q" nil "quit" :exit t))))
+  (fboundp 'arxana-ledger-help-hydra/body))
+
+(defun arxana-ledger-help ()
+  "Open ledger bindings help, preferring a ledger-specific Hydra."
+  (interactive)
+  (if (arxana-ledger--ensure-help-hydra)
+      (arxana-ledger-help-hydra/body)
+    (arxana-ledger-show-bindings-help)))
 
 (defvar arxana-ledger-mode-map
   (let ((m (make-sparse-keymap)))
@@ -223,10 +415,25 @@ offer to STAGE the Current items into Invoice Ready — setting :invoice-ready +
     (define-key m "d" #'arxana-ledger-set-description-at-point)
     (define-key m "s" #'arxana-ledger-set-status-at-point)
     (define-key m "a" #'arxana-ledger-archive-at-point)
+    (define-key m "r" #'arxana-ledger-ready-current-invoice)
+    (define-key m "i" #'arxana-ledger-mark-invoice-sent)
+    (define-key m "h" #'arxana-ledger-mark-invoice-historical)
     (define-key m "P" #'arxana-ledger-print-invoice)
+    (define-key m "O" #'arxana-ledger-open-draft-invoice)
+    (define-key m "I" #'arxana-ledger-mark-invoice-sent)
     (define-key m "E" #'arxana-ledger-edit-file)
+    (define-key m "?" #'arxana-ledger-help)
     m)
   "Keymap for `arxana-ledger-mode'.")
+
+;; Reassert key bindings on reload; `defvar' preserves an existing keymap.
+(define-key arxana-ledger-mode-map "r" #'arxana-ledger-ready-current-invoice)
+(define-key arxana-ledger-mode-map "i" #'arxana-ledger-mark-invoice-sent)
+(define-key arxana-ledger-mode-map "h" #'arxana-ledger-mark-invoice-historical)
+(define-key arxana-ledger-mode-map "P" #'arxana-ledger-print-invoice)
+(define-key arxana-ledger-mode-map "O" #'arxana-ledger-open-draft-invoice)
+(define-key arxana-ledger-mode-map "I" #'arxana-ledger-mark-invoice-sent)
+(define-key arxana-ledger-mode-map "?" #'arxana-ledger-help)
 
 (define-derived-mode arxana-ledger-mode special-mode "Arxana-Ledger"
   "Major mode for the Arxana Ledger view.
@@ -427,7 +634,7 @@ are flat item lists."
          (arxana-ledger--button "[edit ledger.edn]"
                                 (lambda (_) (arxana-ledger-edit-file))
                                 "Open the ledger EDN to edit; g to refresh after save")
-         (insert "   — item: e=hours d=desc s=status a=archive  ·  P=print invoice  ·  g=refresh  E=raw EDN\n")))
+         (insert "   — lifecycle: r=ready i=sent h=historical  ·  item: e=hours d=desc s=status a=archive  ·  O=open P=print  ·  ?=help\n")))
    #'arxana-ledger-browse)))
 
 ;; ---------------------------------------------------- home integration ----
