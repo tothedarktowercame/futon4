@@ -17,6 +17,23 @@
 
 (defonce !server (atom nil))
 
+(defn- webarxana-root
+  "Return the WebArxana project root when running from a filesystem checkout."
+  []
+  (when-let [resource (io/resource "public/wa.html")]
+    (when (= "file" (.getProtocol resource))
+      (-> resource
+          io/file
+          .getCanonicalFile
+          .getParentFile  ; public
+          .getParentFile  ; resources
+          .getParentFile))))
+
+(defn- default-asset-root []
+  (if-let [root (webarxana-root)]
+    (str (.getCanonicalFile (io/file root "../../../data/webarxana/public")))
+    "../../../data/webarxana/public"))
+
 (defn default-config []
   {:futon1a-url (or (System/getenv "FUTON1A_URL")
                     (str "http://127.0.0.1:"
@@ -26,7 +43,7 @@
    :emacs-socket (or (System/getenv "EMACS_SOCKET") "server")
    :emacsclient-bin (or (System/getenv "EMACSCLIENT") "emacsclient")
    :asset-root (or (System/getenv "WEBARXANA_ASSET_ROOT")
-                   "../../../data/webarxana/public")
+                   (default-asset-root))
    :session-secret (or (System/getenv "SESSION_SECRET")
                        "webarxana-dev-secret-change-me!!")})
 
@@ -43,7 +60,7 @@
   [cfg uri]
   (when (str/starts-with? uri "/wa/")
     (let [root ^File (canonical-file (:asset-root cfg))
-          rel (subs uri (count "/wa/"))
+          rel (subs uri 1)
           target ^File (canonical-file (io/file root rel))
           root-path (.getPath root)
           target-path (.getPath target)]
