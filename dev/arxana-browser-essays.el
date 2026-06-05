@@ -37,6 +37,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'json)
 (require 'seq)
 (require 'subr-x)
 (require 'url-util)
@@ -47,6 +48,26 @@
 (defgroup arxana-browser-essays nil
   "Annotated-edition support for essays."
   :group 'arxana)
+
+(defcustom arxana-browser-essays-interest-scribe-agent-id "scribe-1"
+  "Agency agent id that seeds candidate Interest-Network cores for essays."
+  :type 'string
+  :group 'arxana-browser-essays)
+
+(defcustom arxana-browser-essays-interest-scribe-review-agent-id "claude-6"
+  "Agency agent id the scribe should bell after writing the candidate core."
+  :type 'string
+  :group 'arxana-browser-essays)
+
+(defcustom arxana-browser-essays-interest-scribe-bell-base-url
+  "http://localhost:7070/api/alpha"
+  "Agency API base URL for async Interest-Network scribe bells."
+  :type 'string
+  :group 'arxana-browser-essays)
+
+(defvar arxana-browser-essays-essay-registered-hook nil
+  "Hook run after a non-dry-run essay registration completes.
+Each function is called with (ESSAY-ID MANIFEST).")
 
 (defcustom arxana-browser-essays-manifest-files
   (list (expand-file-name "~/npt/working-paper/annotations.el"))
@@ -618,6 +639,165 @@ overrides."
                 (arxana-browser-essays--manifest-records))))
           (and record (plist-get record :path))))))
 
+(defun arxana-browser-essays--essay-slug (essay-id)
+  "Return a stable slug for ESSAY-ID."
+  (replace-regexp-in-string
+   "[^A-Za-z0-9_-]+" "-"
+   (string-remove-prefix "arxana/essay/" (or essay-id ""))))
+
+(defun arxana-browser-essays--manifest-source-file (manifest)
+  "Return MANIFEST's resolved source file when available."
+  (let* ((essay (plist-get manifest :essay))
+         (source (plist-get essay :source-file))
+         (manifest-file (or (plist-get essay :manifest-file)
+                            (arxana-browser-essays--manifest-file-for-essay-id
+                             (plist-get essay :id)))))
+    (when source
+      (arxana-browser-essays--resolve-source-file source manifest-file))))
+
+(defun arxana-browser-essays--ascii-clean (value)
+  "Return VALUE as ASCII text safe for Emacs URL request bodies."
+  (when value
+    (encode-coding-string
+     (string-make-unibyte (encode-coding-string (format "%s" value) 'ascii t))
+     'us-ascii)))
+
+(defun arxana-browser-essays--scribe-bell-url ()
+  "Return the absolute Agency bell URL for the Interest-Network scribe."
+  (concat (string-remove-suffix
+           "/"
+           (or arxana-browser-essays-interest-scribe-bell-base-url
+               "http://localhost:7070/api/alpha"))
+          "/bell"))
+
+(defun arxana-browser-essays--post-scribe-bell-async (payload callback)
+  "POST PAYLOAD to Agency's bell endpoint and invoke CALLBACK asynchronously."
+  (let* ((coding-system-for-read 'utf-8)
+         (coding-system-for-write 'utf-8)
+         (url-request-method "POST")
+         (url-request-data
+          (string-as-unibyte
+           (encode-coding-string (json-encode payload) 'utf-8 t)))
+         (url-request-extra-headers
+          '(("Accept" . "application/json")
+            ("Content-Type" . "application/json")))
+         (target (arxana-browser-essays--scribe-bell-url)))
+    (url-retrieve
+     target
+     (lambda (status)
+       (let ((err (plist-get status :error))
+             (result nil))
+         (when (and (not err) (buffer-live-p (current-buffer)))
+           (goto-char (point-min))
+           (when (re-search-forward "\r?\n\r?\n" nil t)
+             (let ((body (buffer-substring-no-properties (point) (point-max))))
+               (setq result
+                     (or (ignore-errors
+                           (json-parse-string body
+                                              :object-type 'alist
+                                              :array-type 'list
+                                              :object-key-type 'keyword
+                                              :null-object nil
+                                              :false-object nil))
+                         (ignore-errors (json-read-from-string body)))))))
+         (when (buffer-live-p (current-buffer))
+           (kill-buffer (current-buffer)))
+         (when (functionp callback)
+           (funcall callback result status)))))))
+
+(defun arxana-browser-essays--interest-scribe-prompt (essay-id manifest)
+  "Build the prompt sent to the Interest-Network scribe for ESSAY-ID."
+  (let* ((slug (arxana-browser-essays--essay-slug essay-id))
+         (manifest-file (arxana-browser-essays--ascii-clean
+                         (arxana-browser-essays--manifest-file-for-essay-id essay-id)))
+         (source-file (arxana-browser-essays--ascii-clean
+                       (arxana-browser-essays--manifest-source-file manifest)))
+         (essay (plist-get manifest :essay))
+         (essay-name (arxana-browser-essays--ascii-clean
+                      (or (plist-get essay :name) essay-id))))
+    (mapconcat
+     #'identity
+     (list
+      "You are scribe-1, the persistent Interest-Network scribe agent."
+      ""
+      "Task: seed ONE registered Arxana EOI essay into Arxana as a candidate, for-ratification Interest-Network core. Do not touch War Machine or VSATARCS. Do not perform cross-EOI gluing."
+      ""
+      (format "Essay id: %s" essay-id)
+      (format "Essay name: %s" essay-name)
+      (format "Essay slug: %s" slug)
+      (format "Manifest file: %s" (or manifest-file "<unknown>"))
+      (format "Source file: %s" (or source-file "<unknown>"))
+      ""
+      "Read the registered essay from Arxana: essay entity, section entities, annotations, and source/manifest files when helpful."
+      ""
+      "Method source of truth: /home/joe/code/futon5a/holes/excursions/E-interest-mining.md. Use Track-B reduce: extract the essay's approximately 10-star CORE, not the raw section x theme index. Preserve topology; reduce by coalescing real themes/figures into interest stars, not by TFIDF or frequency aggregation."
+      ""
+      "Extraction requirements:"
+      "- Stars are interests, not essays, sections, peers, recipients, or metaphors alone."
+      "- Assign each star a clean display name, keywords, role among anchor/core/bridge/tension, and coalesces-from raw theme/metaphor ids where useful."
+      "- Metaphors/figures become figure-tags or coalesces-from evidence, not peer interest nodes unless they genuinely name the interest."
+      "- Sections become evidence-witnesses on section->star edges; sections are never wired to the diagram apex as peer nodes."
+      "- Create semantic arcs between interest stars with src, dst, kind, and label. Use content-to-content connectivity only."
+      ""
+      "Connectedness-by-construction:"
+      "- Check that every star is reachable in the local essay patch."
+      "- If a star is isolated but the text supports a plausible relation, induce one edge and mark it :speculative / induced so it is auditable."
+      "- If no plausible relation exists, do not force a bogus edge and do not silently float it; flag it as a candidate island for the new-vs-bogus discriminator."
+      ""
+      "Write exactly this candidate shape into Arxana, following /home/joe/code/futon5a/essays/interest-reduce/interest-reduce-demo.el and the APIs in /home/joe/code/futon4/dev/arxana-store.el (arxana-store-ensure-entity, arxana-store-create-hyperedge):"
+      (format "- Stars: entity ids arxana/interest/%s/<star-slug>, type \"arxana/interest-star\"." slug)
+      "- Star props include name/keywords/role/coalesces-from plus candidate flags: :speculative true, :ratified? false, :for-ratification true, :essay-id, :reduce-scale \"per-EOI-core\"."
+      "- Arcs: hyperedges between stars with hx/type \"interest/semantic-arc\", endpoints roles interest/src and interest/dst, props kind/label plus :speculative true, :ratified? false, :for-ratification true. Induced arcs must also carry :induced true."
+      "- Evidence-witnesses: section->star witness hyperedges with hx/type \"interest/witnessed-in\" or \"interest/witness\", endpoint roles witness/section and interest/star, props passage/note plus candidate flags."
+      (format "- Diagram container: entity id arxana/diagram/%s-interests, type \"diagram\", name preferably \"%s Interests\" unless a cleaner short name is obvious." slug (if (string-match-p "fellows" slug) "Fellows" slug))
+      "- Diagram props include pins, core-pins, evidence-pins, mode \"reduced per-EOI core\", core-star-count, authors, :speculative true, :ratified? false, :for-ratification true."
+      "- Wire diagram/core hyperedges from diagram to each core star and diagram/includes hyperedges from diagram to evidence/unfurl targets. The diagram apex is a frame/container, not a peer node; sections are evidence, not apex spokes."
+      ""
+      "Idempotence: upsert by deterministic ids. Re-running for the same essay must not create duplicate stars. Never silent-merge across essays; cross-EOI gluing is a later operator-ratified step and is out of scope."
+      ""
+      (format "When done, bell %s via POST http://localhost:7070/api/alpha/bell with a short summary: essay id, star count, induced speculative edges, candidate islands, and any commit shas if you made commits." arxana-browser-essays-interest-scribe-review-agent-id)
+      "If blocked, bell the same reviewer with the precise blocker and what you verified.")
+     "\n")))
+
+(defun arxana-browser-essays--dispatch-interest-scribe-bell (essay-id manifest)
+  "Asynchronously bell the Interest-Network scribe for ESSAY-ID.
+The hook/command only dispatches; scribe applies its own output."
+  (let* ((prompt (arxana-browser-essays--interest-scribe-prompt essay-id manifest))
+         (payload `(("agent-id" . ,arxana-browser-essays-interest-scribe-agent-id)
+                    ("prompt" . ,prompt)
+                    ("caller" . "arxana-browser-essays")
+                    ("surface" . "emacs")
+                    ("async" . t))))
+    (arxana-browser-essays--post-scribe-bell-async
+     payload
+     (lambda (response status)
+       (let ((err (plist-get status :error)))
+         (if err
+             (message "Interest scribe bell failed for %s: %S" essay-id status)
+           (message "Interest scribe bell queued for %s: %S" essay-id response)))))))
+
+(defun arxana-browser-essays--essay-registered-scribe-handler (essay-id manifest)
+  "Default registration hook handler that dispatches the scribe bell."
+  (arxana-browser-essays--dispatch-interest-scribe-bell essay-id manifest))
+
+(add-hook 'arxana-browser-essays-essay-registered-hook
+          #'arxana-browser-essays--essay-registered-scribe-handler)
+
+;;;###autoload
+(defun arxana-interest-network-describe (essay-id)
+  "Manually ask scribe-1 to seed ESSAY-ID's candidate Interest-Network core."
+  (interactive
+   (let* ((ids (delq nil (mapcar (lambda (entry) (plist-get entry :essay-id))
+                                 (arxana-browser-essays--catalogs))))
+          (default (or (and (boundp 'arxana-browser-essays--essay-id)
+                            arxana-browser-essays--essay-id)
+                       (car ids))))
+     (list (completing-read "Essay id: " ids nil t nil nil default))))
+  (let ((manifest (arxana-browser-essays--manifest-for essay-id)))
+    (unless manifest
+      (user-error "No manifest found for essay: %s" essay-id))
+    (arxana-browser-essays--dispatch-interest-scribe-bell essay-id manifest)))
+
 ;;;###autoload
 (defun arxana-browser-essays-refresh ()
   "Force-reload manifest files and (re-)apply the catalog defcustom value.
@@ -812,9 +992,13 @@ plist summary: :essay, :section-count, :annotation-count."
       (arxana-browser-essays--ensure-section section dry-run))
     (dolist (annotation annotations)
       (arxana-browser-essays--create-annotation annotation dry-run))
-    (list :essay (plist-get essay :id)
-          :section-count (length sections)
-          :annotation-count (length annotations))))
+    (let ((essay-id (plist-get essay :id)))
+      (unless dry-run
+        (run-hook-with-args 'arxana-browser-essays-essay-registered-hook
+                            essay-id manifest))
+      (list :essay essay-id
+            :section-count (length sections)
+            :annotation-count (length annotations)))))
 
 ;;;###autoload
 (defun arxana-browser-essays-import (&optional dry-run)
