@@ -155,10 +155,15 @@
     :witness-layer
     (node-kind nema)))
 
-(defn- apply-kind-filter [hood]
+(defn- effective-visible-kinds
+  [view-mode]
+  (cond-> @!visible-kinds
+    (= :witnesses view-mode) (conj :witness-layer)))
+
+(defn- apply-kind-filter [hood view-mode]
   (if-not (graph-filter-active?)
     hood
-    (let [visible @!visible-kinds
+    (let [visible (effective-visible-kinds view-mode)
           witness-ids (witness-node-ids (:links hood))
           nemas (->> (:nemas hood)
                      (filter #(contains? visible (effective-node-kind witness-ids %)))
@@ -172,39 +177,61 @@
                      vec)]
       (assoc hood :nemas nemas :links links))))
 
+(defn- zoom-lod-visible?
+  [zoom-k nema]
+  (let [magnitude (node-magnitude nema)]
+    (or (>= magnitude 4)
+        (and (>= zoom-k 1.35) (>= magnitude 3))
+        (and (>= zoom-k 2.15) (>= magnitude 2))
+        (>= zoom-k 3.0))))
+
+(defn- apply-view-mode-filter [hood view-mode zoom-k]
+  (if-not (= :zoom-lod view-mode)
+    hood
+    (let [nemas (->> (:nemas hood)
+                     (filter #(zoom-lod-visible? zoom-k %))
+                     vec)
+          visible-ids (set (map :nema/id nemas))
+          links (->> (:links hood)
+                     (filter #(let [src (get-in % [:link/src :nema/id])
+                                    dst (get-in % [:link/dst :nema/id])]
+                                (and (contains? visible-ids src)
+                                     (contains? visible-ids dst))))
+                     vec)]
+      (assoc hood :nemas nemas :links links))))
+
 (defn- filter-controller []
   (let [visible @!visible-kinds]
-    [:foreignObject {:x 18 :y 68 :width 238 :height 238}
-     [:div {:style {:display "flex"
-                    :flex-direction "column"
-                    :gap "6px"
-                    :padding "9px 10px"
-                    :border "1px solid rgba(148, 163, 184, 0.35)"
-                    :border-radius "6px"
-                    :background "rgba(15, 23, 42, 0.88)"
-                    :box-shadow "0 8px 24px rgba(0,0,0,0.22)"
-                    :font-family "sans-serif"
-                    :color "#e5e7eb"}}
-      [:div {:style {:display "flex" :justify-content "space-between" :align-items "center"}}
-       [:span {:style {:font-size "12px" :font-weight 700}} "Kinds"]
-       [:button {:type "button"
-                 :on-click #(reset! !visible-kinds default-visible-kinds)
-                 :style {:font-size "11px" :background "#1e293b" :color "#cbd5e1"
-                         :border "1px solid rgba(148, 163, 184, 0.45)"
-                         :border-radius "4px" :padding "2px 6px"}}
-        "core"]]
-      (for [{:keys [id label]} filter-options]
-        ^{:key (name id)}
-        [:label {:style {:display "flex" :gap "7px" :align-items "center"
-                         :font-size "12px" :cursor "pointer"}}
-         [:input {:type "checkbox"
-                  :checked (contains? visible id)
-                  :on-change #(swap! !visible-kinds
-                                     (fn [ks]
-                                       (if (contains? ks id)
-                                         (disj ks id)
-                                         (conj ks id))))}]
-         [:span label]])]]))
+    [:div {:style {:display "flex"
+                   :flex-direction "column"
+                   :gap "6px"
+                   :padding "9px 10px"
+                   :border "1px solid rgba(148, 163, 184, 0.35)"
+                   :border-radius "6px"
+                   :background "rgba(15, 23, 42, 0.88)"
+                   :box-shadow "0 8px 24px rgba(0,0,0,0.22)"
+                   :font-family "sans-serif"
+                   :color "#e5e7eb"}}
+     [:div {:style {:display "flex" :justify-content "space-between" :align-items "center"}}
+      [:span {:style {:font-size "12px" :font-weight 700}} "Kinds"]
+      [:button {:type "button"
+                :on-click #(reset! !visible-kinds default-visible-kinds)
+                :style {:font-size "11px" :background "#1e293b" :color "#cbd5e1"
+                        :border "1px solid rgba(148, 163, 184, 0.45)"
+                        :border-radius "4px" :padding "2px 6px"}}
+       "core"]]
+     (for [{:keys [id label]} filter-options]
+       ^{:key (name id)}
+       [:label {:style {:display "flex" :gap "7px" :align-items "center"
+                        :font-size "12px" :cursor "pointer"}}
+        [:input {:type "checkbox"
+                 :checked (contains? visible id)
+                 :on-change #(swap! !visible-kinds
+                                    (fn [ks]
+                                      (if (contains? ks id)
+                                        (disj ks id)
+                                        (conj ks id))))}]
+        [:span label]])]))
 
 (defn- bounds-for [positions]
   (when (seq positions)
@@ -257,51 +284,95 @@
   (let [{:keys [k x y]} @!zoom]
     (str "translate(" x "," y ") scale(" k ")")))
 
+(defn- band-y
+  [kind view-mode]
+  (case view-mode
+    :layered (case kind
+               :interest-star 190
+               :essay 315
+               :figure-tag 410
+               :witness-layer 505
+               :pattern-peer 610
+               :essay-section 680
+               :generic 400
+               400)
+    :witnesses (case kind
+                 :interest-star 190
+                 :witness-layer 400
+                 :pattern-peer 610
+                 :essay 300
+                 :essay-section 685
+                 :figure-tag 500
+                 :generic 400
+                 400)
+    (/ svg-height 2)))
+
+(defn- layered-layout
+  [nemas links pin-centres view-mode]
+  (let [witness-ids (witness-node-ids links)
+        kind-of #(effective-node-kind witness-ids %)
+        groups (group-by kind-of nemas)
+        ordered-kinds [:interest-star :essay :figure-tag :witness-layer
+                       :pattern-peer :essay-section :generic]]
+    (into {}
+          (mapcat
+           (fn [kind]
+             (let [nodes (sort-by (comp str/lower-case #(or (:nema/name %) (:nema/id %))) (get groups kind))
+                   n (count nodes)
+                   span (- svg-width 220)
+                   step (if (pos? n) (/ span (inc n)) span)
+                   y (band-y kind view-mode)]
+               (map-indexed
+                (fn [i nema]
+                  (let [nid (:nema/id nema)]
+                    [nid (or (get pin-centres nid)
+                             [(+ 110 (* step (inc i))) y])]))
+                nodes)))
+           ordered-kinds))))
+
 (defn- zoom-controls [positions]
-  [:foreignObject {:x (- svg-width 150) :y 16 :width 132 :height 44}
-   [:button {:type "button"
-             :on-click #(fit-graph! positions)
-             :style {:background "rgba(15, 23, 42, 0.88)"
-                     :color "#e5e7eb"
-                     :border "1px solid rgba(148, 163, 184, 0.45)"
-                     :border-radius "6px"
-                     :font-size "12px"
-                     :font-weight 700
-                     :padding "8px 10px"
-                     :cursor "pointer"
-                     :box-shadow "0 8px 24px rgba(0,0,0,0.22)"}}
-    "Reset / fit"]])
+  [:button {:type "button"
+            :on-click #(fit-graph! positions)
+            :style {:background "rgba(15, 23, 42, 0.88)"
+                    :color "#e5e7eb"
+                    :border "1px solid rgba(148, 163, 184, 0.45)"
+                    :border-radius "6px"
+                    :font-size "12px"
+                    :font-weight 700
+                    :padding "8px 10px"
+                    :cursor "pointer"
+                    :box-shadow "0 8px 24px rgba(0,0,0,0.22)"}}
+   "Reset / fit"])
 
 (defn- view-mode-selector []
   (let [current (:view-mode @state/ui-state)]
-    [:foreignObject {:x 18 :y 16 :width 232 :height 46}
-     [:div {:style {:display "inline-flex"
-                    :align-items "center"
-                    :gap "8px"
-                    :padding "8px 10px"
-                    :border "1px solid rgba(148, 163, 184, 0.35)"
-                    :border-radius "6px"
-                    :background "rgba(15, 23, 42, 0.86)"
-                    :box-shadow "0 8px 24px rgba(0,0,0,0.22)"
-                    :font-family "sans-serif"}}
-      [:span {:style {:color "#cbd5e1"
-                      :font-size "12px"
-                      :font-weight 700}}
-       "View"]
-      [:select {:value (name (or current :organic))
-                :on-change (fn [e]
-                             (swap! state/ui-state assoc
-                                    :view-mode
-                                    (keyword (.. e -target -value))))
-                :style {:background "#0f172a"
-                        :color "#e5e7eb"
-                        :border "1px solid rgba(148, 163, 184, 0.45)"
-                        :border-radius "4px"
-                        :font-size "12px"
-                        :padding "4px 6px"}}
-       (for [{:keys [id label]} view-modes]
-         ^{:key (name id)}
-         [:option {:value (name id)} label])]]]))
+    [:div {:style {:display "inline-flex"
+                   :align-items "center"
+                   :gap "8px"
+                   :padding "8px 10px"
+                   :border "1px solid rgba(148, 163, 184, 0.35)"
+                   :border-radius "6px"
+                   :background "rgba(15, 23, 42, 0.86)"
+                   :box-shadow "0 8px 24px rgba(0,0,0,0.22)"
+                   :font-family "sans-serif"}}
+     [:span {:style {:color "#cbd5e1"
+                     :font-size "12px"
+                     :font-weight 700}}
+      "View"]
+     [:select {:value (name (or current :organic))
+               :on-change (fn [e]
+                            (swap! state/ui-state assoc
+                                   :view-mode
+                                   (keyword (.. e -target -value))))
+               :style {:background "#0f172a"
+                       :color "#e5e7eb"
+                       :border "1px solid rgba(148, 163, 184, 0.45)"
+                       :border-radius "4px"
+                       :font-size "12px"
+                       :padding "4px 6px"}}
+      (for [{:keys [id label]} view-modes]
+        ^{:key (name id)}
+        [:option {:value (name id)} label])]]))
 
 ;; --- Force-directed layout ---
 
@@ -309,12 +380,15 @@
   "Compute positions using d3-force simulation.
    Edge midpoints are included as phantom nodes for label spacing.
    Returns {nema-id [x y]}."
-  [nemas links pin-centres]
+  [nemas links pin-centres view-mode]
   (let [;; Real nodes — initialize pins at grid positions
+        witness-ids (witness-node-ids links)
         real-nodes (mapv (fn [n]
                            (let [nid (:nema/id n)
                                  pin-pos (get pin-centres nid)]
-                             (cond-> {:id nid :radius (+ 10 (node-radius n false false))}
+                             (cond-> {:id nid
+                                      :kind (name (effective-node-kind witness-ids n))
+                                      :radius (+ 10 (node-radius n false false))}
                                pin-pos (assoc :x (first pin-pos)
                                              :y (second pin-pos)))))
                          nemas)
@@ -340,20 +414,27 @@
         ;; Centre of usable area (leave room for cards on right)
         cx (* svg-width 0.42)
         cy (/ svg-height 2)
+        banded? (= :witnesses view-mode)
         ;; Create simulation
         sim (-> (d3/forceSimulation all-sim-nodes)
                 (.force "charge" (-> (d3/forceManyBody)
-                                     (.strength -600)
+                                     (.strength (if banded? -450 -600))
                                      (.distanceMax 500)))
                 (.force "link" (-> (d3/forceLink all-edges)
                                    (.id (fn [d] (.-id d)))
-                                   (.distance 100)
-                                   (.strength 0.7)))
+                                   (.distance (if banded? 125 100))
+                                   (.strength (if banded? 0.45 0.7))))
                 (.force "center" (d3/forceCenter cx cy))
                 (.force "collide" (.radius (d3/forceCollide)
                                            (fn [d] (or (.-radius d) 30))))
                 (.force "x" (.strength (d3/forceX cx) 0.04))
-                (.force "y" (.strength (d3/forceY cy) 0.04))
+                (.force "y" (.strength (d3/forceY (if banded?
+                                                     (fn [d]
+                                                       (if (.startsWith (.-id d) "phantom:")
+                                                         cy
+                                                         (band-y (keyword (.-kind d)) view-mode)))
+                                                     cy))
+                                       (if banded? 0.2 0.04)))
                 (.stop))]
     ;; Run simulation
     (dotimes [_ 250]
@@ -520,6 +601,8 @@
         pins       (:pins @state/ui-state)
         scratchpad (:scratchpad @state/ui-state)
         expanded-essay-sections (:expanded-essay-sections @state/ui-state)
+        view-mode  (or (:view-mode @state/ui-state) :organic)
+        zoom-k     (:k @!zoom)
         effective-pins (if (seq pins)
                          pins
                          (when focus-id [{:id focus-id :k (:hop-depth @state/ui-state)}]))
@@ -571,7 +654,9 @@
                                             (contains? content-ids (get-in % [:link/dst :nema/id])))
                                         (:links raw-hood))
                          :pins (:pins raw-hood)}))
-        filtered-hood (some-> merged-hood apply-kind-filter)
+        filtered-hood (some-> merged-hood
+                              (apply-kind-filter view-mode)
+                              (apply-view-mode-filter view-mode zoom-k))
         hood-ids   (set (map :nema/id (:nemas filtered-hood)))
         floating   (->> scratchpad
                         (remove #(contains? hood-ids (:id %)))
@@ -580,7 +665,15 @@
       (let [centres   (when (seq effective-pins) (pin-centres effective-pins))
             ;; Force-directed layout
             positions (if (and filtered-hood (seq (:nemas filtered-hood)))
-                        (force-layout (:nemas filtered-hood) (:links filtered-hood) (or centres {}))
+                        (if (= :layered view-mode)
+                          (layered-layout (:nemas filtered-hood)
+                                          (:links filtered-hood)
+                                          (or centres {})
+                                          view-mode)
+                          (force-layout (:nemas filtered-hood)
+                                        (:links filtered-hood)
+                                        (or centres {})
+                                        view-mode))
                         {})
             _fit      (fit-on-new-graph! positions)
             nema-map  (into {} (map (fn [n] [(:nema/id n) n]) (:nemas filtered-hood)))
@@ -599,69 +692,73 @@
                               floating))
             all-positions (merge positions float-positions)
             all-nemas     (merge nema-map float-nemas)]
-        [:svg {:width "100%" :height "100%"
-               :viewBox (str "0 0 " svg-width " " svg-height)
-               :style {:background "#1a1a2e" :touch-action "none"}
-               :on-wheel (fn [e]
-                           (let [[px py] (svg-point e)
-                                 {:keys [k x y]} @!zoom
-                                 factor (if (pos? (.-deltaY e)) 0.88 1.14)
-                                 k* (clamp 0.12 5.0 (* k factor))
-                                 ratio (/ k* k)]
-                             (reset! !zoom {:k k*
-                                            :x (- px (* ratio (- px x)))
-                                            :y (- py (* ratio (- py y)))
-                                            :signature (:signature @!zoom)})))
-               :on-pointer-down (fn [e]
-                                  (.setPointerCapture (.-currentTarget e) (.-pointerId e))
-                                  (reset! !drag {:client-x (.-clientX e)
-                                                 :client-y (.-clientY e)
-                                                 :origin @!zoom}))
-               :on-pointer-move (fn [e]
-                                  (when-let [{:keys [client-x client-y origin]} @!drag]
-                                    (let [[dx dy] (screen-delta->svg (.-currentTarget e)
-                                                                     (- (.-clientX e) client-x)
-                                                                     (- (.-clientY e) client-y))]
-                                      (reset! !zoom (assoc origin
-                                                           :x (+ (:x origin) dx)
-                                                           :y (+ (:y origin) dy))))))
-               :on-pointer-up (fn [e]
-                                (reset! !drag nil)
-                                (try
-                                  (.releasePointerCapture (.-currentTarget e) (.-pointerId e))
-                                  (catch :default _ nil)))
-               :on-pointer-leave (fn [_] (reset! !drag nil))}
-         ;; Arrowhead marker definition
-         [:defs
-          [:marker {:id "arrowhead" :markerWidth 10 :markerHeight 8
-                    :refX 9 :refY 4 :orient "auto" :markerUnits "strokeWidth"}
-           [:path {:d "M0,0 L10,4 L0,8 L3,4 Z" :fill "#99aabb"}]]]
-         [view-mode-selector]
+        [:div {:style {:position "relative" :width "100%" :height "100%"}}
+         [:svg {:width "100%" :height "100%"
+                :viewBox (str "0 0 " svg-width " " svg-height)
+                :style {:background "#1a1a2e" :touch-action "none"}
+                :on-wheel (fn [e]
+                            (let [[px py] (svg-point e)
+                                  {:keys [k x y]} @!zoom
+                                  factor (if (pos? (.-deltaY e)) 0.88 1.14)
+                                  k* (clamp 0.12 5.0 (* k factor))
+                                  ratio (/ k* k)]
+                              (reset! !zoom {:k k*
+                                             :x (- px (* ratio (- px x)))
+                                             :y (- py (* ratio (- py y)))
+                                             :signature (:signature @!zoom)})))
+                :on-pointer-down (fn [e]
+                                   (.setPointerCapture (.-currentTarget e) (.-pointerId e))
+                                   (reset! !drag {:client-x (.-clientX e)
+                                                  :client-y (.-clientY e)
+                                                  :origin @!zoom}))
+                :on-pointer-move (fn [e]
+                                   (when-let [{:keys [client-x client-y origin]} @!drag]
+                                     (let [[dx dy] (screen-delta->svg (.-currentTarget e)
+                                                                      (- (.-clientX e) client-x)
+                                                                      (- (.-clientY e) client-y))]
+                                       (reset! !zoom (assoc origin
+                                                            :x (+ (:x origin) dx)
+                                                            :y (+ (:y origin) dy))))))
+                :on-pointer-up (fn [e]
+                                 (reset! !drag nil)
+                                 (try
+                                   (.releasePointerCapture (.-currentTarget e) (.-pointerId e))
+                                   (catch :default _ nil)))
+                :on-pointer-leave (fn [_] (reset! !drag nil))}
+          ;; Arrowhead marker definition
+          [:defs
+           [:marker {:id "arrowhead" :markerWidth 10 :markerHeight 8
+                     :refX 9 :refY 4 :orient "auto" :markerUnits "strokeWidth"}
+            [:path {:d "M0,0 L10,4 L0,8 L3,4 Z" :fill "#99aabb"}]]]
+          [:g {:class "graph-zoom-layer"
+               :transform (zoom-transform-attr)}
+           ;; Links
+           (when filtered-hood
+             (doall
+              (for [link (:links filtered-hood)
+                    :let [src-id (get-in link [:link/src :nema/id])
+                          dst-id (get-in link [:link/dst :nema/id])
+                          src-pos (get all-positions src-id)
+                          dst-pos (get all-positions dst-id)]
+                    :when (and src-pos dst-pos)]
+                ^{:key (:link/id link)}
+                [link-component link src-pos dst-pos])))
+           ;; Nodes
+           (doall
+            (for [[nema-id pos] all-positions
+                  :let [nema (get all-nemas nema-id)]
+                  :when nema]
+              ^{:key nema-id}
+              [node-component nema pos
+               (= nema-id focus-id)
+               (contains? pin-ids nema-id)]))]]
+         [:div {:style {:position "absolute" :left "8px" :top "8px" :z-index 5}}
+          [view-mode-selector]]
          (when (graph-filter-active?)
-           [filter-controller])
-         [zoom-controls all-positions]
-         [:g {:class "graph-zoom-layer"
-              :transform (zoom-transform-attr)}
-          ;; Links
-          (when filtered-hood
-            (doall
-             (for [link (:links filtered-hood)
-                   :let [src-id (get-in link [:link/src :nema/id])
-                         dst-id (get-in link [:link/dst :nema/id])
-                         src-pos (get all-positions src-id)
-                         dst-pos (get all-positions dst-id)]
-                   :when (and src-pos dst-pos)]
-               ^{:key (:link/id link)}
-               [link-component link src-pos dst-pos])))
-          ;; Nodes
-          (doall
-           (for [[nema-id pos] all-positions
-                 :let [nema (get all-nemas nema-id)]
-                 :when nema]
-             ^{:key nema-id}
-             [node-component nema pos
-              (= nema-id focus-id)
-              (contains? pin-ids nema-id)]))]])
+           [:div {:style {:position "absolute" :left "8px" :top "58px" :z-index 5}}
+            [filter-controller]])
+         [:div {:style {:position "absolute" :right "8px" :top "8px" :z-index 5}}
+          [zoom-controls all-positions]]])
       ;; Empty state
       [:div.empty-graph
        [:p "No nema in focus."]
