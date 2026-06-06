@@ -1,5 +1,6 @@
 (ns webarxana.client.graph
   (:require [clojure.string :as str]
+            [reagent.core :as r]
             [webarxana.client.state :as state]
             [webarxana.client.api :as api]
             ["d3-force" :as d3]))
@@ -12,6 +13,21 @@
    {:id :layered :label "B Layered"}
    {:id :witnesses :label "C Witnesses"}
    {:id :zoom-lod :label "D Zoom"}])
+
+(def filter-options
+  [{:id :interest-star :label "interest-star"}
+   {:id :pattern-peer :label "design-pattern"}
+   {:id :witness-layer :label "witness layer"}
+   {:id :essay :label "arxana/essay"}
+   {:id :essay-section :label "arxana/essay-section"}
+   {:id :figure-tag :label "arxana/figure"}
+   {:id :generic :label "generic"}])
+
+(def default-visible-kinds #{:interest-star :pattern-peer})
+
+(defonce !visible-kinds (r/atom default-visible-kinds))
+(defonce !zoom (r/atom {:k 1 :x 0 :y 0 :signature nil}))
+(defonce !drag (atom nil))
 
 (defn- prop-value
   [m k]
@@ -37,6 +53,12 @@
         props (:nema/props nema)
         kind (some-> (prop-value props :node-kind) str/lower-case)]
     (cond
+      (= "arxana/essay-section" nema-type)
+      :essay-section
+
+      (= "arxana/essay" nema-type)
+      :essay
+
       (or (= "design-pattern" kind)
           (= "pattern-peer" kind)
           (= "arxana/design-pattern" nema-type)
@@ -44,6 +66,7 @@
       :pattern-peer
 
       (or (= "figure-tag" kind)
+          (= "arxana/figure" nema-type)
           (str/includes? nema-type "figure"))
       :figure-tag
 
@@ -70,7 +93,10 @@
                :pattern-peer 28
                :figure-tag 22
                :interest-star (magnitude-radius (node-magnitude nema))
-               :generic 28)
+               :essay 26
+               :essay-section 18
+               :generic 28
+               28)
         pin-bump (if is-pin 2 0)
         focus-bump (if is-focus 5 0)]
     (+ base pin-bump focus-bump)))
@@ -113,6 +139,138 @@
               :stroke stroke
               :stroke-width stroke-width
               :class class-name}]))
+
+(defn- graph-filter-active? []
+  (some? (:expanded-diagram @state/ui-state)))
+
+(defn- witness-node-ids [links]
+  (->> links
+       (filter #(= "interest/coalesces-into" (:link/type %)))
+       (map #(get-in % [:link/src :nema/id]))
+       (remove str/blank?)
+       set))
+
+(defn- effective-node-kind [witness-ids nema]
+  (if (contains? witness-ids (:nema/id nema))
+    :witness-layer
+    (node-kind nema)))
+
+(defn- apply-kind-filter [hood]
+  (if-not (graph-filter-active?)
+    hood
+    (let [visible @!visible-kinds
+          witness-ids (witness-node-ids (:links hood))
+          nemas (->> (:nemas hood)
+                     (filter #(contains? visible (effective-node-kind witness-ids %)))
+                     vec)
+          visible-ids (set (map :nema/id nemas))
+          links (->> (:links hood)
+                     (filter #(let [src (get-in % [:link/src :nema/id])
+                                    dst (get-in % [:link/dst :nema/id])]
+                                (and (contains? visible-ids src)
+                                     (contains? visible-ids dst))))
+                     vec)]
+      (assoc hood :nemas nemas :links links))))
+
+(defn- filter-controller []
+  (let [visible @!visible-kinds]
+    [:foreignObject {:x 18 :y 68 :width 238 :height 238}
+     [:div {:style {:display "flex"
+                    :flex-direction "column"
+                    :gap "6px"
+                    :padding "9px 10px"
+                    :border "1px solid rgba(148, 163, 184, 0.35)"
+                    :border-radius "6px"
+                    :background "rgba(15, 23, 42, 0.88)"
+                    :box-shadow "0 8px 24px rgba(0,0,0,0.22)"
+                    :font-family "sans-serif"
+                    :color "#e5e7eb"}}
+      [:div {:style {:display "flex" :justify-content "space-between" :align-items "center"}}
+       [:span {:style {:font-size "12px" :font-weight 700}} "Kinds"]
+       [:button {:type "button"
+                 :on-click #(reset! !visible-kinds default-visible-kinds)
+                 :style {:font-size "11px" :background "#1e293b" :color "#cbd5e1"
+                         :border "1px solid rgba(148, 163, 184, 0.45)"
+                         :border-radius "4px" :padding "2px 6px"}}
+        "core"]]
+      (for [{:keys [id label]} filter-options]
+        ^{:key (name id)}
+        [:label {:style {:display "flex" :gap "7px" :align-items "center"
+                         :font-size "12px" :cursor "pointer"}}
+         [:input {:type "checkbox"
+                  :checked (contains? visible id)
+                  :on-change #(swap! !visible-kinds
+                                     (fn [ks]
+                                       (if (contains? ks id)
+                                         (disj ks id)
+                                         (conj ks id))))}]
+         [:span label]])]]))
+
+(defn- bounds-for [positions]
+  (when (seq positions)
+    (let [xs (map first (vals positions))
+          ys (map second (vals positions))]
+      {:min-x (apply min xs)
+       :max-x (apply max xs)
+       :min-y (apply min ys)
+       :max-y (apply max ys)})))
+
+(defn- fit-transform [positions]
+  (if-let [{:keys [min-x max-x min-y max-y]} (bounds-for positions)]
+    (let [margin 80
+          bw (max 1 (- max-x min-x))
+          bh (max 1 (- max-y min-y))
+          k (clamp 0.18 2.2 (min (/ (- svg-width (* 2 margin)) bw)
+                                  (/ (- svg-height (* 2 margin)) bh)))
+          cx (/ (+ min-x max-x) 2)
+          cy (/ (+ min-y max-y) 2)]
+      {:k k
+       :x (- (/ svg-width 2) (* k cx))
+       :y (- (/ svg-height 2) (* k cy))})
+    {:k 1 :x 0 :y 0}))
+
+(defn- positions-signature [positions]
+  (str (count positions) ":" (str/join "|" (sort (keys positions)))))
+
+(defn- fit-graph! [positions]
+  (let [sig (positions-signature positions)]
+    (swap! !zoom merge (assoc (fit-transform positions) :signature sig))))
+
+(defn- fit-on-new-graph! [positions]
+  (let [sig (positions-signature positions)]
+    (when (and (seq positions) (not= sig (:signature @!zoom)))
+      (fit-graph! positions))))
+
+(defn- svg-point [e]
+  (let [rect (.getBoundingClientRect (.-currentTarget e))
+        sx (/ svg-width (.-width rect))
+        sy (/ svg-height (.-height rect))]
+    [(* (- (.-clientX e) (.-left rect)) sx)
+     (* (- (.-clientY e) (.-top rect)) sy)]))
+
+(defn- screen-delta->svg [svg-el dx dy]
+  (let [rect (.getBoundingClientRect svg-el)]
+    [(* dx (/ svg-width (.-width rect)))
+     (* dy (/ svg-height (.-height rect)))]))
+
+(defn- zoom-transform-attr []
+  (let [{:keys [k x y]} @!zoom]
+    (str "translate(" x "," y ") scale(" k ")")))
+
+(defn- zoom-controls [positions]
+  [:foreignObject {:x (- svg-width 150) :y 16 :width 132 :height 44}
+   [:button {:type "button"
+             :on-click #(fit-graph! positions)
+             :style {:background "rgba(15, 23, 42, 0.88)"
+                     :color "#e5e7eb"
+                     :border "1px solid rgba(148, 163, 184, 0.45)"
+                     :border-radius "6px"
+                     :font-size "12px"
+                     :font-weight 700
+                     :padding "8px 10px"
+                     :cursor "pointer"
+                     :box-shadow "0 8px 24px rgba(0,0,0,0.22)"}}
+    "Reset / fit"]])
 
 (defn- view-mode-selector []
   (let [current (:view-mode @state/ui-state)]
@@ -413,17 +571,19 @@
                                             (contains? content-ids (get-in % [:link/dst :nema/id])))
                                         (:links raw-hood))
                          :pins (:pins raw-hood)}))
-        hood-ids   (set (map :nema/id (:nemas merged-hood)))
+        filtered-hood (some-> merged-hood apply-kind-filter)
+        hood-ids   (set (map :nema/id (:nemas filtered-hood)))
         floating   (->> scratchpad
                         (remove #(contains? hood-ids (:id %)))
                         vec)]
-    (if (or (and merged-hood (seq (:nemas merged-hood))) (seq floating))
+    (if (or (and filtered-hood (seq (:nemas filtered-hood))) (seq floating))
       (let [centres   (when (seq effective-pins) (pin-centres effective-pins))
             ;; Force-directed layout
-            positions (if (and merged-hood (seq (:nemas merged-hood)))
-                        (force-layout (:nemas merged-hood) (:links merged-hood) (or centres {}))
+            positions (if (and filtered-hood (seq (:nemas filtered-hood)))
+                        (force-layout (:nemas filtered-hood) (:links filtered-hood) (or centres {}))
                         {})
-            nema-map  (into {} (map (fn [n] [(:nema/id n) n]) (:nemas merged-hood)))
+            _fit      (fit-on-new-graph! positions)
+            nema-map  (into {} (map (fn [n] [(:nema/id n) n]) (:nemas filtered-hood)))
             pin-ids   (set (map :id effective-pins))
             float-positions (into {}
                              (map-indexed
@@ -441,33 +601,67 @@
             all-nemas     (merge nema-map float-nemas)]
         [:svg {:width "100%" :height "100%"
                :viewBox (str "0 0 " svg-width " " svg-height)
-               :style {:background "#1a1a2e"}}
+               :style {:background "#1a1a2e" :touch-action "none"}
+               :on-wheel (fn [e]
+                           (let [[px py] (svg-point e)
+                                 {:keys [k x y]} @!zoom
+                                 factor (if (pos? (.-deltaY e)) 0.88 1.14)
+                                 k* (clamp 0.12 5.0 (* k factor))
+                                 ratio (/ k* k)]
+                             (reset! !zoom {:k k*
+                                            :x (- px (* ratio (- px x)))
+                                            :y (- py (* ratio (- py y)))
+                                            :signature (:signature @!zoom)})))
+               :on-pointer-down (fn [e]
+                                  (.setPointerCapture (.-currentTarget e) (.-pointerId e))
+                                  (reset! !drag {:client-x (.-clientX e)
+                                                 :client-y (.-clientY e)
+                                                 :origin @!zoom}))
+               :on-pointer-move (fn [e]
+                                  (when-let [{:keys [client-x client-y origin]} @!drag]
+                                    (let [[dx dy] (screen-delta->svg (.-currentTarget e)
+                                                                     (- (.-clientX e) client-x)
+                                                                     (- (.-clientY e) client-y))]
+                                      (reset! !zoom (assoc origin
+                                                           :x (+ (:x origin) dx)
+                                                           :y (+ (:y origin) dy))))))
+               :on-pointer-up (fn [e]
+                                (reset! !drag nil)
+                                (try
+                                  (.releasePointerCapture (.-currentTarget e) (.-pointerId e))
+                                  (catch :default _ nil)))
+               :on-pointer-leave (fn [_] (reset! !drag nil))}
          ;; Arrowhead marker definition
          [:defs
           [:marker {:id "arrowhead" :markerWidth 10 :markerHeight 8
                     :refX 9 :refY 4 :orient "auto" :markerUnits "strokeWidth"}
            [:path {:d "M0,0 L10,4 L0,8 L3,4 Z" :fill "#99aabb"}]]]
          [view-mode-selector]
-         ;; Links
-         (when merged-hood
-           (doall
-            (for [link (:links merged-hood)
-                  :let [src-id (get-in link [:link/src :nema/id])
-                        dst-id (get-in link [:link/dst :nema/id])
-                        src-pos (get all-positions src-id)
-                        dst-pos (get all-positions dst-id)]
-                  :when (and src-pos dst-pos)]
-              ^{:key (:link/id link)}
-              [link-component link src-pos dst-pos])))
-         ;; Nodes
-         (doall
-          (for [[nema-id pos] all-positions
-                :let [nema (get all-nemas nema-id)]
-                :when nema]
-            ^{:key nema-id}
-            [node-component nema pos
-             (= nema-id focus-id)
-             (contains? pin-ids nema-id)]))])
+         (when (graph-filter-active?)
+           [filter-controller])
+         [zoom-controls all-positions]
+         [:g {:class "graph-zoom-layer"
+              :transform (zoom-transform-attr)}
+          ;; Links
+          (when filtered-hood
+            (doall
+             (for [link (:links filtered-hood)
+                   :let [src-id (get-in link [:link/src :nema/id])
+                         dst-id (get-in link [:link/dst :nema/id])
+                         src-pos (get all-positions src-id)
+                         dst-pos (get all-positions dst-id)]
+                   :when (and src-pos dst-pos)]
+               ^{:key (:link/id link)}
+               [link-component link src-pos dst-pos])))
+          ;; Nodes
+          (doall
+           (for [[nema-id pos] all-positions
+                 :let [nema (get all-nemas nema-id)]
+                 :when nema]
+             ^{:key nema-id}
+             [node-component nema pos
+              (= nema-id focus-id)
+              (contains? pin-ids nema-id)]))]])
       ;; Empty state
       [:div.empty-graph
        [:p "No nema in focus."]
