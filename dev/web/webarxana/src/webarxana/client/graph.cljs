@@ -539,10 +539,12 @@
         nema-id (:nema/id nema)
         nema-name (or (:nema/name nema) nema-id)
         nema-type (or (:nema/type nema) "unknown")
+        props (:nema/props nema)
         kind (node-kind nema)
         connecting (:connecting @state/ui-state)
         r (node-radius nema is-focus is-pin)
-        magnitude (node-magnitude nema)]
+        magnitude (node-magnitude nema)
+        folded-count (numeric-prop props :fold/sub-count)]
     [:g {:key nema-id
          :class (str "graph-node node " (name kind))
          :on-click (fn []
@@ -558,7 +560,10 @@
                (api/expand-essay! nema-id))
 
              (= nema-type "arxana/essay-section")
-             (api/open-in-emacs! {:id nema-id :type nema-type})))
+             (api/open-in-emacs! {:id nema-id :type nema-type})
+
+             (= nema-type "scope/frame")
+             (api/expand-scope-frame! nema-id)))
          :style {:cursor (if connecting "crosshair" "pointer")}}
      ;; Pin ring
      (when is-pin
@@ -584,7 +589,9 @@
       (case kind
         :pattern-peer "design-pattern"
         :interest-star (str "m" magnitude)
-        nema-type)]
+        (if folded-count
+          (str folded-count " concepts")
+          nema-type))]
      ;; Name label
      [:text {:x x :y (+ y 10) :text-anchor "middle"
              :fill "#ffffff" :font-size 13 :font-weight "bold"

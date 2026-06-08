@@ -9,7 +9,12 @@
 
 (def base "/api/futon")
 
-(declare fetch-hyperedges save-entity! save-relation! fetch-types pin-entity! connect-ws! ws-send! save-diagram! fetch-recent expand-diagram! compress-diagram! open-diagram-by-name! expand-essay! collapse-essay! entity-location open-in-emacs! open-location! mission-search! mission-search-event! fetch-interest-network!)
+(declare fetch-hyperedges save-entity! save-relation! fetch-types pin-entity! connect-ws! ws-send! save-diagram! fetch-recent expand-diagram! compress-diagram! open-diagram-by-name! expand-essay! collapse-essay! expand-scope-frame! entity-location open-in-emacs! open-location! mission-search! mission-search-event! fetch-interest-network!)
+
+(defn- prop-value
+  [m k]
+  (or (get m k)
+      (get m (name k))))
 
 (defn entity-location
   "Return an Emacs-openable location for ENTITY when one is known."
@@ -170,14 +175,16 @@
   [entity-name]
   (go
     (let [resp (<! (http/get (str base "/ego/" (js/encodeURIComponent entity-name))
-                             {:with-credentials? true}))]
+                             {:query-params {:fold 1 :depth 1}
+                              :with-credentials? true}))]
       (when (= 200 (:status resp))
         (let [ego (get-in resp [:body :ego])
               entity (ingest-ego! ego)]
           (when entity
             (let [eid (or (:id entity) (:entity/id entity))]
               (state/pin! eid)
-              (fetch-hyperedges eid)
+              (when-not (:fold ego)
+                (fetch-hyperedges eid))
               (swap! state/ui-state update :_render-tick (fnil inc 0))))
           ego)))))
 
@@ -290,6 +297,29 @@ essay-expansion metadata used by the graph projection."
     (state/set-focus! essay-id)
     (swap! state/ui-state update :_render-tick (fnil inc 0))))
 
+(defn expand-scope-frame!
+  "Unfold a folded scope frame by materialising its folded slot fillers."
+  [frame-id]
+  (when-let [frame (state/get-nema frame-id)]
+    (let [props (:nema/props frame)
+          fillers (or (prop-value props :fold/fillers) [])]
+      (doseq [f fillers]
+        (let [fid (or (prop-value f :id) (prop-value f :entity-id))
+              fname (or (prop-value f :name) fid)
+              ftype (or (prop-value f :type) "concept")]
+          (when fid
+            (state/ingest-entity! {:id fid
+                                   :name fname
+                                   :type ftype
+                                   :props {:fold/expanded-from frame-id
+                                           :scope/role (prop-value f :role)
+                                           :sip (prop-value f :sip)}})
+            (state/ingest-relation! {:id (str "scope-frame-expand:" frame-id "->" fid)
+                                     :type "mission-scope/expanded-slot"
+                                     :src frame-id
+                                     :dst fid}))))
+      (swap! state/ui-state update :_render-tick (fnil inc 0)))))
+
 (defn create-scratch-node!
   "Add a local scratch entry to the scratchpad. No server call until Save."
   []
@@ -321,14 +351,16 @@ essay-expansion metadata used by the graph projection."
     ;; Pin it: fetch ego, ingest, add pin
     (go
       (let [resp (<! (http/get (str base "/ego/" (js/encodeURIComponent (or entity-name entity-id)))
-                               {:with-credentials? true}))]
+                               {:query-params {:fold 1 :depth 1}
+                                :with-credentials? true}))]
         (when (= 200 (:status resp))
           (let [ego (get-in resp [:body :ego])
                 entity (ingest-ego! ego)]
             (when entity
               (let [eid (or (:id entity) (:entity/id entity))]
                 (state/pin! eid)
-                (fetch-hyperedges eid)
+                (when-not (:fold ego)
+                  (fetch-hyperedges eid))
                 (swap! state/ui-state update :_render-tick (fnil inc 0))))))))))
 
 (defn save-diagram!
@@ -493,14 +525,16 @@ essay-expansion metadata used by the graph projection."
   [entity-name entity-id]
   (go
     (let [resp (<! (http/get (str base "/ego/" (js/encodeURIComponent entity-name))
-                             {:with-credentials? true}))]
+                             {:query-params {:fold 1 :depth 1}
+                              :with-credentials? true}))]
       (when (= 200 (:status resp))
         (let [ego (get-in resp [:body :ego])
               entity (ingest-ego! ego)]
             (if entity
               (let [eid (or (:id entity) (:entity/id entity))]
                 (state/pin! eid)
-                (fetch-hyperedges eid)
+                (when-not (:fold ego)
+                  (fetch-hyperedges eid))
                 (swap! state/ui-state update :_render-tick (fnil inc 0)))
             ;; Ego didn't find by name — try direct entity fetch by ID
             (when entity-id
