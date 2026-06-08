@@ -229,12 +229,48 @@ Returns the sidecar path written, or nil if no source-file is bound."
 ;; Annotation source resolution
 ;; -----------------------------------------------------------------
 
-(defun arxana-browser-essays-compiled--edn-sibling-path (source-file)
-  "Return the path to an annotations.edn sibling of SOURCE-FILE, if it exists."
+(defun arxana-browser-essays-compiled--edn-annotation-essay-id (edn)
+  "Return the :essay-id an annotations EDN is pinned to, via a cheap head scan.
+Deliberately does NOT use the full EDN reader: that reader is hand-rolled and
+can loop on non-annotation .edn (e.g. a large `.aif.edn' graph) that happens to
+sit in the same directory.  Only the first 4 KB are scanned for the literal key."
+  (when (and edn (file-readable-p edn))
+    (ignore-errors
+      (with-temp-buffer
+        (insert-file-contents edn nil 0 4096)
+        (goto-char (point-min))
+        (when (re-search-forward ":essay-id[[:space:]]+\"\\([^\"]+\\)\"" nil t)
+          (match-string 1))))))
+
+(defun arxana-browser-essays-compiled--edn-sibling-path (source-file &optional essay-id)
+  "Return the annotations .edn for SOURCE-FILE, version-aware via ESSAY-ID.
+
+A multi-version essay family shares ONE directory, so a single
+`annotations.edn' would bleed one version's annotations onto the prose of
+another (e.g. v1's eightfold-path set showing over v5's form prose).
+Resolution order:
+  1. `<source-basename>.annotations.edn' sibling (per-version, predictable);
+  2. any `*.edn' in the directory whose `:essay-id' equals ESSAY-ID — e.g. a
+     `coherence-annotations-<ver>.edn' produced by a later pass;
+  3. the shared `annotations.edn', but ONLY when it is not pinned to a
+     DIFFERENT essay-id (so v1's set never bleeds onto v5)."
   (when (and source-file (stringp source-file))
-    (let ((edn (expand-file-name "annotations.edn"
-                                 (file-name-directory source-file))))
-      (and (file-readable-p edn) edn))))
+    (let* ((dir (file-name-directory source-file))
+           (per-version (expand-file-name
+                         (concat (file-name-base source-file) ".annotations.edn")
+                         dir)))
+      (cond
+       ((file-readable-p per-version) per-version)
+       ((when essay-id
+          (seq-find (lambda (edn)
+                      (equal essay-id
+                             (arxana-browser-essays-compiled--edn-annotation-essay-id edn)))
+                    (ignore-errors (directory-files dir t "\\.edn\\'")))))
+       (t (let ((shared (expand-file-name "annotations.edn" dir)))
+            (when (and (file-readable-p shared)
+                       (let ((sid (arxana-browser-essays-compiled--edn-annotation-essay-id shared)))
+                         (or (null sid) (null essay-id) (equal sid essay-id))))
+              shared)))))))
 
 (defun arxana-browser-essays-compiled--load-annotations (essay-id source-file)
   "Return a list of annotation plists for ESSAY-ID.
@@ -251,7 +287,7 @@ the sibling editorial-log.edn.  This is the address-then-orphan-cycle
 plumbing: even an annotation whose passage no longer matches the prose
 (orphan) carries its resolution state to the notes pane, so the
 operator can see at a glance that it has been actioned."
-  (let* ((edn-path (arxana-browser-essays-compiled--edn-sibling-path source-file))
+  (let* ((edn-path (arxana-browser-essays-compiled--edn-sibling-path source-file essay-id))
          (anns
           (cond
            (edn-path
@@ -1161,6 +1197,13 @@ Toggled via `arxana-browser-essays-compiled-edit-mode-toggle'.")
     map)
   "Local keymap installed in the compiled view while edit mode is on.")
 
+;; 🥨 reaches the essays hydra even in edit mode — the whole point of a dedicated
+;; key (`?' must stay self-inserting here).  Standalone `define-key' (not inside
+;; the defvar) so it re-applies on every reload, since `defvar' won't re-init an
+;; already-bound map.
+(define-key arxana-browser-essays-compiled-edit-map
+            (kbd "🥨") #'arxana-browser-essays-hydra/body)
+
 (defun arxana-browser-essays-compiled-edit-mode-toggle ()
   "Toggle edit mode in the compiled view.
 ENABLE: disables read-only; arms `C-c C-c' (save) and `C-c C-k' (abort).
@@ -1745,6 +1788,62 @@ source-file (or if its `:id` slug appears in the essay-id)."
      (t
       (call-interactively #'arxana-browser-rewrites-open)))))
 
+;; -----------------------------------------------------------------
+;; PDF export (pandoc) — bound to the essays hydra as `p'.
+;; -----------------------------------------------------------------
+
+(defcustom arxana-browser-essays-compiled-pdf-engine "xelatex"
+  "LaTeX engine pandoc uses for `arxana-browser-essays-compiled-export-pdf'."
+  :type 'string :group 'arxana-browser-essays-compiled)
+
+(defcustom arxana-browser-essays-compiled-pdf-mainfont "DejaVu Serif"
+  "Main font for PDF export — needs Unicode coverage (£ ≈ · → em-dash)."
+  :type 'string :group 'arxana-browser-essays-compiled)
+
+(defcustom arxana-browser-essays-compiled-pdf-papersize "a4"
+  "Paper size for `arxana-browser-essays-compiled-export-pdf'."
+  :type 'string :group 'arxana-browser-essays-compiled)
+
+(defun arxana-browser-essays-compiled-export-pdf (&optional source-file)
+  "Export the current essay's source markdown to a PDF via pandoc.
+From a compiled view, uses the buffer-local
+`arxana-browser-essays-compiled--source-file'; otherwise prompts for a
+markdown file (or pass SOURCE-FILE non-interactively).  Renders with
+`arxana-browser-essays-compiled-pdf-engine' on
+`arxana-browser-essays-compiled-pdf-papersize' using
+`arxana-browser-essays-compiled-pdf-mainfont'.  Writes <base>.pdf beside
+the source and returns its path; on failure pops the pandoc log."
+  (interactive)
+  (let* ((src (or source-file
+                  arxana-browser-essays-compiled--source-file
+                  (read-file-name "Markdown to export: " nil nil t)))
+         (src (and src (expand-file-name src))))
+    (unless (and src (file-readable-p src))
+      (user-error "No readable source markdown: %S" src))
+    (let* ((out (concat (file-name-sans-extension src) ".pdf"))
+           (pandoc (or (executable-find "pandoc")
+                       (user-error "pandoc not found on `exec-path'")))
+           (args (list src "-o" out
+                       (format "--pdf-engine=%s"
+                               arxana-browser-essays-compiled-pdf-engine)
+                       "-V" (format "mainfont=%s"
+                                    arxana-browser-essays-compiled-pdf-mainfont)
+                       "-V" (format "papersize=%s"
+                                    arxana-browser-essays-compiled-pdf-papersize)
+                       "-V" "geometry:margin=1in"
+                       "-V" "fontsize=11pt"
+                       "-V" "colorlinks=true"))
+           (buf (get-buffer-create "*arxana-pdf-export*")))
+      (with-current-buffer buf (erase-buffer))
+      (let ((status (apply #'call-process pandoc nil buf nil args)))
+        (if (and (eql status 0) (file-readable-p out))
+            (progn (message "[essays] PDF exported (%s): %s"
+                            arxana-browser-essays-compiled-pdf-papersize out)
+                   out)
+          (progn (display-buffer buf)
+                 (user-error "pandoc failed (status %s); see *arxana-pdf-export*"
+                             status)))))))
+
 (defhydra arxana-browser-essays-hydra (:color blue :hint nil)
   "
  Arxana Essays — ? menu
@@ -1755,7 +1854,8 @@ source-file (or if its `:id` slug appears in the essay-id)."
  _a_udit passages (manifest vs prose)         _i_mport (XTDB)
  _C_omment: add text comment at point         _x_ export markdown
  _h_ checkpoint save                          _l_ checkpoint list
- _?_ describe-mode                            _q_ quit
+ _p_ export PDF (A4)                          _?_ describe-mode
+ _q_ quit
 "
   ("c" arxana-browser-essays-compiled-open-current)
   ("o" (lambda () (interactive)
@@ -1785,6 +1885,7 @@ source-file (or if its `:id` slug appears in the essay-id)."
          (if (fboundp 'arxana-browser-essays-export-markdown)
              (call-interactively #'arxana-browser-essays-export-markdown)
            (message "export-markdown not available."))))
+  ("p" arxana-browser-essays-compiled-export-pdf)
   ("h" (lambda () (interactive)
          (if (fboundp 'arxana-browser-essays-checkpoint-save)
              (call-interactively #'arxana-browser-essays-checkpoint-save)
@@ -1799,6 +1900,10 @@ source-file (or if its `:id` slug appears in the essay-id)."
 ;; Bind '?' in the compiled-view mode (we own this keymap).
 (define-key arxana-browser-essays-compiled-mode-map
             (kbd "?") #'arxana-browser-essays-hydra/body)
+;; 🥨 (U+1F968): a dedicated hydra key that ALSO works in edit mode, where
+;; `?' must remain self-inserting.  Bound wherever `?' opens the essays hydra.
+(define-key arxana-browser-essays-compiled-mode-map
+            (kbd "🥨") #'arxana-browser-essays-hydra/body)
 
 ;; Bind '?' in the per-section reading view's minor-mode keymap, if available.
 ;; Hooked off the existing arxana-browser-essays-text-sync-mode-map so it
@@ -1806,7 +1911,9 @@ source-file (or if its `:id` slug appears in the essay-id)."
 ;; mode — '?' should stay self-insert during edits).
 (when (boundp 'arxana-browser-essays-text-sync-mode-map)
   (define-key arxana-browser-essays-text-sync-mode-map
-              (kbd "?") #'arxana-browser-essays-hydra/body))
+              (kbd "?") #'arxana-browser-essays-hydra/body)
+  (define-key arxana-browser-essays-text-sync-mode-map
+              (kbd "🥨") #'arxana-browser-essays-hydra/body))
 
 ;; Notes buffers: special-mode binds '?' to describe-mode by default.  In
 ;; both the per-section *Arxana Essay Notes* and the compiled *Arxana Essay
@@ -1819,7 +1926,8 @@ source-file (or if its `:id` slug appears in the essay-id)."
                  (and (boundp 'arxana-browser-essays-notes-buffer)
                       (string= (buffer-name) arxana-browser-essays-notes-buffer))))
     (use-local-map (copy-keymap (current-local-map)))
-    (local-set-key (kbd "?") #'arxana-browser-essays-hydra/body)))
+    (local-set-key (kbd "?") #'arxana-browser-essays-hydra/body)
+    (local-set-key (kbd "🥨") #'arxana-browser-essays-hydra/body)))
 
 ;; Install the hook so future notes-buffer setups pick it up.
 (add-hook 'special-mode-hook #'arxana-browser-essays-compiled--install-notes-key)
