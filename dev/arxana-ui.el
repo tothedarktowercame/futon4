@@ -46,13 +46,12 @@
      ((and (fboundp 'arxana-browser--up)
            (eq major-mode 'arxana-browser-mode))
       (arxana-browser--up))
-     ((buffer-live-p (get-buffer "*Arxana Browser*"))
-      (set-window-buffer (selected-window) "*Arxana Browser*"))
-     ;; Universal fallback: every Arxana buffer should have *some* "back" at
-     ;; point-min even when it set no explicit return target.  quit-window
-     ;; buries this view and restores whatever the window showed before.
-     ((window-parameter (selected-window) 'quit-restore) (quit-window))
-     (t (quit-window)))))
+     ;; <left> is a BACK button: it must ALWAYS resolve to where we came from.
+     ;; There is no "no target" case — if no explicit return target was set, the
+     ;; window's own recorded previous buffer IS, by construction, the origin we
+     ;; navigated in from.  (`switch-to-prev-buffer' is always defined; it buries
+     ;; this view and restores the prior one.)
+     (t (switch-to-prev-buffer nil 'bury)))))
 
 (defvar arxana-ui-mode-map
   (let ((map (make-sparse-keymap)))
