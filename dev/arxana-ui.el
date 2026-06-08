@@ -48,7 +48,11 @@
       (arxana-browser--up))
      ((buffer-live-p (get-buffer "*Arxana Browser*"))
       (set-window-buffer (selected-window) "*Arxana Browser*"))
-     (t (message "No return target available")))))
+     ;; Universal fallback: every Arxana buffer should have *some* "back" at
+     ;; point-min even when it set no explicit return target.  quit-window
+     ;; buries this view and restores whatever the window showed before.
+     ((window-parameter (selected-window) 'quit-restore) (quit-window))
+     (t (quit-window)))))
 
 (defvar arxana-ui-mode-map
   (let ((map (make-sparse-keymap)))
@@ -131,6 +135,40 @@
         (arxana-window-constraints-validate-ui-focal frame))))
 
 (add-hook 'window-configuration-change-hook #'arxana-ui-refresh)
+
+;; ---------------------------------------------------------------------------
+;; The left-at-point-min "return" shortcut as an INVARIANT of every Arxana
+;; buffer.  Previously each mode had to enable `arxana-ui-mode' (or re-roll its
+;; own <left> handler) by hand; modes that forgot — e.g. the compiled essay
+;; view — silently lacked back-navigation.  A globalized minor mode installs it
+;; once, everywhere, so it never has to be wired per-mode again.
+;; ---------------------------------------------------------------------------
+
+(defcustom arxana-ui-managed-mode-predicate
+  (lambda ()
+    (or arxana-ui-managed
+        (string-prefix-p "arxana-" (symbol-name major-mode))
+        (string-prefix-p "arxana-" (symbol-name (or (get major-mode 'derived-mode-parent)
+                                                     major-mode)))))
+  "Predicate deciding whether the current buffer is an Arxana-managed resource.
+When it returns non-nil, `global-arxana-ui-mode' turns on `arxana-ui-mode'
+there, giving the buffer the left-at-point-min return shortcut.  Override to
+include/exclude buffers."
+  :type 'function
+  :group 'arxana-ui)
+
+(defun arxana-ui--turn-on-if-arxana ()
+  "Enable `arxana-ui-mode' in Arxana-managed buffers (for the globalized mode)."
+  (when (and (not (minibufferp))
+             (ignore-errors (funcall arxana-ui-managed-mode-predicate)))
+    (arxana-ui-mode 1)))
+
+;;;###autoload
+(define-globalized-minor-mode global-arxana-ui-mode
+  arxana-ui-mode arxana-ui--turn-on-if-arxana
+  :group 'arxana-ui)
+
+(global-arxana-ui-mode 1)
 
 (provide 'arxana-ui)
 ;;; arxana-ui.el ends here
