@@ -577,6 +577,7 @@ win for the catalog keys in
             :label label
             :description description
             :essay-id essay-id
+            :props props
             :manifest-file manifest-file
             :source-file source-file))))
 
@@ -1064,9 +1065,106 @@ the currently open `*Arxana Essay*' buffer."
            (length (or (arxana-browser-essays--retracted-ids-in-this-section)
                        '()))))))))
 
+(defun arxana-browser-essays--catalog-prop (cat prop)
+  "Return PROP from CAT's top-level plist or its `:props' alist."
+  (let* ((name (cond
+                ((keywordp prop) (substring (symbol-name prop) 1))
+                ((symbolp prop) (symbol-name prop))
+                ((stringp prop) prop)))
+         (variants (delq nil
+                         (list prop
+                               (and name (intern name))
+                               (and name (intern (concat ":" name)))
+                               name)))
+         (props (plist-get cat :props))
+         value)
+    (catch 'found
+      (dolist (variant variants)
+        (when (plist-member cat variant)
+          (throw 'found (plist-get cat variant)))
+        (when (and (listp props)
+                   (setq value (assoc variant props)))
+          (throw 'found (cdr value))))
+      nil)))
+
+(defun arxana-browser-essays--catalog-family (cat)
+  "Return the version-family key for catalog CAT."
+  (or (arxana-browser-essays--catalog-prop cat :family)
+      (plist-get cat :essay-id)))
+
+(defun arxana-browser-essays--catalog-version-number (cat)
+  "Return numeric version for catalog CAT, or nil if it is not parseable."
+  (let ((version (arxana-browser-essays--catalog-prop cat :version)))
+    (cond
+     ((integerp version) version)
+     ((numberp version) (truncate version))
+     ((and (stringp version)
+           (string-match "\\`v?\\([0-9]+\\)\\'" version))
+      (string-to-number (match-string 1 version)))
+     (t nil))))
+
+(defun arxana-browser-essays--catalog-head-p (cat)
+  "Return non-nil when CAT is explicitly marked as the current head."
+  (let ((head (arxana-browser-essays--catalog-prop cat :head)))
+    (cond
+     ((stringp head) (member (downcase head) '("t" "true" "yes" "head")))
+     (t head))))
+
+(defun arxana-browser-essays--select-version-head (cats)
+  "Return the visible catalog entry for one version-family in CATS.
+Explicit `head' metadata wins; otherwise the highest numeric version wins."
+  (let* ((candidates (copy-sequence cats))
+         (heads (seq-filter #'arxana-browser-essays--catalog-head-p candidates))
+         (pool (or heads candidates))
+         (selected
+          (car
+           (sort (copy-sequence pool)
+                 (lambda (a b)
+                   (> (or (arxana-browser-essays--catalog-version-number a) -1)
+                      (or (arxana-browser-essays--catalog-version-number b) -1))))))
+         (selected-version
+          (and selected
+               (arxana-browser-essays--catalog-version-number selected)))
+         (older
+          (seq-filter
+           (lambda (cat)
+             (and (not (eq cat selected))
+                  (let ((version (arxana-browser-essays--catalog-version-number cat)))
+                    (if (and selected-version version)
+                        (< version selected-version)
+                      t))))
+           candidates))
+         (result (copy-sequence selected)))
+    (setq result (plist-put result :older-versions older))
+    (setq result (plist-put result :older-version-count (length older)))
+    result))
+
+(defun arxana-browser-essays--collapse-versioned-catalogs (catalogs)
+  "Collapse CATALOGS to one visible entry per essay version-family."
+  (let ((groups (make-hash-table :test 'equal))
+        order)
+    (dolist (cat catalogs)
+      (let ((family (arxana-browser-essays--catalog-family cat)))
+        (unless (gethash family groups)
+          (push family order))
+        (puthash family (cons cat (gethash family groups)) groups)))
+    (mapcar
+     (lambda (family)
+       (arxana-browser-essays--select-version-head
+        (nreverse (gethash family groups))))
+     (nreverse order))))
+
+(defun arxana-browser-essays--catalog-summary-for-essay (essay-id)
+  "Return the collapsed catalog entry whose `:essay-id' is ESSAY-ID."
+  (seq-find
+   (lambda (cat)
+     (equal essay-id (plist-get cat :essay-id)))
+   (arxana-browser-essays--collapse-versioned-catalogs
+    (arxana-browser-essays--catalogs))))
+
 ;;;###autoload
 (defun arxana-browser-essays-menu-items ()
-  "Return top-level Essays menu items, one per registered essay catalog."
+  "Return top-level Essays menu items, one per logical essay."
   (mapcar
    (lambda (cat)
      (let* ((manifest (arxana-browser-essays--manifest-for
@@ -1090,8 +1188,11 @@ the currently open `*Arxana Essay*' buffer."
                         (if (= count-annotations 1) "" "s"))))
              :annotation-count count-annotations
              :view 'essays-essay
+             :older-version-count (or (plist-get cat :older-version-count) 0)
+             :older-versions (plist-get cat :older-versions)
              :essay-id (plist-get cat :essay-id))))
-   (arxana-browser-essays--catalogs)))
+   (arxana-browser-essays--collapse-versioned-catalogs
+    (arxana-browser-essays--catalogs))))
 
 (defun arxana-browser-essays-format (&optional context)
   "Return tabulated-list format for the Essays browser CONTEXT."
@@ -1118,10 +1219,14 @@ the currently open `*Arxana Essay*' buffer."
 
 	    ('essays-essay
 	     (let* ((essay-id (plist-get context :essay-id))
+                    (catalog (arxana-browser-essays--catalog-summary-for-essay
+                              essay-id))
+                    (older-count (or (plist-get catalog :older-version-count) 0))
 	            (manifest (arxana-browser-essays--manifest-for essay-id))
 	            (sections (and manifest (plist-get manifest :sections))))
 	       (if sections
-	           (mapcar
+	           (append
+                    (mapcar
 	            (lambda (section)
 	              (let* ((sid (plist-get section :id))
 	                     (props (plist-get section :props))
@@ -1189,7 +1294,14 @@ the currently open `*Arxana Essay*' buffer."
 	                      :essay-id essay-id
 	                      :section-id sid
 	                      :annotation-count count-str)))
-            sections)
+                    sections)
+                    (when (> older-count 0)
+                      (list (list :type 'info
+                                  :label (format "older versions (%d)"
+                                                 older-count)
+                                  :description
+                                  "Older drafts are hidden from the top-level Essays view."
+                                  :annotation-count ""))))
          (list (list :type 'info
                      :label "No sections in manifest"
                      :description "Run M-x arxana-browser-essays-import.")))))

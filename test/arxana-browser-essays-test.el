@@ -504,6 +504,72 @@ The result plist includes `:root', `:golden-dir', `:live-dir',
         (should (equal "Annotated essay (2 sections, 2 annotations)"
                        (plist-get item :description)))))))
 
+(ert-deftest arxana-browser-essays-menu-items-collapse-version-families ()
+  (let ((arxana-browser-essays-catalogs
+         '((:label "Anthropic Fellows EOI - v1"
+            :essay-id "essay:fellows-v1"
+            :props ((family . "essay:fellows")
+                    (version . "v1")))
+           (:label "Anthropic Fellows EOI - v3"
+            :essay-id "essay:fellows-v3"
+            :props ((family . "essay:fellows")
+                    (version . "v3")
+                    (head . t)))
+           (:label "Anthropic Fellows EOI - v2"
+            :essay-id "essay:fellows-v2"
+            :props ((family . "essay:fellows")
+                    (version . "v2")))
+           (:label "Standalone Essay"
+            :essay-id "essay:standalone")))
+        (arxana-browser-essays--xtdb-catalog-cache
+         arxana-browser-essays--xtdb-catalog-cache-unset))
+    (cl-letf (((symbol-function 'arxana-browser-essays--manifest-for)
+               (lambda (_essay-id) nil))
+              ((symbol-function 'arxana-store-sync-enabled-p)
+               (lambda () nil)))
+      (let ((items (arxana-browser-essays-menu-items)))
+        (should (= 2 (length items)))
+        (should (equal "Anthropic Fellows EOI - v3"
+                       (plist-get (car items) :label)))
+        (should (equal "essay:fellows-v3"
+                       (plist-get (car items) :essay-id)))
+        (should (= 2 (plist-get (car items) :older-version-count)))
+        (should (equal "Standalone Essay"
+                       (plist-get (cadr items) :label)))))))
+
+(ert-deftest arxana-browser-essays-items-add-older-versions-row ()
+  (let ((arxana-browser-essays-catalogs
+         '((:label "Anthropic Fellows EOI - v1"
+            :essay-id "essay:fellows-v1"
+            :props ((family . "essay:fellows")
+                    (version . 1)))
+           (:label "Anthropic Fellows EOI - v2"
+            :essay-id "essay:fellows-v2"
+            :props ((family . "essay:fellows")
+                    (version . 2)))
+           (:label "Anthropic Fellows EOI - v3"
+            :essay-id "essay:fellows-v3"
+            :props ((family . "essay:fellows")
+                    (version . 3)
+                    (head . t)))))
+        (arxana-browser-essays--xtdb-catalog-cache
+         arxana-browser-essays--xtdb-catalog-cache-unset)
+        (manifest
+         '(:essay (:id "essay:fellows-v3")
+           :sections ((:id "section:1" :name "Section One"))
+           :annotations nil)))
+    (cl-letf (((symbol-function 'arxana-browser-essays--manifest-for)
+               (lambda (_essay-id) manifest))
+              ((symbol-function 'arxana-store-sync-enabled-p)
+               (lambda () nil)))
+      (let ((items (arxana-browser-essays-items
+                    '(:view essays-essay :essay-id "essay:fellows-v3"))))
+        (should (= 2 (length items)))
+        (should (equal "Section One"
+                       (plist-get (car items) :label)))
+        (should (equal "older versions (2)"
+                       (plist-get (cadr items) :label)))))))
+
 (ert-deftest arxana-browser-essays-render-section-notes-keeps-retracted-visible ()
   (let ((buf nil))
     (unwind-protect

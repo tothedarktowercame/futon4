@@ -234,6 +234,23 @@
           (swap! state/ui-state update :_render-tick (fnil inc 0))
           hxs)))))
 
+(defn- entity-id [entity]
+  (or (:id entity) (:entity/id entity) (:nema/id entity)))
+
+(defn- entity-props [entity]
+  (or (:props entity) (:entity/props entity) (:nema/props entity) {}))
+
+(defn- numeric-prop [props k]
+  (let [v (prop-value props k)]
+    (cond
+      (number? v) v
+      (string? v) (let [parsed (js/parseFloat v)]
+                    (when-not (js/isNaN parsed) parsed))
+      :else nil)))
+
+(defn- essay-version [essay]
+  (numeric-prop (entity-props essay) :version))
+
 (defn expand-essay!
   "Expand ESSAY-ID into section neighbours, then fetch section hyperedges.
 This is the essay-side analogue of expanding a diagram: it teaches the
@@ -249,7 +266,34 @@ without waiting for the full dedicated lifecycle surface."
                                       (:body essay-resp))]
             (state/ingest-entity! essay-entity)))))
     (state/pin! essay-id)
-    (let [resp (<! (http/get (str base "/entities/latest")
+    (let [essay-list-resp (<! (http/get (str base "/entities/latest")
+                                        {:query-params {:type "arxana/essay"
+                                                        :limit 2000}
+                                         :with-credentials? true}))
+          all-essays (when (= 200 (:status essay-list-resp))
+                       (get-in essay-list-resp [:body :entities]))
+          current-essay (or (some #(when (= essay-id (entity-id %)) %)
+                                  all-essays)
+                            (state/get-nema essay-id))
+          current-props (entity-props current-essay)
+          family (prop-value current-props :family)
+          current-version (essay-version current-essay)
+          older-versions (if family
+                           (->> all-essays
+                                (remove #(= essay-id (entity-id %)))
+                                (filter (fn [essay]
+                                          (= family (prop-value
+                                                     (entity-props essay)
+                                                     :family))))
+                                (filter (fn [essay]
+                                          (if current-version
+                                            (let [version (essay-version essay)]
+                                              (and version
+                                                   (< version current-version)))
+                                            true)))
+                                vec)
+                           [])
+          resp (<! (http/get (str base "/entities/latest")
                              {:query-params {:type "arxana/essay-section"
                                              :limit 2000}
                               :with-credentials? true}))]
@@ -277,6 +321,11 @@ without waiting for the full dedicated lifecycle surface."
                  (mapv (fn [section]
                          (or (:id section) (:entity/id section)))
                        sections))
+          (swap! state/ui-state assoc-in
+                 [:essay-versions essay-id]
+                 {:family family
+                  :older-count (count older-versions)
+                  :older older-versions})
           (swap! state/ui-state update :_render-tick (fnil inc 0))
           sections)))))
 
@@ -294,6 +343,7 @@ essay-expansion metadata used by the graph projection."
                       pins))))
     (swap! state/ui-state update :expanded-essays disj essay-id)
     (swap! state/ui-state update :expanded-essay-sections dissoc essay-id)
+    (swap! state/ui-state update :essay-versions dissoc essay-id)
     (state/set-focus! essay-id)
     (swap! state/ui-state update :_render-tick (fnil inc 0))))
 
@@ -398,12 +448,13 @@ essay-expansion metadata used by the graph projection."
   (go
     (let [resp (<! (http/get (str base "/entity/" diagram-id)
                              {:with-credentials? true}))]
-      (when (= 200 (:status resp))
-        (let [entity (or (get-in resp [:body :entity]) (:body resp))
-              pin-ids (get-in entity [:props :pins])
-              focus (get-in entity [:props :focus])]
-          (when (seq pin-ids)
-            ;; Clear existing pins and load diagram's pins
+	      (when (= 200 (:status resp))
+	        (let [entity (or (get-in resp [:body :entity]) (:body resp))
+	              props (:props entity)
+	              pin-ids (prop-value props :pins)
+	              focus (prop-value props :focus)]
+	          (when (seq pin-ids)
+	            ;; Clear existing pins and load diagram's pins
             (swap! state/ui-state assoc :pins [] :expanded-diagram diagram-id)
             (doseq [pid pin-ids]
               (<! (pin-entity! pid pid)))
@@ -514,7 +565,10 @@ essay-expansion metadata used by the graph projection."
   (swap! state/ui-state assoc :browse-type type-str :browse-list [] :sidebar-open true)
   (go
     (let [resp (<! (http/get (str base "/entities/latest")
-                             {:query-params {:type type-str :limit 50}
+                             {:query-params {:type type-str
+                                             :limit (if (= type-str "arxana/essay")
+                                                      2000
+                                                      50)}
                               :with-credentials? true}))]
       (when (= 200 (:status resp))
         (let [entities (get-in resp [:body :entities])]
