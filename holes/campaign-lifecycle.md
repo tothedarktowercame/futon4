@@ -61,6 +61,26 @@ Each Campaign phase maps to a Mission-spine analogue. Constituent Missions run
 their **own** lifecycles independently; the Campaign coordinates, it does not
 re-run their phases.
 
+### 0. RALLY  *(≈ HEAD — muster the agents + assign lanes, before the standard is named)*
+
+The form-up. Before a Campaign can CHARTER a standard, the agents who will build toward it must
+be gathered, the lanes assigned, and the coordination protocol named. RALLY is to CHARTER what a
+Mission's HEAD is to its IDENTIFY: it establishes *who* and *how*, before *what*. Introduced by
+Joe (2026-06-10, on `C-falsifiable-missions`).
+
+- [ ] **Muster.** Which agents are in, on what surfaces (the roster); who coordinates.
+- [ ] **Lane assignment.** Provisional owner per constituent mission (keystone vs paired),
+  **operator-ratified** — the assignments are a coordination decision, not a guess.
+- [ ] **Coordination protocol.** Name the patterns the mesh runs on (`social/`:
+  scope-bounded-handoff, idempotent-handoff, derive-the-contract, verify-before-compose) and the
+  escalation path for transport failures (dropped bells → the agency-hardening agent).
+- [ ] **Operator checkpoints.** The decisions reserved for the operator (pause-and-ask points),
+  recorded so the collab knows where to stop and surface rather than decide.
+
+**Exit:** lanes assigned and operator-ratified, coordination protocol named, operator agrees the
+form-up is right — *then* CHARTER formalises the joint goal + standard. RALLY is the work of the
+**FORMING** state; CHARTER moves the Campaign to **CHARTERED**.
+
 ### 1. CHARTER  *(≈ HEAD + IDENTIFY)*
 
 State the joint goal *no single Mission owns*, and the standard to be delivered.
