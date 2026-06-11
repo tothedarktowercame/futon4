@@ -207,7 +207,7 @@ the frame so the pair reads as a pair."
                           (window-in-direction 'left left-win))))
       ;; whichever window the section view holds becomes the outline again
       (with-current-buffer browser-buf
-        (when (fboundp 'arxana-browser--back) (ignore-errors (arxana-browser--back))))
+        (when (fboundp 'arxana-browser--up) (ignore-errors (arxana-browser--up))))
       (let* ((wins (sort (window-list frame 'nomini)
                          (lambda (a b) (< (nth 0 (window-edges a))
                                           (nth 0 (window-edges b))))))
