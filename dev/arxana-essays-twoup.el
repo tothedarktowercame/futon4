@@ -134,6 +134,13 @@ the frame so the pair reads as a pair."
       (delete-overlay arxana-essays-twoup--overlay)
       (setq arxana-essays-twoup--overlay nil))))
 
+;; `arxana-browser--render' resets the major mode on every navigation,
+;; which kills buffer-local minor modes — the cursor-raise silently died
+;; after the first RET (caught live by Joe, 2026-06-11). Mark the mode
+;; variable and its hook permanent-local so the two-up survives renders.
+(put 'arxana-essays-twoup-mode 'permanent-local t)
+(put 'arxana-essays-twoup--post-command 'permanent-local-hook t)
+
 (provide 'arxana-essays-twoup)
 ;;; arxana-essays-twoup.el ends here
 
