@@ -154,6 +154,8 @@ the frame so the pair reads as a pair."
       (let* ((essay-id (car row))
              (section-name (cdr row))
              (browser-buf (current-buffer))
+             (item (get-text-property (line-beginning-position)
+                                      'tabulated-list-id))
              (cat (arxana-browser-essays--catalog-spec essay-id))
              (source (and cat (arxana-browser-essays--cat-source-file cat)))
              (source-buf (and source (find-file-noselect source)))
@@ -173,9 +175,16 @@ the frame so the pair reads as a pair."
               (narrow-to-region (car span) (cdr span))
               (local-set-key (kbd "q") #'arxana-essays-twoup-ascend)
               (local-set-key (kbd "b") #'arxana-essays-twoup-ascend))
-            ;; drill the browser into the annotations view for this section
+            ;; Drill the browser into the annotations view for this section
+            ;; by pushing the context DIRECTLY (the item plist already is
+            ;; one: :view essays-section + :essay-id + :section-id).
+            ;; `arxana-browser--visit' must NOT be used here: for
+            ;; essays-section rows it dispatches to the three-pane reading
+            ;; view (core.el:1993), whose delete-other-windows + side
+            ;; window destroys the pair before we can arrange it.
             (with-current-buffer browser-buf
-              (arxana-browser--visit))
+              (setq arxana-browser--stack (cons item arxana-browser--stack))
+              (arxana-browser--render))
             ;; geometry: section LEFT, annotations (browser) RIGHT
             (let* ((left-win (or (get-buffer-window browser-buf t)
                                  (selected-window)))
@@ -184,11 +193,14 @@ the frame so the pair reads as a pair."
                                   (split-window left-win nil 'right))))
               (set-window-buffer left-win sec-buf)
               (set-window-buffer right-win browser-buf)
-              ;; surplus discipline at level 2 as well
+              ;; Exactly one pair (idempotent under repeat RET): any other
+              ;; window showing either pair buffer is a leftover from a
+              ;; previous descend; surplus buffers go too.
               (dolist (w (window-list frame))
                 (when (and (not (memq w (list left-win right-win)))
-                           (member (buffer-name (window-buffer w))
-                                   arxana-essays-twoup-surplus-buffers))
+                           (or (memq (window-buffer w) (list sec-buf browser-buf))
+                               (member (buffer-name (window-buffer w))
+                                       arxana-essays-twoup-surplus-buffers)))
                   (ignore-errors (delete-window w))))
               (select-window left-win)
               (when (fboundp 'arxana-window-constraints-validate-essays-two-up)

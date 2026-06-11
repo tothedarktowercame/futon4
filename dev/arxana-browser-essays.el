@@ -1201,15 +1201,26 @@ Explicit `head' metadata wins; otherwise the highest numeric version wins."
     (_ [("Section / Essay" 56 t) ("Annotations" 12 t)])))
 
 (defun arxana-browser-essays-row (item)
-  "Return a tabulated-list row for ITEM."
-  (pcase (plist-get item :type)
-    ('essays-annotation
-     (vector (or (plist-get item :label) "")
-             (or (plist-get item :hx-type-short) "")
-             (or (plist-get item :pattern-name) "")))
-    (_
-     (vector (or (plist-get item :label) "")
-             (format "%s" (or (plist-get item :annotation-count) 0))))))
+  "Return a tabulated-list row for ITEM.
+The row arity must match `arxana-browser-essays-format' for the CURRENT
+view, not the item type: an info row (e.g. the no-annotations notice)
+rendered inside the 3-column essays-section view needs 3 cells."
+  (let ((section-view
+         (and (boundp 'arxana-browser--stack)
+              (eq (plist-get (car arxana-browser--stack) :view)
+                  'essays-section))))
+    (pcase (plist-get item :type)
+      ('essays-annotation
+       (vector (or (plist-get item :label) "")
+               (or (plist-get item :hx-type-short) "")
+               (or (plist-get item :pattern-name) "")))
+      (_
+       (if section-view
+           (vector (or (plist-get item :label) "")
+                   ""
+                   (or (plist-get item :description) ""))
+         (vector (or (plist-get item :label) "")
+                 (format "%s" (or (plist-get item :annotation-count) 0))))))))
 
 (defun arxana-browser-essays--cat-source-file (cat)
   "Source markdown path from CAT, top-level or nested in :props.
