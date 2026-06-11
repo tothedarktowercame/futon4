@@ -1244,6 +1244,7 @@ a v1 manifest serving a v5 HEAD -- hid behind the nested case.)"
                     :name h
                     :type "arxana/essay-section"
                     :props (list (cons 'index (number-to-string i))
+                                 (cons 'heading-text h)
                                  (cons 'derived-from-source t))))
             headings)))
 
@@ -3857,8 +3858,16 @@ active (notes in a side window)."
   "Open the reading view for SECTION-ID in essay ESSAY-ID."
   (let* ((manifest (arxana-browser-essays--manifest-for essay-id))
          (source-file (arxana-browser-essays--catalog-source-file essay-id))
-         (heading-text (arxana-browser-essays--section-heading-text
-                        manifest section-id))
+         ;; Consult the INVARIANT sections (manifest validated against the
+         ;; source, or derived from it) — a stale/absent manifest no longer
+         ;; yields "<no heading-text in section props>"; fall back to the
+         ;; row's display name, which for ## sections IS the heading.
+         (true-sections (arxana-browser-essays--true-sections essay-id manifest))
+         (heading-text (or (arxana-browser-essays--section-heading-text
+                            (list :sections true-sections) section-id)
+                           (arxana-browser-essays--section-heading-text
+                            manifest section-id)
+                           section-name))
          (section-text (or (arxana-browser-essays--extract-section-text
                             source-file heading-text)
                            (format "(Could not extract section text from %s.\n See heading: %s)\n"

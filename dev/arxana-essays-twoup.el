@@ -90,6 +90,12 @@ the frame so the pair reads as a pair."
                         (make-overlay start end buf))
                   (overlay-put arxana-essays-twoup--overlay 'face
                                'arxana-essays-twoup-section-face))))))
+        ;; The layout invariant is CHECKED, not just enforced — the Reazon
+        ;; window-constraints discipline, restored to the Essays build.
+        (when (fboundp 'arxana-window-constraints-validate-essays-two-up)
+          (arxana-window-constraints-validate-essays-two-up
+           (get-buffer "*Arxana Browser*") buf
+           (and win (window-frame win))))
         win))))
 
 (defun arxana-essays-twoup--post-command ()
