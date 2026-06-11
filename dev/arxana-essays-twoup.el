@@ -21,6 +21,43 @@
 (defvar-local arxana-essays-twoup--last-key nil)
 (defvar arxana-essays-twoup--overlay nil)
 
+(defcustom arxana-essays-twoup-surplus-buffers
+  '("*Arxana Essay Compiled Notes*")
+  "Buffers whose windows are surplus to the two-up layout and get closed."
+  :type '(repeat string)
+  :group 'arxana-browser)
+
+(defun arxana-essays-twoup--right-window (buf)
+  "Window directly RIGHT of the outline, showing BUF.
+The Arxana two-up invariant (Joe, 2026-06-11): basic material on the
+left — here, the outline — annotations on the right — here, the raised
+section content. Surplus windows (e.g. Compiled Notes) are removed from
+the frame so the pair reads as a pair."
+  (let* ((outline-win (or (get-buffer-window "*Arxana Browser*" t)
+                          (get-buffer-window (current-buffer) t)
+                          (selected-window))))
+    ;; clear surplus windows on this frame
+    (dolist (w (window-list (window-frame outline-win)))
+      (when (and (not (eq w outline-win))
+                 (member (buffer-name (window-buffer w))
+                         arxana-essays-twoup-surplus-buffers)
+                 (not (eq w (frame-root-window))))
+        (ignore-errors (delete-window w))))
+    (let* ((right (window-in-direction 'right outline-win))
+           (win (cond
+                 ((and right (eq (window-buffer right) buf)) right)
+                 (right (set-window-buffer right buf) right)
+                 (t (let ((new (split-window outline-win nil 'right)))
+                      (set-window-buffer new buf)
+                      new)))))
+      ;; exactly one pair: any OTHER window showing BUF is a duplicate
+      (dolist (w (window-list (window-frame outline-win)))
+        (when (and (eq (window-buffer w) buf)
+                   (not (eq w win))
+                   (not (eq w outline-win)))
+          (ignore-errors (delete-window w))))
+      win)))
+
 (defun arxana-essays-twoup--row-section ()
   "Return (ESSAY-ID . SECTION-NAME) for the row at point, or nil."
   (let ((id (get-text-property (line-beginning-position) 'tabulated-list-id)))
@@ -33,9 +70,7 @@
          (source (and cat (arxana-browser-essays--cat-source-file cat))))
     (when (and source (file-readable-p source))
       (let* ((buf (find-file-noselect source))
-             (win (or (get-buffer-window buf t)
-                      (display-buffer buf '(display-buffer-use-some-window
-                                            (inhibit-same-window . t))))))
+             (win (arxana-essays-twoup--right-window buf)))
         (when win
           (with-current-buffer buf
             (save-excursion
