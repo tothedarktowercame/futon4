@@ -331,9 +331,24 @@ self-inserting keys: the operator TYPES in these buffers.")
   :lighter ""
   :keymap arxana-essays-twoup-content-mode-map)
 
+(defun arxana-essays-twoup-save ()
+  "Save the section's edits by saving the BASE file buffer.
+A § buffer is an indirect buffer: it shares text with the file-visiting
+base buffer but has no file of its own, so ordinary `save-buffer' fails
+with \"no file\" (Joe hit this with C-c C-c, his reading-view save
+muscle-memory, 2026-06-11). Saving the base persists exactly the text
+the operator sees here."
+  (interactive)
+  (let ((base (buffer-base-buffer)))
+    (unless base (user-error "Not an indirect section buffer"))
+    (with-current-buffer base (save-buffer))
+    (message "Saved %s" (abbreviate-file-name (buffer-file-name base)))))
+
 (defvar arxana-essays-twoup-section-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "<left>") #'arxana-essays-twoup-left-or-back)
+    (define-key map (kbd "C-c C-c") #'arxana-essays-twoup-save)
+    (define-key map [remap save-buffer] #'arxana-essays-twoup-save)
     map)
   "Keymap for § section buffers: <left> at point-min is the ONLY back.
 NO letter keys, ever — section buffers are editable text, and any
