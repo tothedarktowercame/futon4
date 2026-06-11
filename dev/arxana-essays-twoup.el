@@ -34,6 +34,19 @@
   :type '(repeat string)
   :group 'arxana-browser)
 
+(defun arxana-essays-twoup--solo (buf keep-win)
+  "Enforce the Arxana solo invariant for BUF: KEEP-WIN is its ONE window.
+Every other window showing BUF — on any frame — is deleted; when such a
+window is its frame's only window, it is switched to another buffer
+instead (never delete a frame). Joe, 2026-06-11: \"there should be
+exactly one of each Arxana-associated buffer at a time.\""
+  (when (buffer-live-p buf)
+    (dolist (w (get-buffer-window-list buf 'nomini t))
+      (unless (eq w keep-win)
+        (if (eq w (frame-root-window (window-frame w)))
+            (set-window-buffer w (other-buffer buf (window-frame w)))
+          (ignore-errors (delete-window w)))))))
+
 (defun arxana-essays-twoup--right-window (buf)
   "Window directly RIGHT of the outline, showing BUF.
 The Arxana two-up invariant (Joe, 2026-06-11): basic material on the
@@ -57,12 +70,10 @@ the frame so the pair reads as a pair."
                  (t (let ((new (split-window outline-win nil 'right)))
                       (set-window-buffer new buf)
                       new)))))
-      ;; exactly one pair: any OTHER window showing BUF is a duplicate
-      (dolist (w (window-list (window-frame outline-win)))
-        (when (and (eq (window-buffer w) buf)
-                   (not (eq w win))
-                   (not (eq w outline-win)))
-          (ignore-errors (delete-window w))))
+      ;; solo invariant, frame-global: one window for the source, one for
+      ;; the outline
+      (arxana-essays-twoup--solo buf win)
+      (arxana-essays-twoup--solo (window-buffer outline-win) outline-win)
       win)))
 
 (defun arxana-essays-twoup--row-section ()
@@ -200,14 +211,15 @@ the frame so the pair reads as a pair."
                                   (split-window left-win nil 'right))))
               (set-window-buffer left-win sec-buf)
               (set-window-buffer right-win browser-buf)
-              ;; Exactly one pair (idempotent under repeat RET): any other
-              ;; window showing either pair buffer is a leftover from a
-              ;; previous descend; surplus buffers go too.
+              ;; Solo invariant, frame-global (idempotent under repeat
+              ;; RET): each pair buffer in exactly one window; surplus
+              ;; buffers evicted from this frame.
+              (arxana-essays-twoup--solo sec-buf left-win)
+              (arxana-essays-twoup--solo browser-buf right-win)
               (dolist (w (window-list frame))
                 (when (and (not (memq w (list left-win right-win)))
-                           (or (memq (window-buffer w) (list sec-buf browser-buf))
-                               (member (buffer-name (window-buffer w))
-                                       arxana-essays-twoup-surplus-buffers)))
+                           (member (buffer-name (window-buffer w))
+                                   arxana-essays-twoup-surplus-buffers))
                   (ignore-errors (delete-window w))))
               (select-window left-win)
               (when (fboundp 'arxana-window-constraints-validate-essays-two-up)

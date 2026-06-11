@@ -93,11 +93,20 @@ Use `message' to warn, `error' to raise, or nil to ignore."
           (arxana-window-constraints--dedicated-o docinfo t doc-ok)
           (arxana-window-constraints--dedicated-o sourceinfo t source-ok)
           (reazon-== ok (and doc-ok source-ok))))))
-    (reazon-defrel arxana-window-constraints--essays-two-up-o (outline-info source-info surplus-names ok)
+    (reazon-defrel arxana-window-constraints--solo-o (counts ok)
+      ;; Exactly one window per Arxana buffer, across ALL frames (Joe,
+      ;; 2026-06-11: "there should be exactly one of each
+      ;; Arxana-associated buffer at a time"). COUNTS is a list of
+      ;; (BUFFER-NAME . N-WINDOWS); the goal fails unless every N is 1.
+      (reazon-project (counts)
+        (reazon-== (and (cl-every (lambda (c) (= (cdr c) 1)) counts) t) t)
+        (reazon-== ok t)))
+    (reazon-defrel arxana-window-constraints--essays-two-up-o (outline-info source-info surplus-names counts ok)
       ;; The general Arxana two-up invariant (Joe, spoken 2026-06-11):
       ;; basic material LEFT (the outline), annotations RIGHT (the raised
-      ;; section), and no surplus windows on the frame. Restores the
-      ;; Reazon layout-discipline that slipped in the Essays build.
+      ;; section), no surplus windows on the frame, and each pair buffer
+      ;; in exactly one window frame-globally. Restores the Reazon
+      ;; layout-discipline that slipped in the Essays build.
       (reazon-project (outline-info source-info surplus-names)
         ;; the GOAL fails on violation — --query counts any solution as
         ;; success, so unifying ok=nil would slip through (the (nil) trap)
@@ -105,8 +114,8 @@ Use `message' to warn, `error' to raise, or nil to ignore."
                            (plist-get source-info :left))
                         (null surplus-names)
                         t)
-                   t)
-        (reazon-== ok t)))
+                   t))
+      (arxana-window-constraints--solo-o counts ok))
     (reazon-defrel arxana-window-constraints--docbook-browser-left-o
         (browserinfo docinfo ok)
       (reazon-conde
@@ -349,15 +358,22 @@ Use `message' to warn, `error' to raise, or nil to ignore."
                             (lambda (name)
                               (get-buffer-window name frame))
                             arxana-essays-twoup-surplus-buffers)))
+             ;; solo: each pair buffer in exactly one window, ALL frames
+             (counts (mapcar
+                      (lambda (buf)
+                        (cons (buffer-name buf)
+                              (length (get-buffer-window-list buf 'nomini t))))
+                      (delq nil (list (get-buffer outline-buffer)
+                                      (get-buffer source-buffer)))))
              (ok (and outline-info source-info
                       (arxana-window-constraints--query
                        `(reazon-run 1 q
                           (arxana-window-constraints--essays-two-up-o
-                           ',outline-info ',source-info ',surplus q))))))
+                           ',outline-info ',source-info ',surplus ',counts q))))))
         (arxana-window-constraints--report
          "essays-two-up"
          ok
-         "expected outline left of section content, no surplus windows")))))
+         (format "expected outline left of section content, no surplus windows, one window per buffer (counts: %S)" counts))))))
 
 (defun arxana-window-constraints-validate-docbook-browser-left (browser-buffer doc-buffer
                                                                                &optional frame)
