@@ -22,7 +22,14 @@
 (defvar arxana-essays-twoup--overlay nil)
 
 (defcustom arxana-essays-twoup-surplus-buffers
-  '("*Arxana Essay Compiled Notes*")
+  '("*Arxana Essay Compiled Notes*"
+    ;; The legacy three-pane reading view: a stale *Arxana Essay* render
+    ;; also SHADOWS the outline's annotation counts (open-section-buffer-state
+    ;; reads its overlays in place of the manifest), and saving it would
+    ;; retract whatever its overlays lost track of. In twoup-mode both are
+    ;; surplus; Joe flagged the stale Notes window live 2026-06-11.
+    "*Arxana Essay*"
+    "*Arxana Essay Notes*")
   "Buffers whose windows are surplus to the two-up layout and get closed."
   :type '(repeat string)
   :group 'arxana-browser)
