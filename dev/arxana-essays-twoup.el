@@ -201,6 +201,10 @@ the frame so the pair reads as a pair."
             (with-current-buffer sec-buf
               (narrow-to-region (car span) (cdr span))
               (arxana-essays-twoup-content-mode 1)
+              ;; long lines (e.g. the References entries) truncate their
+              ;; tails off-screen in a half-width window — wrap instead,
+              ;; so end-of-line markers like [PENDING consent] stay visible
+              (visual-line-mode 1)
               (local-set-key (kbd "q") #'arxana-essays-twoup-ascend)
               (local-set-key (kbd "b") #'arxana-essays-twoup-ascend))
             ;; Drill the browser into the annotations view for this section
