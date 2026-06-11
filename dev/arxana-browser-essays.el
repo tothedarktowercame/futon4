@@ -1027,10 +1027,13 @@ INCLUDE-RETRACTED is non-nil."
       (seq-remove #'arxana-browser-essays--annotation-retracted-p all))))
 
 (defun arxana-browser-essays--annotation-summary (manifest)
-  "Return `(:live N :retracted M)' for MANIFEST's section annotations.
-Only annotations targeting declared sections contribute to the totals,
-so the summary matches the per-section counts shown one level down."
+  "Return `(:live N :total T :retracted M)' for MANIFEST's annotations.
+`:live' = open (neither resolved nor retracted); `:total' = everything a
+section view will list (excludes only retracted).  Only annotations
+targeting declared sections contribute, so the summary matches the
+per-section counts shown one level down."
   (let ((live 0)
+        (total 0)
         (retracted 0))
     (dolist (section (plist-get manifest :sections))
       (let* ((all (arxana-browser-essays--annotations-for-section
@@ -1043,8 +1046,22 @@ so the summary matches the per-section counts shown one level down."
                                        #'arxana-browser-essays--annotation-retracted-p
                                        all))))
         (setq live (+ live live-count)
+              total (+ total (- (length all) retracted-count))
               retracted (+ retracted retracted-count))))
-    (list :live live :retracted retracted)))
+    (list :live live :total total :retracted retracted)))
+
+(defun arxana-browser-essays--count-badge (open total &optional pending)
+  "Format the one annotation-count vocabulary used on EVERY surface.
+Joe's consistency contract (2026-06-11): if one surface says 1 and
+another lists 12 rows, the display is lying — so every surface shows the
+same pair: 🍒 = open (outstanding work), 🟤 = total the section view
+lists (excludes only retracted).  PENDING > 0 appends ⚠N for unsaved
+in-buffer retractions diverging from the manifest.  Empty when zero."
+  (if (and (zerop open) (zerop total)
+           (or (null pending) (zerop pending)))
+      ""
+    (concat (format "%d🍒 %d🟤" open total)
+            (if (and pending (> pending 0)) (format " ⚠%d" pending) ""))))
 
 (defun arxana-browser-essays--open-section-buffer-state (essay-id section-id)
   "Return live buffer state for ESSAY-ID / SECTION-ID when open, else nil.
@@ -1064,6 +1081,24 @@ the currently open `*Arxana Essay*' buffer."
            :pending-retraction
            (length (or (arxana-browser-essays--retracted-ids-in-this-section)
                        '()))))))))
+
+(defun arxana-browser-essays-section-headline-suffix (context)
+  "Count badge for the essays-section CONTEXT headline — the third surface
+of the one-vocabulary contract (same 🍒/🟤 pair as the outline rows)."
+  (let* ((essay-id (plist-get context :essay-id))
+         (section-id (plist-get context :section-id))
+         (manifest (and essay-id
+                        (arxana-browser-essays--manifest-for essay-id)))
+         (all (and manifest section-id
+                   (arxana-browser-essays--annotations-for-section
+                    manifest section-id t)))
+         (retracted (length (seq-filter
+                             #'arxana-browser-essays--annotation-retracted-p all)))
+         (open (length (seq-remove
+                        #'arxana-browser-essays--annotation-disposed-p all)))
+         (badge (arxana-browser-essays--count-badge
+                 open (- (length all) retracted))))
+    (if (string-empty-p badge) "" (concat " — " badge))))
 
 (defun arxana-browser-essays--catalog-prop (cat prop)
   "Return PROP from CAT's top-level plist or its `:props' alist."
@@ -1173,20 +1208,23 @@ Explicit `head' metadata wins; otherwise the highest numeric version wins."
             (count-sections (length sections))
             (summary (and manifest
                           (arxana-browser-essays--annotation-summary manifest)))
-            (count-annotations (or (plist-get summary :live) 0)))
+            (count-open (or (plist-get summary :live) 0))
+            (count-total (or (plist-get summary :total) 0)))
        (list :type 'essays-essay
              :label (plist-get cat :label)
              :description
              (let ((prefix (plist-get cat :description)))
                (string-trim
-                (format "%s%s(%d section%s, %d annotation%s)"
+                (format "%s%s(%d section%s, %d open / %d annotation%s)"
                         (or prefix "")
                         (if prefix " " "")
                         count-sections
                         (if (= count-sections 1) "" "s")
-                        count-annotations
-                        (if (= count-annotations 1) "" "s"))))
-             :annotation-count count-annotations
+                        count-open
+                        count-total
+                        (if (= count-total 1) "" "s"))))
+             :annotation-count (arxana-browser-essays--count-badge
+                                count-open count-total)
              :view 'essays-essay
              :older-version-count (or (plist-get cat :older-version-count) 0)
              :older-versions (plist-get cat :older-versions)
@@ -1346,47 +1384,27 @@ serving the HEAD outline. DERIVED = self-truing fallback active."
 	                     ;; manifest count and let `pending' carry in-flight
 	                     ;; retractions not yet saved.
 	                     (live-count (length manifest-live))
-	                     (count-str
-	                      (cond
-	                       (whole-file
-	                        (if (> live-count 0)
-	                            (format "%d" live-count)
-	                          ""))
-	                       ((> pending 0)
-	                        (format "%d(%d+%d)" live-count retracted pending))
-	                       ((> retracted 0)
-	                        (format "%d(%d)" live-count retracted))
-	                       (t
-	                        (format "%d" live-count)))))
+	                     (total-count (- (length all) retracted))
+	                     (count-str (arxana-browser-essays--count-badge
+	                                 live-count total-count pending)))
 	                (list :type 'essays-section
 	                      :label (plist-get section :name)
 	                      :description
 	                      (cond
-	                       (whole-file
-	                        (if (> live-count 0)
-	                            (format "%d annotation%s"
-	                                    live-count
-	                                    (if (= live-count 1) "" "s"))
-	                          "Open chapter"))
-	                       ((> pending 0)
-	                        (format "%d live annotation%s, %d pending retraction%s%s"
-	                                live-count
-	                                (if (= live-count 1) "" "s")
-	                                pending
-	                                (if (= pending 1) "" "s")
-	                                (if (> retracted 0)
-	                                    (format ", %d already retracted" retracted)
-	                                  "")))
-	                       ((> retracted 0)
-	                        (format "%d live annotation%s, %d retracted"
-	                                live-count
-	                                (if (= live-count 1) "" "s")
-	                                retracted)
-	                        )
+	                       ((and whole-file (zerop total-count))
+	                        "Open chapter")
 	                       (t
-	                        (format "%d annotation%s"
-	                                live-count
-	                                (if (= live-count 1) "" "s"))))
+	                        (concat
+	                         (format "%d open / %d annotation%s"
+	                                 live-count total-count
+	                                 (if (= total-count 1) "" "s"))
+	                         (if (> pending 0)
+	                             (format ", %d pending retraction%s unsaved"
+	                                     pending (if (= pending 1) "" "s"))
+	                           "")
+	                         (if (> retracted 0)
+	                             (format ", %d retracted" retracted)
+	                           ""))))
 	                      :view 'essays-section
 	                      :essay-id essay-id
 	                      :section-id sid

@@ -621,6 +621,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
               store-suffix))
      ((eq (plist-get context :view) 'essays-section)
       (concat "Essay section — annotations linking sentences to pattern-library sources. RET opens an annotation. LEFT/b returns."
+              (if (fboundp 'arxana-browser-essays-section-headline-suffix)
+                  (arxana-browser-essays-section-headline-suffix context)
+                "")
               store-suffix))
      ((memq (plist-get context :view) '(songs-chapbook songs-suite))
       (concat (format "Songs — %s. RET opens the stored text. LEFT/b returns."
