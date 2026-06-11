@@ -39,13 +39,23 @@
 Every other window showing BUF — on any frame — is deleted; when such a
 window is its frame's only window, it is switched to another buffer
 instead (never delete a frame). Joe, 2026-06-11: \"there should be
-exactly one of each Arxana-associated buffer at a time.\""
+exactly one of each Arxana-associated buffer at a time.\"
+
+The operator's selected window is SOVEREIGN: if the operator is sitting
+in a window showing BUF, that window IS the canonical one, whatever
+KEEP-WIN says — enforcement reshapes the layout around the operator,
+never deletes the window under their cursor (Joe, 2026-06-11: \"I have
+a hard time getting cursor control when I change to an Arxana buffer\")."
   (when (buffer-live-p buf)
+    (when (and (eq (window-buffer (selected-window)) buf)
+               (not (eq (selected-window) keep-win)))
+      (setq keep-win (selected-window)))
     (dolist (w (get-buffer-window-list buf 'nomini t))
       (unless (eq w keep-win)
         (if (eq w (frame-root-window (window-frame w)))
             (set-window-buffer w (other-buffer buf (window-frame w)))
-          (ignore-errors (delete-window w)))))))
+          (ignore-errors (delete-window w)))))
+    keep-win))
 
 (defun arxana-essays-twoup--right-window (buf)
   "Window directly RIGHT of the outline, showing BUF.
@@ -53,8 +63,16 @@ The Arxana two-up invariant (Joe, 2026-06-11): basic material on the
 left — here, the outline — annotations on the right — here, the raised
 section content. Surplus windows (e.g. Compiled Notes) are removed from
 the frame so the pair reads as a pair."
-  (let* ((outline-win (or (get-buffer-window "*Arxana Browser*" t)
-                          (get-buffer-window (current-buffer) t)
+  (let* ((outline-buf (or (get-buffer "*Arxana Browser*") (current-buffer)))
+         ;; operator-sovereign anchor order: the window the operator is IN,
+         ;; else a window on the operator's frame, else anywhere. A bare
+         ;; (get-buffer-window buf t) is MRU across frames — with a stray
+         ;; duplicate it anchors the raise to the WRONG frame and fights
+         ;; the operator for cursor control (Joe, live 2026-06-11).
+         (outline-win (or (and (eq (window-buffer (selected-window)) outline-buf)
+                               (selected-window))
+                          (get-buffer-window outline-buf)
+                          (get-buffer-window outline-buf t)
                           (selected-window))))
     ;; clear surplus windows on this frame
     (dolist (w (window-list (window-frame outline-win)))
@@ -71,8 +89,9 @@ the frame so the pair reads as a pair."
                       (set-window-buffer new buf)
                       new)))))
       ;; solo invariant, frame-global: one window for the source, one for
-      ;; the outline
-      (arxana-essays-twoup--solo buf win)
+      ;; the outline — solo may re-choose in the operator's favour, so the
+      ;; window it KEPT is the one we hand back
+      (setq win (arxana-essays-twoup--solo buf win))
       (arxana-essays-twoup--solo (window-buffer outline-win) outline-win)
       win)))
 
@@ -102,8 +121,11 @@ the frame so the pair reads as a pair."
                               (if (re-search-forward "^## " nil t)
                                   (line-beginning-position)
                                 (point-max)))))
-                  (set-window-point win start)
-                  (with-selected-window win (recenter 1))
+                  ;; never move the point in the window the operator is
+                  ;; sitting in — the raise is a service to the OTHER pane
+                  (unless (eq win (selected-window))
+                    (set-window-point win start)
+                    (with-selected-window win (recenter 1)))
                   (when arxana-essays-twoup--overlay
                     (delete-overlay arxana-essays-twoup--overlay))
                   (setq arxana-essays-twoup--overlay
