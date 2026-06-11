@@ -1211,6 +1211,91 @@ Explicit `head' metadata wins; otherwise the highest numeric version wins."
      (vector (or (plist-get item :label) "")
              (format "%s" (or (plist-get item :annotation-count) 0))))))
 
+(defun arxana-browser-essays--cat-source-file (cat)
+  "Source markdown path from CAT, top-level or nested in :props.
+(The catalog stores it either way; the resolution bug of 2026-06-11 --
+a v1 manifest serving a v5 HEAD -- hid behind the nested case.)"
+  (or (plist-get cat :source-file)
+      (let ((props (plist-get cat :props)))
+        (or (alist-get :source-file props)
+            (alist-get 'source-file props)))))
+
+(defun arxana-browser-essays--source-headings (source-file)
+  "Flat ## headings of SOURCE-FILE, in order."
+  (when (and source-file (file-readable-p source-file))
+    (let (out)
+      (with-temp-buffer
+        (insert-file-contents source-file)
+        (goto-char (point-min))
+        (while (re-search-forward "^## +\\(.+?\\) *$" nil t)
+          (push (match-string 1) out)))
+      (nreverse out))))
+
+(defun arxana-browser-essays--derived-sections (essay-id headings)
+  "Section plists derived directly from the source HEADINGS."
+  (let ((i 0))
+    (mapcar (lambda (h)
+              (setq i (1+ i))
+              (list :id (format "%s/section/%s" essay-id
+                                (string-trim
+                                 (replace-regexp-in-string
+                                  "[^a-z0-9]+" "-" (downcase h))
+                                 "-" "-"))
+                    :name h
+                    :type "arxana/essay-section"
+                    :props (list (cons 'index (number-to-string i))
+                                 (cons 'derived-from-source t))))
+            headings)))
+
+(defun arxana-browser-essays--true-sections (essay-id manifest)
+  "Sections for ESSAY-ID, INVARIANTLY matching the source markdown.
+If the resolved MANIFEST declares sections whose names match the
+source's ## headings, use them (they may carry richer metadata).
+Otherwise -- stale manifest, wrong-version manifest, or no manifest --
+derive the outline from the source file itself, so what the browser
+shows is always the essay as it IS (Joe, 2026-06-11: outlines must
+track the actual latest version)."
+  (let* ((cat (arxana-browser-essays--catalog-spec essay-id))
+         (source (arxana-browser-essays--cat-source-file cat))
+         (headings (arxana-browser-essays--source-headings source))
+         (manifest-sections (and manifest (plist-get manifest :sections)))
+         (manifest-names (mapcar (lambda (sec) (plist-get sec :name))
+                                 manifest-sections)))
+    (cond
+     ((null headings) manifest-sections)
+     ((and manifest-sections (equal manifest-names headings))
+      manifest-sections)
+     (t (arxana-browser-essays--derived-sections essay-id headings)))))
+
+;;;###autoload
+(defun arxana-browser-essays-audit-outlines ()
+  "Report, per catalog essay, whether its served outline matches its source.
+The 2026-06-11 fossil class: a sibling manifest from an older version
+serving the HEAD outline. DERIVED = self-truing fallback active."
+  (interactive)
+  (let ((rows '()))
+    (dolist (cat (arxana-browser-essays--catalogs))
+      (let* ((essay-id (plist-get cat :essay-id))
+             (spec (and essay-id (arxana-browser-essays--catalog-spec essay-id)))
+             (source (and spec (arxana-browser-essays--cat-source-file spec)))
+             (headings (arxana-browser-essays--source-headings source))
+             (manifest (and essay-id (arxana-browser-essays--manifest-for essay-id)))
+             (names (and manifest (mapcar (lambda (sec) (plist-get sec :name))
+                                          (plist-get manifest :sections))))
+             (verdict (cond ((null source) "no-source")
+                            ((null headings) "no-headings")
+                            ((equal names headings) "MATCH")
+                            ((null names) "DERIVED(none)")
+                            (t "DERIVED(stale)"))))
+        (push (format "%-15s %s" verdict (or essay-id "?")) rows)))
+    (with-current-buffer (get-buffer-create "*essay-outline-audit*")
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert (string-join (nreverse rows) "\n") "\n")
+        (special-mode))
+      (display-buffer (current-buffer)))))
+
+
 (defun arxana-browser-essays-items (context)
   "Return browser items for CONTEXT, dispatched by view."
   (pcase (plist-get context :view)
@@ -1223,7 +1308,7 @@ Explicit `head' metadata wins; otherwise the highest numeric version wins."
                               essay-id))
                     (older-count (or (plist-get catalog :older-version-count) 0))
 	            (manifest (arxana-browser-essays--manifest-for essay-id))
-	            (sections (and manifest (plist-get manifest :sections))))
+	            (sections (arxana-browser-essays--true-sections essay-id manifest)))
 	       (if sections
 	           (append
                     (mapcar
