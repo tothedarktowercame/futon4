@@ -222,13 +222,11 @@ the frame so the pair reads as a pair."
                                   ib)))))
             (with-current-buffer sec-buf
               (narrow-to-region (car span) (cdr span))
-              (arxana-essays-twoup-content-mode 1)
+              (arxana-essays-twoup-section-mode 1)
               ;; long lines (e.g. the References entries) truncate their
               ;; tails off-screen in a half-width window — wrap instead,
               ;; so end-of-line markers like [PENDING consent] stay visible
-              (visual-line-mode 1)
-              (local-set-key (kbd "q") #'arxana-essays-twoup-ascend)
-              (local-set-key (kbd "b") #'arxana-essays-twoup-ascend))
+              (visual-line-mode 1))
             ;; Drill the browser into the annotations view for this section
             ;; by pushing the context DIRECTLY (the item plist already is
             ;; one: :view essays-section + :essay-id + :section-id).
@@ -324,12 +322,32 @@ point-min, where no leftward motion exists and <left> means back."
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "<left>") #'arxana-essays-twoup-left-or-back)
     map)
-  "Keymap for content buffers raised into a two-up pair.")
+  "Keymap for content buffers raised into a two-up pair.
+ONLY <left> (cursor-meaning preserved except at point-min) — never
+self-inserting keys: the operator TYPES in these buffers.")
 
 (define-minor-mode arxana-essays-twoup-content-mode
   "Back-navigation bindings for a two-up content buffer."
   :lighter ""
   :keymap arxana-essays-twoup-content-mode-map)
+
+(defvar arxana-essays-twoup-section-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "q") #'arxana-essays-twoup-ascend)
+    (define-key map (kbd "b") #'arxana-essays-twoup-ascend)
+    (define-key map (kbd "<left>") #'arxana-essays-twoup-left-or-back)
+    map)
+  "Keymap for § section buffers (q/b ascend).
+A MINOR-mode map, never `local-set-key': an indirect buffer SHARES its
+base buffer's local keymap — which for markdown buffers is the global
+`markdown-mode-map' — so local-set-key here poisoned b/q for EVERY
+markdown buffer in the session (Joe, live 2026-06-11: typing
+\"considerable\" fired ascend at the b and mangled his EOI sentence).")
+
+(define-minor-mode arxana-essays-twoup-section-mode
+  "Navigation bindings for a narrowed § section buffer."
+  :lighter " §"
+  :keymap arxana-essays-twoup-section-mode-map)
 
 (defvar arxana-essays-twoup-mode-map
   (let ((map (make-sparse-keymap)))
