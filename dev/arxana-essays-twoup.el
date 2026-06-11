@@ -118,3 +118,112 @@ the frame so the pair reads as a pair."
 
 (provide 'arxana-essays-twoup)
 ;;; arxana-essays-twoup.el ends here
+
+;;;; RET descends: focus the item, re-form the pair one level down --------
+
+;; Joe, spoken 2026-06-11: RET always FOCUSES the item under the cursor —
+;; a new two-up of [the section (basic material, LEFT) | its annotations
+;; (RIGHT)]. Cursor-over already auto-raises, so RET need not raise; and
+;; the old three-pane reading view (delete-other-windows + a Compiled
+;; Notes side window) breaks the pair, so in twoup-mode RET never goes
+;; there.
+
+(defvar arxana-essays-twoup--level1 nil
+  "Saved (BROWSER-BUF . SOURCE-BUF) for ascending back to level 1.")
+
+(defun arxana-essays-twoup--section-span (source-buf section-name)
+  "Return (START . END) of SECTION-NAME's ## span in SOURCE-BUF."
+  (with-current-buffer source-buf
+    (save-excursion
+      (goto-char (point-min))
+      (when (re-search-forward
+             (concat "^## +" (regexp-quote section-name) " *$") nil t)
+        (cons (line-beginning-position)
+              (save-excursion
+                (if (re-search-forward "^## " nil t)
+                    (line-beginning-position)
+                  (point-max))))))))
+
+(defun arxana-essays-twoup-descend ()
+  "Focus the section at point: section content LEFT, its annotations RIGHT."
+  (interactive)
+  (let ((row (arxana-essays-twoup--row-section)))
+    (if (null row)
+        ;; not a section row — defer to the browser's ordinary visit
+        (call-interactively #'arxana-browser--visit)
+      (let* ((essay-id (car row))
+             (section-name (cdr row))
+             (browser-buf (current-buffer))
+             (cat (arxana-browser-essays--catalog-spec essay-id))
+             (source (and cat (arxana-browser-essays--cat-source-file cat)))
+             (source-buf (and source (find-file-noselect source)))
+             (span (and source-buf
+                        (arxana-essays-twoup--section-span source-buf section-name))))
+        (if (null span)
+            (user-error "Cannot locate section %s in source" section-name)
+          (setq arxana-essays-twoup--level1 (cons browser-buf source-buf))
+          (let* ((sec-buf-name (format "§ %s — %s" section-name
+                                       (file-name-nondirectory source)))
+                 (sec-buf (or (get-buffer sec-buf-name)
+                              (with-current-buffer source-buf
+                                (let ((ib (make-indirect-buffer
+                                           source-buf sec-buf-name t)))
+                                  ib)))))
+            (with-current-buffer sec-buf
+              (narrow-to-region (car span) (cdr span))
+              (local-set-key (kbd "q") #'arxana-essays-twoup-ascend)
+              (local-set-key (kbd "b") #'arxana-essays-twoup-ascend))
+            ;; drill the browser into the annotations view for this section
+            (with-current-buffer browser-buf
+              (arxana-browser--visit))
+            ;; geometry: section LEFT, annotations (browser) RIGHT
+            (let* ((left-win (or (get-buffer-window browser-buf t)
+                                 (selected-window)))
+                   (frame (window-frame left-win))
+                   (right-win (or (window-in-direction 'right left-win)
+                                  (split-window left-win nil 'right))))
+              (set-window-buffer left-win sec-buf)
+              (set-window-buffer right-win browser-buf)
+              ;; surplus discipline at level 2 as well
+              (dolist (w (window-list frame))
+                (when (and (not (memq w (list left-win right-win)))
+                           (member (buffer-name (window-buffer w))
+                                   arxana-essays-twoup-surplus-buffers))
+                  (ignore-errors (delete-window w))))
+              (select-window left-win)
+              (when (fboundp 'arxana-window-constraints-validate-essays-two-up)
+                (arxana-window-constraints-validate-essays-two-up
+                 sec-buf browser-buf frame)))))))))
+
+(defun arxana-essays-twoup-ascend ()
+  "Return to level 1: outline LEFT, raised source RIGHT."
+  (interactive)
+  (when arxana-essays-twoup--level1
+    (let* ((browser-buf (car arxana-essays-twoup--level1))
+           (source-buf (cdr arxana-essays-twoup--level1))
+           (left-win (selected-window))
+           (frame (window-frame left-win))
+           (right-win (or (window-in-direction 'right left-win)
+                          (window-in-direction 'left left-win))))
+      ;; whichever window the section view holds becomes the outline again
+      (with-current-buffer browser-buf
+        (when (fboundp 'arxana-browser--back) (ignore-errors (arxana-browser--back))))
+      (let* ((wins (sort (window-list frame 'nomini)
+                         (lambda (a b) (< (nth 0 (window-edges a))
+                                          (nth 0 (window-edges b))))))
+             (lw (car wins))
+             (rw (cadr wins)))
+        (when (and lw rw)
+          (set-window-buffer lw browser-buf)
+          (set-window-buffer rw source-buf)
+          (select-window lw))))))
+
+(defvar arxana-essays-twoup-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "RET") #'arxana-essays-twoup-descend)
+    map)
+  "Keymap active in `arxana-essays-twoup-mode' (RET descends).")
+
+(unless (assq 'arxana-essays-twoup-mode minor-mode-map-alist)
+  (push (cons 'arxana-essays-twoup-mode arxana-essays-twoup-mode-map)
+        minor-mode-map-alist))
