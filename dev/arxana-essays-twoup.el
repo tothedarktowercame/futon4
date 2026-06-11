@@ -334,10 +334,11 @@ self-inserting keys: the operator TYPES in these buffers.")
 (defvar arxana-essays-twoup-section-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "q") #'arxana-essays-twoup-ascend)
-    (define-key map (kbd "b") #'arxana-essays-twoup-ascend)
     (define-key map (kbd "<left>") #'arxana-essays-twoup-left-or-back)
     map)
-  "Keymap for § section buffers (q/b ascend).
+  "Keymap for § section buffers (q ascends; b is NEVER back here —
+section buffers are editable text, b must type b. Joe, 2026-06-11:
+\"The binding of b to back has to go.\")
 A MINOR-mode map, never `local-set-key': an indirect buffer SHARES its
 base buffer's local keymap — which for markdown buffers is the global
 `markdown-mode-map' — so local-set-key here poisoned b/q for EVERY
