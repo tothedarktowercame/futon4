@@ -89,6 +89,8 @@ the frame so the pair reads as a pair."
     (when (and source (file-readable-p source))
       (let* ((buf (find-file-noselect source))
              (win (arxana-essays-twoup--right-window buf)))
+        (with-current-buffer buf
+          (arxana-essays-twoup-content-mode 1))
         (when win
           (with-current-buffer buf
             (save-excursion
@@ -198,6 +200,7 @@ the frame so the pair reads as a pair."
                                   ib)))))
             (with-current-buffer sec-buf
               (narrow-to-region (car span) (cdr span))
+              (arxana-essays-twoup-content-mode 1)
               (local-set-key (kbd "q") #'arxana-essays-twoup-ascend)
               (local-set-key (kbd "b") #'arxana-essays-twoup-ascend))
             ;; Drill the browser into the annotations view for this section
@@ -233,19 +236,28 @@ the frame so the pair reads as a pair."
                 (arxana-window-constraints-validate-essays-two-up
                  sec-buf browser-buf frame)))))))))
 
+(defvar arxana-essays-twoup--in-ascend nil
+  "Non-nil while ascend itself calls `arxana-browser--up' (advice guard).")
+
 (defun arxana-essays-twoup-ascend ()
-  "Return to level 1: outline LEFT, raised source RIGHT."
+  "Go BACK to the previous two-up display: outline LEFT, raised source RIGHT.
+The Arxana back invariant (Joe, 2026-06-11, oft-repeated): back means
+the previous two-up DISPLAY — the pair re-forms — never a bare view pop
+that strands the window layout."
   (interactive)
   (when arxana-essays-twoup--level1
     (let* ((browser-buf (car arxana-essays-twoup--level1))
            (source-buf (cdr arxana-essays-twoup--level1))
-           (left-win (selected-window))
-           (frame (window-frame left-win))
-           (right-win (or (window-in-direction 'right left-win)
-                          (window-in-direction 'left left-win))))
-      ;; whichever window the section view holds becomes the outline again
+           (frame (window-frame (selected-window))))
+      ;; pop the browser only when it is genuinely one level down;
+      ;; a stray ascend must not pop past the outline
       (with-current-buffer browser-buf
-        (when (fboundp 'arxana-browser--up) (ignore-errors (arxana-browser--up))))
+        (when (and (fboundp 'arxana-browser--up)
+                   (eq (plist-get (car arxana-browser--stack) :view)
+                       'essays-section))
+          (ignore-errors
+            (let ((arxana-essays-twoup--in-ascend t))
+              (arxana-browser--up)))))
       (let* ((wins (sort (window-list frame 'nomini)
                          (lambda (a b) (< (nth 0 (window-edges a))
                                           (nth 0 (window-edges b))))))
@@ -254,7 +266,44 @@ the frame so the pair reads as a pair."
         (when (and lw rw)
           (set-window-buffer lw browser-buf)
           (set-window-buffer rw source-buf)
-          (select-window lw))))))
+          (arxana-essays-twoup--solo browser-buf lw)
+          (arxana-essays-twoup--solo source-buf rw)
+          (select-window lw)
+          (when (fboundp 'arxana-window-constraints-validate-essays-two-up)
+            (arxana-window-constraints-validate-essays-two-up
+             browser-buf source-buf frame)))))))
+
+(defun arxana-essays-twoup--up-restores-pair (orig &rest args)
+  "Around `arxana-browser--up': back from the annotations view re-forms
+the previous two-up display instead of popping the view in place."
+  (if (and (not arxana-essays-twoup--in-ascend)
+           (bound-and-true-p arxana-essays-twoup-mode)
+           (eq (plist-get (car arxana-browser--stack) :view) 'essays-section)
+           arxana-essays-twoup--level1)
+      (arxana-essays-twoup-ascend)
+    (apply orig args)))
+
+(advice-add 'arxana-browser--up :around #'arxana-essays-twoup--up-restores-pair)
+
+(defun arxana-essays-twoup-left-or-back ()
+  "Move left; at `point-min', go BACK to the previous two-up display.
+In a content buffer the left arrow keeps its cursor meaning — except at
+point-min, where no leftward motion exists and <left> means back."
+  (interactive)
+  (if (bobp)
+      (arxana-essays-twoup-ascend)
+    (left-char 1)))
+
+(defvar arxana-essays-twoup-content-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "<left>") #'arxana-essays-twoup-left-or-back)
+    map)
+  "Keymap for content buffers raised into a two-up pair.")
+
+(define-minor-mode arxana-essays-twoup-content-mode
+  "Back-navigation bindings for a two-up content buffer."
+  :lighter ""
+  :keymap arxana-essays-twoup-content-mode-map)
 
 (defvar arxana-essays-twoup-mode-map
   (let ((map (make-sparse-keymap)))
