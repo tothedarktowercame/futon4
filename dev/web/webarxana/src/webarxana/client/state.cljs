@@ -39,6 +39,7 @@
            :expanded-essays #{}  ;; essay ids expanded to show section neighbourhoods
            :expanded-essay-sections {} ;; essay id -> ordered section-id vector
            :view-mode :organic ;; Interest Constellation renderer mode.
+           :graph-visible-ids nil ;; graph-filtered node ids for the card rail.
            :diagram-route {:name nil
                            :mode nil
                            :diagram-id nil
@@ -181,22 +182,46 @@
     (some? t) (str t)
     :else nil))
 
+(defn- weak-type? [t]
+  (contains? #{"unknown" "interest"} t))
+
 (defn ingest-entity! [entity]
-  (let [nema {:nema/id   (or (:entity/id entity) (:id entity) (str (:xt/id entity)))
-              :nema/name (or (:entity/name entity) (:name entity) "")
-              :nema/type (or (type-name (:entity/type entity))
-                             (type-name (:type entity))
-                             "unknown")
-              :nema/text (or (:entity/text entity)
-                             (:source entity)
-                             (get-in entity [:payload :text])
-                             (:notes entity)
-                             "")
-              :nema/authors (or (get-in entity [:props :authors])
-                                [])
-              :nema/props (or (:props entity)
-                              (:entity/props entity)
-                              {})}]
+  (let [nema-id (or (:entity/id entity) (:id entity) (str (:xt/id entity)))
+        existing (get-nema nema-id)
+        incoming-props (or (:props entity)
+                           (:entity/props entity)
+                           {})
+        incoming-type (or (type-name (:entity/type entity))
+                          (type-name (:type entity))
+                          "unknown")
+        stale-weak? (and existing
+                         (seq (:nema/props existing))
+                         (empty? incoming-props)
+                         (weak-type? incoming-type)
+                         (not (weak-type? (:nema/type existing))))
+        incoming-name (or (:entity/name entity) (:name entity) "")
+        incoming-text (or (:entity/text entity)
+                          (:source entity)
+                          (get-in entity [:payload :text])
+                          (:notes entity)
+                          "")
+        nema {:nema/id   nema-id
+              :nema/name (if stale-weak?
+                           (:nema/name existing)
+                           incoming-name)
+              :nema/type (if stale-weak?
+                           (:nema/type existing)
+                           incoming-type)
+              :nema/text (if stale-weak?
+                           (:nema/text existing)
+                           incoming-text)
+              :nema/authors (if stale-weak?
+                              (:nema/authors existing)
+                              (or (get-in entity [:props :authors])
+                                  []))
+              :nema/props (if stale-weak?
+                            (:nema/props existing)
+                            incoming-props)}]
     (d/transact! conn [nema])))
 
 (defn ingest-relation! [rel]

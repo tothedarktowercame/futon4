@@ -14,13 +14,18 @@
       :mission-search [mission-search/page]
       :interest-network [interest-network/page]
       [:div.webarxana
-       [card/search-bar]
-       [:a {:href "#/interest-network"
-            :on-click (fn [_] (api/fetch-interest-network!))
-            :style {:position "fixed" :top "10px" :right "16px" :z-index 50
-                    :color "#93c5fd" :font-size "12px" :font-weight 700
-                    :text-decoration "none"}}
-        "Interest Network →"]
+       ;; Top bar: search-bar takes the available width; the interest link sits
+       ;; in-flow at the right (was a position:fixed overlay floating over the
+       ;; canvas). Re-pointed from the stale bipartite /interest-network to the
+       ;; live "Interest Constellation" diagram.
+       [:div.top-bar {:style {:display "flex" :align-items "center"}}
+        [:div {:style {:flex "1 1 auto" :min-width "0"}}
+         [card/search-bar]]
+        [:a {:href "#/diagram/Interest%20Constellation/expanded"
+             :style {:flex "0 0 auto" :margin "0 16px" :color "#93c5fd"
+                     :font-size "12px" :font-weight 700 :text-decoration "none"
+                     :white-space "nowrap"}}
+         "Interest Constellation →"]]
        [:div.main-area
         [card/sidebar]
         [:div.canvas-container

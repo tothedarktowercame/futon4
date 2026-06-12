@@ -48,8 +48,7 @@
 
 (defn- node-kind
   [nema]
-  (let [nema-id (or (:nema/id nema) "")
-        nema-type (or (:nema/type nema) "unknown")
+  (let [nema-type (or (:nema/type nema) "unknown")
         props (:nema/props nema)
         kind (some-> (prop-value props :node-kind) str/lower-case)]
     (cond
@@ -71,8 +70,8 @@
       :figure-tag
 
       (or (= "interest-star" kind)
-          (str/includes? nema-type "interest")
-          (str/includes? nema-id "/interest/"))
+          (= "arxana/interest-star" nema-type)
+          (= "interest-star" nema-type))
       :interest-star
 
       :else
@@ -665,6 +664,12 @@
                               (apply-kind-filter view-mode)
                               (apply-view-mode-filter view-mode zoom-k))
         hood-ids   (set (map :nema/id (:nemas filtered-hood)))
+        graph-visible-ids (when (graph-filter-active?)
+                            hood-ids)
+        _sync-visible-cards (when (not= (:graph-visible-ids @state/ui-state)
+                                        graph-visible-ids)
+                              (swap! state/ui-state assoc
+                                     :graph-visible-ids graph-visible-ids))
         floating   (->> scratchpad
                         (remove #(contains? hood-ids (:id %)))
                         vec)]
