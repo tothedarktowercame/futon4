@@ -33,6 +33,13 @@
              "/section/"
              (js/encodeURIComponent entity-id)))
 
+      ;; demo-gallery fair nodes → sales.edn entries (resolved Emacs-side)
+      (= entity-type "demo")
+      (str "arxana://demo/" (js/encodeURIComponent entity-id))
+
+      (= entity-type "person")
+      (str "arxana://rolodex/" (js/encodeURIComponent entity-id))
+
       :else
       nil)))
 
