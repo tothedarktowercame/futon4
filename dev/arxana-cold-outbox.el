@@ -252,7 +252,7 @@ If KEY is absent, insert it after ANCHOR.  Targeted; preserves comments."
   (let ((path (arxana-cold-outbox--path draft :draft-md)))
     (cond ((and path (file-readable-p path))
            (insert "────────────────────────────────────────────────────────────\n")
-           (insert-file-contents path)
+           (insert (with-temp-buffer (insert-file-contents path) (buffer-string)))
            (unless (bolp) (insert "\n"))
            (insert "────────────────────────────────────────────────────────────\n\n"))
           (t
