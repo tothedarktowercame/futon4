@@ -7,10 +7,11 @@
 ;; surgical comment-preserving EDN edits, a keymap, and browser home entry
 ;; helpers.
 ;;
-;; The load-bearing transition is OUTBOX -> SENT MAIL.  This module never sends
-;; mail.  It records an operator-witnessed send only after the operator supplies
-;; a non-empty :send-witness and `bb pudding-prover.bb intake!' accepts the
-;; derived :outreach-sent event.  If intake rejects, the staged draft is not
+;; The load-bearing transition is OUTBOX -> SENT MAIL.  The SMTP path is
+;; consent-gated, uses `smtpmail' with operator configuration, captures the real
+;; Message-ID, and records that as :send-witness through `bb pudding-prover.bb
+;; intake!'.  If SMTP is unconfigured, the command falls back to the previous
+;; external-send witness prompt.  If intake rejects, the staged draft is not
 ;; flipped to :sent.
 
 ;;; Code:
@@ -22,6 +23,8 @@
     (add-to-list 'load-path dir)))
 
 (require 'cl-lib)
+(require 'message)
+(require 'smtpmail)
 (require 'subr-x)
 (require 'arxana-browser-rewrites)
 
@@ -42,7 +45,48 @@ Each child directory may contain `staged.edn', `draft.md', and `context.md'."
   :type 'file
   :group 'arxana-cold-outbox)
 
+(defcustom arxana-cold-outbox-from-address
+  "joseph.corneli@hyperreal.enterprises"
+  "From address used when sending staged EOIs through SMTP."
+  :type 'string
+  :group 'arxana-cold-outbox)
+
+(defcustom arxana-cold-outbox-smtp-server
+  ""
+  "SMTP server for staged EOI sends.
+When empty, `arxana-cold-outbox-send' falls back to external-send witness
+recording and does not attempt SMTP."
+  :type 'string
+  :group 'arxana-cold-outbox)
+
+(defcustom arxana-cold-outbox-smtp-service
+  587
+  "SMTP service/port for staged EOI sends."
+  :type 'integer
+  :group 'arxana-cold-outbox)
+
+(defcustom arxana-cold-outbox-smtp-user
+  "joseph.corneli@hyperreal.enterprises"
+  "SMTP username for staged EOI sends.
+Passwords are resolved by `smtpmail' and auth-source; this module never reads or
+stores them."
+  :type 'string
+  :group 'arxana-cold-outbox)
+
+(defcustom arxana-cold-outbox-smtp-stream-type
+  'starttls
+  "SMTP stream type for staged EOI sends, usually `starttls' or `ssl'."
+  :type '(choice (const :tag "STARTTLS" starttls)
+                 (const :tag "SSL" ssl)
+                 (symbol :tag "Other"))
+  :group 'arxana-cold-outbox)
+
 (defvar arxana-cold-outbox--buffer "*Arxana Cold Outbox*")
+(defvar arxana-cold-outbox--smtp-send-fn #'arxana-cold-outbox--smtp-send-default
+  "Function called to send a composed message buffer.
+It receives the message buffer and must return the sent Message-ID string.")
+(defvar arxana-cold-outbox--intake-fn #'arxana-cold-outbox--call-intake
+  "Function called to submit the temporary outreach event file to kit-intake.")
 
 (defconst arxana-cold-outbox--stages
   '((:staged   :staged   "Staged"   "drafted + staged in the outbox; awaiting operator review")
@@ -420,12 +464,108 @@ If KEY is absent, insert it after ANCHOR.  Targeted; preserves comments."
     (let ((exit (apply #'call-process "bb" nil buf nil args)))
       (cons exit (with-current-buffer buf (buffer-string))))))
 
+(defun arxana-cold-outbox--smtp-configured-p ()
+  "Return non-nil when SMTP is configured for direct staged EOI sends."
+  (not (string-empty-p (string-trim (or arxana-cold-outbox-smtp-server "")))))
+
+(defun arxana-cold-outbox--from-domain ()
+  "Return local SMTP domain derived from `arxana-cold-outbox-from-address'."
+  (or (cadr (split-string arxana-cold-outbox-from-address "@"))
+      "localhost"))
+
+(defun arxana-cold-outbox--draft-body (draft)
+  "Return DRAFT body text from draft.md, or raise a user error."
+  (let ((path (arxana-cold-outbox--path draft :draft-md)))
+    (unless (and path (file-readable-p path))
+      (user-error "No draft body readable; run eoi-new before sending"))
+    (with-temp-buffer
+      (insert-file-contents path)
+      (buffer-string))))
+
+(defun arxana-cold-outbox--default-subject (draft)
+  "Return the configured or inferred subject for DRAFT."
+  (let* ((m (arxana-cold-outbox--data draft))
+         (subject (plist-get m :subject))
+         (strawman (plist-get m :strawman))
+         (title (plist-get strawman :title))
+         (target (plist-get m :target))
+         (name (plist-get target :name)))
+    (or subject
+        (and title (format "Re: %s" title))
+        (and name (format "Re: %s" name))
+        "Re: staged EOI")))
+
+(defun arxana-cold-outbox--required-address (draft)
+  "Return DRAFT's target contact URI or prompt for a required address."
+  (let* ((m (arxana-cold-outbox--data draft))
+         (target (plist-get m :target))
+         (contact (plist-get target :contact-uri))
+         (addr (string-trim
+                (or contact
+                    (read-string "To address (required): ")))))
+    (when (string-empty-p addr)
+      (user-error "To address is required; refusing to fabricate one"))
+    addr))
+
+(defun arxana-cold-outbox--required-subject (draft)
+  "Return DRAFT subject, prompting with an inferred default when absent."
+  (let* ((m (arxana-cold-outbox--data draft))
+         (configured (plist-get m :subject))
+         (subject (if configured
+                      configured
+                    (read-string "Subject: " (arxana-cold-outbox--default-subject draft)))))
+    (setq subject (string-trim subject))
+    (when (string-empty-p subject)
+      (user-error "Subject is required"))
+    subject))
+
+(defun arxana-cold-outbox--compose-message-buffer (draft to subject)
+  "Return a preview buffer containing DRAFT as an SMTP message to TO."
+  (let ((buf (generate-new-buffer "*Arxana Cold Outbox Message Preview*"))
+        (body (arxana-cold-outbox--draft-body draft))
+        (message-id (message-make-message-id)))
+    (with-current-buffer buf
+      (message-mode)
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert (format "From: %s\n" arxana-cold-outbox-from-address))
+        (insert (format "To: %s\n" to))
+        (insert (format "Subject: %s\n" subject))
+        (insert (format "Message-ID: %s\n" message-id))
+        (insert "\n")
+        (insert body)
+        (unless (bolp) (insert "\n"))
+        (goto-char (point-min))))
+    buf))
+
+(defun arxana-cold-outbox--message-id (buffer)
+  "Return the Message-ID header from BUFFER."
+  (with-current-buffer buffer
+    (string-trim (or (message-fetch-field "Message-ID") ""))))
+
+(defun arxana-cold-outbox--smtp-send-default (buffer)
+  "Send composed message BUFFER through `smtpmail'; return its Message-ID."
+  (with-current-buffer buffer
+    (let ((message-id (arxana-cold-outbox--message-id buffer))
+          (send-mail-function #'smtpmail-send-it)
+          (message-send-mail-function #'smtpmail-send-it)
+          (smtpmail-smtp-server arxana-cold-outbox-smtp-server)
+          (smtpmail-smtp-service arxana-cold-outbox-smtp-service)
+          (smtpmail-smtp-user arxana-cold-outbox-smtp-user)
+          (smtpmail-stream-type arxana-cold-outbox-smtp-stream-type)
+          (smtpmail-local-domain (arxana-cold-outbox--from-domain))
+          (user-mail-address arxana-cold-outbox-from-address))
+      (unless (string-empty-p message-id)
+        (smtpmail-send-it)
+        message-id))))
+
 (defun arxana-cold-outbox--replace-review-after-send (draft send-witness)
   "Return DRAFT :review value updated with SEND-WITNESS authorization."
   (let* ((review (copy-sequence (or (plist-get (arxana-cold-outbox--data draft) :review) nil)))
          (jh (copy-sequence (or (plist-get review :john-hancock-send) nil))))
     (plist-put review :state :sent)
     (plist-put jh :send-authorized? t)
+    (plist-put jh :send-channel (if (arxana-cold-outbox--smtp-configured-p) :smtp :external))
     (plist-put jh :send-witness send-witness)
     (plist-put review :john-hancock-send jh)
     review))
@@ -439,8 +579,65 @@ If KEY is absent, insert it after ANCHOR.  Targeted; preserves comments."
    draft ":send-projection" event)
   (message "%s → :sent at %s" (arxana-cold-outbox--id draft) sent-at))
 
+(defun arxana-cold-outbox--intake-and-record! (draft send-witness sent-at event)
+  "Submit EVENT, and on success record DRAFT as sent with SEND-WITNESS."
+  (let ((tmp (make-temp-file "arxana-outreach-sent-" nil ".edn")))
+    (unwind-protect
+        (progn
+          (with-temp-file tmp (insert (arxana-cold-outbox--edn event) "\n"))
+          (let* ((result (funcall arxana-cold-outbox--intake-fn tmp))
+                 (exit (car result))
+                 (output (cdr result)))
+            (if (zerop exit)
+                (progn
+                  (arxana-cold-outbox--record-send! draft send-witness sent-at event)
+                  (message "kit-intake accepted: %s" (string-trim output))
+                  (arxana-cold-outbox-refresh))
+              (with-current-buffer (get-buffer-create "*Arxana Cold Outbox Intake*")
+                (let ((inhibit-read-only t))
+                  (erase-buffer)
+                  (insert output)
+                  (goto-char (point-max))
+                  (insert (format "\nkit-intake rejected with exit %s\n" exit))))
+              (pop-to-buffer "*Arxana Cold Outbox Intake*")
+              (user-error "kit-intake rejected; draft not marked sent"))))
+      (ignore-errors (delete-file tmp)))))
+
+(defun arxana-cold-outbox--record-external-send (draft)
+  "Fallback path: prompt for external send witness, then route through intake."
+  (unless (y-or-n-p "Operator confirms this was sent in mail/client? ")
+    (user-error "Send recording aborted"))
+  (let ((witness (string-trim (read-string "send-witness (Message-ID/receipt/sent ISO): "))))
+    (when (string-empty-p witness)
+      (user-error "send-witness is required; refusing to fabricate one"))
+    (let* ((sent-at (arxana-cold-outbox--iso-now))
+           (event (arxana-cold-outbox--outreach-event draft witness sent-at)))
+      (arxana-cold-outbox--intake-and-record! draft witness sent-at event))))
+
+(defun arxana-cold-outbox--send-via-smtp (draft)
+  "Compose, preview, SMTP-send DRAFT, then route its Message-ID through intake."
+  (let* ((to (arxana-cold-outbox--required-address draft))
+         (subject (arxana-cold-outbox--required-subject draft))
+         (buffer (arxana-cold-outbox--compose-message-buffer draft to subject)))
+    (unwind-protect
+        (progn
+          (pop-to-buffer buffer)
+          (unless (y-or-n-p
+                   (format "Send this now via SMTP as %s? "
+                           arxana-cold-outbox-from-address))
+            (user-error "SMTP send aborted"))
+          (let ((message-id (string-trim
+                             (or (funcall arxana-cold-outbox--smtp-send-fn buffer) ""))))
+            (when (string-empty-p message-id)
+              (user-error "SMTP send returned no Message-ID; draft not marked sent"))
+            (let* ((sent-at (arxana-cold-outbox--iso-now))
+                   (event (arxana-cold-outbox--outreach-event draft message-id sent-at)))
+              (arxana-cold-outbox--intake-and-record! draft message-id sent-at event))))
+      (when (buffer-live-p buffer)
+        (kill-buffer buffer)))))
+
 (defun arxana-cold-outbox-send ()
-  "Record a witnessed send for the draft at point through kit-intake."
+  "Send or record a witnessed send for the draft at point through kit-intake."
   (interactive)
   (let* ((draft (arxana-cold-outbox--prop-at-point 'arxana-cold-outbox-draft))
          (status (and draft (plist-get (arxana-cold-outbox--data draft) :draft/status))))
@@ -448,32 +645,9 @@ If KEY is absent, insert it after ANCHOR.  Targeted; preserves comments."
     (unless (memq status '(:staged :reviewed))
       (user-error "Draft is %s; only staged/reviewed drafts can be sent"
                   (arxana-cold-outbox--sym-str status)))
-    (unless (y-or-n-p "Operator confirms this was sent in mail/client? ")
-      (user-error "Send recording aborted"))
-    (let ((witness (string-trim (read-string "send-witness (Message-ID/receipt/sent ISO): "))))
-      (when (string-empty-p witness)
-        (user-error "send-witness is required; refusing to fabricate one"))
-      (let* ((sent-at (arxana-cold-outbox--iso-now))
-             (event (arxana-cold-outbox--outreach-event draft witness sent-at))
-             (tmp (make-temp-file "arxana-outreach-sent-" nil ".edn")))
-        (unwind-protect
-            (progn
-              (with-temp-file tmp (insert (arxana-cold-outbox--edn event) "\n"))
-              (let* ((result (arxana-cold-outbox--call-intake tmp))
-                     (exit (car result))
-                     (output (cdr result)))
-                (if (zerop exit)
-                    (progn
-                      (arxana-cold-outbox--record-send! draft witness sent-at event)
-                      (message "kit-intake accepted: %s" (string-trim output))
-                      (arxana-cold-outbox-refresh))
-                  (with-current-buffer (get-buffer-create "*Arxana Cold Outbox Intake*")
-                    (let ((inhibit-read-only t))
-                      (goto-char (point-max))
-                      (insert (format "\nkit-intake rejected with exit %s\n" exit))))
-                  (pop-to-buffer "*Arxana Cold Outbox Intake*")
-                  (user-error "kit-intake rejected; draft not marked sent"))))
-          (ignore-errors (delete-file tmp)))))))
+    (if (arxana-cold-outbox--smtp-configured-p)
+        (arxana-cold-outbox--send-via-smtp draft)
+      (arxana-cold-outbox--record-external-send draft))))
 
 (defun arxana-cold-outbox-edit-raw ()
   "Open the staged.edn file for the draft at point, or the outbox root."

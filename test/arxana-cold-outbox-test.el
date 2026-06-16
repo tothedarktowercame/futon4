@@ -7,10 +7,14 @@
 (require 'cl-lib)
 (require 'arxana-cold-outbox)
 
+(defvar arxana-cold-outbox-test--smtp-called nil)
+(defvar arxana-cold-outbox-test--captured-event-text nil)
+
 (defconst arxana-cold-outbox-test--staged
   "{:schema/version 1
  :draft/id \"draft-1\"
  :draft/status :staged
+ :subject \"Re: emacs-websocket PR #83\"
  :paths {:staging-dir \"__DIR__\" :draft-md \"draft.md\" :context-md \"context.md\"}
  :source/scan {:axis \"main\" :date \"2026-06-16\" :scan-path \"/tmp/scan.edn\"
                :brief-path \"/tmp/brief.md\" :brief-item \"METR/eval-analysis-public\"}
@@ -21,7 +25,7 @@
                   :because [\"daily brief names METR\"]}
  :target {:target/id \"org:metr\" :target/type :org
           :name \"METR\" :org \"METR\" :person nil
-          :contact-uri nil :public-url \"https://metr.org\"
+          :contact-uri \"hello@metr.org\" :public-url \"https://metr.org\"
           :relationship-path {:class-candidate :cold-scan-lead
                               :basis :only-known-path-is-cold-email
                               :notes \"Cold is relational, not topical.\"}}
@@ -107,6 +111,78 @@
      (should (equal arxana-cold-outbox-pudding-prover (cadr args)))
      (should (equal "intake!" (caddr args)))
      (should (equal "/tmp/event.edn" (cadddr args))))))
+
+(ert-deftest arxana-cold-outbox-smtp-path-sends-message-id-through-intake ()
+  (arxana-cold-outbox-test--with-fixture
+   (let* ((draft (arxana-cold-outbox-test--draft))
+          (captured-message nil)
+          (captured-event nil)
+          (arxana-cold-outbox-smtp-server "smtp.hyperreal.enterprises")
+          (arxana-cold-outbox-from-address "joseph.corneli@hyperreal.enterprises")
+          (arxana-cold-outbox--smtp-send-fn
+           (lambda (buffer)
+             (setq captured-message
+                   (with-current-buffer buffer (buffer-string)))
+             "fake-msgid@hyperreal"))
+          (arxana-cold-outbox--intake-fn
+           (lambda (event-file)
+             (setq captured-event
+                   (arxana-browser-rewrites--read-edn-file event-file))
+             (cons 0 "accepted"))))
+     (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest _) t)))
+       (arxana-cold-outbox--send-via-smtp draft))
+     (should (string-match-p "From: joseph.corneli@hyperreal.enterprises" captured-message))
+     (should (string-match-p "To: hello@metr.org" captured-message))
+     (should (string-match-p "Subject: Re: emacs-websocket PR #83" captured-message))
+     (should (string-match-p "This is the drafted body" captured-message))
+     (should (equal "fake-msgid@hyperreal" (plist-get captured-event :send-witness)))
+     (let ((updated (arxana-cold-outbox-test--draft)))
+       (should (eq :sent (plist-get (arxana-cold-outbox--data updated) :draft/status)))
+       (should (equal "fake-msgid@hyperreal"
+                      (arxana-cold-outbox--plist-get-in
+                       (arxana-cold-outbox--data updated)
+                       '(:review :john-hancock-send :send-witness))))))))
+
+(ert-deftest arxana-cold-outbox-intake-reject-does-not-mark-sent ()
+  (arxana-cold-outbox-test--with-fixture
+   (let* ((draft (arxana-cold-outbox-test--draft))
+          (arxana-cold-outbox-smtp-server "smtp.hyperreal.enterprises")
+          (arxana-cold-outbox--smtp-send-fn (lambda (_) "fake-msgid@hyperreal"))
+          (arxana-cold-outbox--intake-fn (lambda (_) (cons 2 "rejected"))))
+     (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest _) t)))
+       (should-error (arxana-cold-outbox--send-via-smtp draft) :type 'user-error))
+     (let ((updated (arxana-cold-outbox-test--draft)))
+       (should (eq :staged (plist-get (arxana-cold-outbox--data updated)
+                                      :draft/status)))))))
+
+(ert-deftest arxana-cold-outbox-fallback-prompts-for-external-witness ()
+  (arxana-cold-outbox-test--with-fixture
+   (let ((draft (arxana-cold-outbox-test--draft))
+         (arxana-cold-outbox-smtp-server "")
+         (arxana-cold-outbox--smtp-send-fn
+          (lambda (_)
+            (setq arxana-cold-outbox-test--smtp-called t)
+            "should-not-send"))
+         (arxana-cold-outbox--intake-fn
+          (lambda (event-file)
+            (setq arxana-cold-outbox-test--captured-event-text
+                  (with-temp-buffer
+                    (insert-file-contents event-file)
+                    (buffer-string)))
+            (cons 0 "accepted"))))
+     (setq arxana-cold-outbox-test--smtp-called nil)
+     (setq arxana-cold-outbox-test--captured-event-text nil)
+     (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest _) t))
+               ((symbol-function 'read-string)
+                (lambda (&rest _) "external-msgid@operator")))
+       (arxana-cold-outbox--record-external-send draft))
+     (should-not arxana-cold-outbox-test--smtp-called)
+     (should (string-match-p
+              ":send-witness \"external-msgid@operator\""
+              arxana-cold-outbox-test--captured-event-text))
+     (let ((updated (arxana-cold-outbox-test--draft)))
+       (should (eq :sent (plist-get (arxana-cold-outbox--data updated)
+                                    :draft/status)))))))
 
 (provide 'arxana-cold-outbox-test)
 ;;; arxana-cold-outbox-test.el ends here
