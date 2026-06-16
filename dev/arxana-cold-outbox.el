@@ -90,6 +90,7 @@ It receives the message buffer and must return the sent Message-ID string.")
 
 (defconst arxana-cold-outbox--stages
   '((:staged   :staged   "Staged"   "drafted + staged in the outbox; awaiting operator review")
+    (:editing  :editing  "Editing"  "operator is putting final edits into the draft body")
     (:reviewed :reviewed "Reviewed" "operator has read the send-gate surface; cleared to send")
     (:sent     :sent     "Sent"     "operator sent it; :send-witness captured, kit-intake recorded")
     (:replied  :replied  "Replied"  "the world answered")
@@ -361,7 +362,7 @@ If KEY is absent, insert it after ANCHOR.  Targeted; preserves comments."
            (arxana-cold-outbox--insert-provenance m)
            (arxana-cold-outbox--insert-routing m)
            (arxana-cold-outbox--insert-review m)
-           (insert "Commands: r=mark reviewed  S=record witnessed send via kit-intake  E=raw EDN  g=refresh\n")
+           (insert "Commands: e=edit body  r=mark reviewed  S=send via kit-intake  E=raw EDN  g=refresh\n")
            (add-text-properties beg (point) (list 'arxana-cold-outbox-draft draft)))))
      (lambda () (arxana-cold-outbox--render-draft draft-id)))))
 
@@ -423,10 +424,10 @@ If KEY is absent, insert it after ANCHOR.  Targeted; preserves comments."
    (arxana-cold-outbox--edn value)))
 
 (defun arxana-cold-outbox--mark-reviewed-record (draft)
-  "Flip DRAFT from :staged to :reviewed."
+  "Flip DRAFT from :staged or :editing to :reviewed."
   (let ((status (plist-get (arxana-cold-outbox--data draft) :draft/status)))
-    (unless (eq status :staged)
-      (user-error "Draft is %s, not staged" (arxana-cold-outbox--sym-str status)))
+    (unless (memq status '(:staged :editing))
+      (user-error "Draft is %s, not staged/editing" (arxana-cold-outbox--sym-str status)))
     (arxana-cold-outbox--set-draft-field! draft ":draft/status" :reviewed)))
 
 (defun arxana-cold-outbox-mark-reviewed ()
@@ -643,12 +644,27 @@ If KEY is absent, insert it after ANCHOR.  Targeted; preserves comments."
   (let* ((draft (arxana-cold-outbox--prop-at-point 'arxana-cold-outbox-draft))
          (status (and draft (plist-get (arxana-cold-outbox--data draft) :draft/status))))
     (unless draft (user-error "No cold outbox draft at point"))
-    (unless (memq status '(:staged :reviewed))
-      (user-error "Draft is %s; only staged/reviewed drafts can be sent"
+    (unless (memq status '(:staged :editing :reviewed))
+      (user-error "Draft is %s; only staged/editing/reviewed drafts can be sent"
                   (arxana-cold-outbox--sym-str status)))
     (if (arxana-cold-outbox--smtp-configured-p)
         (arxana-cold-outbox--send-via-smtp draft)
       (arxana-cold-outbox--record-external-send draft))))
+
+(defun arxana-cold-outbox-edit-body ()
+  "Open the draft body (draft.md) for final edits; mark the draft :editing.
+Save the body buffer, return to the outbox, and press `g' to re-render."
+  (interactive)
+  (let* ((draft (arxana-cold-outbox--prop-at-point 'arxana-cold-outbox-draft))
+         (status (and draft (plist-get (arxana-cold-outbox--data draft) :draft/status)))
+         (path (and draft (arxana-cold-outbox--path draft :draft-md))))
+    (unless draft (user-error "No cold outbox draft at point"))
+    (unless (and path (file-readable-p path))
+      (user-error "No draft body (draft.md) to edit"))
+    (when (memq status '(:staged :reviewed))
+      (arxana-cold-outbox--set-draft-field! draft ":draft/status" :editing))
+    (find-file path)
+    (message "Editing draft body — save, then `g' in the outbox to re-render")))
 
 (defun arxana-cold-outbox-edit-raw ()
   "Open the staged.edn file for the draft at point, or the outbox root."
@@ -661,6 +677,7 @@ If KEY is absent, insert it after ANCHOR.  Targeted; preserves comments."
 (defvar arxana-cold-outbox-mode-map
   (let ((m (make-sparse-keymap)))
     (define-key m "g" #'arxana-cold-outbox-refresh)
+    (define-key m "e" #'arxana-cold-outbox-edit-body)
     (define-key m "r" #'arxana-cold-outbox-mark-reviewed)
     (define-key m "S" #'arxana-cold-outbox-send)
     (define-key m "E" #'arxana-cold-outbox-edit-raw)
@@ -688,7 +705,7 @@ If KEY is absent, insert it after ANCHOR.  Targeted; preserves comments."
                                    (lambda (_) (arxana-cold-outbox--render-all))
                                    "Flat list of staged outbox drafts")
        (insert (format "   — %d total\n\n" (length drafts)))
-       (insert "Keys: RET/buttons=open  r=reviewed  S=record witnessed send  E=raw EDN  g=refresh\n"))
+       (insert "Keys: RET/buttons=open  e=edit body  r=reviewed  S=send  E=raw EDN  g=refresh\n"))
      #'arxana-cold-outbox-browse)))
 
 ;; ---------------------------------------------------- home integration ----
