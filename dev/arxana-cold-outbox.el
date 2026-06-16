@@ -521,9 +521,10 @@ If KEY is absent, insert it after ANCHOR.  Targeted; preserves comments."
 
 (defun arxana-cold-outbox--compose-message-buffer (draft to subject)
   "Return a preview buffer containing DRAFT as an SMTP message to TO."
-  (let ((buf (generate-new-buffer "*Arxana Cold Outbox Message Preview*"))
-        (body (arxana-cold-outbox--draft-body draft))
-        (message-id (message-make-message-id)))
+  (let* ((message-user-fqdn (arxana-cold-outbox--from-domain))
+         (buf (generate-new-buffer "*Arxana Cold Outbox Message Preview*"))
+         (body (arxana-cold-outbox--draft-body draft))
+         (message-id (message-make-message-id)))
     (with-current-buffer buf
       (message-mode)
       (let ((inhibit-read-only t))
