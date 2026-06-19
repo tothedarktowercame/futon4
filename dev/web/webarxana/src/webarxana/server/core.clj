@@ -45,7 +45,13 @@
    :asset-root (or (System/getenv "WEBARXANA_ASSET_ROOT")
                    (default-asset-root))
    :session-secret (or (System/getenv "SESSION_SECRET")
-                       "webarxana-dev-secret-change-me!!")})
+                       "webarxana-dev-secret-change-me!!")
+   ;; Single-user auto-login. When WEBARXANA_AUTO_LOGIN_AS is a non-empty
+   ;; username, every session-less request is treated as that user for the
+   ;; lifetime of the request (see wrap-auto-login). Empty/unset = normal
+   ;; form-login flow.
+   :auto-login-as (let [v (System/getenv "WEBARXANA_AUTO_LOGIN_AS")]
+                    (when (and v (not= "" v)) v))})
 
 (def config
   (atom (default-config)))
@@ -114,6 +120,19 @@
                      (assoc-in [:security :anti-forgery] false))]
     (wrap-defaults handler defaults)))
 
+(defn wrap-auto-login
+  "When auto-login-as is a non-empty username, inject a synthetic session
+  for every request that arrives without an existing session. Stateless:
+  no response cookie is set, so every request re-injects. Backwards
+  compatible: when auto-login-as is nil/empty, the handler runs unchanged."
+  [handler auto-login-as]
+  (if-not auto-login-as
+    handler
+    (fn [req]
+      (if (get-in req [:session :username])
+        (handler req)
+        (handler (assoc-in req [:session :username] auto-login-as))))))
+
 (defn start!
   ([] (start! {}))
   ([overrides]
@@ -123,6 +142,7 @@
    (let [cfg (merge (default-config) overrides)
          port (:port cfg)
          app  (-> (app-routes cfg)
+                  (wrap-auto-login (:auto-login-as cfg))
                   (wrap-session cfg))
          stop-fn (hk/run-server app {:port port})
          system {:config cfg
@@ -134,6 +154,8 @@
      (reset! !server system)
      (println (str "WebArxana starting on http://localhost:" port))
      (println (str "Proxying futon1a at " (:futon1a-url cfg)))
+     (when (:auto-login-as cfg)
+       (println (str "Auto-login enabled for user: " (:auto-login-as cfg))))
      (println "Ready.")
      system)))
 

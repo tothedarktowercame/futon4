@@ -502,6 +502,47 @@
 
 ;; --- Sidebar ---
 
+(defn- edges-filter-section
+  "Sidebar Edges filter: one checkbox per relation kind currently
+   present in the datascript store.  Ticking off a chip hides every
+   link of that kind on the canvas (without re-fetching).  The
+   filter is a WHITELIST — once the user toggles anything off, new
+   kinds appearing later (via click-to-expand) default OFF so the
+   user's narrowed view is preserved across exploration."
+  []
+  (let [kinds      (state/kinds-present-in-store)
+        vis        (:edge-filter-visible @state/ui-state)
+        visible-ct (if (nil? vis) (count kinds) (count vis))]
+    (when (seq kinds)
+      [:div.sidebar-edges
+       [:div.sidebar-heading
+        (str "Edges  (" visible-ct " of " (count kinds) " visible)")]
+       [:div.sidebar-edges-controls
+        [:button.scratchpad-btn
+         {:on-click #(state/hide-all-edge-kinds!)
+          :title "Hide every edge kind"}
+         "Hide all"]
+        [:button.scratchpad-btn
+         {:on-click #(state/show-all-edge-kinds!)
+          :title "Show every edge kind (incl. ones not yet ingested)"}
+         "Show all"]]
+       (for [kind kinds]
+         (let [is-visible (state/edge-kind-visible? kind)]
+           ^{:key (str "edge-kind-" kind)}
+           [:div.sidebar-edge-kind
+            ;; Whole-row click toggles the kind.  Checkbox is purely
+            ;; visual (read-only); without read-only React fires a
+            ;; checkbox on-change in addition to the row on-click,
+            ;; which double-toggles and produces a no-op.
+            {:on-click #(state/toggle-edge-kind! kind kinds)
+             :style {:cursor "pointer"
+                     :opacity (if is-visible 1.0 0.5)}}
+            [:input {:type "checkbox"
+                     :checked is-visible
+                     :read-only true
+                     :style {:margin-right 6 :pointer-events "none"}}]
+            [:span.entity-name (state/display-label kind)]]))])))
+
 (defn sidebar
   "Sidebar for browsing entities by type, with scratchpad for new nodes."
   []
@@ -510,7 +551,10 @@
           cur-type   (:browse-type @state/ui-state)
           entities   (display-browse-entities cur-type
                                                (:browse-list @state/ui-state))
-          connecting (:connecting @state/ui-state)]
+          connecting (:connecting @state/ui-state)
+          ;; Subscribe to render-tick so the Edges filter rerenders as
+          ;; new kinds get ingested into datascript.
+          _tick      (:_render-tick @state/ui-state)]
       [:div.sidebar
        ;; Connect mode banner
        (when connecting
@@ -519,6 +563,8 @@
           [:button.scratchpad-btn
            {:on-click #(swap! state/ui-state assoc :connecting nil)}
            "Cancel"]])
+       ;; Edges filter (one checkbox per relation kind in the store)
+       [edges-filter-section]
        ;; Recent activity
        [:div.sidebar-recent
         [:div.sidebar-heading

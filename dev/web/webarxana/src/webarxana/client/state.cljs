@@ -69,6 +69,18 @@
                             :graph {:nodes [] :links []}
                             :loading? false
                             :error nil}
+           ;; Edge-type filter: whitelist of :link/type strings to SHOW.
+           ;; Three states:
+           ;;   nil       — show all kinds (default; user has not narrowed)
+           ;;   #{...}    — show only these kinds; everything else
+           ;;               (including NEW kinds appearing as the user
+           ;;               clicks-to-expand new nodes) is hidden
+           ;;   #{}       — show no kinds (Hide all)
+           ;; This whitelist shape is the deliberate choice so that
+           ;; once a user has narrowed the view, later exploration
+           ;; (ingesting new entities / kinds) does NOT silently
+           ;; re-add edge clutter — operator framing 2026-05-22.
+           :edge-filter-visible nil
            }))
 
 (defn focus-id []
@@ -111,6 +123,71 @@
          (fn [ps] (mapv #(if (= (:id %) nema-id)
                            (assoc % :k k)
                            %) ps))))
+
+;; --- Display helpers ---
+
+(defn display-label
+  "Strip noisy namespace prefixes from a Clojure-keyword-shaped string
+   for canvas/sidebar display.  The fully-qualified form
+   (e.g. \":mfuton/mission/parent-child\") is what lives in XTDB and
+   what the wire surface speaks; on the UI we only need the last
+   segment to be legible.  Used by graph.cljs (canvas labels) AND
+   card.cljs (sidebar Edges-filter checkboxes) so both surfaces show
+   the same shortened name for a given relation kind."
+  [s]
+  (if (and (string? s) (clojure.string/includes? s "/"))
+    (last (clojure.string/split s #"/"))
+    s))
+
+;; --- Edge-type filter ---
+
+(defn edge-kind-visible?
+  "True when the given :link/type string is currently visible.
+   `nil` filter = everything visible (default).  Set filter = only
+   members of the set are visible (new kinds appearing in the store
+   default to HIDDEN so user's narrowed view is preserved across
+   click-to-expand exploration)."
+  [kind]
+  (let [vis (:edge-filter-visible @ui-state)]
+    (if (nil? vis) true (contains? vis kind))))
+
+(defn toggle-edge-kind!
+  "Flip visibility of a single relation kind.
+   - If filter is nil (all-visible state) and user clicks a kind,
+     we initialize the whitelist to `(kinds-now \\ kind)` so the
+     click reads as \"hide just this one\" rather than collapsing
+     to only the clicked kind.
+   - If filter is a set, conj/disj as appropriate."
+  [kind kinds-now]
+  (swap! ui-state update :edge-filter-visible
+         (fn [vis]
+           (cond
+             ;; First narrowing from all-visible: clicked = hide-this-one
+             (nil? vis)            (disj (set kinds-now) kind)
+             (contains? vis kind)  (disj vis kind)
+             :else                 (conj vis kind)))))
+
+(defn hide-all-edge-kinds!
+  "Hide every kind (whitelist becomes empty)."
+  []
+  (swap! ui-state assoc :edge-filter-visible #{}))
+
+(defn show-all-edge-kinds!
+  "Reset the filter so every kind (including ones not yet ingested)
+   is visible.  Sets :edge-filter-visible to nil."
+  []
+  (swap! ui-state assoc :edge-filter-visible nil))
+
+(defn kinds-present-in-store
+  "Return the distinct set of :link/type values currently present in
+   datascript, sorted by display label for stable sidebar order.  Used
+   by the sidebar Edges section to render one checkbox per kind."
+  []
+  (->> (d/datoms @conn :aevt :link/type)
+       (map #(.-v %))
+       distinct
+       (sort-by #(or % ""))
+       vec))
 
 ;; --- Queries ---
 
@@ -271,17 +348,14 @@
 (defn- ensure-nema!
   "Idempotently ensure a nema with the given :nema/id exists in the
    store, WITHOUT clobbering any pre-existing :nema/name or :nema/type
-   set by an earlier ingest-entity! call.  If the nema does not yet
-   exist, creates a placeholder shell using the id as the display
-   name; if it already exists, the transact is a no-op upsert on
-   the unique identity attr only."
+   set by an earlier ingest-entity! call.  When the nema already
+   exists this is a complete no-op (transacting a one-attr map with
+   only a unique-identity attr would throw in DataScript).  When the
+   nema does NOT yet exist, creates a placeholder shell using the id
+   as the display name."
   [id]
   (when (and id (not= "" id))
-    (if (d/entid @conn [:nema/id id])
-      ;; Already exists — only re-assert the unique attr so the
-      ;; lookup-ref resolves cleanly without overwriting name/type.
-      (d/transact! conn [{:nema/id id}])
-      ;; New entity — seed a placeholder shell.
+    (when-not (d/entid @conn [:nema/id id])
       (d/transact! conn [{:nema/id   id
                           :nema/name id
                           :nema/type "placeholder"}]))))

@@ -5,22 +5,77 @@
             [webarxana.client.api :as api]
             ["d3-force" :as d3]))
 
-(defn- display-label
-  "Strip noisy namespace prefixes from a Clojure-keyword-shaped display
-   string. The fully-qualified form (e.g. \":mfuton/mission/parent-child\")
-   is what lives in XTDB and what the wire surface speaks; on the canvas
-   we only need the last segment to be legible.
+;; display-label moved to webarxana.client.state for reuse by sidebar
+;; (the Edges-filter section uses the same short-segment shape).
 
-   Examples:
-   - \"mfuton/mission/parent-child\" → \"parent-child\"
-   - \"mfuton/external-reference\"   → \"external-reference\"
-   - \"arxana/scholium\"             → \"scholium\"
-   - \"article\"                     → \"article\"
-   - nil / empty / non-string        → input unchanged"
+(def ^:private wrap-separators
+  "Characters that wrap-text treats as natural break points.  Kept
+   character-by-character to avoid relying on regex lookbehind, which
+   can deadlock under shadow-cljs :advanced in this build."
+  #{\- \space \/ \. \_})
+
+(defn- split-at-separators
+  "Split s into segments such that each separator character
+   (see :data:`wrap-separators`) stays as the LAST character of the
+   segment it terminates.  Pure char-walk; no regex.
+
+   Example: \"a-b/c d\" → [\"a-\" \"b/\" \"c \" \"d\"]"
   [s]
-  (if (and (string? s) (str/includes? s "/"))
-    (last (str/split s #"/"))
-    s))
+  (loop [chars (seq s) buf "" acc []]
+    (if-let [c (first chars)]
+      (let [buf' (str buf c)]
+        (if (contains? wrap-separators c)
+          (recur (rest chars) "" (conj acc buf'))
+          (recur (rest chars) buf' acc)))
+      (if (seq buf) (conj acc buf) acc))))
+
+(defn- wrap-text
+  "Wrap s into at most max-lines lines of ≤max-chars by greedy-packing
+   segments split at natural boundaries (hyphens / spaces / slashes /
+   dots / underscores — kept as trailing characters on the preceding
+   segment so the wrap reads as a hyphenated/spaced/path-shaped
+   continuation rather than a hard cut).  When the natural pack would
+   exceed max-lines, the final line is hard-truncated with `…`.
+   Empty / nil input yields a single empty-string line so callers can
+   render uniformly.
+
+   Examples (max-chars 16, max-lines 4):
+   - \"mfuton-mission-typed-carrier-and-corpus-adherence\"
+     → [\"mfuton-mission-\" \"typed-carrier-\" \"and-corpus-\" \"adherence\"]
+   - \"Mission Artifact Standard\"
+     → [\"Mission \" \"Artifact \" \"Standard\"]
+   - \"short\"     → [\"short\"]
+   - \"\" / nil    → [\"\"]"
+  [s max-chars max-lines]
+  (if (or (nil? s) (= "" s))
+    [""]
+    (let [parts (split-at-separators s)
+          ;; Greedy-pack into lines bounded by max-chars.  Single
+          ;; segments longer than max-chars get their own line
+          ;; rather than being hard-broken — the caller's max-lines
+          ;; truncation handles the worst case.  When the next
+          ;; segment would overflow the current line, flush current
+          ;; to acc with EMPTY current and leave p in remaining so
+          ;; the next iteration starts a fresh line with it (NOT
+          ;; setting current=p here, which would double-consume p
+          ;; and infinite-loop on the next pass).
+          lines (loop [remaining parts current "" acc []]
+                  (if-let [p (first remaining)]
+                    (let [candidate (str current p)]
+                      (if (and (seq current) (> (count candidate) max-chars))
+                        (recur remaining "" (conj acc current))
+                        (recur (rest remaining) candidate acc)))
+                    (if (seq current) (conj acc current) acc)))]
+      ;; Cap at max-lines; fold any overflow into the last line
+      ;; with `…` so the truncation is visible.
+      (if (> (count lines) max-lines)
+        (let [keep (vec (take (dec max-lines) lines))
+              tail-joined (str/join "" (drop (dec max-lines) lines))
+              tail-short (if (> (count tail-joined) max-chars)
+                           (str (subs tail-joined 0 (max 0 (dec max-chars))) "…")
+                           tail-joined)]
+          (conj keep tail-short))
+        lines))))
 
 (def svg-width 1200)
 (def svg-height 800)
@@ -499,23 +554,50 @@
     "claim"    "#51cf66"
     "evidence" "#ffd43b"
     "pattern"  "#cc5de8"
-    "#8899aa"))
+    ;; Default for types that don't have a dedicated color yet
+    ;; (mfuton/mission, mfuton/external-reference, placeholder, etc.).
+    ;; Operator picked red 2026-05-22.
+    "#e74c3c"))
+
+(def ^:private directionless-link-kinds
+  "Relation kinds that are conceptually symmetric — the edge is drawn
+   without an arrowhead because reading direction off the line would
+   suggest a direction the data doesn't carry.  Operator framing
+   2026-05-22: `sibling` is symmetric so an arrow there is misleading."
+  #{"mfuton/mission/sibling"})
+
+(def ^:private reversed-link-kinds
+  "Relation kinds where the on-the-wire direction
+   (`:relation/from` → `:relation/to`) reads BACKWARD to the way a
+   viewer naturally interprets it on the canvas, so the renderer
+   flips src/dst for layout/arrow purposes.  For `parent-child` the
+   data has from=child (the mission carrying the wire), to=parent;
+   the operator (2026-05-22) prefers the canvas to read parent → child
+   so the arrow points away from the parent."
+  #{"mfuton/mission/parent-child"})
 
 (defn link-component
   [link src-pos dst-pos]
-  (let [[x1 y1] src-pos
-        [x2 y2] dst-pos
-        mx (/ (+ x1 x2) 2)
-        my (/ (+ y1 y2) 2)
-        link-id (:link/id link)
+  (let [link-id (:link/id link)
         link-type (:link/type link)
         link-text (:link/text link)
+        ;; Per-kind direction policy.  See `reversed-link-kinds` /
+        ;; `directionless-link-kinds` above.
+        reversed?      (contains? reversed-link-kinds link-type)
+        directionless? (contains? directionless-link-kinds link-type)
+        ;; Swap src/dst for layout if this kind is reversed — the
+        ;; whole link (line, arrowhead, label midpoint) uses the
+        ;; swapped coordinates so the arrow physically points the
+        ;; viewer-natural way.
+        [[x1 y1] [x2 y2]] (if reversed? [dst-pos src-pos] [src-pos dst-pos])
+        mx (/ (+ x1 x2) 2)
+        my (/ (+ y1 y2) 2)
         has-annotation (seq link-text)
         short-label (cond
                       (and has-annotation (> (count link-text) 20))
                       (str (subs link-text 0 18) "...")
                       has-annotation link-text
-                      :else (display-label (or link-type "link")))
+                      :else (state/display-label (or link-type "link")))
         label short-label
         label-w (+ 14 (* 7 (count label)))
         is-editing (= (get-in @state/ui-state [:editing-link :id]) link-id)
@@ -525,14 +607,14 @@
         ax2 (+ x1 (* dx ratio))
         ay2 (+ y1 (* dy ratio))]
     [:g {:key link-id}
-     [:line {:x1 x1 :y1 y1 :x2 ax2 :y2 ay2
-             :stroke (if is-editing "#ffd43b" "#6688aa")
-             :stroke-width (if is-editing 2.5 1.5)
-             :stroke-dasharray (cond
-                                 (= link-type "scholium") "4,4"
-                                 (= link-type "pattern/tensions") "6,5")
-             :opacity 0.7
-             :marker-end "url(#arrowhead)"}]
+     [:line (cond-> {:x1 x1 :y1 y1 :x2 ax2 :y2 ay2
+                     :stroke (if is-editing "#ffd43b" "#6688aa")
+                     :stroke-width (if is-editing 2.5 1.5)
+                     :stroke-dasharray (cond
+                                         (= link-type "scholium") "4,4"
+                                         (= link-type "pattern/tensions") "6,5")
+                     :opacity 0.7}
+              (not directionless?) (assoc :marker-end "url(#arrowhead)"))]
      [:g {:on-click (fn [e]
                       (swap! state/ui-state assoc
                              :editing-link {:id link-id
@@ -607,14 +689,28 @@
         :interest-star (str "m" magnitude)
         (if folded-count
           (str folded-count " concepts")
-          (display-label nema-type)))]
-     ;; Name label
-     [:text {:x x :y (+ y 10) :text-anchor "middle"
-             :fill "#ffffff" :font-size 13 :font-weight "bold"
-             :font-family "sans-serif"}
-      (if (> (count nema-name) 16)
-        (str (subs nema-name 0 14) "...")
-        nema-name)]]))
+          (state/display-label nema-type)))]
+     ;; Name label — wrapped at natural boundaries (hyphens / spaces /
+     ;; slashes / dots / underscores) into up to 4 stacked [:text] lines so
+     ;; long mission ids like "mfuton-mission-typed-carrier-and-corpus-adherence"
+     ;; render readably instead of getting truncated to 14 chars + "…".
+     ;; Using stacked <text> elements rather than <tspan> children inside
+     ;; one <text> because Reagent + the d3-force render path doesn't
+     ;; reliably commit tspan child updates here.
+     (let [lines (wrap-text nema-name 16 4)
+           line-height 14
+           base-y (+ y 10)]
+       (into [:g]
+             (map-indexed
+               (fn [i line]
+                 [:text {:key (str nema-id "-name-" i)
+                         :x x
+                         :y (+ base-y (* i line-height))
+                         :text-anchor "middle"
+                         :fill "#ffffff" :font-size 13 :font-weight "bold"
+                         :font-family "sans-serif"}
+                  line])
+               lines)))]))
 
 (defn graph-svg
   "Main SVG canvas with force-directed layout."
@@ -759,28 +855,35 @@
            [:marker {:id "arrowhead" :markerWidth 10 :markerHeight 8
                      :refX 9 :refY 4 :orient "auto" :markerUnits "strokeWidth"}
             [:path {:d "M0,0 L10,4 L0,8 L3,4 Z" :fill "#99aabb"}]]]
-          [:g {:class "graph-zoom-layer"
-               :transform (zoom-transform-attr)}
-           ;; Links
-           (when filtered-hood
+          (let [visible-links (filter #(state/edge-kind-visible? (:link/type %))
+                                      (:links filtered-hood))
+                visible-node-ids (into (set (mapcat (fn [l]
+                                                      [(get-in l [:link/src :nema/id])
+                                                       (get-in l [:link/dst :nema/id])])
+                                                    visible-links))
+                                       pin-ids)]
+            [:g {:class "graph-zoom-layer"
+                 :transform (zoom-transform-attr)}
+             ;; Links — filtered by the sidebar Edges whitelist (edge-kind-visible?)
+             (when filtered-hood
+               (doall
+                (for [link visible-links
+                      :let [src-id (get-in link [:link/src :nema/id])
+                            dst-id (get-in link [:link/dst :nema/id])
+                            src-pos (get all-positions src-id)
+                            dst-pos (get all-positions dst-id)]
+                      :when (and src-pos dst-pos)]
+                  ^{:key (:link/id link)}
+                  [link-component link src-pos dst-pos])))
+             ;; Nodes — hide nodes left with no visible edge (pins always shown)
              (doall
-              (for [link (:links filtered-hood)
-                    :let [src-id (get-in link [:link/src :nema/id])
-                          dst-id (get-in link [:link/dst :nema/id])
-                          src-pos (get all-positions src-id)
-                          dst-pos (get all-positions dst-id)]
-                    :when (and src-pos dst-pos)]
-                ^{:key (:link/id link)}
-                [link-component link src-pos dst-pos])))
-           ;; Nodes
-           (doall
-            (for [[nema-id pos] all-positions
-                  :let [nema (get all-nemas nema-id)]
-                  :when nema]
-              ^{:key nema-id}
-              [node-component nema pos
-               (= nema-id focus-id)
-               (contains? pin-ids nema-id)]))]]
+              (for [[nema-id pos] all-positions
+                    :let [nema (get all-nemas nema-id)]
+                    :when (and nema (contains? visible-node-ids nema-id))]
+                ^{:key nema-id}
+                [node-component nema pos
+                 (= nema-id focus-id)
+                 (contains? pin-ids nema-id)]))])]
          [:div {:style {:position "absolute" :left "8px" :top "8px" :z-index 5}}
           [view-mode-selector]]
          (when (graph-filter-active?)

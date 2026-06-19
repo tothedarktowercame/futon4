@@ -4,11 +4,22 @@
             [webarxana.client.api :as api]))
 
 ;; Hash-based deep linking.
-;; Format: #/pins/<id1>,<id2>,.../focus/<active-id>/type/<type>
+;; Format: #/pins/<id1>,<id2>,.../focus/<active-id>/type/<type>/show-edges/<kind1>,<kind2>,...
 ;;         #/focus/<entity-id>  (legacy single-focus, auto-pins)
 ;;         #/type/<type>
 ;;         #/mission-search/<query>
 ;;         #/diagram/<diagram-name>/<expanded|compressed>[/view/<mode>]
+;;
+;; `show-edges` carries the sidebar Edges-filter whitelist so a view
+;; with specific relation kinds toggled off can be shared by URL.
+;; Each `<kindN>` is the on-the-wire :link/type string (e.g.
+;; "mfuton/mission/sibling") with slashes percent-encoded via
+;; encodeURIComponent.  Three encodings:
+;;   omitted segment        — all kinds visible (no narrowing)
+;;   `show-edges/-`         — hide all kinds (whitelist is #{})
+;;   `show-edges/<a>,<b>`   — only kinds a, b visible
+;; The `-` sentinel for empty whitelist is needed so a hide-all
+;; selection round-trips through the URL distinctly from "no filter".
 
 (defn- encode [s] (js/encodeURIComponent s))
 (defn- decode [s] (js/decodeURIComponent s))
@@ -35,8 +46,18 @@
 (defn push-hash!
   "Update the URL hash to reflect current UI state."
   []
-  (let [{:keys [page browse-type focus-id pins mission-search expanded-diagram view-mode]} @state/ui-state
+  (let [{:keys [page browse-type focus-id pins mission-search expanded-diagram view-mode edge-filter-visible]} @state/ui-state
         pin-ids (map :id pins)
+        ;; show-edges segment encodes the sidebar Edges-filter whitelist:
+        ;;   nil          — omit segment (no narrowing)
+        ;;   #{}          — `show-edges/-` sentinel (hide-all)
+        ;;   #{kinds}     — `show-edges/<csv>` sorted for stable URL
+        show-edges-seg (cond
+                         (nil? edge-filter-visible) nil
+                         (empty? edge-filter-visible) ["show-edges" "-"]
+                         :else ["show-edges"
+                                (str/join "," (map encode
+                                                   (sort edge-filter-visible)))])
         parts (cond
                 (= :mission-search page)
                 (cond-> ["mission-search"]
@@ -61,9 +82,10 @@
                  view-mode)
                 :else
                 (cond-> []
-                  (seq pin-ids) (into ["pins" (str/join "," (map encode pin-ids))])
-                  focus-id      (into ["focus" (encode focus-id)])
-                  browse-type   (into ["type" (encode browse-type)])))
+                  (seq pin-ids)  (into ["pins" (str/join "," (map encode pin-ids))])
+                  focus-id       (into ["focus" (encode focus-id)])
+                  browse-type    (into ["type" (encode browse-type)])
+                  show-edges-seg (into show-edges-seg)))
         new-hash (if (seq parts)
                    (str "#/" (str/join "/" parts))
                    "#")]
@@ -97,12 +119,16 @@
           (let [[k v & rest] segs]
             (recur (vec rest)
                    (case k
-                     "type"     (assoc result :type (decode v))
-                     "focus"    (assoc result :focus (decode v))
-                     "pins"     (assoc result :pins
-                                       (mapv decode (str/split v #",")))
-                     "xdiagram" (assoc result :expanded-diagram (decode v))
-                     "view"     (assoc result :view-mode (parse-view-mode v))
+                     "type"       (assoc result :type (decode v))
+                     "focus"      (assoc result :focus (decode v))
+                     "pins"       (assoc result :pins
+                                         (mapv decode (str/split v #",")))
+                     "xdiagram"   (assoc result :expanded-diagram (decode v))
+                     "view"       (assoc result :view-mode (parse-view-mode v))
+                     "show-edges" (assoc result :show-edges
+                                         (if (= v "-")
+                                           #{}
+                                           (set (mapv decode (str/split v #",")))))
                      result))))))))
 
 (defn restore-from-hash!
@@ -111,8 +137,13 @@
   (let [hash (.-hash js/location)]
     (when (seq hash)
       (reset! restoring? true)
-      (let [{:keys [page query type focus pins diagram-name diagram-mode expanded-diagram view-mode]} (parse-hash hash)]
+      (let [{:keys [page query type focus pins diagram-name diagram-mode expanded-diagram view-mode show-edges]} (parse-hash hash)]
         (swap! state/ui-state assoc :view-mode (or view-mode :organic))
+        ;; Edges-filter whitelist restores synchronously so even the first
+        ;; canvas render uses the right filter (#{} from `show-edges/-` =
+        ;; hide-all, distinct from nil = no narrowing).
+        (when (some? show-edges)
+          (swap! state/ui-state assoc :edge-filter-visible show-edges))
         (cond
           (= page :mission-search)
           (do
@@ -175,7 +206,8 @@
                      (not= (:view-mode old) (:view-mode new))
                      (not= (:browse-type old) (:browse-type new))
                      (not= (get-in old [:mission-search :query])
-                           (get-in new [:mission-search :query]))))
+                           (get-in new [:mission-search :query]))
+                     (not= (:edge-filter-visible old) (:edge-filter-visible new))))
         (push-hash!))))
   (.addEventListener js/window "hashchange"
     (fn [_]
