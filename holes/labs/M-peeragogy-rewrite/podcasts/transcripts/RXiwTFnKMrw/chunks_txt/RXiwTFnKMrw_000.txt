@@ -1,0 +1,47 @@
+Well, hello and welcome to the 12th episode of the Peeragogy in Action podcast called title
+is Opening Education. So we're going to be talking about open source education with Peter Schucke
+in the UK and David Preston if he solves technical issues in California. So if you're
+wondering what the Peeragogy project is about, this is our 10th anniversary and we've
+been collaborating to build what we call the no longer missing guide to all things relevant
+to successful peer learning and peer production. And we like to remind people that we didn't
+invent Peeragogy, it's been happening since the beginning of time and maybe before. But
+through this podcast called Peeragogy in Action, we aim to provide an interactive space where
+participants and audience can explore the philosophies, the concepts, contributors and
+practical applications of Peeragogy. And we aim to keep these discussions for informal
+and free flowing within some minimal guidelines. We generally work around two to three topping
+or talking points or topics. We live streamed via video live video to the Peeragogy
+channels on YouTube, LinkedIn and Facebook. And we'd like you to consider subscribing on
+your favorite podcast apps. So that's just any podcast app. Literally, I think we're
+on all of them. And you can find the links to all those at Peeragogy in Action. So
+there's, you know, pierspress.com slash podcasts is the easiest place to find them. And several
+dozen archived recordings reside on our YouTube channel. We've been doing it, like I said,
+since 2012. And please consider subscribing and participating in future live streams. It
+makes it more interesting for us. And with that said, I'd like to go back to introducing
+our guests and I'll turn it over to Joe Corneli. Hello. Yeah. So in fact, Charlotte is
+going to join us as a guest representing the Peeragogy project. We would be joined by David
+Preston. But yeah, he seems to not be online today. But we can try to fill his shoes as well as
+we can. Because we do know him. He's contributed to the Peeragogy Handbook. Peter
+Schucke is our guest. And I'd really be great just to hear a bit more about him. But to
+introduce his background and why we reach out to him, we came to know of his work through
+on and through and with community open online courses.
+And yeah, Peter, if you'd like to just introduce yourself to the audience and a bit to us as
+well, we can get to know you. Hi. Yeah, I'm Peter Schucke. I'm a lecturer in higher education
+in a college based university center in East Lancashire, which is in the northwest of
+England. It's between Liverpool and Manchester, I guess it's a little bit north of Manchester
+toward the east. And I think the first time I got involved with Peeragogy, I can't remember
+when that was now, but it was quite a way. I mean, it was 10 years, it must have been
+getting offered to the 10 years at the beginning time. And I would wrangle for
+people who are fully aware. But he interviewed me about Coops when Coops was a project that
+I designed. He later became a PhD thesis and project. But Coops was running at the time as
+a community open online courses project. And it was a direct response to MOOCs and massive open
+online courses. And I felt at the time that it fitted very much between the Coops, the X,
+I don't know if these terms still get used as much as the ones did, but the connectivist MOOC.
+So the idea that this was like an egalitarian space where we were going to learn and create new
+ecologies of learning. And then the X MOOC, which seems to really dominate now and they're the blue
+chip institutional base MOOCs. Both of them were massive and both of them focused on the massive.
+And I thought there's such a missing space here that is community. How do people that need
+to use technology that are actually cut off from those other spaces that have through resource,
+through economics, through culture, through location in terms of geographic location or
+societal location. They really do need to be part of this and they're at threat to be, you know,
+those small micro communities are in threat or under threat of being isolated again, right at
+the beginning of something when actually we can do things.

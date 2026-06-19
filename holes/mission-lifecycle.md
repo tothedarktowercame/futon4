@@ -1,13 +1,51 @@
 # Futonic Mission Lifecycle
 
 A futonic mission is a scoped unit of work that moves the stack from a
-known state to a better one. Missions follow a 7-phase derivation path
-that progresses from naming a gap to demonstrating a working result and
-documenting it in the living system.
+known state to a better one. Missions may begin with a `HEAD`
+bootstrap, then follow a 7-phase derivation path that progresses from
+naming a gap to demonstrating a working result and documenting it in
+the living system.
 
 This document is a reusable reference — not specific to any mission.
 
 ## Phases
+
+### HEAD (optional bootstrap before IDENTIFY)
+
+Use `HEAD` when a mission exists first as a live operator-shape rather
+than as a scoped proposal. `HEAD` is not yet design, research, or
+formal scoping. Its job is to preserve the operator's voice, surface
+the mission's live pressure, and carry forward named tensions before
+IDENTIFY hardens the mission into a tractable gap statement.
+
+- [ ] **Operator-voice anchor:** A first-person statement of what this
+  mission is for, ideally preserving the operator's own wording rather
+  than an after-the-fact paraphrase.
+- [ ] **What's already felt to be true:** What seems promising,
+  effective, or morphogenetically real about the practice / system this
+  mission is trying to formalize or extend?
+- [ ] **Anti-glibness discipline:** What would make this mission
+  superficial, rhetorical, or under-evidenced? Name the discipline that
+  prevents that.
+- [ ] **Working-economy position:** What does this mission underwrite,
+  and what underwrites it? Why does it matter in the stack's actual
+  working life?
+- [ ] **Clarity-gap / carried-forward tensions:** What is still unclear,
+  not yet articulated, or intentionally deferred? Name these as live
+  tensions to be picked up by later phases rather than silently buried.
+- [ ] **Provenance:** How was this `HEAD` generated? Interview, flash,
+  note sequence, operator memo, or another intake process. Record the
+  date and source.
+
+`HEAD` does not replace IDENTIFY. It is a pre-IDENTIFY intake layer for
+missions whose real starting point is an operator's live sense of the
+problem. If a mission already has a crisp gap statement, skip `HEAD`
+and begin at IDENTIFY.
+
+**Exit criterion:** The operator recognises the `HEAD` as faithful to
+the mission's live shape, and the carried-forward tensions are named
+well enough that IDENTIFY can proceed without pretending the unknowns
+have already been settled.
 
 ### 1. IDENTIFY
 
@@ -23,11 +61,36 @@ Name the gap. Why does this mission exist?
 - [ ] **Source material:** Files, APIs, prior work that feed into this mission.
 - [ ] **Owner and dependencies:** Which repos are involved, who drives?
 
-The IDENTIFY document IS the mission file (`M-<name>.md`). Everything else
-accretes onto it.
+The mission file (`M-<name>.md`) begins no later than `HEAD`; if `HEAD`
+is skipped, IDENTIFY is the first required authored section. Everything
+else accretes onto that file.
 
 **Exit criterion:** A human has read the proposal and agrees the gap is real
 and the scope is right.
+
+#### Optional: shape-first IDENTIFY
+
+When the mission's gap is an *invariant* (or a candidate one), IDENTIFY
+can have a more formal character. Before progressing to MAP, ask:
+**"what shape is this one instance of?"** If the candidate invariant is
+naturally one of several siblings under a single protocol-shape, name
+the shape, enumerate at least 2-3 plausible instances, and adopt
+namespace IDs (`<shape>/<instance>`) in the inventory. If only one
+instance ever surfaces, that absence of generalisation is itself a
+finding — record it explicitly as `:special-case true`.
+
+This is a methodological move that produces sibling-namespaces of
+invariants rather than narrow one-offs, and dogfoods the futon stack's
+existing `family → invariants` shape without inventing new structural
+elements. Worked example: `M-archaeology-control` IDENTIFY surfaces
+the subsumption-witness shape (artifact A obsolete relative to record
+P) with siblings `obsolescence-recognition/{autostash, deferred-stub,
+pipeline-tracer, branch-merged, ...}`.
+
+Reference patterns:
+- `futon3/library/invariant-coherence/shape-first-identify.flexiarg`
+- `futon3/library/invariant-coherence/subsumption-witness.flexiarg`
+- `futon3/library/invariant-coherence/protocol-family-naming.flexiarg`
 
 ### 2. MAP
 
@@ -81,6 +144,11 @@ Design the solution. This is the core intellectual work.
   §GF for the full template. Not required for pure research or exploration
   missions, but required for any mission that replaces or extends existing
   behavior.
+- [ ] **PSR (optional, per non-obvious design choice):** When the design
+  selects a pattern from `futon3/library/`, write a Pattern Selection Record
+  *before* committing to it. Format and storage in §PSR/PUR Discipline below.
+  Optional but strongly encouraged when the choice is non-obvious or the
+  pattern is being used in a new way.
 
 **Exit criterion:** Someone could implement the mission from the DERIVE
 section alone, without needing to ask clarifying questions.
@@ -93,7 +161,9 @@ Synthesize. Why is this design *right*, not just *workable*?
   relevant to the DERIVE design. For each pattern that applies, record:
   which pattern, where it applies in the design, and how. This is a
   structured survey, not a post-hoc decoration — patterns you discover
-  here may revise the DERIVE design.
+  here may revise the DERIVE design. PSRs collected during DERIVE feed
+  directly into this cross-reference; if PSRs were skipped, this is the
+  catch-up moment to write them.
 - [ ] **Theoretical coherence:** Does the design serve the theoretical
   anchoring from IDENTIFY? Or has the theory shifted?
 - [ ] **Trade-off summary:** What did we give up and why?
@@ -138,6 +208,11 @@ validation — confirming the design is sound before code hardens.
   `adapt` capabilities.
 - [ ] **Decision log:** Record any verification-time discoveries that revise
   the DERIVE design, with rationale.
+- [ ] **PUR (optional, per pattern application during a spike):** If
+  VERIFY-time spikes apply patterns from `futon3/library/`, record a
+  Pattern Use Record per application — outcome, prediction error,
+  surprises. PURs are how patterns get validated or revised; even
+  short ones are valuable.
 
 **Exit criterion:** The design has been checked against available structural
 constraints. Any risks that can't be verified statically have been spiked.
@@ -165,6 +240,14 @@ requires novel design decisions, the earlier phases were incomplete.
   VERIFY/INSTANTIATE but belongs to a follow-on mission.
 - [ ] **Checkpoint:** Write the final checkpoint in the mission doc with
   commits, what was built, and what remains.
+- [ ] **PUR (optional but expected for pattern-driven implementation):**
+  This is where the bulk of PURs land. For each pattern selected via
+  PSR (or applied without a prior PSR), write a Pattern Use Record after
+  the pattern is in place: outcome (success / partial / failure),
+  prediction errors, surprises, and any revisions to the pattern itself
+  this exercise suggests. Skip only when the implementation is purely
+  mechanical (no pattern was actually applied — e.g. a one-line typo
+  fix or a rote dependency bump).
 
 **Exit criterion:** Every completion criterion has a concrete demonstration.
 A new person (human or agent) could reproduce the demo from the mission doc
@@ -200,11 +283,14 @@ navigation, not just via grep.
 ## Mission Lifecycle States
 
 ```
-IDENTIFY → MAP → DERIVE → ARGUE → VERIFY → INSTANTIATE → DOCUMENT → COMPLETE
-                                                                        ↓
-                                                                    RE-OPENED
-                                                                    (if gaps found)
+[HEAD] → IDENTIFY → MAP → DERIVE → ARGUE → VERIFY → INSTANTIATE → DOCUMENT → COMPLETE
+                                                                                 ↓
+                                                                             RE-OPENED
+                                                                             (if gaps found)
 ```
+
+`HEAD` is optional. When present, it precedes IDENTIFY; when absent, the
+mission starts at IDENTIFY.
 
 A mission may also be:
 - **BLOCKED:** Waiting on another mission or external dependency.
@@ -214,18 +300,142 @@ A mission may also be:
 ## Conventions
 
 - Mission files live in `<repo>/holes/missions/M-<name>.md`.
-- Status line at the top: `**Status:** <PHASE> (date)`.
+- Status line at the top records the mission's current phase-state. For
+  straightforward missions this can be `**Status:** <PHASE> (date)`;
+  for `HEAD`-bootstrapped missions it may be composite, e.g.
+  `**Status:** HEAD complete; IDENTIFY pending`.
 - Checkpoints are appended (never overwrite prior phases).
 - Evidence is emitted to futon1a during VERIFY/INSTANTIATE.
 - Completed missions become source material for future missions.
 - Each phase accretes — the mission doc grows as phases complete.
 
+## PSR/PUR Discipline
+
+PSR (Pattern Selection Record) and PUR (Pattern Use Record) are the
+mechanism by which the pattern library evolves alongside the missions
+that consume it. They are **optional per phase** — the per-phase
+checklists call out where they typically land — but they are **strongly
+encouraged whenever a non-trivial design choice references a pattern**.
+
+### When to write them
+
+| Phase | PSR? | PUR? | Note |
+|---|---|---|---|
+| IDENTIFY | – | – | Patterns named here are theoretical anchoring, not selection |
+| MAP | – | – | MAP is research; no design decisions yet |
+| DERIVE | **yes (optional)** | – | Per non-obvious pattern selection |
+| ARGUE | catch-up | – | Cross-reference step is the safety net |
+| VERIFY | – | **yes** if a spike applied a pattern | |
+| INSTANTIATE | – | **yes (expected)** | The bulk of PURs land here |
+| DOCUMENT | – | – | PURs become source material for docbook entries |
+
+Skip both only when the work is purely mechanical (typo fix, rote
+dependency bump, generated-code regeneration). For everything else, at
+least one PUR is the floor.
+
+### Where they live
+
+**Canonical (2026-05-23):** PSR / PUR records live as sections *inside
+the mission .md file*, so the mission watcher picks them up
+automatically and surfaces them on the mission's substrate-2 hyperedge
+(`:mission/psrs` and `:mission/purs` props served by
+`/api/alpha/missions`). No separate `<repo>/holes/labs/<mission>/psr/`
+directory tree is needed; the mission file is the canonical record of
+its own pattern selections and applications.
+
+Legacy `<repo>/holes/labs/<mission-name>/psr|pur/<date>__<phase>__<topic>.md`
+files from earlier sessions are still readable but new PSRs should land
+in the mission file directly.
+
+### Format
+
+PSR (write *before* committing to a pattern): a `## PSR` (or `### PSR`,
+or `#### PSR-N: <title>`) section in the mission file, followed by
+`- Key: value` bullets. Multi-line values are supported via indented
+continuation lines under the bullet.
+
+```markdown
+## PSR
+
+- Pattern chosen: code-coherence/dead-code-hygiene
+- Candidates: dead-code-hygiene, test-before-commit
+- Rationale: Removed orphan helpers in mission_control_backend.clj after
+  Task 8 consolidated three parsers into one — leftover functions for
+  the deleted code paths.
+- Confidence: high — pattern is well-established and the orphan check
+  was straightforward.
+```
+
+Or numbered, for missions with multiple PSRs:
+
+```markdown
+### PSR — Pattern Selection Records
+
+#### PSR-1: `code-coherence/dead-code-hygiene` applied to futon3a parser
+
+- Pattern chosen: code-coherence/dead-code-hygiene
+- Candidates: dead-code-hygiene, keep-deprecated-with-comment
+- Rationale: ...
+- Confidence: high
+
+#### PSR-2: `regex-tightening` for code-paths capture
+
+- Pattern chosen: combining-methods-as-diagnostic
+- ...
+```
+
+PUR (write *after* applying a pattern): a `## PUR` (or `### PUR`, or
+`#### PUR-N: <title>`) section with the same bullet shape.
+
+```markdown
+## PUR
+
+- Pattern: code-coherence/dead-code-hygiene
+- Actions taken: Removed 21 unused defns + def patterns (mission_control_backend.clj
+  reduced from 892 → 682 lines). Updated parse-roots and -main to
+  drop the filesystem-walk fallback.
+- Outcome: success
+- Prediction error: low — clean removal, all callers re-checked
+- Notes: futon.missions namespace now compiles cleanly with no orphans
+```
+
+**Field keys are case-insensitive and whitespace becomes hyphen-separated
+when parsed** (e.g. `Pattern chosen` → `pattern-chosen`, `Actions taken`
+→ `actions-taken`). Keep them roughly canonical for cross-mission
+queries.
+
+**Avoid the legacy "code-block-with-template" format** seen in some
+2026-05 mission files (M-vsatarcs-writer, M-or-training,
+M-self-documenting-stack): a `**PSR-X — title**` bold-key line followed
+by a triple-backtick fenced code block with `key: value` lines inside.
+The mission watcher's V1 parser captures the section heading but not
+the code-block contents. Convert those to bullet format when the
+mission is next touched, or live with the section being heading-only
+in the substrate.
+
+### Why optional, not mandatory
+
+PSR/PUR adds friction. For substrate-spanning work, novel pattern
+applications, or any decision that future agents would otherwise have
+to re-derive ("why was this built this way?"), the friction is bought
+back many times over. For trivial work, it's bureaucracy. Mission
+authors decide per phase; the lifecycle gives them visible hooks rather
+than mandating compliance.
+
+### Exemplar
+
+`futon3/holes/labs/M-live-geometric-stack/{psr,pur}/2026-04-27__phase-1__edge-taxonomy-lift.md`
+is the inaugural full-discipline pair after this revision (substrate-2
+phase 1, 2026-04-27). Earlier exemplars from the futon1a rebuild are at
+`futon3/holes/labs/futon1a/{psr,pur}/`.
+
 ## Relationship to Other Processes
 
 - **Portfolio inference** (M-portfolio-inference) decides *which* mission to
   work on next. The mission lifecycle says *how* to work on it.
-- **Patterns** (futon3/library) inform DERIVE decisions. Pattern use is
-  recorded via PSR/PUR during VERIFY.
+- **Patterns** (futon3/library) inform DERIVE decisions. Pattern selection
+  and use are recorded via PSR/PUR per the discipline above; PURs feed
+  back into the library as evidence for pattern revision.
 - **Evidence landscape** (futon1a) stores the trail. Mission artifacts become
   queryable evidence.
 - **Mission Control** (futon3c) tracks mission status, computes coverage,

@@ -1,0 +1,52 @@
+As you're building towards the conference and then as you're running the conference,
+what are the ways in which you need to kind of see what developments are going on in the planning,
+make adjustments? Can you talk a little bit about that dynamic?
+Sure, definitely. And it's actually the main cap that I have for Emacsconth. I'm really happy
+to talk about this. So, yeah, I had the privilege to help prepare Emacsconth 2020, the last
+edition. And really, we were, I joined about two months away from the conference. And so,
+we had two months of getting ready. So, we had the call for proposals. We needed to review
+all the proposals. We needed to submit a schedule. We needed to make sure that all the speakers
+would take check, okay, all the technical aspects, which any kind of conference needs to have,
+at least virtual conferences. But the thing you really need to keep in mind when you're
+trying to run an event like this, any kind of conference, and especially online conferences,
+is that there are so many aspects that need to be worked on prior to the event. Not only that,
+once the event is done, there's a whole lot more of debriefing that needs to go on,
+so that the next edition can take into account all the aspects. Now, Emacs is free software.
+And we are, all the organizers, we have contributed in some shape or forms to Emacs.
+And as a result, I'd say that it has structured the way we approached working together as a group.
+And so, as a result, we tend to have to be very methodical when it comes to preparing the event.
+I mentioned that we were meeting on a weekly basis. When we finished Emacs on 2020,
+we started meeting every Saturday and discussing, well, first debriefing what had
+gone on in the last Emacs on that we did, but also trying to see how we could make the next one
+better. And so, when I said methodical, there's obviously the method in the schedule meeting every
+week, but also sticking to a particular mode of debriefing when we do something which is called
+checking in with people, where make sure that people say where they are at mentally.
+And then we move on to usually an agenda working on different points. But we always try to
+gather points throughout the week, whatever we're working on. We gather points and we come to the
+meeting with all the notes and we discuss them together. We minute the meeting. We're very rigorous
+about this. And I think that this rigor materializes itself in the way we run the conference itself.
+I say this half jokingly, but in the entire two days of conference, and it's about,
+it's about 20 hours total of conference are going from Saturday,
+late in the evening for me, which is early morning for the East Coast,
+up until the evening in East Coast and very, very late for me. We only managed to
+be late by 10 minutes over the two days. And I was watching my watch constantly,
+virtual conferences. You always need to make sure that people have their gears working,
+that they know what they need to be doing. We need to ensure that the tech infrastructure
+works. So it could be a nice move, but it went surprisingly well. And I think it's a testament to
+in a way how well we were organized ahead of time and how well the patterns that we used
+actually were. And maybe we could go a little deeper into this part since it's kind of the
+whole aspect of your energy in a way. Yeah. Well, I think, as we were talking before, we
+were discussing the similarities of planning a conference and working on a wiki. And so,
+you know, I wonder if we might be able to sort of draw out some of those comparisons in terms of,
+you know, on a wiki, one of the main ways that a user will understand what's going on,
+you know, if you go away for a day or a week or something and you come back and you want
+to see what's changed, you can look at the recent changes and see which pages have been edited.
+You know, there are various software features that sort of allow you to see
+what's going on. And then various, you know, features that let you respond to that or make
+your own impact. So what do you see as similarities with that? It sounds like having your regular
+meetings is one part of it and having a blog is another part of it. But what are sort of
+the main ways that someone would get, well, someone like you would get involved in planning
+something like this. How do you gain a sense of how everything fits together and what your
+contribution can be? Well, you've mentioned software solutions as in functions that your
+software provides to be able to do this. But I kind of want to be broader about this.
+It's not only about the solution, it's about the

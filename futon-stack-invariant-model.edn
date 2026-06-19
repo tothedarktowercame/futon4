@@ -160,9 +160,19 @@
    :layer :I1
    :status :operational
    :question "Do states advance in a valid order?"
-   :repos #{:R-futon3b :R-futon3c}
+   :repos #{:R-futon3c}
    :firm-exemplar :mission-cycle-phase-ordering
    :invariant-count 3}
+
+  {:id :F-gate-pipeline-phase-ordering
+   :name "Gate pipeline phase ordering"
+   :layer :I1
+   :status :operational-but-bypassable
+   :question "Does the futon3b gate pipeline traverse G5->G0 in declared order?"
+   :repos #{:R-futon3b}
+   :firm-exemplar :g5-to-g0-pipeline
+   :invariant-count 1
+   :note "Real code and tests exist in futon3b, but this path is not part of the current futon3c live invariant aggregate."}
 
   {:id :F-status-discipline
    :name "Status discipline"
@@ -299,9 +309,13 @@
    :status :candidate
    :question "Is latent work accumulating as invisible debt?"
    :repos #{:R-futon3 :R-futon3c :R-futon4 :R-futon6}
-   :firm-exemplar nil
-   :candidate-invariants [:stash-debt-bounded :recover-or-drop :obsolescence-recognition]
-   :note "Important workspace pressure, no enforced structure yet"}
+   :firm-exemplar :obsolescence-recognition/autostash
+   :exemplar-status :candidate-with-live-exemplar
+   :candidate-invariants [:stash-debt-bounded :recover-or-drop
+                          :obsolescence-recognition/autostash
+                          :obsolescence-recognition/deferred-stub
+                          :obsolescence-recognition/pipeline-tracer]
+   :note "Subsumption-witness shape exhibited via three sibling invariants under namespace `obsolescence-recognition/*` (M-archaeology-control 2026-04-29). Autostash slice is operational across all 14 futon repos via pre-commit hook; deferred-stub and pipeline-tracer are operational-when-enabled probe-taps."}
 
   {:id :F-cross-store-agreement
    :name "Cross-store agreement"
@@ -324,9 +338,9 @@
   {:from :R-futon1a :to :F-authorization-and-identity     :type :owns     :strength :operational}
   {:from :R-futon1a :to :F-layered-error-hierarchy        :type :owns     :strength :operational}
 
-  ;; I1 — futon3b, futon3c, futon1a
-  {:from :R-futon3b  :to :F-phase-ordering                :type :enforces :strength :operational}
+  ;; I1 — futon3c, futon1a, plus futon3b gate pipeline
   {:from :R-futon3c  :to :F-phase-ordering                :type :enforces :strength :operational}
+  {:from :R-futon3b  :to :F-gate-pipeline-phase-ordering  :type :enforces :strength :operational-but-bypassable}
   {:from :R-futon3c  :to :F-status-discipline             :type :enforces :strength :operational}
   {:from :R-futon1a  :to :F-status-discipline             :type :enforces :strength :operational}
   {:from :R-futon3c  :to :F-existence                     :type :enforces :strength :operational}
@@ -410,7 +424,7 @@
   {:I0 {:futon "9 operational invariants in futon1a. Firm substrate."
         :ukrn  "Training delivery exists. Untested downstream."
         :feel  "futon I0 is solid. UKRN I0 is claimed but unproven."}
-   :I1 {:futon "7 operational invariants across futon3b/3c. Phase ordering, status, existence."
+   :I1 {:futon "4 operational futon3c state-transition invariants plus 1 futon3b bypassable gate-pipeline family."
         :ukrn  "Exit interviews don't exist yet. Optional forms yield nothing."
         :feel  "futon I1 is operational. UKRN I1 is absent."}
    :I2 {:futon "Mixed: graph-symmetry operational, failure-locality strong in some repos, candidate elsewhere."

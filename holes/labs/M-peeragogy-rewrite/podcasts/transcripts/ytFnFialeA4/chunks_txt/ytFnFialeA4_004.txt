@@ -1,0 +1,55 @@
+As a community building component, how does the conference connect with other building
+community components of the Emacs world? You've talked a little bit about the blog
+and the meetings that you have for planning the conference. What else is there that builds and
+sustains community around Emacs? Well, the thing about Emacs, it feels like I've spoken a lot
+about paradigms today, but there is also an Emacs paradigm. I've talked about the free
+software, the fact that Emacs is free software and the paradigm within which it exists.
+But Emacs also within this whole field of free software is a tool that is particularly open.
+It's like a lot of people say that Emacs is an operating system and what they mean by this
+is that it supports many different type of stuff that you could do with it. You can, as I said,
+take notes, you can write code, you can organize your day, you can check your emails,
+you can browse the web, you can check your RSS feeds, so many things. But the lovely thing about
+it all is that it's all done under the paradigm of Emacs, which is think of it as the kernel.
+And we can actually see if you look at the, oh, I need to get the, there we go. It's really
+hard. Not disco, I swear. But if you look at the slide on my left, not on my right,
+damn it, it's really hard to do relativity. The middle of the screen now.
+Thank you. That's a good strategy here. But, you know, you have notes and Emacs is like the
+note at the very center and so many things are being linked to it. Actually, just for the anecdotes,
+what you're seeing on the screen here is an algorithm server, which is a tool that I've
+developed. I didn't get the chance today to speak, to talk about this, but one of my
+contribution to Emacs was algorithm and it's actually the perfect encapsulation of what's
+what I was trying to say about Emacs because everything is linked to Emacs. Everything can
+interact, you know, different modules within, you know, Emacs at the center and you have
+modules everywhere, everywhere. But the thing is, because they are linked to Emacs, any kind of
+modules can interact between one another. And if we step away from Emacs for a bit and we
+think about collaboration in a way, it feels like the method, the patterns, the tools that
+you have could be this kernel at the very middle. And people working together or working
+between one another are kind of depending on those methods. And personally, I've been working
+with Joe for a while, so I do know about Pyrogyn. I've been implementing some of those patterns
+that you've especially worked on into my own work, but also into, you know,
+the projects that I manage. And I truly feel like Emacs and Free Software in general
+are a very good pipeline for us to mobilize patterns, not only that, but also to see how
+the Free Software world is actually informing some of the patterns which could be used elsewhere.
+One of the stuff that we were trying on and I'll finish on this because I know we
+are running a little short on time. You know, we've been thinking with Joe and
+other people inside the Emacs research group about ways Emacs could help, you know, the
+academia in general in producing reproducible research working together collaboratively
+with Free Software. And it feels like, you know, if we could do this with academia,
+who knows which other fields we could do this with. You know, it could be just the
+whole aspect of working as a group on something. And as a result, I'm pretty inspired about this
+and I'm pretty inspired about working on this in the future. Okay, that's me done.
+Excellent. All right, so Joe, were you going to come back in? Do you have some
+show notes to discuss? Or did we want to talk a little bit more about the future of the Emacs
+conference? Hi, here I am. Yeah, so I was just thinking, yeah, takeaways in general,
+whether the future of Emacs and Charlotte, I hope she'll come in and just get some
+comments as someone watching this discussion and what we like and what we find exciting about
+this particular discussion and all that. So in any order, I'll happily jump in and just say one
+thing that wasn't covered in the discussion, but I think it's really important to say for the record
+is that I've really learned how to program through the Emacs mailing list. I would post
+things on this mailing list, and the people were so generous, they would send back comments
+saying, that was pretty good, but here you can do it better. And so like, actually not only
+was that how I learned how to program, that was for me really one of the key foundations
+of Purogogy, because I didn't go to class to learn how to program like that. I did it by
+this mailing list. So Leo is really a key figure in making that community even better
+now for the 21st century, right? This was a long time ago. So that's one of my takeaways,
+is that community is doing well, and indeed for me, Purogogy is really wrapped up.

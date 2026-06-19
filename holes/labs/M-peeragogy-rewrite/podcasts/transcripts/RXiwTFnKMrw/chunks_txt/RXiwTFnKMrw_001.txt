@@ -1,0 +1,96 @@
+To make that happen and to be part of something new, smaller spaces, but with not massive, community
+not massive.
+That was the phrase at the beginning.
+Everybody can teach and everybody can learn for free.
+That was the other mantra for it.
+Yeah.
+Is that enough, Joe, to start off?
+That's certainly enough to get us started.
+Thank you so much.
+That's great.
+I love the community, not massive.
+And I think, yeah, had we had David here, we would have got his introduction, but David
+has worked on something which I think will be a theme that we can discuss in his absence
+unless he shows up, open source learning.
+How do you share the methods and ideas that you've been developing?
+I think that's one notion of open source.
+I guess in the peeragogy project also, we've been trying to make, as Charlotte was saying,
+in our intro, a guide.
+Just to ask another follow-up question about your intro, really, is are you now the
+owner and proprietor of this Cooke's website?
+And if someone else wanted to run a Cooke, say, we wanted to run one, how would we do it?
+Would we approach you?
+Would we look on the website and see, okay, I click this and click that and I can do it
+myself here?
+Or do you have something else where someone can download that and go off and run it
+in their own time on their own platform?
+How does that work?
+Yeah.
+Okay.
+Good questions.
+Cooke's here.
+He's 10 years old now.
+And the idea of the, well, actually, it's older than 10 years, initially what we wanted
+to have is a platform that people could go on wherever they were and create courses.
+And that happened, you know, within the first three years, we thought we'd be quite small
+and it'd be in the northwest of England.
+And we had 1500 users within the first three years, which is a massive, I know
+in technology terms and in network terms, but people were creating courses in pretty
+diverse locations on every continent.
+Now, what happened was over a period of time, we noticed a lot of people created courses
+and then left them and they were abandoned and there was a real ethical dilemma, do we
+just shut them down or do we maintain them?
+Because people are taking the time to produce them, but they haven't been back
+and sometimes they haven't been back for years.
+So in the last 12 months, it's a sentient time for us.
+In this period now, we've shifted, we've got, we're going to move it now.
+You can still go on and you can still create courses, but at the point
+that we're at now, our focus is not to make it all things to all people,
+but to work with organizations and help them create the coops.
+So the ones that work really well have had existing organizations, not organizations
+necessarily, but a community.
+So a community can come together and use the coops.
+So the idea that we kind of began with, and that was part of the investigation is,
+will people create courses just as an individual in the hope that other people
+will come and join?
+And that happened only in tiny ways.
+And I think what happens is there's a whole thing behind course creation
+that we're not aware of.
+So somebody may be an expert, we had artists do this,
+and a really beautiful one from, I won't give the name of the creator,
+but a really beautiful one about making the invisible people.
+And it was an art thing, so it said, and it was part of the project
+that they were working on, and they put it out there for other people to come.
+So the knowledge was there, the expertise was there, but what was missing
+was how do you create a community online?
+How do you go and find those other people?
+They don't just happen and stumble across.
+It's not a high street where the people in it go past that building.
+It's a website, it's a web address.
+There's absolutely nothing that there is no way you would encounter this
+unless somebody comes and finds you.
+So there was that issue.
+And I think that's where we're at.
+I don't think people are going to stumble across these things.
+So we work with the groups first to make courses.
+But if somebody was listening to this now and wanted to make a cook
+and could they? Yes, they could.
+We might have a couple of issues right at this moment
+because we're switching from one domain to another.
+We're not a domain.
+We've got the same web addresses
+while we're being hosted somewhere differently.
+And the background is WordPress and Moodle.
+And so they are attached to each other,
+but it might be a couple of days.
+I'm hoping that you'll be less than that, actually,
+that they'll be free.
+But the goal is people can go from create.
+Peter, I have a question about, like,
+can a group say, I'm just thinking of a bunch of organizations
+that I'm involved in, mostly nonprofits.
+Could they use that platform to improve community interactions
+in their own community?
+Or is it just something to go and learn as a subject?
+Does that make sense?
+Yeah, it does.

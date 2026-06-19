@@ -1,0 +1,48 @@
+Emax. I've been working on it. I mean, I'm not the developer of Emax. I merely develop for Emax,
+but I've been doing this for eight years. Moving on to the second question, which you asked, which is
+about the community. Well, if you imagine a text editor straight from the 80s, you don't have
+the neons everywhere like the Tron film, but you still have the very strong nerdy culture around
+it. And whenever you have nerdy culture, you think about problems of diversity of other representation
+of specific groups of people. And so as a result, the community of Emax, we tend to say that it's
+fairly diverse. And the previous editions that we did of the Emax cons kind of reveal this to us
+because we have people from many different fields. You have authors writing books inside Emax and
+they were telling us about the setup to take the notes and organize the plot and all this. You have
+obviously developers who use text editors for their main job, writing programming on Emax and
+working for their companies or working for free software in general. But you also have people
+who use org mode, which is a component of Emax, to organize their life like I do. That's how I
+got started. That's the hook that got me completely enthralled by Emax and made me want to contribute
+so much to the code. And so even though the community is diverse, what we wanted to address
+with regards to the next Emax con but also the previous one is how do we make the community
+more diverse under different declensions of the words? Because diversity can be about
+the job that you do in your life. It can be about your gender. It can be about your age. It can
+be about your ethnicity and so many different aspects. So I feel like I've answered your question
+and I'm going to try to be shorter in my next answers. No, this is wonderful.
+I guess just getting into what the organizing the conference looks like. So you described
+yourself as the organizer, but I imagine that organizing a conference is not a one person
+job. Even if there's one central person, surely you have to collaborate with many different people
+in different respects. Maybe you didn't have to get a venue this time if it's all virtual,
+but you have software and technical questions, you have to build a program. There are many
+different pieces to a conference. So can you talk a little bit about who else you were working
+with and what those relationships are like? Is anyone paid? Is anyone drawing a salary
+from working on this? Is it all purely volunteer? No. It's good that you asked the question because
+it gives me the opportunity to say how happy I am to work with this team. I joined only for the
+last edition and I've discovered a group of people, the other organizers, the main organizers
+so to speak, who have been running the show for two or three editions. We didn't have one in 2018,
+but we had one in 2019 and one two years prior. So there were about five Emacs Conf totaled in the
+last six years and I only joined for the very last one as well as for the next one, but I work with
+lovely people who are fairly salient figures in the Emacs community. We didn't necessarily
+define the words community, but here I mean just the people. We do have a subreddit, we do
+have mailing list, which might feel a little antiquated to the younger viewers, but you know,
+it's still the main way work is being done on a lot of free software nowadays.
+And as a result, I work with a lot of people. We are about 10 organizers with various
+degrees of involvement in the project, but we are about four people who meet on a
+near weekly basis to try to prepare for the next Emacs Conf. And I'm happy to mention I'm in Bandali,
+who is the lead organizers for the Emacs Conf, but also Sasha Schwa, who runs the lovely
+lovely blog Emacs Life where she publishes a lot of notes about her own experience with Emacs
+and she's a gateway for many, many people discovering Emacs into how to do a lot of
+stuff, a lot of cool stuff especially. Sasha is very excited about a lot of stuff and she shares it
+on a blog. So yeah, that's two of the people I'm working on. I believe there was another side
+to the question you were asking. Would you mind repeating it possibly?
+Well, I guess, you know, what I'm really interested to hear and I see, I think we have Joe
+asking a similar question in the chat is what are some of the ways that you need to collaborate
+with other organizers? So if you're

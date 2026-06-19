@@ -406,7 +406,8 @@ already encoded query string (without the leading ?)."
            (coding-system-for-write 'utf-8)
            (url-request-method method)
            (url-request-data (when payload
-                               (encode-coding-string (json-encode payload) 'utf-8)))
+                               (string-as-unibyte
+                                (encode-coding-string (json-encode payload) 'utf-8 t))))
            (url-request-extra-headers (arxana-store--default-headers payload))
            (target (arxana-store--build-url path query))
            (fallback-target (when (and (stringp target)

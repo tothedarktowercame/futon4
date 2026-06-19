@@ -13,6 +13,18 @@
 (require 'cl-lib)
 (require 'subr-x)
 (require 'arxana-ui nil t)
+(require 'arxana-vsatarcs-belief)
+(require 'arxana-vsatarcs-anticipation)
+(require 'arxana-vsatarcs-sorrys)
+(require 'arxana-vsatarcs-bilateral)
+(require 'arxana-vsatarcs-r-criteria-wm)
+(require 'arxana-vsatarcs-wm-decision)
+(require 'arxana-vsatarcs-wm-recent)
+(require 'arxana-vsatarcs-cluster)
+(require 'arxana-vsatarcs-xtdb-clicks)
+(require 'arxana-vsatarcs-lifting-queue)
+(require 'arxana-vsatarcs-essay-revision-queue)
+(require 'arxana-browser-lab nil t)
 
 (defgroup arxana-vsatarcs nil
   "VSATARCS reading support for VSAT-shaped stories."
@@ -195,6 +207,63 @@ Return a plist with `:title', `:source-file', `:metadata', and `:scenes'."
   (dolist (line (split-string (or text "") "\n"))
     (arxana-vsatarcs--insert-markdown-line line)))
 
+(defun arxana-vsatarcs--story-id (story)
+  "Return the projection story id for STORY."
+  (when-let ((source (plist-get story :source-file)))
+    (file-name-base source)))
+
+(defun arxana-vsatarcs--decoration-status-counts (decorations)
+  "Return status counts for invariant DECORATIONS."
+  (let ((counts (make-hash-table :test 'equal)))
+    (dolist (dec decorations)
+      (let ((status (or (plist-get dec :decoration/status) "missing")))
+        (puthash status (1+ (gethash status counts 0)) counts)))
+    counts))
+
+(defun arxana-vsatarcs--insert-invariant-decoration-strip (story)
+  "Insert projection-backed invariant decorations for STORY."
+  (let* ((story-id (arxana-vsatarcs--story-id story))
+         (decorations (and story-id
+                           (fboundp 'arxana-browser--story-decorations-for-story)
+                           (ignore-errors
+                             (arxana-browser--story-decorations-for-story story-id)))))
+    (insert "Story invariants")
+    (if (not decorations)
+        (insert ": none\n\n")
+      (let ((counts (arxana-vsatarcs--decoration-status-counts decorations)))
+        (insert ": "
+                (string-join
+                 (delq nil
+                       (mapcar (lambda (status)
+                                 (let ((n (gethash status counts 0)))
+                                   (when (> n 0)
+                                     (format "%s:%d" status n))))
+                               '("candidate" "witnessed/violation"
+                                 "witnessed/inactive" "witnessed/error"
+                                 "witnessed/missing" "witnessed/ok"
+                                 "missing")))
+                 " ")
+                "\n")
+        (dolist (status '("candidate" "witnessed/violation"
+                          "witnessed/inactive" "witnessed/error"
+                          "witnessed/missing" "witnessed/ok" "missing"))
+          (let ((rows (seq-filter (lambda (dec)
+                                    (equal (or (plist-get dec :decoration/status)
+                                               "missing")
+                                           status))
+                                  decorations)))
+            (when rows
+              (insert (format "  %s: " status))
+              (insert
+               (mapconcat (lambda (dec)
+                            (format "%s/%s"
+                                    (or (plist-get dec :node/id) "?")
+                                    (or (plist-get dec :invariant/id) "?")))
+                          rows
+                          ", "))
+              (insert "\n"))))
+        (insert "\n")))))
+
 (defun arxana-vsatarcs--scene-at-index (story index)
   (nth index (arxana-vsatarcs--scenes story)))
 
@@ -275,10 +344,422 @@ RETURN-BUFFER and RETURN-CONFIG, when non-nil, are used by
                           (insert (propertize (plist-get s :title) 'face 'bold))
                         (arxana-vsatarcs--insert-scene-link story s))))
         (insert "\n\n")
+        (arxana-vsatarcs--insert-belief-snapshot)
+        (arxana-vsatarcs--insert-anticipation-snapshot)
+        (arxana-vsatarcs--insert-sorrys-snapshot)
+        (arxana-vsatarcs--insert-bilateral-snapshot)
+        (arxana-vsatarcs--insert-wm-r-criteria-snapshot)
+        (arxana-vsatarcs--insert-wm-decision-snapshot)
+        (arxana-vsatarcs--insert-wm-recent-snapshot)
+        (arxana-vsatarcs--insert-cluster-snapshot)
+        (arxana-vsatarcs--insert-xtdb-clicks-snapshot)
+        (arxana-vsatarcs--insert-lifting-queue-snapshot)
+        (arxana-vsatarcs--insert-essay-revision-queue-snapshot)
+        (arxana-vsatarcs--insert-invariant-decoration-strip story)
         (insert (make-string 72 ?-) "\n\n")
         (arxana-vsatarcs--insert-markdown (plist-get scene :body))
         (goto-char (point-min)))
       (display-buffer (current-buffer)))))
+
+(defun arxana-vsatarcs--insert-belief-snapshot ()
+  "Insert the global VSATARCS belief snapshot block.
+The block surfaces R1 (per the alignment contract
+`futon4/docs/vsatarcs-alignment-completeness.md') in the reader
+chrome: every tracked entity is listed with its most-likely status
+and entropy (in nats).  When no entity is tracked yet, a brief
+explanatory line is inserted instead.  Story-scoped filtering
+(showing only entities the current story references) is a v0.3
+move that couples to R2."
+  (let ((snapshot (arxana-vsatarcs-belief-snapshot)))
+    (insert "Belief snapshot (global; entity → status, entropy in nats)\n")
+    (if (null snapshot)
+        (insert "  (no entities tracked yet — ingest M-INC events via "
+                "`arxana-vsatarcs-belief-ingest-events')\n\n")
+      (dolist (row snapshot)
+        (insert (format "  %s → %s   (H = %.3f)\n"
+                        (car row) (or (nth 1 row) "?") (nth 2 row))))
+      (insert "\n"))))
+
+(defun arxana-vsatarcs--insert-anticipation-snapshot ()
+  "Insert the anticipation snapshot block (reader-criterion Q3).
+Reads `~/code/calendar/events.edn' on every call via
+`arxana-vsatarcs-anticipation-snapshot' and lists each in-horizon
+event with days-until, firing prior, mission anchor, and per-event
+time-pressure.  When no events.edn exists or no events fall in the
+horizon, an explanatory line is inserted instead."
+  (let* ((snap (arxana-vsatarcs-anticipation-snapshot))
+         (events (plist-get snap :events))
+         (horizon (plist-get snap :horizon-days))
+         (tp (plist-get snap :horizon-time-pressure)))
+    (insert (format "Anticipation snapshot (horizon %dd; aggregate tp = %.2f)\n"
+                    horizon tp))
+    (cond
+     ((not (plist-get snap :events-loaded?))
+      (insert "  (events file not readable: "
+              arxana-vsatarcs-anticipation-events-file ")\n\n"))
+     ((null events)
+      (insert "  (no events in horizon)\n\n"))
+     (t
+      (dolist (e events)
+        (insert (format "  %s  in %.1fd  p=%.2f  tp=%.2f%s\n"
+                        (or (plist-get e :id) "?")
+                        (or (plist-get e :days-until) 0.0)
+                        (or (plist-get e :p-fires) 0.0)
+                        (or (plist-get e :time-pressure) 0.0)
+                        (if-let ((m (plist-get e :mission)))
+                            (format "  %s" m) ""))))
+      (insert "\n")))))
+
+(defun arxana-vsatarcs--render-id (id)
+  "Stringify a `:mu-post' entity ID for chrome output."
+  (cond ((null id) "")
+        ((stringp id) id)
+        ((symbolp id) (symbol-name id))
+        (t (format "%s" id))))
+
+(defun arxana-vsatarcs--insert-xtdb-clicks-snapshot ()
+  "Insert the XTDB-clicks snapshot block (R10 engagement-time surface).
+Queries futon1a XTDB via `arxana-vsatarcs-xtdb-clicks-snapshot' for the
+configured stream types (watcher-event + invoke-job by default) and
+renders per-stream digest + the last N records.  Defensive across
+server-down / type-slow / stream-empty cases — chrome layout is stable
+even when XTDB is unreachable."
+  (let* ((snap (arxana-vsatarcs-xtdb-clicks-snapshot))
+         (streams (plist-get snap :streams)))
+    (insert (format "XTDB clicks (%s)\n" (plist-get snap :digest-line)))
+    (if (null streams)
+        (insert "  (no streams configured)\n\n")
+      (dolist (s streams)
+        (insert
+         (format "  stream %s (%s):\n"
+                 (let ((k (plist-get s :stream-subclass)))
+                   (if (keywordp k)
+                       (substring (symbol-name k) 1)
+                     (format "%s" k)))
+                 (if (plist-get s :stream-loaded?)
+                     (format "%d records returned"
+                             (length (or (plist-get s :records) nil)))
+                   "unavailable — futon1a server unreachable or type slow")))
+        (let ((records (plist-get s :records)))
+          (when records
+            (dolist (r records)
+              (let* ((ts (plist-get r :ts))
+                     (short-ts (cond
+                                ((null ts) "?")
+                                ((numberp ts)
+                                 (format-time-string
+                                  "%H:%M:%S"
+                                  (seconds-to-time (/ ts 1000.0)) t))
+                                (t (format "%s" ts)))))
+                (insert (format "    %s  source=%-12s repo=%-12s cycle=%s\n"
+                                short-ts
+                                (or (plist-get r :source) "?")
+                                (or (plist-get r :repo) "?")
+                                (or (plist-get r :cycle) "?"))))))))
+      (insert "\n"))))
+
+(defun arxana-vsatarcs--insert-essay-revision-queue-snapshot ()
+  "Insert the essay-revision-queue block (corpus-niche dispatch surface).
+Per Joe directive 2026-05-20 (revision-as-niche-creation framing): each
+essay in `~/code/futon7a/' is an entity in the corpus-niche; cross-essay
+coherence is its free energy; revision is action.  Surfaces top N
+candidates by G-proxy (combining staleness, cross-link-density, and
+named-stale-pattern hits) for operator inspection + future
+`:essay-revise' action-class dispatch."
+  (let* ((snap (arxana-vsatarcs-essay-revision-queue-snapshot))
+         (essays (plist-get snap :essays))
+         (n-show 5))
+    (insert (format "Essay revision queue (%s)\n"
+                    (plist-get snap :digest-line)))
+    (cond
+     ((not (plist-get snap :corpus-loaded?))
+      (insert "  (corpus directory not readable)\n\n"))
+     ((null essays)
+      (insert "  (corpus empty)\n\n"))
+     (t
+      (let ((shown (cl-subseq essays 0 (min n-show (length essays)))))
+        (dolist (e shown)
+          (insert (format "  G=%-8.3f  age=%4.0fd  xlink=%-2d  stale=%-2d  %s%s\n"
+                          (or (plist-get e :G-proxy) 0.0)
+                          (or (plist-get e :days-since-mtime) 0.0)
+                          (or (plist-get e :cross-link-density) 0)
+                          (or (plist-get e :stale-pattern-hits) 0)
+                          (or (plist-get e :essay-basename) "?")
+                          (if (plist-get e :has-pkd-epigraph?) "  [PKD]" ""))))
+        (when (> (length essays) n-show)
+          (insert (format "  ... %d more queued\n"
+                          (- (length essays) n-show))))
+        (insert "\n"))))))
+
+(defun arxana-vsatarcs--insert-lifting-queue-snapshot ()
+  "Insert the lifting-queue block (non-lifted-story dispatch surface).
+Per Joe directive 2026-05-20: non-lifted stories become a queue AIF can
+dispatch — read-half here; write-half lands as a v0.6.x action class
+in M-vsatarcs-writer.  Surfaces top N queue entries (mtime-newest first)
+with their proposed `:sections[]' payload for operator inspection."
+  (let* ((snap (arxana-vsatarcs-lifting-queue-snapshot))
+         (queue (plist-get snap :unlifted))
+         (n-show 5))
+    (insert (format "Lifting queue (%s)\n" (plist-get snap :digest-line)))
+    (cond
+     ((not (plist-get snap :stack-loaded?))
+      (insert "  (stack-annotations.edn not readable)\n\n"))
+     ((null queue)
+      (insert "  (queue empty — every story is lifted)\n\n"))
+     (t
+      (let ((shown (cl-subseq queue 0 (min n-show (length queue)))))
+        (dolist (q shown)
+          (insert (format "  [%-12s] %s  →  %s\n"
+                          (let ((k (plist-get q :kind)))
+                            (if (keywordp k)
+                                (substring (symbol-name k) 1) "?"))
+                          (or (plist-get q :story-basename) "?")
+                          (or (plist-get q :proposed-id) "?"))))
+        (when (> (length queue) n-show)
+          (insert (format "  ... %d more queued\n"
+                          (- (length queue) n-show))))
+        (insert "\n"))))))
+
+(defun arxana-vsatarcs--insert-cluster-snapshot ()
+  "Insert the mission-cluster overview block (reader-criterion Q8).
+Surfaces per-mission lifecycle stage and checkpoint progress for the
+futon-stack-as-Hyperreal-business cluster.  The block is compact —
+the operator sees `where are we in the cluster' without opening
+multiple docs.  Aggregate digest line summarises stage distribution
+and total checkpoint completion."
+  (let* ((snap (arxana-vsatarcs-cluster-snapshot))
+         (missions (plist-get snap :missions)))
+    (insert (format "Mission cluster (%s)\n"
+                    (plist-get snap :digest-line)))
+    (if (null missions)
+        (insert "  (no cluster missions configured)\n\n")
+      (dolist (m missions)
+        (let* ((cps (plist-get m :checkpoints))
+               (total (plist-get cps :total))
+               (done (plist-get cps :complete)))
+          (insert (format "  %-40s  %-10s  %d/%d cps%s\n"
+                          (or (plist-get m :mission) "?")
+                          (if-let ((s (plist-get m :stage)))
+                              (substring (symbol-name s) 1)
+                            "(no-stage)")
+                          done total
+                          (if (plist-get m :loaded?) "" "  [unreadable]")))))
+      (insert "\n"))))
+
+(defun arxana-vsatarcs--insert-wm-recent-snapshot ()
+  "Insert the recent-trace + belief-drift block (reader-criteria Q5+Q6).
+Reads the last N records from today's WM trace via
+`arxana-vsatarcs-wm-recent-snapshot' and renders two subsections:
+recent-trace (per-record digest of timestamp + mode + decision +
+G-total + time-pressure + µ-shift) and top-K-moved entities (drift
+trajectory across the window)."
+  (let* ((snap (arxana-vsatarcs-wm-recent-snapshot))
+         (recent (plist-get snap :recent))
+         (moved (plist-get snap :top-k-moved)))
+    (insert (format "WM recent trace (%s · %s)\n"
+                    (plist-get snap :trace-date)
+                    (plist-get snap :digest-line)))
+    (cond
+     ((not (plist-get snap :trace-loaded?))
+      (insert "  (trace file not readable)\n\n"))
+     ((null recent)
+      (insert "  (no records in trace)\n\n"))
+     (t
+      (dolist (r recent)
+        (arxana-vsatarcs--insert-recent-record r))
+      (insert (format "  drift across window (top-%d-most-moved):\n"
+                      arxana-vsatarcs-wm-recent-top-k-moved))
+      (if (null moved)
+          (insert "    (window too short or quiescent)\n")
+        (dolist (m moved)
+          (insert (format "    %s  max-abs-diff=%.4f\n"
+                          (arxana-vsatarcs--render-id
+                           (plist-get m :id))
+                          (or (plist-get m :max-abs-diff) 0.0)))))
+      (insert "\n")))))
+
+(defun arxana-vsatarcs--insert-recent-record (r)
+  "Insert one recent-trace record line into the current buffer."
+  (let* ((ts (plist-get r :timestamp))
+         (short-ts (if (and ts (>= (length ts) 19))
+                       (substring ts 11 19)
+                     (or ts "?")))
+         (tp (plist-get r :time-pressure))
+         (tp-str (if tp (format " tp=%.3f" tp) "")))
+    (insert (format "  %s  %-12s  %s %s  G=%.3f%s  µ=%d\n"
+                    short-ts
+                    (or (plist-get r :mode) "?")
+                    (or (plist-get r :decision-action) "?")
+                    (arxana-vsatarcs--render-id
+                     (plist-get r :decision-target))
+                    (or (plist-get r :G-total) 0.0)
+                    tp-str
+                    (or (plist-get r :mu-shift-count) 0)))))
+
+(defun arxana-vsatarcs--insert-wm-decision-snapshot ()
+  "Insert the WM-decision snapshot block (reader-criterion Q2).
+Reads today's WM trace via `arxana-vsatarcs-wm-decision-snapshot' and
+renders the latest record's chosen action + top-K alternatives + the
+composition section (time-pressure, horizon-steps, µ-shift count)
+that explains why this G-total.  Per claude-2's handoff 2026-05-20
+recommendation, the chrome shows decision + close-runners-up
+together so operator-comprehension is supported.  When no trace
+exists / record is empty / decision field absent, surfaces the
+appropriate digest line."
+  (let* ((snap (arxana-vsatarcs-wm-decision-snapshot))
+         (s (plist-get snap :summary)))
+    (insert (format "WM decision (%s · %s)\n"
+                    (plist-get snap :trace-date)
+                    (plist-get snap :digest-line)))
+    (when (plist-get snap :decision-present?)
+      (insert (format "  rationale: %s\n"
+                      (or (plist-get s :rationale) "(none)")))
+      (let ((alts (plist-get s :top-k)))
+        (when (and alts (> (length alts) 1))
+          (insert "  alternatives:\n")
+          (dolist (a (cdr alts))      ; skip rank 1 (the chosen action)
+            (insert (format "    rank %s: %s %s  (G=%.3f)\n"
+                            (or (plist-get a :rank) "?")
+                            (or (plist-get a :action-type) "?")
+                            (let ((t- (plist-get a :target)))
+                              (cond
+                               ((null t-) "")
+                               ((symbolp t-) (symbol-name t-))
+                               (t (format "%s" t-))))
+                            (or (plist-get a :G-total) 0.0))))))
+      (insert "  composition:\n")
+      (when-let ((tp (plist-get s :chosen-time-pressure)))
+        (insert (format "    time-pressure: %.3f\n" tp)))
+      (when-let ((h (plist-get s :horizon-steps)))
+        (insert (format "    horizon-steps: %d\n" h)))
+      (insert (format "    µ-shift: %d entities (R3d global update fired)\n"
+                      (or (plist-get s :mu-shift-count) 0)))
+      (when-let ((gap (plist-get s :gap-report)))
+        (insert (format "    gap-report: %S\n" gap))))
+    (insert "\n")))
+
+(defun arxana-vsatarcs--insert-wm-r-criteria-snapshot ()
+  "Insert the WM-side R-criteria status row (reader-criterion Q1).
+Reads `~/code/futon2/docs/futon-aif-completeness.md' on every call
+and renders a compact one-line-per-criterion status strip.  Each row
+shows the criterion key, status (`:satisfied' / `:n-a' / `:not-satisfied'
+/ `:unknown'), `as of vX.Y' anchor when present, and the human-readable
+name.  When the contract file is unreadable, an explanatory line is
+inserted instead."
+  (let* ((snap (arxana-vsatarcs-r-criteria-wm-snapshot))
+         (by-key (plist-get snap :by-key)))
+    (insert (format "WM R-criteria (%s)\n"
+                    (plist-get snap :summary-line)))
+    (if (not (plist-get snap :contract-loaded?))
+        (insert "  (WM contract not readable: "
+                arxana-vsatarcs-r-criteria-wm-file ")\n\n")
+      (dolist (k arxana-vsatarcs-r-criteria-wm-rs)
+        (let ((row (plist-get by-key k)))
+          (insert (format "  %-4s  %-15s  %-7s  %s\n"
+                          k
+                          (or (plist-get row :status) "?")
+                          (or (plist-get row :as-of) "-")
+                          (or (plist-get row :name) "(missing)")))))
+      (insert "\n"))))
+
+(defun arxana-vsatarcs--insert-bilateral-snapshot ()
+  "Insert the bilateral-evidence snapshot block (reader-criterion Q7).
+Reads the local `.aif.edn' on every call via
+`arxana-vsatarcs-bilateral-snapshot' and lists cross-side
+correspondence records (vsatarcs ↔ wm pairs grouped by
+`:evidence-kind').  When no `.aif.edn' exists or the
+`:bilateral-evidence' block is empty, an explanatory line is
+inserted instead.  A ★ marker on a row indicates the entry carries
+`:protocol-witnesses' (cross-side coordination audit trail captured
+in the source)."
+  (condition-case err
+      (let* ((snap (arxana-vsatarcs-bilateral-snapshot))
+             (entries (plist-get snap :entries))
+             (total (plist-get snap :total))
+             (kc (plist-get snap :kind-counts))
+             (wc (plist-get snap :witness-count)))
+        (insert (format "Bilateral evidence (total %d; with protocol-witnesses: %d; by kind: %s)\n"
+                        total wc
+                        (mapconcat (lambda (c)
+                                     (format "%s=%d"
+                                             (if (keywordp (car c))
+                                                 (substring (symbol-name (car c)) 1)
+                                               (car c))
+                                             (cdr c)))
+                                   (cl-remove-if (lambda (c) (zerop (cdr c))) kc)
+                                   " ")))
+        (cond
+         ((not (plist-get snap :block-loaded?))
+          (insert "  (aif file not readable: "
+                  arxana-vsatarcs-bilateral-aif-file ")\n\n"))
+         ((null entries)
+          (insert "  (no bilateral-evidence entries)\n\n"))
+         (t
+          (dolist (e entries)
+            (insert (format "  %s%s  [%s]  %s\n"
+                            (or (plist-get e :principle) "?")
+                            (if (plist-get e :has-protocol-witnesses?) " ★" "")
+                            (or (plist-get e :evidence-kind) "?")
+                            (or (plist-get e :landed) "?"))))
+          (insert "\n"))))
+    (error
+     (insert (format "Bilateral evidence unavailable: %s\n\n"
+                     (error-message-string err))))))
+
+(defun arxana-vsatarcs--insert-sorrys-snapshot ()
+  "Insert the sorry-registry snapshot block (reader-criterion Q4).
+Reads `~/code/futon2/data/sorrys.edn' on every call via
+`arxana-vsatarcs-sorrys-snapshot' and lists the total + per-kind
+distribution + per-status distribution.  Full per-sorry titles are
+elided to the first 12 entries to keep the chrome compact; operators
+can read the full registry in source.
+
+Sorry mining from agent interactions is the work of
+M-a-sorry-enterprise (futon5a/holes/missions/M-a-sorry-enterprise.md);
+the event vocabulary that would populate future entries automatically
+comes from M-interest-network-coupling step (b).  Both are referenced
+in the module commentary."
+  (let* ((scene (arxana-vsatarcs--current-scene))
+         (scene-body (and scene (plist-get scene :body)))
+         (snap (if scene-body
+                   (arxana-vsatarcs-sorrys-snapshot-for-text scene-body)
+                 (arxana-vsatarcs-sorrys-snapshot)))
+         (sorrys (plist-get snap :sorrys))
+         (total (plist-get snap :total))
+         (kc (plist-get snap :kind-counts))
+         (sc (plist-get snap :status-counts))
+         (scoped? (plist-get snap :scoped?))
+         (scope-missions (plist-get snap :scope-missions)))
+    (insert (format "Sorry registry (total %d%s; by kind: %s; by status: %s)\n"
+                    total
+                    (if scoped?
+                        (format "; story-scoped to %s"
+                                (mapconcat #'identity scope-missions ", "))
+                      "")
+                    (mapconcat (lambda (c)
+                                 (format "%s=%d" (car c) (cdr c)))
+                               (cl-remove-if (lambda (c) (zerop (cdr c))) kc)
+                               " ")
+                    (mapconcat (lambda (c)
+                                 (format "%s=%d" (car c) (cdr c)))
+                               (cl-remove-if (lambda (c) (zerop (cdr c))) sc)
+                               " ")))
+    (cond
+     ((not (plist-get snap :registry-loaded?))
+      (insert "  (registry file not readable: "
+              arxana-vsatarcs-sorrys-file ")\n\n"))
+     ((null sorrys)
+      (insert "  (registry empty)\n\n"))
+     (t
+      (let ((shown (cl-subseq sorrys 0 (min 12 (length sorrys)))))
+        (dolist (s shown)
+          (insert (format "  [%s] %s\n"
+                          (or (plist-get s :kind) "?")
+                          (or (plist-get s :title) "(no title)"))))
+        (when (> (length sorrys) (length shown))
+          (insert (format "  ... %d more in source\n"
+                          (- (length sorrys) (length shown)))))
+        (insert "\n"))))))
 
 (defun arxana-vsatarcs--find-story-file (name)
   "Return an absolute path for a VSATARCS story matching NAME, or nil.
@@ -389,15 +870,28 @@ configuration as the left-at-start return target."
     (define-key map (kbd "o") #'arxana-vsatarcs-goto)
     (define-key map (kbd "u") #'arxana-vsatarcs-up)
     (define-key map (kbd "<left>") #'arxana-vsatarcs-left-or-return)
+    ;; R1 belief surface — operator-triggerable belief management
+    (define-key map (kbd "B") #'arxana-vsatarcs-belief-bootstrap-and-redisplay)
+    (define-key map (kbd "R") #'arxana-vsatarcs-belief-reset-and-redisplay)
+    (define-key map (kbd "i") #'arxana-vsatarcs-belief-ingest-interactive)
     map)
-  "Keymap for `arxana-vsatarcs-mode'.")
+  "Keymap for `arxana-vsatarcs-mode'.
+
+Reader navigation: `n' / `p' next/previous scene; `g' reload from disk;
+`o' jump to scene anchor; `u' to landing story; `<left>' back-or-return.
+
+R1 belief surface: `B' bootstrap-from-canonical-source-and-persist; `R'
+reset-in-memory-with-confirm; `i' ingest events from minibuffer.")
 
 (define-derived-mode arxana-vsatarcs-mode special-mode "VSATARCS"
   "Major mode for reading VSAT-shaped stories."
   (setq-local truncate-lines nil))
 
 (defun arxana-browser-vsatarcs--story-paths ()
-  "Return readable VSATARCS source paths."
+  "Return readable VSATARCS source paths.
+Files matching `*.aif.md' are excluded — they are AIF+ annotation overlays
+on stories, not stories themselves.  See `README-vsatarcs.md' for the
+`*.md' / `*.aif.md' / `*.aif.edn' naming convention."
   (let (paths)
     (dolist (directory arxana-vsatarcs-story-directories)
       (let ((expanded (expand-file-name directory)))
@@ -405,13 +899,18 @@ configuration as the left-at-start return target."
           (setq paths
                 (append paths
                         (directory-files expanded t "\\.md\\'"))))))
-    (delete-dups (sort paths #'string<))))
+    (delete-dups
+     (sort (cl-remove-if (lambda (p)
+                           (string-suffix-p ".aif.md" p))
+                         paths)
+           #'string<))))
 
 (defun arxana-browser-vsatarcs-format ()
   "Return tabulated format for VSATARCS story sources."
   [("Story" 36 t)
    ("Scenes" 7 t)
    ("Opening" 26 t)
+   ("Invariants" 28 t)
    ("Path" 0 nil)])
 
 (defun arxana-browser-vsatarcs-row (item)
@@ -419,6 +918,7 @@ configuration as the left-at-start return target."
   (vector (or (plist-get item :label) "")
           (format "%s" (or (plist-get item :scene-count) 0))
           (or (plist-get item :opening) "-")
+          (or (plist-get item :invariant-status) "none")
           (or (plist-get item :path) "")))
 
 (defun arxana-browser-vsatarcs-items ()
@@ -434,13 +934,21 @@ configuration as the left-at-start return target."
                        :label (plist-get story :title)
                        :path path
                        :scene-count (length (arxana-vsatarcs--scenes story))
-                       :opening (and opening (plist-get opening :title))))
+                       :opening (and opening (plist-get opening :title))
+                       :invariant-status
+                       (if (fboundp 'arxana-browser--story-decoration-summary)
+                           (or (ignore-errors
+                                 (arxana-browser--story-decoration-summary
+                                  (file-name-base path)))
+                               "none")
+                         "none")))
              (error
               (list :type 'vsatarcs-story
                     :label (file-name-base path)
                     :path path
                     :scene-count 0
-                    :opening (format "parse error: %s" (error-message-string err))))))
+                    :opening (format "parse error: %s" (error-message-string err))
+                    :invariant-status "none"))))
          paths)
       (list (list :type 'info
                   :label "No VSATARCS stories"

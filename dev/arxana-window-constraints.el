@@ -93,6 +93,29 @@ Use `message' to warn, `error' to raise, or nil to ignore."
           (arxana-window-constraints--dedicated-o docinfo t doc-ok)
           (arxana-window-constraints--dedicated-o sourceinfo t source-ok)
           (reazon-== ok (and doc-ok source-ok))))))
+    (reazon-defrel arxana-window-constraints--solo-o (counts ok)
+      ;; Exactly one window per Arxana buffer, across ALL frames (Joe,
+      ;; 2026-06-11: "there should be exactly one of each
+      ;; Arxana-associated buffer at a time"). COUNTS is a list of
+      ;; (BUFFER-NAME . N-WINDOWS); the goal fails unless every N is 1.
+      (reazon-project (counts)
+        (reazon-== (and (cl-every (lambda (c) (= (cdr c) 1)) counts) t) t)
+        (reazon-== ok t)))
+    (reazon-defrel arxana-window-constraints--essays-two-up-o (outline-info source-info surplus-names counts ok)
+      ;; The general Arxana two-up invariant (Joe, spoken 2026-06-11):
+      ;; basic material LEFT (the outline), annotations RIGHT (the raised
+      ;; section), no surplus windows on the frame, and each pair buffer
+      ;; in exactly one window frame-globally. Restores the Reazon
+      ;; layout-discipline that slipped in the Essays build.
+      (reazon-project (outline-info source-info surplus-names)
+        ;; the GOAL fails on violation — --query counts any solution as
+        ;; success, so unifying ok=nil would slip through (the (nil) trap)
+        (reazon-== (and (< (plist-get outline-info :left)
+                           (plist-get source-info :left))
+                        (null surplus-names)
+                        t)
+                   t))
+      (arxana-window-constraints--solo-o counts ok))
     (reazon-defrel arxana-window-constraints--docbook-browser-left-o
         (browserinfo docinfo ok)
       (reazon-conde
@@ -311,6 +334,46 @@ Use `message' to warn, `error' to raise, or nil to ignore."
          "docbook-two-up"
          ok
          "expected doc left of source, both dedicated")))))
+
+(defun arxana-window-constraints-validate-essays-two-up (outline-buffer source-buffer &optional frame)
+  "Validate the Essays two-up: OUTLINE-BUFFER left of SOURCE-BUFFER, no surplus."
+  (if (not arxana-window-constraints-enable)
+      t
+    (if (not (arxana-window-constraints--ensure-relations))
+        (progn
+          (unless arxana-window-constraints--reazon-missing-reported
+            (setq arxana-window-constraints--reazon-missing-reported t)
+            (message "Reazon not available; window constraints skipped"))
+          nil)
+      (let* ((outline-win (and outline-buffer
+                               (or (and frame (get-buffer-window outline-buffer frame))
+                                   (get-buffer-window outline-buffer t))))
+             (frame (or frame (and outline-win (window-frame outline-win))
+                        (selected-frame)))
+             (source-win (and source-buffer (get-buffer-window source-buffer frame)))
+             (outline-info (and outline-win (arxana-window-constraints--window-info outline-win)))
+             (source-info (and source-win (arxana-window-constraints--window-info source-win)))
+             (surplus (and (boundp 'arxana-essays-twoup-surplus-buffers)
+                           (cl-remove-if-not
+                            (lambda (name)
+                              (get-buffer-window name frame))
+                            arxana-essays-twoup-surplus-buffers)))
+             ;; solo: each pair buffer in exactly one window, ALL frames
+             (counts (mapcar
+                      (lambda (buf)
+                        (cons (buffer-name buf)
+                              (length (get-buffer-window-list buf 'nomini t))))
+                      (delq nil (list (get-buffer outline-buffer)
+                                      (get-buffer source-buffer)))))
+             (ok (and outline-info source-info
+                      (arxana-window-constraints--query
+                       `(reazon-run 1 q
+                          (arxana-window-constraints--essays-two-up-o
+                           ',outline-info ',source-info ',surplus ',counts q))))))
+        (arxana-window-constraints--report
+         "essays-two-up"
+         ok
+         (format "expected outline left of section content, no surplus windows, one window per buffer (counts: %S)" counts))))))
 
 (defun arxana-window-constraints-validate-docbook-browser-left (browser-buffer doc-buffer
                                                                                &optional frame)

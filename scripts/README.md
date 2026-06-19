@@ -189,6 +189,102 @@ Usage:
 ./bounce_vocal_banjo_bass_accordion.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
 ```
 
+## All-strings mix (vocal + guitar + guitar2 + reverbed mandola)
+
+`bounce_vocal_guitar_guitar2_mandola.sh` is an all-strings arrangement
+with no rhythm section. Guitar1 takes the rhythm/low-body role
+(HPF 60) and pans ~60% L; guitar2 takes the lead/topline role (HPF 90,
++0.5 dB @ 4 kHz presence) and pans ~60% R. Reciprocal -1 dB notches
+at 2.5/1.5 kHz across the guitars and -1.5 dB @ 2 kHz on the mandola
+give the vocal room. Mandola passes through the same chained-aecho
+plate-room reverb send as the mandola+dbass script. The full string
+bus is sidechain-ducked from the vocal key.
+
+Usage:
+
+```sh
+./bounce_vocal_guitar_guitar2_mandola.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
+```
+
+## Lead+harmony mix with reverbed mandola (vocal + vocal2 + mandola + double bass)
+
+`bounce_vocal_vocal2_mandola_dbass.sh` is a lead-plus-harmony arrangement
+with mandola and upright bass. The harmony vocal gets a smaller presence
+boost (+1.2 dB vs +2 dB on the lead) and slight R pan so the two voices
+don't double-clash at 2.8 kHz. The mandola passes through a chained-aecho
+plate-room reverb send with a 6.5 kHz wet lowpass, mixed at ~32% wet.
+Sidechain key is a blended/compressed mix of both vocals, ducking only
+the (wet) mandola; double bass passes through unducked.
+
+Usage:
+
+```sh
+./bounce_vocal_vocal2_mandola_dbass.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
+```
+
+## Jazz-trio-plus-vocal mix (vocal + piano + double bass + drum)
+
+`bounce_vocal_piano_dbass_drum.sh` is a vocal-forward mix designed for
+the jazz-trio shape. The rhythm bedrock (double bass + drums) passes
+through untouched by the vocal duck — only the piano gets sidechain-
+ducked from the vocal key, since piano is the harmonic instrument
+actually crowding the lead. Double bass gets a body bump at 90 Hz, a
+-1 dB cut at 350 Hz to dial out boxiness, and a 4.5 kHz lowpass to
+keep it warm and out of the vocal range.
+
+Usage:
+
+```sh
+./bounce_vocal_piano_dbass_drum.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
+```
+
+## Vocal-forward mix without bass (vocal + drum + piano + guitar)
+
+`bounce_vocal_drum_piano_guitar.sh` is a vocal-forward mix with no
+bass — piano picks up the low-mid weight (HPF dropped to 50 Hz). Drums
+pass through at full level with slow-attack glue comp and a touch of
+5 kHz air; piano + guitar form a harmonic bus that gets sidechain-ducked
+from the vocal key, so the backing parts get out of the lead's way
+without flattening the kit's punch.
+
+Usage:
+
+```sh
+./bounce_vocal_drum_piano_guitar.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
+```
+
+## Bleed-aware mix (vocal + piano + guitar + harmonica)
+
+`bounce_vocal_piano_guitar_harmonica.sh` keeps the lead vocal forward
+while preserving any extra vocals that may have bled into the
+instrumental tracks. Instrument lanes use a low HPF (60-200 Hz) and soft
+lowpass so hidden vocal content survives, and the sidechain duck is
+keyed off the main vocal only — bleed vocals stay audible during the
+lead's silent moments instead of being crushed by a key they didn't
+sing into. Reciprocal -1.5 dB notches at 1.8/2.2/3.0 kHz across
+piano/guitar/harmonica give the lead room.
+
+Usage:
+
+```sh
+./bounce_vocal_piano_guitar_harmonica.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
+```
+
+## Co-equal trio mix (vocal1 + vocal2 + vocal3 + guitar)
+
+`bounce_vocal_vocal2_vocal3_guitar.sh` mixes three co-equal vocals (panned
+left/centre/right) against a guitar lane. Each voice owns one presence slot
+(2.5/4/5.5 kHz) with reciprocal -1 dB notches at the other two slots so the
+stack stops fighting for the same air. HPF kept low (70 Hz) so piano bleed
+inside the vocal tracks survives as room glue. Guitar is notched at 1.8 kHz
+and gently ducked from a blended sidechain key built from all three voices.
+
+Usage:
+
+```sh
+./bounce_vocal_vocal2_vocal3_guitar.sh t1.wav t2.wav t3.wav t4.wav out.wav [out.mp3]
+```
+
 ## Mix two bounces (background at 30%)
 
 `bounce_mix_ducked_background.sh` blends two existing bounces, keeping the

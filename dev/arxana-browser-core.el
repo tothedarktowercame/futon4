@@ -40,6 +40,7 @@
 (declare-function arxana-browser-essays-format "arxana-browser-essays" (&optional context))
 (declare-function arxana-browser-essays-row "arxana-browser-essays" (item))
 (declare-function arxana-browser-essays-open "arxana-browser-essays" (item))
+(declare-function arxana-browser-essays-location "arxana-browser-essays" (item))
 (declare-function arxana-browser-songs-open "arxana-browser-songs" (item))
 (declare-function arxana-browser-songs-location "arxana-browser-songs" (item))
 (declare-function arxana-browser-chorus-menu-items "arxana-browser-chorus")
@@ -139,6 +140,14 @@
 (declare-function arxana-browser--lab-sessions-active-items "arxana-browser-lab")
 (declare-function arxana-browser--lab-sessions-active-row "arxana-browser-lab" (item))
 (declare-function arxana-browser--lab-sessions-active-format "arxana-browser-lab")
+(declare-function arxana-browser--pattern-activation-items "arxana-browser-pattern-activation")
+(declare-function arxana-browser--pattern-activation-row "arxana-browser-pattern-activation" (item))
+(declare-function arxana-browser--pattern-activation-format "arxana-browser-pattern-activation")
+(declare-function arxana-browser--pattern-activation-detail-items "arxana-browser-pattern-activation")
+(declare-function arxana-browser--pattern-activation-detail-row "arxana-browser-pattern-activation" (item))
+(declare-function arxana-browser--pattern-activation-detail-format "arxana-browser-pattern-activation")
+(declare-function arxana-browser-pattern-activation-headline "arxana-browser-pattern-activation")
+(declare-function arxana-browser-pattern-activation-detail-headline "arxana-browser-pattern-activation")
 (declare-function arxana-browser--lab-sessions-recent-items "arxana-browser-lab")
 (declare-function arxana-browser--lab-sessions-raw-items "arxana-browser-lab")
 (declare-function arxana-browser--lab-sessions-raw-row "arxana-browser-lab" (item))
@@ -161,6 +170,7 @@
 (declare-function arxana-browser--evidence-fetch-single "arxana-browser-lab" (evidence-id))
 (declare-function arxana-browser-lab--browse-evidence-entry "arxana-browser-lab" (evidence-id))
 (declare-function arxana-browser-lab--browse-evidence-chain "arxana-browser-lab" (evidence-id))
+(declare-function arxana-browser-operational-family-location "arxana-browser-lab" (item))
 
 (declare-function arxana-browser--encyclopedia-items "arxana-browser-encyclopedia")
 (declare-function arxana-browser--encyclopedia-row "arxana-browser-encyclopedia" (item))
@@ -184,6 +194,8 @@
 (declare-function arxana-browser--evidence-open-sessions-items "arxana-browser-evidence")
 (declare-function arxana-browser--evidence-open-sessions-row "arxana-browser-evidence" (item))
 (declare-function arxana-browser--evidence-open-sessions-format "arxana-browser-evidence")
+(declare-function arxana-evidence-toggle-open-session-mark-at-point "arxana-browser-evidence")
+(declare-function arxana-evidence-delete-open-sessions "arxana-browser-evidence")
 ;; Mission Control browser
 (declare-function arxana-browser--missions-portfolio-items "arxana-browser-missions")
 (declare-function arxana-browser--missions-portfolio-row "arxana-browser-missions" (item))
@@ -211,6 +223,7 @@
 (declare-function arxana-browser--evidence-entry-detail-row "arxana-browser-evidence" (item))
 (declare-function arxana-browser--evidence-entry-detail-format "arxana-browser-evidence")
 (declare-function arxana-browser-evidence-open-session "arxana-browser-evidence" (item))
+(declare-function arxana-browser-evidence-open-live-session "arxana-browser-evidence" (item))
 (declare-function arxana-browser-evidence-open-thread "arxana-browser-evidence" (item))
 (declare-function arxana-browser-evidence-open-entry "arxana-browser-evidence" (item))
 
@@ -252,6 +265,7 @@
 (declare-function arxana-media-publish-marked "arxana-media")
 (declare-function arxana-media-set-publication-url "arxana-media")
 (declare-function arxana-media-open-publication-url "arxana-media")
+(declare-function arxana-media-create-ep-staging "arxana-media")
 (declare-function arxana-media-stage-to-ep "arxana-media")
 (declare-function arxana-media-delete-at-point "arxana-media")
 (declare-function arxana-media-move-misc-to-ep-at-point "arxana-media")
@@ -264,6 +278,10 @@
 (declare-function arxana-browser-vsatarcs-format "arxana-browser-vsatarcs")
 (declare-function arxana-browser-vsatarcs-row "arxana-browser-vsatarcs" (item))
 (declare-function arxana-browser-vsatarcs-open "arxana-browser-vsatarcs" (item))
+(declare-function arxana-browser-scans-items "arxana-browser-scans")
+(declare-function arxana-browser-scans-format "arxana-browser-scans")
+(declare-function arxana-browser-scans-row "arxana-browser-scans" (item))
+(declare-function arxana-browser-scans-open "arxana-browser-scans" (item))
 
 (defun arxana-browser--require-patterns ()
   "Ensure the pattern browser helpers are available."
@@ -399,6 +417,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
               :description "Browse pattern languages and flexiarg collections."
               :view 'patterns)
         (list :type 'menu
+              :label "Pattern Activation"
+              :description "Patterns activated by recent agent turns (futon3a context-retrieval evidence)."
+              :view 'pattern-activation)
+        (list :type 'menu
               :label "Code"
               :description "Browse code with docbook backlinks."
               :view 'code-root)
@@ -451,9 +473,21 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
               :description "Read VSAT-shaped anthology stories as Arxana-native scenes."
               :view 'vsatarcs)
         (list :type 'menu
+              :label "Scans"
+              :description "Daily-scan frames (M-daily-scan). RET opens frame EDN."
+              :view 'scans)
+        (list :type 'menu
               :label "Invariants"
-              :description "Live violations plus candidate-law queue."
-              :view 'invariants-home)))
+              :description "Live invariant families first, with violations and candidates as secondary views."
+              :view 'invariants-home)
+        (list :type 'menu
+              :label "Ledger"
+              :description "Billable-hours ledger (Hyperreal) — Historical / Current / Future."
+              :view 'ledger)
+        (list :type 'menu
+              :label "Sales"
+              :description "Sales pipeline (Hyperreal) — clients by stage + Rolodex. Dual of the Ledger."
+              :view 'sales)))
 
 (defun arxana-browser--evidence-menu-items ()
   (if (require 'arxana-browser-evidence nil t)
@@ -461,6 +495,11 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
     (list (list :type 'info
                 :label "Evidence module unavailable"
                 :description "Load arxana-browser-evidence.el for evidence views."))))
+
+(defun arxana-browser--ensure-evidence ()
+  "Load evidence browser support when available."
+  (or (featurep 'arxana-browser-evidence)
+      (require 'arxana-browser-evidence nil t)))
 
 (defun arxana-browser--code-root-items ()
   (list (list :type 'code-root
@@ -567,7 +606,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
      ((eq (plist-get context :view) 'hypergraph)
       "Hypergraph viewer — inspect local JSON datasets. RET/right shows details. LEFT/b returns.")
      ((eq (plist-get context :view) 'media)
-      (concat "Media library — pick All tracks, a status, or Projects to drill into recorder projects. LEFT/b returns."
+      (concat "Media library — pick All tracks, a status, or Projects to drill into recorder projects. N creates a staging EP. LEFT/b returns."
               store-suffix))
      ((eq (plist-get context :view) 'songs-home)
       (concat "Songs — browse imported lyrics, suite songs, and chorus experiments. LEFT/b returns."
@@ -582,6 +621,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
               store-suffix))
      ((eq (plist-get context :view) 'essays-section)
       (concat "Essay section — annotations linking sentences to pattern-library sources. RET opens an annotation. LEFT/b returns."
+              (if (fboundp 'arxana-browser-essays-section-headline-suffix)
+                  (arxana-browser-essays-section-headline-suffix context)
+                "")
               store-suffix))
      ((memq (plist-get context :view) '(songs-chapbook songs-suite))
       (concat (format "Songs — %s. RET opens the stored text. LEFT/b returns."
@@ -604,7 +646,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
       (concat "Publication tracks — RET plays, p plays, s stops, B bounces marked tracks. LEFT/b returns."
               store-suffix))
      ((eq (plist-get context :view) 'media-ep-staging)
-      (concat "EP staging — select an EP folder to browse its exported tracks. LEFT/b returns."
+      (concat "EP staging — select an EP folder to browse its exported tracks, or press N to create one. LEFT/b returns."
               store-suffix))
      ((eq (plist-get context :view) 'media-ep-staging-ep)
       (concat "EP staging tracks — RET plays, p plays, s stops, B bounces marked tracks. LEFT/b returns."
@@ -650,10 +692,13 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                         filter-desc)
                 store-suffix)))
      ((eq (plist-get context :view) 'evidence-sessions)
-      (concat "Evidence sessions — RET opens session timeline. LEFT/b returns."
-              store-suffix))
+      (let ((usage (if (require 'usage-report nil t)
+                       (usage-report-headline-prefix) "")))
+        (concat usage
+                "Evidence sessions — RET opens session timeline. LEFT/b returns."
+                store-suffix)))
      ((eq (plist-get context :view) 'evidence-open-sessions)
-      (concat "Open REPL sessions — Evidence-backed semantic summaries. RET opens session timeline; g refreshes. LEFT/b returns."
+      (concat "Open REPL sessions — RET opens live session; C-RET opens evidence timeline; m marks; D deletes; g refreshes. LEFT/b returns."
               store-suffix))
      ((eq (plist-get context :view) 'evidence-session)
       (concat "Evidence session — chronological entries for this session. RET opens entry details. LEFT/b returns."
@@ -672,6 +717,27 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
               store-suffix))
      ((eq (plist-get context :view) 'vsatarcs)
       "VSATARCS — select a VSAT-shaped story to read. LEFT/b returns.")
+     ((eq (plist-get context :view) 'scans)
+      "Daily-scan frames — RET opens frame EDN. LEFT/b returns.")
+     ((eq (plist-get context :view) 'pattern-activation)
+      (when (require 'arxana-browser-pattern-activation nil t)
+        (concat (arxana-browser-pattern-activation-headline)
+                store-suffix)))
+     ((eq (plist-get context :view) 'pattern-activation-detail)
+      (when (require 'arxana-browser-pattern-activation nil t)
+        (concat (arxana-browser-pattern-activation-detail-headline)
+                store-suffix)))
+     ((memq (plist-get context :view) '(lab-sessions-active lab-sessions-recent))
+      (let* ((label (or (plist-get context :label)
+                        (if (eq (plist-get context :view) 'lab-sessions-active)
+                            "Active Sessions" "Recent Sessions")))
+             (usage (if (require 'usage-report nil t)
+                        (usage-report-headline-prefix)
+                      "")))
+        (concat usage
+                (format "%s (%d) — RET opens session, LEFT/b returns."
+                        label total)
+                store-suffix)))
      ((eq (plist-get context :view) 'lab)
       (concat "Lab notebook — RET stub; v trace, r raw, d draft. LEFT/b returns."
               store-suffix))
@@ -704,6 +770,346 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
      (face (propertize line 'face face))
      (t line))))
 
+(defconst arxana-browser--help-buffer "*Arxana Browser Help*")
+
+(defconst arxana-browser--media-track-help-views
+  '(media-publication media-ep-staging-ep media-misc-folder media-podcasts)
+  "Views whose rows are directly playable media items.")
+
+(defconst arxana-browser--media-help-views
+  '(media media-projects media-publications media-publication
+          media-ep-staging media-ep-staging-ep media-misc
+          media-misc-folder media-podcasts)
+  "Views that belong to the media browser.")
+
+(defconst arxana-browser--help-specs
+  '((:section "Navigation"
+     :keys ("RET" "<right>")
+     :description "Open the entry at point."
+     :predicate arxana-browser--help-any-context-p)
+    (:section "Navigation"
+     :keys ("<left>" "b")
+     :description "Return to the parent browser view."
+     :predicate arxana-browser--help-any-context-p)
+    (:section "Navigation"
+     :keys ("g")
+     :description "Refresh the current browser view."
+     :predicate arxana-browser--help-any-context-p)
+    (:section "Navigation"
+     :keys ("y" "Y")
+     :description "Copy item or current-view Arxana location."
+     :predicate arxana-browser--help-any-context-p)
+    (:section "Navigation"
+     :keys ("f")
+     :description "Copy the file path for the current item when available."
+     :predicate arxana-browser--help-any-context-p)
+    (:section "Navigation"
+     :keys ("?")
+     :description "Show this bindings help."
+     :predicate arxana-browser--help-any-context-p)
+    (:section "Navigation"
+     :keys ("q")
+     :description "Quit the browser window."
+     :predicate arxana-browser--help-any-context-p)
+    (:section "Media"
+     :keys ("m" "U")
+     :description "Mark the current item or clear all marks in this view."
+     :predicate arxana-browser--help-media-p)
+    (:section "Media"
+     :keys ("p" "s" "o")
+     :description "Play, stop, or toggle autoplay-next."
+     :predicate arxana-browser--help-media-track-list-p)
+    (:section "Media"
+     :keys ("C-c SPC" "C-c <left>" "C-c <right>" "C-c M-<left>" "C-c M-<right>")
+     :description "Pause or seek the current player."
+     :predicate arxana-browser--help-media-track-list-p)
+    (:section "Media"
+     :keys ("e")
+     :description "Stage the current or marked tracks into an EP."
+     :predicate arxana-browser--help-media-track-list-p)
+    (:section "Media"
+     :keys ("N")
+     :description "Create a new empty staging EP and open it."
+     :predicate arxana-browser--help-ep-creation-p)
+    (:section "Media"
+     :keys ("B")
+     :description "Bounce the marked tracks in the current media view."
+     :predicate arxana-browser--help-media-p)
+    (:section "Media"
+     :keys ("t")
+     :description "Retitle the current track or file."
+     :predicate arxana-browser--help-media-track-list-p)
+    (:section "Media"
+     :keys ("L")
+     :description "Edit lyrics for the current track."
+     :predicate arxana-browser--help-media-track-list-p)
+    (:section "Media"
+     :keys ("a")
+     :description "Open the current media file in Audacity."
+     :predicate arxana-browser--help-media-track-list-p)
+    (:section "Media"
+     :keys ("S")
+     :description "Set status for marked Zoom recorder tracks."
+     :predicate arxana-browser--help-zoom-track-list-p)
+    (:section "Media"
+     :keys ("P")
+     :description "Publish marked misc or staged tracks to a publication EP."
+     :predicate arxana-browser--help-publishable-media-p)
+    (:section "Media"
+     :keys ("u" "w")
+     :description "Set or open the publication URL for the current EP."
+     :predicate arxana-browser--help-publication-p)
+    (:section "Media"
+     :keys ("R")
+     :description "Remove the current or marked tracks from this staging EP."
+     :predicate arxana-browser--help-ep-staging-p)
+    (:section "Docbook"
+     :keys ("O")
+     :description "Open the current docbook in its source buffer."
+     :predicate arxana-browser--help-docbook-p)
+    (:section "Docbook"
+     :keys ("C")
+     :description "Open surrounding section context for the current docbook item."
+     :predicate arxana-browser--help-docbook-p)
+    (:section "Docbook"
+     :keys ("M-<up>" "M-<down>" "C-M-<up>" "C-M-<down>" "C-M-S-<up>" "C-M-S-<down>")
+     :description "Reorder docbook items or sections."
+     :predicate arxana-browser--help-docbook-contents-p)
+    (:section "Docbook"
+     :keys ("C-c C-e" "C-c C-p" "C-c C-s")
+     :description "Export Org/PDF or sync docbook ordering."
+     :predicate arxana-browser--help-docbook-p)
+    (:section "Evidence"
+     :keys ("F")
+     :description "Filter the evidence timeline."
+     :predicate arxana-browser--help-evidence-timeline-p)
+    (:section "Lab"
+     :keys ("v" "r" "d")
+     :description "Open trace, raw, or draft lab buffers for the current item."
+     :predicate arxana-browser--help-lab-p)
+    (:section "Forum"
+     :keys ("C-c C-f")
+     :description "Compose a forum reply for the current thread."
+     :predicate arxana-browser--help-forum-p))
+  "Context-sensitive bindings shown by the Arxana browser help surface.")
+
+(defun arxana-browser--help-context ()
+  "Return the current browser context plist, if any."
+  (or (and (boundp 'arxana-browser--context)
+           (listp arxana-browser--context)
+           arxana-browser--context)
+      (car-safe (and (boundp 'arxana-browser--stack)
+                     arxana-browser--stack))))
+
+(defun arxana-browser--help-any-context-p (_context)
+  "Return non-nil for help rows that should always be shown."
+  t)
+
+(defun arxana-browser--help-media-p (context)
+  "Return non-nil when CONTEXT belongs to the media browser."
+  (or (memq (plist-get context :view) arxana-browser--media-help-views)
+      (memq (plist-get context :type) '(media-category media-project))))
+
+(defun arxana-browser--help-media-track-list-p (context)
+  "Return non-nil when CONTEXT renders playable media rows."
+  (or (memq (plist-get context :view) arxana-browser--media-track-help-views)
+      (memq (plist-get context :type) '(media-category media-project))))
+
+(defun arxana-browser--help-zoom-track-list-p (context)
+  "Return non-nil when CONTEXT is a Zoom track listing."
+  (memq (plist-get context :type) '(media-category media-project)))
+
+(defun arxana-browser--help-publication-p (context)
+  "Return non-nil when CONTEXT is a publication browser view."
+  (eq (plist-get context :view) 'media-publication))
+
+(defun arxana-browser--help-publishable-media-p (context)
+  "Return non-nil when CONTEXT can publish marked media items."
+  (memq (plist-get context :view)
+        '(media-ep-staging-ep media-misc-folder)))
+
+(defun arxana-browser--help-ep-staging-p (context)
+  "Return non-nil when CONTEXT is an EP staging track list."
+  (eq (plist-get context :view) 'media-ep-staging-ep))
+
+(defun arxana-browser--help-ep-creation-p (context)
+  "Return non-nil when CONTEXT can create a new staging EP."
+  (memq (plist-get context :view) '(media media-ep-staging)))
+
+(defun arxana-browser--help-docbook-p (context)
+  "Return non-nil when CONTEXT is any docbook browser view."
+  (memq (plist-get context :view)
+        '(docbook docbook-book docbook-contents docbook-section docbook-recent)))
+
+(defun arxana-browser--help-docbook-contents-p (context)
+  "Return non-nil when CONTEXT is the editable docbook contents view."
+  (eq (plist-get context :view) 'docbook-contents))
+
+(defun arxana-browser--help-evidence-timeline-p (context)
+  "Return non-nil when CONTEXT is the evidence timeline view."
+  (eq (plist-get context :view) 'evidence-timeline))
+
+(defun arxana-browser--help-lab-p (context)
+  "Return non-nil when CONTEXT is a lab browser view."
+  (memq (plist-get context :view)
+        '(lab-home lab-sessions-active lab-sessions-recent lab-sessions-raw
+                   lab-sessions-archived lab tensions devmaps narrative-trail
+                   lab-files)))
+
+(defun arxana-browser--help-forum-p (context)
+  "Return non-nil when CONTEXT is a forum browser view."
+  (eq (plist-get context :view) 'forum))
+
+(defun arxana-browser--help-rows (&optional context)
+  "Return help rows relevant to CONTEXT."
+  (let ((context (or context (arxana-browser--help-context))))
+    (seq-filter
+     (lambda (spec)
+       (when-let* ((predicate (plist-get spec :predicate)))
+         (funcall predicate context)))
+     arxana-browser--help-specs)))
+
+(defun arxana-browser--help-sections (&optional context)
+  "Return grouped help sections relevant to CONTEXT."
+  (let ((rows (arxana-browser--help-rows context))
+        sections
+        order)
+    (dolist (row rows)
+      (let* ((section (plist-get row :section))
+             (cell (assoc section sections)))
+        (unless cell
+          (setq cell (cons section nil))
+          (setq sections (append sections (list cell)))
+          (setq order (append order (list section))))
+        (setcdr cell (append (cdr cell) (list row)))))
+    (mapcar (lambda (section) (assoc section sections)) order)))
+
+(defun arxana-browser--help-title (&optional context)
+  "Return a title string for browser bindings help in CONTEXT."
+  (let* ((context (or context (arxana-browser--help-context)))
+         (view (plist-get context :view))
+         (label (plist-get context :label)))
+    (cond
+     ((and label view)
+      (format "Arxana Browser bindings for %s (%s)" label view))
+     (view
+      (format "Arxana Browser bindings for %s" view))
+     (t
+      "Arxana Browser bindings"))))
+
+(defun arxana-browser--insert-help-sections (sections)
+  "Insert browser help SECTIONS into the current buffer."
+  (dolist (section sections)
+    (insert (format "%s\n" (car section)))
+    (insert (make-string (length (car section)) ?-))
+    (insert "\n")
+    (dolist (row (cdr section))
+      (insert (format " %-42s %s\n"
+                      (string-join (plist-get row :keys) ", ")
+                      (plist-get row :description))))
+    (insert "\n")))
+
+(defun arxana-browser-show-bindings-help ()
+  "Show a contextual bindings cheatsheet for the Arxana browser."
+  (interactive)
+  (let* ((context (arxana-browser--help-context))
+         (title (arxana-browser--help-title context))
+         (sections (arxana-browser--help-sections context)))
+    (with-help-window arxana-browser--help-buffer
+      (with-current-buffer standard-output
+        (insert title "\n")
+        (insert (make-string (length title) ?=))
+        (insert "\n\n")
+        (insert "This list is filtered to the current browser view.\n\n")
+        (arxana-browser--insert-help-sections sections)))))
+
+(defun arxana-browser--ensure-help-hydra ()
+  "Define the browser help Hydra(s) if Hydra is installed.
+
+Return non-nil when the default Hydra body command is available after
+this call. Two hydras are defined: the default and a variant for
+`media-ep-staging-ep` views that surfaces publish instead of stage."
+  (when (or (fboundp 'defhydra)
+            (require 'hydra nil t))
+    (unless (fboundp 'arxana-browser-help-hydra/body)
+      (eval
+       '(defhydra arxana-browser-help-hydra (:hint nil :foreign-keys run)
+          "
+Arxana Browser
+  _RET_: open   _<left>_/_b_: up   _g_: refresh   _m_: mark   _U_: unmark
+  _p_: play     _s_: stop          _e_: stage     _N_: new EP _B_: bounce
+  _?_: full help
+  _q_: quit
+"
+          ("RET" arxana-browser--visit nil)
+          ("<right>" arxana-browser--visit nil)
+          ("<left>" arxana-browser--up nil)
+          ("b" arxana-browser--up nil)
+          ("g" arxana-browser--refresh nil)
+          ("m" arxana-browser--toggle-mark nil)
+          ("U" arxana-media-unmark-all nil)
+          ("p" arxana-media-play-at-point nil)
+          ("s" arxana-media-stop-playback nil)
+          ("e" arxana-browser--stage-to-ep nil)
+          ("N" arxana-browser--create-ep-staging nil)
+          ("B" arxana-browser--bounce-or-select-docbook nil)
+          ("?" arxana-browser-show-bindings-help "full help" :exit t)
+          ("q" nil "quit" :exit t))))
+    (unless (fboundp 'arxana-browser-help-hydra-ep-staging/body)
+      (eval
+       '(defhydra arxana-browser-help-hydra-ep-staging (:hint nil :foreign-keys run)
+          "
+Arxana Browser (EP staging)
+  _RET_: open   _<left>_/_b_: up   _g_: refresh   _m_: mark   _U_: unmark
+  _p_: play     _s_: stop          _P_: publish   _N_: new EP _B_: bounce
+  _?_: full help
+  _q_: quit
+"
+          ("RET" arxana-browser--visit nil)
+          ("<right>" arxana-browser--visit nil)
+          ("<left>" arxana-browser--up nil)
+          ("b" arxana-browser--up nil)
+          ("g" arxana-browser--refresh nil)
+          ("m" arxana-browser--toggle-mark nil)
+          ("U" arxana-media-unmark-all nil)
+          ("p" arxana-media-play-at-point nil)
+          ("s" arxana-media-stop-playback nil)
+          ("P" arxana-media-publish-marked nil :exit t)
+          ("N" arxana-browser--create-ep-staging nil)
+          ("B" arxana-browser--bounce-or-select-docbook nil)
+          ("?" arxana-browser-show-bindings-help "full help" :exit t)
+          ("q" nil "quit" :exit t)))))
+  (fboundp 'arxana-browser-help-hydra/body))
+
+(defun arxana-browser-help ()
+  "Open browser bindings help, preferring Hydra when available.
+The Hydra variant adapts to the current view: in `media-ep-staging-ep'
+views the hint surfaces publish instead of stage-to-ep, since the
+tracks already live in an EP and publish is the next likely action."
+  (interactive)
+  (if (arxana-browser--ensure-help-hydra)
+      (let ((view (and (boundp 'arxana-browser--context)
+                       (plist-get arxana-browser--context :view))))
+        (if (and (eq view 'media-ep-staging-ep)
+                 (fboundp 'arxana-browser-help-hydra-ep-staging/body))
+            (arxana-browser-help-hydra-ep-staging/body)
+          (arxana-browser-help-hydra/body)))
+    (arxana-browser-show-bindings-help)))
+
+(defun arxana-browser--with-help-hint (line)
+  "Append the bindings help hint to LINE."
+  (if (or (null line) (string-match-p "\\? for bindings\\." line))
+      line
+    (concat line " ? for bindings.")))
+
+(defconst arxana-browser--description-in-header-views
+  '(docbook-contents
+    evidence-sessions evidence-open-sessions
+    lab-sessions-active lab-sessions-recent
+    pattern-activation pattern-activation-detail)
+  "Views whose description is prepended to `header-line-format'.
+Other views show the description in `mode-line-format'.")
+
 (defun arxana-browser--decorate-header-line (context total)
   "Add status markers to the tabulated header line for CONTEXT."
   (when (and context (eq (plist-get context :view) 'docbook-contents))
@@ -715,7 +1121,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                           (:filesystem 'arxana-docbook-source-amber)
                           (:state 'arxana-docbook-source-red)
                           (_ nil)))
-           (status (arxana-browser--header-line context total))
+           (status (arxana-browser--with-help-hint
+                    (arxana-browser--header-line context total)))
            (cols (and (listp header-line-format)
                       (car (last header-line-format)))))
       (when cols
@@ -728,9 +1135,24 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                                   t cols))
         (setq header-line-format (list status " " 'header-line-indent cols))
         (setq mode-line-format '(" ")))))
+  (when (and context
+             (not (eq (plist-get context :view) 'docbook-contents))
+             (memq (plist-get context :view)
+                   arxana-browser--description-in-header-views))
+    (let* ((status (arxana-browser--with-help-hint
+                    (arxana-browser--header-line context total)))
+           (cols (and (listp header-line-format)
+                      (car (last header-line-format)))))
+      (when cols
+        (setq header-line-format
+              (list status " " 'header-line-indent (copy-sequence cols)))
+        (setq mode-line-format '(" ")))))
   (when (or (not context)
-            (not (eq (plist-get context :view) 'docbook-contents)))
-    (setq mode-line-format (list " " (arxana-browser--header-line context total))))
+            (not (memq (plist-get context :view)
+                       arxana-browser--description-in-header-views)))
+    (setq mode-line-format
+          (list " " (arxana-browser--with-help-hint
+                     (arxana-browser--header-line context total)))))
   (when (fboundp 'arxana-ui-mark-managed)
     (setq-local arxana-ui--base-header-line header-line-format)
     (arxana-ui-mark-managed "Arxana Browser")))
@@ -838,7 +1260,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                         (arxana-browser--songs-items)))
         ((or 'essays-home 'essays-essay 'essays-section)
          (if (require 'arxana-browser-essays nil t)
-             (arxana-browser-essays-items context)
+             (progn
+               (require 'arxana-browser-essays-wikibooks nil t)
+               (arxana-browser-essays-items context))
            (list (list :type 'info
                        :label "Essays browser unavailable"
                        :description "Load arxana-browser-essays.el."))))
@@ -891,6 +1315,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         ('invariants-home (arxana-browser--invariants-menu-items))
         ('lab-sessions-active (arxana-browser--lab-sessions-active-items))
         ('lab-sessions-recent (arxana-browser--lab-sessions-recent-items))
+        ('pattern-activation (progn (require 'arxana-browser-pattern-activation)
+                                    (arxana-browser--pattern-activation-items)))
+        ('pattern-activation-detail (progn (require 'arxana-browser-pattern-activation)
+                                           (arxana-browser--pattern-activation-detail-items)))
         ('lab-sessions-raw (arxana-browser--lab-sessions-raw-items))
         ('lab-sessions-archived (arxana-browser--lab-sessions-archived-items))
         ('evidence-timeline (arxana-browser--evidence-timeline-items))
@@ -944,6 +1372,18 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                        (arxana-browser-vsatarcs-items)
                      (list (list :type 'info :label "VSATARCS module unavailable"
                                  :description "Load arxana-browser-vsatarcs.el"))))
+        ('scans (if (require 'arxana-browser-scans nil t)
+                    (arxana-browser-scans-items)
+                  (list (list :type 'info :label "Scans module unavailable"
+                              :description "Load arxana-browser-scans.el"))))
+        ('ledger (if (require 'arxana-vsatarcs-ledger nil t)
+                     (arxana-ledger--home-items)
+                   (list (list :type 'info :label "Ledger module unavailable"
+                               :description "Load arxana-vsatarcs-ledger.el"))))
+        ('sales (if (require 'arxana-vsatarcs-sales nil t)
+                    (arxana-sales--home-items)
+                  (list (list :type 'info :label "Sales module unavailable"
+                              :description "Load arxana-vsatarcs-sales.el"))))
         (_ (arxana-browser--menu-items))))
      (t
       (arxana-browser--require-patterns)
@@ -1124,6 +1564,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
             ('invariants-home #'arxana-browser--invariants-menu-row)
             ('lab-sessions-active #'arxana-browser--lab-sessions-active-row)
             ('lab-sessions-recent #'arxana-browser--lab-sessions-active-row)
+            ('pattern-activation #'arxana-browser--pattern-activation-row)
+            ('pattern-activation-detail #'arxana-browser--pattern-activation-detail-row)
             ('lab-sessions-raw #'arxana-browser--lab-sessions-raw-row)
             ('lab-sessions-archived #'arxana-browser--lab-sessions-archived-row)
             ('evidence-timeline #'arxana-browser--evidence-timeline-row)
@@ -1169,6 +1611,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
             ('vsatarcs (if (fboundp 'arxana-browser-vsatarcs-row)
                            #'arxana-browser-vsatarcs-row
                          #'arxana-browser--info-row))
+            ('scans (if (fboundp 'arxana-browser-scans-row)
+                        #'arxana-browser-scans-row
+                      #'arxana-browser--info-row))
             (_ #'arxana-browser--menu-row)))
         (t (arxana-browser--require-patterns)
            #'arxana-browser-patterns--browser-pattern-row))))
@@ -1276,6 +1721,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                         ('invariants-home (arxana-browser--invariants-menu-format))
                         ('lab-sessions-active (arxana-browser--lab-sessions-active-format))
                         ('lab-sessions-recent (arxana-browser--lab-sessions-active-format))
+                        ('pattern-activation (arxana-browser--pattern-activation-format))
+                        ('pattern-activation-detail (arxana-browser--pattern-activation-detail-format))
                         ('lab-sessions-raw (arxana-browser--lab-sessions-raw-format))
                         ('lab-sessions-archived (arxana-browser--lab-sessions-archived-format))
                         ('evidence-timeline (arxana-browser--evidence-timeline-format))
@@ -1321,6 +1768,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                         ('vsatarcs (if (fboundp 'arxana-browser-vsatarcs-format)
                                        (arxana-browser-vsatarcs-format)
                                      (arxana-browser--info-format)))
+                        ('scans (if (fboundp 'arxana-browser-scans-format)
+                                    (arxana-browser-scans-format)
+                                  (arxana-browser--info-format)))
                         (_ (arxana-browser--menu-format))))
                      ((eq (plist-get context :type) 'language)
                       (arxana-browser--pattern-format))
@@ -1407,36 +1857,65 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                (cons (list :view view :label label)
                      arxana-browser--stack))
          (arxana-browser--render)))
+      ('pattern-activation
+       ;; Drill into one pattern: push a detail context. The items fn
+       ;; and headline both read `(:pattern context)' from the stack
+       ;; top, so it survives the major-mode reset inside --render.
+       (require 'arxana-browser-pattern-activation)
+       (setq arxana-browser--stack
+             (cons (list :type 'pattern-activation-detail-context
+                         :label (plist-get item :id)
+                         :view 'pattern-activation-detail
+                         :pattern item)
+                   arxana-browser--stack))
+       (arxana-browser--render))
+      ('pattern-activation-row
+       ;; In the detail view, RET opens the originating turn.
+       (let ((eid (plist-get item :evidence-id)))
+         (cond
+          ((and eid (fboundp 'arxana-browser-evidence-open-entry))
+           (arxana-browser-evidence-open-entry
+            (list :type 'evidence-entry :evidence/id eid)))
+          (eid
+           (message "Evidence id: %s (no opener available)" eid))
+          (t (message "No evidence id on this row")))))
       ('lab-session-active
        (arxana-browser-lab-open-session item))
       ('lab-session-archived
        (arxana-browser-lab-open-session item))
       ('evidence-session
-       (if (fboundp 'arxana-browser-evidence-open-session)
+       (if (and (arxana-browser--ensure-evidence)
+                (fboundp 'arxana-browser-evidence-open-session))
            (arxana-browser-evidence-open-session item)
          (message "Evidence module unavailable")))
       ('evidence-open-session
-       (if (fboundp 'arxana-browser-evidence-open-session)
-           (arxana-browser-evidence-open-session item)
+       (if (and (arxana-browser--ensure-evidence)
+                (fboundp 'arxana-browser-evidence-open-live-session))
+           (arxana-browser-evidence-open-live-session item)
          (message "Evidence module unavailable")))
       ('evidence-thread
-       (if (fboundp 'arxana-browser-evidence-open-thread)
+       (if (and (arxana-browser--ensure-evidence)
+                (fboundp 'arxana-browser-evidence-open-thread))
            (arxana-browser-evidence-open-thread item)
          (message "Evidence module unavailable")))
       ('evidence-entry
-       (if (fboundp 'arxana-browser-evidence-open-entry)
+       (if (and (arxana-browser--ensure-evidence)
+                (fboundp 'arxana-browser-evidence-open-entry))
            (arxana-browser-evidence-open-entry item)
          (message "Evidence module unavailable")))
       ('evidence-turn
-       (if (fboundp 'arxana-browser-evidence-open-entry)
+       (if (and (arxana-browser--ensure-evidence)
+                (fboundp 'arxana-browser-evidence-open-entry))
            (arxana-browser-evidence-open-entry item)
          (message "Evidence module unavailable")))
       ('evidence-chat-turn
-       (if (fboundp 'arxana-browser-evidence-open-entry)
+       (if (and (arxana-browser--ensure-evidence)
+                (fboundp 'arxana-browser-evidence-open-entry))
            (arxana-browser-evidence-open-entry item)
          (message "Evidence module unavailable")))
       ('evidence-meta
-       (if (fboundp 'arxana-browser-evidence-open-entry)
+       (if (and (arxana-browser--ensure-evidence)
+                (fboundp 'arxana-browser-evidence-open-entry))
            (arxana-browser-evidence-open-entry item)
          (message "Evidence module unavailable")))
       ('mission-entry
@@ -1495,6 +1974,18 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
        (if (fboundp 'arxana-browser-vsatarcs-open)
            (arxana-browser-vsatarcs-open item)
          (message "VSATARCS module unavailable")))
+      ('scans-frame
+       (if (fboundp 'arxana-browser-scans-open)
+           (arxana-browser-scans-open item)
+         (message "Scans module unavailable")))
+      ('ledger-stratum
+       (if (fboundp 'arxana-ledger-open-stratum)
+           (arxana-ledger-open-stratum item)
+         (message "Ledger module unavailable")))
+      ((or 'sales-stage 'sales-rolodex 'sales-leads 'sales-demos)
+       (if (fboundp 'arxana-sales-open-stage)
+           (arxana-sales-open-stage item)
+         (message "Sales module unavailable")))
       ('essays-essay
        (setq arxana-browser--stack
              (cons (list :view 'essays-essay
@@ -1748,6 +2239,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                     ((and item (eq (plist-get item :type) 'chorus-entity))
                      (and (fboundp 'arxana-browser-chorus-location)
                           (arxana-browser-chorus-location item)))
+                    ((and item (memq (plist-get item :type)
+                                     '(essays-essay essays-section essays-annotation)))
+                     (and (fboundp 'arxana-browser-essays-location)
+                          (arxana-browser-essays-location item)))
                     ((and item (eq (plist-get item :type) 'pattern))
                      (arxana-browser--pattern-location item))
                     ((and item (eq (plist-get item :type) 'collection))
@@ -1756,6 +2251,9 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                      (arxana-browser--language-location item))
                     ((and item (eq (plist-get item :type) 'forum-thread))
                      (arxana-browser--forum-location item))
+                    ((and item (eq (plist-get item :type) 'operational-family-entry))
+                     (and (fboundp 'arxana-browser-operational-family-location)
+                          (arxana-browser-operational-family-location item)))
                     (t nil))))
     (unless location
       (user-error "No location available for this item"))
@@ -1808,6 +2306,16 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
                           (plist-get context :evidence-id))
                      (format "arxana://evidence/entry/%s"
                              (plist-get context :evidence-id)))
+                    ((and context (eq (plist-get context :view) 'essays-essay)
+                          (plist-get context :essay-id))
+                     (format "arxana://essay/%s"
+                             (url-hexify-string (plist-get context :essay-id))))
+                    ((and context (eq (plist-get context :view) 'essays-section)
+                          (plist-get context :essay-id)
+                          (plist-get context :section-id))
+                     (format "arxana://essay/%s/section/%s"
+                             (url-hexify-string (plist-get context :essay-id))
+                             (url-hexify-string (plist-get context :section-id))))
                     ((and context (plist-get context :view))
                      ;; Try item-at-point for evidence views
                      (let ((item (ignore-errors (arxana-browser--item-at-point))))
@@ -1869,6 +2377,21 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
   (interactive)
   (arxana-browser--render))
 
+(defun arxana-browser-home ()
+  "Show the Arxana browser at its root menu on the current frame.
+Always resets the navigation stack, and forces the
+`*Arxana Browser*' buffer to appear in the selected window of
+the current frame — never popping to a different frame even if
+the buffer is already visible elsewhere."
+  (interactive)
+  (let ((buf (get-buffer-create arxana-browser--buffer)))
+    (switch-to-buffer buf)
+    (setq arxana-browser--stack nil
+          arxana-browser--context nil)
+    (let ((display-buffer-overriding-action
+           '((display-buffer-same-window) (inhibit-switch-frame . t))))
+      (arxana-browser--render))))
+
 (defun arxana-browser--import-library ()
   "Ingest the flexiarg collection at point into Futon."
   (interactive)
@@ -1918,12 +2441,29 @@ returning to the top-level list."
         (call-interactively #'arxana-browser-evidence-filter-by-type)
       (user-error "Filtering is only available in Evidence Timeline view"))))
 
+(defun arxana-browser--visit-alternate ()
+  "Perform the alternate visit action for the row at point."
+  (interactive)
+  (let* ((context (car arxana-browser--stack))
+         (item (arxana-browser--item-at-point)))
+    (unless item
+      (user-error "No entry on this line"))
+    (if (and context
+             (eq (plist-get context :view) 'evidence-open-sessions)
+             (eq (arxana-browser--item-get item :type) 'evidence-open-session))
+        (if (and (arxana-browser--ensure-evidence)
+                 (fboundp 'arxana-browser-evidence-open-session))
+            (arxana-browser-evidence-open-session item)
+          (message "Evidence module unavailable"))
+      (arxana-browser--visit))))
+
 (defun arxana-browser--make-mode-map ()
   (let ((map (make-sparse-keymap)))
     (when (and (boundp 'tabulated-list-mode-map)
                (keymapp tabulated-list-mode-map))
       (set-keymap-parent map tabulated-list-mode-map))
     (define-key map (kbd "RET") #'arxana-browser--visit)
+    (define-key map (kbd "C-<return>") #'arxana-browser--visit-alternate)
     (define-key map (kbd "<right>") #'arxana-browser--visit)
     (define-key map (kbd "<left>") #'arxana-browser--up)
     (define-key map [wheel-left] #'arxana-browser--up)
@@ -1947,6 +2487,7 @@ returning to the top-level list."
     (define-key map (kbd "I") #'arxana-browser--import-library)
     (define-key map (kbd "E") #'arxana-browser--edit-current-context)
     (define-key map (kbd "e") #'arxana-browser--stage-to-ep)
+    (define-key map (kbd "N") #'arxana-browser--create-ep-staging)
     (define-key map (kbd "+") #'arxana-browser--move-pattern-up)
     (define-key map (kbd "-") #'arxana-browser--move-pattern-down)
     (define-key map (kbd "A") #'arxana-browser--add-collection-root)
@@ -1985,6 +2526,7 @@ returning to the top-level list."
     (define-key map (kbd "y") #'arxana-browser--copy-location)
     (define-key map (kbd "Y") #'arxana-browser--copy-current-location)
     (define-key map (kbd "f") #'arxana-browser--copy-file-path)
+    (define-key map (kbd "?") #'arxana-browser-help)
     (define-key map (kbd "C-c C-e") #'arxana-browser-docbook-export-org)
     (define-key map (kbd "C-c C-p") #'arxana-browser-docbook-export-pdf)
     (define-key map (kbd "C-c C-s") #'arxana-browser-docbook-sync-order)
@@ -1995,6 +2537,9 @@ returning to the top-level list."
     (define-key map (kbd "C-c C-r") #'arxana-media-lyrics-refresh-buffer)
     (define-key map (kbd "C-c C-L") #'arxana-media-lyrics-adopt-entity-at-point)
     (define-key map (kbd "<left>") #'arxana-browser--up)
+    (define-key map (kbd "<home>") #'arxana-browser-home)
+    (define-key map (kbd "<next>") #'arxana-browser-home)
+    (define-key map (kbd "H") #'arxana-browser-home)
     (define-key map (kbd "q") #'quit-window)
     map))
 
@@ -2035,13 +2580,23 @@ returning to the top-level list."
   (interactive)
   (arxana-media-move-misc-to-ep-at-point))
 
+(defun arxana-browser--create-ep-staging ()
+  (interactive)
+  (arxana-browser--ensure-context)
+  (let ((view (plist-get (car arxana-browser--stack) :view)))
+    (unless (memq view '(media media-ep-staging))
+      (user-error "New EP staging is only available from Media or EP staging views")))
+  (arxana-media-create-ep-staging))
+
 (defun arxana-browser--toggle-mark ()
   (interactive)
   (arxana-browser--ensure-context)
   (let ((context (car arxana-browser--stack)))
     (if (and context (eq (plist-get context :view) 'docbook-contents))
         (arxana-browser-docbook-toggle-mark-at-point)
-      (arxana-media-toggle-mark-at-point))))
+      (if (and context (eq (plist-get context :view) 'evidence-open-sessions))
+          (arxana-evidence-toggle-open-session-mark-at-point)
+        (arxana-media-toggle-mark-at-point)))))
 
 (defun arxana-browser--remove-marked ()
   (interactive)
@@ -2067,9 +2622,13 @@ returning to the top-level list."
   (interactive)
   (arxana-browser--ensure-context)
   (let ((context (car arxana-browser--stack)))
-    (if (and context (eq (plist-get context :view) 'docbook-contents))
-        (user-error "Use R to remove or X to hard delete in docbook contents")
-      (arxana-media-delete-at-point))))
+    (cond
+     ((and context (eq (plist-get context :view) 'docbook-contents))
+      (user-error "Use R to remove or X to hard delete in docbook contents"))
+     ((and context (eq (plist-get context :view) 'evidence-open-sessions))
+      (arxana-evidence-delete-open-sessions))
+     (t
+      (arxana-media-delete-at-point)))))
 
 (provide 'arxana-browser-core)
 ;;; arxana-browser-core.el ends here

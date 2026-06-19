@@ -1,0 +1,346 @@
+Hi everybody, this is Joe for the episode five of the Peeragogy podcast and today we are joined
+by Yasmin Budyoff and Paola Ricaurte, who I would love it if they would introduce themselves in
+the order I just said so that the audience knows who they are. And just everyone, please remember
+this is a video podcast when you have video but it also goes by audio so people may not see
+what you see. So if you have to describe something, feel free. But yeah, please take it away,
+Yasmin. Okay, hi. Thank you, Joe. Hi Paola. My name is Yasmin Budyoff. I'm a creative technologist
+based in London. I do computational art at Goldsmiths University. I organise with no tech
+for tyrants and I'm also a visiting fellow at the Ada Lovelace Institute where I'm looking at
+the ethics of AI, specifically AI justice. And I'm working on ways of having discussions around
+designing ethical frameworks that truly benefit everyone involved. That's pretty much it for me.
+And Paola, I know quite well but some people in the audience may not know her as well as I
+do. So please go for it, Paola. Thank you very much, Joe. My name is Paola Riccardo. I'm
+based in Mexico City but I'm originally from Ecuador. I teach at Tecnológico de Mante Rey,
+Department of Media and Digital Culture. I'm also a faculty associate at the Bergman Klein
+Centre for Internet and Society. And I'm also co-founder with Nick Koldrian, Ulysses Mejías
+of the Tierra Común Network, an initiative to think and organise around data, the coloniality
+and in the global south. And I also belong to the A-plus Alliance, a global alliance to think about
+feminist AI and feminist ethics in AI. And I'm super happy to be here. So I wanted first of all to
+introduce the two of you because I felt that that would be good. So I did that a while ago by
+email. And I know we've been wanting to have this chat for a while. So this is the first
+podcast after the holiday break. So yeah, I would say although it's a bit of an interview,
+it's really hopefully a slightly facilitated discussion between the two of you. So if I
+have a slightly light touch, it's because I really hope that you'll have an opportunity
+to get to know each other as well as just share some background. So yeah. And by the way,
+these slides don't move around by themselves. Charlotte is they're producing as usual. So
+thank you Charlotte. But yeah, the first kind of interview question or really discussion question
+is how do you think about data ethics and epistemology? So it's not necessary maybe to
+define these terms, but I got these words from a paper by Paolo called Data Epistemologies,
+The Coloniality of Power and Resistance. So maybe Paolo, if you wouldn't mind going first,
+how did you choose such an interesting title and how do you combine these topics in that paper?
+Thank you, Joe. Yeah, I wrote this paper because I was trying to think around the way
+data epistemologies are the way we see the world right now. And for me, it's very important to
+challenge the idea of data or the defecation of society as the only way of existence in this
+moment of history. And also, I address the problem of creating universal worldviews through data and
+specifically Western worldviews as universal worldviews through defecation and through data.
+So what I'm trying to do and going back to the ethics and ethical frameworks
+is to challenge the idea of having universal values that are applied to all cultures because
+even though we
+We can, for example, share some basic principles of living and being in the world, like, for example,
+I don't know, freedom.
+The way we understand freedom is very different depending on the culture and the context we
+live in.
+So that is a very short response to Europe.
+Yeah, I think we can dig into it a bit more.
+But the other reason I felt confident to put epistemologies in the question was, I know that
+Yasmin is working on topics related to research, which is related to epistemology, how do we
+learn about things?
+So, Yasmin, you may have very different things to say, or you may say, oh, I completely
+agree.
+But how do you think about data, ethics, and epistemology?
+Well, I completely agree with Paula, of course.
+The thing is, like, if we take a step back from that, and to Paula's point of the origins
+of knowledge, there's a misconception that technology is born of the West, and there's
+this very Eurocentric idea that countries in the global South have, you know, were completely
+helpless before colonialism happened, and then the colonialists kind of brought technological
+knowledge to these barbaric, helpless people.
+And I think, like, obviously that's wrong, but that ideology has permeated our educational
+institutions, and it's really shaped the way that we design technology since.
+There's a sort of arrogance, but also it means that we design technological products in a
+way that's not as creative as it could be.
+So one way to address the misconception that all technology is born of the West, and all
+kind of scientific knowledge is born of the West, is through art, I would say.
+And we've seen a kind of, like, one particular project that comes to mind is by Alan Kudiccio,
+and he made a game called the Wagadoubou Chronicles, and for that he did lots and lots of research
+on cultures in sub-Saharan Africa and the technologies that they used before coloniality,
+and I think it's so tragic that, you know, those were not allowed to continue and evolve
+because the way that we design AI products especially has been intellectually stunted
+because of that.
+So that's where, like we are at, so there is work to be done in dismantling these
+misconceptions of origins of knowledge, and secondly, there's work to be done
+in kind of proving the point and designing AI products that demonstrate that actually you
+can build better things when you acknowledge that knowledge is not a kind of Western product.
+So this reminds me of a really interesting tension in Paula's paper, so maybe we can
+flip onto topic two, how do you address this in your work?
+Paula, one of the interesting kind of tensions in the paper is you talk about the stuff that
+we've been talking about now, but then you also talk about this topic of resistance,
+and someone who is a researcher in Mexico building a website, and it's a very kind
+of sobering topic, it's a website about femicide, violent assault and death on women,
+and it documents all the circumstances and stuff, so it's a very grim topic, but of course
+a very needed one, so the official numbers, the official statistics don't cover this,
+but she and I guess her team have used some open source software to get this information out there,
+and it's literally life or death information for people to understand this, so that seemed
+to be an interesting example about related to a creative use of technology, okay, in this case
+This is a map. It may be not the most creative use of technology, but it's still it's very different from the other part of the paper you're talking about, which is a more extractive use of technology.
+So I wonder if you can talk more about that, because I also know this is a paper where you're talking about, you know, her work and you're doing it as a researcher, but you yourself have just mentioned some networks and stuff that you're working with and on.
+So I wonder if you wanted to go a bit more into how you engage with the things we've been talking about.
+Yeah, thank you, Joe. Yeah, of course, I work trying to understand the way that the vacation and this extractive process happens in the world and how does it link to traditional systems of operation like capitalism, colonialism and patriarchy.
+But at the same time, I'm trying to collect and understand cases and where women, especially not only like people in general, but women in the social south are trying to resist certification or trying to resist this
+patriarchal way of reading data or processing data. So for the Mexican state,
+femicides are not relevant in the sense that there is not a policy, a gender based policy, where we can actually collect this data and prosecute the basically men that are
+particular is very interesting because it shows all this.
+We're getting a little bit of freezing going on. So I think it may have healed itself, but it may not have because Paul looks very still.
+Well, I can speak a little bit to what Paolo is describing, because the work I do with no tech for tyrants is specifically addressing violent tech.
+And we kind of collaborate with Mejente, and that's a kind of human rights organization in South America that advocates for migrant rights.
+And it's a long process of trying to dismantle the relationship between public organizations and violent tech organizations, which as Paolo described, are extractive.
+And specifically, they extract the personal data and then use it to harm black and brown people.
+A particular campaign is no tech for ICE, where we're trying to make the point that we don't want to hand over public contracts to organizations
+which end up doing harm to the public and specifically minority groups or people of less power.
+I mean, I think that with some of these themes that I've been talking about with Paolo in mind, I read a book called Columbus and Other Cannibals, which is by a North American,
+he's deceased now, but a Native American author, and he points out that like, coloniality kind of is an ideology which exists, for example, inside of Britain.
+It's not like it's purely in other place. Now, I don't know if you would agree about that though. What do you think?
+Because I mean, I'm, you know, from North America. So to me, it's like very clearly a country, I guess, built on, you know, built on stolen land.
+It's a colonial force even now. How do you think about that here in the UK? And how, I mean, you're working very internationally, but what do you think?
+Think about it, you know, here in London, for example, do you see the same issue showing
+up?
+I can, so my concern is specifically with respect to personal data, so we can see these
+neocolonial behaviors manifest in data collection and what happens with that data in the UK.
+And it's another kind of story that we at No Tech for Tyrants are doing.
+It's quite disturbing how the government has made partnerships with companies like Palantir
+who are known to be extractive and to create violent tech products that end up reharming
+minority groups.
+At the same time, I'm seeing various government initiatives on constructing AI ethics boards,
+which on the face of it is like a noble endeavor, but when I looked at these boards and who's
+involved, they do not represent the people that these AI products will eventually affect.
+And it's kind of like one step forward, two steps back.
+You know, when you see that the government is giving contracts to private firms without
+adequate tendering process or due diligence, and then you see them create ethics boards
+that almost kind of gives themselves permission for just continuing with their behavior.
+It's such a feeling of powerlessness, and that's why we have to think creatively about
+elbowing our way into these conversations.
+Sorry, speaking of elbowing my way in, I wasn't wholly distracted.
+I'm trying to see if I can get Paola to connect via telegram.
+So it's okay, I will see if I can call her no.
+So let's just see here.
+But I guess I would say that the question I would have about AI ethics boards and stuff
+is like, okay, well, what can we do about that as normal people?
+Because I don't work for Google or Palantir, and yes, I don't personally buy Palantir
+products, but I know some people who have worked at Palantir, I could tell them
+to stop that.
+Like, what do you think we can kind of do about this?
+And at the meantime, I'm just trying to call Paola, so feel free to extemporize.
+This is basically what my work involves.
+I, as a creative technologist, try to build things to make a case for technical
+technology.
+I'm very much a believer of building products to make a point, rather than
+endless reports in the hope that something tank will eventually turn that into
+something that looks like policy.
+So one thing that is really exciting is kind of thinking of creative uses for AI.
+I'm kind of dismantling the idea that it's so unbelievably complex and
+unknowable, kind of opening up participation, and that's where the
+internet is really useful, because you can design platforms and invite lots
+of different people to have their say, and then from that construct a
+framework for ethical uses of AI, for example.
+So I can't get the audio off of my computer and into my phone, but I may be
+able to get Paola's voice off of this phone and into the computer.
+Paola, are you there?
+I'll call her, OK.
+OK.
+Charlotte is calling you.
+You can just focus on the topic.
+Hello.
+OK.
+Charlotte is going to call you now.
+OK.
+Well, OK.
+So they're trying to get audio spliced in.
+So the last slide I had here was, like, how can we learn from your
+work in this piragaji project?
+Maybe just carrying on with this.
+It's not completely beyond us to work with technology, although right now it's giving us a big pain in the neck with the internet being a bit touchy, but that's okay, that happens sometimes.
+So for those who are on video, here's a little tiny kind of mock-up of keeping track of some of our own data. So this is not really extractive, it's like, hey, this is our data.
+And we will have a chance to do one of these kind of reviews that we sometimes do after such sessions to create a data source ourselves, which we can then use.
+And we're trying to build a bit of technology to help manage that, but I feel like that's very naive.
+So I feel like you and Paula would both have things to say that's a bit less naive, maybe from an ethical standpoint, and maybe we could push things a bit further.
+So, yeah, sorry, the question maybe feels a little bit out of the blue if it's a matter of like, well, I need to know more about the review methods and stuff you're using.
+But yeah, feel free to interview me. You can ask me questions about how we are using technology if you want to, or to say, you know, here's something you must do.
+How can we, in this kind of global collaboration, learn from your work?
+Well, I suppose one question that I would have for the wider, Pyrogogy, Pyrogogy, or very good.
+A little bit of however you like it. Yeah, Pyrogogy is how I say it.
+And it's a question I kind of have for myself is, how do you involve people who are not academically inclined?
+Because I think, you know, personally, most of the people that I collaborate with happen to be academics or technologists or industry people or artists and just like people who are already concerned
+and active. But what I'm really interested in is getting the people who are affected by this like rapid technological development, who have something to say, but there is no real forum for that.
+Because, you know, our governments just do a really bad job of getting like meaningful public participation.
+So I guess my question is, how are you working to incorporate meaningful public participation?
+So I would say that it's a multi-layer process, but this is definitely something that Charlotte will remind us of a lot of times is like, this is not a book really written for academics.
+We're talking about book, there's this Pyrogogy handbook that we are writing, and that's one of our things, aside from the podcast that we like to make.
+So like we like to make things as a way of learning.
+I think that that resonates with what you were talking about with art.
+But the things we make aren't, sometimes they are academic papers, there are some of those.
+But there's other things we've tried to make together like this book and the podcast, which are a bit more accessible.
+And of course, with those things, you know, there's always a matter of marketing, and then there's a matter of this and that.
+There's a really nitty-gritty stuff that as an academic, you sort of don't have to think about or you could get away without thinking about it, let's say.
+But I think that in terms of the engagement, I would like it if this stuff was kind of, you know, I think if we were ever going for grants or funding or something,
+and we could say, oh look, you know, hundreds of people have used this and it's really revolutionized X rather than this is something that we really enjoy doing ourselves
+and it's really fun and we think other people have fun with it too.
+I think the former could be a bit more flashy.
+So, you know, I would say Piragaji is often cited in the literature on MOOCs, Massive Open Online Courses.
+And so they must find the concept useful.
+But in terms of like, what are we actually doing, you know, one thing that's come up would be,
+how could we make our own Massive Open Online Course?
+So we haven't built one yet, but we have done some course design.
+And it's like, how do you design a course that's not just taught from the top down, but is actually built by the participants.
+So those are some of the ideas that we've been exploring.
+I don't think we can say, oh yeah, we've nailed it and it's going great.
+We've built this, you know, Massive Open Online Course which is subscribed by, you know, loads of people around the world.
+But in the broader sense in which Piragaji...
+It's like a reflection on other practices that we don't have to do ourselves, but maybe going on
+in other places that we can learn with and from those people. Certainly some of the other stuff
+I've been involved with is about that. So this Planet Math website I used to work on was called
+Math for the People by the People and it was like, you know, it really was a kind of global
+peer-produced resource. So, but yeah, I think just engaging people in the process of writing
+is challenging. Some people don't love writing and so books are less accessible in some ways
+than podcasts. So, Charlotte has appeared. So I guess you have not managed to retrieve Paola from
+the... I have very little of the expertise that Paola has, but here she is. Oh, that's great.
+I'll put myself out on a hurry. Okay. Welcome back. Thank you. I'm sorry. I don't know what
+happened. I'm sorry that it didn't work out to get you on Telegram, but I'm so glad you're here.
+That was an interesting, unexpected turn of events. Of course, we can keep talking if there's time,
+but I think, yeah, so Yasmin and I were talking about this last question, how can this work
+inform our work on PuroGudgy? So I think that you may have disappeared just as we were asking
+that other question, how do you address it in your work? But you've been a part of the
+PuroGudgy project for quite a while, so maybe it's a good question for you. How do you see PuroGudgy
+helping? Maybe not yet, but maybe we could do more in this, to align more with the other themes
+you were talking about before. Well, I think PuroGudgy, as you know, is a way of doing things
+collectively, thinking together and producing knowledge together. And I think one of the issues
+that happens usually is that every technology is usually developed by a very small group of people,
+usually white men in industrialized countries. And also data reflects that bias. Data that is
+collected is mainly data processed with this Western bias as well. So if we could
+think of different processes and methodologies of doing things, for example, there is this framework
+about feminist data. And also there are all other frameworks like indigenous data frameworks
+that explain that not only the results of data processing or extraction is important,
+but also the way we think around data collection, the ways data relates to the needs of certain
+community, and also the ways in data gives back to the community in the sense that if we extract
+something from the community, we should give back that as well. So that is mainly what we
+try to do with PuroGudgy. We try to learn together. We're trying to address the needs of the community.
+And we try to give back not only to the community that is working to produce knowledge collectively,
+but also to the broader community as well. Thank you so much. Not only was what you just said
+amazing, but you also showed this really great graphic. I wonder if we could get that back
+again. That was as Riccarte 2020. So I think that this could provide some interesting guidance for us
+to reflect on some more. There's another example we were talking about, which I don't know if we've
+shared this article, but it was about centers for people who I think had actually survived
+the kinds of things which would otherwise become femicide, domestic violence and stuff
+like that, and helping them in Mexico, helping them learn things like knitting and crafting and
+stuff like that. I'll see if I can find the article, but I was so impressed by it as an example of
+PuroGudgy, where they don't call it PuroGudgy. They've never heard of us and what we do,
+but I felt like a real kindred spirit with what they were doing. I wonder if maybe
+is it helpful to kind of reach out to some other efforts or do I as a white male
+from the U.S., should I just mine my
+How do you think, I mean, this isn't really a matter of like allyship, it's just a matter
+of how do we do peeragogy in this context in which like I would be really interested to
+learn, you know, what makes these places work well for the women who are, you know, like
+you.
+Well, I was speaking earlier about resistance and I work with women's collectives and women's
+collectives that are working in the technology area.
+And what is amazing for me is the way that women like do things differently in the sense
+at least women in the global south that are not part of the like dominant system without
+any resources, material resources, they try to imagine and challenge the dominant technologies
+from the way they think it's good for them and their communities.
+And the image that you shared before reflects what for me is the idea that resistance
+and also agency, collective agency goes from the body through all the territories that are
+intertwined when we speak about technology.
+The body being the first territory, but the air being our collective territory and all
+the internet and layers that are involved in that in the sense that internet could
+be also understood as another territory that should be disputed from power.
+Cool.
+I think we're getting Robert best here.
+So I think that it's interesting with some comments or whatever.
+I think you like the technology that we're using to present the podcast.
+So Yasmin, would you want to respond to any of what we just saw and were hearing
+about?
+I guess typically we would keep to a half an hour, but because we had a little bit of
+lost time, I think we should, you know, like, yeah, start to to think about how we want
+to close things up.
+So response, maybe moving towards closing.
+What do you think?
+So to power's point of participation, a meaningful participation rather than extractive, particularly
+with the way from power, my own project, I was thinking of some sort of social
+contract that I'm trying to develop when as a researcher, you know, I need people's
+knowledge that I don't have.
+And in particularly kind of Western apropological practice, it's historically been
+extractive when people go to groups of people and they take knowledge from them and use
+it in their own work.
+And often those people never reap the benefits of that research or the products that are made
+of that.
+I'm just trying to think, well, how can we do better as researchers and practitioners?
+And I'm trying to craft a kind of reciprocal participation, social contract sort of thing.
+I wanted to see, Paolo, maybe, can you think of any such social contracts between, you know,
+somebody who is seeking knowledge and participants and, yeah, what kind of, do you know of any
+projects that have found that success?
+Oh, she seems present.
+Oh, no, okay.
+So what do you think?
+Do you know of existing social contracts?
+I know that some of your colleagues have this governance, but that's very different from sort
+of social contracts with the end users of the, well, yes, maybe would you say a little bit
+more about like a specific, you know, walk us through a specific example, like a really
+kind of succinct example that might be like, here it is, it might be easier to find
+other examples or other frameworks that, yeah.
+Yeah, so for example, if we wanted to learn more about the health care needs of a group
+of people, you're an NGO, and you know, you've got some funding to provide something to the
+group of people who are, who need a certain type of health care, and you want to know,
+you know, what are your medical needs right now, and you need to extract personal medical
+information.
+How can you, in your communication with the medical care, exactly what?
+They will get out of it should they consent to you taking that knowledge from them.
+I see, yeah. Well, I would definitely say it doesn't sound like the Mexican state is providing this kind
+of sensitivity at all. So, yeah, Paola, what do you think? Have you come across such kinds of
+contracts for researchers, like kind of research ethics and how we as researchers work with
+people who we do research on or research with? Have you come across any such things?
+Well, of course, I think research in some sense tends to reproduce
+destructive processes or patterns. So from a feminist standpoint, we try to avoid those practices.
+And there is a framework that I use, which is the design justice framework. And also it's very
+close to some of the ethical frameworks to work with data that come from non-western communities,
+from indigenous communities, from New Zealand. And it's not thinking about research as a
+process that you lead and you conceive and you put in to work, but rather
+put in your abilities at the service of the community and try to just be
+an intermediary for their needs and purposes. So it's not that you, as a researcher, are going to
+go to the community and extract, again, their data and their information for your ends, but rather
+do what, there's an anthropologist from Brazil called Rita Segato and she speaks about
+like doing public anthropology or putting anthropology at the service of the community
+in the sense that is the community what is going, who is going to decide the questions
+and the way the research is going to be done. And not you as a researcher. It's the other way
+around. That sounds like a kind of spirit anyway. If it's not a framework, it's at least someone who
+shares some of these same viewpoints. It strikes me as well that maybe Eleanor Ostrom would be another
+kind of relevant person to bring into the conversation at one point because she certainly
+has frameworks, but it's frameworked. Her idea is about local solutions to local problems.
+So okay, this is just the random picture of some data silos. Maybe that's a funny thing
+to close with though. Maybe it is good that we should all be kind of finding good ways to work
+across so that we're not just on these little data islands and that we could share good practices
+and stuff. So okay, I would love to say anyone wants to put any last words, but I would also
+say that I'm sure we could talk about these topics more. But for the sake of the listeners
+who may be wanting to move on with their day or night, wherever they may be listening to the replay,
+I guess we should wrap up. So yep, I'm Joe. Charlotte appeared briefly. Thank you Charlotte
+for making this happen. And yeah, thanks to Robert and whoever else is watching for tuning in.
+Hey there, Charlotte. So do you guys want to do one more round of Q&A with Charlotte,
+or should we say goodbye? Charlotte, do you have any questions or thoughts you want to share here?
+Not really, but I mean, I'm a publisher and I have, as a result of my experience with Piragaji,
+I have just gone around to being a collaborator partner with my authors, you know, so I bring
+my expertise and they bring the creative part. And it's a little bit messy sometimes, but it's
+only way I like to work now, because I feel like I'm part of a, you know,
+have a purpose in part of creating something instead of-
+Just a transactional. So that's what I've gotten out of peeragogy in some ways.
+Yeah, I think it's very much that it infuses the kinds of stuff that we do. And I think we can see
+that in this kind of sense of a research context as well. So perhaps even without using the word,
+maybe this is kind of puragogical research where you're working together with people to
+shape even what it's research about. So okay, for those here and anyone watching live,
+Charlotte's put up a link meet.jit.c slash peeragogy. So we're going to close down the
+live stream now, but we will reconvene those who are interested there for a little post
+discussion and follow-up question. We tend to do this review. And in fact, Charlotte, would you
+be okay to show them the next slide, just because we're talking about research methods?
+We have this framework that we, oops, where to go? Yeah, one peeragogy project action review
+that we like to ask certain questions about kind of how it's gone and how it's going. And so
+it might be interesting as another example about a framework. It's not really a contract,
+but it's a little tiny piece of what could be a contract. So any famous last words here?
+Thank you so much both for being on. And yep, I hope that we will get further chances to discuss
+later. But closing comments are welcome as well.
+So thank you for coming to meet us. Thank you.

@@ -1,0 +1,121 @@
+{
+  "episodes": {
+    "0N5cdNjsEfA": {
+      "index": 1,
+      "title": "PEERAGOGY IN ACTION: The Peeragogy Podcast",
+      "url": "https://www.youtube.com/watch?v=0N5cdNjsEfA",
+      "duration_seconds": 1726,
+      "status": "ok",
+      "audio_path": "audio/0N5cdNjsEfA.webm",
+      "transcript_path": "transcripts/0N5cdNjsEfA/0N5cdNjsEfA_full.txt"
+    },
+    "kg91z9tUtt4": {
+      "index": 2,
+      "title": "Peeragogy Podcast #2: Wikipedia in the Misinformation Age",
+      "url": "https://www.youtube.com/watch?v=kg91z9tUtt4",
+      "duration_seconds": 3176,
+      "audio_path": "audio/kg91z9tUtt4.webm",
+      "transcript_path": "transcripts/kg91z9tUtt4/kg91z9tUtt4_full.txt",
+      "status": "ok"
+    },
+    "Z9yeUmRoKOA": {
+      "index": 3,
+      "title": "Peeragog In Action #3: Peering into Early Learning",
+      "url": "https://www.youtube.com/watch?v=Z9yeUmRoKOA",
+      "duration_seconds": 1815,
+      "audio_path": "audio/Z9yeUmRoKOA.webm",
+      "transcript_path": "transcripts/Z9yeUmRoKOA/Z9yeUmRoKOA_full.txt",
+      "status": "ok"
+    },
+    "QWQCVl0dJws": {
+      "index": 4,
+      "title": "Peeragogy in Action #4: The Collaborative Process of Creating a Book",
+      "url": "https://www.youtube.com/watch?v=QWQCVl0dJws",
+      "duration_seconds": 2231,
+      "audio_path": "audio/QWQCVl0dJws.webm",
+      "transcript_path": "transcripts/QWQCVl0dJws/QWQCVl0dJws_full.txt",
+      "status": "ok"
+    },
+    "v15f07e0ahQ": {
+      "index": 5,
+      "title": "Peeragogy In Action #5: The Ethics of Data",
+      "url": "https://www.youtube.com/watch?v=v15f07e0ahQ",
+      "duration_seconds": 2506,
+      "audio_path": "audio/v15f07e0ahQ.webm",
+      "transcript_path": "transcripts/v15f07e0ahQ/v15f07e0ahQ_full.txt",
+      "status": "ok"
+    },
+    "lqXZYEeHJNY": {
+      "index": 6,
+      "title": "Peeragogy In Action #6: Visualizing Life Patterns",
+      "url": "https://www.youtube.com/watch?v=lqXZYEeHJNY",
+      "duration_seconds": 1819,
+      "audio_path": "audio/lqXZYEeHJNY.webm",
+      "transcript_path": "transcripts/lqXZYEeHJNY/lqXZYEeHJNY_full.txt",
+      "status": "ok"
+    },
+    "oxdhyllSFr8": {
+      "index": 7,
+      "title": "Peeragogy In Action #7: The Possibilities of an Open Global Mind",
+      "url": "https://www.youtube.com/watch?v=oxdhyllSFr8",
+      "duration_seconds": 1787,
+      "audio_path": "audio/oxdhyllSFr8.webm",
+      "transcript_path": "transcripts/oxdhyllSFr8/oxdhyllSFr8_full.txt",
+      "status": "ok"
+    },
+    "HT92XcTm-0I": {
+      "index": 8,
+      "title": "Peeragogy In Action #8: Community Media Accelerator",
+      "url": "https://www.youtube.com/watch?v=HT92XcTm-0I",
+      "duration_seconds": 2353,
+      "audio_path": "audio/HT92XcTm-0I.webm",
+      "transcript_path": "transcripts/HT92XcTm-0I/HT92XcTm-0I_full.txt",
+      "status": "ok"
+    },
+    "rS-jjwF7Cuw": {
+      "index": 9,
+      "title": "PEERAGOGY IN ACTION #9: Peeragogy, Of Course!",
+      "url": "https://www.youtube.com/watch?v=rS-jjwF7Cuw",
+      "duration_seconds": 2414,
+      "audio_path": "audio/rS-jjwF7Cuw.webm",
+      "transcript_path": "transcripts/rS-jjwF7Cuw/rS-jjwF7Cuw_full.txt",
+      "status": "ok"
+    },
+    "JS4reDmmJ6g": {
+      "index": 10,
+      "title": "Peeragogy In Action #10: Challenging Conversations",
+      "url": "https://www.youtube.com/watch?v=JS4reDmmJ6g",
+      "duration_seconds": 1960,
+      "audio_path": "audio/JS4reDmmJ6g.webm",
+      "transcript_path": "transcripts/JS4reDmmJ6g/JS4reDmmJ6g_full.txt",
+      "status": "ok"
+    },
+    "SBSM7iZcU5A": {
+      "index": 11,
+      "title": "Peeragogy In Action #13: Exploring Causal Layered Analysis",
+      "url": "https://www.youtube.com/watch?v=SBSM7iZcU5A",
+      "duration_seconds": 1974,
+      "audio_path": "audio/SBSM7iZcU5A.webm",
+      "transcript_path": "transcripts/SBSM7iZcU5A/SBSM7iZcU5A_full.txt",
+      "status": "ok"
+    },
+    "RXiwTFnKMrw": {
+      "index": 12,
+      "title": "Peeragogy In Action #12: Opening Education",
+      "url": "https://www.youtube.com/watch?v=RXiwTFnKMrw",
+      "duration_seconds": 2816,
+      "audio_path": "audio/RXiwTFnKMrw.webm",
+      "transcript_path": "transcripts/RXiwTFnKMrw/RXiwTFnKMrw_full.txt",
+      "status": "ok"
+    },
+    "ytFnFialeA4": {
+      "index": 13,
+      "title": "Peeragogy In Action #11: Effective Organizing in Peer Ecosystems",
+      "url": "https://www.youtube.com/watch?v=ytFnFialeA4",
+      "duration_seconds": 1941,
+      "audio_path": "audio/ytFnFialeA4.webm",
+      "transcript_path": "transcripts/ytFnFialeA4/ytFnFialeA4_full.txt",
+      "status": "ok"
+    }
+  }
+}

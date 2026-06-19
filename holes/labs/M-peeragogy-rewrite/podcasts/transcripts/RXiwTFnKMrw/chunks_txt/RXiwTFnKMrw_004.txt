@@ -1,0 +1,68 @@
+The three of us are employed at institutions of learning, so, and written, you know, we can
+write books.
+I think you have a book out as well about this, David, or you can write a PhD dissertation,
+as Peter and I have done.
+But you know, you're just mentioning in your little intro, there's a bit of a culture
+clash, isn't there, in terms of open-source learning or community, anything.
+I wonder if both of you could say a little bit about that culture clash and how you've
+responded to it, or if you agree, is there a culture clash?
+Well, I'm wondering if I can piggyback just a little bit before Peter answers, because
+I saw a question from your friend Bryan Alexander pop up while you were talking, and he was
+asking about the cultural skepticism about digital technology.
+I think this is the misguided conversation, you know, you ask me what does it mean
+to be an educated global citizen?
+Open-source learning looks at the things that school ostensibly should be supporting, and
+most often doesn't.
+Mental fitness, how well do we concentrate, how well do we manage our emotions, how
+well do we remember things or comprehend them?
+Physical fitness, how well are we managing us?
+Civic fitness, spiritual fitness, and technical fitness.
+Technical fitness, technology itself, I'm a word geek.
+It comes from the ancient Greek technique, which doesn't mean tools, it means the cleverness
+and the purposeful use of tools.
+And you don't need a computer to do open-source learning, or pyrogogy for that matter.
+I'll take a stick and some dirt, but really all I need is a learner.
+And I think that we've gone too far afield into these sort of horse race, dichotomous
+debates about face-to-face versus virtual, and we get lost in the weeds when really,
+you know, I'm looking at my own children when I think these things.
+What we're trying to do is create the habits of mind and the practices in life that support
+learning, which is something we all do very naturally as homo sapiens, to support the
+kinds of outcomes we need in the face of an increasingly complex and uncertain future.
+I think that, you know, that resonates even though you weren't here at the time, at
+least in my mind it resonates with something that Peter was talking about, when you
+go to an institution of higher learning, for example, there's all this paraphernalia you
+need.
+You need to have three years to write your PhD, or eight years if it's in the US or something
+like that, et cetera, et cetera, whereas people, as you said, learn naturally without
+making those kinds of commitments or outlays at the outset.
+So Peter, do you want to come back to what David just said, or think a bit more about
+culture clashes?
+I love what David said, and I also I think are very respondent to Brian's question
+as well.
+There is a culture class in Pyrogodgy and things like Cooke's and Dave's work is you
+need to establish a space that is not, but I don't want to turn this into the good
+bad, you know, the evil, but another Greek word, and this is how I use this, I teach
+informal education, and I teach a technology project module, and it relates to Cooke's
+and I think it relates to what Dave's angle there was, and the Greek word that we
+use in that that's often missed is frenesis.
+So that's what the purpose, what's the good, what's your reason for doing the work
+that you're doing, and so rather than just looking at technology and saying we're
+going to achieve this qualification as if that in itself is enough, what is the
+learning that was within that qualification, what is the good, what is
+the action that your work is involved with in the community that you're
+working, so when you leave this college, when you're involved in this
+college, you're a trainee teacher, I know I've got Ryan and a few other people
+now in a room just watching this and, you know, training to be teachers, so what
+do we do that for? Is it just for the money? Is it for status? Is it for
+respect? Is it for any of those things? Or is it to change the world that
+we're in? And that's on so many different levels, we don't all have
+to work informal education to do that, and I think open education is the
+space that both recognises that the innate desire drive need to teach and to
+learn and to share knowledge, but also it can be so manipulable in terms of size,
+micro communities, I keep mentioning that term, because any course, college
+courses need a specific number of people to run, when actually two people
+is enough really to be able to trade something to change lives, to change
+those two lives, open education is the way that that can happen. We're not
+living in a utopia, there's a lot of things that go with this. You know, in
+terms of Virginia U banks, we've had over here from Blackburn, from the
+states who wrote Automating Inequality, you know, the idea

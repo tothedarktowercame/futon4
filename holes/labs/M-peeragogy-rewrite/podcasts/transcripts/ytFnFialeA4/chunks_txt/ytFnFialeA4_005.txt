@@ -1,0 +1,60 @@
+Thank you for the praise. I'm not sure if I'm deserving of it, but thank you anyway.
+Was there a question for me, Joe, regarding the future of Emacs?
+Or a future of Emacs conflict at any rate? Let's not be too broad.
+Sure, yeah. I think that was what was up briefly flying by on the screen when we were talking about other things.
+What would your takeaway be about that?
+That would be a good question.
+Well, first maybe to echo the point that you've just said.
+I discovered Emacs when I was doing my, I mean, I didn't say it, but I'm French and I studied English.
+And I was an English teacher for a couple of years, just a completely different life in a way.
+But I've learned how to program on the side of this particular academic gig.
+And it feels to me like I've learned more about working together with this side of my life,
+with programming, with Emacs, with mailing lists, with GitHub, Git, than I have with my traditional courses at university.
+And I think it's saying something, if someone like me who had not set out to become a programmer
+could somehow feel like I was getting more out of my experience as a programmer
+than of my experience as an academic studying English literature.
+And moving swiftly to the next question, oh, we're running a little bit out of time.
+Should I cover the question or should I end it off to someone else?
+We have about one minute.
+I think I was going to be short to talk about the Emacs conflict.
+Let's go to Charlotte and Pete for some takeaways.
+The other comment to put is there will be an after discussion, but let's go to Charlotte to give her a chance.
+Yeah, I just feel like I don't know much about Emacs and I don't know much about programming.
+But I like how you've teased out the methods for keeping people who are maybe engaging at different speeds up to speed.
+And I think that's, in Piragaji, that's very important, something we intentionally work on and try to be mindful of
+is not just laying all the responsibility for the wrapper or the newsletter or the information on one person,
+but kind of try to overlap.
+Is that something that you would say?
+Oh, sorry, did I cut you off?
+No, no, that goes on it in your Emacs Con.
+Yeah, I would say that the thing is, even though we were talking about Emacs Con today,
+there are many other things that I do with regards to Emacs.
+And one of them, which we could probably talk about one day, is the concept of Emacs workshops.
+They are inherited from Linux user groups, which is pretty much people meeting around Linux stuff,
+and they talk about software, they talk about the cool stuff that they discovered lately.
+But we do have the same thing, the same concept of Emacs,
+and we do have all around the world in different big cities and big countries.
+We do have events, sometimes on a monthly basis, sometimes on a bi-monthly basis,
+where people meet people from all different levels of expertise with regards to Emacs.
+Some of them are beginners, some of them are seasoned veterans,
+some of them are maintainers like me, working on software and maintaining software,
+and some of them even have the actual Emacs developers.
+So it makes for, you know, we wanted to strategize this year,
+and I won't be too long elsewhere, 30 more seconds than I'm done.
+But we wanted to think about ways to make those meetings, make those workshops,
+both inviting to people discovering Emacs,
+but also to the people who are a little more experienced.
+I attended many different workshops.
+I was part of the one in Paris, Emacs Paris, but we also have one in New York,
+we also have one in Austin, Texas, we also have one in San Francisco.
+I attended many, many of them, even in Asia.
+And it's funny to see how by simply nudging people to be, you know,
+to toe down the level, you know, when they're being too technical to toss them,
+you actually explain this particular function.
+And when they do, it feels like you're hooking more and more people into the discussion,
+and it's been a lovely experience, and we could probably talk about this during an entire whole episode.
+Let's have another episode about this topic.
+Do you have people that kind of like get involved for like intensely for a short period of time
+and then drop off for a while?
+We do, but what we try to do, I mentioned that we were about 10 organizers for the Emacs content,
+we were about four regulars, the colonel of the group.

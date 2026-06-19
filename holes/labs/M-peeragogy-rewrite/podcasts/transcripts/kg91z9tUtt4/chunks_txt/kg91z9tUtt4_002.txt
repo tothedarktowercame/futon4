@@ -1,0 +1,55 @@
+And so his basic premise, based on some research, was that individual people, when they come across
+a source from, say, a community newspaper on the other side of the country that happens
+to be the one covering something that's in the news, but they've never heard of that
+source before, they will often go to Google or a web search engine and punch in the
+name of it to try to figure out, is this a real news source, is this something that
+just cropped up yesterday, just to get a basic sense of how much they can rely on it.
+And Google, and I believe all the major search engines, will actually display a
+knowledge panel in the search results if there's a Wikipedia article. They will
+draw that information from the Wikipedia article. I know we have a slide with a
+screen grab of one of these that will actually display all that
+information in a very succinct way. And so the premise of the News on Wiki project is,
+if we can just get a basic, well-referenced, but sort of basic level Wikipedia article about
+hundreds or thousands of local newspapers, that we're going to help people everywhere make
+those quick assessments of, like, should I rely on this source or not? It's going to appear
+both in Wikipedia searches and in web searches.
+So I think there's a screenshot for anyone who has video. So I would like to go to
+Lane and just get your perspective on this, both as a friend of Pete's, but also as a
+Wikimedia and Wikipedia in residence and a scholar of kind of reliability. Like,
+what's your view on this project? How do you see it changing the landscape of
+your work or students who might work at your university?
+I think that the project is interesting in itself and it's also interesting as a model of what
+Wikipedia wants to do in many fields of media. So what Pete's doing, I would say it's a general
+wish of the Wiki community to have better access to sources, more information about the sources.
+It's kind of a daunting exercise, though, to say that you're going to get a list of all the
+newspapers and some information to be able to evaluate the reliability. And ideally,
+we would also be able to deconstruct to get the metadata for every article published in every
+newspaper and also what they're about so that we could give better access to this kind of
+information to the Wiki community. I participated in this News on Wiki project.
+Pete's got the corner on the newspaper. He does quite a bit with this. I'm also looking
+at the general projects of which News on Wiki is a complement or a subset of the Wiki site
+project where we're trying to get a list of every source in every media, every academic article,
+magazine, book, just go through every kind of media, list every source, then list every
+article in every kind of source, make all this more accessible so that if anybody's
+searching for information on any topic, they'll find everything that's ever written
+about this topic and also get information about the various sources, what kind of
+information they published, what their biases may be, or whatever kind of information is publicly
+accessible or about those sources. So Wikipedia's ambition is really to catalog everything.
+Newspapers is big enough. It's fine to start there. And we're starting this on multiple fronts.
+So we're getting around the halfway, Mark. One of the questions we like to do in the
+peer dodgy project is kind of making all of this stuff as practical as possible,
+which I realize you'd have to learn how to maybe edit Wikipedia while reading Wikipedia,
+something anyone can hopefully do. But what are some of the things that you would share with
+other people who are either very computationally sophisticated? Is there something that you
+were looking for programmers or is there things where just about anyone can do something here?
+How could I get involved? How could we use this in the peer dodgy project? So we've got
+a book. Should we be throwing out our own bibliography and reference stuff inside of
+WikiCite source of knowledge? Or how would you suggest people can get involved? What does that
+look like? Well, I think one thing that I really like to encourage people to do that I think
+is a little bit more accessible than setting a goal of becoming a Wikipedia writer or a
+Wikipedia editor is just to expand your understanding of how to read Wikipedia a
+little bit more critically. So the two things that you can really learn a lot from just by
+clicking around and looking at the site without even making an account or anything is the
+View History tab on any article and also the Talk tab on any article. So the View History tab
+will give you a, it's like a version history on Microsoft Word or something like that. It'll
+give you one line for every edit in an article.

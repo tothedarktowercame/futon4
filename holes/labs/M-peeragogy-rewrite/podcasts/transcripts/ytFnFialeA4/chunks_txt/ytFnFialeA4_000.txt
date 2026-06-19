@@ -1,0 +1,86 @@
+Hi, welcome to the 11th episode of Peeragogy in Action, the podcast.
+In the Peeragogy project, we collaborate to build the no longer missing guides to all things
+relevant to successful peer learning and peer production.
+And I'm Joe Corneli.
+You've often seen me before as the host of this.
+This time we have a guest host or a new host, Pete Forsythe, who will be interviewing
+Leo Vivier.
+But I'm going to just tell you a little bit about the podcast in case you're jumping
+in at episode 11.
+Peeragogy in Action, live stream, video and audio podcast aims to provide an interactive
+space where participants and audience can explore the philosophies, concepts, contributors and
+practical applications of peeragogy.
+We aim to keep the discussions informal and free-flowing with some minimal guidelines
+and generally two or three talking points, which we have summarized in some slides
+for you if you have a video connection.
+It's live streamed on YouTube, LinkedIn and Facebook, and also recorded and available
+on your favorite podcast app.
+You can find out about this podcast at peerspress.com slash podcasts or peeragogy.org.
+And there's now some archive recordings on our YouTube channel.
+So with that, I'm going to turn it over to Pete and he can take it from here.
+Maybe we'll come back in me and show it at the end for some Q&A and broader discussion.
+But anyway, leave it to you, Pete and Leo, bye for now.
+Thanks Joe.
+So Leo, we had talked a little bit about the conference that you put together recently
+for the Emacs community.
+And I thought it'd be interesting to hear a little bit more about it, especially now
+that the conference has finished.
+So maybe you could tell us a little bit to get us started about what are the goals
+of the conference?
+What are you looking to accomplish with it?
+And how long have you been doing it?
+Sure.
+Hi, Pete.
+Hi, everyone else, Charlotte, Joe, and everyone watching.
+Yeah.
+So as Pete said, I'm one of the organizers for EmacsCon, which as you said, it's in
+the name.
+It's a conference about Emacs.
+And yeah, I wanted to, I mean, we chatted a little bit with Pete before in preparation
+for today.
+And we thought it'd be a great idea to start talking about EmacsCon from a
+pure agogic perspective, pure agogic, you know, being the objective of pure agogy,
+which you're watching right now.
+And yeah, as a result, we thought it'd be pretty interesting for me to talk about
+my experience as an organizer, since I had more of a facilitator slash organization
+role within the team of organizers for the event.
+And as a result, we thought it'd be interesting to maybe talk about how we
+work together and how we prepare it for the next one.
+And so since you've asked me for dates, so it's actually a little longer.
+I mean, it was a while ago when we finished EmacsCon 2020.
+It was in late November.
+And recently, we've just opened the call for proposals for the next one,
+which will also take place on the last weekend of November.
+So EmacsCon 2020, I believe, will be on the 28th and 29th of November.
+And there will be a time which is nice for most time zones
+and we'll probably get a chance to talk about it later.
+So, yes, did I answer your question?
+Just like I've done a lot of setup.
+And, you know, I'm curious if you could talk a little bit.
+I mean, I think a conference is a familiar concept.
+I mean, we have them for for various purposes so that people can get
+to know each other and form working relationships, work on projects,
+things like that.
+But maybe you could say a little bit more about what your goals
+in this particular conference are.
+What is the what's the Emacs community like and what are people
+looking to get out of a conference like this?
+Sure.
+So maybe just to specify first, because yes, now remember that I did not
+understand answer the for the mental question, which you asked before,
+which is what is Emacs and it's kind of granted for a lot of people
+in the field I work on.
+But Emacs is a text editor, which is, you know, a lot of people use word
+or any kind of software that you usually find on Windows computers.
+But text editors, you know, they come in all shapes and forms
+and the shape and form of Emacs to the untrained eye is very spartan.
+You know, if you fire it up, it feels like you're back to the 80s.
+But it's actually a surprisingly well developed software
+with many different components working together.
+You have a calculator.
+You have the ability to write notes in what we call plain text,
+which allows you to organize your day, organize your life,
+organize the way you work with people.
+And you have ways to check your emails.
+You have ways to program in any kind of language imaginable.
+And all this comes with a text editor.

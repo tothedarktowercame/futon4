@@ -33,6 +33,19 @@ to quickly detect paren/quote mismatches before or after edits. Example:
 - `dev/docs-backlog.org` flags drift between `dev/` code and XTDB-backed
   docs, plus any temporary filesystem snapshots that still need ingesting.
 
+## Ingesting essays into Arxana Essays
+
+- **Read `README-essays.md` before ingesting or annotating an essay.** It
+  spells out the file-role convention that is easy to get wrong: the source
+  `.md` is canonical and read-only (an annotated edition is a *render*, never
+  blockquotes baked into the body); `annotations.edn` is the authoritative
+  annotation layer with **verbatim** `:passage` anchors; `annotations.el` is a
+  thin sections-only manifest that the loader augments from the `.edn`.
+- Section headings in the source must be flat `##`; logical nesting lives in
+  the manifest's `:index`, not in `#`/`###` markdown depth.
+- Verify every ingest with `M-x arxana-browser-essays-audit-passages`, which
+  reports per-section whether each annotation's passage actually anchors.
+
 * Logical model
 
 Arxana manages a single logical hypergraph. The core primitives are:
@@ -127,3 +140,11 @@ When renaming or moving functions, log the change to help maintain documentation
 - Hyperedges connect doc sections to code spans (Ted Nelson-style transclusion)
 - Think of code as terrain, documentation coverage as a heat map
 - AI agents help detect link drift and suggest repairs
+
+## Pending coordination
+
+- **S — 2026-05-21 — VSATARCs R12 follow-on, two pieces deferred** (claude-4 v0.5.31).
+  The narrow R12 take-up consumption site landed (`dev/arxana-vsatarcs-intrinsic-values.el` + `dev/arxana-vsatarcs-efe.el` wrapping `--g-pragmatic` with the `(credit / 0.5)` modulator). Two follow-on pieces are needed for learned values to be meaningful:
+  1. **Consent-decision stream from `dev/arxana-vsatarcs-consent.el` (claude-2's module) to futon1a XTDB.** Each `:confirm` / `:reject` / `:ignore` / `:abstain-for-now` dispatch should emit a hyperedge of a new type (suggested: `code/v05/vsatarcs-consent-decision`) carrying `{:writer-action-class :writer-event-id :decision :timestamp :source}`. claude-4 did NOT modify `consent.el` directly per the multi-agent coordination convention; this wants claude-2 or a fresh session with that ownership.
+  2. **The elisp outer-loop entry point.** A new module (e.g. `dev/arxana-vsatarcs-outer-loop.el`) or sibling `.bb`/`.clj` script that reads consent-decision hyperedges in a sliding window (default 14 days per claude-9's WM-side §13), computes per-class Beta updates via `arxana-vsatarcs-intrinsic-values-next-record`, persists via `arxana-vsatarcs-intrinsic-values-persist-record!`, calls `apply-update!`. Sliding-window-from-scratch per claude-9's design-choices §13 (back-to-back runs must produce identical output to avoid double-counting conjugate updates).
+  Cross-pointers: `docs/vsatarcs-alignment-completeness.aif.edn:1584` (R12 audit row + `:v0.5.31-closure` text); `~/code/futon0/holes/missions/M-the-futon-stack-Q6-r12-design-choices.md` (claude-9's per-DERIVE-fork record); `~/code/futon0/holes/handoffs/r12-to-stack-Q6-2026-05-21.md` (original handoff naming both pieces).

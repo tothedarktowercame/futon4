@@ -1,0 +1,67 @@
+If we can share those markdown files and that we can version them, then it's not so much
+anymore that Jerry has the brain, or that Pete has a stroll, or that Joe has an orgrome.
+If we can kind of meet in the middle and share all of that in simple files, then we get this
+interoperability explosion and the ability to federate information around with each other.
+So there's a fair amount of technical heavy lift in adapting the tools of software development.
+It's actually software development that we're kind of inspired by and get and centralized
+get hubs like GitHub or GitLab.
+But if we can kind of unlock that and unlock the ability for people to collaborate with
+information and knowledge in text and work out the kind of the social protocols of using
+different tools that speak the same language and Git as an interoperation synchronization
+syndication protocol, where can we get to?
+So we're super excited about this.
+And this is the most active thing for me right now and a number of the other geeks
+in OGM are on the hunt here.
+It's a little bit like the thing that we're going for, the vision that we're going for
+is very similar to WordCunningham's FedWiki, where he's got the idea that what you really
+want to do is not have a closed wiki, but you want to have a wiki that federates
+with a bunch of other people.
+So that part is very similar.
+I think what we're going for is a little bit more for lack of a better kind of way to
+think about it.
+Lowest common denominator, where can we kind of meet in the middle and kind of make
+a mess and but also make a mess together hopefully and grow a signal out of that.
+So I would say that just to quickly connect that with this image, just the image from Howard
+and if you read the fine print, which is impossible to read here, he's projecting
+a future 20 years in the future from the time of writing at which there would be sort
+of a drug for everything.
+And I don't think that's quite come to pass, but maybe sort of.
+But what's really come to pass, I think, is that there's like a cyber drug for everything.
+There's a cyber kind of online community for everything.
+And these things kind of are, they are very much kind of a psychedelic experience,
+I think, getting into these different groups and different calls.
+But I think another thing, Howard, might say, where he here on the call, he
+might say, we've got to worry not just about the tools, but about the protocols.
+And that's a good way to move this towards closing.
+Because one of the things we like to do at the end of each podcast is something
+we call Project Action Review.
+We consider everyone who's on these podcasts as a contributor to the
+Puragaji project.
+And one way we formalize that is by doing these kinds of reviews.
+So it's a variant of the after action review.
+One could even imagine a kind of wiki shared amongst different projects,
+which are reviewing their progress through this reflective thing.
+And that would be much less like we were talking about the difference
+between titles and content.
+That would be a much lighter thing than all the whole transcript or the whole thing.
+But sharing a review and sharing a sense of where we're going and
+the problems we're running into like they do in Scrum Agile Method.
+So anyway, this up on the screen, meat.jit.c slash Puragaji.
+You can also follow up on jerryisbrain.com, openglobalmind.org.
+Come, openglobalmind.com and puragaji.org.
+And yeah, if you're here on the live chat, I hope we'll see you in the
+meat.jit.c slash puragaji in a minute.
+But yeah, as I'm sorry, I just just as usual, we just scratched the surface.
+So I hope that we can make this a series, you know, so maybe every
+three or four months, we can have you guys back to talk about where it's going
+and, you know, kind of reflect back on what we talked about today and in the future.
+Yeah, lots to talk about.
+And we hope to have a bunch of progress in a couple of months
+because we're on the move.
+So that's awesome.
+Well, thank you for having me and Lisa on yesterday.
+And and thank you, Joe, for hosting and we're going to wrap it up.
+But we'll see everybody on the PAR, the PAR, as we call it,
+on jitzy slash puragaji.
+Great. See you all. Thank you.
+Thank you. All right.

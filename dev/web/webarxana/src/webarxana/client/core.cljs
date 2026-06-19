@@ -4,19 +4,35 @@
             [webarxana.client.api :as api]
             [webarxana.client.graph :as graph]
             [webarxana.client.card :as card]
+            [webarxana.client.interest-network :as interest-network]
+            [webarxana.client.mission-search :as mission-search]
             [webarxana.client.route :as route]))
 
 (defn app []
   (if (state/logged-in?)
-    [:div.webarxana
-     [card/search-bar]
-     [:div.main-area
-      [card/sidebar]
-      [:div.canvas-container
-       [graph/graph-svg]
-       [card/scratch-card]
-       [card/focus-card]
-       [card/link-editor]]]]
+    (case (:page @state/ui-state)
+      :mission-search [mission-search/page]
+      :interest-network [interest-network/page]
+      [:div.webarxana
+       ;; Top bar: search-bar takes the available width; the interest link sits
+       ;; in-flow at the right (was a position:fixed overlay floating over the
+       ;; canvas). Re-pointed from the stale bipartite /interest-network to the
+       ;; live "Interest Constellation" diagram.
+       [:div.top-bar {:style {:display "flex" :align-items "center"}}
+        [:div {:style {:flex "1 1 auto" :min-width "0"}}
+         [card/search-bar]]
+        [:a {:href "#/diagram/Interest%20Constellation/expanded"
+             :style {:flex "0 0 auto" :margin "0 16px" :color "#93c5fd"
+                     :font-size "12px" :font-weight 700 :text-decoration "none"
+                     :white-space "nowrap"}}
+         "Interest Constellation →"]]
+       [:div.main-area
+        [card/sidebar]
+        [:div.canvas-container
+         [graph/graph-svg]
+         [card/scratch-card]
+         [card/focus-card]
+         [card/link-editor]]]])
     [card/login-form]))
 
 (defonce root (rdc/create-root (.getElementById js/document "app")))

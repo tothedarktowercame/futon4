@@ -126,8 +126,67 @@ Done.
             (should (eq (plist-get item :type) 'vsatarcs-story))
             (should (equal (plist-get item :label) "Demo Story"))
             (should (= (plist-get item :scene-count) 2))
-            (should (equal (plist-get item :opening) "Overview"))))
+            (should (equal (plist-get item :opening) "Overview"))
+            (should (equal (plist-get item :invariant-status) "none"))))
       (ignore-errors (delete-directory directory t)))))
+
+(ert-deftest arxana-vsatarcs-render-keeps-story-when-decorations-missing ()
+  (let ((story (arxana-vsatarcs-parse-string arxana-vsatarcs-test--story
+                                             "/tmp/no-decorations.md"))
+        (buffer-name arxana-vsatarcs--buffer))
+    (unwind-protect
+        (progn
+          (cl-letf (((symbol-function 'display-buffer) (lambda (&rest _) nil))
+                    ((symbol-function 'arxana-browser--story-decorations-for-story)
+                     (lambda (&rest _) nil)))
+            (arxana-vsatarcs-render story "overview"))
+          (with-current-buffer buffer-name
+            (goto-char (point-min))
+            (should (search-forward "Story invariants: none" nil t))
+            (goto-char (point-min))
+            (should (search-forward "Start here." nil t))))
+      (when (get-buffer buffer-name)
+        (kill-buffer buffer-name)))))
+
+(ert-deftest arxana-vsatarcs-render-shows-belief-snapshot-empty ()
+  "Reader chrome surfaces an empty-belief notice when no entities are tracked."
+  (arxana-vsatarcs-belief-reset)
+  (let ((story (arxana-vsatarcs-parse-string arxana-vsatarcs-test--story))
+        (buffer-name arxana-vsatarcs--buffer))
+    (unwind-protect
+        (progn
+          (cl-letf (((symbol-function 'display-buffer) (lambda (&rest _) nil)))
+            (arxana-vsatarcs-render story "overview"))
+          (with-current-buffer buffer-name
+            (goto-char (point-min))
+            (should (search-forward "Belief snapshot" nil t))
+            (goto-char (point-min))
+            (should (search-forward "no entities tracked yet" nil t))))
+      (when (get-buffer buffer-name)
+        (kill-buffer buffer-name))
+      (arxana-vsatarcs-belief-reset))))
+
+(ert-deftest arxana-vsatarcs-render-shows-belief-snapshot-populated ()
+  "Reader chrome lists tracked entity ids + most-likely status."
+  (arxana-vsatarcs-belief-reset)
+  (arxana-vsatarcs-belief-ingest-events
+   '((:entity-id "arxana/stack/futon-v1/leaf/2" :type :strengthened :weight 3.0)))
+  (let ((story (arxana-vsatarcs-parse-string arxana-vsatarcs-test--story))
+        (buffer-name arxana-vsatarcs--buffer))
+    (unwind-protect
+        (progn
+          (cl-letf (((symbol-function 'display-buffer) (lambda (&rest _) nil)))
+            (arxana-vsatarcs-render story "overview"))
+          (with-current-buffer buffer-name
+            (goto-char (point-min))
+            (should (search-forward "Belief snapshot" nil t))
+            (goto-char (point-min))
+            (should (search-forward "arxana/stack/futon-v1/leaf/2" nil t))
+            (goto-char (point-min))
+            (should (search-forward "strengthened" nil t))))
+      (when (get-buffer buffer-name)
+        (kill-buffer buffer-name))
+      (arxana-vsatarcs-belief-reset))))
 
 (provide 'arxana-browser-vsatarcs-test)
 ;;; arxana-browser-vsatarcs-test.el ends here

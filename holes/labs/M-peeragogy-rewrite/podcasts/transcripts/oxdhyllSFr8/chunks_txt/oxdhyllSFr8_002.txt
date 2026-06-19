@@ -1,0 +1,56 @@
+Those are really interesting and important to us and people who just facilitate
+groups without any technology. We love those people as much as we love sort of geekness and
+trying to figure out how do we build sort of this this mycelial network of what we know and how we
+know it. Yeah, we talked in the, oh go for it, Lisa, Charlotte. Oh, sorry, just one thing that
+occurred to me when I was there was that, you know, I love geeking out and being really
+intellectual, distilling out wonderful, you know, nuances at the edges of understanding,
+but, you know, I couldn't imagine someone just from a regular person kind of coming in and saying,
+wow, I really want to be part of that. Or, you know, I want to contribute, you know, like,
+here's my experience, my life experience, you know. Do you, is that something that you're
+looking for or do you, is this just a different thing? So, I think, so we love communities and
+groups and initiatives that are doing like six people for dinner and, you know, long table
+lunch conversations in Italian cities or deliberative dialogue or other places where normal people
+get together and share their lives. And we want to lather rinse repeat on that. Like, we want
+that to happen all over the world a lot. This particular conversation is a bit geekier and
+it's about how do we instrument that? How do we remember that? How do we foster more of that?
+How do we, how do we harvest from those conversations the best ideas and represent them?
+So, so the OGM conversation is a little more specialized than just coming in and unburdening
+yourself about, about why you believe what you believe. Yeah, more meta. Pete, I don't know
+what you want to add to that. Yeah. Hey, go ahead Joe. I was going to just say
+quick thing when we were talking about, you're talking about visualizing it, you know, showing
+the arguments in the brain and what you see behind Charlotte on her Zoom background is,
+is a drawing, right? So it's a sketch. And I think that there's something
+very technical about the brain. It's a technical tool, one of, one of several that,
+that are available. And I wonder if, you know, the relationship between you could have
+someone in the conversations in the Zoom room, you know, live sketching, right? But it wouldn't
+have that ability which you demonstrate often. And, and, and maybe we can do it at some point of,
+you know, here is, oh, here it is. I just, it feels like the right, let's, let's do that.
+Okay, you ready? Ready? Yeah. Yeah. Everybody buckled it. Yeah. Okay.
+Exactly. And I'll just do like a two minute what the hell is this kind of, kind of tour.
+And we're going to, we're going to drop off, Joe, if that's okay, I'll just put it full screen.
+Yeah. Great. Cool. So this is a piece of software called the brain. It's about 23 years old. It's
+a tiny company in Los Angeles that I've known since their birth because I was on their first
+press tour. So I was a tech industry analyst back then. I'm not a coder. I know enough to
+write hello world in about 20 different languages. And that's it. That's the end of my coding.
+But I saw this tool and started using it and started feeding it. So
+the file that you're looking at, this is a weird thing. The file that I'm showing you right now is
+the same file that I started 23 years ago. I don't have a second brain file. I don't create
+multiple files in this tool. So for example, Purogaji sort of comes out of the work of Howard
+Reingold whom we've talked about a little bit here. I just clicked on Howard and he rotates
+into the middle. So in the brain display, in this version of the display, there's always
+something, some thought because it's called the brain in the middle. And then things connect
+the active thought either they go up, they go down, or they go left. And notice that there's no link
+on the right. And you can use these up, down, left, right kind of links any way you feel like.
+It's up to you. The brain doesn't tell you how. So for example, I have Howard married to Judy.
+He's an IFTF affiliate and so are these other people. The IFTF is the Institute for the
+Future. And then as we go through, anywhere you see a little icon here, that means that I've attached
+a link to the web to that thought. So if I were to click right now, it would launch my browser
+to that URL, wherever it might be. And then down here across the bottom, you'll see that
+everything I've been clicking on is scrolling off toward the left. So I can go back to
+Purogaji, for example, which we were just on. And then I can click on the Purogaji
+handbook, for example. And here's the Purogaji handbook on GitHub. So that's actually a link to
+the GitHub site. Joe, here's you. Charlotte, here's you. But all of this is under open content
+and a bunch of other things. And again, all the links you see here, I've been gardening,
+I've been curating for these 23 years. So this thing, one more really brief thing just so
+and this might cause brains to explode, but types of pedagogy. So there's contemplative
+pedagogy, critical pedagogy, indigenous pedagogy, all alongside Purogaji. But then when I go to type

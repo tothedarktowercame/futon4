@@ -1,0 +1,74 @@
+Important core message of Wikipedia.
+Early on, I think one of the biggest questions around Wikipedia in like the 2000s, I remember
+every time Wikipedia was in the news, it was because there was a supposed scandal when
+some university department had banned their students from citing Wikipedia.
+And that really amused slash irritated me, I guess, depending on my mood, because it's
+a news story that's not a news story, right?
+There's no one to take the other side of that.
+There's no one from Wikipedia who would say, well, yes, you should be citing Wikipedia as
+reliable information in a serious academic paper.
+So, you know, Wikipedia's entire model is different.
+It's about generating knowledge with transparent practices so that in order to build trust
+in a certain article or in a certain fact cited in an article, the reader has the ability
+to check the references that Wikipedia is built on, to check the edit history, to look at
+the talk page to see what was discussed, and make their own assessment of how much they
+want to rely on that specific piece of information.
+So it occurs to me that even published articles which can be cited sometimes are retracted
+as well.
+So, you know, when you're talking about reliability, does this kind of, does
+the transparency itself help with that?
+Maybe it's a little bit similar to reproducibility in science, I guess.
+Like, if I understand how you got to a conclusion, I can evaluate for myself whether I want to
+join you on that, on that path.
+Wikipedia does have an editorial process and it's decided by the community and there
+is a lot of transparency in the who does what and who publishes what.
+And there are some unusual things about Wikipedia, but I'd like to emphasize that
+Wikipedia's ideals of quality control and what's a reliable source.
+This doesn't come from Wikipedia.
+This comes from, mostly from academia.
+If a university librarian were to say a particular kind of source is reliable or to say that a
+certain research workflow is the way that research ought to be, then Wikipedia has
+adopted that, adapted it for its system and that's what we also say in Wikipedia.
+There's nothing special about Wikipedia defining what's good or bad.
+We just try to implement this and bring transparency to the process.
+So I guess an example that I'm aware of here in the UK, I think the Daily Mail is kind of
+banned as a reliable source.
+It's a very popular source.
+I think it's one of the top most popular sources of news or media in the country, but
+not considered a reliable source for Wikipedia, which is interesting.
+Yeah, I could comment on that.
+That was something I blogged about pretty heavily.
+I wrote two or three different posts about that as it was unfolding.
+It was basically, Wikipedia editors made what, from our perspective, is a fairly routine
+decision.
+Someone had questioned how reliable we should consider the Daily Mail, even though it is
+very widespread.
+There was some reason to question it.
+There was an extensive discussion around it and several administrators came to the
+conclusion that what the community was saying with evidence was basically that it should not
+be regarded in most cases as a reliable source.
+It wasn't banned.
+That's not a word that Wikipedia was using.
+It's a word that the media used when they covered it.
+But it was essentially deprecated as a source.
+That other sources should be sought out if they're available.
+Something that really stood out to me was that the Daily Mail chose to, in their
+response, chose to really argue with that and question Wikipedia's value as a reliable
+source, which, going back to my earlier point, is an amusing thing because Wikipedia does
+not claim to be a reliable source in the way that a publication like the Daily Mail does.
+So that's interesting.
+What I was going to say is I'm aware, I don't know that we came to it right now,
+but I'm aware from previous discussions with you that you're working on a project
+right now that has to do exactly with documenting news sources on Wikipedia,
+ones that are maybe would be like a community newspaper.
+Maybe this podcast will someday have a Wikipedia page about it.
+But we think we need a little bit more traction before we get there.
+But, you know, that you take smaller things.
+So what would be your, I don't know, again, I know Wikipedia,
+that's not really hard and fast rules, but what's your broad brush description
+of the target that you're trying to get at there?
+So the campaign is called News on Wiki.
+It's the core concept originated with our colleague Mike Caulfield,
+who is a digital information expert at the Washington State University system
+and is well known as sort of a misinformation and disinformation
+expert and especially on helping students learn to distinguish.

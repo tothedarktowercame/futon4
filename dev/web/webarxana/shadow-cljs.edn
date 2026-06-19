@@ -1,11 +1,12 @@
 {:source-paths ["src"]
+ :http {:port 9631}
  :dependencies [[reagent/reagent "1.2.0"]
                 [datascript/datascript "1.7.3"]
                 [cljs-http/cljs-http "0.1.46"]]
  :builds
  {:app {:target :browser
-        :output-dir "resources/public/js"
-        :asset-path "/js"
-        :modules {:main {:init-fn webarxana.client.core/init}}
+        :output-dir "../../../data/webarxana/public/wa"
+        :asset-path "/wa"
+        :modules {:wa {:init-fn webarxana.client.core/init}}
         :devtools {:repl-pprint true
                    :after-load webarxana.client.core/reload}}}}

@@ -1,5 +1,6 @@
 (ns webarxana.client.state
-  (:require [datascript.core :as d]
+  (:require [clojure.set :as set]
+            [datascript.core :as d]
             [reagent.core :as r]))
 
 ;; Datascript schema for the local graph cache.
@@ -10,6 +11,7 @@
    :nema/type     {}
    :nema/text     {}
    :nema/authors  {}
+   :nema/props    {}
    :nema/payload  {}
    ;; Relations (links between nemas — themselves nemas)
    :link/id       {:db/unique :db.unique/identity}
@@ -40,6 +42,7 @@
 ;; Reactive atoms for UI state
 (defonce ui-state
   (r/atom {:focus-id    nil      ;; nema/id of the active card (shown on right)
+           :page        :graph   ;; :graph or :mission-search
            :pins        []       ;; [{:id "..." :k 1} ...] pinned nodes on canvas
            :hop-depth   1        ;; default hop-depth for new pins (1 = direct neighbors)
            :editing     nil      ;; nema/id currently being edited
@@ -49,8 +52,23 @@
            :browse-type nil      ;; currently selected type for browsing
            :browse-list []       ;; entities loaded for the selected type
            :sidebar-open false   ;; sidebar visibility
+           :expanded-essays #{}  ;; essay ids expanded to show section neighbourhoods
+           :expanded-essay-sections {} ;; essay id -> ordered section-id vector
+           :view-mode :organic ;; Interest Constellation renderer mode.
+           :graph-visible-ids nil ;; graph-filtered node ids for the card rail.
+           :diagram-route {:name nil
+                           :mode nil
+                           :diagram-id nil
+                           :loading? false
+                           :error nil}
            :scratchpad  []       ;; newly created nodes awaiting connection
            :connecting  nil      ;; {:node-id "..."} when waiting to pick a target
+           :mission-search {:query ""
+                            :query-id nil
+                            :results []
+                            :graph {:nodes [] :links []}
+                            :loading? false
+                            :error nil}
            }))
 
 (defn focus-id []
@@ -199,25 +217,56 @@
 
 ;; --- Ingest ---
 
+(defn- type-name [t]
+  (cond
+    (keyword? t) (if-let [ns-part (namespace t)]
+                   (str ns-part "/" (name t))
+                   (name t))
+    (string? t) t
+    (some? t) (str t)
+    :else nil))
+
+(defn- weak-type? [t]
+  (contains? #{"unknown" "interest"} t))
+
 (defn ingest-entity! [entity]
-  (let [computed-id (or (:entity/id entity) (:id entity) (str (:xt/id entity)))
-        nema {:nema/id   computed-id
-              :nema/name (or (:entity/name entity) (:name entity) "")
-              :nema/type (or (some-> (:entity/type entity) name)
-                             (some-> (:type entity) name)
-                             "unknown")
-              :nema/text (or (:entity/text entity)
-                             (:source entity)
-                             (get-in entity [:payload :text])
-                             (:notes entity)
-                             "")
-              :nema/authors (or (get-in entity [:props :authors])
-                                [])}]
-    (when (or (nil? computed-id) (= "" computed-id))
-      (js/console.warn "ingest-entity! NIL/EMPTY id; skipping"
-                       (clj->js entity)))
-    (when (and computed-id (not= "" computed-id))
-      (d/transact! conn [nema]))))
+  (let [nema-id (or (:entity/id entity) (:id entity) (str (:xt/id entity)))
+        existing (get-nema nema-id)
+        incoming-props (or (:props entity)
+                           (:entity/props entity)
+                           {})
+        incoming-type (or (type-name (:entity/type entity))
+                          (type-name (:type entity))
+                          "unknown")
+        stale-weak? (and existing
+                         (seq (:nema/props existing))
+                         (empty? incoming-props)
+                         (weak-type? incoming-type)
+                         (not (weak-type? (:nema/type existing))))
+        incoming-name (or (:entity/name entity) (:name entity) "")
+        incoming-text (or (:entity/text entity)
+                          (:source entity)
+                          (get-in entity [:payload :text])
+                          (:notes entity)
+                          "")
+        nema {:nema/id   nema-id
+              :nema/name (if stale-weak?
+                           (:nema/name existing)
+                           incoming-name)
+              :nema/type (if stale-weak?
+                           (:nema/type existing)
+                           incoming-type)
+              :nema/text (if stale-weak?
+                           (:nema/text existing)
+                           incoming-text)
+              :nema/authors (if stale-weak?
+                              (:nema/authors existing)
+                              (or (get-in entity [:props :authors])
+                                  []))
+              :nema/props (if stale-weak?
+                            (:nema/props existing)
+                            incoming-props)}]
+    (d/transact! conn [nema])))
 
 (defn- ensure-nema!
   "Idempotently ensure a nema with the given :nema/id exists in the

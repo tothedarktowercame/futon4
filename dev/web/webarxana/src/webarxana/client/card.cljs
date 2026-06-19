@@ -6,17 +6,66 @@
             [webarxana.client.state :as state]
             [webarxana.client.api :as api]))
 
+;; --- Entity display helpers ---
+
+(defn- entity-id [e]
+  (or (:id e) (:entity/id e) (:nema/id e)))
+
+(defn- entity-props [e]
+  (or (:props e) (:entity/props e) (:nema/props e) {}))
+
+(defn- prop-value [props k]
+  (or (get props k)
+      (get props (name k))))
+
+(defn- truthy-prop? [v]
+  (or (= true v)
+      (= "true" v)
+      (= "t" v)))
+
+(defn- numeric-prop [props k]
+  (let [v (prop-value props k)]
+    (cond
+      (number? v) v
+      (string? v) (let [parsed (js/parseFloat v)]
+                    (when-not (js/isNaN parsed) parsed))
+      :else nil)))
+
+(defn- essay-family-key [essay]
+  (let [props (entity-props essay)]
+    (or (prop-value props :family)
+        (entity-id essay))))
+
+(defn- essay-head? [essay]
+  (truthy-prop? (prop-value (entity-props essay) :head)))
+
+(defn- essay-version [essay]
+  (numeric-prop (entity-props essay) :version))
+
+(defn- essay-row-entity [essays]
+  (or (some #(when (essay-head? %) %) essays)
+      (last (sort-by #(or (essay-version %) -1) essays))))
+
+(defn- display-browse-entities [cur-type entities]
+  (if (= cur-type "arxana/essay")
+    (->> entities
+         (group-by essay-family-key)
+         vals
+         (map essay-row-entity)
+         (sort-by #(str/lower-case (or (:name %) "")))
+         vec)
+    entities))
+
 ;; --- Creation dialog (shared by top-level + and + Adjacent) ---
 
 (defn creation-dialog
   "Modal dialog for creating a new entity.
    opts: {:adjacent? bool, :from-id string, :on-close fn}"
-  [opts]
+  [_opts]
   (let [new-name     (r/atom "")
         new-text     (r/atom "")
         new-type     (r/atom "article")
-        rel-type     (r/atom "arxana/scholium")
-        entity-types (:available-types @state/ui-state)]
+        rel-type     (r/atom "arxana/scholium")]
     (fn [{:keys [adjacent? from-id on-close]}]
       (let [entity-types  (:available-types @state/ui-state)
             rel-types     (:available-relation-types @state/ui-state)]
@@ -96,7 +145,7 @@
 
 (defn- pin-card-inner
   "A single editable card for a pinned entity."
-  [pin-id]
+  [_pin-id]
   (let [editing-text (r/atom nil)
         editing-name (r/atom nil)
         show-adjacent (r/atom false)]
@@ -109,6 +158,10 @@
                 nema-name   (or (:nema/name nema) "")
                 nema-text   (or (:nema/text nema) "")
                 nema-type   (or (:nema/type nema) "unknown")
+                openable?   (some? (api/entity-location {:id pin-id
+                                                         :type nema-type}))
+                version-info (get-in @state/ui-state [:essay-versions pin-id])
+                older-count (:older-count version-info)
                 nema-authors (or (:nema/authors nema) [])]
             [:<>
              [:div.focus-card {:class (when is-active "active-pin")}
@@ -167,11 +220,17 @@
                                    (reset! editing-name nil))}
                    "Cancel"]]
                  [:<>
-                  [:button.btn-edit
+                 [:button.btn-edit
                    {:on-click #(do (reset! editing-text nema-text)
                                    (reset! editing-name nema-name)
                                    (swap! state/ui-state assoc :editing pin-id))}
                    "Edit"]
+                  (when openable?
+                    [:button.scratchpad-btn
+                     {:on-click #(api/open-in-emacs! {:id pin-id
+                                                      :type nema-type})
+                      :title "Open this node in Emacs"}
+                     "Emacs"])
                   [:button.scratchpad-btn
                    {:on-click #(swap! state/ui-state assoc
                                       :connecting {:node-id pin-id})
@@ -182,6 +241,10 @@
                    {:on-click #(do (state/set-focus! pin-id)
                                    (reset! show-adjacent true))}
                    "+ Adjacent"]])]]
+              (when (and (= "arxana/essay" nema-type)
+                         (pos? (or older-count 0)))
+                [:div.card-footer
+                 [:span.card-id (str "older versions (" older-count ")")]])
              ;; Adjacent dialog for this pin
              (when (and @show-adjacent is-active)
                [creation-dialog {:adjacent? true
@@ -191,7 +254,11 @@
 (defn focus-card
   "Stacked cards for all pinned entities, scrollable on the right."
   []
-  (let [pins (:pins @state/ui-state)]
+  (let [all-pins (:pins @state/ui-state)
+        visible-ids (:graph-visible-ids @state/ui-state)
+        pins (if (some? visible-ids)
+               (vec (filter #(contains? visible-ids (:id %)) all-pins))
+               all-pins)]
     (when (seq pins)
       [:div.pin-cards
        (doall
@@ -441,7 +508,8 @@
   (when (:sidebar-open @state/ui-state)
     (let [types      (:available-types @state/ui-state)
           cur-type   (:browse-type @state/ui-state)
-          entities   (:browse-list @state/ui-state)
+          entities   (display-browse-entities cur-type
+                                               (:browse-list @state/ui-state))
           connecting (:connecting @state/ui-state)]
       [:div.sidebar
        ;; Connect mode banner
@@ -461,8 +529,12 @@
           (for [e recent]
             ^{:key (:id e)}
             [:div.sidebar-entity-item
-             (let [is-diagram (= "diagram" (or (:_type e) (:type e)))
-                   is-expanded (= (:id e) (:expanded-diagram @state/ui-state))]
+             (let [entity-type (or (:_type e) (:type e))
+                   is-diagram (= "diagram" entity-type)
+                   is-essay (= "arxana/essay" entity-type)
+                   is-essay-section (= "arxana/essay-section" entity-type)
+                   is-expanded (= (:id e) (:expanded-diagram @state/ui-state))
+                   essay-expanded (contains? (:expanded-essays @state/ui-state) (:id e))]
                [:<>
                 [:span.entity-name
                  {:on-click (if is-diagram
@@ -471,14 +543,35 @@
                                 #(api/expand-diagram! (:id e)))
                               #(api/browse-and-focus! (:name e) (:id e)))}
                  (str (or (:name e) "?") " ")]
-                [:span.entity-type-badge (or (:_type e) (:type e) "?")]
-                (when is-diagram
+                [:span.entity-type-badge entity-type]
+                (when (or is-diagram is-essay)
                   [:button.scratchpad-btn
-                   {:on-click (if is-expanded
-                                #(api/compress-diagram! (:id e))
-                                #(api/expand-diagram! (:id e)))
-                    :title (if is-expanded "Compress diagram" "Expand diagram")}
-                   (if is-expanded "\u23f8" "\u25b6")])])
+                   {:on-click (cond
+                                is-diagram
+                                (if is-expanded
+                                  #(api/compress-diagram! (:id e))
+                                  #(api/expand-diagram! (:id e)))
+
+                                is-essay
+                                (if essay-expanded
+                                  #(api/collapse-essay! (:id e))
+                                  #(api/expand-essay! (:id e))))
+                    :title (cond
+                             is-diagram
+                             (if is-expanded "Compress diagram" "Expand diagram")
+
+                             is-essay
+                             (if essay-expanded "Collapse essay sections" "Expand essay sections"))}
+                   (if is-diagram
+                     (if is-expanded "\u23f8" "\u25b6")
+                     (if essay-expanded "\u23f8" "\u25b6"))])
+                (when (or is-essay is-essay-section)
+                  [:button.scratchpad-btn
+                   {:on-click (fn [evt]
+                                (.stopPropagation evt)
+                                (api/open-in-emacs! e))
+                    :title "Open in Emacs"}
+                   "Emacs"])])
              [:button.pin-btn
               {:on-click (fn [evt]
                            (.stopPropagation evt)
@@ -498,17 +591,47 @@
          [:div.sidebar-entities
           [:div.sidebar-heading (str cur-type " (" (count entities) ")")]
           (for [e entities]
-            ^{:key (:id e)}
+            ^{:key (entity-id e)}
             [:div.sidebar-entity-item
-             [:span.entity-name
-              {:on-click #(api/browse-and-focus! (:name e) (:id e))}
-              (or (:name e) (subs (str (:id e)) 0 12))]
-             [:button.pin-btn
-              {:on-click (fn [evt]
-                           (.stopPropagation evt)
-                           (api/pin-entity! (:name e) (:id e)))
-               :title (if (state/pinned? (:id e)) "Unpin" "Pin")}
-              (if (state/pinned? (:id e)) "\u25cb" "\u25cf")]])])])))
+             (let [entity-type (or (:type e) "unknown")
+                   is-essay (= "arxana/essay" entity-type)
+                   is-essay-section (= "arxana/essay-section" entity-type)
+                   eid (entity-id e)
+                   essay-expanded (contains? (:expanded-essays @state/ui-state) eid)]
+               [:<>
+                (when is-essay
+                  (when-let [version (essay-version e)]
+                    [:span.card-id
+                     {:style {:margin-right "6px"}}
+                     (str "v" version)]))
+                [:span.entity-name
+                 {:on-click #(api/browse-and-focus! (:name e) eid)}
+                 (or (:name e) (subs (str eid) 0 12))]
+                (when is-essay
+                  [:button.scratchpad-btn
+                   {:on-click (fn [evt]
+                                (.stopPropagation evt)
+                                (if essay-expanded
+                                  (api/collapse-essay! eid)
+                                  (api/expand-essay! eid)))
+                    :title (if essay-expanded
+                             "Collapse essay sections"
+                             "Expand essay sections")}
+                   (if essay-expanded "\u23f8" "\u25b6")])
+                (when (or is-essay is-essay-section)
+                  [:button.scratchpad-btn
+                   {:on-click (fn [evt]
+                                (.stopPropagation evt)
+                                (api/open-in-emacs! e))
+                    :title "Open in Emacs"}
+                   "Emacs"])
+                [:button.pin-btn
+                 {:on-click (fn [evt]
+                              (.stopPropagation evt)
+                              (api/pin-entity! (:name e) eid))
+                  :title (if (state/pinned? eid) "Unpin" "Pin")}
+                 (if (state/pinned? eid) "\u25cb" "\u25cf")]])])])
+       ])))
 
 ;; --- Link editor popup ---
 
@@ -565,5 +688,3 @@
                    (swap! state/ui-state update :_render-tick (fnil inc 0))))}
               "Save"]
              [:span.card-id (subs (str (:id info)) 0 20)]]]])))))
-
-

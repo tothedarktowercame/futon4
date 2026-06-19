@@ -8,8 +8,12 @@
 (require 'ert)
 (require 'seq)
 
-(let ((root (or (locate-dominating-file default-directory "dev")
-                (expand-file-name default-directory))))
+(defun arxana-docbook-location-test--canonical-dir (path)
+  (directory-file-name (file-truename (expand-file-name path))))
+
+(let* ((base (or load-file-name buffer-file-name))
+       (root (and base
+                  (expand-file-name ".." (file-name-directory base)))))
   (load-file (expand-file-name "dev/arxana-docbook-core.el" root))
   (load-file (expand-file-name "dev/arxana-docbook-toc.el" root)))
 
@@ -34,6 +38,19 @@
     (should (seq-some (lambda (heading) (plist-get heading :doc-id)) toc))
     (should (listp entries))
     (should (seq-some (lambda (entry) (plist-get entry :doc-id)) entries))))
+
+(ert-deftest arxana-docbook-location-ignores-system-dev-root ()
+  (let ((arxana-docbook-books-root nil)
+        (load-file-name nil)
+        (buffer-file-name nil)
+        (default-directory "/home/joe/code/"))
+    (should (equal (arxana-docbook-location-test--canonical-dir "/home/joe/code/futon4/")
+                   (arxana-docbook-location-test--canonical-dir
+                    (arxana-docbook--repo-root))))
+    (should (equal (arxana-docbook-location-test--canonical-dir
+                    "/home/joe/code/futon4/docs/docbook")
+                   (arxana-docbook-location-test--canonical-dir
+                    (arxana-docbook--locate-books-root))))))
 
 (provide 'arxana-docbook-location-test)
 ;;; arxana-docbook-location-test.el ends here

@@ -21,10 +21,29 @@
   :type '(choice (const :tag "Auto-detect" nil)
                  directory)
   :group 'arxana-docbook)
+
+(defun arxana-docbook--repo-root-p (dir)
+  "Return non-nil when DIR looks like a Futon repo root."
+  (and (stringp dir)
+       (file-directory-p (expand-file-name "dev" dir))
+       (or (file-directory-p (expand-file-name "docs/docbook" dir))
+           (file-readable-p (expand-file-name "dev/arxana-docbook-core.el" dir))
+           (file-readable-p (expand-file-name "dev/arxana-browser-code.el" dir)))))
+
+(defun arxana-docbook--find-repo-root (&optional start)
+  "Locate the Futon repo root dominating START."
+  (let ((path (and start (expand-file-name start))))
+    (and path
+         (locate-dominating-file path #'arxana-docbook--repo-root-p))))
+
 (defun arxana-docbook--locate-books-root ()
   (or arxana-docbook-books-root
-      (let* ((base (or load-file-name buffer-file-name default-directory))
-             (repo-root (and base (locate-dominating-file base "dev")))
+      (let* ((base (or load-file-name
+                       buffer-file-name
+                       (symbol-file 'arxana-docbook--repo-root)
+                       (locate-library "arxana-docbook-core")
+                       default-directory))
+             (repo-root (arxana-docbook--find-repo-root base))
              (working-root (and repo-root
                                 (expand-file-name "docs/docbook" repo-root))))
         (cond
@@ -32,13 +51,14 @@
          (repo-root (expand-file-name "docs/docbook" repo-root))))))
 (defun arxana-docbook--repo-root ()
   (let* ((base (or load-file-name buffer-file-name))
+         (sym-file (and (not base) (symbol-file 'arxana-docbook--repo-root)))
          (lib (and (not base) (locate-library "arxana-docbook-core")))
-         (base (or base lib))
-         (root (and base (locate-dominating-file base "dev"))))
+         (base (or base sym-file lib default-directory))
+         (root (arxana-docbook--find-repo-root base)))
     (or root
         (when-let* ((books (arxana-docbook--locate-books-root)))
           (expand-file-name "../../.." books))
-        (locate-dominating-file default-directory "dev")
+        (arxana-docbook--find-repo-root default-directory)
         default-directory)))
 (defun arxana-docbook--filesystem-available-p (&optional book)
   (let* ((root (arxana-docbook--locate-books-root))

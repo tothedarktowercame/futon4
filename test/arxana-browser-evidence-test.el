@@ -54,6 +54,98 @@
                    (append (arxana-browser--evidence-open-sessions-format)
                            nil)))))
 
+(ert-deftest arxana-evidence-buffer-session-id-prefers-current-session-over-last-emitted ()
+  (with-temp-buffer
+    (setq-local major-mode 'codex-repl-mode)
+    (setq-local codex-repl--last-emitted-session-id "sid-stale")
+    (setq-local agent-chat--session-id "sid-current")
+    (should (equal (arxana-evidence--buffer-session-id)
+                   "sid-current"))))
+
+(ert-deftest arxana-evidence-buffer-session-id-prefers-evidence-session-over-last-emitted ()
+  (with-temp-buffer
+    (setq-local major-mode 'codex-repl-mode)
+    (setq-local codex-repl--last-emitted-session-id "sid-stale")
+    (setq-local codex-repl--evidence-session-id "sid-evidence")
+    (should (equal (arxana-evidence--buffer-session-id)
+                   "sid-evidence"))))
+
+(ert-deftest arxana-evidence-buffer-session-id-falls-back-to-last-emitted ()
+  (with-temp-buffer
+    (setq-local major-mode 'codex-repl-mode)
+    (setq-local codex-repl--last-emitted-session-id "sid-fallback")
+    (setq-local agent-chat--session-id "pending")
+    (should (equal (arxana-evidence--buffer-session-id)
+                   "sid-fallback"))))
+
+(ert-deftest arxana-evidence-open-sessions-row-shows-mark ()
+  (let ((arxana-evidence--open-session-marks (make-hash-table :test 'equal))
+        (item (list :type 'evidence-open-session
+                    :buffer "*codex-repl:marked*"
+                    :agent "codex"
+                    :state "idle"
+                    :count 12
+                    :latest "2026-04-22T12:00:00Z"
+                    :missions '("M-repl-wins-over-cli")
+                    :about "Testing marks")))
+    (should (equal (aref (arxana-browser--evidence-open-sessions-row item) 0)
+                   " "))
+    (puthash "*codex-repl:marked*" t arxana-evidence--open-session-marks)
+    (should (equal (aref (arxana-browser--evidence-open-sessions-row item) 0)
+                   "*"))))
+
+(ert-deftest arxana-evidence-open-sessions-toggle-mark-rerenders ()
+  (let ((arxana-evidence--open-session-marks (make-hash-table :test 'equal))
+        (rendered nil)
+        (goto-row nil)
+        (set-col-called nil))
+    (cl-letf (((symbol-function 'tabulated-list-get-id)
+               (lambda ()
+                 (list :type 'evidence-open-session
+                       :buffer "*codex-repl:mark-safe*")))
+              ((symbol-function 'arxana-browser--current-row)
+               (lambda () 2))
+              ((symbol-function 'arxana-browser--render)
+               (lambda () (setq rendered t)))
+              ((symbol-function 'arxana-browser--goto-row)
+               (lambda (row) (setq goto-row row)))
+              ((symbol-function 'tabulated-list-set-col)
+               (lambda (&rest _)
+                 (setq set-col-called t)
+                 (error "tabulated-list-set-col should not be used"))))
+      (arxana-evidence-toggle-open-session-mark-at-point)
+      (should (gethash "*codex-repl:mark-safe*"
+                       arxana-evidence--open-session-marks))
+      (should rendered)
+      (should (= goto-row 3))
+      (should-not set-col-called))))
+
+(ert-deftest arxana-evidence-open-sessions-cleanup-kills-buffer-and-process ()
+  (let ((buf (get-buffer-create "*codex-repl:cleanup-test*"))
+        (invoke-buf (get-buffer-create "*invoke: cleanup-test*"))
+        (proc nil))
+    (unwind-protect
+        (progn
+          (setq proc (start-process "arxana-session-cleanup-test" nil "sleep" "10"))
+          (with-current-buffer buf
+            (setq-local major-mode 'codex-repl-mode)
+            (setq-local agent-chat--pending-process proc)
+            (setq-local codex-repl-invoke-buffer-name "*invoke: cleanup-test*"))
+          (should
+           (arxana-evidence--cleanup-open-session-item
+            (list :type 'evidence-open-session
+                  :buffer "*codex-repl:cleanup-test*")))
+          (accept-process-output proc 0.1)
+          (should-not (buffer-live-p buf))
+          (should-not (buffer-live-p invoke-buf))
+          (should-not (process-live-p proc)))
+      (when (process-live-p proc)
+        (kill-process proc))
+      (when (buffer-live-p buf)
+        (kill-buffer buf))
+      (when (buffer-live-p invoke-buf)
+        (kill-buffer invoke-buf)))))
+
 (ert-deftest arxana-evidence-open-sessions-summarize-from-evidence ()
   (let ((buf (get-buffer-create "*codex-repl:codex-8*"))
         (arxana-evidence-open-session-llm-summaries nil)
@@ -81,7 +173,7 @@
           (with-current-buffer buf
             (setq-local major-mode 'codex-repl-mode)
             (setq-local codex-repl-session-id "wrong-global-style-sid")
-            (setq-local agent-chat--session-id "stale-agent-chat-sid")
+            (setq-local agent-chat--session-id "pending")
             (setq-local codex-repl--last-emitted-session-id "sid-1")
             (setq-local agent-chat--agent-name "codex")
             (setq-local agent-chat--evidence-url
@@ -114,16 +206,18 @@
       (when (get-buffer buf)
         (kill-buffer buf)))))
 
-(ert-deftest arxana-evidence-open-sessions-applies-batched-llm-summary ()
+(ert-deftest arxana-evidence-open-sessions-queues-batched-llm-summary ()
   (let ((arxana-evidence-open-session-llm-summaries t)
         (arxana-evidence-open-session-summary-model "haiku-test")
         (arxana-evidence--open-session-summary-cache
          (make-hash-table :test 'equal))
-        captured-requests)
-    (cl-letf (((symbol-function 'arxana-evidence--batch-open-session-summaries)
-               (lambda (requests)
-                 (setq captured-requests requests)
-                 '(("S1" . "Fixing VSATARCS navigation")))))
+        (arxana-evidence--open-session-summary-pending
+         (make-hash-table :test 'equal))
+        (arxana-evidence--open-session-summary-inflight
+         (make-hash-table :test 'equal))
+        worker-started)
+    (cl-letf (((symbol-function 'arxana-evidence--start-open-session-summary-worker)
+               (lambda () (setq worker-started t))))
       (let* ((item (list :type 'evidence-open-session
                          :buffer "*codex-repl:codex-8*"
                          :agent "codex"
@@ -136,13 +230,104 @@
                          :entries nil))
              (items (arxana-evidence--apply-open-session-llm-summaries
                      (list item))))
-        (should (= (length captured-requests) 1))
+        (should worker-started)
         (should (equal (plist-get (car items) :about)
-                       "Fixing VSATARCS navigation"))
+                       "raw user text"))
         (should (equal
                  (gethash "sid-1|e1|haiku-test"
-                          arxana-evidence--open-session-summary-cache)
-                 "Fixing VSATARCS navigation"))))))
+                          arxana-evidence--open-session-summary-pending)
+                 (arxana-evidence--open-session-capsule item)))))))
+
+(ert-deftest arxana-evidence-session-items-refetch-full-session-slice ()
+  (let (fetched-params counted-session)
+    (cl-letf (((symbol-function 'arxana-evidence--count-session-entries)
+               (lambda (session-id)
+                 (setq counted-session session-id)
+                 714))
+              ((symbol-function 'arxana-evidence--fetch-evidence)
+               (lambda (params)
+                 (setq fetched-params params)
+                 (list (list :evidence/id "e1"
+                             :evidence/type :coordination
+                             :evidence/author "joe"
+                             :evidence/at "2026-05-19T12:00:00Z"
+                             :evidence/body
+                             (list :event "chat-turn"
+                                   :role "user"
+                                   :text "hello"))))))
+      (let ((items (arxana-browser--evidence-session-items
+                    (list :session-id "sid-1"
+                          :entries (list (list :evidence/id "stale"))))))
+        (should (equal counted-session "sid-1"))
+        (should (equal (cdr (assoc "session-id" fetched-params)) "sid-1"))
+        (should (equal (cdr (assoc "limit" fetched-params)) "714"))
+        (should (= 1 (length items)))
+        (should (eq (plist-get (car items) :type) 'evidence-chat-turn))
+        (should (equal (plist-get (car items) :text) "hello"))))))
+
+(ert-deftest arxana-evidence-open-sessions-applies-cached-llm-summary ()
+  (let ((arxana-evidence-open-session-llm-summaries t)
+        (arxana-evidence-open-session-summary-model "haiku-test")
+        (arxana-evidence--open-session-summary-cache
+         (make-hash-table :test 'equal)))
+    (puthash "sid-1|e1|haiku-test"
+             "Fixing VSATARCS navigation"
+             arxana-evidence--open-session-summary-cache)
+    (let* ((item (list :type 'evidence-open-session
+                       :buffer "*codex-repl:codex-8*"
+                       :agent "codex"
+                       :state "idle"
+                       :session-id "sid-1"
+                       :latest-id "e1"
+                       :about "raw user text"
+                       :missions '("M-repl-wins-over-cli")
+                       :artifacts '("dev/arxana-browser-vsatarcs.el")
+                       :entries nil))
+           (items (arxana-evidence--apply-open-session-llm-summaries
+                   (list item))))
+      (should (equal (plist-get (car items) :about)
+                     "Fixing VSATARCS navigation"))
+      (should (plist-get (car items) :summary-ready)))))
+
+(ert-deftest arxana-evidence-open-sessions-finishes-async-summary-batch ()
+  (let ((arxana-evidence--open-session-summary-cache
+         (make-hash-table :test 'equal))
+        (arxana-evidence--open-session-summary-inflight
+         (make-hash-table :test 'equal))
+        (arxana-evidence--open-session-summary-process nil)
+        (arxana-evidence--open-session-summary-timeout-timer nil)
+        rerendered)
+    (puthash "sid-1|e1|haiku-test" t
+             arxana-evidence--open-session-summary-inflight)
+    (let* ((out (generate-new-buffer " *arxana-summary-finish-test*"))
+           (proc (make-process :name "arxana-summary-finish-test"
+                               :buffer out
+                               :command '("sh" "-c" "exit 0")
+                               :connection-type 'pipe
+                               :noquery t)))
+      (unwind-protect
+          (progn
+            (with-current-buffer out
+              (insert "S1\tFixing VSATARCS navigation\n"))
+            (while (eq (process-status proc) 'run)
+              (accept-process-output proc 0.01))
+            (setq arxana-evidence--open-session-summary-process proc)
+            (process-put proc :id->key '(("S1" . "sid-1|e1|haiku-test")))
+            (process-put proc :started-at (float-time))
+            (cl-letf (((symbol-function 'arxana-evidence--maybe-rerender-open-sessions)
+                       (lambda () (setq rerendered t)))
+                      ((symbol-function 'arxana-evidence--start-open-session-summary-worker)
+                       (lambda () nil)))
+              (arxana-evidence--finish-open-session-summary-process proc))
+            (should (equal
+                     (gethash "sid-1|e1|haiku-test"
+                              arxana-evidence--open-session-summary-cache)
+                     "Fixing VSATARCS navigation"))
+            (should rerendered)
+            (should-not (gethash "sid-1|e1|haiku-test"
+                                 arxana-evidence--open-session-summary-inflight)))
+        (when (buffer-live-p out)
+          (kill-buffer out))))))
 
 (ert-deftest arxana-evidence-open-sessions-reuses-row-cache-from-latest-id ()
   (let ((buf (get-buffer-create "*codex-repl:cached*"))
@@ -188,7 +373,7 @@
       (when (get-buffer buf)
         (kill-buffer buf)))))
 
-(ert-deftest arxana-evidence-open-sessions-error-without-evidence ()
+(ert-deftest arxana-evidence-open-sessions-shows-placeholder-without-evidence ()
   (let ((buf (get-buffer-create "*claude-repl:test*")))
     (unwind-protect
         (progn
@@ -202,8 +387,14 @@
                      (lambda () (list buf)))
                     ((symbol-function 'arxana-evidence--fetch-evidence)
                      (lambda (_params) nil)))
-            (should-error (arxana-browser--evidence-open-sessions-items)
-                          :type 'user-error)))
+            (let ((items (arxana-browser--evidence-open-sessions-items)))
+              (should (= (length items) 1))
+              (let ((item (car items)))
+                (should (eq (plist-get item :type) 'evidence-open-session))
+                (should (equal (plist-get item :session-id) "sid-missing"))
+                (should (= (plist-get item :count) 0))
+                (should (equal (plist-get item :about) "No Evidence yet"))
+                (should-not (plist-get item :entries))))))
       (when (get-buffer buf)
         (kill-buffer buf)))))
 
