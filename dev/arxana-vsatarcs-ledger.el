@@ -212,16 +212,20 @@ reference .docx template when present."
         out))))
 
 (defun arxana-ledger--current-invoice-id-default ()
-  "Infer the next invoice id from Current item ids, falling back to 202504."
-  (let* ((current (arxana-ledger--by-status
-                   (arxana-ledger--items (arxana-ledger--read)) :unbilled-draft))
-         (ids (delq nil
-                    (mapcar (lambda (it)
-                              (when-let ((id (plist-get it :item/id)))
-                                (and (string-match "\\`\\([0-9]+\\)-" id)
-                                     (match-string 1 id))))
-                            current))))
-    (or (car ids) "202504")))
+  "The next, not-yet-created invoice id — the one Current drafts belong to.
+Computed as one past the highest invoice id that has actually been ISSUED
+\(status `:invoiced' or `:billed-paid'), so Current items are never defaulted to
+a *previous* invoice number.  Falls back to \"202505\" before any invoice exists."
+  (let* ((items (arxana-ledger--items (arxana-ledger--read)))
+         (issued (append (arxana-ledger--by-status items :invoiced)
+                         (arxana-ledger--by-status items :billed-paid)))
+         (max-issued (car (sort (delq nil
+                                      (mapcar (lambda (it) (plist-get it :item/invoice))
+                                              issued))
+                                #'string>))))
+    (if max-issued
+        (number-to-string (1+ (string-to-number max-issued)))
+      "202505")))
 
 (defun arxana-ledger-ready-current-invoice (inv-id)
   "Move all Current items into Invoice Ready under INV-ID and generate the docx.
