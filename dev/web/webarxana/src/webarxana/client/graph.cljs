@@ -552,8 +552,63 @@ signals are visually distinct (two nodes of equal magnitude can differ in hue)."
     "pattern"  "#cc5de8"
     "#8899aa"))
 
+(def ^:private label-tiers
+  "Zoom-bucketed label policy (high-zoom -> low-zoom). Bucketing matters: labels
+   only re-render when zoom CROSSES a boundary, not on every wheel event, so
+   continuous zooming stays cheap. As you zoom OUT, fonts counter-scale up
+   (:scale) to stay legible, and lettering drops from smaller nodes/edges
+   (:node-mag threshold; :edges?) so labels don't overlap."
+  ;; :node-mag is the MIN magnitude a node needs to keep its label; the depth-0
+  ;; "gray" neighbour nodes have magnitude 0, so the top tier must use 0 or they
+  ;; would never be labelled at all. Thresholds peel labels off lowest-magnitude
+  ;; first as you zoom out.
+  [{:min-k 0.85 :scale 1.0  :node-mag 0 :edges? true}
+   {:min-k 0.55 :scale 1.35 :node-mag 1 :edges? true}
+   {:min-k 0.38 :scale 1.8  :node-mag 3 :edges? false}
+   {:min-k 0.0  :scale 2.4  :node-mag 5 :edges? false}])
+
+(defn- label-config
+  "Label policy for zoom K. Returns the SAME map object within a tier so reagent
+   skips re-rendering labels until a boundary is crossed."
+  [k]
+  (or (some (fn [t] (when (>= k (:min-k t)) t)) label-tiers)
+      (last label-tiers)))
+
+(defn- label-group-transform
+  "Scale a label group by S about anchor (ax,ay) so lettering grows around the
+   node/edge rather than drifting."
+  [ax ay s]
+  (str "translate(" ax "," ay ") scale(" s ") translate(" (- ax) "," (- ay) ")"))
+
+(defn- ellipsise [s n]
+  (if (> (count s) n) (str (str/trimr (subs s 0 (max 0 (dec n)))) "…") s))
+
+(defn- greedy-lines
+  "Greedily pack WORDS into lines of <= per-line chars, breaking on spaces."
+  [words per-line]
+  (loop [[w & more] words, cur "", lines []]
+    (if (nil? w)
+      (cond-> lines (seq cur) (conj cur))
+      (let [cur* (if (seq cur) (str cur " " w) w)]
+        (cond
+          (<= (count cur*) per-line) (recur more cur* lines)
+          (seq cur)                  (recur (cons w more) "" (conj lines cur))
+          :else                      (recur more w lines)))))) ; lone long word
+
+(defn- wrap-label
+  "Word-wrap LABEL into at most MAX-LINES lines of ~PER-LINE chars. Shows the
+   full title when it fits (no aggressive truncation); ellipsises only if the
+   text overflows MAX-LINES lines."
+  [label per-line max-lines]
+  (let [words (remove str/blank? (str/split (str (or label "")) #"\s+"))
+        lines (greedy-lines words per-line)]
+    (if (<= (count lines) max-lines)
+      lines
+      (conj (vec (take (dec max-lines) lines))
+            (ellipsise (str/join " " (drop (dec max-lines) lines)) per-line)))))
+
 (defn link-component
-  [link src-pos dst-pos]
+  [link src-pos dst-pos label-cfg]
   (let [[x1 y1] src-pos
         [x2 y2] dst-pos
         mx (/ (+ x1 x2) 2)
@@ -584,21 +639,25 @@ signals are visually distinct (two nodes of equal magnitude can differ in hue)."
                                  (= link-type "pattern/tensions") "6,5")
              :opacity 0.7
              :marker-end "url(#arrowhead)"}]
-     [:g {:on-click (fn [e]
-                      (swap! state/ui-state assoc
-                             :editing-link {:id link-id
-                                            :type (or link-type "arxana/scholium")
-                                            :text (or link-text "")
-                                            :x (.-clientX e)
-                                            :y (.-clientY e)}))
-          :style {:cursor "pointer"}}
-      [:rect {:x (- mx (/ label-w 2)) :y (- my 9) :width label-w :height 18
-              :rx 4 :fill "#2a2a3a"
-              :stroke (if is-editing "#ffd43b" "#556677")
-              :stroke-width 0.5 :opacity 0.85}]
-      [:text {:x mx :y (+ my 3) :text-anchor "middle"
-              :fill "#aabbcc" :font-size 11 :font-family "monospace"}
-       label]]]))
+     ;; Edge label: hidden when zoomed out (edges are the densest clutter), and
+     ;; counter-scaled up about its midpoint when shown so it stays legible.
+     (when (:edges? label-cfg)
+       [:g {:transform (label-group-transform mx my (:scale label-cfg))
+            :on-click (fn [e]
+                        (swap! state/ui-state assoc
+                               :editing-link {:id link-id
+                                              :type (or link-type "arxana/scholium")
+                                              :text (or link-text "")
+                                              :x (.-clientX e)
+                                              :y (.-clientY e)}))
+            :style {:cursor "pointer"}}
+        [:rect {:x (- mx (/ label-w 2)) :y (- my 9) :width label-w :height 18
+                :rx 4 :fill "#2a2a3a"
+                :stroke (if is-editing "#ffd43b" "#556677")
+                :stroke-width 0.5 :opacity 0.85}]
+        [:text {:x mx :y (+ my 3) :text-anchor "middle"
+                :fill "#aabbcc" :font-size 11 :font-family "monospace"}
+         label]])]))
 
 (defn- reveal-pinned-card!
   "Scroll the pinned card for `nema-id` into view in the right-hand rail.
@@ -612,7 +671,7 @@ signals are visually distinct (two nodes of equal magnitude can differ in hue)."
        (.scrollIntoView el #js {:block "center" :behavior "smooth"})))))
 
 (defn node-component
-  [nema pos is-focus is-pin]
+  [nema pos is-focus is-pin label-cfg]
   (let [[x y] pos
         nema-id (:nema/id nema)
         nema-name (or (:nema/name nema) nema-id)
@@ -681,23 +740,40 @@ signals are visually distinct (two nodes of equal magnitude can differ in hue)."
                   :stroke (when (= kind :pattern-peer) "#fed7aa")
                   :stroke-width (if (= kind :pattern-peer) 1.5 0)
                   :class-name (str "node-shape " (name kind))}]
-     ;; Type badge
-     [:text {:x x :y (- y 6) :text-anchor "middle"
-             :fill "#ffffff" :font-size 11 :font-family "monospace"
-             :opacity 0.7}
-      (case kind
-        :pattern-peer "design-pattern"
-        :interest-star (str "m" magnitude)
-        (if folded-count
-          (str folded-count " concepts")
-          nema-type))]
-     ;; Name label
-     [:text {:x x :y (+ y 10) :text-anchor "middle"
-             :fill "#ffffff" :font-size 13 :font-weight "bold"
-             :font-family "sans-serif"}
-      (if (> (count nema-name) 16)
-        (str (subs nema-name 0 14) "...")
-        nema-name)]]))
+     ;; Type badge + name, grouped so they counter-scale together about the node
+     ;; as you zoom out, and dropped from smaller-magnitude nodes when zoomed out
+     ;; so lettering doesn't overlap. Focus/pinned nodes always keep their label.
+     (when (or is-focus is-pin (>= magnitude (:node-mag label-cfg)))
+       [:g {:transform (label-group-transform x y (:scale label-cfg))}
+        ;; Type badge — interest-stars omit it: their magnitude is already the
+        ;; node's size + hover tooltip, so an "m5"/"m0" badge is redundant
+        ;; internal clutter. Other kinds keep a meaningful badge.
+        (when-let [badge (case kind
+                           :pattern-peer "design-pattern"
+                           :interest-star nil
+                           (if folded-count
+                             (str folded-count " concepts")
+                             nema-type))]
+          [:text {:x x :y (- y 6) :text-anchor "middle"
+                  :fill "#ffffff" :font-size 11 :font-family "monospace"
+                  :opacity 0.7}
+           badge])
+        ;; Name label — word-wrapped over up to 2 lines (full title when it
+        ;; fits; ellipsised only if it overflows both lines), as <tspan>s since
+        ;; SVG <text> does not wrap on its own. The block is vertically CENTRED
+        ;; on the node (baseline of the first line shifts up with line count) so
+        ;; it doesn't hang low now that the magnitude badge above it is gone.
+        (let [lines  (wrap-label nema-name 22 2)
+              line-h 14
+              y0     (+ y 4 (* (/ (dec (count lines)) -2.0) line-h))]
+          (into [:text {:x x :y y0 :text-anchor "middle"
+                        :fill "#ffffff" :font-size 13 :font-weight "bold"
+                        :font-family "sans-serif"}]
+                (map-indexed
+                 (fn [i ln]
+                   ^{:key i}
+                   [:tspan {:x x :dy (if (zero? i) "0" "1.1em")} ln])
+                 lines)))])]))
 
 (defonce ^:private !layout-cache (atom {:sig nil :positions {}}))
 
@@ -723,6 +799,48 @@ signals are visually distinct (two nodes of equal magnitude can differ in hue)."
           pos)))
     {}))
 
+(def ^:private legible-zoom
+  "Camera scale used when flying to a node: large enough that the node's label
+   (font-size 13 in world units) reads comfortably."
+  1.5)
+
+(def ^:private wheel-zoom-sensitivity
+  "Exponential zoom rate per pixel of wheel delta. Lower = gentler. ~0.0015
+   gives ~14% per mouse notch while keeping trackpad gestures controllable."
+  0.0015)
+
+(defn- tween-zoom!
+  "Animate !zoom toward TARGET ({:k :x :y}) over MS milliseconds, ease-out
+   cubic. Uses swap!/assoc so :fitted-for is preserved (the auto-fit won't
+   revert the move)."
+  [target ms]
+  (let [start @!zoom
+        t0 (js/performance.now)
+        lerp (fn [a b e] (+ a (* (- b a) e)))]
+    (letfn [(step [_]
+              (let [p (min 1 (/ (- (js/performance.now) t0) ms))
+                    e (- 1 (js/Math.pow (- 1 p) 3))]
+                (swap! !zoom assoc
+                       :k (lerp (:k start) (:k target) e)
+                       :x (lerp (:x start) (:x target) e)
+                       :y (lerp (:y start) (:y target) e))
+                (when (< p 1)
+                  (js/requestAnimationFrame step))))]
+      (js/requestAnimationFrame step))))
+
+(defn center-on-node!
+  "Fly the camera so NEMA-ID's node sits centred in the canvas (left of the
+   card rail, matching the fit's 0.42 bias) at a legible zoom. No-op if the
+   node has no computed position yet."
+  [nema-id]
+  (when-let [pos (get-in @!layout-cache [:positions nema-id])]
+    (let [[nx ny] pos
+          k legible-zoom]
+      (tween-zoom! {:k k
+                    :x (- (* svg-width 0.42) (* k nx))
+                    :y (- (/ svg-height 2) (* k ny))}
+                   320))))
+
 (defn graph-svg
   "Main SVG canvas with force-directed layout."
   []
@@ -733,9 +851,17 @@ signals are visually distinct (two nodes of equal magnitude can differ in hue)."
         expanded-essay-sections (:expanded-essay-sections @state/ui-state)
         view-mode  (or (:view-mode @state/ui-state) :organic)
         zoom-k     (:k @!zoom)
-        effective-pins (if (seq pins)
-                         pins
-                         (when focus-id [{:id focus-id :k (:hop-depth @state/ui-state)}]))
+        hop-depth  (:hop-depth @state/ui-state)
+        effective-pins (cond
+                         ;; Pinned graph (e.g. an expanded diagram): the toolbar
+                         ;; k controls how many neighbour rings expand around the
+                         ;; pinned core. Offset by 2 so the default k=3 keeps the
+                         ;; familiar 1-ring view and k=2 drops the neighbour ring
+                         ;; (the depth-0 "gray" nodes) + its edges entirely;
+                         ;; higher k adds rings. Per-pin :k drives the BFS hops.
+                         (seq pins) (let [rings (max 0 (- hop-depth 2))]
+                                      (mapv #(assoc % :k rings) pins))
+                         focus-id   [{:id focus-id :k hop-depth}])
         raw-hood (when (seq effective-pins)
                    (state/multi-neighbourhood effective-pins))
         ;; Diagram filtering:
@@ -850,7 +976,18 @@ signals are visually distinct (two nodes of equal magnitude can differ in hue)."
                 :on-wheel (fn [e]
                             (let [[px py] (svg-point e)
                                   {:keys [k x y]} @!zoom
-                                  factor (if (pos? (.-deltaY e)) 0.88 1.14)
+                                  ;; Zoom by wheel-delta MAGNITUDE (exponential)
+                                  ;; so a gesture's total zoom depends on total
+                                  ;; scroll distance, not the NUMBER of wheel
+                                  ;; events -- trackpad momentum fires dozens and
+                                  ;; a fixed per-event factor compounded to
+                                  ;; "outer space" in one flick. Normalise across
+                                  ;; deltaMode (lines/pages -> ~px); clamp so one
+                                  ;; freak delta can't jump.
+                                  unit (case (.-deltaMode e) 1 16 2 400 1)
+                                  dy (* (.-deltaY e) unit)
+                                  factor (js/Math.exp
+                                          (clamp -0.25 0.25 (* (- wheel-zoom-sensitivity) dy)))
                                   k* (clamp 0.06 5.0 (* k factor))
                                   ratio (/ k* k)]
                               ;; swap!/assoc (not reset!) keeps :fitted-for, so the
@@ -895,7 +1032,7 @@ signals are visually distinct (two nodes of equal magnitude can differ in hue)."
                           dst-pos (get all-positions dst-id)]
                     :when (and src-pos dst-pos)]
                 ^{:key (:link/id link)}
-                [link-component link src-pos dst-pos])))
+                [link-component link src-pos dst-pos (label-config zoom-k)])))
            ;; Nodes
            (doall
             (for [[nema-id pos] all-positions
@@ -904,7 +1041,8 @@ signals are visually distinct (two nodes of equal magnitude can differ in hue)."
               ^{:key nema-id}
               [node-component nema pos
                (= nema-id focus-id)
-               (contains? pin-ids nema-id)]))]]
+               (contains? pin-ids nema-id)
+               (label-config zoom-k)]))]]
          [:div {:style {:position "absolute" :left "8px" :top "8px" :z-index 5}}
           [view-mode-selector]]
          (when (graph-filter-active?)
