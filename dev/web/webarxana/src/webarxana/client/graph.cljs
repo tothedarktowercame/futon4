@@ -71,6 +71,7 @@
 
       (or (= "interest-star" kind)
           (= "arxana/interest-star" nema-type)
+          (= "arxana/constellation-star" nema-type)   ; cross-EOI colimit nodes
           (= "interest-star" nema-type))
       :interest-star
 
@@ -100,12 +101,21 @@
         focus-bump (if is-focus 5 0)]
     (+ base pin-bump focus-bump)))
 
+(defn- depth-colour
+  "Colour ramp by grounding-depth: shallow = light, deep = saturated blue.
+Size encodes magnitude (overall weight); colour encodes depth -- so the two
+signals are visually distinct (two nodes of equal magnitude can differ in hue)."
+  [depth]
+  (let [d (clamp 1 7 (or depth 1))
+        t (/ (- d 1) 6.0)]
+    (str "hsl(205," (int (+ 45 (* 45 t))) "%," (int (- 78 (* 38 t))) "%)")))
+
 (defn- node-fill
   [nema]
   (case (node-kind nema)
     :pattern-peer "#f59e0b"
     :figure-tag "#a78bfa"
-    :interest-star "#38bdf8"
+    :interest-star (depth-colour (numeric-prop (:nema/props nema) :grounding-depth))
     (case (or (:nema/type nema) "unknown")
       "article"  "#4a9eff"
       "question" "#ff6b6b"
@@ -150,7 +160,11 @@
        set))
 
 (defn- effective-node-kind [witness-ids nema]
-  (if (contains? witness-ids (:nema/id nema))
+  (if (and (contains? witness-ids (:nema/id nema))
+           ;; Cross-EOI colimit nodes are real interest stars, never a witness
+           ;; layer -- they just happen to be the src of coalesces-into edges,
+           ;; which would otherwise filter them (and all their arcs) out.
+           (not= "arxana/constellation-star" (:nema/type nema)))
     :witness-layer
     (node-kind nema)))
 
@@ -243,10 +257,14 @@
 
 (defn- fit-transform [positions]
   (if-let [{:keys [min-x max-x min-y max-y]} (bounds-for positions)]
-    (let [margin 80
+    (let [margin 60
           bw (max 1 (- max-x min-x))
           bh (max 1 (- max-y min-y))
-          k (clamp 0.18 2.2 (min (/ (- svg-width (* 2 margin)) bw)
+          ;; Don't shrink a large graph into a tiny rectangle. Clamp the fit
+          ;; near natural scale: big constellations render full-size and
+          ;; OVERFLOW the viewport, so wheel-zoom + drag-pan are meaningful;
+          ;; only small graphs get gently scaled up to fill.
+          k (clamp 0.08 1.8 (min (/ (- svg-width (* 2 margin)) bw)
                                   (/ (- svg-height (* 2 margin)) bh)))
           cx (/ (+ min-x max-x) 2)
           cy (/ (+ min-y max-y) 2)]
@@ -262,10 +280,12 @@
   (let [sig (positions-signature positions)]
     (swap! !zoom merge (assoc (fit-transform positions) :signature sig))))
 
-(defn- fit-on-new-graph! [positions]
-  (let [sig (positions-signature positions)]
-    (when (and (seq positions) (not= sig (:signature @!zoom)))
-      (fit-graph! positions))))
+(defn- fit-on-new-graph! [positions fit-key]
+  ;; Fit ONCE per graph, keyed by a STABLE id (the diagram/focus) -- NOT the pin
+  ;; set, which churns every render and would re-fit constantly, reverting the
+  ;; user's zoom/pan. wheel/pan preserve :fitted-for so they never trigger a fit.
+  (when (and (seq positions) (not= fit-key (:fitted-for @!zoom)))
+    (swap! !zoom merge (fit-transform positions) {:fitted-for fit-key})))
 
 (defn- svg-point [e]
   (let [rect (.getBoundingClientRect (.-currentTarget e))
@@ -379,24 +399,54 @@
   "Compute positions using d3-force simulation.
    Edge midpoints are included as phantom nodes for label spacing.
    Returns {nema-id [x y]}."
-  [nemas links pin-centres view-mode]
-  (let [;; Real nodes — initialize pins at grid positions
-        witness-ids (witness-node-ids links)
-        real-nodes (mapv (fn [n]
-                           (let [nid (:nema/id n)
-                                 pin-pos (get pin-centres nid)]
+  [nemas links pin-centres view-mode seed-positions]
+  (let [witness-ids (witness-node-ids links)
+        ;; Seeding policy (two things matter):
+        ;; 1. NEVER seed from the pin grid -- a grid seed biases the sim into a
+        ;;    grid-shaped local minimum that ignores connectivity (an
+        ;;    articulation node ends stranded on the rim instead of pulled
+        ;;    interior). 2. DO seed from the PREVIOUS layout's positions: the
+        ;;    expanded diagram streams ~35 pins in one at a time, recomputing on
+        ;;    each arrival; without a prior seed every recompute phyllotaxis-
+        ;;    reshuffles the whole graph (the "flashed then reshaped" churn).
+        ;;    Seeding existing nodes at their last position keeps them put while
+        ;;    only the new node settles in -- and it's a FORCE seed, not a grid,
+        ;;    so it preserves real structure. Brand-new nodes seed near the prior
+        ;;    centroid (not d3's origin) so they don't yank the cloud around.
+        seeds (or seed-positions {})
+        svals (vals seeds)
+        seed-cx (when (seq svals) (/ (reduce + (map first svals)) (count svals)))
+        seed-cy (when (seq svals) (/ (reduce + (map second svals)) (count svals)))
+        real-nodes (vec (map-indexed
+                         (fn [i n]
+                           (let [nid  (:nema/id n)
+                                 seed (get seeds nid)]
                              (cond-> {:id nid
                                       :kind (name (effective-node-kind witness-ids n))
                                       :radius (+ 10 (node-radius n false false))}
-                               pin-pos (assoc :x (first pin-pos)
-                                             :y (second pin-pos)))))
-                         nemas)
+                               seed (assoc :x (first seed) :y (second seed))
+                               (and (not seed) seed-cx)
+                               (assoc :x (+ seed-cx (* 40 (js/Math.cos i)))
+                                      :y (+ seed-cy (* 40 (js/Math.sin i)))))))
+                         nemas))
+        ;; Only links whose BOTH endpoints are real sim nodes. d3 forceLink
+        ;; resolves each link's source/target against the node set; a link to a
+        ;; filtered-out node (e.g. a coalesces-into target not on the canvas)
+        ;; leaves the ref undefined and poisons positions with NaN — which makes
+        ;; ALL edges (and nodes) vanish once the sim ticks. This was the
+        ;; "edges disappear as the nodes bounce" bug.
+        node-ids (set (map :id real-nodes))
+        valid-links (filter (fn [link]
+                              (let [s (get-in link [:link/src :nema/id])
+                                    d (get-in link [:link/dst :nema/id])]
+                                (and s d (contains? node-ids s) (contains? node-ids d))))
+                            links)
         ;; Phantom nodes for edge label midpoints (prevents label overlap)
         phantom-nodes (keep (fn [link]
                               (let [lid (:link/id link)]
                                 (when lid
                                   {:id (str "phantom:" lid) :radius 25})))
-                            links)
+                            valid-links)
         all-sim-nodes (clj->js (into real-nodes phantom-nodes))
         ;; Real edges
         real-edges (keep (fn [link]
@@ -408,44 +458,62 @@
                                ;; Connect phantom to both endpoints
                                [{:source src :target pid}
                                 {:source pid :target dst}])))
-                         links)
+                         valid-links)
         all-edges (clj->js (vec (mapcat identity real-edges)))
-        ;; Centre of usable area (leave room for cards on right)
-        cx (* svg-width 0.42)
-        cy (/ svg-height 2)
         banded? (= :witnesses view-mode)
+        n (count real-nodes)
+        ;; Organic spread: a single radius grows with node count so the
+        ;; constellation settles into a roughly CIRCULAR cloud (charge repulsion
+        ;; balanced by centre gravity) -- NOT a fixed landscape rectangle. The
+        ;; 1200x800 viewBox is a CAMERA over this world (the zoom-transform <g>),
+        ;; NOT its bounds: the initial fit zooms OUT to frame the cloud and
+        ;; wheel-zoom + drag-pan navigate. Banded/witness mode keeps the fixed
+        ;; canvas so its y-bands stay put.
+        spread (max 480 (* 175 (js/Math.sqrt (max 1 n))))
+        ;; Centre of usable area (leave room for cards on right)
+        cx (if banded? (* svg-width 0.42) spread)
+        cy (if banded? (/ svg-height 2) spread)
         ;; Create simulation
         sim (-> (d3/forceSimulation all-sim-nodes)
                 (.force "charge" (-> (d3/forceManyBody)
-                                     (.strength (if banded? -450 -600))
-                                     (.distanceMax 500)))
+                                     (.strength (if banded? -450 -900))
+                                     (.distanceMax (if banded? 900 (* 1.2 spread)))))
                 (.force "link" (-> (d3/forceLink all-edges)
                                    (.id (fn [d] (.-id d)))
-                                   (.distance (if banded? 125 100))
-                                   (.strength (if banded? 0.45 0.7))))
+                                   (.distance (if banded? 125 150))
+                                   (.strength (if banded? 0.45 0.6))))
                 (.force "center" (d3/forceCenter cx cy))
                 (.force "collide" (.radius (d3/forceCollide)
                                            (fn [d] (or (.-radius d) 30))))
-                (.force "x" (.strength (d3/forceX cx) 0.04))
+                (.force "x" (.strength (d3/forceX cx) 0.02))
                 (.force "y" (.strength (d3/forceY (if banded?
                                                      (fn [d]
                                                        (if (.startsWith (.-id d) "phantom:")
                                                          cy
                                                          (band-y (keyword (.-kind d)) view-mode)))
                                                      cy))
-                                       (if banded? 0.2 0.04)))
+                                       (if banded? 0.2 0.02)))
                 (.stop))]
     ;; Run simulation
-    (dotimes [_ 250]
+    (dotimes [_ 300]
       (.tick sim))
     ;; Extract positions for real nodes only (skip phantoms)
     (into {}
           (keep (fn [node]
                   (let [nid (.-id node)]
                     (when-not (.startsWith nid "phantom:")
-                      [nid
-                       [(max 50 (min (- svg-width 50) (.-x node)))
-                        (max 50 (min (- svg-height 50) (.-y node)))]]))))
+                      (let [x (.-x node) y (.-y node)]
+                        (if banded?
+                          ;; Banded mode keeps the original rectangular clamp.
+                          [nid [(max 50 (min (- svg-width 50) x))
+                                (max 50 (min (- svg-height 50) y))]]
+                          ;; Organic mode: NO geometric clamp -- the symmetric
+                          ;; centre gravity already bounds the cloud into a round
+                          ;; blob. A hard radial clamp would pin stray nodes onto
+                          ;; a ring, which during incremental load read as the
+                          ;; layout "reshaping into a circle". Only guard NaN.
+                          [nid [(if (js/isFinite x) x cx)
+                                (if (js/isFinite y) y cy)]]))))))
                (array-seq all-sim-nodes))))
 
 (defn- pin-centres
@@ -532,6 +600,17 @@
               :fill "#aabbcc" :font-size 11 :font-family "monospace"}
        label]]]))
 
+(defn- reveal-pinned-card!
+  "Scroll the pinned card for `nema-id` into view in the right-hand rail.
+   Deferred to the next frame so it runs AFTER the focus swap! re-renders the
+   rail (and the `active-pin` class lands); scrolls to centre instantly."
+  [nema-id]
+  (js/requestAnimationFrame
+   (fn []
+     (when-let [el (.querySelector js/document
+                                   (str ".focus-card[data-pin-id=\"" nema-id "\"]"))]
+       (.scrollIntoView el #js {:block "center" :behavior "smooth"})))))
+
 (defn node-component
   [nema pos is-focus is-pin]
   (let [[x y] pos
@@ -546,10 +625,22 @@
         folded-count (numeric-prop props :fold/sub-count)]
     [:g {:key nema-id
          :class (str "graph-node node " (name kind))
+         ;; Stop pointerdown bubbling to the SVG: otherwise the SVG's drag-pan
+         ;; handler setPointerCaptures the pointer and the browser dispatches the
+         ;; click to the SVG instead of this node -- so node clicks were silently
+         ;; lost. Stopping it here keeps pan on the empty canvas while letting
+         ;; node clicks (select/focus) through.
+         :on-pointer-down (fn [e] (.stopPropagation e))
          :on-click (fn []
                      (if connecting
                        (api/connect-nodes! (:node-id connecting) nema-id nil)
-                       (api/browse-and-focus! nema-id nema-id)))
+                       ;; Single click raises this node's card on the right:
+                       ;; pin! adds it to the pinned-card rail AND focuses it,
+                       ;; then reveal-pinned-card! scrolls that card into view
+                       ;; (focus only adds an `active-pin` highlight; the long
+                       ;; rail would otherwise not move to show it).
+                       (do (state/pin! nema-id)
+                           (reveal-pinned-card! nema-id))))
          :on-double-click
          (fn [_]
            (cond
@@ -564,6 +655,15 @@
              (= nema-type "scope/frame")
              (api/expand-scope-frame! nema-id)))
          :style {:cursor (if connecting "crosshair" "pointer")}}
+     ;; Full name + weight breakdown on hover (the on-canvas label is truncated;
+     ;; this native SVG tooltip is the un-truncated read).
+     [:title (let [m (numeric-prop props :multiplicity)
+                   d (numeric-prop props :grounding-depth)]
+               (str nema-name
+                    (when (and m d)
+                      (str "  —  magnitude " magnitude
+                           "  (multiplicity " m " × depth "
+                           (/ (js/Math.round (* d 10)) 10.0) ")"))))]
      ;; Pin ring
      (when is-pin
        [node-glyph {:kind kind
@@ -598,6 +698,30 @@
       (if (> (count nema-name) 16)
         (str (subs nema-name 0 14) "...")
         nema-name)]]))
+
+(defonce ^:private !layout-cache (atom {:sig nil :positions {}}))
+
+(defn- cached-positions
+  "Memoise the expensive (250-tick) force/layered layout: recompute only when the
+   node/link set, pin centres, or view-mode change -- not on every re-render.
+   Zoom, hover and incremental pin-loads re-render but must not re-run the sim."
+  [filtered-hood centres view-mode]
+  (if (and filtered-hood (seq (:nemas filtered-hood)))
+    (let [sig [view-mode (or centres {})
+               (sort (map :nema/id (:nemas filtered-hood)))
+               (sort (keep :link/id (:links filtered-hood)))]]
+      (if (= sig (:sig @!layout-cache))
+        (:positions @!layout-cache)
+        ;; Seed the next sim from the PREVIOUS layout's positions so an
+        ;; incremental pin-load nudges the existing graph instead of
+        ;; phyllotaxis-reshuffling it from scratch on every arrival.
+        (let [prev (:positions @!layout-cache)
+              pos (if (= :layered view-mode)
+                    (layered-layout (:nemas filtered-hood) (:links filtered-hood) (or centres {}) view-mode)
+                    (force-layout  (:nemas filtered-hood) (:links filtered-hood) (or centres {}) view-mode prev))]
+          (reset! !layout-cache {:sig sig :positions pos})
+          pos)))
+    {}))
 
 (defn graph-svg
   "Main SVG canvas with force-directed layout."
@@ -699,18 +823,10 @@
     (if (or (and filtered-hood (seq (:nemas filtered-hood))) (seq floating))
       (let [centres   (when (seq effective-pins) (pin-centres effective-pins))
             ;; Force-directed layout
-            positions (if (and filtered-hood (seq (:nemas filtered-hood)))
-                        (if (= :layered view-mode)
-                          (layered-layout (:nemas filtered-hood)
-                                          (:links filtered-hood)
-                                          (or centres {})
-                                          view-mode)
-                          (force-layout (:nemas filtered-hood)
-                                        (:links filtered-hood)
-                                        (or centres {})
-                                        view-mode))
-                        {})
-            _fit      (fit-on-new-graph! positions)
+            positions (cached-positions filtered-hood centres view-mode)
+            _fit      (fit-on-new-graph! positions
+                                         (or (get-in @state/ui-state [:diagram-route :diagram-id])
+                                             focus-id "adhoc"))
             nema-map  (into {} (map (fn [n] [(:nema/id n) n]) (:nemas filtered-hood)))
             pin-ids   (set (map :id effective-pins))
             float-positions (into {}
@@ -735,12 +851,14 @@
                             (let [[px py] (svg-point e)
                                   {:keys [k x y]} @!zoom
                                   factor (if (pos? (.-deltaY e)) 0.88 1.14)
-                                  k* (clamp 0.12 5.0 (* k factor))
+                                  k* (clamp 0.06 5.0 (* k factor))
                                   ratio (/ k* k)]
-                              (reset! !zoom {:k k*
-                                             :x (- px (* ratio (- px x)))
-                                             :y (- py (* ratio (- py y)))
-                                             :signature (:signature @!zoom)})))
+                              ;; swap!/assoc (not reset!) keeps :fitted-for, so the
+                              ;; auto-fit won't immediately revert the user's zoom.
+                              (swap! !zoom assoc
+                                     :k k*
+                                     :x (- px (* ratio (- px x)))
+                                     :y (- py (* ratio (- py y))))))
                 :on-pointer-down (fn [e]
                                    (.setPointerCapture (.-currentTarget e) (.-pointerId e))
                                    (reset! !drag {:client-x (.-clientX e)

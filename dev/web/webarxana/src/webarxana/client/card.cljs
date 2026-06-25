@@ -164,7 +164,8 @@
                 older-count (:older-count version-info)
                 nema-authors (or (:nema/authors nema) [])]
             [:<>
-             [:div.focus-card {:class (when is-active "active-pin")}
+             [:div.focus-card {:class (when is-active "active-pin")
+                               :data-pin-id pin-id}
               ;; Header
               [:div.card-header
                [:span.card-type nema-type]
