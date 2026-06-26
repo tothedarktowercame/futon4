@@ -148,7 +148,30 @@ The aggregator uses absolute paths, so the working directory is irrelevant."
                  (insert "  —\n")
                (dolist (d ds) (arxana-clock--insert-driver d)))
              (insert "\n")))
-         (insert "  g=refresh (re-run aggregator)  ·  f=toggle non-futon  ·  E=edit crontab  ·  ?=help\n")))
+         ;; ⚠ scan residue: periodic JVM threads with no registered driver (the
+         ;; completeness signal — a registry can be skipped; the scan can't).
+         (let ((res (plist-get data :unaccounted)))
+           (when (> (length res) 0)
+             (insert (propertize (format "⚠ UNACCOUNTED — periodic JVM threads with no registered cyder driver  (%d)\n"
+                                         (length res))
+                                 'face 'warning))
+             (seq-doseq (r res)
+               (insert (propertize (format "  %-34s ×%s\n"
+                                           (arxana-clock--fmt (plist-get r :name))
+                                           (arxana-clock--fmt (plist-get r :count)))
+                                   'face 'warning)))
+             (insert "\n")))
+         ;; coverage manifest: exactly which sources were scanned (auditable).
+         (insert (propertize "── sources scanned (coverage manifest) ──\n" 'face 'bold))
+         (seq-doseq (s (plist-get data :sources))
+           (insert (format "  %-44s count=%s%s\n"
+                           (arxana-clock--fmt (plist-get s :source))
+                           (arxana-clock--fmt (plist-get s :count))
+                           (if (plist-get s :worker-pool)
+                               (format "  worker-pool=%s periodic=%s"
+                                       (plist-get s :worker-pool) (plist-get s :periodic))
+                             ""))))
+         (insert "\n  g=refresh (re-run aggregator)  ·  f=toggle non-futon  ·  E=edit crontab  ·  ?=help\n")))
      #'arxana-clock-browse)))
 
 ;; ---------------------------------------------------------------------------
