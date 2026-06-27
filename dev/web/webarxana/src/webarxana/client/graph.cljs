@@ -10,6 +10,7 @@
 
 (def view-modes
   [{:id :organic :label "A Organic"}
+   {:id :spiral :label "S Spiral"}
    {:id :layered :label "B Layered"}
    {:id :witnesses :label "C Witnesses"}
    {:id :zoom-lod :label "D Zoom"}])
@@ -189,6 +190,91 @@ signals are visually distinct (two nodes of equal magnitude can differ in hue)."
                                      (contains? visible-ids dst))))
                      vec)]
       (assoc hood :nemas nemas :links links))))
+
+(defn- restrict-to-pins
+  "Keep only the pinned core nodes and the links whose BOTH endpoints are pins.
+   Drops the depth-0 'gray' neighbour ring and every edge touching it, while
+   the star-to-star edges among the core survive. Used at low k (k<=2): the BFS
+   still expands one hop so inter-pin edges get captured, then this strips the
+   ring back off — otherwise rings=0 isolates each star and the network goes
+   edgeless."
+  [hood keep-ids]
+  (-> hood
+      (update :nemas #(filterv (fn [n] (contains? keep-ids (:nema/id n))) %))
+      (update :links #(filterv (fn [l]
+                                 (and (contains? keep-ids (get-in l [:link/src :nema/id]))
+                                      (contains? keep-ids (get-in l [:link/dst :nema/id]))))
+                               %))))
+
+(defn- median [xs]
+  (let [s (vec (sort xs)) n (count s)]
+    (when (pos? n)
+      (if (odd? n)
+        (nth s (quot n 2))
+        (/ (+ (nth s (dec (quot n 2))) (nth s (quot n 2))) 2)))))
+
+(defn- restrict-to-super-core
+  "k=1 retraction: from the pinned core, keep only the 'super-core' — the stars
+   whose magnitude is strictly ABOVE the core's median magnitude — plus whatever
+   is in always-keep (the focus), and the links between two kept stars. magnitude
+   is the per-star coreness weight (it also drives node radius), so this answers
+   'some interests are more core than others' rather than treating all pins as
+   equally core. Using the median makes the cut SCALE-RELATIVE: it adapts to each
+   constellation's own weight spread instead of a hardcoded threshold. Tune the
+   comparator here (median -> mean -> top-N -> fixed) to widen/narrow the cut."
+  [hood always-keep]
+  (let [cut      (or (median (map node-magnitude (:nemas hood))) 0)
+        keep?    (fn [n] (or (contains? always-keep (:nema/id n))
+                             (> (node-magnitude n) cut)))
+        kept-ids (into #{} (comp (filter keep?) (map :nema/id)) (:nemas hood))]
+    (-> hood
+        (update :nemas #(filterv keep? %))
+        (update :links #(filterv (fn [l]
+                                   (and (contains? kept-ids (get-in l [:link/src :nema/id]))
+                                        (contains? kept-ids (get-in l [:link/dst :nema/id]))))
+                                 %)))))
+
+(defn- connected-components
+  "Undirected connected components of HOOD's nodes, as a seq of id-sets. A node
+   with no surviving edge is its own singleton component."
+  [hood]
+  (let [ids (set (map :nema/id (:nemas hood)))
+        adj (reduce (fn [m l]
+                      (let [s (get-in l [:link/src :nema/id])
+                            d (get-in l [:link/dst :nema/id])]
+                        (if (and (contains? ids s) (contains? ids d) (not= s d))
+                          (-> m (update s (fnil conj #{}) d)
+                                (update d (fnil conj #{}) s))
+                          m)))
+                    {} (:links hood))]
+    (loop [unseen ids comps []]
+      (if (empty? unseen)
+        comps
+        (let [comp (loop [stack [(first unseen)] seen #{}]
+                     (if-let [x (peek stack)]
+                       (if (contains? seen x)
+                         (recur (pop stack) seen)
+                         (recur (into (pop stack) (get adj x)) (conj seen x)))
+                       seen))]
+          (recur (reduce disj unseen comp) (conj comps comp)))))))
+
+(defn- keep-largest-component
+  "Drop disconnected fragments: keep the connected component containing PREFER-ID
+   (the focus) when present, else the largest by node count. Singletons and small
+   islands fall away. Used at k=1 so the super-core reads as one coherent cluster
+   instead of a scatter of stars with stragglers."
+  [hood prefer-id]
+  (let [comps (connected-components hood)]
+    (if (empty? comps)
+      hood
+      (let [target (or (some #(when (contains? % prefer-id) %) comps)
+                       (apply max-key count comps))]
+        (-> hood
+            (update :nemas #(filterv (fn [n] (contains? target (:nema/id n))) %))
+            (update :links #(filterv (fn [l]
+                                       (and (contains? target (get-in l [:link/src :nema/id]))
+                                            (contains? target (get-in l [:link/dst :nema/id]))))
+                                     %)))))))
 
 (defn- zoom-lod-visible?
   [zoom-k nema]
@@ -391,7 +477,23 @@ signals are visually distinct (two nodes of equal magnitude can differ in hue)."
                        :padding "4px 6px"}}
       (for [{:keys [id label]} view-modes]
         ^{:key (name id)}
-        [:option {:value (name id)} label])]]))
+        [:option {:value (name id)} label])]
+     ;; Mission-scope fold toggle (k=2 main scopes ⇄ k=3 all subscopes): re-fetch the
+     ;; focus at a new depth; reset the graph first so collapsing drops the subscopes.
+     (when (:focus-name @state/ui-state)
+       [:button
+        {:on-click (fn [_]
+                     (let [d (get @state/ui-state :scope-fold-depth 1)]
+                       (swap! state/ui-state assoc :scope-fold-depth (if (= d 1) 3 1))
+                       (state/reset-graph!)
+                       (api/browse-and-focus! (:focus-name @state/ui-state)
+                                              (:focus-id @state/ui-state))))
+         :title "Mission-scope fold: main scopes only ⇄ all subscopes"
+         :style {:background "#0f172a" :color "#e5e7eb"
+                 :border "1px solid rgba(148,163,184,0.45)"
+                 :border-radius "4px" :font-size "12px" :padding "4px 8px"
+                 :cursor "pointer"}}
+        (if (= 1 (get @state/ui-state :scope-fold-depth 3)) "show all (k3)" "fold to main (k2)")])]))
 
 ;; --- Force-directed layout ---
 
@@ -743,7 +845,8 @@ signals are visually distinct (two nodes of equal magnitude can differ in hue)."
      ;; Type badge + name, grouped so they counter-scale together about the node
      ;; as you zoom out, and dropped from smaller-magnitude nodes when zoomed out
      ;; so lettering doesn't overlap. Focus/pinned nodes always keep their label.
-     (when (or is-focus is-pin (>= magnitude (:node-mag label-cfg)))
+     (when (or is-focus is-pin (= nema-type "scope/frame")
+               (>= magnitude (:node-mag label-cfg)))
        [:g {:transform (label-group-transform x y (:scale label-cfg))}
         ;; Type badge — interest-stars omit it: their magnitude is already the
         ;; node's size + hover tooltip, so an "m5"/"m0" badge is redundant
@@ -775,6 +878,158 @@ signals are visually distinct (two nodes of equal magnitude can differ in hue)."
                    [:tspan {:x x :dy (if (zero? i) "0" "1.1em")} ln])
                  lines)))])]))
 
+(defn- scope-frame-dominated?
+  "True when the hood is mostly scope/frame nodes — i.e. a single mission's scope
+   view, where the spiral reads far better than the force-ring."
+  [hood]
+  (let [nemas (:nemas hood)
+        n (count nemas)
+        sc (count (filter #(= "scope/frame" (:nema/type %)) nemas))]
+    (and (pos? n) (>= sc (* 0.5 n)))))
+
+(defn- catmull-rom-segments
+  "Smooth Catmull-Rom spline as one map per segment: {:d <cubic-bezier> :p2 <end-xy>
+   :tan <unit tangent into p2>}.  Each segment can carry its own colour (gradient along
+   the curve); the final segment's tangent orients the arrowhead.  K is the tension divisor
+   — smaller = more pronounced, orbital winding (classical mechanics, not graph edges)."
+  [points k]
+  (let [pts (vec points) n (count pts)]
+    (when (>= n 2)
+      (vec
+       (for [i (range 0 (dec n))]
+         (let [[x0 y0] (nth pts (max 0 (dec i)))
+               [x1 y1] (nth pts i)
+               [x2 y2] (nth pts (inc i))
+               [x3 y3] (nth pts (min (dec n) (+ i 2)))
+               c2x (- x2 (/ (- x3 x1) k)) c2y (- y2 (/ (- y3 y1) k))
+               dx (- x2 c2x) dy (- y2 c2y)
+               len (js/Math.max 0.001 (js/Math.sqrt (+ (* dx dx) (* dy dy))))]
+           {:d (str "M" x1 "," y1 " C" (+ x1 (/ (- x2 x0) k)) "," (+ y1 (/ (- y2 y0) k))
+                    " " c2x "," c2y " " x2 "," y2)
+            :p2 [x2 y2]
+            :tan [(/ dx len) (/ dy len)]}))))))
+
+(defn- orbit-hsl
+  "Colour for one thread's curve: HUE identifies the thread; T∈[0,1] is turn-time, ramping
+   lightness dim (earlier turns) → bright (now), so every curve also reads its own direction."
+  [hue t]
+  (str "hsl(" hue ", 85%, " (js/Math.round (+ 40 (* 25 t))) "%)"))
+
+(defn- draw-orbit
+  "One thread's integral curve on the scope-surface: a smooth spline whose colour ramps dim→bright
+   along turn-time, an arrowhead at the latest turn, and a station dot per scope.  KP keys siblings.
+   OI is the orbit index (for hover); DIM? fades it when another orbit is hovered."
+  [pts hue kp oi dim?]
+  (let [segs (catmull-rom-segments pts 4.0)
+        ns   (count segs)
+        np   (count pts)
+        {[ex ey] :p2 [tx ty] :tan} (last segs)
+        bx (- ex (* tx 4)) by (- ey (* ty 4))
+        arrow (str (+ ex (* tx 8)) "," (+ ey (* ty 8)) " "
+                   (- bx (* ty 5)) "," (+ by (* tx 5)) " "
+                   (+ bx (* ty 5)) "," (- by (* tx 5)))]
+    (into [:g {:key kp
+               :on-mouse-enter (fn [_] (reset! state/!orbit-hover oi))
+               :on-mouse-leave (fn [_] (reset! state/!orbit-hover nil))
+               :style {:pointer-events "auto" :cursor "pointer"
+                       :opacity (if dim? 0.12 1) :transition "opacity 0.15s"}}
+           [:polygon {:key (str kp "a") :points arrow :fill (orbit-hsl hue 1.0) :opacity 0.95}]]
+          (concat
+           ;; the trajectory, gradient along its whole length
+           (map-indexed
+            (fn [i s]
+              (let [t (/ i (max 1 (dec ns)))]
+                ^{:key (str kp "s" i)}
+                [:path {:d (:d s) :fill "none" :stroke (orbit-hsl hue t)
+                        :stroke-width (+ 1.2 (* 1.3 t)) :opacity 0.9
+                        :stroke-linejoin "round" :stroke-linecap "round"}]))
+            segs)
+           ;; the stations — earlier small/dim, latest large/bright
+           (map-indexed
+            (fn [i [x y]]
+              (let [t (/ i (max 1 (dec np)))]
+                ^{:key (str kp "n" i)}
+                [:circle {:cx x :cy y :r (+ 2 (* 1.8 t)) :fill (orbit-hsl hue t) :opacity 0.92}]))
+            pts)))))
+
+(defn- orbit-layer
+  "Draw the FULL phase portrait: every recurrent thread that engages the mission, retracted onto the
+   scope-surface as its own integral curve (draw-orbit).  One thread is a sliver; the family is the
+   coverage — the scopes the session actually swept while clocked near the mission.  Hue per thread
+   (golden-angle spacing), dim→bright along each curve's turn-time, arrowhead toward NOW."
+  [all-positions]
+  (api/fetch-orbits!)
+  (let [o @state/!orbits
+        hover @state/!orbit-hover
+        gk (fn [m k] (or (get m k) (get m (keyword k))))]
+    (when (map? o)
+      (into [:g {:class "thread-orbits" :style {:pointer-events "none"}}]
+            (keep-indexed
+             (fn [oi ob]
+               (let [pts (vec (keep (fn [p] (get all-positions (gk p "scope"))) (gk ob "orbit")))
+                     hue (mod (js/Math.round (* oi 137.5)) 360)]
+                 (when (> (count pts) 1)
+                   (draw-orbit pts hue (str "o" oi) oi (and hover (not= hover oi))))))
+             (gk o "orbits"))))))
+
+(defn- orbit-card
+  "Left-side explainer for the hovered orbit: what this thread is (its pattern + sigil), how
+   often it recurred, and the scopes it winds through.  Nil when nothing is hovered."
+  []
+  (let [hi @state/!orbit-hover
+        o  @state/!orbits
+        gk (fn [m k] (or (get m k) (get m (keyword k))))]
+    (when (and (number? hi) (map? o))
+      (when-let [ob (nth (vec (gk o "orbits")) hi nil)]
+        (let [sg  (gk ob "sigil")
+              hue (mod (js/Math.round (* hi 137.5)) 360)
+              scopes (distinct (keep (fn [p] (gk p "name")) (gk ob "orbit")))]
+          [:div {:style {:position "absolute" :left "14px" :top "64px" :width "300px"
+                         :background "rgba(26,26,46,0.96)" :color "#e2e8f0"
+                         :border (str "2px solid " (orbit-hsl hue 0.7)) :border-radius "8px"
+                         :padding "12px 14px" :font-size "13px" :line-height "1.45"
+                         :pointer-events "none" :z-index 30 :box-shadow "0 6px 20px rgba(0,0,0,0.55)"}}
+           [:div {:style {:font-size "15px" :font-weight "bold" :margin-bottom "4px"}}
+            (str "〘 " (or (gk sg "truth") "·") " " (or (gk sg "okipona") "") " 〙")]
+           [:div {:style {:color (orbit-hsl hue 0.65) :font-weight "bold" :margin-bottom "8px"}}
+            (gk ob "pattern")]
+           [:div {:style {:margin-bottom "8px"}}
+            (str "A recurrent thread — this pattern was retrieved across "
+                 (gk ob "recurrence") " turns of the session, drawn as the trajectory it traced "
+                 "through the scopes it engaged (dim → bright = earlier → now, arrow = latest turn).")]
+           [:div {:style {:font-size "11px" :color "#94a3b8"}}
+            "winds through: " (str/join "  →  " (take 6 scopes))]])))))
+
+(defn- spiral-layout
+  "Futon-City idiom: the hub (highest-degree node — a mission is the hub of its
+   scope star) sits at centre, the rest spiral OUT around it on a phyllotaxis
+   (golden-angle) spiral.  Deterministic positions, no force sim — the surface a
+   thread-trajectory will later be drawn onto.  Returns {nema-id [x y]}."
+  [nemas links _centres _view-mode]
+  (let [cx (* svg-width 0.42)
+        cy (/ svg-height 2)
+        deg (frequencies (mapcat (fn [l] [(get-in l [:link/src :nema/id])
+                                          (get-in l [:link/dst :nema/id])])
+                                 links))
+        hub-id (when (seq nemas)
+                 (:nema/id (apply max-key #(get deg (:nema/id %) 0) nemas)))
+        others (remove #(= hub-id (:nema/id %)) nemas)
+        ;; Phyllotaxis (golden-angle) sunflower spiral — the Futon-City idiom Joe
+        ;; preferred.  STEP is the nearest-neighbour gap; sized to clear the wide
+        ;; scope labels (edges/edge-labels are hidden for this view, so only node
+        ;; labels need room).
+        golden (* js/Math.PI (- 3 (js/Math.sqrt 5)))   ; ~2.399 rad
+        step 130]
+    (into (if hub-id {hub-id [cx cy]} {})
+          (map-indexed
+           (fn [i n]
+             (let [t (inc i)
+                   r (* step (js/Math.sqrt t))
+                   a (* t golden)]
+               [(:nema/id n) [(+ cx (* r (js/Math.cos a)))
+                              (+ cy (* r (js/Math.sin a)))]]))
+           others))))
+
 (defonce ^:private !layout-cache (atom {:sig nil :positions {}}))
 
 (defn- cached-positions
@@ -792,8 +1047,12 @@ signals are visually distinct (two nodes of equal magnitude can differ in hue)."
         ;; incremental pin-load nudges the existing graph instead of
         ;; phyllotaxis-reshuffling it from scratch on every arrival.
         (let [prev (:positions @!layout-cache)
-              pos (if (= :layered view-mode)
+              pos (cond
+                    (= :spiral view-mode)
+                    (spiral-layout (:nemas filtered-hood) (:links filtered-hood) (or centres {}) view-mode)
+                    (= :layered view-mode)
                     (layered-layout (:nemas filtered-hood) (:links filtered-hood) (or centres {}) view-mode)
+                    :else
                     (force-layout  (:nemas filtered-hood) (:links filtered-hood) (or centres {}) view-mode prev))]
           (reset! !layout-cache {:sig sig :positions pos})
           pos)))
@@ -852,14 +1111,19 @@ signals are visually distinct (two nodes of equal magnitude can differ in hue)."
         view-mode  (or (:view-mode @state/ui-state) :organic)
         zoom-k     (:k @!zoom)
         hop-depth  (:hop-depth @state/ui-state)
+        ;; Pinned graph (e.g. an expanded diagram): the toolbar k controls how
+        ;; many neighbour rings expand around the pinned core. Offset by 2 so the
+        ;; default k=3 keeps the familiar 1-ring view; k<=2 drops the neighbour
+        ;; ring (the depth-0 "gray" nodes) + their edges. We still expand ONE hop
+        ;; at low k so star-to-star edges among the core get captured by the BFS
+        ;; (both endpoints must be visited for a link to surface), then strip the
+        ;; gray ring back off via pins-only? below — rings=0 would isolate every
+        ;; star and the whole network would go edgeless. k=1 retracts further to
+        ;; the super-core (above-median-magnitude stars) via super-core? below.
+        pins-only?  (and (seq pins) (<= hop-depth 2))
+        super-core? (and (seq pins) (<= hop-depth 1))
         effective-pins (cond
-                         ;; Pinned graph (e.g. an expanded diagram): the toolbar
-                         ;; k controls how many neighbour rings expand around the
-                         ;; pinned core. Offset by 2 so the default k=3 keeps the
-                         ;; familiar 1-ring view and k=2 drops the neighbour ring
-                         ;; (the depth-0 "gray" nodes) + its edges entirely;
-                         ;; higher k adds rings. Per-pin :k drives the BFS hops.
-                         (seq pins) (let [rings (max 0 (- hop-depth 2))]
+                         (seq pins) (let [rings (max 1 (- hop-depth 2))]
                                       (mapv #(assoc % :k rings) pins))
                          focus-id   [{:id focus-id :k hop-depth}])
         raw-hood (when (seq effective-pins)
@@ -934,6 +1198,12 @@ signals are visually distinct (two nodes of equal magnitude can differ in hue)."
                                         (:links raw-hood))
                          :pins (:pins raw-hood)}))
         filtered-hood (some-> merged-hood
+                              (cond-> pins-only?
+                                (restrict-to-pins (cond-> pin-id-set
+                                                    focus-id (conj focus-id))))
+                              (cond-> super-core?
+                                (-> (restrict-to-super-core (if focus-id #{focus-id} #{}))
+                                    (keep-largest-component focus-id)))
                               (apply-kind-filter view-mode)
                               (apply-view-mode-filter view-mode zoom-k))
         hood-ids   (set (map :nema/id (:nemas filtered-hood)))
@@ -948,8 +1218,15 @@ signals are visually distinct (two nodes of equal magnitude can differ in hue)."
                         vec)]
     (if (or (and filtered-hood (seq (:nemas filtered-hood))) (seq floating))
       (let [centres   (when (seq effective-pins) (pin-centres effective-pins))
-            ;; Force-directed layout
-            positions (cached-positions filtered-hood centres view-mode)
+            ;; Layout: a mission-scope view (mostly scope/frame nodes) defaults to
+            ;; the spiral instead of the force-ring; the View dropdown still overrides.
+            ;; Such a view also HIDES edges — they all carry the same
+            ;; "mission-scope/folded-frame" label (pure clutter); the spiral conveys
+            ;; the structure on its own.
+            scope-view? (scope-frame-dominated? filtered-hood)
+            effective-vm (if (and (= :organic view-mode) scope-view?)
+                           :spiral view-mode)
+            positions (cached-positions filtered-hood centres effective-vm)
             _fit      (fit-on-new-graph! positions
                                          (or (get-in @state/ui-state [:diagram-route :diagram-id])
                                              focus-id "adhoc"))
@@ -970,6 +1247,7 @@ signals are visually distinct (two nodes of equal magnitude can differ in hue)."
             all-positions (merge positions float-positions)
             all-nemas     (merge nema-map float-nemas)]
         [:div {:style {:position "relative" :width "100%" :height "100%"}}
+         (when scope-view? (orbit-card))
          [:svg {:width "100%" :height "100%"
                 :viewBox (str "0 0 " svg-width " " svg-height)
                 :style {:background "#1a1a2e" :touch-action "none"}
@@ -1022,8 +1300,8 @@ signals are visually distinct (two nodes of equal magnitude can differ in hue)."
             [:path {:d "M0,0 L10,4 L0,8 L3,4 Z" :fill "#99aabb"}]]]
           [:g {:class "graph-zoom-layer"
                :transform (zoom-transform-attr)}
-           ;; Links
-           (when filtered-hood
+           ;; Links — hidden for scope views (identical "mission-scope" labels = clutter).
+           (when (and filtered-hood (not scope-view?))
              (doall
               (for [link (:links filtered-hood)
                     :let [src-id (get-in link [:link/src :nema/id])
@@ -1033,6 +1311,8 @@ signals are visually distinct (two nodes of equal magnitude can differ in hue)."
                     :when (and src-pos dst-pos)]
                 ^{:key (:link/id link)}
                 [link-component link src-pos dst-pos (label-config zoom-k)])))
+           ;; Thread orbit (classical-mechanics trajectory) — scope views only, under the nodes.
+           (when scope-view? (orbit-layer all-positions))
            ;; Nodes
            (doall
             (for [[nema-id pos] all-positions

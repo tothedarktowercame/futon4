@@ -40,6 +40,10 @@
 (defn ^:dev/after-load reload []
   (rdc/render root [app]))
 
+(defonce ^:private orbit-poller
+  ;; Live orbit: poll the asset every 4s so the map follows the session without a reload.
+  (js/setInterval api/poll-orbits! 4000))
+
 (defn init []
   (println "[init] Starting...")
   (route/install!)

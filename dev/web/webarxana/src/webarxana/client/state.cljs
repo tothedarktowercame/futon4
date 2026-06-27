@@ -23,6 +23,10 @@
 
 (defonce conn (d/create-conn schema))
 
+(defonce !orbit (r/atom :unfetched))   ;; a single thread orbit (retracted onto the scope-surface)
+(defonce !orbits (r/atom :unfetched))  ;; the FULL phase portrait — every engaging thread's orbit
+(defonce !orbit-hover (r/atom nil))    ;; index of the orbit the mouse is over (dims the rest + shows a card)
+
 ;; Reactive atoms for UI state
 (defonce ui-state
   (r/atom {:focus-id    nil      ;; nema/id of the active card (shown on right)
@@ -39,6 +43,8 @@
            :expanded-essays #{}  ;; essay ids expanded to show section neighbourhoods
            :expanded-essay-sections {} ;; essay id -> ordered section-id vector
            :view-mode :organic ;; Interest Constellation renderer mode.
+           :scope-fold-depth 3 ;; mission-scope fold depth (3 = k3 all subscopes [default]; 1 = k2 main scopes only)
+           :focus-name  nil    ;; entity NAME of the active focus (to re-fetch at a new depth)
            :graph-visible-ids nil ;; graph-filtered node ids for the card rail.
            :diagram-route {:name nil
                            :mode nil
@@ -75,6 +81,13 @@
   (when-not (pinned? nema-id)
     (swap! ui-state update :pins conj {:id nema-id :k k}))
   (set-focus! nema-id))
+
+(defn reset-graph!
+  "Clear the Datascript graph + pins/scratchpad (keeps focus-id/name) — used before a
+   re-fetch at a new scope-fold depth so collapsing actually drops the subscope nodes."
+  []
+  (d/reset-conn! conn (d/empty-db schema))
+  (swap! ui-state assoc :pins [] :scratchpad []))
 
 (defn unpin!
   "Remove a node from the canvas pins."

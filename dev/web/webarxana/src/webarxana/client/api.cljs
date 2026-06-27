@@ -177,12 +177,51 @@
           (state/ingest-entity! entity)
           entity)))))
 
+(defn fetch-orbit!
+  "Fetch the thread orbit (retracted onto the scope-surface) from the static asset, once."
+  []
+  (when (= :unfetched @state/!orbit)
+    (reset! state/!orbit :fetching)
+    (go (let [resp (<! (http/get "/wa/thread-orbit.json" {:with-credentials? false}))
+              body (:body resp)
+              data (cond (string? body) (js->clj (js/JSON.parse body))
+                         (map? body) body
+                         (object? body) (js->clj body)
+                         :else body)]
+          (reset! state/!orbit (if (and (= 200 (:status resp)) (map? data)) data nil))))))
+
+(defn fetch-orbits!
+  "Fetch the FULL phase portrait (every engaging thread's orbit) from the static asset, once."
+  []
+  (when (= :unfetched @state/!orbits)
+    (reset! state/!orbits :fetching)
+    (go (let [resp (<! (http/get "/wa/thread-orbits.json" {:with-credentials? false}))
+              body (:body resp)
+              data (cond (string? body) (js->clj (js/JSON.parse body))
+                         (map? body) body
+                         (object? body) (js->clj body)
+                         :else body)]
+          (reset! state/!orbits (if (and (= 200 (:status resp)) (map? data)) data nil))))))
+
+(defn poll-orbits!
+  "Re-fetch the orbit asset unconditionally and swap it in if changed — for LIVE updates
+   (the orbit JSON is rewritten as the session takes turns; the map follows without a reload)."
+  []
+  (go (let [resp (<! (http/get "/wa/thread-orbits.json" {:with-credentials? false}))
+            body (:body resp)
+            data (cond (string? body) (js->clj (js/JSON.parse body))
+                       (map? body) body
+                       (object? body) (js->clj body)
+                       :else body)]
+        (when (and (= 200 (:status resp)) (map? data) (not= data @state/!orbits))
+          (reset! state/!orbits data)))))
+
 (defn fetch-ego
   "Fetch entity + outgoing relations (neighbourhood seed)."
   [entity-name]
   (go
     (let [resp (<! (http/get (str base "/ego/" (js/encodeURIComponent entity-name))
-                             {:query-params {:fold 1 :depth 1}
+                             {:query-params {:fold 1 :depth (get @state/ui-state :scope-fold-depth 1)}
                               :with-credentials? true}))]
       (when (= 200 (:status resp))
         (let [ego (get-in resp [:body :ego])
@@ -465,8 +504,10 @@ essay-expansion metadata used by the graph projection."
 	          (when (seq pin-ids)
 	            ;; Clear existing pins and load diagram's pins
             (swap! state/ui-state assoc :pins [] :expanded-diagram diagram-id)
-            (doseq [pid pin-ids]
-              (<! (pin-entity! pid pid)))
+            ;; Fire all ego loads CONCURRENTLY, then await — sequential awaiting
+            ;; meant ~35 round-trips in series, churning the graph for ~30s.
+            (let [chs (mapv (fn [pid] (pin-entity! pid pid)) pin-ids)]
+              (doseq [ch chs] (<! ch)))
             (when focus
               (state/set-focus! focus))))))))
 
@@ -586,9 +627,10 @@ essay-expansion metadata used by the graph projection."
 (defn browse-and-focus!
   "Load an entity by name via ego, used when clicking sidebar items."
   [entity-name entity-id]
+  (swap! state/ui-state assoc :focus-name entity-name)
   (go
     (let [resp (<! (http/get (str base "/ego/" (js/encodeURIComponent entity-name))
-                             {:query-params {:fold 1 :depth 1}
+                             {:query-params {:fold 1 :depth (get @state/ui-state :scope-fold-depth 1)}
                               :with-credentials? true}))]
       (when (= 200 (:status resp))
         (let [ego (get-in resp [:body :ego])
