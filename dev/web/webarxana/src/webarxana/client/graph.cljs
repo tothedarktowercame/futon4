@@ -1016,8 +1016,12 @@ signals are visually distinct (two nodes of equal magnitude can differ in hue)."
             (gk ob "pattern")]
            [:div {:style {:margin-bottom "8px"}}
             (str "A recurrent thread — this pattern was retrieved across "
-                 (gk ob "recurrence") " turns of the session, drawn as the trajectory it traced "
-                 "through the scopes it engaged (dim → bright = earlier → now, arrow = latest turn).")]
+                 (gk ob "recurrence") " turns, drawn as the trajectory it traced through the "
+                 "scopes it engaged (dim → bright = earlier → now, arrow = latest turn).")]
+           ;; campaign-scale: which AGENTS' sessions this thread spans
+           (when-let [ss (gk ob "sessions")]
+             [:div {:style {:font-size "11px" :color "#a5b4fc" :margin-bottom "6px"}}
+              "spans sessions: " (str/join " + " ss)])
            [:div {:style {:font-size "11px" :color "#94a3b8"}}
             "winds through: " (str/join "  →  " (take 6 scopes))]])))))
 
