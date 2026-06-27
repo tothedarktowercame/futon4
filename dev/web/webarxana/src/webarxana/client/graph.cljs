@@ -909,6 +909,16 @@ signals are visually distinct (two nodes of equal magnitude can differ in hue)."
             :p2 [x2 y2]
             :tan [(/ dx len) (/ dy len)]}))))))
 
+(defn- catmull-rom-d
+  "The whole orbit as ONE svg path-d string (segments chained) — for the wide grace hit-area
+   and the hover halo, which want a single continuous stroke rather than per-segment paths."
+  [pts k]
+  (let [segs (catmull-rom-segments pts k)]
+    (when (seq segs)
+      (str (:d (first segs))
+           (apply str (map (fn [s] (str " " (subs (:d s) (str/index-of (:d s) "C"))))
+                           (rest segs)))))))
+
 (defn- orbit-hsl
   "Colour for one thread's curve: HUE identifies the thread; T∈[0,1] is turn-time, ramping
    lightness dim (earlier turns) → bright (now), so every curve also reads its own direction."
@@ -918,9 +928,10 @@ signals are visually distinct (two nodes of equal magnitude can differ in hue)."
 (defn- draw-orbit
   "One thread's integral curve on the scope-surface: a smooth spline whose colour ramps dim→bright
    along turn-time, an arrowhead at the latest turn, and a station dot per scope.  KP keys siblings.
-   OI is the orbit index (for hover); DIM? fades it when another orbit is hovered."
-  [pts hue kp oi dim?]
+   OI is the orbit index (for hover); HOVERED? haloes it; DIM? fades it (another is hovered)."
+  [pts hue kp oi hovered? dim?]
   (let [segs (catmull-rom-segments pts 4.0)
+        full (catmull-rom-d pts 4.0)
         ns   (count segs)
         np   (count pts)
         {[ex ey] :p2 [tx ty] :tan} (last segs)
@@ -931,9 +942,17 @@ signals are visually distinct (two nodes of equal magnitude can differ in hue)."
     (into [:g {:key kp
                :on-mouse-enter (fn [_] (reset! state/!orbit-hover oi))
                :on-mouse-leave (fn [_] (reset! state/!orbit-hover nil))
-               :style {:pointer-events "auto" :cursor "pointer"
-                       :opacity (if dim? 0.12 1) :transition "opacity 0.15s"}}
-           [:polygon {:key (str kp "a") :points arrow :fill (orbit-hsl hue 1.0) :opacity 0.95}]]
+               :style {:cursor "pointer" :opacity (if dim? 0.12 1) :transition "opacity 0.18s"}}
+           ;; grace hit-area — a fat INVISIBLE stroke so the mouse has a few px of margin off the line
+           [:path {:key (str kp "hit") :d full :fill "none" :stroke "transparent"
+                   :stroke-width 16 :style {:pointer-events "stroke"}}]
+           ;; halo — a soft glow under the line while THIS orbit is hovered
+           (when hovered?
+             [:path {:key (str kp "halo") :d full :fill "none" :stroke (orbit-hsl hue 0.95)
+                     :stroke-width 9 :opacity 0.45 :stroke-linecap "round" :stroke-linejoin "round"
+                     :style {:filter "blur(2.5px)" :pointer-events "none"}}])
+           [:polygon {:key (str kp "a") :points arrow :fill (orbit-hsl hue 1.0) :opacity 0.95
+                      :style {:pointer-events "none"}}]]
           (concat
            ;; the trajectory, gradient along its whole length
            (map-indexed
@@ -967,9 +986,11 @@ signals are visually distinct (two nodes of equal magnitude can differ in hue)."
             (keep-indexed
              (fn [oi ob]
                (let [pts (vec (keep (fn [p] (get all-positions (gk p "scope"))) (gk ob "orbit")))
-                     hue (mod (js/Math.round (* oi 137.5)) 360)]
+                     hue (mod (js/Math.round (* oi 137.5)) 360)
+                     hovered? (= hover oi)
+                     dim? (and (number? hover) (not hovered?))]
                  (when (> (count pts) 1)
-                   (draw-orbit pts hue (str "o" oi) oi (and hover (not= hover oi))))))
+                   (draw-orbit pts hue (str "o" oi) oi hovered? dim?))))
              (gk o "orbits"))))))
 
 (defn- orbit-card
