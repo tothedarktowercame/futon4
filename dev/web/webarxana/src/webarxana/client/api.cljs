@@ -190,12 +190,22 @@
                          :else body)]
           (reset! state/!orbit (if (and (= 200 (:status resp)) (map? data)) data nil))))))
 
+(defn orbit-asset
+  "PER-TARGET orbit asset: `/wa/thread-orbits-<focused M-/E-/C- name>.json` so the mission
+   and campaign trackers each have their own live file (no fighting over one served path).
+   Falls back to the single `/wa/thread-orbits.json` when nothing focused-doc-like is open."
+  []
+  (let [nm (:focus-name @state/ui-state)]
+    (if (and (string? nm) (re-matches #"[MEC]-[A-Za-z0-9._-]+" nm))
+      (str "/wa/thread-orbits-" nm ".json")
+      "/wa/thread-orbits.json")))
+
 (defn fetch-orbits!
-  "Fetch the FULL phase portrait (every engaging thread's orbit) from the static asset, once."
+  "Fetch the FULL phase portrait (every engaging thread's orbit) from the per-target asset, once."
   []
   (when (= :unfetched @state/!orbits)
     (reset! state/!orbits :fetching)
-    (go (let [resp (<! (http/get "/wa/thread-orbits.json" {:with-credentials? false}))
+    (go (let [resp (<! (http/get (orbit-asset) {:with-credentials? false}))
               body (:body resp)
               data (cond (string? body) (js->clj (js/JSON.parse body))
                          (map? body) body
@@ -203,18 +213,26 @@
                          :else body)]
           (reset! state/!orbits (if (and (= 200 (:status resp)) (map? data)) data nil))))))
 
+(defonce ^:private !orbit-src (atom nil))   ;; last asset polled (reset !orbits when focus flips)
+
 (defn poll-orbits!
-  "Re-fetch the orbit asset unconditionally and swap it in if changed — for LIVE updates
-   (the orbit JSON is rewritten as the session takes turns; the map follows without a reload)."
+  "Re-fetch the per-target orbit asset and swap it in if changed — LIVE updates as the session
+   takes turns, AND on focus change (the asset path flips, so we re-fetch the new target)."
   []
-  (go (let [resp (<! (http/get "/wa/thread-orbits.json" {:with-credentials? false}))
-            body (:body resp)
-            data (cond (string? body) (js->clj (js/JSON.parse body))
-                       (map? body) body
-                       (object? body) (js->clj body)
-                       :else body)]
-        (when (and (= 200 (:status resp)) (map? data) (not= data @state/!orbits))
-          (reset! state/!orbits data)))))
+  (let [src (orbit-asset)]
+    (go (let [resp (<! (http/get src {:with-credentials? false}))
+              body (:body resp)
+              data (cond (string? body) (js->clj (js/JSON.parse body))
+                         (map? body) body
+                         (object? body) (js->clj body)
+                         :else body)
+              ok (and (= 200 (:status resp)) (map? data))]
+          ;; focus flipped → adopt the new target (or clear if it has no orbit file yet)
+          (when (not= src @!orbit-src)
+            (reset! !orbit-src src)
+            (reset! state/!orbits (if ok data nil)))
+          (when (and ok (not= data @state/!orbits))
+            (reset! state/!orbits data))))))
 
 (defn fetch-ego
   "Fetch entity + outgoing relations (neighbourhood seed)."
