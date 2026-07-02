@@ -33,10 +33,14 @@
   "Window configuration to restore when using the left-at-point-min shortcut.")
 
 (defun arxana-ui-left-or-return ()
-  "Move left or return when at point-min."
+  "Move the cursor left, or -- at `point-min' -- return (back) to the origin.
+<left> only acts as a back button at the start of the buffer; elsewhere it
+just moves left."
   (interactive)
   (if (> (point) (point-min))
       (backward-char)
+    ;; At point-min, <left> is a back button -- always resolve to where we
+    ;; came from.
     (cond
      ((and arxana-ui-return-window-config
            (window-configuration-p arxana-ui-return-window-config))
@@ -44,13 +48,9 @@
      ((buffer-live-p arxana-ui-return-buffer)
       (set-window-buffer (selected-window) arxana-ui-return-buffer))
      ((and (fboundp 'arxana-browser--up)
-           (eq major-mode 'arxana-browser-mode))
+           (or (eq major-mode 'arxana-browser-mode)
+               (derived-mode-p 'tabulated-list-mode)))
       (arxana-browser--up))
-     ;; <left> is a BACK button: it must ALWAYS resolve to where we came from.
-     ;; There is no "no target" case — if no explicit return target was set, the
-     ;; window's own recorded previous buffer IS, by construction, the origin we
-     ;; navigated in from.  (`switch-to-prev-buffer' is always defined; it buries
-     ;; this view and restores the prior one.)
      (t (switch-to-prev-buffer nil 'bury)))))
 
 (defvar arxana-ui-mode-map
@@ -92,10 +92,24 @@
                  (< (car (window-edges a))
                     (car (window-edges b))))))))
 
+(defun arxana-ui--any-managed-p ()
+  "Non-nil when any live window displays an `arxana-ui-managed' buffer.
+Lets `arxana-ui-refresh' skip its per-frame scan AND the Reazon window-constraint
+validation entirely on the global `window-configuration-change-hook' when Arxana
+is not in use — it was previously running on every window change anywhere
+(the redisplay-lag culprit, 2026-07-02)."
+  (seq-some (lambda (frame)
+              (seq-some (lambda (win)
+                          (buffer-local-value 'arxana-ui-managed (window-buffer win)))
+                        (window-list frame 'no-mini)))
+            (frame-list)))
+
 ;;;###autoload
 (defun arxana-ui-refresh ()
-  "Recompute focal/ancillary header styling in all frames."
-  (dolist (frame (frame-list))
+  "Recompute focal/ancillary header styling in all frames.
+No-op unless an Arxana-managed buffer is on screen (`arxana-ui--any-managed-p')."
+  (when (arxana-ui--any-managed-p)
+    (dolist (frame (frame-list))
     (let* ((wins (window-list frame 'no-mini))
            (managed (seq-filter (lambda (win)
                                   (with-current-buffer (window-buffer win)
@@ -131,7 +145,7 @@
               (setq arxana-ui--focal (eq buf focal-buffer))
               (force-mode-line-update))))))
       (when (fboundp 'arxana-window-constraints-validate-ui-focal)
-        (arxana-window-constraints-validate-ui-focal frame))))
+        (arxana-window-constraints-validate-ui-focal frame)))))
 
 (add-hook 'window-configuration-change-hook #'arxana-ui-refresh)
 

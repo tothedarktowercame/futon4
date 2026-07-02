@@ -448,6 +448,19 @@ Use `message' to warn, `error' to raise, or nil to ignore."
          ok
          "expected single focal managed window at leftmost edge")))))
 
+;;;###autoload
+(define-minor-mode arxana-window-constraints-mode
+  "Global opt-in mode: enforce Arxana window/data layout invariants (Reazon-backed).
+OFF by default — validation runs a logic-programming query on Arxana UI refresh,
+so it is opt-in like a diagnostic mode (e.g. `loop-lag-mode') rather than an
+always-on cost.  Toggles `arxana-window-constraints-enable' and
+`arxana-data-constraints-enable' together."
+  :global t
+  (let ((on arxana-window-constraints-mode))
+    (setq arxana-window-constraints-enable on)
+    (when (boundp 'arxana-data-constraints-enable)
+      (setq arxana-data-constraints-enable on))))
+
 (provide 'arxana-window-constraints)
 
 ;;; arxana-window-constraints.el ends here
