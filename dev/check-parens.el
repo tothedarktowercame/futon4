@@ -47,9 +47,18 @@
     (cond
      ((string= ext "el") #'emacs-lisp-mode)
      ;; For clojure-ish files, we may not have clojure-mode available in -Q.
-     ;; Fundamental-mode still uses a reasonable syntax table for parens, but
-     ;; won't know all comment forms. We keep it conservative.
-     ((member ext '("clj" "cljs" "cljc" "edn")) #'lisp-mode)
+     ;; lisp-mode (CL) gives [ ] { } no paren syntax class, so bracket/brace
+     ;; mismatches in Clojure were INVISIBLE to `check-parens` (found in the
+     ;; E-KL-refinements review, 2026-07-03: `(f [x (+ x 1))` passed). Patch
+     ;; the syntax table — on a copy, since `lisp-mode-syntax-table` is shared.
+     ((member ext '("clj" "cljs" "cljc" "edn"))
+      (lambda ()
+        (lisp-mode)
+        (set-syntax-table (copy-syntax-table (syntax-table)))
+        (modify-syntax-entry ?\[ "(]")
+        (modify-syntax-entry ?\] ")[")
+        (modify-syntax-entry ?\{ "(}")
+        (modify-syntax-entry ?\} "){")))
      ;; Default: Emacs Lisp mode is safest for this script’s use case.
      (t #'emacs-lisp-mode))))
 
