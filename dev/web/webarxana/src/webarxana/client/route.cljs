@@ -43,6 +43,8 @@
                   (seq (:query mission-search)) (conj (encode (:query mission-search))))
                 (= :interest-network page)
                 ["interest-network"]
+                (= :live page)
+                ["live"]
                 (= :diagram-route page)
                 (append-view-mode
                  (cond-> ["diagram" (encode (get-in @state/ui-state [:diagram-route :name]))]
@@ -90,6 +92,8 @@
        :query (decode (or (second segments) ""))}
       (= "interest-network" (first segments))
       {:page :interest-network}
+      (= "live" (first segments))
+      {:page :live}
       (= "diagram" (first segments))
       {:page :diagram-route
        :diagram-name (decode (or (second segments) ""))
@@ -135,6 +139,10 @@
           (do
             (swap! state/ui-state assoc :page :interest-network)
             (api/fetch-interest-network!)
+            (js/setTimeout #(reset! restoring? false) 500))
+          (= page :live)
+          (do
+            (swap! state/ui-state assoc :page :live)
             (js/setTimeout #(reset! restoring? false) 500))
           (= page :diagram-route)
           (do
