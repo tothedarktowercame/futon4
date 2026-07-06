@@ -212,16 +212,20 @@ reference .docx template when present."
         out))))
 
 (defun arxana-ledger--current-invoice-id-default ()
-  "Infer the next invoice id from Current item ids, falling back to 202504."
-  (let* ((current (arxana-ledger--by-status
-                   (arxana-ledger--items (arxana-ledger--read)) :unbilled-draft))
-         (ids (delq nil
-                    (mapcar (lambda (it)
-                              (when-let ((id (plist-get it :item/id)))
-                                (and (string-match "\\`\\([0-9]+\\)-" id)
-                                     (match-string 1 id))))
-                            current))))
-    (or (car ids) "202504")))
+  "The next, not-yet-created invoice id — the one Current drafts belong to.
+Computed as one past the highest invoice id that has actually been ISSUED
+\(status `:invoiced' or `:billed-paid'), so Current items are never defaulted to
+a *previous* invoice number.  Falls back to \"202505\" before any invoice exists."
+  (let* ((items (arxana-ledger--items (arxana-ledger--read)))
+         (issued (append (arxana-ledger--by-status items :invoiced)
+                         (arxana-ledger--by-status items :billed-paid)))
+         (max-issued (car (sort (delq nil
+                                      (mapcar (lambda (it) (plist-get it :item/invoice))
+                                              issued))
+                                #'string>))))
+    (if max-issued
+        (number-to-string (1+ (string-to-number max-issued)))
+      "202505")))
 
 (defun arxana-ledger-ready-current-invoice (inv-id)
   "Move all Current items into Invoice Ready under INV-ID and generate the docx.
@@ -658,6 +662,58 @@ are flat item lists."
 (defun arxana-ledger-open-stratum (item)
   "Open the stratum named by ITEM (a `ledger-stratum' home item)."
   (arxana-ledger--render-stratum (plist-get item :stratum)))
+
+;; Arxana Browser '?': the browser's ledger view lists STRATA (bulk), not
+;; individual items, so the per-item edit keys (e/d/s/a) of the standalone
+;; ledger hydra don't apply there — those operate on the item at point, which
+;; only exists in the `*Arxana Ledger*' frames reached by RET.  Define a
+;; bulk/invoice-only variant and route the ledger view to it; other views fall
+;; through to the original `arxana-browser-help'.  Mirrors the essays module's
+;; `arxana-browser-essays-compiled--browser-help-advice'.
+
+(defun arxana-ledger--ensure-browser-help-hydra ()
+  "Define the bulk/invoice-only ledger hydra for the Arxana Browser view."
+  (when (or (fboundp 'defhydra) (require 'hydra nil t))
+    (unless (fboundp 'arxana-ledger-browser-help-hydra/body)
+      (eval
+       '(defhydra arxana-ledger-browser-help-hydra (:hint nil :foreign-keys run)
+          "
+Arxana Ledger (bulk / invoice ops)
+  _r_: ready Current -> Invoice Ready    _i_: issue -> Invoiced
+  _h_: mark paid -> Historical           _P_: print/regenerate draft
+  _O_: open draft .docx                  _g_: refresh
+  _E_: raw EDN      (RET a stratum for per-item edits)
+  _?_: full help    _q_: quit
+"
+          ("r" arxana-ledger-ready-current-invoice nil :exit t)
+          ("i" arxana-ledger-mark-invoice-sent nil :exit t)
+          ("h" arxana-ledger-mark-invoice-historical nil :exit t)
+          ("P" arxana-ledger-print-invoice nil :exit t)
+          ("O" arxana-ledger-open-draft-invoice nil :exit t)
+          ("g" arxana-browser--refresh nil)
+          ("E" arxana-ledger-edit-file nil :exit t)
+          ("?" arxana-ledger-show-bindings-help "full help" :exit t)
+          ("q" nil "quit" :exit t)))))
+  (fboundp 'arxana-ledger-browser-help-hydra/body))
+
+(defun arxana-ledger-browser-help ()
+  "Show the bulk/invoice ledger hydra (for the Arxana Browser ledger view)."
+  (interactive)
+  (if (arxana-ledger--ensure-browser-help-hydra)
+      (arxana-ledger-browser-help-hydra/body)
+    (arxana-ledger-show-bindings-help)))
+
+(defun arxana-ledger--browser-help-advice (orig-fn &rest args)
+  "Dispatch `arxana-browser-help' to the bulk ledger hydra in the ledger view."
+  (let ((view (and (boundp 'arxana-browser--context)
+                   (plist-get arxana-browser--context :view))))
+    (if (eq view 'ledger)
+        (arxana-ledger-browser-help)
+      (apply orig-fn args))))
+
+(when (fboundp 'arxana-browser-help)
+  (advice-add 'arxana-browser-help
+              :around #'arxana-ledger--browser-help-advice))
 
 (provide 'arxana-vsatarcs-ledger)
 ;;; arxana-vsatarcs-ledger.el ends here

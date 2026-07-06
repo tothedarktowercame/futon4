@@ -30,6 +30,22 @@
 (defn- scope-entity? [e]
   (str/starts-with? (or (:type e) "") "scope/"))
 
+(def ^:private scope-tree-dir "/home/joe/code/futon6/data/mission-scope-trees")
+
+(defn- scope-tree-parents
+  "The detector's `original-id -> parent-original-id` nesting map for MISSION (its
+   `parent` field IS the passage-containment result).  Used because the ingest drops
+   `scope/parent` to nil on the substrate-2 entities (eightfold-stabilization nulls it),
+   so the proxy can't read it back — but every entity still carries `scope/original-id`."
+  [mission]
+  (try
+    (let [f (io/file scope-tree-dir (str mission ".json"))]
+      (when (and mission (.exists f))
+        (->> (:scope-hyperedges (json/read-str (slurp f) :key-fn keyword))
+             (keep (fn [h] (when-let [p (:parent h)] [(:scope-id h) p])))
+             (into {}))))
+    (catch Exception _ nil)))
+
 (defn- folded-frame-ego [body depth]
   (let [ego (:ego body)
         outgoing (:outgoing ego)
@@ -41,6 +57,19 @@
                                       [hx-id {:type t :entries entries}]))))
                           (into {}))
         content (remove #(= "mission-scope/nesting" (:type (val %))) scope-groups)
+        ;; Nesting comes from the detector's scope-tree (the ingest nulls scope/parent
+        ;; on the entities), resolved via each scope's :scope/original-id -> entity id.
+        scope-ents (->> content vals (mapcat :entries) (map :entity) (filter scope-entity?))
+        mission (some #(prop (:props %) "mission") scope-ents)
+        oid->parent-oid (scope-tree-parents mission)
+        oid->eid (into {} (keep (fn [e]
+                                  (when-let [oid (prop (:props e) "scope/original-id")]
+                                    [oid (:id e)]))
+                                scope-ents))
+        parent-eid (fn [scope]
+                     (some-> (prop (:props scope) "scope/original-id")
+                             oid->parent-oid
+                             oid->eid))
         nodes (into {}
                     (keep (fn [[_ {:keys [type entries]}]]
                             (let [scope-entry (some #(when (scope-entity? (:entity %)) %) entries)
@@ -65,13 +94,13 @@
                                       :binder (or (prop props "scope/binder-type")
                                                   (last (str/split type #"/")))
                                       :title (or (:name scope) sid)
-                                      :parent (prop props "scope/parent")
+                                      :parent (parent-eid scope)
                                       :fillers fillers}]))))
                           content)
         children (reduce (fn [m [_ {:keys [entries]}]]
                            (let [scopes (->> entries (map :entity) (filter scope-entity?))]
                              (reduce (fn [m child]
-                                       (if-let [parent (prop (:props child) "scope/parent")]
+                                       (if-let [parent (parent-eid child)]
                                          (update m parent (fnil conj #{}) (:id child))
                                          m))
                                      m scopes)))
@@ -147,10 +176,24 @@
                                                    frames)}))
       body)))
 
+(defn- focus-anchor
+  "If PATH is `ego/<short E-/C- doc>` whose scopes anchor on `<repo>-d/mission/<lower-id>`,
+   rewrite to `ego/<that-anchor>` so focusing the NATURAL excursion/campaign name shows its
+   scope-surface.  (Missions resolve by short name already; excursions/campaigns don't — their
+   scope hyperedges hang off the `<repo>-d/mission/…` vertex, not the bare `E-`/`C-` entity.)"
+  [path]
+  (or (when-let [[_ nm] (re-matches #"ego/([EC]-[^/]+)" (or path ""))]
+        (let [tree (io/file scope-tree-dir (str nm ".json"))]
+          (when (.exists tree)
+            (when-let [doc-path (get (json/read-str (slurp tree)) "path")]
+              (let [repo (-> doc-path (str/replace #"^.*/code/" "") (str/replace #"/.*$" ""))]
+                (str "ego/" repo "-d/mission/" (str/lower-case nm)))))))
+      path))
+
 (defn forward
   "Proxy a request to futon1a, rewriting /api/futon/* → /api/alpha/*"
   [req cfg method]
-  (let [path       (get-in req [:path-params :path])
+  (let [path       (focus-anchor (get-in req [:path-params :path]))
         futon-url  (str (:futon1a-url cfg) "/api/alpha/" path)
         query      (:query-string req)
         query-params (codec/form-decode (or query ""))
@@ -158,7 +201,13 @@
                        (str/starts-with? (or path "") "ego/")
                        (truthy? (get query-params "fold")))
         fold-depth (long (or (some-> (get query-params "depth") Long/parseLong) 1))
-        url        (if query (str futon-url "?" query) futon-url)
+        url        (if fold-ego?
+                     ;; Fetch the RAW ego (full scope tree + parents) upstream; the fold
+                     ;; — and its depth — is applied LOCALLY by folded-frame-ego.  Forwarding
+                     ;; the client's fold/depth upstream truncated the tree before we could fold.
+                     (str futon-url "?" (codec/form-encode
+                                         (assoc query-params "fold" "0" "depth" "3")))
+                     (if query (str futon-url "?" query) futon-url))
         penholder  (or (System/getenv "FUTON1A_COMPAT_PENHOLDER") "api")
         opts       (cond-> {:headers      {"accept"       "application/json"
                                            "content-type" "application/json"

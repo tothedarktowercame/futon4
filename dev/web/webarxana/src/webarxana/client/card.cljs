@@ -4,7 +4,8 @@
             [reagent.core :as r]
             [cljs.core.async :refer [go <!]]
             [webarxana.client.state :as state]
-            [webarxana.client.api :as api]))
+            [webarxana.client.api :as api]
+            [webarxana.client.graph :as graph]))
 
 ;; --- Entity display helpers ---
 
@@ -164,7 +165,18 @@
                 older-count (:older-count version-info)
                 nema-authors (or (:nema/authors nema) [])]
             [:<>
-             [:div.focus-card {:class (when is-active "active-pin")}
+             [:div.focus-card {:class (when is-active "active-pin")
+                               :data-pin-id pin-id
+                               ;; Click the card body to fly the camera to this
+                               ;; node (the mirror of node-click -> raise card).
+                               ;; Skip when the click is on an interactive
+                               ;; control so editing/buttons don't move the view.
+                               :on-click
+                               (fn [e]
+                                 (let [tag (some-> (.-target e) .-tagName .toLowerCase)]
+                                   (when-not (#{"input" "button" "textarea" "select"} tag)
+                                     (state/set-focus! pin-id)
+                                     (graph/center-on-node! pin-id))))}
               ;; Header
               [:div.card-header
                [:span.card-type nema-type]

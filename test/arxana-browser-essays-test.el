@@ -8,6 +8,8 @@
 (require 'arxana-docbook-ui)
 (require 'arxana-browser-essays)
 
+(setq arxana-browser-essays-essay-registered-hook nil)
+
 (defconst arxana-browser-essays-test--hyperreal-source
   "/home/joe/npt/applications/hyperreal-director-side-a/hyperreal-director-side-a-v1.md")
 
@@ -700,6 +702,71 @@ The result plist includes `:root', `:golden-dir', `:live-dir',
                 (should (equal "essay:alpha"
                                (plist-get (plist-get manifest :essay) :id)))))))
       (delete-directory tmpdir t))))
+
+(ert-deftest arxana-browser-essays-import-manifest-runs-registration-hook-after-write ()
+  (let* ((manifest '(:essay (:id "essay:alpha"
+                          :name "Essay Alpha"
+                          :type "arxana/essay")
+                    :sections ((:id "essay:alpha/section/1"
+                                :name "Section 1"
+                                :type "arxana/essay-section"))
+                    :annotations ()))
+         (events nil)
+         (arxana-browser-essays-essay-registered-hook
+          (list (lambda (essay-id manifest*)
+                  (push (list :hook essay-id
+                              :section-count (length (plist-get manifest* :sections))
+                              :writes-before-hook (length events))
+                        events)))))
+    (cl-letf (((symbol-function 'arxana-store-ensure-entity)
+               (lambda (&rest args)
+                 (push (list :entity (plist-get args :id)) events)
+                 args)))
+      (let ((summary (arxana-browser-essays--import-manifest
+                      manifest "/tmp/annotations.el" nil)))
+        (should (equal "essay:alpha" (plist-get summary :essay)))
+        (should (equal (list :hook "essay:alpha"
+                             :section-count 1
+                             :writes-before-hook 2)
+                       (car events)))))))
+
+(ert-deftest arxana-browser-essays-import-manifest-dry-run-skips-registration-hook ()
+  (let* ((manifest '(:essay (:id "essay:alpha"
+                          :name "Essay Alpha"
+                          :type "arxana/essay")
+                    :sections ()
+                    :annotations ()))
+         (called nil)
+         (arxana-browser-essays-essay-registered-hook
+          (list (lambda (&rest _) (setq called t)))))
+    (arxana-browser-essays--import-manifest manifest "/tmp/annotations.el" t)
+    (should-not called)))
+
+(ert-deftest arxana-browser-essays-default-registration-handler-dispatches-scribe ()
+  (let ((called nil)
+        (manifest '(:essay (:id "essay:alpha"
+                         :name "Essay Alpha"
+                         :type "arxana/essay"))))
+    (cl-letf (((symbol-function 'arxana-browser-essays--dispatch-interest-scribe-bell)
+               (lambda (essay-id manifest*)
+                 (setq called (list essay-id manifest*)))))
+      (arxana-browser-essays--essay-registered-scribe-handler
+       "essay:alpha" manifest)
+      (should (equal (list "essay:alpha" manifest) called)))))
+
+(ert-deftest arxana-interest-network-describe-dispatches-same-scribe-bell ()
+  (let ((called nil)
+        (manifest '(:essay (:id "essay:alpha"
+                         :name "Essay Alpha"
+                         :type "arxana/essay"))))
+    (cl-letf (((symbol-function 'arxana-browser-essays--manifest-for)
+               (lambda (essay-id)
+                 (when (equal essay-id "essay:alpha") manifest)))
+              ((symbol-function 'arxana-browser-essays--dispatch-interest-scribe-bell)
+               (lambda (essay-id manifest*)
+                 (setq called (list essay-id manifest*)))))
+      (arxana-interest-network-describe "essay:alpha")
+      (should (equal (list "essay:alpha" manifest) called)))))
 
 (ert-deftest arxana-browser-essays-catalog-source-file-resolves-relative-to-manifest ()
   (let* ((tmpdir (make-temp-file "arxana-essay-source-resolve-" t))

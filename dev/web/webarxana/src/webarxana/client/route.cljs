@@ -86,6 +86,10 @@
                   focus-id       (into ["focus" (encode focus-id)])
                   browse-type    (into ["type" (encode browse-type)])
                   show-edges-seg (into show-edges-seg)))
+        ;; Keep the hot-reload marker sticky: once in dev mode, every
+        ;; state-driven hash update re-prepends `dev` so a reload stays on the
+        ;; watch bundle.
+        parts (if (:dev? @state/ui-state) (cons "dev" parts) parts)
         new-hash (if (seq parts)
                    (str "#/" (str/join "/" parts))
                    "#")]
@@ -95,8 +99,14 @@
 (defn- parse-hash
   [hash-str]
   (let [s (str/replace hash-str #"^#/?" "")
-        segments (str/split s #"/")]
-    (cond
+        all-segments (str/split s #"/")
+        ;; A leading `dev` segment is the hot-reload marker (wa.html's bundle
+        ;; picker already used it to load the watch bundle). Strip it so the
+        ;; rest routes normally; carry :dev? so push-hash! keeps it sticky.
+        dev? (= "dev" (first all-segments))
+        segments (if dev? (vec (rest all-segments)) all-segments)]
+    (assoc
+     (cond
       (= "mission-search" (first segments))
       {:page :mission-search
        :query (decode (or (second segments) ""))}
@@ -129,7 +139,8 @@
                                          (if (= v "-")
                                            #{}
                                            (set (mapv decode (str/split v #",")))))
-                     result))))))))
+                     result))))))
+     :dev? dev?)))
 
 (defn restore-from-hash!
   "On page load, read the hash and restore the view."
@@ -137,8 +148,8 @@
   (let [hash (.-hash js/location)]
     (when (seq hash)
       (reset! restoring? true)
-      (let [{:keys [page query type focus pins diagram-name diagram-mode expanded-diagram view-mode show-edges]} (parse-hash hash)]
-        (swap! state/ui-state assoc :view-mode (or view-mode :organic))
+      (let [{:keys [page query type focus pins diagram-name diagram-mode expanded-diagram view-mode show-edges dev?]} (parse-hash hash)]
+        (swap! state/ui-state assoc :view-mode (or view-mode :organic) :dev? dev?)
         ;; Edges-filter whitelist restores synchronously so even the first
         ;; canvas render uses the right filter (#{} from `show-edges/-` =
         ;; hide-all, distinct from nil = no narrowing).

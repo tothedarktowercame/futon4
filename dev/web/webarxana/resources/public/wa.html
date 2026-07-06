@@ -638,6 +638,19 @@
       Loading WebArxana...
     </div>
   </div>
-  <script src="/wa/wa.js"></script>
+  <script>
+    // Bundle picker: a `#/dev/...` route loads the in-JVM shadow WATCH bundle
+    // (/js/main.js, carries the hot-reload client) so CLJS edits hot-reload
+    // live; any other route loads the static compile bundle (/wa/wa.js). The
+    // hash is available at parse time, so this runs before either bundle loads.
+    // route.cljs strips the leading `dev` segment, so `#/dev/diagram/X/expanded`
+    // routes exactly like `#/diagram/X/expanded`, just hot-reloadable.
+    (function () {
+      var dev = /^#\/?dev(\/|$)/.test(window.location.hash || "");
+      var s = document.createElement("script");
+      s.src = dev ? "/wa/dev/main.js" : "/wa/wa.js";
+      (document.body || document.head).appendChild(s);
+    })();
+  </script>
 </body>
 </html>

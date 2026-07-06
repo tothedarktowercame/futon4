@@ -151,7 +151,7 @@
              {:type (:type rel-info)
               :src  (:id entity)
               :dst  (:id dst-entity)
-              :id   (str (:id entity) "->" (:id dst-entity))}))))
+              :id   (str (:id entity) "->" (:type rel-info) "->" (:id dst-entity))}))))
       ;; Incoming relations
       (doseq [entry incoming]
         (let [src-entity (:entity entry)
@@ -163,7 +163,7 @@
              {:type (:type rel-info)
               :src  (:id src-entity)
               :dst  (:id entity)
-              :id   (str (:id src-entity) "->" (:id entity))})))))
+              :id   (str (:id src-entity) "->" (:type rel-info) "->" (:id entity))})))))
     entity))
 
 (defn fetch-entity
@@ -177,12 +177,69 @@
           (state/ingest-entity! entity)
           entity)))))
 
+(defn fetch-orbit!
+  "Fetch the thread orbit (retracted onto the scope-surface) from the static asset, once."
+  []
+  (when (= :unfetched @state/!orbit)
+    (reset! state/!orbit :fetching)
+    (go (let [resp (<! (http/get "/wa/thread-orbit.json" {:with-credentials? false}))
+              body (:body resp)
+              data (cond (string? body) (js->clj (js/JSON.parse body))
+                         (map? body) body
+                         (object? body) (js->clj body)
+                         :else body)]
+          (reset! state/!orbit (if (and (= 200 (:status resp)) (map? data)) data nil))))))
+
+(defn orbit-asset
+  "PER-TARGET orbit asset: `/wa/thread-orbits-<focused M-/E-/C- name>.json` so the mission
+   and campaign trackers each have their own live file (no fighting over one served path).
+   Falls back to the single `/wa/thread-orbits.json` when nothing focused-doc-like is open."
+  []
+  (let [nm (:focus-name @state/ui-state)]
+    (if (and (string? nm) (re-matches #"[MEC]-[A-Za-z0-9._-]+" nm))
+      (str "/wa/thread-orbits-" nm ".json")
+      "/wa/thread-orbits.json")))
+
+(defn fetch-orbits!
+  "Fetch the FULL phase portrait (every engaging thread's orbit) from the per-target asset, once."
+  []
+  (when (= :unfetched @state/!orbits)
+    (reset! state/!orbits :fetching)
+    (go (let [resp (<! (http/get (orbit-asset) {:with-credentials? false}))
+              body (:body resp)
+              data (cond (string? body) (js->clj (js/JSON.parse body))
+                         (map? body) body
+                         (object? body) (js->clj body)
+                         :else body)]
+          (reset! state/!orbits (if (and (= 200 (:status resp)) (map? data)) data nil))))))
+
+(defonce ^:private !orbit-src (atom nil))   ;; last asset polled (reset !orbits when focus flips)
+
+(defn poll-orbits!
+  "Re-fetch the per-target orbit asset and swap it in if changed — LIVE updates as the session
+   takes turns, AND on focus change (the asset path flips, so we re-fetch the new target)."
+  []
+  (let [src (orbit-asset)]
+    (go (let [resp (<! (http/get src {:with-credentials? false}))
+              body (:body resp)
+              data (cond (string? body) (js->clj (js/JSON.parse body))
+                         (map? body) body
+                         (object? body) (js->clj body)
+                         :else body)
+              ok (and (= 200 (:status resp)) (map? data))]
+          ;; focus flipped → adopt the new target (or clear if it has no orbit file yet)
+          (when (not= src @!orbit-src)
+            (reset! !orbit-src src)
+            (reset! state/!orbits (if ok data nil)))
+          (when (and ok (not= data @state/!orbits))
+            (reset! state/!orbits data))))))
+
 (defn fetch-ego
   "Fetch entity + outgoing relations (neighbourhood seed)."
   [entity-name]
   (go
     (let [resp (<! (http/get (str base "/ego/" (js/encodeURIComponent entity-name))
-                             {:query-params {:fold 1 :depth 1}
+                             {:query-params {:fold 1 :depth (get @state/ui-state :scope-fold-depth 1)}
                               :with-credentials? true}))]
       (when (= 200 (:status resp))
         (let [ego (get-in resp [:body :ego])
@@ -235,6 +292,7 @@
                     ;; when no real entity already exists for ep-id, so
                     ;; clicking through to the endpoint will load its
                     ;; real `:mfuton/mission` (or other) type from /ego.
+                    ;; Create a link from the focused entity to the other endpoint
                     (state/ingest-relation!
                      {:id   (str hx-id "->" ep-id)
                       :type hx-type
@@ -466,8 +524,10 @@ essay-expansion metadata used by the graph projection."
 	          (when (seq pin-ids)
 	            ;; Clear existing pins and load diagram's pins
             (swap! state/ui-state assoc :pins [] :expanded-diagram diagram-id)
-            (doseq [pid pin-ids]
-              (<! (pin-entity! pid pid)))
+            ;; Fire all ego loads CONCURRENTLY, then await — sequential awaiting
+            ;; meant ~35 round-trips in series, churning the graph for ~30s.
+            (let [chs (mapv (fn [pid] (pin-entity! pid pid)) pin-ids)]
+              (doseq [ch chs] (<! ch)))
             (when focus
               (state/set-focus! focus))))))))
 
@@ -587,9 +647,10 @@ essay-expansion metadata used by the graph projection."
 (defn browse-and-focus!
   "Load an entity by name via ego, used when clicking sidebar items."
   [entity-name entity-id]
+  (swap! state/ui-state assoc :focus-name entity-name)
   (go
     (let [resp (<! (http/get (str base "/ego/" (js/encodeURIComponent entity-name))
-                             {:query-params {:fold 1 :depth 1}
+                             {:query-params {:fold 1 :depth (get @state/ui-state :scope-fold-depth 1)}
                               :with-credentials? true}))]
       (when (= 200 (:status resp))
         (let [ego (get-in resp [:body :ego])
