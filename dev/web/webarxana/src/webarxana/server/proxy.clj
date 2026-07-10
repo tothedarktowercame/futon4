@@ -46,7 +46,7 @@
              (into {}))))
     (catch Exception _ nil)))
 
-(defn- folded-frame-ego [body depth]
+(defn- folded-frame-ego [body depth ego-mission]
   (let [ego (:ego body)
         outgoing (:outgoing ego)
         groups (group-by #(get-in % [:relation :hyperedge-id]) outgoing)
@@ -60,8 +60,10 @@
         ;; Nesting comes from the detector's scope-tree (the ingest nulls scope/parent
         ;; on the entities), resolved via each scope's :scope/original-id -> entity id.
         scope-ents (->> content vals (mapcat :entries) (map :entity) (filter scope-entity?))
-        mission (some #(prop (:props %) "mission") scope-ents)
-        oid->parent-oid (scope-tree-parents mission)
+        mission (or (some #(prop (:props %) "mission") scope-ents) ego-mission)
+        ;; Default to {} so a missing/unresolved scope tree yields no parents
+        ;; instead of NPE-ing when parent-eid invokes this as a fn.
+        oid->parent-oid (or (scope-tree-parents mission) {})
         oid->eid (into {} (keep (fn [e]
                                   (when-let [oid (prop (:props e) "scope/original-id")]
                                     [oid (:id e)]))
@@ -226,7 +228,7 @@
             body     (try (json/read-str (:body response) :key-fn keyword)
                          (catch Exception _ (:body response)))
             body     (if (and fold-ego? (= 200 status) (map? body))
-                       (folded-frame-ego body fold-depth)
+                       (folded-frame-ego body fold-depth (subs path 4))
                        body)]
         (-> (resp/response body)
             (resp/status status)))
