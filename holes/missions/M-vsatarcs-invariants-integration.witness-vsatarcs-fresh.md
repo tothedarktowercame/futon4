@@ -1,5 +1,7 @@
 # Witness design: "VSATARCS is invariantly up to date"
 
+**Status:** OPEN (companion artifact; parent mission in INSTANTIATE)
+
 **The foundational invariant of the new era (Joe, 2026-06-01).** D6 of
 `M-vsatarcs-invariants-integration`. claude-2 owns this witness; codex-2 owns the
 queue/projection it plugs into. **Design note — no code until the shape is agreed**

@@ -1,5 +1,7 @@
 # Wiring diagram — Interest-Network → War-Machine AIF coupling
 
+**Status:** CLOSED (companion artifact; parent mission closed 2026-05-29)
+
 *Design artifact for the M-interest-network-coupling extension into WM-AIF territory.
 Grounded in a read-only mapping pass over `futon2/src/futon2/aif/*` (2026-05-29).
 NOT a build. To be ratified by Joe before anything is wired. Line refs are from the
