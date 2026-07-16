@@ -19,7 +19,10 @@
 
 (def ^:private live-pages
   {"/live/efe-map.html" "/home/joe/code/futon6/data/mission-efe-field-embed.html"
-   "/live/cascade.html" "/home/joe/code/futon3c/holes/excursions/pipeline-pattern-cascade-live.html"})
+   "/live/cascade.html" "/home/joe/code/futon3c/holes/excursions/pipeline-pattern-cascade-live.html"
+   ;; M-learning-loop capability graph — regenerate after each mining ingest:
+   ;; bb -cp scripts scripts/capability_graph_render.clj (in futon5a)
+   "/live/capability-graph.html" "/home/joe/code/futon5a/data/capability-mining/capability-graph.html"})
 
 (defn- webarxana-root
   "Return the WebArxana project root when running from a filesystem checkout."
