@@ -93,11 +93,11 @@ export function bodyPreview(body, etype, maxLen = 40) {
     text = Array.isArray(well) && well.length > 0 ? well[0] : String(well || '');
   } else if (body.tool) {
     // Peripheral step
-    const args = body.args ? `(${truncStr(JSON.stringify(body.args), 20)})` : '';
+    const args = body.args ? `(${previewValue(body.args, 20)})` : '';
     text = `${body.tool}${args}`;
   } else if (body.fruit) {
     // Peripheral stop
-    text = truncStr(JSON.stringify(body.fruit), maxLen);
+    text = previewValue(body.fruit, maxLen);
   } else if (typeof body === 'string') {
     text = body;
   } else {
@@ -105,11 +105,23 @@ export function bodyPreview(body, etype, maxLen = 40) {
     const keys = Object.keys(body);
     if (keys.length > 0) {
       const k = keys[0];
-      const v = typeof body[k] === 'string' ? body[k] : JSON.stringify(body[k]);
+      const v = previewValue(body[k], 30);
       text = `${k}: ${truncStr(v || '', 30)}`;
     }
   }
   return truncStr(text, maxLen);
+}
+
+function previewValue(value, maxLen = 40) {
+  if (value == null) return '';
+  if (typeof value === 'string') return truncStr(value, maxLen);
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (Array.isArray(value)) return `[${value.length} items]`;
+  if (typeof value === 'object') {
+    const keys = Object.keys(value);
+    return `{${keys.slice(0, 3).join(', ')}${keys.length > 3 ? ', ...' : ''}}`;
+  }
+  return truncStr(String(value), maxLen);
 }
 
 function truncStr(s, max) {
@@ -450,53 +462,109 @@ export function renderWall(entries) {
     return '<div class="empty-state"><p>No entries yet.</p></div>';
   }
 
-  // Sort oldest-first for reading order
-  const sorted = [...entries].sort((a, b) => {
+  // Newest-first for a wall. The backend already returns newest-first, but keep
+  // this stable if callers pass merged pages later.
+  const sorted = dedupeWallEntries([...entries].sort((a, b) => {
     const atA = eget(a, 'at') || '';
     const atB = eget(b, 'at') || '';
-    return atA.localeCompare(atB);
-  });
+    return atB.localeCompare(atA);
+  }));
 
-  let html = '<div class="notebook wall">';
+  let html = '<div class="notebook wall agency-wall">';
 
   for (const entry of sorted) {
-    const body = eget(entry, 'body');
-    const isChatTurn = isChatMessage(body);
-
-    if (isChatTurn) {
-      const author = eget(entry, 'author') || body.role || 'unknown';
-      const text = body.text || '';
-      const at = eget(entry, 'at');
-      const aclass = authorClass(author);
-      const transport = body.transport;
-      const tLabel = transportLabel(transport);
-      const tClass = transportClass(transport);
-
-      html += `<div class="chat-message ${aclass}">
-        <div class="message-meta">
-          <span class="message-author ${aclass}">${esc(author)}</span>
-          <span class="transport-badge ${tClass} transport-badge-sm">${esc(tLabel)}</span>
-          <span class="message-time">${esc(formatTimeShort(at))}</span>
-        </div>
-        <div class="message-text">${formatMessageText(text)}</div>
-      </div>`;
-    } else {
-      const type = eget(entry, 'type');
-      const tclass = typeClass(type);
-      const at = eget(entry, 'at');
-      const preview = bodyPreview(body, type, 60);
-      const id = eget(entry, 'id');
-
-      html += `<div class="system-event" data-id="${esc(id || '')}">
-        <span class="system-event-time">${esc(formatTimeShort(at))}</span>
-        <span class="type-badge ${tclass}">${esc(typeLabel(type))}</span>
-        <span class="system-event-preview">${esc(preview)}</span>
-      </div>`;
-    }
+    html += renderWallEntry(entry);
   }
 
   html += '</div>';
   return html;
+}
+
+export function renderWallEntry(entry) {
+  const body = eget(entry, 'body') || {};
+  const key = wallEntryKey(entry);
+  const isChatTurn = isChatMessage(body);
+
+  if (isChatTurn) {
+    const author = eget(entry, 'author') || body.role || 'unknown';
+    const text = body.text || '';
+    const at = eget(entry, 'at');
+    const aclass = authorClass(author);
+    const transport = body.transport;
+    const tLabel = transportLabel(transport);
+    const tClass = transportClass(transport);
+    const source = wallSource(entry, body);
+
+    return `<div class="chat-message ${aclass}" data-wall-key="${esc(key)}">
+      <div class="message-meta">
+        <span class="message-author ${aclass}">${esc(author)}</span>
+        <span class="transport-badge ${tClass} transport-badge-sm">${esc(tLabel)}</span>
+        ${source ? `<span class="wall-source">${esc(source)}</span>` : ''}
+        <span class="message-time">${esc(formatTimeShort(at))}</span>
+      </div>
+      <div class="message-text">${formatMessageText(text)}</div>
+    </div>`;
+  }
+
+  const type = eget(entry, 'type');
+  const tclass = typeClass(type);
+  const at = eget(entry, 'at');
+  const preview = wallEventPreview(entry);
+  const id = eget(entry, 'id');
+  const source = wallSource(entry, body);
+
+  return `<div class="system-event" data-id="${esc(id || '')}" data-wall-key="${esc(key)}">
+    <span class="system-event-time">${esc(formatTimeShort(at))}</span>
+    <span class="type-badge ${tclass}">${esc(typeLabel(type))}</span>
+    ${source ? `<span class="wall-source">${esc(source)}</span>` : ''}
+    <span class="system-event-preview">${esc(preview)}</span>
+  </div>`;
+}
+
+export function dedupeWallEntries(entries) {
+  const seen = new Set();
+  const out = [];
+  for (const entry of entries) {
+    const key = wallEntryKey(entry);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(entry);
+  }
+  return out;
+}
+
+export function wallEntryKey(entry) {
+  const body = eget(entry, 'body') || {};
+  const text = typeof body.text === 'string' ? body.text.trim() : '';
+  const author = eget(entry, 'author') || '';
+  const channel = body.channel || '';
+  const at = eget(entry, 'at') || '';
+  const bucket = at.slice(0, 19);
+  return text
+    ? `${author}|${channel}|${bucket}|${text}`
+    : eget(entry, 'id') || `${author}|${bucket}|${bodyPreview(body, eget(entry, 'type'), 80)}`;
+}
+
+function wallSource(entry, body = {}) {
+  const channel = body.channel;
+  if (channel) return channel;
+  const transport = body.transport;
+  if (transport) return transportLabel(transport);
+  const sid = eget(entry, 'session-id');
+  if (sid) return `session ${truncStr(sid, 10)}`;
+  const subject = formatSubject(eget(entry, 'subject'));
+  return subject ? truncStr(subject, 28) : '';
+}
+
+function wallEventPreview(entry) {
+  const body = eget(entry, 'body') || {};
+  const event = body.event || body.kind || body.status || '';
+  const message = body.message || body.summary || body.outcome || '';
+  const family = body['family-id'] || body.familyId || '';
+  const container = body.container || '';
+  const pieces = [event, family || container, message].filter(Boolean);
+  if (pieces.length > 0) return pieces.join(' · ');
+  return bodyPreview(body, eget(entry, 'type'), 80);
 }
 
 function formatMessageText(text) {

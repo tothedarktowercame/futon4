@@ -1,21 +1,30 @@
 // evidence.js — Main application: routing, views, filters.
-import { fetchEvidence, fetchEntry, fetchChain } from './evidence-api.js?v=6';
+import { fetchEvidence, fetchEntry, fetchChain } from './evidence-api.js?v=12';
 import {
   eget, typeLabel, typeClass, claimLabel, formatSubject,
   bodyPreview, formatTime, formatTimeShort, formatTags,
-  renderDetail, renderChain, renderThreadCard, renderNotebook, renderWall,
+  renderDetail, renderChain, renderThreadCard, renderNotebook,
+  renderWallEntry, dedupeWallEntries, wallEntryKey,
   renderMissionCard, groupMissionsByStatus, renderTodoItem
-} from './evidence-render.js?v=6';
+} from './evidence-render.js?v=7';
 
 // -- State --
 
 const FILTER_KEYS = ['type', 'author'];
+const DEFAULT_RECENT_WINDOW_HOURS = 12;
+const DASHBOARD_PAGE_LIMIT = 20;
+const THREAD_PAGE_LIMIT = 40;
+const WALL_PAGE_LIMIT = 80;
+const WALL_MAX_VISIBLE = 180;
+const WALL_LIVE_POLL_MS = 2000;
+const SESSION_INDEX_LIMIT = 50;
 
 let currentFilters = {};
 let refreshTimer = null;
 const filterEls = { type: null, author: null };
 let livePaused = false;
 let liveRefreshFn = null;
+let liveRefreshIntervalMs = 30000;
 const liveControls = { container: null, dot: null, label: null, toggle: null };
 let detailRowEl = null;
 let themeToggleEl = null;
@@ -83,6 +92,18 @@ function filtersToQuery(filters = currentFilters) {
   return params.toString();
 }
 
+function isoHoursAgo(hours) {
+  return new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
+}
+
+function recentEvidenceParams(params = {}, { limit = 50, hours = DEFAULT_RECENT_WINDOW_HOURS } = {}) {
+  const out = { ...params, limit };
+  if (!out.since && !out['session-id'] && !out['pattern-id']) {
+    out.since = isoHoursAgo(hours);
+  }
+  return out;
+}
+
 function updateFilterControls() {
   if (filterEls.type) filterEls.type.value = currentFilters.type || '';
   if (filterEls.author) filterEls.author.value = currentFilters.author || '';
@@ -129,6 +150,19 @@ function wireNavLinks(root = document) {
   }
 }
 
+let liveLastOkAt = Date.now();
+let liveFailing = false;
+
+function markLiveHealth(ok) {
+  if (ok) {
+    liveLastOkAt = Date.now();
+    if (liveFailing) { liveFailing = false; updateLiveIndicatorUI(); }
+    return;
+  }
+  liveFailing = true;
+  updateLiveIndicatorUI();
+}
+
 function setLiveIndicatorVisible(show) {
   if (!liveControls.container) return;
   liveControls.container.style.display = show ? 'flex' : 'none';
@@ -139,11 +173,15 @@ function updateLiveIndicatorUI() {
   const hasRefresh = typeof liveRefreshFn === 'function';
   const active = hasRefresh && !livePaused;
   if (liveControls.dot) {
-    liveControls.dot.classList.toggle('live', active);
-    liveControls.dot.classList.toggle('paused', !active);
+    liveControls.dot.classList.toggle('live', active && !liveFailing);
+    liveControls.dot.classList.toggle('paused', !active || liveFailing);
   }
   if (liveControls.label) {
-    liveControls.label.textContent = active ? 'Live' : 'Paused';
+    liveControls.label.textContent = !active
+      ? 'Paused'
+      : (liveFailing
+         ? `Stale ${Math.max(1, Math.round((Date.now() - liveLastOkAt) / 1000))}s — retrying`
+         : 'Live');
   }
   if (liveControls.toggle) {
     liveControls.toggle.textContent = livePaused ? '▶' : '⏸';
@@ -160,19 +198,23 @@ function restartLiveRefreshTimer() {
   clearInterval(refreshTimer);
   if (!livePaused && typeof liveRefreshFn === 'function') {
     refreshTimer = setInterval(() => {
-      const result = liveRefreshFn();
-      if (result && typeof result.catch === 'function') {
-        result.catch(() => {});
+      let result;
+      try { result = liveRefreshFn(); } catch (err) { markLiveHealth(false); return; }
+      if (result && typeof result.then === 'function') {
+        result.then(() => markLiveHealth(true), () => markLiveHealth(false));
+      } else {
+        markLiveHealth(true);
       }
-    }, 30000);
+    }, liveRefreshIntervalMs);
   } else {
     refreshTimer = null;
   }
   updateLiveIndicatorUI();
 }
 
-function configureLiveRefresh(fn) {
+function configureLiveRefresh(fn, { intervalMs = 30000 } = {}) {
   liveRefreshFn = fn;
+  liveRefreshIntervalMs = intervalMs;
   setLiveIndicatorVisible(true);
   restartLiveRefreshTimer();
 }
@@ -278,7 +320,7 @@ function route() {
 
   if (primary === 'evidence' && parts.length === 1) {
     showFilters(true);
-    showThreads();
+    showWall();
   } else if (primary === 'wall' && parts.length === 1) {
     showFilters(true);
     showWall();
@@ -297,6 +339,9 @@ function route() {
   } else if (primary === 'todos' && parts.length === 1) {
     showFilters(false);
     showTodos();
+  } else if (primary === 'msg-graph' && parts.length === 1) {
+    showFilters(false);
+    showMessageGraph();
   } else if (primary === 'sessions' && parts.length === 1) {
     showFilters(false);
     showSessions();
@@ -317,7 +362,7 @@ async function showDashboard() {
   try {
     let firstLoad = true;
     const refresh = async () => {
-      const data = await fetchEvidence(currentFilters);
+      const data = await fetchEvidence(recentEvidenceParams(currentFilters, { limit: DASHBOARD_PAGE_LIMIT }));
       renderDashboard(data, { preserveDetail: !firstLoad });
       firstLoad = false;
     };
@@ -475,7 +520,7 @@ async function showThreads() {
   try {
     let firstLoad = true;
     const refresh = async () => {
-      const data = await fetchEvidence({ ...currentFilters, limit: 1000 });
+      const data = await fetchEvidence(recentEvidenceParams(currentFilters, { limit: THREAD_PAGE_LIMIT, hours: 48 }));
       const threads = groupIntoThreads(data.entries || []);
       renderThreadList(threads, data.count || 0);
       firstLoad = false;
@@ -520,15 +565,121 @@ function renderThreadList(threads, totalCount) {
 // -- Wall view --
 
 async function showWall() {
-  setTitle('Wall');
+  setTitle('Agency Wall');
   setLoading();
   try {
     replaceView('');
-    const container = document.createElement('div');
-    $('#view').appendChild(container);
+    const shell = document.createElement('div');
+    shell.className = 'wall-shell';
+    shell.innerHTML = `
+      <div class="wall-status" aria-live="polite"></div>
+      <div class="notebook wall agency-wall"></div>
+      <div class="wall-pager">
+        <button type="button" class="wall-load-older">Load older</button>
+      </div>
+    `;
+    const statusEl = shell.querySelector('.wall-status');
+    const wallEl = shell.querySelector('.agency-wall');
+    const olderButton = shell.querySelector('.wall-load-older');
+    $('#view').appendChild(shell);
+
+    const state = {
+      entries: [],
+      keys: new Set(),
+      newestAt: null,
+      oldestAt: null,
+      loadingOlder: false,
+      exhaustedOlder: false
+    };
+
+    const setStatus = (text) => {
+      if (statusEl) statusEl.textContent = text || '';
+    };
+
+    const normalize = (entries) => dedupeWallEntries([...(entries || [])].sort((a, b) => {
+      const atA = eget(a, 'at') || '';
+      const atB = eget(b, 'at') || '';
+      return atB.localeCompare(atA);
+    }));
+
+    const updateBounds = () => {
+      state.newestAt = state.entries.length ? eget(state.entries[0], 'at') : null;
+      state.oldestAt = state.entries.length ? eget(state.entries[state.entries.length - 1], 'at') : null;
+      updateCount(state.entries.length);
+    };
+
+    const remember = (entries) => {
+      for (const entry of entries) {
+        state.keys.add(wallEntryKey(entry));
+      }
+    };
+
+    const renderInitial = (entries) => {
+      const normalized = normalize(entries);
+      state.entries = [];
+      state.keys.clear();
+      for (const entry of normalized) {
+        const key = wallEntryKey(entry);
+        if (state.keys.has(key)) continue;
+        state.keys.add(key);
+        state.entries.push(entry);
+      }
+      wallEl.innerHTML = state.entries.map(renderWallEntry).join('');
+      updateBounds();
+      setStatus('');
+    };
+
+    const prependNew = (entries) => {
+      const incoming = [];
+      for (const entry of normalize(entries)) {
+        const key = wallEntryKey(entry);
+        if (state.keys.has(key)) continue;
+        incoming.push(entry);
+      }
+      if (incoming.length === 0) return;
+      remember(incoming);
+      state.entries = [...incoming, ...state.entries].sort((a, b) => {
+        const atA = eget(a, 'at') || '';
+        const atB = eget(b, 'at') || '';
+        return atB.localeCompare(atA);
+      });
+      wallEl.insertAdjacentHTML('afterbegin', incoming.map(renderWallEntry).join(''));
+      while (state.entries.length > WALL_MAX_VISIBLE) {
+        const removed = state.entries.pop();
+        if (!removed) break;
+        const removedKey = wallEntryKey(removed);
+        state.keys.delete(removedKey);
+        const el = wallEl.querySelector(`[data-wall-key="${cssEscape(removedKey)}"]`);
+        if (el) el.remove();
+      }
+      updateBounds();
+      setStatus(`${incoming.length} new`);
+      window.setTimeout(() => {
+        if (statusEl?.textContent === `${incoming.length} new`) setStatus('');
+      }, 2500);
+    };
+
+    const appendOlder = (entries) => {
+      const incoming = [];
+      for (const entry of normalize(entries)) {
+        const key = wallEntryKey(entry);
+        if (state.keys.has(key)) continue;
+        incoming.push(entry);
+      }
+      if (incoming.length === 0) return 0;
+      remember(incoming);
+      state.entries = [...state.entries, ...incoming].sort((a, b) => {
+        const atA = eget(a, 'at') || '';
+        const atB = eget(b, 'at') || '';
+        return atB.localeCompare(atA);
+      });
+      wallEl.insertAdjacentHTML('beforeend', incoming.map(renderWallEntry).join(''));
+      updateBounds();
+      return incoming.length;
+    };
 
     // Event delegation for system event expansion (same as notebook)
-    container.addEventListener('click', async (e) => {
+    shell.addEventListener('click', async (e) => {
       const eventEl = e.target.closest('.system-event');
       if (!eventEl) return;
       const id = eventEl.dataset.id;
@@ -551,14 +702,56 @@ async function showWall() {
       }
     });
 
+    olderButton.addEventListener('click', async () => {
+      if (state.loadingOlder || state.exhaustedOlder || !state.oldestAt) return;
+      state.loadingOlder = true;
+      olderButton.disabled = true;
+      olderButton.textContent = 'Loading...';
+      try {
+        const data = await fetchEvidence(recentEvidenceParams(
+          { ...currentFilters, before: state.oldestAt },
+          { limit: WALL_PAGE_LIMIT, hours: 24 * 30 }
+        ));
+        const added = appendOlder(data.entries || []);
+        if (added === 0 || (data.entries || []).length < WALL_PAGE_LIMIT) {
+          state.exhaustedOlder = true;
+          olderButton.textContent = 'No older events';
+        } else {
+          olderButton.textContent = 'Load older';
+          olderButton.disabled = false;
+        }
+      } catch (err) {
+        olderButton.textContent = 'Retry older';
+        olderButton.disabled = false;
+        setStatus(`Older page failed: ${err.message}`);
+      } finally {
+        state.loadingOlder = false;
+        if (!state.exhaustedOlder && olderButton.textContent === 'Loading...') {
+          olderButton.textContent = 'Load older';
+          olderButton.disabled = false;
+        }
+      }
+    });
+
+    let pollN = 0;
     const refresh = async () => {
-      const data = await fetchEvidence({ ...currentFilters, limit: 200 });
-      container.innerHTML = renderWall(data.entries || []);
-      updateCount(data.count || 0);
+      pollN += 1;
+      // every 15th tick: full-window resync (heals any missed incremental gap;
+      // prependNew dedups by key so overlap is harmless)
+      const useFull = !state.newestAt || pollN % 15 === 0;
+      const params = useFull
+        ? recentEvidenceParams(currentFilters, { limit: WALL_PAGE_LIMIT, hours: 24 * 14 })
+        : { ...currentFilters, since: state.newestAt, limit: WALL_PAGE_LIMIT };
+      const data = await fetchEvidence(params);
+      if (state.entries.length === 0) {
+        renderInitial(data.entries || []);
+      } else {
+        prependNew(data.entries || []);
+      }
     };
 
     await refresh();
-    configureLiveRefresh(refresh);
+    configureLiveRefresh(refresh, { intervalMs: WALL_LIVE_POLL_MS });
   } catch (err) {
     setError(`Failed to load evidence: ${err.message}`);
     disableLiveRefresh();
@@ -612,7 +805,7 @@ async function showSessions() {
   setTitle('Sessions');
   setLoading();
   try {
-    const data = await fetchEvidence({ limit: 1000 });
+    const data = await fetchEvidence(recentEvidenceParams({}, { limit: SESSION_INDEX_LIMIT, hours: 24 * 14 }));
     const entries = data.entries || [];
 
     // Group by session-id
@@ -737,6 +930,83 @@ async function showSessionTimeline(sessionId) {
 }
 
 // -- Missions view --
+
+// -- Message graph: user->user @-mention edges from the #futon transcript --
+
+function buildMentionGraph(entries) {
+  const edges = new Map();     // "src dst" -> count
+  const nodes = new Set();
+  const mentionRe = /@([a-zA-Z0-9_][a-zA-Z0-9_\-]*)/g;
+  for (const e of entries) {
+    const author = String(e['evidence/author'] || '').trim();
+    if (!author) continue;
+    nodes.add(author);
+    const text = String((e['evidence/body'] || {}).text || '');
+    let m;
+    while ((m = mentionRe.exec(text)) !== null) {
+      const dst = m[1];
+      if (!dst || dst === author) continue;
+      nodes.add(dst);
+      const key = author + ' ' + dst;
+      edges.set(key, (edges.get(key) || 0) + 1);
+    }
+  }
+  return { nodes: [...nodes], edges };
+}
+
+function renderMentionGraphSvg({ nodes, edges }) {
+  const W = 960, H = 660, cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2 - 96;
+  const n = nodes.length || 1;
+  const pos = new Map();
+  nodes.forEach((name, i) => {
+    const a = (i / n) * 2 * Math.PI - Math.PI / 2;
+    pos.set(name, { x: cx + R * Math.cos(a), y: cy + R * Math.sin(a) });
+  });
+  const maxC = Math.max(1, ...edges.values());
+  const nr = 7;
+  let lines = '';
+  for (const [key, count] of edges) {
+    const [src, dst] = key.split(' ');
+    const a = pos.get(src), b = pos.get(dst);
+    if (!a || !b) continue;
+    const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+    const ux = dx / len, uy = dy / len;
+    const x1 = (a.x + ux * nr).toFixed(1), y1 = (a.y + uy * nr).toFixed(1);
+    const x2 = (b.x - ux * (nr + 9)).toFixed(1), y2 = (b.y - uy * (nr + 9)).toFixed(1);
+    const sw = (1 + (count / maxC) * 9).toFixed(1);
+    lines += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#4a78c8" stroke-opacity="0.55" stroke-width="${sw}" marker-end="url(#mg-arrow)"><title>${esc(src)} → ${esc(dst)}: ${count}</title></line>`;
+  }
+  let dots = '';
+  for (const name of nodes) {
+    const p = pos.get(name);
+    const lx = p.x + (p.x >= cx ? 11 : -11);
+    const anchor = p.x >= cx ? 'start' : 'end';
+    dots += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${nr}" fill="#b08c4f"/>`;
+    dots += `<text x="${lx.toFixed(1)}" y="${(p.y + 4).toFixed(1)}" text-anchor="${anchor}" font-size="12" fill="currentColor">${esc(name)}</text>`;
+  }
+  return `<div style="padding:12px">
+    <p style="margin:0 0 8px;opacity:.7;font-size:13px">User→user @-mention graph for #futon — arrow width ∝ mention count, hover an edge for the tally. ${nodes.length} nodes, ${edges.size} edges.</p>
+    <svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px">
+      <defs><marker id="mg-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4a78c8"/></marker></defs>
+      ${lines}${dots}
+    </svg></div>`;
+}
+
+async function showMessageGraph() {
+  setTitle('Message Graph');
+  setLoading('Building message graph from #futon…');
+  try {
+    const data = await fetchEvidence({ 'subject-type': 'thread', 'subject-id': 'irc/#futon', limit: 600 });
+    const g = buildMentionGraph(data.entries || []);
+    if (!g.edges.size) {
+      replaceView('<div class="loading">No @-mention edges yet — talk to some agents first.</div>');
+      return;
+    }
+    replaceView(renderMentionGraphSvg(g));
+  } catch (err) {
+    setError(`Failed to build message graph: ${err.message}`);
+  }
+}
 
 async function showMissions() {
   setTitle('Missions');

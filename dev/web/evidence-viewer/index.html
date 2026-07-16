@@ -572,6 +572,43 @@
       max-width: 800px;
     }
 
+    .wall-shell {
+      max-width: 800px;
+    }
+
+    .wall-status {
+      min-height: 18px;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-family: var(--font-mono);
+    }
+
+    .wall-pager {
+      padding: 16px 0 28px;
+      text-align: center;
+    }
+
+    .wall-load-older {
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .wall-load-older:hover:not(:disabled) {
+      border-color: var(--border-light);
+      color: var(--text-primary);
+    }
+
+    .wall-load-older:disabled {
+      cursor: default;
+      opacity: 0.65;
+    }
+
     .notebook-header {
       display: flex;
       align-items: center;
@@ -627,6 +664,12 @@
     }
 
     .message-time {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .wall-source {
       font-size: 11px;
       color: var(--text-muted);
       font-family: var(--font-mono);
@@ -917,11 +960,12 @@
       <div class="header-left">
         <h1 id="view-title">Evidence Landscape</h1>
         <nav class="main-nav">
-          <a href="#/evidence" data-nav="#/evidence">Threads</a>
-          <a href="#/wall" data-nav="#/wall">Wall</a>
+          <a href="#/evidence" data-nav="#/evidence">Wall</a>
+          <a href="#/wall" data-nav="#/wall">Wall+</a>
           <a href="#/timeline" data-nav="#/timeline">Raw Timeline</a>
           <a href="#/missions" data-nav="#/missions">Missions</a>
           <a href="#/todos" data-nav="#/todos">Todos</a>
+          <a href="#/msg-graph" data-nav="#/msg-graph">Msg Graph</a>
         </nav>
       </div>
       <button id="theme-toggle" title="Toggle theme">◑</button>
@@ -960,6 +1004,6 @@
     </main>
   </div>
 
-  <script type="module" src="./evidence.js?v=6"></script>
+  <script type="module" src="./evidence.js?v=14"></script>
 </body>
 </html>
