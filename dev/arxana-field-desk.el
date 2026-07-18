@@ -32,6 +32,12 @@
   :type 'directory
   :group 'arxana-field-desk)
 
+(defcustom arxana-field-desk-jvm-incidents-root
+  "/home/joe/code/futon3c/data/jvm-incidents"
+  "Directory containing append-only JVM incident EDN records."
+  :type 'directory
+  :group 'arxana-field-desk)
+
 (defcustom arxana-field-desk-reviewer "joe"
   "Reviewer identity recorded with Morning Brief feature acceptance."
   :type 'string
@@ -74,6 +80,7 @@
 
 (defvar-local arxana-field-desk--refresh-fn nil)
 (defvar-local arxana-field-desk--current-item nil)
+(defvar-local arxana-field-desk--current-incident nil)
 (defvar-local arxana-field-desk--auto-refresh-timer nil)
 
 (defvar arxana-field-desk-mode-map
@@ -96,28 +103,41 @@
 
 ;; ---------------------------------------------------------------- data ----
 
-(defun arxana-field-desk--directory-files (name)
-  (let ((dir (expand-file-name name arxana-field-desk-root)))
+(defun arxana-field-desk--directory-files (directory)
+  (let ((dir (expand-file-name directory)))
     (when (file-directory-p dir)
       (sort (directory-files dir t "\\.edn\\'" t) #'string<))))
 
-(defun arxana-field-desk--read-records (name)
-  "Read all EDN records in store subdirectory NAME.
+(defun arxana-field-desk--read-records (directory)
+  "Read all EDN records in DIRECTORY.
 This deliberately reuses the same reader as `arxana-ledger--read'."
   (delq nil
         (mapcar (lambda (path)
                   (when (file-readable-p path)
                     (ignore-errors
                       (arxana-browser-rewrites--read-edn-file path))))
-                (arxana-field-desk--directory-files name))))
+                (arxana-field-desk--directory-files directory))))
 
-(defun arxana-field-desk--items () (arxana-field-desk--read-records "items"))
-(defun arxana-field-desk--reviews () (arxana-field-desk--read-records "reviews"))
+(defun arxana-field-desk--items ()
+  (arxana-field-desk--read-records
+   (expand-file-name "items" arxana-field-desk-root)))
+(defun arxana-field-desk--reviews ()
+  (arxana-field-desk--read-records
+   (expand-file-name "reviews" arxana-field-desk-root)))
 (defun arxana-field-desk--addenda ()
-  (sort (arxana-field-desk--read-records "addenda")
+  (sort (arxana-field-desk--read-records
+         (expand-file-name "addenda" arxana-field-desk-root))
         (lambda (left right)
           (string< (or (plist-get left :created-at) "")
                    (or (plist-get right :created-at) "")))))
+
+(defun arxana-field-desk--jvm-incidents ()
+  "Read durable JVM incidents newest-first without contacting the server."
+  (sort (arxana-field-desk--read-records
+         arxana-field-desk-jvm-incidents-root)
+        (lambda (left right)
+          (string> (or (plist-get left :at) "")
+                   (or (plist-get right :at) "")))))
 
 (defun arxana-field-desk--item-addenda (item)
   (let ((attempt (plist-get item :attempt-id)))
@@ -248,7 +268,8 @@ Keep this simple conditional projection visibly aligned with the Clojure source.
                                #'arxana-field-desk--timer-refresh
                                (current-buffer)))))
 
-(defun arxana-field-desk--render-frame (body-fn refresh-fn &optional item)
+(defun arxana-field-desk--render-frame
+    (body-fn refresh-fn &optional item incident)
   (let ((buffer (get-buffer-create arxana-field-desk--buffer)))
     (with-current-buffer buffer
       (unless (derived-mode-p 'arxana-field-desk-mode)
@@ -258,7 +279,8 @@ Keep this simple conditional projection visibly aligned with the Clojure source.
         (funcall body-fn)
         (goto-char (point-min)))
       (setq arxana-field-desk--refresh-fn refresh-fn
-            arxana-field-desk--current-item item)
+            arxana-field-desk--current-item item
+            arxana-field-desk--current-incident incident)
       (arxana-field-desk--configure-timer))
     (pop-to-buffer buffer)))
 
@@ -510,6 +532,51 @@ Read-only `git show'; guarded so a missing repo or sha never errors."
                                'mouse-face 'highlight
                                'help-echo "RET: open feature-acceptance sheet"))))
 
+(defun arxana-field-desk--incident-date (incident)
+  (let ((at (plist-get incident :at)))
+    (if (and (stringp at) (>= (length at) 19))
+        (substring at 0 19)
+      (or at "—"))))
+
+(defun arxana-field-desk--insert-incident-row (incident)
+  (let ((start (point)))
+    (insert (format "%-19s %-42s %s\n"
+                    (arxana-field-desk--incident-date incident)
+                    (truncate-string-to-width
+                     (or (plist-get incident :ex-class) "—") 42 nil nil "…")
+                    (truncate-string-to-width
+                     (or (plist-get incident :message) "—") 60 nil nil "…")))
+    (add-text-properties
+     start (point)
+     (list 'arxana-field-desk-incident incident
+           'mouse-face 'highlight
+           'help-echo "RET: open JVM incident sheet"))))
+
+(defun arxana-field-desk--insert-incident-sheet (incident)
+  (let ((heap (plist-get incident :heap))
+        (runtime (plist-get incident :runtime)))
+    (insert "ARXANA FIELD DESK — JVM INCIDENT\n")
+    (insert "================================\n")
+    (arxana-field-desk--insert-value
+     "incident" (plist-get incident :jvm-incident/id))
+    (arxana-field-desk--insert-value "at" (plist-get incident :at))
+    (arxana-field-desk--insert-value "thread" (plist-get incident :thread))
+    (arxana-field-desk--insert-value "exception" (plist-get incident :ex-class))
+    (arxana-field-desk--insert-value "message" (plist-get incident :message))
+    (when-let ((data (plist-get incident :ex-data)))
+      (insert "  ex-data:\n")
+      (arxana-field-desk--insert-verbatim data "    "))
+    (insert "\nHEAP AT FAILURE\n===============\n")
+    (arxana-field-desk--insert-value "used MB" (plist-get heap :used-mb))
+    (arxana-field-desk--insert-value "max MB" (plist-get heap :max-mb))
+    (insert "\nRUNTIME\n=======\n")
+    (arxana-field-desk--insert-value "pid" (plist-get runtime :pid))
+    (arxana-field-desk--insert-value "uptime ms" (plist-get runtime :uptime-ms))
+    (insert "\nSTACK (top 30 frames)\n=====================\n")
+    (dolist (frame (arxana-field-desk--as-list (plist-get incident :stack)))
+      (arxana-field-desk--insert-verbatim frame "  "))
+    (insert "\nKeys: g=refresh  ?=help  q=quit\n")))
+
 ;;;###autoload
 (defun arxana-field-desk ()
   "Open the Morning Brief Field Desk."
@@ -530,6 +597,14 @@ Read-only `git show'; guarded so a missing repo or sha never errors."
                       (lambda (_) (arxana-field-desk-open-stratum
                                    (list :stratum stratum)))))
            (insert (format " — %d item(s), %s\n" count (nth 2 spec)))))
+       (let ((count (length (arxana-field-desk--jvm-incidents))))
+         (insert-text-button
+          "▸ JVM incidents"
+          'follow-link t
+          'action (lambda (_) (arxana-field-desk-open-incidents nil)))
+         (insert (if (> count 0)
+                     (format " — %d uncaught failure(s)\n" count)
+                   " — quiet; no recorded incidents\n")))
        (insert "\nKeys: RET=open  g=refresh  ?=help  q=quit\n"))
      #'arxana-field-desk)))
 
@@ -574,6 +649,38 @@ Read-only `git show'; guarded so a missing repo or sha never errors."
          (when fresh (arxana-field-desk-open-item fresh))))
      brief-item)))
 
+(defun arxana-field-desk-open-incidents (_item)
+  "Open the durable JVM incident stratum, newest first."
+  (let ((incidents (arxana-field-desk--jvm-incidents)))
+    (arxana-field-desk--render-frame
+     (lambda ()
+       (insert "Arxana Field Desk — JVM incidents\n")
+       (insert (format "Source: %s\n\n"
+                       arxana-field-desk-jvm-incidents-root))
+       (insert (format "%-19s %-42s %s\n" "DATE" "EXCEPTION" "MESSAGE"))
+       (insert (make-string 126 ?-) "\n")
+       (dolist (incident incidents)
+         (arxana-field-desk--insert-incident-row incident))
+       (unless incidents
+         (insert "Quiet: no JVM incidents have been recorded.\n"))
+       (insert "\nRET=open incident  g=refresh  q=quit\n"))
+     (lambda () (arxana-field-desk-open-incidents nil)))))
+
+(defun arxana-field-desk-open-incident (item)
+  "Open the typed JVM incident sheet described by ITEM."
+  (let* ((incident (or (plist-get item :incident) item))
+         (incident-id (plist-get incident :jvm-incident/id)))
+    (arxana-field-desk--render-frame
+     (lambda () (arxana-field-desk--insert-incident-sheet incident))
+     (lambda ()
+       (when-let ((fresh
+                   (cl-find incident-id (arxana-field-desk--jvm-incidents)
+                            :key (lambda (candidate)
+                                   (plist-get candidate :jvm-incident/id))
+                            :test #'equal)))
+         (arxana-field-desk-open-incident fresh)))
+     nil incident)))
+
 ;; ------------------------------------------------------------- actions ----
 
 (defun arxana-field-desk--prop-at-point (property)
@@ -585,6 +692,9 @@ Read-only `git show'; guarded so a missing repo or sha never errors."
   "Open the item at point, or invoke a button."
   (interactive)
   (cond ((button-at (point)) (push-button))
+        ((arxana-field-desk--prop-at-point 'arxana-field-desk-incident)
+         (arxana-field-desk-open-incident
+          (arxana-field-desk--prop-at-point 'arxana-field-desk-incident)))
         ((arxana-field-desk--prop-at-point 'arxana-field-desk-item)
          (arxana-field-desk-open-item
           (arxana-field-desk--prop-at-point 'arxana-field-desk-item)))
@@ -829,7 +939,7 @@ Read-only `git show'; guarded so a missing repo or sha never errors."
   (interactive)
   (with-help-window "*Arxana Field Desk Help*"
     (princ "Arxana Field Desk — feature acceptance\n\n")
-    (princ "RET  open item or stratum\n")
+    (princ "RET  open item, stratum, or JVM incident\n")
     (princ "a    answer objective at point\n")
     (princ "v    answer feature verdict from anywhere in a sheet\n")
     (princ "n    add a reproducibility or rationale notebook entry\n")
@@ -842,18 +952,26 @@ Read-only `git show'; guarded so a missing repo or sha never errors."
 ;; ---------------------------------------------------- home integration ----
 
 (defun arxana-field-desk--home-items ()
-  "Return pending, partial, and full Field Desk stratum rows."
+  "Return Morning Brief strata plus the durable JVM incident stratum."
   (let ((items (arxana-field-desk--items))
-        (reviews (arxana-field-desk--reviews)))
-    (mapcar
-     (lambda (spec)
-       (let ((count (length (arxana-field-desk--items-at
-                             (nth 0 spec) items reviews))))
-         (list :type 'field-desk-stratum
-               :label (nth 1 spec)
-               :stratum (nth 0 spec)
-               :description (format "%d item(s) — %s" count (nth 2 spec)))))
-     arxana-field-desk--strata)))
+        (reviews (arxana-field-desk--reviews))
+        (incident-count (length (arxana-field-desk--jvm-incidents))))
+    (append
+     (mapcar
+      (lambda (spec)
+        (let ((count (length (arxana-field-desk--items-at
+                              (nth 0 spec) items reviews))))
+          (list :type 'field-desk-stratum
+                :label (nth 1 spec)
+                :stratum (nth 0 spec)
+                :description (format "%d item(s) — %s" count (nth 2 spec)))))
+      arxana-field-desk--strata)
+     (list
+      (list :type 'field-desk-incident-stratum
+            :label (format "JVM incidents (%d)" incident-count)
+            :description (if (> incident-count 0)
+                             "uncaught JVM failures — newest first"
+                           "quiet — no recorded incidents"))))))
 
 (provide 'arxana-field-desk)
 ;;; arxana-field-desk.el ends here

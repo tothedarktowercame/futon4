@@ -46,7 +46,8 @@
   `(let* ((root (make-temp-file "arxana-field-desk-" t))
           (items-dir (expand-file-name "items" root))
           (reviews-dir (expand-file-name "reviews" root))
-          (addenda-dir (expand-file-name "addenda" root)))
+          (addenda-dir (expand-file-name "addenda" root))
+          (incidents-root (make-temp-file "arxana-jvm-incidents-" t)))
      (make-directory items-dir t)
      (make-directory reviews-dir t)
      (make-directory addenda-dir t)
@@ -71,6 +72,22 @@
  :attempt-id \"attempt-feature\" :kind :why-built :title \"Review gap\"
  :body \"We built this so claims can be reproduced.\" :author \"machine\"
  :created-at \"2026-07-18T11:00:00Z\"}"))
+     ;; Filenames deliberately oppose timestamps: incident lists sort by :at.
+     (with-temp-file (expand-file-name "a-newer.edn" incidents-root)
+       (insert "{:jvm-incident/id \"jvi-new\" :at \"2026-07-18T14:00:00Z\"
+ :thread \"invoke-worker-2\" :ex-class \"java.lang.OutOfMemoryError\"
+ :message \"Java heap space while invoking a very large agent response\"
+ :ex-data nil :stack [\"futon3c.agency.Invoke.run(Invoke.java:42)\"
+                      \"java.lang.Thread.run(Thread.java:840)\"]
+ :heap {:used-mb 1530 :max-mb 1536}
+ :runtime {:pid 4242 :uptime-ms 90000}
+ :jvm-incident/schema-version 1}"))
+     (with-temp-file (expand-file-name "z-older.edn" incidents-root)
+       (insert "{:jvm-incident/id \"jvi-old\" :at \"2026-07-18T13:00:00Z\"
+ :thread \"worker-1\" :ex-class \"java.lang.IllegalStateException\"
+ :message \"older\" :stack [\"example.Old.run(Old.java:1)\"]
+ :heap {:used-mb 100 :max-mb 1536}
+ :runtime {:pid 4242 :uptime-ms 80000}}"))
      (dolist (pair '((:feature-verdict :accept-feature)
                      (:selection-quality :yes)
                      (:substantive-achievement :yes)
@@ -85,11 +102,13 @@
                          (car pair) (cadr pair)))))
      (unwind-protect
          (let ((arxana-field-desk-root root)
+               (arxana-field-desk-jvm-incidents-root incidents-root)
                (arxana-field-desk-auto-refresh-seconds nil))
            ,@body)
        (when (get-buffer arxana-field-desk--buffer)
          (kill-buffer arxana-field-desk--buffer))
-       (delete-directory root t))))
+       (delete-directory root t)
+       (delete-directory incidents-root t))))
 
 (defun arxana-field-desk-test--item (attempt-id)
   (cl-find attempt-id (arxana-field-desk--items)
@@ -220,10 +239,38 @@
    (should (cl-find 'field-desk (arxana-browser--menu-items)
                     :key (lambda (item) (plist-get item :view))))
    (let ((arxana-browser--stack (list '(:view field-desk))))
-     (should (= 3 (length (arxana-browser--current-items))))
-     (should (cl-every
-              (lambda (item) (eq 'field-desk-stratum (plist-get item :type)))
-              (arxana-browser--current-items))))))
+     (let ((rows (arxana-browser--current-items)))
+       (should (= 4 (length rows)))
+       (should (= 3 (cl-count 'field-desk-stratum rows
+                              :key (lambda (item) (plist-get item :type)))))
+       (should (eq 'field-desk-incident-stratum
+                   (plist-get (car (last rows)) :type)))))))
+
+(ert-deftest arxana-field-desk-jvm-stratum-counts-durable-records ()
+  (arxana-field-desk-test--with-store
+   (let ((row (car (last (arxana-field-desk--home-items)))))
+     (should (equal "JVM incidents (2)" (plist-get row :label)))
+     (should (eq 'field-desk-incident-stratum (plist-get row :type))))))
+
+(ert-deftest arxana-field-desk-jvm-incidents-are-newest-first ()
+  (arxana-field-desk-test--with-store
+   (should (equal '("jvi-new" "jvi-old")
+                  (mapcar (lambda (incident)
+                            (plist-get incident :jvm-incident/id))
+                          (arxana-field-desk--jvm-incidents))))))
+
+(ert-deftest arxana-field-desk-jvm-sheet-renders-stack-verbatim ()
+  (arxana-field-desk-test--with-store
+   (with-temp-buffer
+     (arxana-field-desk--insert-incident-sheet
+      (car (arxana-field-desk--jvm-incidents)))
+     (let ((text (buffer-string)))
+       (should (string-match-p "java.lang.OutOfMemoryError" text))
+       (should (string-match-p "used MB[[:space:]]+1530" text))
+       (should (string-match-p
+                "  futon3c.agency.Invoke.run(Invoke.java:42)" text))
+       (should (string-match-p
+                "  java.lang.Thread.run(Thread.java:840)" text))))))
 
 (provide 'arxana-field-desk-test)
 ;;; arxana-field-desk-test.el ends here

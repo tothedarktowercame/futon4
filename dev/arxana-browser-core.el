@@ -188,6 +188,8 @@
 (declare-function arxana-field-desk--home-items "arxana-field-desk")
 (declare-function arxana-field-desk-open-stratum "arxana-field-desk" (item))
 (declare-function arxana-field-desk-open-item "arxana-field-desk" (item))
+(declare-function arxana-field-desk-open-incidents "arxana-field-desk" (item))
+(declare-function arxana-field-desk-open-incident "arxana-field-desk" (item))
 (declare-function arxana-browser--evidence-timeline-items "arxana-browser-evidence")
 (declare-function arxana-browser--evidence-timeline-row "arxana-browser-evidence" (item))
 (declare-function arxana-browser--evidence-timeline-format "arxana-browser-evidence")
@@ -2000,6 +2002,14 @@ Other views show the description in `mode-line-format'.")
       ('field-desk-item
        (if (fboundp 'arxana-field-desk-open-item)
            (arxana-field-desk-open-item item)
+         (message "Field Desk module unavailable")))
+      ('field-desk-incident-stratum
+       (if (fboundp 'arxana-field-desk-open-incidents)
+           (arxana-field-desk-open-incidents item)
+         (message "Field Desk module unavailable")))
+      ('field-desk-incident
+       (if (fboundp 'arxana-field-desk-open-incident)
+           (arxana-field-desk-open-incident item)
          (message "Field Desk module unavailable")))
       ((or 'sales-stage 'sales-rolodex 'sales-leads 'sales-demos)
        (if (fboundp 'arxana-sales-open-stage)
