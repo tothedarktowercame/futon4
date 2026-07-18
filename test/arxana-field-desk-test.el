@@ -142,14 +142,20 @@
      (should (string-match-p "\\[no\\] Was this the best available"
                              (buffer-string))))))
 
-(ert-deftest arxana-field-desk-qa-command-is-shell-free-argv ()
+(ert-deftest arxana-field-desk-review-post-payload-is-canonical ()
   (should
-   (equal '("clojure" "-M:wm-full-loop" "qa" "attempt-feature"
-            "feature-verdict" "accept-with-follow-ups"
-            "Works; retain a refresh follow-up" "joe")
-          (arxana-field-desk--qa-command
+   (equal '(("attempt-id" . "attempt-feature")
+            ("objective" . "feature-verdict")
+            ("answer" . "accept-with-follow-ups")
+            ("note" . "Works; retain a refresh follow-up")
+            ("reviewer" . "joe"))
+          (arxana-field-desk--review-payload
            "attempt-feature" :feature-verdict :accept-with-follow-ups
-           "Works; retain a refresh follow-up" "joe"))))
+           "Works; retain a refresh follow-up" "joe")))
+  (let ((arxana-field-desk-endpoint "http://127.0.0.1:7070/"))
+    (should (equal
+             "http://127.0.0.1:7070/api/alpha/morning-brief/review"
+             (arxana-field-desk--review-url)))))
 
 (ert-deftest arxana-field-desk-is-wired-into-the-browser-contract ()
   (arxana-field-desk-test--with-store

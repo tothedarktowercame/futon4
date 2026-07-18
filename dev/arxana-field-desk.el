@@ -3,8 +3,8 @@
 ;;; Commentary:
 ;; Arxana surface over the append-only War Machine Morning Brief store.
 ;; Items and reviews are read directly as EDN.  Reviews are never written here:
-;; answers go asynchronously through `clojure -M:wm-full-loop qa', whose
-;; `morning-brief/review!' path owns immutability, deduplication, and projection.
+;; answers go asynchronously through the serving JVM's Morning Brief HTTP API,
+;; whose `morning-brief/review!' path owns immutability and deduplication.
 
 ;;; Code:
 
@@ -17,6 +17,9 @@
 (require 'cl-lib)
 (require 'subr-x)
 (require 'button)
+(require 'json)
+(require 'url)
+(require 'url-http)
 (require 'arxana-browser-rewrites)
 
 (defgroup arxana-field-desk nil
@@ -30,7 +33,12 @@
   :group 'arxana-field-desk)
 
 (defcustom arxana-field-desk-reviewer "joe"
-  "Reviewer identity passed to the Morning Brief QA CLI."
+  "Reviewer identity recorded with Morning Brief feature acceptance."
+  :type 'string
+  :group 'arxana-field-desk)
+
+(defcustom arxana-field-desk-endpoint "http://127.0.0.1:7070"
+  "Serving JVM endpoint used to submit Morning Brief reviews."
   :type 'string
   :group 'arxana-field-desk)
 
@@ -41,7 +49,6 @@
 
 (defconst arxana-field-desk--buffer "*Arxana Field Desk*")
 (defconst arxana-field-desk--errors-buffer "*field-desk-errors*")
-(defconst arxana-field-desk--futon2-root "/home/joe/code/futon2")
 
 (defconst arxana-field-desk--objective-specs
   '((:feature-verdict
@@ -412,51 +419,77 @@ Keep this simple conditional projection visibly aligned with the Clojure source.
           (arxana-field-desk--prop-at-point 'arxana-field-desk-item)))
         (t (user-error "No Field Desk item at point"))))
 
-(defun arxana-field-desk--qa-command (attempt objective answer note reviewer)
-  "Return the argv used to submit one QA answer."
-  (list "clojure" "-M:wm-full-loop" "qa" attempt
-        (arxana-field-desk--keyword-name objective)
-        (arxana-field-desk--keyword-name answer)
-        note reviewer))
+(defun arxana-field-desk--review-payload
+    (attempt objective answer note reviewer)
+  "Build the JSON-ready review payload for ATTEMPT."
+  `(("attempt-id" . ,attempt)
+    ("objective" . ,(arxana-field-desk--keyword-name objective))
+    ("answer" . ,(arxana-field-desk--keyword-name answer))
+    ("note" . ,note)
+    ("reviewer" . ,reviewer)))
+
+(defun arxana-field-desk--review-url ()
+  (concat (string-remove-suffix "/" arxana-field-desk-endpoint)
+          "/api/alpha/morning-brief/review"))
+
+(defun arxana-field-desk--record-submit-error (summary detail)
+  (let ((buffer (get-buffer-create arxana-field-desk--errors-buffer)))
+    (with-current-buffer buffer
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert summary "\n\n" (or detail "No response body was returned.") "\n")))
+    (display-buffer buffer)
+    (message "%s; the serving JVM may be down (see %s)"
+             summary arxana-field-desk--errors-buffer)))
+
+(defun arxana-field-desk--response-body ()
+  (save-excursion
+    (goto-char (or (and (boundp 'url-http-end-of-headers)
+                        url-http-end-of-headers)
+                   (point-min)))
+    (when (looking-at-p "\r?\n") (forward-line 1))
+    (string-trim (buffer-substring-no-properties (point) (point-max)))))
+
+(defun arxana-field-desk--submit-callback (status origin objective attempt)
+  (let ((response-buffer (current-buffer)))
+    (unwind-protect
+        (let ((network-error (plist-get status :error))
+              (http-status (and (boundp 'url-http-response-status)
+                                url-http-response-status))
+              (body (arxana-field-desk--response-body)))
+          (if (and (not network-error) http-status
+                   (<= 200 http-status) (< http-status 300))
+              (progn
+                (message "Field Desk recorded %s for %s" objective attempt)
+                (when (buffer-live-p origin)
+                  (with-current-buffer origin
+                    (when arxana-field-desk--refresh-fn
+                      (funcall arxana-field-desk--refresh-fn)))))
+            (arxana-field-desk--record-submit-error
+             (if network-error
+                 (format "Field Desk could not reach %s"
+                         arxana-field-desk-endpoint)
+               (format "Field Desk review failed with HTTP %s"
+                       (or http-status "unknown")))
+             (if network-error (format "%S" network-error) body))))
+      (when (buffer-live-p response-buffer) (kill-buffer response-buffer)))))
 
 (defun arxana-field-desk--submit (item objective answer note)
   (let* ((attempt (plist-get item :attempt-id))
          (origin (current-buffer))
-         (stdout (generate-new-buffer " *field-desk-qa-output*"))
-         (errors (get-buffer-create arxana-field-desk--errors-buffer))
-         (command (arxana-field-desk--qa-command
-                   attempt objective answer note arxana-field-desk-reviewer)))
-    (with-current-buffer errors
-      (let ((inhibit-read-only t)) (erase-buffer)))
-    (let ((default-directory (file-name-as-directory
-                              arxana-field-desk--futon2-root)))
-      (make-process
-       :name (format "field-desk-qa-%s-%s" attempt objective)
-       :buffer stdout
-       :stderr errors
-       :command command
-       :noquery t
-       :sentinel
-       (lambda (process _event)
-         (when (memq (process-status process) '(exit signal))
-           (if (zerop (process-exit-status process))
-               (progn
-                 (message "Field Desk recorded %s for %s" objective attempt)
-                 (when (buffer-live-p origin)
-                   (with-current-buffer origin
-                     (when arxana-field-desk--refresh-fn
-                       (funcall arxana-field-desk--refresh-fn))))
-                 (when (buffer-live-p stdout) (kill-buffer stdout)))
-             (with-current-buffer errors
-               (let ((inhibit-read-only t))
-                 (goto-char (point-max))
-                 (insert (format "\nCommand: %S\nExit: %s\n"
-                                 command (process-exit-status process)))
-                 (when (buffer-live-p stdout)
-                   (insert-buffer-substring stdout))))
-             (display-buffer errors)
-             (message "Field Desk QA failed; see %s"
-                      arxana-field-desk--errors-buffer))))))))
+         (payload (arxana-field-desk--review-payload
+                   attempt objective answer note arxana-field-desk-reviewer))
+         (url-request-method "POST")
+         (url-request-extra-headers '(("Content-Type" . "application/json")))
+         (url-request-data (encode-coding-string (json-encode payload) 'utf-8)))
+    (condition-case err
+        (url-retrieve (arxana-field-desk--review-url)
+                      #'arxana-field-desk--submit-callback
+                      (list origin objective attempt) t t)
+      (error
+       (arxana-field-desk--record-submit-error
+        (format "Field Desk could not reach %s" arxana-field-desk-endpoint)
+        (error-message-string err))))))
 
 (defun arxana-field-desk--answer (item objective)
   (unless (memq objective (arxana-field-desk--item-objectives item))
