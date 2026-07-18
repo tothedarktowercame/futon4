@@ -2,9 +2,9 @@
 
 ;;; Commentary:
 ;; Arxana surface over the append-only War Machine Morning Brief store.
-;; Items and reviews are read directly as EDN.  Reviews are never written here:
-;; answers go asynchronously through the serving JVM's Morning Brief HTTP API,
-;; whose `morning-brief/review!' path owns immutability and deduplication.
+;; Items, reviews, and notebook addenda are read directly as EDN.  Append-only
+;; records are never written here: submissions go asynchronously through the
+;; serving JVM's Morning Brief HTTP API.
 
 ;;; Code:
 
@@ -28,7 +28,7 @@
 
 (defcustom arxana-field-desk-root
   "/home/joe/code/futon2/data/wm-morning-brief"
-  "Root containing append-only Morning Brief items/ and reviews/."
+  "Root containing append-only Morning Brief items/, reviews/, and addenda/."
   :type 'directory
   :group 'arxana-field-desk)
 
@@ -81,6 +81,7 @@
     (define-key map (kbd "RET") #'arxana-field-desk-open-at-point)
     (define-key map "a" #'arxana-field-desk-answer-at-point)
     (define-key map "v" #'arxana-field-desk-feature-verdict)
+    (define-key map "n" #'arxana-field-desk-compose-addendum)
     (define-key map "o" #'arxana-field-desk-open-mission)
     (define-key map "c" #'arxana-field-desk-copy-commit)
     (define-key map "g" #'arxana-field-desk-refresh)
@@ -112,6 +113,17 @@ This deliberately reuses the same reader as `arxana-ledger--read'."
 
 (defun arxana-field-desk--items () (arxana-field-desk--read-records "items"))
 (defun arxana-field-desk--reviews () (arxana-field-desk--read-records "reviews"))
+(defun arxana-field-desk--addenda ()
+  (sort (arxana-field-desk--read-records "addenda")
+        (lambda (left right)
+          (string< (or (plist-get left :created-at) "")
+                   (or (plist-get right :created-at) "")))))
+
+(defun arxana-field-desk--item-addenda (item)
+  (let ((attempt (plist-get item :attempt-id)))
+    (cl-remove-if-not
+     (lambda (addendum) (equal attempt (plist-get addendum :attempt-id)))
+     (arxana-field-desk--addenda))))
 
 (defun arxana-field-desk--get-in (plist keys)
   (let ((value plist))
@@ -277,6 +289,129 @@ Keep this simple conditional projection visibly aligned with the Clojure source.
            'mouse-face 'highlight
            'help-echo "a: answer this objective"))))
 
+(defun arxana-field-desk--commit-subject (item)
+  "Return the one-line subject of the item's commit, or nil.
+Read-only `git show'; guarded so a missing repo or sha never errors."
+  (let ((repo (arxana-field-desk--repository item))
+        (sha (arxana-field-desk--commit item)))
+    (when (and (stringp repo) (stringp sha) (file-directory-p repo))
+      (with-temp-buffer
+        (when (zerop (ignore-errors
+                       (call-process "git" nil t nil "-C" repo
+                                     "show" "--no-patch" "--format=%s" sha)))
+          (let ((subject (string-trim (buffer-string))))
+            (unless (string-empty-p subject) subject)))))))
+
+(defun arxana-field-desk--insert-selection (item)
+  (let* ((policy (or (arxana-field-desk--get-in
+                      item '(:selection-review :selected-action))
+                     (arxana-field-desk--get-in
+                      item '(:qa-targets :selection :policy)))))
+    (when policy
+      (insert "WHY THIS WORK WAS SELECTED\n==========================\n")
+      (arxana-field-desk--insert-value
+       "action" (format "%s %s"
+                        (arxana-field-desk--keyword-name (plist-get policy :type))
+                        (or (plist-get policy :target)
+                            (arxana-field-desk--keyword-name
+                             (plist-get policy :target-class))
+                            "")))
+      (when-let ((rationale (plist-get policy :rationale)))
+        (insert "  rationale:\n")
+        (arxana-field-desk--insert-verbatim rationale "    "))
+      (insert "\n"))))
+
+(defun arxana-field-desk--insert-built-record (item)
+  "Insert the loop-record facts about what was built (card or no card)."
+  (let* ((achievement (plist-get item :achievement))
+         (build (plist-get achievement :build))
+         (subject (arxana-field-desk--commit-subject item))
+         (artifacts (arxana-field-desk--as-list (plist-get build :artifacts)))
+         (patterns (arxana-field-desk--as-list (plist-get build :patterns-used))))
+    (insert "WHAT WAS BUILT (from the loop record)\n")
+    (insert "=====================================\n")
+    (when-let ((summary (plist-get achievement :summary)))
+      (arxana-field-desk--insert-value "summary" summary))
+    (when subject
+      (arxana-field-desk--insert-value "commit says" subject))
+    (when artifacts
+      (insert "  files:\n")
+      (dolist (file artifacts) (insert (format "    - %s\n" file))))
+    (when patterns
+      (insert "  patterns used:\n")
+      (dolist (pattern patterns) (insert (format "    - %s\n" pattern))))
+    (unless (or subject artifacts patterns (plist-get achievement :summary))
+      (insert "  No additional build facts were recorded.\n"))
+    (insert "\n")))
+
+(defun arxana-field-desk--insert-notebook (item)
+  (let* ((addenda (arxana-field-desk--item-addenda item))
+         (things-to-try
+          (arxana-field-desk--as-list
+           (arxana-field-desk--get-in item '(:feature-card :things-to-try)))))
+    (insert "NOTEBOOK — why built / how to reproduce\n")
+    (insert "======================================\n")
+    (dolist (addendum addenda)
+      (let ((created-at (or (plist-get addendum :created-at) "—")))
+        (insert (format "── %s · %s · %s · %s\n"
+                        (arxana-field-desk--keyword-name
+                         (plist-get addendum :kind))
+                        (or (plist-get addendum :title) "—")
+                        (or (plist-get addendum :author) "—")
+                        (if (and (stringp created-at) (>= (length created-at) 10))
+                            (substring created-at 0 10)
+                          created-at)))
+        (arxana-field-desk--insert-verbatim (plist-get addendum :body) "  ")))
+    (when (and (null things-to-try) (null addenda))
+      (insert "No repro notes yet — press n to add what you tried and observed.\n"))
+    (insert "\n")))
+
+(defun arxana-field-desk--insert-validation-review (item)
+  (let* ((validation (arxana-field-desk--get-in
+                      item '(:achievement :build :validation))))
+    (when validation
+      (let ((author (plist-get validation :author))
+            (reviewer (plist-get validation :reviewer))
+            (approved (plist-get validation :approved?)))
+        (insert "VALIDATION & INDEPENDENT REVIEW\n")
+        (insert "===============================\n")
+        (when author
+          (arxana-field-desk--insert-value
+           "author" (format "executed=%s tool-events=%s"
+                            (plist-get author :executed)
+                            (plist-get author :tool-events))))
+        (when reviewer
+          (let ((executed (plist-get reviewer :executed)))
+            (arxana-field-desk--insert-value
+             "reviewer" (format "executed=%s tool-events=%s%s"
+                                executed (plist-get reviewer :tool-events)
+                                (if (eq executed t) ""
+                                  "  ⟵ READ-ONLY review; no gates were executed")))))
+        (arxana-field-desk--insert-value "approved?" approved)
+        (insert "\n")))))
+
+(defun arxana-field-desk--insert-failure (item)
+  (let ((failure (plist-get item :failure)))
+    (when failure
+      (insert "WHAT HAPPENED (why this attempt did not ground)\n")
+      (insert "===============================================\n")
+      (arxana-field-desk--insert-value
+       "failure" (arxana-field-desk--keyword-name (plist-get failure :kind)))
+      (arxana-field-desk--insert-value
+       "at stage" (arxana-field-desk--keyword-name (plist-get failure :stage)))
+      (when-let ((error-text (plist-get failure :error)))
+        (arxana-field-desk--insert-value "error" error-text))
+      (when-let ((repair (plist-get failure :repair-id)))
+        (arxana-field-desk--insert-value "repair obligation" repair))
+      (when-let ((requires (arxana-field-desk--as-list
+                            (arxana-field-desk--get-in
+                             failure '(:discharge-contract :requires)))))
+        (insert "  discharge requires:\n")
+        (dolist (requirement requires)
+          (insert (format "    - %s\n"
+                          (arxana-field-desk--keyword-name requirement)))))
+      (insert "\n"))))
+
 (defun arxana-field-desk--insert-feature (item)
   (let ((card (plist-get item :feature-card)))
     (insert "THE FEATURE\n===========\n")
@@ -296,8 +431,9 @@ Keep this simple conditional projection visibly aligned with the Clojure source.
             (arxana-field-desk--insert-value "fold-ref" (plist-get card :fold-ref)))
           (when (plist-member card :proof-ref)
             (arxana-field-desk--insert-value "proof-ref" (plist-get card :proof-ref))))
-      (insert "Build-time gap: no valid feature card was recorded for this attempt.\n")
-      (insert "There is no feature claim to accept without resolving that gap.\n"))
+      (insert "No feature card: the author did not record a feature claim\n")
+      (insert "(build-time gap).  The loop-record facts below are what there\n")
+      (insert "is to judge; a reject verdict here is normal for card-less builds.\n"))
     (insert "\n")))
 
 (defun arxana-field-desk--insert-sheet (item reviews)
@@ -314,8 +450,21 @@ Keep this simple conditional projection visibly aligned with the Clojure source.
                                                  (plist-get item :outcome)))
     (arxana-field-desk--insert-value "achievement" (arxana-field-desk--keyword-name
                                                      (plist-get achievement :tier)))
+    (arxana-field-desk--insert-value "target" (plist-get item :selected-target))
+    (arxana-field-desk--insert-value
+     "agents" (format "author %s → reviewer %s"
+                      (or (plist-get item :author) "—")
+                      (or (plist-get item :reviewer) "—")))
     (insert "\n")
+    (insert "How to review: read this sheet, then press v to record your\n")
+    (insert "verdict (accept-feature / accept-with-follow-ups / reject) with a\n")
+    (insert "note.  The appendix questions are optional; answer them with a.\n\n")
+    (arxana-field-desk--insert-selection item)
     (arxana-field-desk--insert-feature item)
+    (arxana-field-desk--insert-built-record item)
+    (arxana-field-desk--insert-notebook item)
+    (arxana-field-desk--insert-validation-review item)
+    (arxana-field-desk--insert-failure item)
     (insert "EVIDENCE LINKS\n==============\n")
     (arxana-field-desk--insert-value "commit (c)" (arxana-field-desk--commit item))
     (arxana-field-desk--insert-value "repository" (arxana-field-desk--repository item))
@@ -329,17 +478,33 @@ Keep this simple conditional projection visibly aligned with the Clojure source.
     (insert "APPENDIX — DECISION QA\n======================\n")
     (dolist (objective (delq :feature-verdict (copy-sequence objectives)))
       (arxana-field-desk--insert-objective item objective reviews))
-    (insert "\nKeys: v=verdict  a=answer  o=mission  c=copy SHA  g=refresh  ?=help  q=quit\n")))
+    (insert "\nKeys: v=verdict  a=answer  n=notebook  o=mission  c=copy SHA  g=refresh  ?=help  q=quit\n")))
+
+(defun arxana-field-desk--item-summary (item)
+  "One line saying what there is to judge, or why the attempt failed."
+  (or (when-let ((kind (arxana-field-desk--get-in item '(:failure :kind))))
+        (format "failed: %s" (arxana-field-desk--keyword-name kind)))
+      (arxana-field-desk--get-in item '(:feature-card :built))
+      (arxana-field-desk--get-in item '(:achievement :summary))
+      "—"))
 
 (defun arxana-field-desk--insert-item-row (item reviews)
-  (let ((start (point))
-        (state (arxana-field-desk--review-state item reviews)))
-    (insert (format "%-18s %-10s %-18s %s\n"
+  (let* ((start (point))
+         (date (plist-get item :queued-at))
+         (summary (arxana-field-desk--item-summary item)))
+    (ignore reviews)
+    (insert (format "%-13s %-11s %-16s %-26s %s\n"
                     (or (plist-get item :attempt-id) "?")
+                    (if (and (stringp date) (>= (length date) 10))
+                        (substring date 0 10) "—")
                     (arxana-field-desk--keyword-name (plist-get item :outcome))
-                    (arxana-field-desk--keyword-name
-                     (arxana-field-desk--get-in item '(:achievement :tier)))
-                    (arxana-field-desk--keyword-name state)))
+                    (truncate-string-to-width
+                     (format "%s" (or (plist-get item :selected-target)
+                                      (arxana-field-desk--get-in
+                                       item '(:qa-targets :selection :policy :target-class))
+                                      "—"))
+                     26 nil nil "…")
+                    (truncate-string-to-width (format "%s" summary) 46 nil nil "…")))
     (add-text-properties start (point)
                          (list 'arxana-field-desk-item item
                                'mouse-face 'highlight
@@ -378,10 +543,16 @@ Keep this simple conditional projection visibly aligned with the Clojure source.
          (title (nth 1 (assq stratum arxana-field-desk--strata))))
     (arxana-field-desk--render-frame
      (lambda ()
-       (insert (format "Arxana Field Desk — %s\n\n" title))
-       (insert "ATTEMPT            OUTCOME    ACHIEVEMENT        STATE\n")
-       (insert "-------------------------------------------------------------\n")
-       (dolist (brief-item items)
+       (insert (format "Arxana Field Desk — %s\n" title))
+       (insert "RET on a row opens its reviewable sheet; press v there to record\n")
+       (insert "your accept/reject verdict.  Newest first.\n\n")
+       (insert (format "%-13s %-11s %-16s %-26s %s\n"
+                       "ATTEMPT" "DATE" "OUTCOME" "TARGET" "WHAT / WHY"))
+       (insert (make-string 100 ?-) "\n")
+       (dolist (brief-item (sort (copy-sequence items)
+                                 (lambda (a b)
+                                   (string> (format "%s" (or (plist-get a :queued-at) ""))
+                                            (format "%s" (or (plist-get b :queued-at) ""))))))
          (arxana-field-desk--insert-item-row brief-item reviews))
        (unless items (insert "No items in this stratum.\n"))
        (insert "\nRET=open feature-acceptance sheet  g=refresh  q=quit\n"))
@@ -431,6 +602,19 @@ Keep this simple conditional projection visibly aligned with the Clojure source.
 (defun arxana-field-desk--review-url ()
   (concat (string-remove-suffix "/" arxana-field-desk-endpoint)
           "/api/alpha/morning-brief/review"))
+
+(defun arxana-field-desk--addendum-payload
+    (attempt kind title body author)
+  "Build the JSON-ready notebook payload for ATTEMPT."
+  `(("attempt-id" . ,attempt)
+    ("kind" . ,(arxana-field-desk--keyword-name kind))
+    ("title" . ,title)
+    ("body" . ,body)
+    ("author" . ,author)))
+
+(defun arxana-field-desk--addendum-url ()
+  (concat (string-remove-suffix "/" arxana-field-desk-endpoint)
+          "/api/alpha/morning-brief/addendum"))
 
 (defun arxana-field-desk--record-submit-error (summary detail)
   (let ((buffer (get-buffer-create arxana-field-desk--errors-buffer)))
@@ -490,6 +674,95 @@ Keep this simple conditional projection visibly aligned with the Clojure source.
        (arxana-field-desk--record-submit-error
         (format "Field Desk could not reach %s" arxana-field-desk-endpoint)
         (error-message-string err))))))
+
+(defvar-local arxana-field-desk--compose-item nil)
+(defvar-local arxana-field-desk--compose-kind nil)
+(defvar-local arxana-field-desk--compose-title nil)
+(defvar-local arxana-field-desk--compose-origin nil)
+
+(defun arxana-field-desk--addendum-submit-callback
+    (status compose-buffer origin attempt)
+  (let ((response-buffer (current-buffer)))
+    (unwind-protect
+        (let ((network-error (plist-get status :error))
+              (http-status (and (boundp 'url-http-response-status)
+                                url-http-response-status))
+              (body (arxana-field-desk--response-body)))
+          (if (and (not network-error) http-status
+                   (<= 200 http-status) (< http-status 300))
+              (progn
+                (when (buffer-live-p compose-buffer) (kill-buffer compose-buffer))
+                (when (buffer-live-p origin)
+                  (with-current-buffer origin
+                    (when arxana-field-desk--refresh-fn
+                      (funcall arxana-field-desk--refresh-fn))))
+                (message "Field Desk added notebook entry for %s" attempt))
+            (arxana-field-desk--record-submit-error
+             (if network-error
+                 (format "Field Desk could not reach %s"
+                         arxana-field-desk-endpoint)
+               (format "Field Desk addendum failed with HTTP %s"
+                       (or http-status "unknown")))
+             (if network-error (format "%S" network-error) body))))
+      (when (buffer-live-p response-buffer) (kill-buffer response-buffer)))))
+
+(defun arxana-field-desk-submit-addendum ()
+  "Submit the current addendum composition asynchronously."
+  (interactive)
+  (unless arxana-field-desk--compose-item
+    (user-error "This is not a Field Desk addendum buffer"))
+  (let* ((compose-buffer (current-buffer))
+         (attempt (plist-get arxana-field-desk--compose-item :attempt-id))
+         (body (buffer-substring-no-properties (point-min) (point-max)))
+         (payload (arxana-field-desk--addendum-payload
+                   attempt arxana-field-desk--compose-kind
+                   arxana-field-desk--compose-title body
+                   arxana-field-desk-reviewer))
+         (url-request-method "POST")
+         (url-request-extra-headers '(("Content-Type" . "application/json")))
+         (url-request-data (encode-coding-string (json-encode payload) 'utf-8)))
+    (when (string-empty-p (string-trim body))
+      (user-error "A non-blank body is required"))
+    (condition-case err
+        (url-retrieve (arxana-field-desk--addendum-url)
+                      #'arxana-field-desk--addendum-submit-callback
+                      (list compose-buffer arxana-field-desk--compose-origin attempt)
+                      t t)
+      (error
+       (arxana-field-desk--record-submit-error
+        (format "Field Desk could not reach %s" arxana-field-desk-endpoint)
+        (error-message-string err))))))
+
+(defun arxana-field-desk-cancel-addendum ()
+  "Cancel the current addendum composition."
+  (interactive)
+  (kill-buffer (current-buffer)))
+
+(defun arxana-field-desk-compose-addendum ()
+  "Compose a notebook addendum for the current attempt sheet."
+  (interactive)
+  (unless arxana-field-desk--current-item
+    (user-error "Open a Field Desk item first"))
+  (let* ((item arxana-field-desk--current-item)
+         (attempt (plist-get item :attempt-id))
+         (origin (current-buffer))
+         (kind-name (completing-read "Kind: " '("repro" "why-built" "note")
+                                     nil t))
+         (kind (intern (concat ":" kind-name)))
+         (title (string-trim (read-string "Title: "))))
+    (when (string-empty-p title) (user-error "A non-blank title is required"))
+    (let ((buffer (get-buffer-create
+                   (format "*Field Desk Addendum: %s*" attempt))))
+      (pop-to-buffer buffer)
+      (text-mode)
+      (erase-buffer)
+      (setq-local arxana-field-desk--compose-item item
+                  arxana-field-desk--compose-kind kind
+                  arxana-field-desk--compose-title title
+                  arxana-field-desk--compose-origin origin
+                  header-line-format "C-c C-c submit, C-c C-k cancel")
+      (local-set-key (kbd "C-c C-c") #'arxana-field-desk-submit-addendum)
+      (local-set-key (kbd "C-c C-k") #'arxana-field-desk-cancel-addendum))))
 
 (defun arxana-field-desk--answer (item objective)
   (unless (memq objective (arxana-field-desk--item-objectives item))
@@ -559,6 +832,7 @@ Keep this simple conditional projection visibly aligned with the Clojure source.
     (princ "RET  open item or stratum\n")
     (princ "a    answer objective at point\n")
     (princ "v    answer feature verdict from anywhere in a sheet\n")
+    (princ "n    add a reproducibility or rationale notebook entry\n")
     (princ "o    open mission file\n")
     (princ "c    copy commit SHA\n")
     (princ "g    refresh from append-only EDN store\n")

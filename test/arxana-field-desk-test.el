@@ -45,9 +45,11 @@
 (defmacro arxana-field-desk-test--with-store (&rest body)
   `(let* ((root (make-temp-file "arxana-field-desk-" t))
           (items-dir (expand-file-name "items" root))
-          (reviews-dir (expand-file-name "reviews" root)))
+          (reviews-dir (expand-file-name "reviews" root))
+          (addenda-dir (expand-file-name "addenda" root)))
      (make-directory items-dir t)
      (make-directory reviews-dir t)
+     (make-directory addenda-dir t)
      (with-temp-file (expand-file-name "attempt-feature.edn" items-dir)
        (insert arxana-field-desk-test--feature-item))
      (with-temp-file (expand-file-name "attempt-failed.edn" items-dir)
@@ -58,6 +60,17 @@
        (insert "{:morning-brief/review-id \"r-failed-selection\"
  :attempt-id \"attempt-failed\" :objective :selection-quality
  :answer :no :note \"A better target existed\" :reviewer \"joe\"}"))
+     ;; Filenames deliberately oppose timestamps: rendering follows :created-at.
+     (with-temp-file (expand-file-name "a-later-name.edn" addenda-dir)
+       (insert "{:morning-brief/addendum-id \"mba-second\"
+ :attempt-id \"attempt-feature\" :kind :repro :title \"Exercise it\"
+ :body \"Press n -> a compose buffer opens.\" :author \"joe\"
+ :created-at \"2026-07-18T12:00:00Z\"}"))
+     (with-temp-file (expand-file-name "z-earlier-name.edn" addenda-dir)
+       (insert "{:morning-brief/addendum-id \"mba-first\"
+ :attempt-id \"attempt-feature\" :kind :why-built :title \"Review gap\"
+ :body \"We built this so claims can be reproduced.\" :author \"machine\"
+ :created-at \"2026-07-18T11:00:00Z\"}"))
      (dolist (pair '((:feature-verdict :accept-feature)
                      (:selection-quality :yes)
                      (:substantive-achievement :yes)
@@ -119,14 +132,21 @@
      (arxana-field-desk--insert-sheet
       (arxana-field-desk-test--item "attempt-feature")
       (arxana-field-desk--reviews))
-     (let* ((text (buffer-string))
+     (let* ((case-fold-search nil)
+            (text (buffer-string))
             (feature (string-match "THE FEATURE" text))
+            (built (string-match "WHAT WAS BUILT" text))
+            (notebook (string-match "NOTEBOOK — why built / how to reproduce" text))
+            (validation (string-match "VALIDATION & INDEPENDENT REVIEW" text))
             (evidence (string-match "EVIDENCE LINKS" text))
-            (verdict (string-match "VERDICT" text))
+            (verdict (string-match "^VERDICT$" text))
             (appendix (string-match "APPENDIX — DECISION QA" text)))
        (should (string-match-p "A navigable feature desk" text))
        (should (string-match-p "M-x arxana-field-desk" text))
-       (should (< feature evidence))
+       (should (< feature built))
+       (should (< built notebook))
+       (should (< notebook validation))
+       (should (< validation evidence))
        (should (< evidence verdict))
        (should (< verdict appendix))
        (should (string-match-p "\\[unanswered\\] Accept the built feature" text))))))
@@ -137,10 +157,34 @@
      (arxana-field-desk--insert-sheet
       (arxana-field-desk-test--item "attempt-failed")
       (arxana-field-desk--reviews))
-     (should (string-match-p "Build-time gap: no valid feature card"
+     (should (string-match-p "No feature card: the author did not record a feature claim"
                              (buffer-string)))
      (should (string-match-p "\\[no\\] Was this the best available"
                              (buffer-string))))))
+
+(ert-deftest arxana-field-desk-notebook-renders-addenda-in-created-order ()
+  (arxana-field-desk-test--with-store
+   (with-temp-buffer
+     (arxana-field-desk--insert-notebook
+      (arxana-field-desk-test--item "attempt-feature"))
+     (let* ((case-fold-search nil)
+            (text (buffer-string))
+            (first (string-match "why-built · Review gap · machine · 2026-07-18" text))
+            (second (string-match "repro · Exercise it · joe · 2026-07-18" text)))
+       (should first)
+       (should second)
+       (should (< first second))
+       (should (string-match-p
+                "  We built this so claims can be reproduced" text))))))
+
+(ert-deftest arxana-field-desk-notebook-empty-state-is-actionable ()
+  (arxana-field-desk-test--with-store
+   (with-temp-buffer
+     (arxana-field-desk--insert-notebook
+      (arxana-field-desk-test--item "attempt-full"))
+     (should (string-match-p
+              "No repro notes yet — press n to add what you tried and observed."
+              (buffer-string))))))
 
 (ert-deftest arxana-field-desk-review-post-payload-is-canonical ()
   (should
@@ -156,6 +200,20 @@
     (should (equal
              "http://127.0.0.1:7070/api/alpha/morning-brief/review"
              (arxana-field-desk--review-url)))))
+
+(ert-deftest arxana-field-desk-addendum-post-payload-is-canonical ()
+  (should
+   (equal '(("attempt-id" . "attempt-feature")
+            ("kind" . "repro")
+            ("title" . "Exercise it")
+            ("body" . "Press n -> a compose buffer opens")
+            ("author" . "joe"))
+          (arxana-field-desk--addendum-payload
+           "attempt-feature" :repro "Exercise it"
+           "Press n -> a compose buffer opens" "joe")))
+  (should (equal
+           "http://127.0.0.1:7070/api/alpha/morning-brief/addendum"
+           (arxana-field-desk--addendum-url))))
 
 (ert-deftest arxana-field-desk-is-wired-into-the-browser-contract ()
   (arxana-field-desk-test--with-store
