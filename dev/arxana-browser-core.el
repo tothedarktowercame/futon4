@@ -185,6 +185,9 @@
 (declare-function arxana-browser-encyclopedia-open-entry "arxana-browser-encyclopedia" (item))
 
 (declare-function arxana-browser-evidence-menu-items "arxana-browser-evidence")
+(declare-function arxana-field-desk--home-items "arxana-field-desk")
+(declare-function arxana-field-desk-open-stratum "arxana-field-desk" (item))
+(declare-function arxana-field-desk-open-item "arxana-field-desk" (item))
 (declare-function arxana-browser--evidence-timeline-items "arxana-browser-evidence")
 (declare-function arxana-browser--evidence-timeline-row "arxana-browser-evidence" (item))
 (declare-function arxana-browser--evidence-timeline-format "arxana-browser-evidence")
@@ -484,6 +487,10 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
               :label "Ledger"
               :description "Billable-hours ledger (Hyperreal) — Historical / Current / Future."
               :view 'ledger)
+        (list :type 'menu
+              :label "Field Desk"
+              :description "Review Morning Brief features as they arrive."
+              :view 'field-desk)
         (list :type 'menu
               :label "Sales"
               :description "Sales pipeline (Hyperreal) — clients by stage + Rolodex. Dual of the Ledger."
@@ -1380,6 +1387,10 @@ Other views show the description in `mode-line-format'.")
                      (arxana-ledger--home-items)
                    (list (list :type 'info :label "Ledger module unavailable"
                                :description "Load arxana-vsatarcs-ledger.el"))))
+        ('field-desk (if (require 'arxana-field-desk nil t)
+                         (arxana-field-desk--home-items)
+                       (list (list :type 'info :label "Field Desk unavailable"
+                                   :description "Load arxana-field-desk.el"))))
         ('sales (if (require 'arxana-vsatarcs-sales nil t)
                     (arxana-sales--home-items)
                   (list (list :type 'info :label "Sales module unavailable"
@@ -1982,6 +1993,14 @@ Other views show the description in `mode-line-format'.")
        (if (fboundp 'arxana-ledger-open-stratum)
            (arxana-ledger-open-stratum item)
          (message "Ledger module unavailable")))
+      ('field-desk-stratum
+       (if (fboundp 'arxana-field-desk-open-stratum)
+           (arxana-field-desk-open-stratum item)
+         (message "Field Desk module unavailable")))
+      ('field-desk-item
+       (if (fboundp 'arxana-field-desk-open-item)
+           (arxana-field-desk-open-item item)
+         (message "Field Desk module unavailable")))
       ((or 'sales-stage 'sales-rolodex 'sales-leads 'sales-demos)
        (if (fboundp 'arxana-sales-open-stage)
            (arxana-sales-open-stage item)
