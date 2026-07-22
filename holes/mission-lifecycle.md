@@ -304,6 +304,16 @@ A mission may also be:
   straightforward missions this can be `**Status:** <PHASE> (date)`;
   for `HEAD`-bootstrapped missions it may be composite, e.g.
   `**Status:** HEAD complete; IDENTIFY pending`.
+- An operator gate is recorded directly below the status as
+  `**Gate:** <kind> — <free text>`, where `<kind>` is kebab-case and begins
+  `operator-` (for example `operator-acceptance`, `operator-decision`, or
+  `operator-input`). Multiple Gate lines are allowed. A gate means that the
+  remaining work needs the operator; it is not a defect or a stall. The War
+  Machine treats the mission as infeasible for author dispatch and surfaces
+  the gate to the operator as an action.
+- The operator sets and clears gates by editing the mission document (removing
+  the Gate line clears it; git history is the record). Agents may propose a
+  gate during review, but may not clear one.
 - Checkpoints are appended (never overwrite prior phases).
 - Evidence is emitted to futon1a during VERIFY/INSTANTIATE.
 - Completed missions become source material for future missions.
