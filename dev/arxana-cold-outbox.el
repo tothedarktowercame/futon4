@@ -447,9 +447,14 @@ If KEY is absent, insert it after ANCHOR.  Targeted; preserves comments."
   (let* ((m (arxana-cold-outbox--data draft))
          (projection (copy-sequence (or (plist-get m :send-projection) nil)))
          (sent (or sent-at (arxana-cold-outbox--iso-now))))
-    (plist-put projection :event :outreach-sent)
-    (plist-put projection :sent-at sent)
-    (plist-put projection :send-witness send-witness)
+    ;; plist-put's return value MUST be captured: on a nil plist the
+    ;; mutation cannot happen in place, so discarding the return threw
+    ;; away :event AND the Message-ID witness (James/JUXT send,
+    ;; 2026-07-27 — intake saw an empty event, {:rejected
+    ;; :not-outreach-sent}, and the witness was lost from this path).
+    (setq projection (plist-put projection :event :outreach-sent))
+    (setq projection (plist-put projection :sent-at sent))
+    (setq projection (plist-put projection :send-witness send-witness))
     projection))
 
 (defun arxana-cold-outbox--intake-command (event-file)
