@@ -674,15 +674,47 @@ Save the body buffer, return to the outbox, and press `g' to re-render."
         (find-file (arxana-cold-outbox--file draft))
       (dired arxana-cold-outbox-root))))
 
-(defvar arxana-cold-outbox-mode-map
+;; FOOTGUN (second occurrence, 2026-07-26; first fixed 2026-07-05 and lost):
+;; `define-derived-mode' above already defvars `arxana-cold-outbox-mode-map'
+;; as an empty keymap, so a LATER `defvar' with bindings is a silent no-op —
+;; every key listed in the buffer was dead. Bind into the mode's own map
+;; directly; never re-defvar a map a derived mode has created.
+(define-key arxana-cold-outbox-mode-map "g" #'arxana-cold-outbox-refresh)
+(define-key arxana-cold-outbox-mode-map "e" #'arxana-cold-outbox-edit-body)
+(define-key arxana-cold-outbox-mode-map "r" #'arxana-cold-outbox-mark-reviewed)
+(define-key arxana-cold-outbox-mode-map "S" #'arxana-cold-outbox-send)
+(define-key arxana-cold-outbox-mode-map "E" #'arxana-cold-outbox-edit-raw)
+(define-key arxana-cold-outbox-mode-map "?" #'arxana-cold-outbox-menu)
+
+(defun arxana-cold-outbox-menu ()
+  "Show the outbox key summary (plain menu; hydra variant is future polish)."
+  (interactive)
+  (message "Outbox: RET open · g refresh · e edit body · E edit raw · r mark reviewed · S send (gate) · ? this menu"))
+
+;; Browser-listing keymap: registered with the browser-core per-view
+;; registry so outbox rows get outbox keys — and so the media-player keys
+;; that otherwise leak through the shared map are shadowed by hints
+;; instead of silently acting on drafts.
+(defvar arxana-cold-outbox--browser-view-map
   (let ((m (make-sparse-keymap)))
-    (define-key m "g" #'arxana-cold-outbox-refresh)
-    (define-key m "e" #'arxana-cold-outbox-edit-body)
-    (define-key m "r" #'arxana-cold-outbox-mark-reviewed)
-    (define-key m "S" #'arxana-cold-outbox-send)
-    (define-key m "E" #'arxana-cold-outbox-edit-raw)
+    (define-key m "?" #'arxana-cold-outbox-menu)
+    (define-key m "e" #'arxana-cold-outbox-menu)
+    (define-key m "r" #'arxana-cold-outbox-menu)
+    (define-key m "S" #'arxana-cold-outbox-menu)
+    (define-key m "E" #'arxana-cold-outbox-menu)
     m)
-  "Keymap for `arxana-cold-outbox-mode'.")
+  "Laid over outbox rows in the Arxana browser listing.
+Stage rows open with RET; per-draft commands live in the dedicated
+*Arxana Cold Outbox* buffer, so draft keys here show the menu rather
+than falling through to the shared media map.")
+
+(with-eval-after-load 'arxana-browser-core
+  (when (fboundp 'arxana-browser-register-view-keymap)
+    (arxana-browser-register-view-keymap
+     'cold-outbox arxana-cold-outbox--browser-view-map)))
+(when (fboundp 'arxana-browser-register-view-keymap)
+  (arxana-browser-register-view-keymap
+   'cold-outbox arxana-cold-outbox--browser-view-map))
 
 ;;;###autoload
 (defun arxana-cold-outbox-browse ()

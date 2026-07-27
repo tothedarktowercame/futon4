@@ -1648,6 +1648,38 @@ Other views show the description in `mode-line-format'.")
 (defun arxana-browser--item-at-point ()
   (tabulated-list-get-id))
 
+;; --- Per-view keymap registry (restored 2026-07-26; the 2026-07-05 seam
+;; was lost in a rewrite of this file). Features register a small keymap
+;; for their :view symbol; it is laid over the rendered listing as a
+;; `keymap' text property (highest precedence; unbound keys fall through).
+;; This is ALSO the enforcement point Joe asked for: a view that renders
+;; without a registered keymap gets a once-per-session warning naming it,
+;; so shared-map leaks (media keys on non-media surfaces) are visible debt
+;; rather than silent behavior.
+
+(defvar arxana-browser-view-keymaps (make-hash-table :test 'eq)
+  "Registry mapping a :view symbol to the keymap laid over its listing.")
+
+(defvar arxana-browser--view-keymap-warned (make-hash-table :test 'eq)
+  "Views already warned about this session (no registered keymap).")
+
+(defun arxana-browser-register-view-keymap (view keymap)
+  "Register KEYMAP as the row-level keymap for VIEW (a :view symbol)."
+  (puthash view keymap arxana-browser-view-keymaps))
+
+(defun arxana-browser--apply-view-keymap (context)
+  "Lay the registered keymap for CONTEXT's :view over the listing.
+Warn once per session for feature views with no registered keymap."
+  (let ((view (and context (plist-get context :view))))
+    (when view
+      (let ((km (gethash view arxana-browser-view-keymaps)))
+        (if km
+            (put-text-property (point-min) (point-max) 'keymap km)
+          (unless (gethash view arxana-browser--view-keymap-warned)
+            (puthash view t arxana-browser--view-keymap-warned)
+            (message "[arxana-browser] view %s has no registered keymap — shared-map keys apply (register one via arxana-browser-register-view-keymap)"
+                     view)))))))
+
 (defun arxana-browser--render ()
   ;; Allow early exit when docbook sections redirect straight to a single entry.
   (cl-block arxana-browser--render
@@ -1815,6 +1847,7 @@ Other views show the description in `mode-line-format'.")
                 (arxana-browser--decorate-header-line context (length items))
                 (force-mode-line-update)
                 (tabulated-list-print t)
+                (arxana-browser--apply-view-keymap context)
                 (let* ((count (arxana-browser--row-count))
                        (clamped (if (> count 0)
                                     (max 0 (min desired-row (1- count)))
