@@ -534,6 +534,15 @@ If KEY is absent, insert it after ANCHOR.  Targeted; preserves comments."
       (user-error "Subject is required"))
     subject))
 
+(defcustom arxana-cold-outbox-bcc-self t
+  "When non-nil, Bcc the From address on every outbox send.
+The Bcc copy is the round-trip delivery receipt AND the durable record of
+the Message-ID witness (smtpmail writes no Sent copy). Re-added 2026-07-27:
+the 2026-07-06 original was uncommitted work lost to a working-tree
+overwrite — the James/JUXT send went out with no receipt as a result."
+  :type 'boolean
+  :group 'arxana-cold-outbox)
+
 (defun arxana-cold-outbox--compose-message-buffer (draft to subject)
   "Return a preview buffer containing DRAFT as an SMTP message to TO."
   (let* ((message-user-fqdn (arxana-cold-outbox--from-domain))
@@ -546,6 +555,8 @@ If KEY is absent, insert it after ANCHOR.  Targeted; preserves comments."
         (erase-buffer)
         (insert (format "From: %s\n" arxana-cold-outbox-from-address))
         (insert (format "To: %s\n" to))
+        (when arxana-cold-outbox-bcc-self
+          (insert (format "Bcc: %s\n" arxana-cold-outbox-from-address)))
         (insert (format "Subject: %s\n" subject))
         (insert (format "Message-ID: %s\n" message-id))
         (insert "\n")
