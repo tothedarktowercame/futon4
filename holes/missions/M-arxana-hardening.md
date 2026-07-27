@@ -89,3 +89,16 @@ handoffs; cheap enough for every commit).
 4. S4: F7 smoke suite; then flip F3's warning to enforcement (small).
 5. S5: F6 invariant extension to browser surfaces (larger; needs Joe's
    eyes on interaction design).
+
+### F8 — ROOT FINDING (2026-07-27): the losses were one event, not many
+Git history of arxana-cold-outbox.el jumps from 2026-06-16 directly to
+the 2026-07-26 restorations: the entire 2026-07-05/06 session (keymap
+fix, browser wiring, bcc-self receipts, porcelain fixes) was VERIFIED
+LIVE BUT NEVER COMMITTED, then destroyed by a working-tree overwrite
+around 07-08. F1/F2/F3's "regressions" are all shrapnel from this one
+loss. **Hardening rule: a live-install session ends with a commit — no
+exceptions; "verified live" is not a terminal state.** (The same
+memory that recorded the work as done also recorded "futon7 changes
+UNCOMMITTED — Joe to commit" — the pattern was visible.) Candidate
+enforcement: the smoke suite (F7) diffs loaded definitions against
+committed source at session end.
