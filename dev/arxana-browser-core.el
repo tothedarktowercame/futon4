@@ -496,7 +496,14 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         (list :type 'menu
               :label "Sales"
               :description "Sales pipeline (Hyperreal) — clients by stage + Rolodex. Dual of the Ledger."
-              :view 'sales)))
+              :view 'sales)
+        ;; Re-wired 2026-07-26: the 2026-07-05 Outbox entry was lost in a
+        ;; later rewrite of this file (menu is a static list — features do
+        ;; not self-register).
+        (list :type 'menu
+              :label "Outbox"
+              :description "Cold/warm outreach drafts (futon7 outbox) — staged, editing, reviewed, sent. Dual of Sales."
+              :view 'cold-outbox)))
 
 (defun arxana-browser--evidence-menu-items ()
   (if (require 'arxana-browser-evidence nil t)
@@ -1397,6 +1404,10 @@ Other views show the description in `mode-line-format'.")
                     (arxana-sales--home-items)
                   (list (list :type 'info :label "Sales module unavailable"
                               :description "Load arxana-vsatarcs-sales.el"))))
+        ('cold-outbox (if (require 'arxana-cold-outbox nil t)
+                          (arxana-cold-outbox--home-items)
+                        (list (list :type 'info :label "Outbox module unavailable"
+                                    :description "Load arxana-cold-outbox.el"))))
         (_ (arxana-browser--menu-items))))
      (t
       (arxana-browser--require-patterns)
@@ -2015,6 +2026,10 @@ Other views show the description in `mode-line-format'.")
        (if (fboundp 'arxana-sales-open-stage)
            (arxana-sales-open-stage item)
          (message "Sales module unavailable")))
+      ((or 'cold-outbox-stage 'cold-outbox-all)
+       (if (fboundp 'arxana-cold-outbox-open-stage)
+           (arxana-cold-outbox-open-stage item)
+         (message "Outbox module unavailable")))
       ('essays-essay
        (setq arxana-browser--stack
              (cons (list :view 'essays-essay
