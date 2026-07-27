@@ -504,8 +504,17 @@ If KEY is absent, insert it after ANCHOR.  Targeted; preserves comments."
          (addr (string-trim
                 (or contact
                     (read-string "To address (required): ")))))
+    ;; :contact-uri is a URI field; RCPT TO wants a bare address. A verbatim
+    ;; "mailto:hello@xtdb.com" reached Postfix as "mailto:hello"@xtdb.com and
+    ;; bounced 553 5.1.3 at Google (2026-07-27, the James/JUXT send). Strip
+    ;; the scheme and any ?query part before use.
+    (when (string-prefix-p "mailto:" addr)
+      (setq addr (substring addr (length "mailto:"))))
+    (setq addr (car (split-string addr "[?]")))
     (when (string-empty-p addr)
       (user-error "To address is required; refusing to fabricate one"))
+    (unless (string-match-p "\\`[^@ ]+@[^@ ]+\\.[^@ ]+\\'" addr)
+      (user-error "To address %S does not look like an email address" addr))
     addr))
 
 (defun arxana-cold-outbox--required-subject (draft)
