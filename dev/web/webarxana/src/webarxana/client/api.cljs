@@ -284,12 +284,14 @@
               (doseq [ep other-ends]
                 (let [ep-id (:entity-id ep)]
                   (when ep-id
-                    ;; Hyperedge endpoints only carry local passage/role context.
-                    ;; Do not let that placeholder overwrite a real entity label.
-                    (when-not (state/get-nema ep-id)
-                      (state/ingest-entity! {:id ep-id
-                                            :name (or (:passage ep) ep-id)
-                                            :type (or (:role ep) "endpoint")}))
+                    ;; NOTE: don't ingest-entity! here — the hyperedge
+                    ;; endpoint metadata (`:passage`, `:role`) is
+                    ;; hyperedge-local prose, not authoritative entity
+                    ;; type/name.  state/ingest-relation! below pre-
+                    ;; creates a placeholder shell via ensure-nema! ONLY
+                    ;; when no real entity already exists for ep-id, so
+                    ;; clicking through to the endpoint will load its
+                    ;; real `:mfuton/mission` (or other) type from /ego.
                     ;; Create a link from the focused entity to the other endpoint
                     (state/ingest-relation!
                      {:id   (str hx-id "->" ep-id)

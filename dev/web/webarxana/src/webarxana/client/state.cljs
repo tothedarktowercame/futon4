@@ -23,6 +23,22 @@
 
 (defonce conn (d/create-conn schema))
 
+;; DIAGNOSTIC: expose datascript conn and a single bundled snapshot helper
+;; to JS so developers can inspect store state from devtools. Lightweight —
+;; only used during debugging, no production hot-path consumers.
+(set! (.-_webarxana_conn js/window) conn)
+(set! (.-_webarxana_diag js/window)
+      (fn []
+        (let [db @conn
+              total-datoms (count (d/datoms db :eavt))
+              by-attr (->> (d/datoms db :eavt)
+                           (group-by (fn [d] (str (.-a d))))
+                           (into {} (map (fn [[a ds]] [a (count ds)]))))]
+          (clj->js {:total-datoms total-datoms
+                    :datoms-by-attr by-attr
+                    :link-count (count (d/datoms db :aevt :link/id))
+                    :nema-count (count (d/datoms db :aevt :nema/id))}))))
+
 (defonce !orbit (r/atom :unfetched))   ;; a single thread orbit (retracted onto the scope-surface)
 (defonce !orbits (r/atom :unfetched))  ;; the FULL phase portrait — every engaging thread's orbit
 (defonce !orbit-hover (r/atom nil))    ;; index of the orbit the mouse is over (dims the rest + shows a card)
@@ -32,7 +48,7 @@
   (r/atom {:focus-id    nil      ;; nema/id of the active card (shown on right)
            :page        :graph   ;; :graph or :mission-search
            :pins        []       ;; [{:id "..." :k 1} ...] pinned nodes on canvas
-           :hop-depth   3        ;; default hop-depth for new pins
+           :hop-depth   1        ;; default hop-depth for new pins (1 = direct neighbors)
            :editing     nil      ;; nema/id currently being edited
            :username    nil      ;; logged-in user
            :connected   false    ;; WebSocket connected?
@@ -59,6 +75,18 @@
                             :graph {:nodes [] :links []}
                             :loading? false
                             :error nil}
+           ;; Edge-type filter: whitelist of :link/type strings to SHOW.
+           ;; Three states:
+           ;;   nil       — show all kinds (default; user has not narrowed)
+           ;;   #{...}    — show only these kinds; everything else
+           ;;               (including NEW kinds appearing as the user
+           ;;               clicks-to-expand new nodes) is hidden
+           ;;   #{}       — show no kinds (Hide all)
+           ;; This whitelist shape is the deliberate choice so that
+           ;; once a user has narrowed the view, later exploration
+           ;; (ingesting new entities / kinds) does NOT silently
+           ;; re-add edge clutter — operator framing 2026-05-22.
+           :edge-filter-visible nil
            }))
 
 (defn focus-id []
@@ -109,11 +137,92 @@
                            (assoc % :k k)
                            %) ps))))
 
+;; --- Display helpers ---
+
+(defn display-label
+  "Strip noisy namespace prefixes from a Clojure-keyword-shaped string
+   for canvas/sidebar display.  The fully-qualified form
+   (e.g. \":mfuton/mission/parent-child\") is what lives in XTDB and
+   what the wire surface speaks; on the UI we only need the last
+   segment to be legible.  Used by graph.cljs (canvas labels) AND
+   card.cljs (sidebar Edges-filter checkboxes) so both surfaces show
+   the same shortened name for a given relation kind."
+  [s]
+  (if (and (string? s) (clojure.string/includes? s "/"))
+    (last (clojure.string/split s #"/"))
+    s))
+
+;; --- Edge-type filter ---
+
+(defn edge-kind-visible?
+  "True when the given :link/type string is currently visible.
+   `nil` filter = everything visible (default).  Set filter = only
+   members of the set are visible (new kinds appearing in the store
+   default to HIDDEN so user's narrowed view is preserved across
+   click-to-expand exploration)."
+  [kind]
+  (let [vis (:edge-filter-visible @ui-state)]
+    (if (nil? vis) true (contains? vis kind))))
+
+(defn toggle-edge-kind!
+  "Flip visibility of a single relation kind.
+   - If filter is nil (all-visible state) and user clicks a kind,
+     we initialize the whitelist to `(kinds-now \\ kind)` so the
+     click reads as \"hide just this one\" rather than collapsing
+     to only the clicked kind.
+   - If filter is a set, conj/disj as appropriate."
+  [kind kinds-now]
+  (swap! ui-state update :edge-filter-visible
+         (fn [vis]
+           (cond
+             ;; First narrowing from all-visible: clicked = hide-this-one
+             (nil? vis)            (disj (set kinds-now) kind)
+             (contains? vis kind)  (disj vis kind)
+             :else                 (conj vis kind)))))
+
+(defn hide-all-edge-kinds!
+  "Hide every kind (whitelist becomes empty)."
+  []
+  (swap! ui-state assoc :edge-filter-visible #{}))
+
+(defn show-all-edge-kinds!
+  "Reset the filter so every kind (including ones not yet ingested)
+   is visible.  Sets :edge-filter-visible to nil."
+  []
+  (swap! ui-state assoc :edge-filter-visible nil))
+
+(defn kinds-present-in-store
+  "Return the distinct set of :link/type values currently present in
+   datascript, sorted by display label for stable sidebar order.  Used
+   by the sidebar Edges section to render one checkbox per kind."
+  []
+  (->> (d/datoms @conn :aevt :link/type)
+       (map #(.-v %))
+       distinct
+       (sort-by #(or % ""))
+       vec))
+
 ;; --- Queries ---
 
 (defn get-nema [nema-id]
   (when-let [eid (d/entid @conn [:nema/id nema-id])]
     (d/pull @conn '[*] eid)))
+
+(defn- nema-id-of [db eid]
+  ;; Fast :nema/id lookup via :eavt index (no :in binding needed)
+  (some (fn [d] (when (= :nema/id (.-a d)) (.-v d)))
+        (d/datoms db :eavt eid)))
+
+(defn- links-touching
+  "Return [outgoing-link-eids incoming-link-eids] for the nema with eid src-eid.
+   Uses :aevt index walks rather than :in-bound d/q (which is broken under
+   shadow-cljs :advanced compilation in this build of DataScript)."
+  [db src-eid]
+  (let [src-datoms (d/datoms db :aevt :link/src)
+        dst-datoms (d/datoms db :aevt :link/dst)
+        outgoing (vec (keep (fn [d] (when (= (.-v d) src-eid) (.-e d))) src-datoms))
+        incoming (vec (keep (fn [d] (when (= (.-v d) src-eid) (.-e d))) dst-datoms))]
+    [outgoing incoming]))
 
 (defn neighbourhood
   "All nemas within k hops of focus-nema-id."
@@ -122,46 +231,58 @@
     (let [db @conn]
       (loop [frontier #{focus-nema-id}
              visited  #{}
-             depth    0]
+             depth    0
+             link-eids #{}]
         (if (or (>= depth k) (empty? frontier))
           ;; Include frontier in visited — they are reachable within k hops
-          (let [visited  (into visited frontier)
-                nema-eids (keep #(d/entid db [:nema/id %]) visited)
-                nemas     (map #(d/pull db '[*] %) nema-eids)
-                links     (d/q '[:find [(pull ?l [:link/id :link/type :link/text
-                                                       {:link/src [:nema/id]}
-                                                       {:link/dst [:nema/id]}]) ...]
-                                 :in $ ?visited
-                                 :where
-                                 [?l :link/src ?s]
-                                 [?l :link/dst ?d]
-                                 [?s :nema/id ?sid]
-                                 [?d :nema/id ?did]
-                                 [(contains? ?visited ?sid)]
-                                 [(contains? ?visited ?did)]]
-                               db visited)]
+          (let [visited      (into visited frontier)
+                visited-eids (into #{} (keep #(d/entid db [:nema/id %]) visited))
+                nemas        (mapv (fn [eid] (d/pull db '[*] eid)) visited-eids)
+                ;; Filter the collected link-eids down to ones whose BOTH endpoints
+                ;; are in visited-eids (using :eavt direct lookups)
+                links (->> link-eids
+                           (keep (fn [leid]
+                                   (let [datoms (d/datoms db :eavt leid)
+                                         src-d (some (fn [d] (when (= :link/src (.-a d)) d)) datoms)
+                                         dst-d (some (fn [d] (when (= :link/dst (.-a d)) d)) datoms)]
+                                     (when (and src-d dst-d
+                                                (contains? visited-eids (.-v src-d))
+                                                (contains? visited-eids (.-v dst-d)))
+                                       (d/pull db
+                                               '[:link/id :link/type :link/text
+                                                 {:link/src [:nema/id]}
+                                                 {:link/dst [:nema/id]}]
+                                               leid)))))
+                           vec)]
             {:nemas nemas :links links :focus focus-nema-id})
+          ;; Expand frontier by one hop
           (let [new-visited (into visited frontier)
-                outgoing (d/q '[:find [?did ...]
-                                :in $ [?fid ...]
-                                :where
-                                [?s :nema/id ?fid]
-                                [?l :link/src ?s]
-                                [?l :link/dst ?d]
-                                [?d :nema/id ?did]]
-                              db (vec frontier))
-                incoming (d/q '[:find [?sid ...]
-                                :in $ [?fid ...]
-                                :where
-                                [?d :nema/id ?fid]
-                                [?l :link/dst ?d]
-                                [?l :link/src ?s]
-                                [?s :nema/id ?sid]]
-                              db (vec frontier))
-                next-frontier (set/difference
-                               (into (set outgoing) incoming)
-                               new-visited)]
-            (recur next-frontier new-visited (inc depth))))))))
+                ;; For each frontier nema-id, resolve eid then collect touching links
+                frontier-eids (into #{} (keep #(d/entid db [:nema/id %]) frontier))
+                [out-pairs link-eids']
+                (reduce (fn [[neighbors links] eid]
+                          (let [[out-leids in-leids] (links-touching db eid)
+                                ;; Resolve the OTHER endpoint of each link
+                                out-others (mapv (fn [leid]
+                                                   (some (fn [d]
+                                                           (when (= :link/dst (.-a d)) (.-v d)))
+                                                         (d/datoms db :eavt leid)))
+                                                 out-leids)
+                                in-others (mapv (fn [leid]
+                                                  (some (fn [d]
+                                                          (when (= :link/src (.-a d)) (.-v d)))
+                                                        (d/datoms db :eavt leid)))
+                                                in-leids)
+                                ;; Convert other-endpoint eids back to :nema/id strings
+                                neighbor-ids (->> (concat out-others in-others)
+                                                  (keep #(nema-id-of db %))
+                                                  set)]
+                            [(into neighbors neighbor-ids)
+                             (into links (concat out-leids in-leids))]))
+                        [#{} link-eids]
+                        frontier-eids)
+                next-frontier (clojure.set/difference out-pairs new-visited)]
+            (recur next-frontier new-visited (inc depth) link-eids')))))))
 
 (defn multi-neighbourhood
   "Merge neighbourhoods from all pinned nodes into a single graph."
@@ -237,10 +358,33 @@
                             incoming-props)}]
     (d/transact! conn [nema])))
 
-(defn ingest-relation! [rel]
+(defn- ensure-nema!
+  "Idempotently ensure a nema with the given :nema/id exists in the
+   store, WITHOUT clobbering any pre-existing :nema/name or :nema/type
+   set by an earlier ingest-entity! call.  When the nema already
+   exists this is a complete no-op (transacting a one-attr map with
+   only a unique-identity attr would throw in DataScript).  When the
+   nema does NOT yet exist, creates a placeholder shell using the id
+   as the display name."
+  [id]
+  (when (and id (not= "" id))
+    (when-not (d/entid @conn [:nema/id id])
+      (d/transact! conn [{:nema/id   id
+                          :nema/name id
+                          :nema/type "placeholder"}]))))
+
+(defn ingest-relation!
+  "Transact a relation as a {:link/id, :link/type, :link/src, :link/dst} edge.
+   Pre-creates a placeholder shell for each endpoint that doesn't exist yet,
+   so the link's :db.type/ref lookup-refs ([:nema/id src-id]) resolve cleanly.
+   Endpoints that have already been ingested as full entities KEEP their
+   real :nema/name / :nema/type — the placeholder upsert is conditional
+   on existence to avoid clobbering them."
+  [rel]
   (let [src-id (or (:relation/from rel) (:src-id rel) (:src rel))
         dst-id (or (:relation/to rel) (:dst-id rel) (:dst rel))
-        link   {:link/id   (or (:relation/id rel) (:id rel) (str (:xt/id rel)))
+        link-id (or (:relation/id rel) (:id rel) (str (:xt/id rel)))
+        link   {:link/id   link-id
                 :link/type (or (some-> (:relation/type rel) name)
                                (some-> (:type rel) name)
                                "link")
@@ -249,4 +393,13 @@
                 :link/text (or (get-in rel [:provenance :note])
                                (:notes rel)
                                "")}]
-    (d/transact! conn [link])))
+    (when (and src-id dst-id link-id (not= "" link-id))
+      (try
+        (ensure-nema! src-id)
+        (ensure-nema! dst-id)
+        (d/transact! conn [link])
+        (catch :default e
+          (js/console.error "ingest-relation! FAILED"
+                            (clj->js {:src-id src-id :dst-id dst-id
+                                      :link-id link-id
+                                      :err (str e)})))))))
