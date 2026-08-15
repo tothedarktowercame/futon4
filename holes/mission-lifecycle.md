@@ -364,19 +364,25 @@ process row:
 
 - **futon5 exotype `.edn` checks — exist** (hand-rolled, mechanical; the
   VERIFY structural list above). This is the enforceable ceiling today.
-- **Fong/BV by-construction level — no compliant verifier exists.** The
-  engine it would sit on landed 2026-08-02 (`M-diagramprover` WS-A:
-  chyp-ported SMC hypergraph DPO rewriting, Clojure; Markov-category
-  regime contained as WS-B.0), but a mission-wiring verifier on top of
-  it is **owed**. This is this section's own priced hole: a mission
-  wanting by-construction process guarantees records that want as a hole
-  against `M-diagramprover` and verifies at the exotype level meanwhile.
-  Discharge path (adopted 2026-08-15, operator ruling — urgent):
-  `M-diagramprover` **WS-E: mission-wiring verification**, with the
-  M-apm-demonstration reconstruction as its pre-existing replay corpus.
-  Revisit trigger: re-point the process row when WS-E's acceptance
-  lands (sensitivity on the recorded defects, specificity on the
-  post-fix states, generality on ≥2 non-APM configs).
+- **Hypergraph wiring verifier — EXISTS: `futon3c.diagramprover.wiring`
+  (WS-E, acceptance met 2026-08-15).** The hole recorded here on
+  2026-08-15 discharged the same day: five checks over declared
+  ownership maps under contract (c) — `written-never-read`,
+  `read-never-written`, `multiply-written`, `phase-chain-findings`,
+  and site `conformance` (declaration↔source drift, both directions).
+  Acceptance evidence: sensitivity on all four M-apm-demonstration
+  recorded defect classes (three on live artifacts); specificity on
+  post-fix states; generality on the proof peripheral (where it found
+  three real latent defects, including a duplicated-and-drifted
+  contract) and the futon2 War Machine belief path (cross-repo,
+  non-cycle-engine). Worked examples:
+  `futon3c/holes/labs/M-apm-demonstration/problem-wiring.edn` and
+  `futon3c/holes/labs/M-diagramprover/{proof,wm}-wiring.edn`, each with
+  a dated findings snapshot. Honest grade: detect-level checks over
+  authored, conformance-kept declarations — **by-construction
+  unconstructibility remains the Lean/engine layer's territory** (the
+  V.12 F1 lesson), so a mission wanting that grade still records it as
+  a hole against M-diagramprover's WS-D line.
 - `DarkTower/Coverage.lean` proves no-orphan-by-construction for the
   typed-hole datatype — a precedent that the level is reachable, not a
   verifier a mission can point at.
