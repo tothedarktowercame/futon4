@@ -339,7 +339,7 @@ One row per aspect of the deliverable:
 |---|---|---|
 | claim | confounding, non-transport, bad denominator | causal/Pearl (cf. `capability-proof-apm`) |
 | data / artifact | malformed or unfalsifiable record | Lean shape + Clojure validator (the V.12 "first RHS" style) |
-| process | dangling wire, unowned field, unreachable state | futon5 wiring diagram (exotype `.edn`); Fong/BV where by-construction is wanted |
+| process | dangling wire, unowned field, unreachable state | futon5 wiring diagram (exotype `.edn`) — current enforceable ceiling; see tool-status note |
 | loop | act succeeded, measurement inadmissible | flight organs (witness, settled read, admissibility) — `anatomy-of-a-wm-flight.md` |
 | decision | wrong thing for unexamined reasons | flexiarg / IF-HOWEVER-THEN-BECAUSE |
 
@@ -355,6 +355,27 @@ visible or unconstructible — and prefer the level at which the check
 can consume the live artifact (a projection check over the actual
 config/EDN, not a document standing beside it). Where you specify, you
 don't bleed; where you don't, you do.
+
+**Tool status (2026-08-15) — a BOM row may only name a level at which a
+verifier actually exists.** Naming an unverifiable level makes the BOM
+itself written-but-not-wired: agents inherit a compliance target with no
+compliant checker, and either fake it or stall. Current status for the
+process row:
+
+- **futon5 exotype `.edn` checks — exist** (hand-rolled, mechanical; the
+  VERIFY structural list above). This is the enforceable ceiling today.
+- **Fong/BV by-construction level — no compliant verifier exists.** The
+  engine it would sit on landed 2026-08-02 (`M-diagramprover` WS-A:
+  chyp-ported SMC hypergraph DPO rewriting, Clojure; Markov-category
+  regime contained as WS-B.0), but a mission-wiring verifier on top of
+  it is **owed**. This is this section's own priced hole: a mission
+  wanting by-construction process guarantees records that want as a hole
+  against `M-diagramprover` and verifies at the exotype level meanwhile.
+  Revisit trigger: re-point the process row when M-diagramprover ships a
+  mission-wiring frontend.
+- `DarkTower/Coverage.lean` proves no-orphan-by-construction for the
+  typed-hole datatype — a precedent that the level is reachable, not a
+  verifier a mission can point at.
 
 ### When is a wiring diagram required (not optional)?
 
