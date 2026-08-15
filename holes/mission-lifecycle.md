@@ -190,11 +190,17 @@ Check the architecture against constraints before committing to full
 implementation. This phase is primarily about structural and empirical
 validation — confirming the design is sound before code hardens.
 
+- [ ] **Specification bill of materials:** Fill the BOM — one row per
+  aspect of the deliverable, each naming its formalism and level or
+  recording a priced decline. See §Specification Bill of Materials
+  below. A row that fails its check is a reason to cycle back to
+  DERIVE; that loop is cheap. An aspect silently unspecified is not.
 - [ ] **Structural verification (if wiring diagram exists):** Check the
   architecture against exotype diagrams (`.edn`). Verify: completeness,
   coverage, no orphan inputs, type safety, spec coverage, timescale
   ordering, exogeneity, and compositional closure. If no diagram exists,
-  record why (not every mission needs one) and skip this check.
+  apply the "when is a wiring diagram required" test (see §Specification
+  Bill of Materials); four "no" answers are the recorded skip reason.
 - [ ] **Prototype / spike (if needed):** For missions where structural
   verification alone is insufficient, build a minimal spike to validate
   the riskiest DERIVE commitments. This is not full implementation — it's
@@ -318,6 +324,64 @@ A mission may also be:
 - Evidence is emitted to futon1a during VERIFY/INSTANTIATE.
 - Completed missions become source material for future missions.
 - Each phase accretes — the mission doc grows as phases complete.
+
+## Specification Bill of Materials (VERIFY)
+
+VERIFY checks the design against structural constraints; the BOM is the
+record of *which* constraints the mission is answerable to, and at what
+level of formality. These artifacts are strictly VERIFY-level: fill the
+table at VERIFY entry, and treat a failing row as a cheap cycle back to
+DERIVE rather than a reason to have specified everything up front.
+
+One row per aspect of the deliverable:
+
+| aspect | characteristic defect | native formalism |
+|---|---|---|
+| claim | confounding, non-transport, bad denominator | causal/Pearl (cf. `capability-proof-apm`) |
+| data / artifact | malformed or unfalsifiable record | Lean shape + Clojure validator (the V.12 "first RHS" style) |
+| process | dangling wire, unowned field, unreachable state | futon5 wiring diagram (exotype `.edn`); Fong/BV where by-construction is wanted |
+| loop | act succeeded, measurement inadmissible | flight organs (witness, settled read, admissibility) — `anatomy-of-a-wm-flight.md` |
+| decision | wrong thing for unexamined reasons | flexiarg / IF-HOWEVER-THEN-BECAUSE |
+
+Each row names its formalism and level, **or records a priced decline**:
+a named hole with a revisit trigger (e.g. "re-open after two
+written-but-not-wired findings"). "Not blocking" is not a permitted
+status for a BOM row — an unpriced deferral is how a check gets carried
+across five checkpoints while the defect it catches accumulates.
+
+The selection principle behind the table: choose, per aspect, the
+formalism whose native objects make that aspect's characteristic defect
+visible or unconstructible — and prefer the level at which the check
+can consume the live artifact (a projection check over the actual
+config/EDN, not a document standing beside it). Where you specify, you
+don't bleed; where you don't, you do.
+
+### When is a wiring diagram required (not optional)?
+
+Required if **any** of the following holds; each is checkable at VERIFY
+entry:
+
+1. the deliverable is a **machine** — phases, states, loops, or
+   long-lived processes — rather than an analysis, corpus, or document;
+2. **more than one party writes fields another party reads**
+   (engine/caller, multi-agent, cross-review seams);
+3. any field, event, or record **crosses a language, process, or repo
+   boundary** (Lean↔Clojure, driver↔peripheral, EDN registration↔engine);
+4. the mission's **claims rest on evidence produced by the thing being
+   built**.
+
+If none hold, freeform is fine — the four "no" answers *are* the
+recorded skip reason. If any holds and no diagram exists, draw it now,
+cycling back to DERIVE if the drawing changes the design. If it is
+declined anyway, the decline is an operator Gate or a priced hole,
+never a checklist line.
+
+*Evidence: M-apm-demonstration (2026-08) scored 4-for-4 on the trigger
+list, carried "futon5 wiring diagram — not yet drawn / not blocking"
+across five checkpoints, and accumulated sixteen instances of the
+defect class the no-orphan check catches. See
+`futon3c/docs/retrieval-whitepaper-v3.md` §7a and
+`futon3c/TN-problem-peripheral-RC-fable-review.md`.*
 
 ## PSR/PUR Discipline
 
