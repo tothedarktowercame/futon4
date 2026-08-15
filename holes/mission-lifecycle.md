@@ -371,8 +371,12 @@ process row:
   it is **owed**. This is this section's own priced hole: a mission
   wanting by-construction process guarantees records that want as a hole
   against `M-diagramprover` and verifies at the exotype level meanwhile.
-  Revisit trigger: re-point the process row when M-diagramprover ships a
-  mission-wiring frontend.
+  Discharge path (adopted 2026-08-15, operator ruling — urgent):
+  `M-diagramprover` **WS-E: mission-wiring verification**, with the
+  M-apm-demonstration reconstruction as its pre-existing replay corpus.
+  Revisit trigger: re-point the process row when WS-E's acceptance
+  lands (sensitivity on the recorded defects, specificity on the
+  post-fix states, generality on ≥2 non-APM configs).
 - `DarkTower/Coverage.lean` proves no-orphan-by-construction for the
   typed-hole datatype — a precedent that the level is reachable, not a
   verifier a mission can point at.
