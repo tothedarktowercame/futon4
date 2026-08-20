@@ -1676,6 +1676,60 @@ Verification:
   chains: `render-hash unknown`, `feeder-heartbeat unknown`,
   `content-drift violation`.
 
+## INSTANTIATE tripwire repair: --check had a permanent bypass (2026-08-20)
+
+`scripts/build-invariant-state-projection.bb --check` did not gate what it
+appeared to gate. Its failure set was built as:
+
+```clojure
+(remove #(or (= :ok (:outcome %))
+             ;; This violation is expected until docs are regenerated.
+             (= :leaf-invariants-count-claims-match-projection (:test/id %)))
+        (:live-tests p))
+```
+
+The exemption keys on **test id alone**, so that tripwire was suppressed
+regardless of what it reported. Written 2026-06-02 as a short-lived allowance
+"until docs are regenerated"; the docs were not regenerated, and by 2026-08-20
+it had been silently green for two and a half months. The drift could have
+doubled and `--check` would still have exited 0 — this is INSTANTIATE item 2's
+own tripwire, unable to trip.
+
+**Repaired to a pinned expectation.** `expected-violations` now records the
+exact signed-off shape:
+
+```clojure
+{:leaf-invariants-count-claims-match-projection
+ {:claim {:operational-family-forms 9 :candidate-family-forms 10}
+  :projection {:operational-family-forms 15 :candidate-family-forms 12}}}
+```
+
+A tolerated deviation must now BE the deviation that was signed off. Behaviour,
+mutation-checked rather than asserted:
+
+| case | result |
+|---|---|
+| pinned test, exact signed-off shape | tolerated, exit 0 |
+| pinned test, any other numbers | **exit 2**, reported as "re-pin or fix" |
+| pinned test repaired (`:ok`) | passes on the ordinary path — the pin cannot go stale |
+| any unpinned violation | never tolerated (unchanged) |
+
+Verified by mutating the pinned claim and re-running: exit 2, restored: exit 0.
+
+**Also recorded:** the live summary in the 2026-06-02 implementation slice above
+(`{:stories-total 1 :stories-violation 1 :candidate-queue-rows 86}`) is long
+superseded. Current:
+
+```clojure
+{:stories-total 52 :stories-ok 10 :stories-warning 0 :stories-violation 19
+ :stories-stale 19 :stories-inactive 23 :candidate-queue-rows 86
+ :witnessed-missing 52}
+```
+
+The pinned `leaf-invariants` drift is unchanged (9/10 claimed vs 15/12
+projected), which is why the pin is safe to install today; the other 18
+violations are all `devmap-*` staleness and were never covered by the bypass.
+
 ## Follow-up note: pipeline-tracer value is dubious (Joe, 2026-06-03)
 
 The `archaeology` family's **`pipeline-tracer`** check (and especially its
