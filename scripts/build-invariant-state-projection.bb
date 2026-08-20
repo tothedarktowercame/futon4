@@ -825,42 +825,6 @@
      :witness-registry/draft single-locus-witnesses
      :live-tests live-tests}))
 
-(def ^:private expected-violations
-  "Live-test violations that are knowingly tolerated, PINNED TO THEIR EXACT
-  OBSERVED SHAPE rather than exempted by test id.
-
-  Before this, --check removed :leaf-invariants-count-claims-match-projection
-  from the failure set unconditionally, under the comment \"This violation is
-  expected until docs are regenerated\". Written 2026-06-02; the docs were not
-  regenerated, and by 2026-08-20 the exemption had suppressed that test for two
-  and a half months with nothing able to notice. Worse, it keyed on test id
-  alone, so the gate stayed green no matter what the test SAID — the drift could
-  double and --check would still exit 0.
-
-  A tolerated deviation now has to be the deviation that was actually signed
-  off. If the numbers move in either direction the gate fails and someone must
-  consciously re-pin or fix. If the drift is repaired the test simply reports
-  :ok and passes here on the ordinary path, so the pin cannot go stale in the
-  other direction."
-  {:leaf-invariants-count-claims-match-projection
-   {:claim {:operational-family-forms 9 :candidate-family-forms 10}
-    :projection {:operational-family-forms 15 :candidate-family-forms 12}}})
-
-(defn- expected-violation?
-  "True only when this test is pinned AND still shows exactly the pinned shape."
-  [t]
-  (when-let [pin (get expected-violations (:test/id t))]
-    (and (= (:claim pin) (:claim t))
-         (= (:projection pin) (:projection t)))))
-
-(defn- drifted-expectation?
-  "A pinned test that is failing in some OTHER way than the one signed off.
-  Reported separately so the operator sees 're-pin or fix', not a bare failure."
-  [t]
-  (and (contains? expected-violations (:test/id t))
-       (not= :ok (:outcome t))
-       (not (expected-violation? t))))
-
 (defn -main [& args]
   (let [p (projection)
         check? (some #{"--check"} args)
@@ -871,20 +835,17 @@
       (println (json/generate-string out))
       (prn out))
     (when check?
-      (let [bad (remove #(or (= :ok (:outcome %)) (expected-violation? %))
-                        (:live-tests p))
-            drifted (filter drifted-expectation? (:live-tests p))]
-        (when (or (seq bad) (seq drifted))
+      ;; No exemptions. A live test that is not :ok fails the check, whatever it
+      ;; is and however long it has been failing. The previous id-keyed skip for
+      ;; :leaf-invariants-count-claims-match-projection, and the pinned-shape
+      ;; version that replaced it, were both special-cased invariant violations,
+      ;; which this workspace forbids. The remedy for a red check is to fix the
+      ;; violation, not to describe it more precisely in the gate.
+      (let [bad (remove #(= :ok (:outcome %)) (:live-tests p))]
+        (when (seq bad)
           (binding [*out* *err*]
             (println "build-invariant-state-projection: live check failed")
-            (when (seq drifted)
-              (println (str "an EXPECTED violation changed shape — re-pin it in "
-                            "expected-violations, or regenerate the docs so it "
-                            "passes; it is no longer the deviation that was "
-                            "signed off:"))
-              (prn drifted))
-            (when (seq bad)
-              (prn bad)))
+            (prn bad))
           (System/exit 2))))))
 
 (apply -main *command-line-args*)

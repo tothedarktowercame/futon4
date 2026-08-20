@@ -1676,59 +1676,54 @@ Verification:
   chains: `render-hash unknown`, `feeder-heartbeat unknown`,
   `content-drift violation`.
 
-## INSTANTIATE tripwire repair: --check had a permanent bypass (2026-08-20)
+## INSTANTIATE tripwire repair: --check exemption removed outright (2026-08-20)
 
 `scripts/build-invariant-state-projection.bb --check` did not gate what it
-appeared to gate. Its failure set was built as:
+appeared to gate. Its failure set removed
+`:leaf-invariants-count-claims-match-projection` **by test id**, under the
+comment "This violation is expected until docs are regenerated". Written
+2026-06-02; the docs were never regenerated, so the tripwire had been suppressed
+for two and a half months, and because the skip keyed on id alone the gate
+stayed green no matter what the test reported — the drift could have doubled and
+`--check` would still have exited 0.
 
-```clojure
-(remove #(or (= :ok (:outcome %))
-             ;; This violation is expected until docs are regenerated.
-             (= :leaf-invariants-count-claims-match-projection (:test/id %)))
-        (:live-tests p))
+My first attempt replaced that with a *pinned* exemption tolerating only the
+exact signed-off numbers. Independent review (codex-7) rejected it: functionally
+tighter, but still a special-cased invariant violation, which this workspace
+forbids. That is correct — a narrower bypass is a bypass. **All exemptions are
+now gone.** A live test that is not `:ok` fails the check, whatever it is and
+however long it has been failing.
+
+**`--check` is therefore RED, and honestly so:**
+
+```
+build-invariant-state-projection: live check failed
+{:test/id :leaf-invariants-count-claims-match-projection
+ :claim {:operational-family-forms 9 :candidate-family-forms 10}
+ :projection {:operational-family-forms 15 :candidate-family-forms 12}}
 ```
 
-The exemption keys on **test id alone**, so that tripwire was suppressed
-regardless of what it reported. Written 2026-06-02 as a short-lived allowance
-"until docs are regenerated"; the docs were not regenerated, and by 2026-08-20
-it had been silently green for two and a half months. The drift could have
-doubled and `--check` would still have exited 0 — this is INSTANTIATE item 2's
-own tripwire, unable to trip.
+### What clears it, and why this mission cannot
 
-**Repaired to a pinned expectation.** `expected-violations` now records the
-exact signed-off shape:
+The violation is real: `leaf-invariants` states its family counts as hand-typed
+prose that has drifted from the projection. The gate reads three literal phrases
+from `futon5a/holes/stories/leaf-invariants.md`:
 
-```clojure
-{:leaf-invariants-count-claims-match-projection
- {:claim {:operational-family-forms 9 :candidate-family-forms 10}
-  :projection {:operational-family-forms 15 :candidate-family-forms 12}}}
-```
+- line 6 — `9 operational families + 10 candidate families`
+- line 24 — `**9 operational families**`
+- line 28 — `**10 candidate families**`
 
-A tolerated deviation must now BE the deviation that was signed off. Behaviour,
-mutation-checked rather than asserted:
+They should read **15** and **12**. Verified rather than assumed: editing that
+file to 15/12 makes `--check` exit 0; reverting it byte-for-byte returns exit 2.
 
-| case | result |
-|---|---|
-| pinned test, exact signed-off shape | tolerated, exit 0 |
-| pinned test, any other numbers | **exit 2**, reported as "re-pin or fix" |
-| pinned test repaired (`:ok`) | passes on the ordinary path — the pin cannot go stale |
-| any unpinned violation | never tolerated (unchanged) |
+**That file is in `futon5a`, outside this mission's artifact boundary**, so the
+fix cannot land here. It is a one-line-each prose correction in the story, and
+this is the whole remaining content of the violation — recorded so the next
+slice can close it without re-deriving any of the above.
 
-Verified by mutating the pinned claim and re-running: exit 2, restored: exit 0.
-
-**Also recorded:** the live summary in the 2026-06-02 implementation slice above
-(`{:stories-total 1 :stories-violation 1 :candidate-queue-rows 86}`) is long
-superseded. Current:
-
-```clojure
-{:stories-total 52 :stories-ok 10 :stories-warning 0 :stories-violation 19
- :stories-stale 19 :stories-inactive 23 :candidate-queue-rows 86
- :witnessed-missing 52}
-```
-
-The pinned `leaf-invariants` drift is unchanged (9/10 claimed vs 15/12
-projected), which is why the pin is safe to install today; the other 18
-violations are all `devmap-*` staleness and were never covered by the bypass.
+No automated consumer of `--check` was found across futon4/futon3c/futon2, so
+turning it red does not break a running gate; it exposes one that was never
+able to fail.
 
 ## Follow-up note: pipeline-tracer value is dubious (Joe, 2026-06-03)
 
