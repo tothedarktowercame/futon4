@@ -1725,6 +1725,41 @@ No automated consumer of `--check` was found across futon4/futon3c/futon2, so
 turning it red does not break a running gate; it exposes one that was never
 able to fail.
 
+## INSTANTIATE tripwire: gate now lints clean and self-tests (2026-08-20)
+
+Follow-up to the exemption removal above, on independent review (codex-7): the
+exemption was gone, but the changed file still failed `clj-kondo` and the
+removal had no durable test — both mutation checks so far had been ad-hoc and
+left no artifact.
+
+**clj-kondo.** `scripts/build-invariant-state-projection.bb` carried an `ns`
+form, which raises *"Namespace name does not match file name"*: the ns/filename
+correspondence clj-kondo checks does not exist for a path-invoked `bb` script,
+and the hyphenated filename is load-bearing (callers in other repos invoke it by
+that path, so renaming to underscores is not available from inside futon4). The
+`ns` form is now top-level `require`/`import`, which is exactly how the two
+sibling scripts that already lint clean — `generate_vsatarcs_md.bb` and
+`lift_unlifted_stories.bb` — are written. **0 errors, 0 warnings**, with no
+linter config and no suppression.
+
+**Durable test.** The failure-set computation is extracted as `check-failures`
+and pinned by `bb scripts/build-invariant-state-projection.bb --self-test`:
+5 synthetic cases, no live projection, no external state, so it holds regardless
+of current drift. One case asserts specifically that
+`:leaf-invariants-count-claims-match-projection` — the id exempted twice — is
+**not** special-cased.
+
+Mutation-verified: reintroducing the id-keyed skip makes the self-test report
+3/5 and exit 3; restoring returns 5/5 and exit 0. (Measured without a pipe —
+`bb ... | tail` reports tail's status, which briefly gave a false green here.)
+
+`--check` still exits 2 on the real `leaf-invariants` violation; `--wm-status`
+and `enumerate-invariant-queue.bb` are unaffected.
+
+**Left open, deliberately:** `scripts/enumerate-invariant-queue.bb` has the
+identical `ns` lint error and the identical one-line fix. It is not part of this
+repair and was not touched.
+
 ## Follow-up note: pipeline-tracer value is dubious (Joe, 2026-06-03)
 
 The `archaeology` family's **`pipeline-tracer`** check (and especially its

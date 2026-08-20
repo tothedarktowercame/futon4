@@ -1,15 +1,22 @@
 #!/usr/bin/env bb
 
-(ns build-invariant-state-projection
-  (:require [cheshire.core :as json]
-            [clojure.edn :as edn]
-            [clojure.java.io :as io]
-            [clojure.java.shell :as shell]
-            [clojure.string :as str]
-            [babashka.fs :as fs])
-  (:import [java.io PushbackReader]
-           [java.security MessageDigest]
-           [java.time Instant]))
+;; No `ns` form: this is a path-invoked bb script, not a classpath namespace.
+;; With one, clj-kondo raises "Namespace name does not match file name" — the
+;; ns/filename correspondence it checks does not exist for `bb <path>`, and the
+;; hyphenated filename is load-bearing (callers in other repos invoke it by that
+;; path, so renaming it to underscores is not available from here). The two
+;; sibling scripts that lint clean, generate_vsatarcs_md.bb and
+;; lift_unlifted_stories.bb, are both written this way; this now matches them.
+(require '[cheshire.core :as json]
+         '[clojure.edn :as edn]
+         '[clojure.java.io :as io]
+         '[clojure.java.shell :as shell]
+         '[clojure.string :as str]
+         '[babashka.fs :as fs])
+
+(import '[java.io PushbackReader]
+        '[java.security MessageDigest]
+        '[java.time Instant])
 
 (def inventory-path "/home/joe/code/futon3c/docs/structural-law-inventory.sexp")
 (def arxana-path "/home/joe/code/futon4/dev/arxana-browser-lab.el")
@@ -825,7 +832,66 @@
      :witness-registry/draft single-locus-witnesses
      :live-tests live-tests}))
 
+(defn check-failures
+  "Live tests that fail --check.
+
+  No exemptions, by contract: a live test that is not :ok fails, whatever it is
+  and however long it has been failing. Two successive attempts at tolerating
+  :leaf-invariants-count-claims-match-projection — first an id-keyed skip, then
+  a pinned-shape allowance — were both rejected on independent review as
+  special-cased invariant violations, which this workspace forbids. The remedy
+  for a red check is to fix the violation, not to describe it more precisely
+  inside the gate.
+
+  Extracted from -main so the property is testable without running a live
+  projection; see --self-test."
+  [live-tests]
+  (remove #(= :ok (:outcome %)) live-tests))
+
+(def ^:private self-test-cases
+  "Synthetic live-tests pinning check-failures. Deliberately includes the id
+  that was twice exempted, so a reintroduced carve-out fails here."
+  [{:label "a violation fails the check"
+    :tests [{:test/id :some-test :outcome :violation}]
+    :expect-failing 1}
+   {:label ":ok passes"
+    :tests [{:test/id :some-test :outcome :ok}]
+    :expect-failing 0}
+   {:label "the twice-exempted id is NOT special-cased"
+    :tests [{:test/id :leaf-invariants-count-claims-match-projection
+             :outcome :violation
+             :claim {:operational-family-forms 9 :candidate-family-forms 10}
+             :projection {:operational-family-forms 15 :candidate-family-forms 12}}]
+    :expect-failing 1}
+   {:label "a stale outcome is not :ok, so it fails too"
+    :tests [{:test/id :some-test :outcome :stale}]
+    :expect-failing 1}
+   {:label "mixed set reports only the non-:ok members"
+    :tests [{:test/id :a :outcome :ok}
+            {:test/id :b :outcome :violation}
+            {:test/id :leaf-invariants-count-claims-match-projection
+             :outcome :violation}]
+    :expect-failing 2}])
+
+(defn run-self-test!
+  "Deterministic regression check for the --check failure set. No live
+  projection, no external state, so it holds regardless of current drift."
+  []
+  (let [results (for [{:keys [label tests expect-failing]} self-test-cases
+                      :let [n (count (check-failures tests))
+                            ok? (= n expect-failing)]]
+                  (do (println (format "  %-4s %-52s failing=%d expected=%d"
+                                       (if ok? "PASS" "FAIL") label n expect-failing))
+                      ok?))
+        failed (count (remove true? results))]
+    (println (format "self-test: %d/%d cases passed" (- (count results) failed)
+                     (count results)))
+    (when (pos? failed) (System/exit 3))))
+
 (defn -main [& args]
+  (when (some #{"--self-test"} args)
+    (run-self-test!)
+    (System/exit 0))
   (let [p (projection)
         check? (some #{"--check"} args)
         wm-status? (some #{"--wm-status"} args)
@@ -835,13 +901,7 @@
       (println (json/generate-string out))
       (prn out))
     (when check?
-      ;; No exemptions. A live test that is not :ok fails the check, whatever it
-      ;; is and however long it has been failing. The previous id-keyed skip for
-      ;; :leaf-invariants-count-claims-match-projection, and the pinned-shape
-      ;; version that replaced it, were both special-cased invariant violations,
-      ;; which this workspace forbids. The remedy for a red check is to fix the
-      ;; violation, not to describe it more precisely in the gate.
-      (let [bad (remove #(= :ok (:outcome %)) (:live-tests p))]
+      (let [bad (check-failures (:live-tests p))]
         (when (seq bad)
           (binding [*out* *err*]
             (println "build-invariant-state-projection: live check failed")
