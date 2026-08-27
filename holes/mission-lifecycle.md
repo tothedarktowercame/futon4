@@ -166,6 +166,14 @@ Synthesize. Why is this design *right*, not just *workable*?
   catch-up moment to write them.
 - [ ] **Theoretical coherence:** Does the design serve the theoretical
   anchoring from IDENTIFY? Or has the theory shifted?
+- [ ] **Rationale citation:** Name the war-room ruling this design rests on, as
+  `@why war-room/wr-N-…`, or state that none applies. *(Added 2026-08-27, Joe:
+  exposure is not use. Measured 2026-08-23 and re-tested 2026-08-27: across all
+  missions, **zero** cite any of the 28 numbered rulings — including the seven
+  available for six weeks, over a window carrying 333 mission-file touches. The
+  rulings were never asked for, so this is a missing instruction rather than an
+  unharvestable register. `README-flexiarg` §5a's "authored, never harvested"
+  describes the state before this line existed.)*
 - [ ] **Trade-off summary:** What did we give up and why?
 - [ ] **Generalization notes:** Does this design work beyond the immediate
   context? What would need to change to apply it elsewhere?
