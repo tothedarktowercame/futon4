@@ -125,6 +125,59 @@ the first packet. The inventory is the deliverable of this gate, and a term
 that cannot be moved into the first class is reported as such — that report
 is the refusal of §2.4, one level up.
 
+## 0.6 Gate 1 — the typed wiring diagram, with a contract on every edge *(added 2026-08-29, Joe, from the APM comparison)*
+
+Gate 0 is about terms. A second gap survives it: an apparatus whose terms are
+all defined can still have its **procedure** undefined — who sends what to
+whom, and with what guarantee on receipt. Joe on APM: *"the terms are pretty
+well defined … but the procedural aspects were very unclear and had to be
+continually found through discovery and trial and error … we'd want a typed
+wiring diagram that says this role will send this thing to this other role,
+and when they get the information, it should be transactional."*
+
+Measured on APM, 08-27..08-29: of 93 commits in `src/futon3c/apm/`, **56 are
+message / handoff / transaction fixes** — *"repair a half-written pair with an
+edge-only write"*, *"record clean successor disposition before frame close"*,
+*"supersede expired coordinator intents durably"*, *"exclude concurrent
+receipt identity work"* — and 14 are environment/boundary fixes. The APM
+contract does name delivery properties, but as **global booleans**
+(`idempotent-reactivation true`, `exactly-once-per-frame true`,
+`persist-claim true`, `student-candidate-persisted-before-receipt true`,
+three timeouts in ms): asserted of the whole apparatus, attached to no edge.
+`persist-claim true` is the L0 self-assertion of §3.1i, written as policy.
+So each edge's real semantics was discovered by running it, one commit at a
+time.
+
+**Gate 1 requires**, before any packet that touches a handoff: a wiring
+diagram whose **edges** carry — sender role, receiver role, message type
+(schema), delivery (exactly-once / at-least-once), the write(s) the receipt
+must be atomic with, retry policy and cap, timeout, idempotence key — and
+whose **nodes** carry the satiety-graded typed holes the stack already uses
+(`holes/flights/first-flights-wiring.edn` types nodes this way and edges not
+at all). `mission-lifecycle.md` already has the slot (VERIFY: "structural
+verification if wiring diagram exists"; "when is a wiring diagram required")
+— it is optional there, its edge schema has no contract fields, and nothing
+checks code against it. Gate 1 makes it required wherever roles hand off,
+gives edges the fields above, and checks the implementation against it the
+way APM already checks message *shapes* (mutation tests), which is the one
+class of APM bug that did go away.
+
+What this would and would not remove, stated so it can be tested: the 56
+handoff-shaped fixes are the class a contract-bearing diagram states in
+advance; the 14 boundary fixes (Lean provisioning, wall-clock exhaustion,
+JSON normalisation) are the typed-hole/starvation class and need the node
+side, not the edge side. Joe's conjecture — *"no more live debugging"* —
+is therefore testable as: the handoff class goes to ~0 once the diagram is
+enforced. If it does not, the diagram was a description (§3.1i) and this
+gate is withdrawn.
+
+Attribution, from trailers: 85 of the 93 fix commits carry no author trailer
+(consistent with the Codex stream; not proven), 8 carry Claude's; 67 of the
+period's `holes/` design commits carry Claude's. Joe's observation that Codex
+fielded the operational issues while Claude did the design is consistent
+with the record. The diagram is what would let the design side hand the
+operational side something *checkable* rather than something to discover.
+
 ## 1. The unit: a problem record
 
 One file per commissioned problem, `<repo>/holes/problems/P-<name>.md`, or a
