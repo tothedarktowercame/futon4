@@ -7,9 +7,30 @@ ratified. v1 is archived as `delivery-lifecycle.v1.md`; its validation log
 
 **One-line:** Work is commissioned to solve a problem. The problem — not the
 deliverable — is the thing that has a status, and its status changes only when
-an observation the commissioner named in advance is seen on a run. Everything
-else in this document exists to stop a deliverable from acquiring a status of
-its own.
+the model is shown to satisfy a predicate the commissioner named in advance.
+Everything else in this document exists to stop a deliverable from acquiring a
+status of its own.
+
+**Amendment 2026-08-29 (Joe) — the name of this document is wrong, and the
+error it names is the one it was written to prevent.** *"Delivery is a type
+of event. Delivery can happen. But delivering the wrong thing is of no use to
+anybody. So optimizing for delivery without checking the model first is a waste
+of time and effort and compute and electricity."* The agents of 2026-07 were
+optimising delivery; the commissioner's satisfaction criterion was *alignment
+with Active Inference* — and that criterion was never written in a formal
+language, so "faithful" had no referent and was awarded to anything with G's,
+τ's and γ's in it. Checked 2026-08-29: no `DarkTower/*.lean` file defines a
+policy, a cascade, an expected free energy, or an observation model;
+`futon2/docs/futon-aif-completeness.md` is a requirements checklist ported from
+last year's simulation, in which "G(π)" names three different computations
+(`rollout` path-sum, `cascade-lane` wholeness, `efe` over actions); the
+mission's §2.1e formalism table types authority, trajectory, uncertainty,
+naming and records — and not G itself. **So the object upstream of every
+problem record — the formal statement of what the machine must be aligned
+with — does not yet exist, and writing it is the first work, before any
+problem record and before G over cascades.** Until it exists this document
+governs nothing, whatever it is called. Rename pending Joe's choice; "delivery"
+should not survive in the title.
 
 ---
 
