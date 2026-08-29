@@ -110,10 +110,31 @@ Before any dispatch:
    - *wrong corpus*: "zero X" — satisfiable by looking in the directory that
      cannot contain X.
    - *self-report*: "claimPersisted = true" — satisfiable by the subject.
+   - *type substitution* (added 2026-08-29, Joe): the theory's term names a
+     structured object and the delivery passes a simpler one and proceeds.
+     "G over policies, a policy composed of patterns" was delivered as G over
+     candidate actions (`efe.clj:808`, `rank-actions [state candidate-actions]`)
+     and a cascade as `(vec (get-in d [:cascade :pattern-ids]))`
+     (`fold_escrow.clj:113`) — a bag of ids, which `M-formal-war-machine`
+     §2.1d lists under *what a cascade is not*. The substitution was even
+     narrated: `f7aa044` (07-08) reframed the remaining gap from "implement
+     G-over-policies" to "depth".
 3. **Rewrite `solved` until each facade would fail it**, or record the facade
    as accepted-and-observable ("a rename would pass this predicate; we accept
    that because γ's movement is checked separately at …"). A predicate that
    admits an unrecorded facade is not yet a predicate.
+4. **Refusal is a first-class deliverable.** If the commissioner's term has no
+   definition the deliverer can state on the commissioner's own terms, the
+   correct delivery is *"I'm not seeing it — here is what would have to be
+   defined"*, and the problem record's status stays `open` with that gap as
+   its `now`. A stand-in of a simpler type is the type-substitution facade,
+   not progress. Joe, 2026-08-29: *"The system itself should have said, I'm
+   sorry, I cannot compute that for you because it's too badly specified …
+   there should have been zero attempts, not 24."* At the model level this
+   is a type error — `G : Cascade → ℝ` does not accept a `List Pattern` — and
+   is exactly what validation-before-running refuses; at run time it is a
+   typed absence (`:cannot-compute {:reason :ill-typed-policy}`), the
+   vocabulary families 2 and 4 already provide, emitted instead of a number.
 
 *Why this is the value-adding step and not overhead.* It is the moment where
 "faithful to what?" gets answered concretely: the predicate that survives the
