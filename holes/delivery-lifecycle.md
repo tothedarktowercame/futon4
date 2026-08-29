@@ -51,18 +51,44 @@ section in the mission that commissions it. Fields, in this order:
 
 ```
 problem:      <the commissioner's words, verbatim — what is wrong now>
-now:          <an observation on a run artefact that shows it: path + what is seen>
-solved:       <the observation on the same kind of artefact that would show it solved>
+now:          <the record that shows it: path + what is seen — this is the one
+               place run data belongs; it is evidence that a problem exists>
+solved:       <a property of the MODEL, stated so it can be checked before the
+               machine is turned on: what no run may do, over the whole domain
+               the theory claims (any mission, any policy) — not an observation>
 facades:      <ways `solved` could be made true without the problem being solved,
-               each with the observation that would expose it — see §2>
+               each stated as a case the model must REFUSE — see §2>
 owner:        <one agent-id or joe>
-status:       open | solved (observed <date> at <path>) | did-something-else (<what>)
+status:       open | validated (model refuses every facade, <date>, <artefact>)
+              | did-something-else (<what>)
 deliveries:   <list; each says what it changed and which of now/solved/facades it affected>
 ```
 
 `solved` is the only predicate any status is ever written against. It is the
 commissioner's. A deliverer may propose a rewording; the commissioner accepts
 or not; the deliverer may not write against their own.
+
+**Amended 2026-08-29 (Joe): `solved` is validated before running, not observed
+after.** *"You can generate all kinds of empirics for a machine which is badly
+specified … runtime data is not the thing to go for here. The thing to go for
+is validation of the model before we even turn it on, ever."* The corpus makes
+the point by itself: 85 of the 88 realized outcomes are on one policy, so no
+amount of that data validates a general-purpose claim — it can only falsify a
+specific run. Run data therefore has exactly two roles in a problem record:
+it is `now` (the evidence that there is a problem), and it is what a validated
+model must *refuse* (the retro-trip — the known bad runs must fail the model's
+predicate). It is never the validation.
+
+In the formal chain this is not new. `M-formal-war-machine` §3.1d's module
+standard already demands three witnesses per module — *accepting*,
+*refusing-broken*, *refusing-plausible-fix* — and the third is this document's
+facade list as theorems: `substitution_2026_07_08_narrows_domain_is_refused`
+in `GainChain.lean` is "the whitelist facade is refused", proved, before any
+run. A problem record's `facades` are the informal statement of the
+refusing-plausible-fix witnesses the Lean module must carry; `validated` means
+each has been carried. The general-purpose requirement is what `∀` supplies
+and no trace can: a producer whose domain is a finite list is refused for
+every mission, not for the four that happened to be listed.
 
 ## 2. The first step: PROBLEM + FACADE — and why it is the one that adds value
 
@@ -110,15 +136,18 @@ Deliberately few, and none of them has a status of its own.
 - **DELIVER.** Any method. Form gates (clj-kondo, check-parens, tests) as a
   floor. The delivery's own report says which of `now` / `solved` / `facades`
   it touched, and nothing else about its standing.
-- **OBSERVE.** Someone runs the thing and looks at the `solved` artefact. Who
-  is not constrained here — v1's different-method witness rule is *unproven*
-  for the failure that occurred and is kept only as an option for count-shaped
-  predicates (v1 §9 rows 1–2). What is constrained: the observation is on a
-  run artefact at a path, and it is the commissioner's predicate, verbatim.
-- **STATUS.** Written on the problem record only, by anyone, but only from an
-  OBSERVE. Three values: `open`, `solved (observed …)`, `did-something-else`.
-  The third is the important one: it is where B-2d, the rename, the whitelist
-  and every "built (dark)" row would have gone, visibly, instead of "done".
+- **VALIDATE.** *(Amended 2026-08-29; replaces "OBSERVE".)* The model is
+  checked against `solved` and against every entry in `facades` before the
+  machine is turned on: each facade is a case the model refuses, and the known
+  bad runs in `now` are cases it refuses (retro-trip). Who does this is not
+  constrained; what is: it is the commissioner's predicate, verbatim, and it
+  is over the whole domain the theory claims, not over the runs that happen
+  to exist. Running the machine and looking at its trace is not validation —
+  it is at most a later falsification of one run.
+- **STATUS.** Written on the problem record only, by anyone, but only from a
+  VALIDATE. Three values: `open`, `validated (…)`, `did-something-else`. The
+  third is the important one: it is where B-2d, the rename, the whitelist and
+  every "built (dark)" row would have gone, visibly, instead of "done".
 
 Deferrals ("until data", "latent") are entries in `deliveries` that leave
 `status: open`. They are not a status. v1's park-with-deadline is dropped as
