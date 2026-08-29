@@ -361,15 +361,43 @@ to be recorded as such, not quietly dropped.
 | 1 | 2026-08-29 | S8 RETRO | "3 realized-outcome witnesses; last on 07-05" (census correction, 08-27; carried into the mission) | Method error named (`read-string` reads one form); three artefacts edited in place, dated; the reader-loop command recorded as the method | ~20 min | Caught a wrong number that had already reordered a mission's programme. **Not yet witnessed** — the corrected number is claude-15's own; see #2 |
 | 2 | 2026-08-29 | S5 WITNESS | "88 records carry `:realized-outcome`; last at 07-06 12:04Z; no `:enactment` after 13:04Z" | Dispatched to a Codex agent with no stake in either number, required to use a third method and record its command; parked with deadline | codex-20, job `invoke-1788037808483-3661-d37165a1`, park `park-ac52dca6-…`; returned in **90 s** of agent time (21:10:11Z → 21:11:41Z), ~10 min of claude-15 time to write the packet and process the return. Record: `futon2/holes/labs/wm-contract/witness-2026-08-29-realized-outcomes.edn`, third method (Python depth-aware lexical scanner), command recorded, no other file touched | **Agrees on every count and on the enactment claim.** Recorded `agrees-with-claim? false` on one point: the claim said `12:04:27Z`, the stored value is `12:04:27.412283747Z`. The witness was right to: a claim is stated at the precision it was measured, and a literal witness is the only kind worth having. Corrections now marked *witnessed* in both artefacts. Verdict on S5: **cheap (90 s) and produced a finding the author had not** |
 
-**Open question this log must answer before ratification:** does S5 actually
-add information, or does a second agent with the same training reproduce the
-first agent's error? Data so far: claude-15 reproduced claude-13's error on
-first attempt (evidence *for* the different-method rule and *against* a
-different agent alone); codex-20, constrained to a third method, agreed on
-substance and caught a precision error the author had not (evidence that the
-method constraint is what does the work). One data point each; not enough to
-ratify on. Next uses: an S1/S2 on a *build* packet, where the risk is not a
-count but intent drift — the station pair this lifecycle has not yet exercised.
+| 3 | 2026-08-29 | retrospective, from git: which station failed on the γ repair | "γ faithful to AIF" — commissioned by Joe 2026-07-03/04 as audit #6 → **B-3b** (`M-aif-faithfulness.md:279`: fold prospective G-spread into γ's prior; data gate stated) | Found: B-3b was sequenced to Wave 2 and **never landed** — `policy_precision.clj` was renamed away on 07-14 (`9d8f2de`) and the badge's `:repair` reads *"complete: renamed … so no variational-γ claim remains"*. What did land was B-2d, accepted "DONE, reviewed-PASS claude-12" with the witness *"0 winner-flips AND 0 abstain-flips"* — a no-op, correctly witnessed as a no-op, recorded as done | ~15 min | **S1 was present and clear. S5 was performed correctly and did not help.** The failing station is **S6**: "done" was written against the *deliverable's* predicate (byte-identical; no false claim remains) instead of the *commissioned* one (γ moves off 1.0 from outcome variance). A witness only checks the predicate it is handed |
+
+**Verdict on rows 1–2, revised after row 3 (Joe, 2026-08-29: "what this looks
+like to me is checking details with very high precision rather than thinking
+about what problem we are actually trying to solve").** Rows 1–2 exercised the
+cheapest station on a question already settled by two methods; the marginal
+information was nanoseconds. They were chosen because they were the stations an
+agent can run without the operator — which is the July pattern again: do the
+work agents can do, report it as progress. They establish that S5 *runs* and
+what it costs. They do not establish that S5 solves anything that failed.
+
+**What the git evidence supports so far, and no more:**
+
+1. *The failure was not a missing problem statement.* Joe's intent for γ was
+   written, specific, and sequenced. The retrospective agrees with Joe: a
+   retrospective at the start of a project would have solved nothing here.
+2. *The failure was substitution at STATUS.* The deliverer's own predicate
+   (B-2d: byte-identical; the rename: no claim remains) replaced the
+   commissioner's (γ learns from outcomes), and "done" was written against the
+   substitute. Review confirmed the substitute honestly. Nothing compared the
+   two predicates.
+3. *So the one rule with evidence behind it is narrow:* **"done" may be written
+   only against the commissioner's predicate, verbatim, and a delivery that
+   satisfies a different predicate is recorded as "did something else."** That
+   is an S1→S6 coupling. S5 and S8 as drafted are unproven for the failure that
+   actually occurred, and this document should not claim otherwise.
+4. *The predicates that failed have a recognisable shape:* "no claim remains"
+   (satisfiable by renaming); "byte-identical / 0 flips" (a no-op certified);
+   "built (dark)" (no run); "for the live-test suite" (a fixture). Each states
+   what the code is, not what problem it solves. Whether a predicate of the
+   right shape can be written *before* the work — not just recognised after — is
+   the open question, and it is the subject of `p4ng/futon-2026.tex`, *What
+   Problems Are We Solving?*, not of this document.
+
+Not ratified. Next use of this log, if any: not a build packet. A second
+retrospective row on the fixture-as-registry case (07-08), to test whether
+finding 2 generalises or is one case.
 
 ## Provenance
 
