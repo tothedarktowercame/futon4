@@ -83,6 +83,23 @@ classified:
 | **borrowed name** | the theory's word attached to a stack object of a different type (a list called a cascade; a clamp called γ) | no, and it is recorded as a type-substitution facade |
 | **undefined** | used, not defined anywhere | no |
 
+**Where this sits in `mission-lifecycle.md`.** HEAD already has the slot:
+*carried-forward tensions* — "for IDENTIFY/DERIVE to pick up, not bury." What
+is missing is the check that they were picked up. `M-G-over-cascades`
+(2026-06-22) is the case: HEAD, in Joe's voice, said *"G over cascades needs
+cascades to be defined … and once we've defined what we mean by cascades, we
+have to define what we mean by G over them,"* and carried T1 (define cascade)
+and T2 (define G) forward. IDENTIFY answered with theoretical anchoring
+(Ostrom/IAD — an analogy); MAP and the slices answered with measurement
+apparatus (a discharge-trained recall probe, robust negative); DERIVE answered
+with a *new name* for G (expected tension-discharge, Ollivier-Ricci curvature);
+the success criterion was a recall percentage. T1 and T2 were never
+discharged, and no phase exit asked whether they had been. Gate 0 is that
+exit criterion, on IDENTIFY: *every term in the thesis is theory-defined, or
+the next phase is DEFINE, not MAP* — and the pushback Joe wanted ("we can't
+proceed without these definitions") is an agent refusing to cross that line
+with T1/T2 open, which the lifecycle currently permits.
+
 The gate passes only when every term in the goal statement is
 *theory-defined*. If the goal was "something that looks like active
 inference," G may be computed over anything and the gate is vacuous; if the
