@@ -100,6 +100,22 @@ the next phase is DEFINE, not MAP* — and the pushback Joe wanted ("we can't
 proceed without these definitions") is an agent refusing to cross that line
 with T1/T2 open, which the lifecycle currently permits.
 
+**Second condition, from the APM comparison (2026-08-29).** Gate 0 can pass
+*vacuously*: an apparatus that defines its own nouns — frame, seat,
+coordinator, countdown — has every term "defined" and nothing external to be
+faithful to, so no term can fail the gate and the whole cost moves to
+operational conformance with a description of itself. APM is that case: 94
+Clojure commits in `src/futon3c/apm/` in the three days 08-27..08-29 against
+**zero** Lean commits in the same window, on a spec that is 27/42 operational
+clauses, with its hub (`countdown_control.clj`, 107 revisions) mentioned once.
+So the gate requires, in addition: **at least one term in the goal statement
+is external — defined by something the apparatus does not control, with a
+falsifier the apparatus cannot satisfy by construction.** In APM the only
+such term is the preregistered `Q(o∣π)` over the mathematics outcome space
+(n=11, falsifier named), and it is the only place drift surfaced *as drift*
+(`:tier-a` absent, `:defective-registration` outside the protocol's set)
+rather than as another fix.
+
 The gate passes only when every term in the goal statement is
 *theory-defined*. If the goal was "something that looks like active
 inference," G may be computed over anything and the gate is vacuous; if the
