@@ -347,6 +347,26 @@ and a number it got is a reading, and is labelled as such.
   `gen-wip-cards.py` exist; wiring them to these rules is a small,
   separately-commissioned packet, with its own S1.
 
+## 9. Validation log — this document is itself under test
+
+Joe, 2026-08-29: *"I'm not going to ratify anything at this point. We need
+evidence that this thing actually works as required."* So: not ratified; in
+use on `M-formal-war-machine`, one station at a time. Every use is logged here
+with what the station cost and whether it caught anything. A station that never
+catches anything, or that is routinely skipped, is evidence against it and is
+to be recorded as such, not quietly dropped.
+
+| # | date | station | claim under test | what the station did | cost | verdict on the station |
+|---|---|---|---|---|---|---|
+| 1 | 2026-08-29 | S8 RETRO | "3 realized-outcome witnesses; last on 07-05" (census correction, 08-27; carried into the mission) | Method error named (`read-string` reads one form); three artefacts edited in place, dated; the reader-loop command recorded as the method | ~20 min | Caught a wrong number that had already reordered a mission's programme. **Not yet witnessed** — the corrected number is claude-15's own; see #2 |
+| 2 | 2026-08-29 | S5 WITNESS | "88 records carry `:realized-outcome`; last at 07-06 12:04Z; no `:enactment` after 13:04Z" | Dispatched to a Codex agent with no stake in either number, required to use a third method and record its command; parked with deadline | dispatched 2026-08-29 to codex-20: job `invoke-1788037808483-3661-d37165a1`, park `park-ac52dca6-ff3c-474f-8b39-36c3a325f1a9`, deadline +45 min; witness record due at `futon2/holes/labs/wm-contract/witness-2026-08-29-realized-outcomes.edn` | *(pending)* |
+
+**Open question this log must answer before ratification:** does S5 actually
+add information, or does a second agent with the same training reproduce the
+first agent's error? #2 is the first data point. claude-15 reproduced
+claude-13's error on first attempt, which is evidence *for* the different-method
+rule and *against* relying on a different agent alone.
+
 ## Provenance
 
 Drafted 2026-08-29 by claude-15 after a review, at Joe's direction, of how
