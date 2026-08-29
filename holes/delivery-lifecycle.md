@@ -29,8 +29,12 @@ naming and records — and not G itself. **So the object upstream of every
 problem record — the formal statement of what the machine must be aligned
 with — does not yet exist, and writing it is the first work, before any
 problem record and before G over cascades.** Until it exists this document
-governs nothing, whatever it is called. Rename pending Joe's choice; "delivery"
-should not survive in the title.
+governs nothing, whatever it is called. Rename pending Joe's choice.
+*(Later the same day: "delivery" is reclaimed at Gate 1, §0.6, as the name
+of the typed event on an edge of the wiring diagram — sender, receiver,
+payload, guarantee, atomicity, receipt. It is a good word for that and a
+bad word for the objective; the title question is whether the document is
+about the objective or about the edges.)*
 
 ---
 
@@ -161,6 +165,36 @@ checks code against it. Gate 1 makes it required wherever roles hand off,
 gives edges the fields above, and checks the implementation against it the
 way APM already checks message *shapes* (mutation tests), which is the one
 class of APM bug that did go away.
+
+**Delivery, typed** *(Joe, 2026-08-29: "this is similar to 'delivery' but
+needs to be typed properly")*. A delivery is one event on one edge of the
+diagram. Its type, stated so the field list above is not prose:
+
+```
+Delivery :=
+  { from        : Role                     -- sender seat
+    to          : Role                     -- receiver seat
+    payload     : Schema                   -- the message type (APM already emits these)
+    guarantee   : ExactlyOnce | AtLeastOnce
+    atomic-with : List Write               -- writes that must land with the receipt, or none of them
+    retry       : { cap : Nat, same-identity : Bool }   -- APM's "stable job identity" and "retries increment same entry"
+    timeout-ms  : Nat
+    idem-key    : Key                      -- what makes a redelivery recognisable
+    receipt     : Schema }                 -- what the receiver must emit back; a Delivery without one is a broadcast
+```
+
+Two consequences. First, the six global booleans in the APM contract each
+become a *field on specific edges* — `exactly-once-per-frame` is
+`guarantee` on the frame-mint edge, `student-candidate-persisted-before-receipt`
+is `atomic-with` on the student→coordinator edge — so a violation names an
+edge instead of the apparatus. Second, the ordering of deliveries is the
+BV layer §2.1e already assigns: `seq` between deliveries that must not
+reorder, `copar` between ones that may; a wiring diagram is a BV term over
+`Delivery`s, which is the form in which it can be checked rather than drawn.
+The Agency's bell envelope (`--from`, `--to`, `in-reply-to`, job-id,
+park deadline) is an untyped instance of this record already; the
+lost-review and agent-not-found incidents in `CLAUDE.md` are missing
+`receipt` and unchecked `to`.
 
 What this would and would not remove, stated so it can be tested: the 56
 handoff-shaped fixes are the class a contract-bearing diagram states in
