@@ -359,13 +359,17 @@ to be recorded as such, not quietly dropped.
 | # | date | station | claim under test | what the station did | cost | verdict on the station |
 |---|---|---|---|---|---|---|
 | 1 | 2026-08-29 | S8 RETRO | "3 realized-outcome witnesses; last on 07-05" (census correction, 08-27; carried into the mission) | Method error named (`read-string` reads one form); three artefacts edited in place, dated; the reader-loop command recorded as the method | ~20 min | Caught a wrong number that had already reordered a mission's programme. **Not yet witnessed** — the corrected number is claude-15's own; see #2 |
-| 2 | 2026-08-29 | S5 WITNESS | "88 records carry `:realized-outcome`; last at 07-06 12:04Z; no `:enactment` after 13:04Z" | Dispatched to a Codex agent with no stake in either number, required to use a third method and record its command; parked with deadline | dispatched 2026-08-29 to codex-20: job `invoke-1788037808483-3661-d37165a1`, park `park-ac52dca6-ff3c-474f-8b39-36c3a325f1a9`, deadline +45 min; witness record due at `futon2/holes/labs/wm-contract/witness-2026-08-29-realized-outcomes.edn` | *(pending)* |
+| 2 | 2026-08-29 | S5 WITNESS | "88 records carry `:realized-outcome`; last at 07-06 12:04Z; no `:enactment` after 13:04Z" | Dispatched to a Codex agent with no stake in either number, required to use a third method and record its command; parked with deadline | codex-20, job `invoke-1788037808483-3661-d37165a1`, park `park-ac52dca6-…`; returned in **90 s** of agent time (21:10:11Z → 21:11:41Z), ~10 min of claude-15 time to write the packet and process the return. Record: `futon2/holes/labs/wm-contract/witness-2026-08-29-realized-outcomes.edn`, third method (Python depth-aware lexical scanner), command recorded, no other file touched | **Agrees on every count and on the enactment claim.** Recorded `agrees-with-claim? false` on one point: the claim said `12:04:27Z`, the stored value is `12:04:27.412283747Z`. The witness was right to: a claim is stated at the precision it was measured, and a literal witness is the only kind worth having. Corrections now marked *witnessed* in both artefacts. Verdict on S5: **cheap (90 s) and produced a finding the author had not** |
 
 **Open question this log must answer before ratification:** does S5 actually
 add information, or does a second agent with the same training reproduce the
-first agent's error? #2 is the first data point. claude-15 reproduced
-claude-13's error on first attempt, which is evidence *for* the different-method
-rule and *against* relying on a different agent alone.
+first agent's error? Data so far: claude-15 reproduced claude-13's error on
+first attempt (evidence *for* the different-method rule and *against* a
+different agent alone); codex-20, constrained to a third method, agreed on
+substance and caught a precision error the author had not (evidence that the
+method constraint is what does the work). One data point each; not enough to
+ratify on. Next uses: an S1/S2 on a *build* packet, where the risk is not a
+count but intent drift — the station pair this lifecycle has not yet exercised.
 
 ## Provenance
 
