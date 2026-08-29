@@ -65,6 +65,33 @@ Three lessons, and v2 is built from them only:
    *is* the design research Joe asked for — "what should this be faithful to?"
    — and its output is a document the work is answerable to.
 
+## 0.5 Gate 0 — are the terms defined well enough to proceed? *(added 2026-08-29, Joe)*
+
+*"From a lifecycle standpoint, the question is really: are the terms that
+we're working with sufficiently well defined that we can proceed? … It is
+important at the meta level to just think about what terms are being used at
+all. That's a different order of business"* from defining any one of them.
+
+Before a problem record is written, and before any object-level definition
+work, the goal statement is decomposed into its terms and each term is
+classified:
+
+| class | meaning | may proceed? |
+|---|---|---|
+| **theory-defined** | defined on the theory's own terms (a formal statement, or a citation *plus* the statement of what in the stack instantiates it) | yes |
+| **stack-defined** | defined by what the code does ("G is what `rank-actions` returns") | no — this is the class every July facade lived in |
+| **borrowed name** | the theory's word attached to a stack object of a different type (a list called a cascade; a clamp called γ) | no, and it is recorded as a type-substitution facade |
+| **undefined** | used, not defined anywhere | no |
+
+The gate passes only when every term in the goal statement is
+*theory-defined*. If the goal was "something that looks like active
+inference," G may be computed over anything and the gate is vacuous; if the
+goal is "an actual active inference implementation with design patterns at
+the core," every term of that sentence has to be in the first class before
+the first packet. The inventory is the deliverable of this gate, and a term
+that cannot be moved into the first class is reported as such — that report
+is the refusal of §2.4, one level up.
+
 ## 1. The unit: a problem record
 
 One file per commissioned problem, `<repo>/holes/problems/P-<name>.md`, or a
