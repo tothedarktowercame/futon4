@@ -455,6 +455,58 @@ load and a degrade path below it, wants a tetrahedron of its own. The
 placemat's answer is "as appropriate": recurse where there are edges with
 undeclared guarantees, and stop where there are none.
 
+## 0.10 A fifth precept — workflow state *(Joe, 2026-08-30; PROPOSED, not validated)*
+
+> *"In a static picture you've got your nouns, your verbs, they're all drawn out as a
+> diagram, and in principle they're going to amass some evidence as an output of that
+> diagram if it runs. But the workflow state, or handoff state, would be a fifth one.
+> Provenance could be part of it. Here's the iteration of that machine that ran, or
+> here is the next role involved, like your assignment to Claude 20."*
+
+The four precepts of §0.7 describe a snapshot: what the parts are (nouns), what they do
+(transactions), how they fit (organisation), and whether the evidence they amass is the right
+evidence (apex). None of them says **who holds the thing right now, at which iteration, and
+what the next handoff is**. That is a separate kind of fact, and it was the kind behind a
+distinct set of today's failures:
+
+- "I'll get back to you" followed by silence (the park protocol exists because of it);
+- a job shown as `running` that is last-observed, not live (claude-20's own caveat);
+- a `:done` inherited from a previous iteration's state file (log row 12);
+- a bell without a park; an unnamed reviewer; author = reviewer (the R9 audit's "the author
+  then closed thirteen");
+- a count carried into a record without the iteration that produced it (rows 9, 11; claude-20's
+  two catches on 2026-08-30).
+
+**The precept.** Every artefact, at every moment, has exactly one `holder : Role`, an
+`iteration`, and a dated handoff chain; "in flight" is a state with a `deadline` and an
+`awaiting`; no handoff without a receipt. As a type it is the `Delivery` of §0.6 lifted from
+data to *roles*:
+
+```
+Handoff  := { artefact, from : Role, to : Role, at, iteration, awaiting : List JobId, deadline, receipt }
+Workflow := { holder : Role, iteration : Nat, history : List Handoff }   -- provenance is `history`
+```
+
+Provenance (§0.7's apex asks *is this the right evidence*; provenance asks *when, by which
+instrument, by whose hand*) is the backward half of this precept — `history`. Workflow state is the
+present and forward half — `holder`, `awaiting`, `deadline`. The Agency already stores the instance:
+parks, jobs, the build ledger (`BUILD-ledger.md`), the roster's roles.
+
+**Where it lives in a problem record.** S1 already carries it in embryo — `owner`, `status`,
+`deliveries` with job/park ids. Made explicit: `holder` (who has it now), `iteration`, and
+`handoffs` (dated, with receipts). The Sierpiński recursion (§0.9) applies unchanged: a node's own
+tetrahedron gets its own workflow vertex — who holds *that node* — and the big tetrahedron's
+workflow vertex is the build ledger.
+
+**Facades this precept names** (to be tested in use, like the rest): a status without a holder; a
+holder without a deadline; a "done" without the iteration that did it; a review line written by the
+author; a job-id nowhere in the operator-facing buffer.
+
+**Validation.** Not ratified. It is applied first to the R-node build (the ledger, the tech-lead
+charter, the `BUILD-packets/` files) and to the P-R9 / P-control-map-lint records; a log row is
+written when it catches something the four precepts did not, or when it fails to. If it never fires,
+it was not a precept.
+
 ## 1. The unit: a problem record
 
 One file per commissioned problem, `<repo>/holes/problems/P-<name>.md`, or a
