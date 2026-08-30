@@ -672,7 +672,7 @@ done in the overall project today after stating the problem in the first place")
    that can say "wrong evidence".
 2. **The evidence vertex subdivided** — this section (2026-08-31): evidence-gathering gets its own tetrahedron,
    with the meta-question ("what is the evidence of the evidence?") as its evidence vertex.
-Subsequent subdivisions append here (see §0.13 for move 3); the register is the map of the gasket as it actually develops.
+Subsequent subdivisions append here (see §0.13 for move 3, §0.14 for move 4); the register is the map of the gasket as it actually develops.
 
 ## 0.13 The organisation tetrahedron — the third formal subdivision: edges have types *(Joe, 2026-08-31)*
 
@@ -732,6 +732,53 @@ the direct product — and is staffed as its own lane (EDGES), not queued behind
 **Register update (§0.12):**
 3. **The organisation vertex subdivided** — this section (2026-08-31): edges have types; transactionality and
    guaranteed flow are the first questions; the APM trial record is the costed evidence.
+
+## 0.14 The workflow octahedron — the negative space, and what makes work automatable *(Joe, 2026-08-31, going to sleep; PROPOSED — the decomposition wants his waking eyes)*
+
+Joe: *"How would we decompose, following the Sierpiński model, this workflow — something that touches all the
+other boundaries — as a kind of negative space? … Not just how do we automate the building of this machine, but
+what makes a workflow suitable for automation, and what kinds of decisions have to be set up in advance to make
+that possible. Not every task is going to be automatable … previous considerations weren't very good at this: we
+put someone in that needed a human in the loop, and the machine couldn't distinguish good and bad candidates."*
+
+**The geometry is exact, not decorative.** Subdividing a tetrahedron into four corner tetrahedra (§0.9) leaves a
+central OCTAHEDRON — the removed piece, whose eight faces touch all four children and all four of the parent's
+faces. §0.10 said workflow is the mass, not a vertex; this says where the mass lives when the solid subdivides:
+in the negative space that coordinates every boundary. The workflow is not a fifth vertex because it is the shape
+of what the four vertices exchange.
+
+**The decomposition (draft, from one day's ledger as the empirical base — ~25 dispatched units, every gate and
+every operator intervention on the record):** a unit of work is AUTOMATABLE within the machine to the degree that:
+1. **Its ports are typed on both sides** (§0.13): inputs emitted by an interface, outputs validated at uptake.
+   Freehand ports are where a human silently supplies the type.
+2. **Its acceptance is named in advance and dry-run satisfiable** (row 11) — an acceptance that requires judgement
+   at read time is a gate, i.e. a human.
+3. **Its falsifier is executable** — the work can know it failed without anyone reading it (the --negative
+   controls; a task whose failure only a reader can see is not automatable, only delegable).
+4. **Its evidence has a named consumer** (§0.11) — otherwise automation produces exhaust faster.
+5. **Its reads are pinned and its absences loud** (I_data_current, I_absent_is_loud) — else the automation runs on
+   silently wrong inputs, which is worse than not running.
+6. **Its blast radius is bounded and reversible without arming** — the R16 fork is exactly this boundary: outward
+   actuation wants an operator-armed step; construction inside the model does not. Where arming is needed, the
+   task is SPLIT (automate up to the arming point, hand off, automate after) rather than classed unautomatable.
+7. **Every decision it can encounter is pre-decided or refusable.** This is the load: the packets' refusal clauses
+   are pre-decisions ("refuse rather than invent"); the day's operator interventions are the residue — fork
+   rulings, precept statements, scope calls, seat lending. **A task is automatable iff its decision surface is
+   covered by (packet text ∪ standing precepts ∪ honest refusal).** What must be set up in advance is therefore
+   not the answers but the DECISION ROUTES: who rules, at what contact point, with what deadline behaviour.
+The failure mode Joe names — a human quietly load-bearing inside a "automated" flow — is criterion 1+7 violated
+together: an untyped port whose type a person supplies, plus an undeclared decision they keep making.
+
+**Where it attaches:** not RUN3 (Joe's instinct, endorsed: running is the existence vertex's evidence; automating
+is the octahedron's). The candidate declaration when ratified: `wmAutomatesWork` — evidence: a unit of this
+machine's OWN build executed end-to-end with zero operator turns between dispatch and gate, scored against the
+seven criteria; falsifier: an operator turn inside the span, or a criterion silently unmet. The case study is
+already half-run: tonight's ledger can be re-read as data — which units cleared all seven, and what exactly the
+owner supplied where they didn't. That re-reading is the discovery packet (AUTO-D1, drafted on Joe's word only).
+
+**Register update (§0.12):**
+4. **The negative space named** — this section (2026-08-31): the workflow octahedron; automatability as its
+   decomposition; the decision surface as what must be set up in advance.
 
 ## 1. The unit: a problem record
 
