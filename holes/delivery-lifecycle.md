@@ -287,6 +287,68 @@ feedback improves practice / the system sustains itself), three values, and
 `absent` as a first-class word. "Built (dark)" was I0 asserted with I1 absent,
 and had no word for itself.
 
+## 0.8 The big tetrahedron, specified *(Joe, 2026-08-30)*
+
+*"At the big level, our nouns effectively are the R-number nodes, up to R20.
+The verbs are the wiring diagram from Figure 4 in the* What Problems Are We
+Solving? *paper, duplicated from the PLoP paper — so those are the edges, and
+with that stated we have a reasonable comprehension of what it means to have
+an organization of those things as well. The wiring diagram gives a typology
+both of the edges and of the organization overall, if we were to write that
+down carefully. And then for the evidence apex — yes, we have been gathering
+those empirics, but we need a standard so that we would know which empirics
+are the right empirics. And that's what we don't have yet."*
+
+| vertex | instance | state on 2026-08-30 |
+|---|---|---|
+| **People / nouns** | the R-nodes, R1–R20 | **exist as prose**: ~20 distinct R-headed pattern paragraphs in `p4ng/sec-catalog.tex`; 18 drawn on Figure 4; R18 (faithfulness meta-criterion) and R19 (the C-vector) are in `futon-aif-completeness.md` and not on the figure. Their Gate-0 class is the §0.5 inventory — most are stack-defined or borrowed |
+| **Money / verbs** | Figure 4's edges: 10 control edges forming one cycle, 11 dashed support edges | **exist only as Bezier paths** in `p4ng/aif-control-map-paper.svg` (24 `<path>` elements). No file states an edge between two R-nodes. `M-formal-war-machine` §1.6 criterion 1 — "the wiring is data" — is the oldest open item in the mission and was never in the H-series. Precedent vocabulary: `p4ng/empirics-futon/fig-loop.edn` (`{:from :to :label :kind :status}`, with `:holds` as a predicate); where an edge is a handoff it also carries the `Delivery` fields of §0.6 |
+| **Organizations / fit** | the typology the diagram gives of the edges *and* of the whole | follows from the edges once they are data: five phased columns, one cycle, cross-column support; which edges are transitions, which are constraints (the §1.4 hypothesis that support edges are APM-style policies is testable only then) |
+| **Evidence apex** | a standard saying which empirics are the right empirics, per noun and per edge | **does not exist.** What exists instead: `wr-overlay.edn` badges (17, `:holds` by dated sentence), `r18-badges.edn` (static, 07-03), the H1 census (counts of key presence), `empirics.tex` (nine campaigns, each "diagnostic rather than compliant"), and the paper's own vetting (6 of 8 mechanism claims non-confirmed, parked). All are evidence; none says what evidence a given R-node or edge *requires* |
+
+**The apex's ancestor was inside the triangle, which is why it could not
+certify.** R18 — "faithfulness of the quantities (meta-criterion)" — was the
+R-list's own slot for the apex, and it was implemented as a badge audit
+written by the code's authors from the code, on one day. An apex that is one
+of the nouns is a vertex of the triangle wearing the word "meta"; it can
+grade the evidence the triangle produced but cannot say the triangle
+gathered the wrong kind, because it is graded by the same hands. The apex
+has to sit outside the R-list.
+
+**What the standard would consist of — proposed shape, not yet written.**
+One *evidence contract* per noun and per edge, with the fields the week's
+failures each lacked:
+
+```
+EvidenceContract :=
+  { subject     : R-node | Edge
+    claim       : the predicate as commissioned (Gate 0 class must be theory-defined)
+    artefact    : the KIND of run artefact that bears on it (trace record / receipt /
+                  qualification record / witness record) — a test or a badge is not a kind
+    domain      : what the claim ranges over (any mission; any policy) — and the
+                  minimum diversity a corpus must show before it counts
+    corpus      : where such artefacts live (a path), and which runner writes them
+    method      : how the predicate is recomputed over the corpus (a command)
+    falsifier   : an outcome in the artefact's space that carries zero predicted mass
+                  under the claim (T1512Z's rule) — the claim is refutable only if named
+    not-evidence: the facades §2 lists, instantiated for this subject
+                  (fixture; dark build; wrong corpus; self-report; line count; …) }
+```
+
+The apex's act is then a type check, not a judgement: *does the artefact
+offered match `artefact`, over `domain`, from `corpus`, by `method`, and is
+`falsifier` in its space?* Anything that fails is "not the right evidence"
+whatever its quality — which is the sentence nobody could say in July.
+
+**Order of work that follows, all of it writing:** (1) the edges as data —
+criterion 1, one file, `fig-loop.edn` vocabulary plus `Delivery` fields on
+handoff edges; (2) the noun inventory by Gate-0 class, one line per R-node;
+(3) the evidence contracts, starting with the two nodes that already have
+external terms — R8's per-tick trace and R14/R16's `Q(o∣π)` over the fourteen
+dispositions — because those are the only subjects for which `falsifier` can
+be filled today. None of this is a build packet. All of it is the apex being
+constructed *outside* the R-list before any R-node is worked on again.
+
 ## 1. The unit: a problem record
 
 One file per commissioned problem, `<repo>/holes/problems/P-<name>.md`, or a
