@@ -672,7 +672,51 @@ done in the overall project today after stating the problem in the first place")
    that can say "wrong evidence".
 2. **The evidence vertex subdivided** — this section (2026-08-31): evidence-gathering gets its own tetrahedron,
    with the meta-question ("what is the evidence of the evidence?") as its evidence vertex.
-Subsequent subdivisions append here; the register is the map of the gasket as it actually develops.
+Subsequent subdivisions append here (see §0.13 for move 3); the register is the map of the gasket as it actually develops.
+
+## 0.13 The organisation tetrahedron — the third formal subdivision: edges have types *(Joe, 2026-08-31)*
+
+Joe, immediately after the organisation-evidence step (RUN2's route tracer): *"It's important to know what type of
+edges those things are that connect the nodes. If we're talking about handing off data, are the handoffs
+transactional? And do we know that the data is going to actually flow through the system? … It's taken 50 or 60
+trials with the APM machine to get it to behave well. Most of those problems are to do with transitions between
+states or handoffs between agents. … How is the organisation itself organised or typed — another meta-level
+consideration."*
+
+**Position (per §0.9):** a child of the big tetrahedron at its ORGANISATION vertex — the third top-level move
+(register below). RUN2 witnesses that a run followed the drawn edges; this tetrahedron asks what an edge *is*.
+
+**The four vertices:**
+- **Nouns — the edge typology.** Candidate type dimensions, all already paid for in experience:
+  *delivery semantics* (transactional / at-least-once / at-most-once / fire-and-forget); *synchrony* (whistle-like
+  blocking pair vs bell-like async that can cross); *acknowledgement* (receipted — a `delivery-recorded` event,
+  a park resume — vs assumed); *idempotence* (safe to retry vs not); *health-checked* (does the edge verify the
+  receiver can receive — the zai case: a handoff that "succeeds" into a session that 400s every prompt);
+  *compensation* (what happens on failure: park deadline, re-bell, rerun-and-mark). The Agency's bells, whistles,
+  parks and job envelopes ARE edge types — typed by incident, not yet by declaration.
+- **Verbs** — hand off, acknowledge, commit, roll back, retry, time out, resume, compensate.
+- **Organisation (the meta level)** — the typing discipline: every edge in the wiring diagram carries its type
+  beside its label; CML's `Delivery` operational fields are the start (what travels, when, how acknowledged);
+  an untyped edge is to organisation what an unpinned corpus is to nouns.
+- **Evidence** — two registers. *For the typology itself:* the APM record — 50–60 trials to good behaviour, most
+  failures at transitions/handoffs between agents and states. *From this build, one day:* the cancelled R19-D2
+  release bell (non-transactional handoff; state lost mid-processing; recovered only by explicit re-bell); crossed
+  bells resolved by the ledger-not-the-message rule; bells queued behind long turns (at-least-once with unbounded
+  latency, compensated by parks); the zai handoff failing while the roster said ready (no health check on the
+  edge); the lost-review incident (a reply on an edge with no return path). Falsifier for a typed edge: an
+  observed transition whose semantics differ from the declared type — a "transactional" handoff that loses state,
+  a "receipted" edge whose receipt never comes.
+- **Mass:** the CML lane holds the edge schemas and is the natural occupant; the tech-lead charter's
+  reply-delivery contract is edge typing in prose, waiting to be lifted to data.
+
+**Lean (queued, not yet ratified):** an `EdgeType` structure over these dimensions, and `Delivery` extended to
+carry one — the CML operational-fields work and R16-D2 need exactly this, so the ratification lands there rather
+than as a separate lane. The witness after `wmRunConformsToWiring` is handoff-semantics conformance: the route's
+hops each behaved per their edge's declared type.
+
+**Register update (§0.12):**
+3. **The organisation vertex subdivided** — this section (2026-08-31): edges have types; transactionality and
+   guaranteed flow are the first questions; the APM trial record is the costed evidence.
 
 ## 1. The unit: a problem record
 
