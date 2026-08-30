@@ -633,6 +633,7 @@ day it was instead recorded as done, live, or ✓.
 | 2 | 2026-08-29 | v1 S5 WITNESS (codex-20, third method) | agreed on every count; caught a nanosecond truncation | 90 s; runs; low information — the question was already settled |
 | 3 | 2026-08-29 | retrospective from git on the γ repair | S1 present, S5 correct, **status written against a substituted predicate** | v1's checking stations do not address the failure; v1 invalidated |
 | 4 | 2026-08-29 | v2 written from finding 3 | first step = problem + facade test; deliverables have no status | untested |
+| 5 | 2026-08-30 | Gate 0 + S5 on the *commissioner's* framing: the R5 policy/cascade/Q typing (`P-validated-R5` §3) sent to codex-22 as a hypothesis with six questions, refusal permitted | codex-22 (3 min, 297 lines, pointers exact on spot-check): Policy is `InformationState → Action`, not an operation on a cascade (that is a constructor); no Kleisli composition evidenced; C unspecified; zero-mass outcomes determinable for one item only; **"Q derived" was written where the artefact says "the item states Q"** (`score_item.clj:5–6`) | a different agent, told to disagree, caught a type-substitution facade in *our own* record — the first catch on the framing side rather than the count side. Cost: 3 min agent time, ~25 min claude-15 (packet, spot-checks, record). Verdict on the step: **kept** |
 
 Next use: not a build packet. The first problem record, written by Joe, for
 one July case or one open family — and the facade test on it, logged in §4's
