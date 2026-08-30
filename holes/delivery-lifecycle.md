@@ -349,6 +349,72 @@ dispositions — because those are the only subjects for which `falsifier` can
 be filled today. None of this is a build packet. All of it is the apex being
 constructed *outside* the R-list before any R-node is worked on again.
 
+## 0.9 The Sierpiński recursion — which nodes get their own tetrahedron, and where their evidence goes *(Joe, 2026-08-30)*
+
+*"Some of the nodes, maybe not all of them, have an internal wiring aspect …
+The question is which of those nodes need to have this same structure
+applied to them, and where do they send their evidence to for certification.
+R5 would be a good candidate; all the ones with red rings from our
+reconstruction would be — they have already got excursions tagged. We may
+not need a recursion of a tetrahedron per node, but if we had one for R5 and
+the other ones of that class, we might gain some assurance that the model
+works at all levels."*
+
+**The rule.** A node recurses — gets its own tetrahedron — when it has
+internal wiring: more than one noun inside it and edges between them along
+which something is delivered. A node with no internal edges is a vertex of
+the big triangle and nothing more; its evidence contract lives at the big
+apex. A node with internal edges has its own nouns, its own deliveries, its
+own fit, and its own apex — and its apex sends **one typed thing** up: the
+contract clause that states what the node claims and the evidence kind that
+bears on it. That is the flow-up. The flow-down is the big apex's
+`EvidenceContract` for that node constraining what the node's own witnesses
+may count — which fixtures are admissible, what domain the node must range
+over, what its falsifier is. Neither direction alone is governance
+(`:recursion-governance`, the placemat).
+
+**Why the red rings are the right first instances.** Their internal wiring is
+already excavated — five excursions, opened 08-26/27 — and three already have
+a Lean module that is the node-level apex in embryo:
+
+| node | internal nouns (from the excursion) | internal edges | node apex, as it stands | state |
+|---|---|---|---|---|
+| **R8** | deposit, fold, realized-outcome, tick, policy, γ | `grounded-deposit → deposit-for-mission → deposits-by-id → realized-outcome → step ⑨ → γ → τ_eff` | `GainChain.lean` — families 1, 2, 4, 5; three polarities named | excavated; 88 records; enactment stop 07-06 cause open |
+| **R14** | selector, temperature, entry, action, habit prior | `γ → τ_eff → softmax → argmax`; `E(π)` vs `G` spans | `CommitmentTemperature.lean` — `governs`, `factorsThroughDiscard`; family 8 (`I(τ;action)=0`) | 905-line excursion, "open as a repair" |
+| **R5** | criterion set, report, outcome, coverage | `criteria → evaluate → report (covers / does not cover)` | `CoverageReport.lean` (adapts families 2, 5) + `PolicyGrade.lean` (S-G1–G4) | `foldCompliant` is R5's property in embryo |
+| **R6** | candidate space, proposer, artefact provenance | `proposers → compose → candidate set → select` | **named only** — `surveyedSpace`, family 9; `CandidateSpace.lean` unwritten | slice 1 (provenance) OPEN and blocking |
+| **R2** | operator turn, observation vector, channel | `turn → persisted evidence → (nothing) → observation vector` | none | loop open at both ends; slice 1 done |
+
+**The recursion is doing work, not decoration — R8 shows it.** The July
+failure inside R8 was a *delivery* failure on its internal edges:
+`deposits-by-id` throws the whole corpus on one rejected deposit;
+`enact.clj:255` catches everything and returns the judgement unchanged;
+step ⑨ no-ops on absence. Each edge had an undeclared guarantee, and the
+composition of three defensible choices was seven weeks of silence. Gate 1's
+`Delivery` type — `guarantee`, `atomic-with`, `receipt` — applied to R8's
+*internal* edges is exactly what would have stated *"one rejected deposit ⇒
+corpus-wide throw"* as a field someone had to write down. So the same gate
+that types the big diagram types the inside of a node, and that is the
+assurance Joe is after: the model works at the level where the failure
+actually happened.
+
+**Where each node's evidence goes.** Up, to the big apex, as its clause in
+`ContractEmitter.lean` — which already registers R8's four families and R5's
+coverage clause and reserves R6's, and is therefore the flow-up channel that
+exists. Down, from the big apex, as the node's `EvidenceContract` — which does
+not exist for any node yet, and is why the three Lean modules could name
+their polarities without anyone asking whether a fixture with one policy is
+the right evidence for a claim over any mission.
+
+**What this does not settle.** Whether R14's internal wiring is one node or
+two (the excursion is the longest of the five and treats τ and γ as separable
+by design); whether R2, with no internal noun that is the machine's, recurses
+at all or is a pure edge between the operator and R1; and how many levels the
+gasket goes — whether `deposits-by-id`, itself a small machine with a strict
+load and a degrade path below it, wants a tetrahedron of its own. The
+placemat's answer is "as appropriate": recurse where there are edges with
+undeclared guarantees, and stop where there are none.
+
 ## 1. The unit: a problem record
 
 One file per commissioned problem, `<repo>/holes/problems/P-<name>.md`, or a
