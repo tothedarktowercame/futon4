@@ -212,6 +212,81 @@ fielded the operational issues while Claude did the design is consistent
 with the record. The diagram is what would let the design side hand the
 operational side something *checkable* rather than something to discover.
 
+## 0.7 The tetrahedron — nouns, transactions, fit, and an apex that can say "wrong evidence" *(added 2026-08-30, Joe)*
+
+Source: the Grand Unified Placemat, `futon5a/data/grand-unified-placemat.edn`
+— Krowne's three sustainability vertices plus the evidence apex Joe added
+("not in Krowne 2003; the same triangle plus an evidence apex opens the local
+system to the network"), with an invariant axis I0–I4, a maturity vocabulary
+`operational / building / absent`, and `:recursion-governance` between scales.
+This section uses it; it does not restate it.
+
+**The correspondence (Joe, 2026-08-30):**
+
+| placemat vertex | in this lifecycle | gate |
+|---|---|---|
+| **People** | **the nouns** — the terms of the system: policy, cascade, outcome, G, C, Q(o∣π); who they are and whether they are defined on the theory's terms | Gate 0 |
+| **Money** | **the transactions** — the typed deliveries: what crosses an edge, from whom to whom, with what guarantee and at what cost | Gate 1 (§0.6, `Delivery`) |
+| **Organizations** | **how they all fit together** — the wiring the transactions live in; the rules that hold the nouns in place | Gate 1 (the diagram) |
+| **Evidence apex** | **certification, at the meta level, that the evidence being gathered is the right evidence** | the condition on every status change |
+
+**Why the apex is the vertex that was missing.** Joe: *"The problem with the
+previous round is that we were gathering evidence, but there was no
+certification at the meta level that would say, this is the wrong evidence.
+Because there was no recognition that we were gathering anything but the
+correct evidence."* The record of July and of this week is a list of exactly
+that: null results drawn from the runner that does not enact
+(`T-wm-wrong-corpus`, three parties, same day); "62 archived attempts" from
+`wm-outer-loop`; a line count reported as 88 outcomes, then a first-form read
+reported as 3; a census that "made the error it exists to catch" by counting
+one of two shapes; the paper's own vetting finding "seven counts untraceable
+to any primary record"; the 18/18 scale test on a fixture; a search for `Q(o|π)`
+that could not find `Q(o∣π)`. In every case evidence was gathered carefully and
+the question *"is this the evidence the claim needs?"* was never asked, because
+nothing was positioned to ask it. The triangle certifies its own evidence; the
+apex is outside the triangle by construction. This is WR-0's "verdict the
+apparatus cannot issue to itself", the external term of Gate 0's second
+condition, and the placemat's apex, which are one requirement stated three
+times.
+
+**What the apex does, concretely.** Before a status changes, the apex answers
+one question about the evidence offered: *does this artefact bear on the
+predicate as commissioned, for the domain the theory claims?* — not "is it
+correct" (the triangle can check that) but "is it the right kind." A count
+without its corpus path and command fails it; a fixture test offered for a
+run claim fails it; a run on one policy offered for a general claim fails it;
+a search that could not have found the thing, offered as absence, fails it.
+The apex's own record is the two reflection lines of §4, kept per problem.
+
+**Tetrahedra as appropriate — not one everywhere, and not one big one.** Joe:
+*"we need tetrahedra as appropriate, not necessarily one everywhere, but one
+big one probably wouldn't be enough."* The placemat already answers how many:
+one per scale, with recursion governance between them. Here:
+
+- **per problem record** (§1): its nouns, its transactions, its fit, and its
+  apex — the external witness for *that* problem's predicate;
+- **per mission**: the same shape one scale up, whose apex certifies that the
+  problem records' evidence is the right evidence for the mission's thesis —
+  this is the check `M-G-over-cascades` lacked, where a recall percentage was
+  accepted as evidence for a definition;
+- **the stack's reader scale** (code → stack → war machine → placemat, as
+  `TN-appearance` lists them): the placemat itself.
+
+And the placemat's rule for the relation between them is the discipline Joe
+asked for between *understanding the problem*, *cleaning it up*, and
+*what is reusable*: flow-up (a finding promoted to the next scale) is
+admissible only when matched by flow-down (governance applied back at the
+lower scale), because otherwise *"the meta-pattern accumulates claims faster
+than it accumulates governance"* — which is the sentence that describes July.
+
+**Status vocabulary, borrowed rather than invented.** The placemat's maturity
+table — `:I0 :operational, :I1 :building, :I2 :absent …` — is the status form
+this lifecycle should use instead of anything it invents: five rungs (the core
+fact holds / is detectable / evidence reaches the people who need it /
+feedback improves practice / the system sustains itself), three values, and
+`absent` as a first-class word. "Built (dark)" was I0 asserted with I1 absent,
+and had no word for itself.
+
 ## 1. The unit: a problem record
 
 One file per commissioned problem, `<repo>/holes/problems/P-<name>.md`, or a
