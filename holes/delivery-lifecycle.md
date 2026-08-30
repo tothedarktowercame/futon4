@@ -502,6 +502,40 @@ workflow vertex is the build ledger.
 holder without a deadline; a "done" without the iteration that did it; a review line written by the
 author; a job-id nowhere in the operator-facing buffer.
 
+**Refinement (Joe, 2026-08-30, same conversation): the fifth precept is not a vertex — it is the
+*mass* of the tetrahedron.** *"That cell has to be occupied by someone or something that's going to
+actually do the work. Otherwise it just remains a conceptual artifact. If it's occupied, then that
+agent or entity can also orchestrate the breakdown to produce the gasket at the next level."* So:
+
+- **Occupancy.** A tetrahedron (a problem record, a node, the whole system) is *live* iff its interior
+  has a `holder`. Four precepts with no holder is a specification of something nobody is building —
+  a conceptual artefact, and the July facade in its purest form (a diagram that "ran" with no one
+  inside it).
+- **Subdivision.** The holder of a tetrahedron may subdivide it (the §0.9 rule says when), assigning a
+  holder to each child. On subdividing, the parent's holder stops doing the work and becomes the
+  keeper of the **contact points**: in the Sierpiński tetrahedron the four child simplices touch only
+  at points — the midpoints of the parent's edges — and the interior between them is removed. Those
+  contact points are the overlap points "moderated by the specification": the parent's holder owns
+  the edge schemas; the children's holders own their interiors. (This is what happened on
+  2026-08-30: claude-15 held the big tetrahedron, subdivided into CML/R9/R2/R8, handed the build
+  sub-tetrahedron to claude-20, who assigned codex seats to node tetrahedra and keeps the ledger.)
+- **Termination.** Recursion stops at a tetrahedron one holder can fill directly — one file, one
+  behaviour, one acceptance: the small packet is a leaf simplex.
+- **Evidence flow.** Each child's apex evidence is passed to the parent through a contact point (the
+  six-line review-request); the parent's apex decides whether it is the right evidence (the owner
+  gate). Evidence never crosses between siblings except through a contact point.
+- **Consequence for the War Machine.** It is not a linear process R1→…→R20 with ticks; it is a gasket
+  whose top simplex is occupied by the machine itself, which subdivides (R6 *generation* is
+  subdivision; R8 is the parent reading its children's outcomes; R9 is the apex rule inherited by
+  every child) and which can grow nested decompositions as needed. The July machine had the four
+  corners and no mass.
+
+**Checkable form (proposed):** every problem record carries `holder:` (a role or agent id, or
+`conceptual`) and `parent:` (the record it was subdivided from, or `root`); the gasket is then
+derivable from the records, and a lint can say: every live record has a holder; every child names its
+parent; every contact point is an edge with two records; no evidence path crosses siblings. The
+control-map lint (`P-control-map-lint`) is the edge half of that lint already.
+
 **Validation.** Not ratified. It is applied first to the R-node build (the ledger, the tech-lead
 charter, the `BUILD-packets/` files) and to the P-R9 / P-control-map-lint records; a log row is
 written when it catches something the four precepts did not, or when it fails to. If it never fires,
