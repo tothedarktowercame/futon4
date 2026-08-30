@@ -406,6 +406,46 @@ not exist for any node yet, and is why the three Lean modules could name
 their polarities without anyone asking whether a fixture with one policy is
 the right evidence for a claim over any mission.
 
+**Priority: R8 first, because of the whitelist (Joe, 2026-08-30).** *"Whichever
+one has the four whitelisted missions inside of it, that one would be a
+priority, because that to me was just an absolute sign of failure that wasn't
+being propagated anywhere and was just sort of silently being accepted. That
+was what I was talking about with regard to this Hollywood facade."* It is R8:
+`reviewed-candidate-cleans` (`actuator_a3.clj:372`, four entries, docstring
+"for the A3 live-test suite") is read at `fold_realized.clj:113–114` on R8's
+internal edge `deposit-for-mission → realized-outcome-grounded`; outside the
+map the path is `nil`, `bound` is 0, and `remaining` is `(when (pos? bound) …)`
+— a bare `nil` that the next edge cannot tell from "no measurement." Checked
+2026-08-30: unchanged since 07-08.
+
+What "propagated" means on that edge, in this document's terms, and why it
+is the right first instance of the recursion:
+
+- **Gate 1, inside the node.** The edge gets a `Delivery` with `receipt :
+  RealizedOutcome | DomainMismatch {mission, declared-domain}` — a typed
+  absence, not `nil`. `M-formal-war-machine` §3.2 Tier 1 #3 already names it
+  (`:domain-mismatch`), and notes the vocabulary exists one function above
+  (`actuator_a3.clj:395`). The receipt is what makes the failure *visible at
+  the edge* instead of at the operator's desk seven weeks later.
+- **The node apex.** `GainChain.lean` already carries the refusing-plausible-
+  fix witness for exactly this: `substitution_2026_07_08_narrows_domain_is_refused`
+  (line 211), over `declaredDomain` (line 142). So the node-level certification
+  that "a four-entry map is not the domain" is *proved*. What it lacks is a
+  route: nothing connects the theorem to the running edge, and nothing sends
+  the node's finding up.
+- **Flow-up.** The `DomainMismatch` receipt, counted per tick, is the
+  evidence the node apex forwards — "N of M ticks fell outside the declared
+  domain" — as the qualification entry for family 5. That count would have
+  read 100% from 07-09 onward.
+- **Flow-down.** The big apex's `EvidenceContract` for R8 sets `domain : any
+  mission the selector can choose`, which is what makes a four-entry fixture
+  *not the right evidence* by type, before any run — the sentence nobody
+  could say in July, said by a field.
+
+So R8 is the instance where all four parts of the recursion exist or are
+one small step away, and where the facade has a name, a theorem, a ticket and
+a line number. Start there; the other four in the order of the table.
+
 **What this does not settle.** Whether R14's internal wiring is one node or
 two (the excursion is the longest of the five and treats τ and γ as separable
 by design); whether R2, with no internal noun that is the machine's, recurses
