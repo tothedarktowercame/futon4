@@ -311,6 +311,28 @@ landscape at `:7073` held 191,076 through the day — every wave-1 absence was a
 audit of other dated reads is `AUD-D1`; the corpus fix is packet 4c. Where no live endpoint exists for a noun an
 instrument needs, the deliverable is the endpoint, not a fresher snapshot.
 
+**Second invariant on the nouns vertex — absent input is loud (Joe, 2026-08-30 18:20Z, from AUD-D1 / row 26).**
+Currency has a sibling that `I_data_current` cannot see: an input that was never there has no date to be late.
+AUD-D1 found the WM report reading `futon5a/data/stack-logic-model.edn` and `alignment.edn` — planned as inputs
+in `M-war-machine.md` (05-03), never produced, never committed — through a helper that returns `nil` both when
+the file is absent and when it fails to parse (`war_machine.clj:482-486`), under `when-let`. Three report
+sections have rendered as nothing since May. Joe: *"that rule definitely needs to be enforced."*
+
+```
+I_absent_is_loud : for every read of a named input file by an instrument, report or loop, the
+                   absence or unparseability of that file is REPORTED (fail closed, or an explicit
+                   `:missing <path>` / `:unreadable <path> <cause>` in the output) and is never
+                   rendered as an empty result. Optional inputs are declared optional at the
+                   read site (a distinct helper / flag), and the declaration is what the lint reads.
+falsifier        : a read site where `nil`/empty from a missing or unparseable file flows into the
+                   same branch as "the file said nothing" — `when-let`/`some->`/`or`/`(catch _ nil)`
+                   over a file read with no declared optionality; instrument: a source lint over
+                   the read helpers and their call sites (AUD-D2).
+```
+Relation to the tetrahedron: `I_data_current` is about *which* store the nouns come from; `I_absent_is_loud` is
+about whether a noun *arrived at all*. The evidence vertex cannot say "wrong evidence" about evidence that was
+silently replaced by nothing — so the apex depends on this one.
+
 ## 0.8 The big tetrahedron, specified *(Joe, 2026-08-30)*
 
 *"At the big level, our nouns effectively are the R-number nodes, up to R20.
