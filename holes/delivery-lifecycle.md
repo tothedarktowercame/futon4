@@ -672,7 +672,7 @@ done in the overall project today after stating the problem in the first place")
    that can say "wrong evidence".
 2. **The evidence vertex subdivided** — this section (2026-08-31): evidence-gathering gets its own tetrahedron,
    with the meta-question ("what is the evidence of the evidence?") as its evidence vertex.
-Subsequent subdivisions append here (see §0.13 for move 3, §0.14 for move 4); the register is the map of the gasket as it actually develops.
+Subsequent subdivisions append here (§0.13 move 3, §0.14 move 4, §0.15 move 5); the register is the map of the gasket as it actually develops.
 
 ## 0.13 The organisation tetrahedron — the third formal subdivision: edges have types *(Joe, 2026-08-31)*
 
@@ -779,6 +779,42 @@ owner supplied where they didn't. That re-reading is the discovery packet (AUTO-
 **Register update (§0.12):**
 4. **The negative space named** — this section (2026-08-31): the workflow octahedron; automatability as its
    decomposition; the decision surface as what must be set up in advance.
+
+## 0.15 The verbs vertex subdivided — the handoff formula, and transparent unsuccess *(Joe, 2026-08-31; PROPOSED)*
+
+Joe, directly after §0.14: the nouns and verbs vertices still lack their major subdivisions; for verbs, the way in
+is automation's concrete unit — *"how would you create a handoff to another agent? … there's a very specific
+formula that we were using, a kind of pilot and co-pilot role, and they would hand off one thing to another. And
+that's the example we need for that paper. But it's still an example from a broader class of workflow
+orchestrations and guarantees that need to be in place for that to be successful in most cases — and unsuccessful
+in some cases but TRANSPARENTLY unsuccessful: 'sorry, we can't work on that type of data.'"* And on the paper:
+*"the original PLoP version is fine. We don't need to change the topology or the loop. We just need to make it so
+that it's validated that it works."*
+
+**The subdivision:** the verbs vertex's children are the HANDOFF FORMULAS — named orchestration patterns, each a
+verb-with-guarantees:
+- **pilot/co-pilot** (the paper's exemplar; the PLoP Act stage already describes it: construction, authoring,
+  bounded repair, independent review — author ≠ reviewer as a formula, not a habit);
+- commission/gate (this build's default: packet → builder → owner gate);
+- pair-negotiate (two nodes agree a contract; measured tonight at 6 ports / 0 freehand);
+- census/audit (walk the emissions, no mutation);
+- fan-out/harvest (the spider waves, with pins and reruns-marked).
+Each formula is typed by: its ports (§0.13 — who emits, who validates), its decision routes (§0.14 criterion 7),
+and its **guarantee pair**: the success criterion AND the refusal form. **Transparent unsuccess is a typed
+refusal** — the formula fails by naming the type it cannot take ("can't work on that type of data"), which is an
+uptake-port validation failing loudly, not a stall. Tonight's practice already shows the shape: the fixture-hash
+FAIL that certified everything else it could; wave-2's blocked report with nothing faked; the pair's
+`:unresolved` port. A formula without a refusal form is not a formula yet.
+
+**What the paper needs is validation, not redesign:** receipts for one pilot/co-pilot run — the handoff expressed
+as a hyper-edge instance (ports, emitted-by, uptake), the run leaving a TickRunRecord-style receipt, the refusal
+path exercised once on purpose. The machinery for all three now exists; assembling it for the paper's example is
+a bounded packet (PILOT-D1, drafted on Joe's word).
+
+**Register update (§0.12):**
+5. **The verbs vertex subdivided** — this section (2026-08-31, PROPOSED): handoff formulas with guarantee pairs;
+   pilot/co-pilot as the paper's exemplar; transparent unsuccess as typed refusal. (Nouns remains the last
+   unsubdivided vertex.)
 
 ## 1. The unit: a problem record
 
