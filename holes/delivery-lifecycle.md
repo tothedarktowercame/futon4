@@ -630,6 +630,50 @@ Instrument (when commissioned, not yet): the control map already carries edges; 
 evidence-producing node/record type has at least one outgoing consumer edge, and CML's `Delivery` fields say what
 travels. R16-D2 is the first repair this precept demands.
 
+## 0.12 The evidence tetrahedron — the second formal subdivision *(Joe, 2026-08-31)*
+
+Joe, on the cascade/PLoP census (upward-flowing evidence located, and found unconsumed): *"maybe the most important
+example of upward flowing evidence… but that means that in whichever ledger we're using to keep track of our
+tetrahedral designs, this evidence-reporting-up tetrahedron should exactly decompose the space that includes the
+evidence-going-up node… This is where it goes to the meta level: what's the evidence of the evidence? How do we
+know if evidence is being gathered? What ramifications would it have if it wasn't? How complete is it? Not just
+saying, well, evidence is gathered, so we're done."*
+
+**Position (per §0.9):** a child of the big tetrahedron (§0.8), subdividing at its evidence vertex. The contact
+points with the parent are owned by the parent's holder; this section is that ownership being exercised.
+
+**The four vertices, asked at the meta level:**
+- **Nouns** — the emissions themselves as first-class things: store records, trace fields, attestations, registry
+  rows, report sections, bells; each with its basis (`I_data_current`), its loudness (`I_absent_is_loud`), and its
+  named consumer (`I_evidence_consumed`). The consumer is a noun here, not a footnote.
+- **Verbs** — gather, attest, verify, report up, consume, and *census* (the act of walking the emissions and
+  asking "who reads this?" — performed twice today: the stale-readout audit, the cascade-consumers census).
+- **Organisation** — the consumer edges in the wiring diagram (Figure 4 + CML `Delivery` fields): for every
+  emission type, the edge that carries it and the workflow step that reads it. The three invariants are this
+  tetrahedron's laws.
+- **Evidence (the meta level — evidence OF evidence-gathering):**
+  - *how we know gathering is happening:* liveness signals with dates — the store's max-at moving, the trace
+    gaining ticks, attestation counts per wave with their basis pins, the lint verdict lines;
+  - *how we would know it stopped:* the falsifier made historical — from 07-06 13:04Z no outcome arrived and
+    NOTHING NOTICED for seven weeks; the detection that finally fired was an operator question, not an instrument.
+    The instrument this vertex demands is precisely the one that was missing: a consumer for the liveness signal;
+  - *completeness:* measurable as the fraction of emission types with a named consumer edge (from the control
+    map), and per-corpus coverage with bases (the wave tables). "Evidence is gathered, so we're done" is this
+    vertex's facade;
+  - *ramifications if not:* the flattened helix — a loop that runs, writes exhaust, and cannot learn; the archive
+    machine.
+- **Mass (§0.10):** currently occupied by the build's owner performing censuses by hand. The open staffing
+  question: this cell wants a standing occupant (the R10 successor — a scheduled reader of the liveness signals
+  whose own output has a named consumer: the operator's brief and this ledger).
+
+**Standing register — top-level moves of the project** (Joe: "keep track of it… the second top-level move we've
+done in the overall project today after stating the problem in the first place"):
+1. **The problem stated** — the big tetrahedron (§0.8, 2026-08-30): nouns/verbs/organisation/evidence with an apex
+   that can say "wrong evidence".
+2. **The evidence vertex subdivided** — this section (2026-08-31): evidence-gathering gets its own tetrahedron,
+   with the meta-question ("what is the evidence of the evidence?") as its evidence vertex.
+Subsequent subdivisions append here; the register is the map of the gasket as it actually develops.
+
 ## 1. The unit: a problem record
 
 One file per commissioned problem, `<repo>/holes/problems/P-<name>.md`, or a
