@@ -295,6 +295,22 @@ mechanism: Lean states the shape; the Clojure run is the observation; the adapte
 `conformant` or `wrong-shape`. In AIF terms the build loop is the machine's own loop — hypothesis, predicted
 observation, observation, update — which is what §0.10's occupied tetrahedron said it should be.
 
+**Invariant on the nouns vertex — data currency (Joe, 2026-08-30 17:57Z).** *"The data should be current;
+otherwise it's not a war machine, it's an archive machine that reads the archive. Active inference has to run over
+the active data in the store."* Stated as an invariant with a falsifier, so it can be checked and not admired:
+
+```
+I_data_current : for every instrument or loop that reads evidence, observations or patterns,
+                 the read is against the LIVE store (the endpoint that is written to), and the
+                 read records the store's basis (tx / count / max-at) it was made against.
+falsifier      : a negative ("absent", "0 hits", "cannot be organised") produced from a snapshot,
+                 export, printout or .edn whose date precedes the store's latest write.
+```
+First instance: the spider's rung 1 read `migration-export/evidence.edn` (07-10; 90,583 records) while the
+landscape at `:7073` held 191,076 through the day — every wave-1 absence was an archive absence (row 25). The
+audit of other dated reads is `AUD-D1`; the corpus fix is packet 4c. Where no live endpoint exists for a noun an
+instrument needs, the deliverable is the endpoint, not a fresher snapshot.
+
 ## 0.8 The big tetrahedron, specified *(Joe, 2026-08-30)*
 
 *"At the big level, our nouns effectively are the R-number nodes, up to R20.
