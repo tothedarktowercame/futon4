@@ -816,6 +816,28 @@ a bounded packet (PILOT-D1, drafted on Joe's word).
    pilot/co-pilot as the paper's exemplar; transparent unsuccess as typed refusal. (Nouns remains the last
    unsubdivided vertex.)
 
+## 0.16 SEED — the nouns vertex: what are the carriers now? *(Joe, 2026-08-31, at the edge of sleep; not yet a move)*
+
+The way in, from the machine's own history: the earliest (previous-year PLoP) version was simple — an agent
+warranted each step of a reasoning chain by finding ONE pattern that supplied an imprimatur (*"because I agree
+with all these patterns, you can apply any of them to get unstuck"*), chaining work overnight move by move. Joe:
+*"I don't know that anyone ever actually built that system — but now we can do chained parks and we've got the
+typed bells mechanism. I don't see why we shouldn't have agents doing parks where the chaining mechanism gets an
+annotation of a design pattern."*
+
+Every part of that machine now exists: chained parks (the wake payload as continuation), typed bells (§0.13's
+edges), and — what the old version never had — an ATTESTED library: a pattern's imprimatur can now require a
+clean-non-reflection rung-1 warrant (the spider's evidence rules), so "because this pattern" is checkable, not
+vibes. A pattern-annotated park chain is a bounded packet when wanted (PARK-CHAIN-D1, undrafted).
+
+But Joe's caution is the actual nouns question: that is the *simple atomic linear* progression, and it can
+flatten every cascade into a linear story ("try harder"). The open decision `cascadeGrainPi` (the glossary's π as
+scored cascade vs Holes.Policy as information-state function) is this same question in Lean clothing. So the
+nouns subdivision — move 6, when it comes — asks: **what are the carriers of this system now?** Chains, cascades,
+stacks (R19), routes (RUN2), receipts, patterns, evidence records — which are fundamental, which are views of
+which, and what does each carry that the others cannot. Queued for a waking session; this seed exists so the
+question survives the night.
+
 ## 1. The unit: a problem record
 
 One file per commissioned problem, `<repo>/holes/problems/P-<name>.md`, or a
