@@ -587,6 +587,49 @@ charter, the `BUILD-packets/` files) and to the P-R9 / P-control-map-lint record
 written when it catches something the four precepts did not, or when it fails to. If it never fires,
 it was not a precept.
 
+## 0.11 Evidence names its consumer *(Joe, 2026-08-31)*
+
+Stated at the end of the day on which the build kept finding the same gap in different clothes. Joe:
+*"Each of these tetrahedra produces evidence. And each of them has a workflow. And so that means the evidence has
+to be consumed by somebody as part of that workflow."* And the diagnosis of why the gap exists at all: *"we're
+working with a partly wired system"* — who consumes the evidence "should be part of our wiring diagram" (the
+operational diagram once called Figure 4).
+
+The precept: **an evidence emission without a named consumer is not yet evidence in the system — it is exhaust.**
+§0.7 gave evidence a vertex; §0.10 gave the tetrahedron a workflow with handoffs; this closes them together: every
+handoff has a recipient, an evidence emission is a handoff, therefore every emission names who consumes it and in
+what workflow step. The consumer is part of the wiring, not an afterthought of the write.
+
+```
+I_evidence_consumed : every evidence emission (a store record, a trace field, a report section, a
+                      registry row, a bell) names its consumer — the node, agent, or workflow step
+                      that reads it and can act on it — and that edge is in the wiring diagram.
+falsifier           : an emission with no consumer edge: a field written that nothing reads, a record
+                      deposited to no reader, a report section rendered for nobody, a reply with no
+                      return path.
+```
+
+First instances, all found today before the precept was stated (which is why it deserves stating):
+- **R16's fan-out** (the sharpest): the machine acts and `:enacted` returns to nobody — four role-played nodes and
+  the code agree no channel consumes the act's witness.
+- `:load-status` (row 27's neighbour): a marker threaded into a map that nothing rendered.
+- The habit prior's counterfactual ordering: computed and recorded, consumed by no selector — a *declared*
+  non-consumption, which is the honest variant.
+- The mission/build link: a day of deliveries invisible from the mission that governs them — evidence with no
+  upward consumer until §Deliveries was filed.
+- Bells whose callers are not registered recipients (the agent-not-found corollary): replies emitted to no
+  return path.
+- The wave-1 spider absences recorded against an export nobody was keeping current.
+
+Relation to the recursion (§0.9): when a tetrahedron subdivides, each child's evidence consumer defaults to the
+parent's holder at the contact point — "who consumes this?" must survive subdivision, or the gasket produces
+exhaust at every level. The chain of command above the top holder is the precepts themselves: reporting "up" past
+the operator means checking emissions against these invariants, which is what this section is.
+
+Instrument (when commissioned, not yet): the control map already carries edges; the check is that every
+evidence-producing node/record type has at least one outgoing consumer edge, and CML's `Delivery` fields say what
+travels. R16-D2 is the first repair this precept demands.
+
 ## 1. The unit: a problem record
 
 One file per commissioned problem, `<repo>/holes/problems/P-<name>.md`, or a
