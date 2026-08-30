@@ -768,6 +768,7 @@ day it was instead recorded as done, live, or ✓.
 Next use: not a build packet. The first problem record, written by Joe, for
 one July case or one open family — and the facade test on it, logged in §4's
 two lines. That is the first observation this document can be judged by.
+| 26 | 2026-08-30 | AUD-D1 (the stale-readout audit under `I_data_current`) found that the WM report reads two files (`futon5a/data/stack-logic-model.edn`, `alignment.edn`) that exist nowhere and have **never** been committed; each read is inside a `when-let`, so three report sections have rendered as nothing since they were written, with no error | The builder refused to class them as "stale" or "legitimate history" — neither fits a file that never existed — and named it a dead-path contract. Right refusal: the currency question presupposes a producer; here there is none | A `when-let` over a file read is a facade shape of its own: **absence of the input is indistinguishable from absence of the finding.** `I_data_current` catches a dated file; it does not catch a file that was never there, because there is no date to be late. Rule: a reader of a canonical file fails closed (or emits `:missing <path>`) — silence is reserved for empty data, never for no data. Sibling finding: a timer a mission note *expects* (`mana-snapshot.timer`) is not a unit; the snapshot is 18 days old and hand-run |
 
 ## Provenance
 
