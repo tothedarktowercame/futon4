@@ -92,6 +92,54 @@ read, doability applied). Steps 3–4 exist per-flight only via hand-carried
 context. That delta — mission-document ingest into mission-grain state — is
 the concrete build the zaif lab's S4 row scopes.
 
+## 3b. What the wiring says happens next — checked (2026-09-02, Joe's question)
+
+Joe: "assume IDENTIFY has happened and is taken as given… that doesn't
+presuppose MAP has been done. Is there an AIF analog of MAP that might kick in
+next, and is that what the wiring says would happen?"
+
+Theory says: MAP's analog is epistemic action — G's ambiguity/information-gain
+side selecting observation before commitment. The wiring says something else,
+checked step by step:
+
+1. After an :advance-mission selection, `construct-for-decision`
+   (full_loop_runner.clj:1036) dispatches on action type; mission actions fall
+   to the :default method (:998-1035), which calls
+   `futon2.report.cascade-lane/cascade-lane` (cascade_lane.clj:434) — a
+   cascade built for the mission's psi by the PYTHON SIMILARITY CONSTRUCTOR
+   (cascade_serve.py / MiniLM cosine, greedy, budget 6): exactly the
+   constructor O2/F3 refuse and LA1c §4 recorded as the wrong substrate. If it
+   returns nothing, the run throws "No construction for selected decision"
+   (full_loop_runner.clj:2628) — the 09-01 log's exact stop.
+2. Then the flight (㉓–㉞): an author dispatched with that cascade as bounded
+   build context, undifferentiated by the mission's phase.
+3. **There is no MAP analog anywhere in this.** The action space is
+   {:open-mission :advance-mission :fire-pattern :learn-action-class
+   :repair-machine-failure} — every one pragmatic. Nothing reads the mission's
+   MAP section; nothing generates a survey; the tick's READ phase (①–⑩)
+   perceives the machine's own registries, never the selected mission's field.
+   An identify-phase mission and an instantiate-phase mission get the same
+   treatment: generic advance, similarity cascade, author flight.
+
+**The unifying hypothesis this exposes** (ties three of today's threads into
+one hole): ambiguity moved 0 winners in 674 ticks (the U4 question) not
+because the term is broken but because **the action space contains no
+epistemic actions for it to favor** — G = risk + ambiguity can only
+discriminate among candidates, and every candidate is pragmatic. Joe's
+explore/exploit ruling (§5 q1), his actionability question (§5 q-new), and
+MAP-has-no-analog are the same absence seen from three sides.
+
+**The concrete fix this implies** (proposed as zaif-harness row S6, pending
+Joe): a `:survey-mission` action type — the MAP flight. The lifecycle already
+requires each mission's MAP section to enumerate questions Q1–Qn; those are
+machine-legible survey obligations sitting in every conforming mission doc.
+The action's G is dominated by information gain (finally giving the ambiguity
+term candidates it can favor); its discharge is MAP answers as typed
+observations folded into mission-grain belief; its natural selection weight
+rises exactly when S5's epistemic term says the field is the bottleneck. An
+identify-phase mission then generates survey flights the machine can actually
+fly autonomously — Joe's actionability concern answered by construction.
+
 ## 4. What changes in the new construction (post-§1c)
 
 The inner loop as written selects ranked single actions (⑯). Under the
