@@ -12,7 +12,7 @@ ARGUE → VERIFY → INSTANTIATE → DOCUMENT); `p4ng/empirics-futon/control-sta
 (the five loop stages PERCEIVE / BELIEVE / EVALUATE / SELECT / ACT with the
 assurance band beneath); `p4ng/sec-system.tex` (the ①–㉞ walkthrough);
 `futon2/scripts/futon2/report/war_machine.clj:1405` (the fact below);
-`futon2/holes/M-zaif-harness-v1.md` IDENTIFY (the phase→node table this
+`futon2/holes/missions/M-zaif-harness-v1.md` IDENTIFY (the phase→node table this
 document supersedes in detail).
 
 ## 0. The alignment is already half-live, at one specific line
