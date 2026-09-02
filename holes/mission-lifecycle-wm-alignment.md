@@ -140,6 +140,54 @@ rises exactly when S5's epistemic term says the field is the bottleneck. An
 identify-phase mission then generates survey flights the machine can actually
 fly autonomously — Joe's actionability concern answered by construction.
 
+## 3c. The cascade catalog — missions read by their cascades, not their prose (Joe, 2026-09-02)
+
+> "Each mission might leave behind a cascade showing how it was worked
+> end-to-end, and so maybe we could learn from that catalog… at the MAP phase,
+> as we're looking around at other missions, we could look at how those
+> missions showed up in terms of their cascades and their build strategies,
+> rather than just looking at them as text files."
+
+The design, thought through against what exists:
+
+1. **The record accretes; nobody writes it after the fact.** A mission's
+   cascade record is assembled from typed events that already exist or are
+   already required: PSR/PUR records (the lifecycle mandates per-mission
+   Pattern Selection Records — which pattern, where, how), flight discharges
+   (㉚, typed implementation/discharge events), the trace's decision + :shown
+   pattern lists per tick, and clocked-on lineage (who was on it, when). The
+   DOCUMENT phase — R17 in the §2 table — is where the accreted record is
+   sealed as the mission's deposit. The alignment earns its keep here: DOCUMENT
+   was already "the learning deposit"; this says concretely WHAT is deposited.
+2. **MAP reads the catalog, not the prose.** The survey flight (S6) queries
+   kin missions (kinship: shared patterns, shared repos, cross-refs) for their
+   cascade records — which patterns, in what order, with what outcomes. The
+   ChipWits reading: you learn to wire a new robot by opening saved robots
+   from the Warehouse, not by reading their marketing copy.
+3. **This is where Q(o|π) at mission grain comes from.** P-validated-R5
+   demands Q(o|π) be DERIVED (a playout), never authored. For a mission-grain
+   policy there is no simulator — but the catalog IS the playout record:
+   the empirical distribution of how cascades-like-this-one actually went.
+   G over candidate build strategies gets its forward model from precedent,
+   which is also exactly what makes ambiguity discriminate at mission grain
+   (a strategy with no precedent is high-ambiguity; surveying reduces it).
+4. **The precedent is already running.** Every APM frame leaves an end-to-end
+   record (ledger, trace, memories); the zai-scribe mines failed and
+   successful attempts into typed memories; the fingerprint audit adjudicates
+   what transferred by token witness. The mission cascade catalog is that
+   architecture at mission grain, and it should inherit the discipline whole:
+   typed use records, witnessed transfer, author≠reviewer on anything
+   promoted from a record into the library.
+5. **O5 holds.** Catalog reading yields proposals and weights; only authors
+   write edges. A build strategy learned from the catalog reaches the library
+   as a proposed pattern with provenance, not as an inferred edge.
+
+Carriers today, honestly: PSRs exist in the lifecycle but sparsely in
+practice; :shown lists exist per tick but aggregate nowhere; APM records are
+rich but domain-local; futon6 pattern-phylogeny-learned.json (LA9''s carrier)
+holds 2 co-application edges. The catalog is a query surface plus an
+accretion convention away — not a new store.
+
 ## 4. What changes in the new construction (post-§1c)
 
 The inner loop as written selects ranked single actions (⑯). Under the
