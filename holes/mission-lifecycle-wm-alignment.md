@@ -110,7 +110,11 @@ at that seam.
 ## 5. Standing questions (named, not resolved here)
 
 - Should doability ever prefer PERCEIVE-stage phases (buy MAP when the machine
-  is observation-starved)? — the fiat noted in §2.
+  is observation-starved)? — the fiat noted in §2. *Partial answer (Joe,
+  2026-09-02, in session): "we spend some time looking around at what's already
+  been done. So, yes, that has to be part of the process here." Surveying the
+  existing is affirmed as part of the process; how the doability table should
+  reflect that is still open.*
 - Is the §2 mapping a formal claim or a working analogy? — carried tension 3
   of M-zaif-harness-v1, still carried; S2's manual step-through is where it
   gets its first test against reality.
