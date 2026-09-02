@@ -125,6 +125,18 @@ at that seam.
   been: a prior, not the whole value. (In the iconography: SNIFF and LOOK are
   chips too, and the maze-explorer spends cycles on them precisely when its
   map is the bottleneck.)
+- **Autonomous actionability as a selection factor** (Joe, 2026-09-02, on the
+  S3 result): "I have to question whether selecting based on centrality,
+  without some kind of measure of what can be done about this particular
+  mission on an autonomous basis, isn't setting the machine up for success.
+  Had it selected expressions-of-interest, I'm not sure what it could have
+  actually done." Phase doability gestures at this but measures lifecycle
+  position, not machine-workability. A real actionability factor would read
+  something like: does the mission have an open, machine-legible worklist
+  with unblocked rows the WM's flights can actually fly? (M-zaif-harness-v1
+  scores high on exactly that; the incumbent may not.) Kin to S5's epistemic
+  term — both say the three-factor value under-measures what selection is
+  FOR. The stated test is an end-to-end run, deliberately deferred.
 - Is the §2 mapping a formal claim or a working analogy? — carried tension 3
   of M-zaif-harness-v1, still carried; S2's manual step-through is where it
   gets its first test against reality.
