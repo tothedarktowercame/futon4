@@ -110,11 +110,21 @@ at that seam.
 ## 5. Standing questions (named, not resolved here)
 
 - Should doability ever prefer PERCEIVE-stage phases (buy MAP when the machine
-  is observation-starved)? — the fiat noted in §2. *Partial answer (Joe,
-  2026-09-02, in session): "we spend some time looking around at what's already
-  been done. So, yes, that has to be part of the process here." Surveying the
-  existing is affirmed as part of the process; how the doability table should
-  reflect that is still open.*
+  is observation-starved)? — **ANSWERED YES (Joe, 2026-09-02, in session,
+  dictated)**: "yes, we do need to prefer perceive in some cases… with the MAP
+  phase in a mission, we need to be able to do that, and that's similar to the
+  explore–exploit dichotomy that active inference is supposed to be quite good
+  at… even if you think about a ChipWit exploring a maze — it has to sometimes
+  go explore in order to decide what to do next." Design consequence, stated
+  here and worked as zaif-harness row S5: the doability table prices only
+  exploit (pragmatic value rising toward INSTANTIATE). The AIF-native fix is
+  not a bigger fiat number for MAP — it is an *epistemic term in the mission
+  value*, so a MAP-phase mission scores by expected information gain about the
+  field and wins exactly when uncertainty about the field is what blocks
+  everything else. The hand-authored table then becomes what it should have
+  been: a prior, not the whole value. (In the iconography: SNIFF and LOOK are
+  chips too, and the maze-explorer spends cycles on them precisely when its
+  map is the bottleneck.)
 - Is the §2 mapping a formal claim or a working analogy? — carried tension 3
   of M-zaif-harness-v1, still carried; S2's manual step-through is where it
   gets its first test against reality.
