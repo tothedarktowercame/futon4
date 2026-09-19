@@ -185,6 +185,11 @@
 (declare-function arxana-browser-encyclopedia-open-entry "arxana-browser-encyclopedia" (item))
 
 (declare-function arxana-browser-evidence-menu-items "arxana-browser-evidence")
+(declare-function arxana-field-desk--home-items "arxana-field-desk")
+(declare-function arxana-field-desk-open-stratum "arxana-field-desk" (item))
+(declare-function arxana-field-desk-open-item "arxana-field-desk" (item))
+(declare-function arxana-field-desk-open-incidents "arxana-field-desk" (item))
+(declare-function arxana-field-desk-open-incident "arxana-field-desk" (item))
 (declare-function arxana-browser--evidence-timeline-items "arxana-browser-evidence")
 (declare-function arxana-browser--evidence-timeline-row "arxana-browser-evidence" (item))
 (declare-function arxana-browser--evidence-timeline-format "arxana-browser-evidence")
@@ -485,9 +490,20 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
               :description "Billable-hours ledger (Hyperreal) — Historical / Current / Future."
               :view 'ledger)
         (list :type 'menu
+              :label "Field Desk"
+              :description "Review Morning Brief features as they arrive."
+              :view 'field-desk)
+        (list :type 'menu
               :label "Sales"
               :description "Sales pipeline (Hyperreal) — clients by stage + Rolodex. Dual of the Ledger."
-              :view 'sales)))
+              :view 'sales)
+        ;; Re-wired 2026-07-26: the 2026-07-05 Outbox entry was lost in a
+        ;; later rewrite of this file (menu is a static list — features do
+        ;; not self-register).
+        (list :type 'menu
+              :label "Outbox"
+              :description "Cold/warm outreach drafts (futon7 outbox) — staged, editing, reviewed, sent. Dual of Sales."
+              :view 'cold-outbox)))
 
 (defun arxana-browser--evidence-menu-items ()
   (if (require 'arxana-browser-evidence nil t)
@@ -1380,10 +1396,18 @@ Other views show the description in `mode-line-format'.")
                      (arxana-ledger--home-items)
                    (list (list :type 'info :label "Ledger module unavailable"
                                :description "Load arxana-vsatarcs-ledger.el"))))
+        ('field-desk (if (require 'arxana-field-desk nil t)
+                         (arxana-field-desk--home-items)
+                       (list (list :type 'info :label "Field Desk unavailable"
+                                   :description "Load arxana-field-desk.el"))))
         ('sales (if (require 'arxana-vsatarcs-sales nil t)
                     (arxana-sales--home-items)
                   (list (list :type 'info :label "Sales module unavailable"
                               :description "Load arxana-vsatarcs-sales.el"))))
+        ('cold-outbox (if (require 'arxana-cold-outbox nil t)
+                          (arxana-cold-outbox--home-items)
+                        (list (list :type 'info :label "Outbox module unavailable"
+                                    :description "Load arxana-cold-outbox.el"))))
         (_ (arxana-browser--menu-items))))
      (t
       (arxana-browser--require-patterns)
@@ -1624,6 +1648,38 @@ Other views show the description in `mode-line-format'.")
 (defun arxana-browser--item-at-point ()
   (tabulated-list-get-id))
 
+;; --- Per-view keymap registry (restored 2026-07-26; the 2026-07-05 seam
+;; was lost in a rewrite of this file). Features register a small keymap
+;; for their :view symbol; it is laid over the rendered listing as a
+;; `keymap' text property (highest precedence; unbound keys fall through).
+;; This is ALSO the enforcement point Joe asked for: a view that renders
+;; without a registered keymap gets a once-per-session warning naming it,
+;; so shared-map leaks (media keys on non-media surfaces) are visible debt
+;; rather than silent behavior.
+
+(defvar arxana-browser-view-keymaps (make-hash-table :test 'eq)
+  "Registry mapping a :view symbol to the keymap laid over its listing.")
+
+(defvar arxana-browser--view-keymap-warned (make-hash-table :test 'eq)
+  "Views already warned about this session (no registered keymap).")
+
+(defun arxana-browser-register-view-keymap (view keymap)
+  "Register KEYMAP as the row-level keymap for VIEW (a :view symbol)."
+  (puthash view keymap arxana-browser-view-keymaps))
+
+(defun arxana-browser--apply-view-keymap (context)
+  "Lay the registered keymap for CONTEXT's :view over the listing.
+Warn once per session for feature views with no registered keymap."
+  (let ((view (and context (plist-get context :view))))
+    (when view
+      (let ((km (gethash view arxana-browser-view-keymaps)))
+        (if km
+            (put-text-property (point-min) (point-max) 'keymap km)
+          (unless (gethash view arxana-browser--view-keymap-warned)
+            (puthash view t arxana-browser--view-keymap-warned)
+            (message "[arxana-browser] view %s has no registered keymap — shared-map keys apply (register one via arxana-browser-register-view-keymap)"
+                     view)))))))
+
 (defun arxana-browser--render ()
   ;; Allow early exit when docbook sections redirect straight to a single entry.
   (cl-block arxana-browser--render
@@ -1791,6 +1847,7 @@ Other views show the description in `mode-line-format'.")
                 (arxana-browser--decorate-header-line context (length items))
                 (force-mode-line-update)
                 (tabulated-list-print t)
+                (arxana-browser--apply-view-keymap context)
                 (let* ((count (arxana-browser--row-count))
                        (clamped (if (> count 0)
                                     (max 0 (min desired-row (1- count)))
@@ -1982,10 +2039,30 @@ Other views show the description in `mode-line-format'.")
        (if (fboundp 'arxana-ledger-open-stratum)
            (arxana-ledger-open-stratum item)
          (message "Ledger module unavailable")))
+      ('field-desk-stratum
+       (if (fboundp 'arxana-field-desk-open-stratum)
+           (arxana-field-desk-open-stratum item)
+         (message "Field Desk module unavailable")))
+      ('field-desk-item
+       (if (fboundp 'arxana-field-desk-open-item)
+           (arxana-field-desk-open-item item)
+         (message "Field Desk module unavailable")))
+      ('field-desk-incident-stratum
+       (if (fboundp 'arxana-field-desk-open-incidents)
+           (arxana-field-desk-open-incidents item)
+         (message "Field Desk module unavailable")))
+      ('field-desk-incident
+       (if (fboundp 'arxana-field-desk-open-incident)
+           (arxana-field-desk-open-incident item)
+         (message "Field Desk module unavailable")))
       ((or 'sales-stage 'sales-rolodex 'sales-leads 'sales-demos)
        (if (fboundp 'arxana-sales-open-stage)
            (arxana-sales-open-stage item)
          (message "Sales module unavailable")))
+      ((or 'cold-outbox-stage 'cold-outbox-all)
+       (if (fboundp 'arxana-cold-outbox-open-stage)
+           (arxana-cold-outbox-open-stage item)
+         (message "Outbox module unavailable")))
       ('essays-essay
        (setq arxana-browser--stack
              (cons (list :view 'essays-essay

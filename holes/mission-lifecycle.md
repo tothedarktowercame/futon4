@@ -166,6 +166,14 @@ Synthesize. Why is this design *right*, not just *workable*?
   catch-up moment to write them.
 - [ ] **Theoretical coherence:** Does the design serve the theoretical
   anchoring from IDENTIFY? Or has the theory shifted?
+- [ ] **Rationale citation:** Name the war-room ruling this design rests on, as
+  `@why war-room/wr-N-…`, or state that none applies. *(Added 2026-08-27, Joe:
+  exposure is not use. Measured 2026-08-23 and re-tested 2026-08-27: across all
+  missions, **zero** cite any of the 28 numbered rulings — including the seven
+  available for six weeks, over a window carrying 333 mission-file touches. The
+  rulings were never asked for, so this is a missing instruction rather than an
+  unharvestable register. `README-flexiarg` §5a's "authored, never harvested"
+  describes the state before this line existed.)*
 - [ ] **Trade-off summary:** What did we give up and why?
 - [ ] **Generalization notes:** Does this design work beyond the immediate
   context? What would need to change to apply it elsewhere?
@@ -190,11 +198,17 @@ Check the architecture against constraints before committing to full
 implementation. This phase is primarily about structural and empirical
 validation — confirming the design is sound before code hardens.
 
+- [ ] **Specification bill of materials:** Fill the BOM — one row per
+  aspect of the deliverable, each naming its formalism and level or
+  recording a priced decline. See §Specification Bill of Materials
+  below. A row that fails its check is a reason to cycle back to
+  DERIVE; that loop is cheap. An aspect silently unspecified is not.
 - [ ] **Structural verification (if wiring diagram exists):** Check the
   architecture against exotype diagrams (`.edn`). Verify: completeness,
   coverage, no orphan inputs, type safety, spec coverage, timescale
   ordering, exogeneity, and compositional closure. If no diagram exists,
-  record why (not every mission needs one) and skip this check.
+  apply the "when is a wiring diagram required" test (see §Specification
+  Bill of Materials); four "no" answers are the recorded skip reason.
 - [ ] **Prototype / spike (if needed):** For missions where structural
   verification alone is insufficient, build a minimal spike to validate
   the riskiest DERIVE commitments. This is not full implementation — it's
@@ -304,10 +318,109 @@ A mission may also be:
   straightforward missions this can be `**Status:** <PHASE> (date)`;
   for `HEAD`-bootstrapped missions it may be composite, e.g.
   `**Status:** HEAD complete; IDENTIFY pending`.
+- An operator gate is recorded directly below the status as
+  `**Gate:** <kind> — <free text>`, where `<kind>` is kebab-case and begins
+  `operator-` (for example `operator-acceptance`, `operator-decision`, or
+  `operator-input`). Multiple Gate lines are allowed. A gate means that the
+  remaining work needs the operator; it is not a defect or a stall. The War
+  Machine treats the mission as infeasible for author dispatch and surfaces
+  the gate to the operator as an action.
+- The operator sets and clears gates by editing the mission document (removing
+  the Gate line clears it; git history is the record). Agents may propose a
+  gate during review, but may not clear one.
 - Checkpoints are appended (never overwrite prior phases).
 - Evidence is emitted to futon1a during VERIFY/INSTANTIATE.
 - Completed missions become source material for future missions.
 - Each phase accretes — the mission doc grows as phases complete.
+
+## Specification Bill of Materials (VERIFY)
+
+VERIFY checks the design against structural constraints; the BOM is the
+record of *which* constraints the mission is answerable to, and at what
+level of formality. These artifacts are strictly VERIFY-level: fill the
+table at VERIFY entry, and treat a failing row as a cheap cycle back to
+DERIVE rather than a reason to have specified everything up front.
+
+One row per aspect of the deliverable:
+
+| aspect | characteristic defect | native formalism |
+|---|---|---|
+| claim | confounding, non-transport, bad denominator | causal/Pearl (cf. `capability-proof-apm`) |
+| data / artifact | malformed or unfalsifiable record | Lean shape + Clojure validator (the V.12 "first RHS" style) |
+| process | dangling wire, unowned field, unreachable state | futon5 wiring diagram (exotype `.edn`) — current enforceable ceiling; see tool-status note |
+| loop | act succeeded, measurement inadmissible | flight organs (witness, settled read, admissibility) — `anatomy-of-a-wm-flight.md` |
+| decision | wrong thing for unexamined reasons | flexiarg / IF-HOWEVER-THEN-BECAUSE |
+
+Each row names its formalism and level, **or records a priced decline**:
+a named hole with a revisit trigger (e.g. "re-open after two
+written-but-not-wired findings"). "Not blocking" is not a permitted
+status for a BOM row — an unpriced deferral is how a check gets carried
+across five checkpoints while the defect it catches accumulates.
+
+The selection principle behind the table: choose, per aspect, the
+formalism whose native objects make that aspect's characteristic defect
+visible or unconstructible — and prefer the level at which the check
+can consume the live artifact (a projection check over the actual
+config/EDN, not a document standing beside it). Where you specify, you
+don't bleed; where you don't, you do.
+
+**Tool status (2026-08-15) — a BOM row may only name a level at which a
+verifier actually exists.** Naming an unverifiable level makes the BOM
+itself written-but-not-wired: agents inherit a compliance target with no
+compliant checker, and either fake it or stall. Current status for the
+process row:
+
+- **futon5 exotype `.edn` checks — exist** (hand-rolled, mechanical; the
+  VERIFY structural list above). This is the enforceable ceiling today.
+- **Hypergraph wiring verifier — EXISTS: `futon3c.diagramprover.wiring`
+  (WS-E, acceptance met 2026-08-15).** The hole recorded here on
+  2026-08-15 discharged the same day: five checks over declared
+  ownership maps under contract (c) — `written-never-read`,
+  `read-never-written`, `multiply-written`, `phase-chain-findings`,
+  and site `conformance` (declaration↔source drift, both directions).
+  Acceptance evidence: sensitivity on all four M-apm-demonstration
+  recorded defect classes (three on live artifacts); specificity on
+  post-fix states; generality on the proof peripheral (where it found
+  three real latent defects, including a duplicated-and-drifted
+  contract) and the futon2 War Machine belief path (cross-repo,
+  non-cycle-engine). Worked examples:
+  `futon3c/holes/labs/M-apm-demonstration/problem-wiring.edn` and
+  `futon3c/holes/labs/M-diagramprover/{proof,wm}-wiring.edn`, each with
+  a dated findings snapshot. Honest grade: detect-level checks over
+  authored, conformance-kept declarations — **by-construction
+  unconstructibility remains the Lean/engine layer's territory** (the
+  V.12 F1 lesson), so a mission wanting that grade still records it as
+  a hole against M-diagramprover's WS-D line.
+- `DarkTower/Coverage.lean` proves no-orphan-by-construction for the
+  typed-hole datatype — a precedent that the level is reachable, not a
+  verifier a mission can point at.
+
+### When is a wiring diagram required (not optional)?
+
+Required if **any** of the following holds; each is checkable at VERIFY
+entry:
+
+1. the deliverable is a **machine** — phases, states, loops, or
+   long-lived processes — rather than an analysis, corpus, or document;
+2. **more than one party writes fields another party reads**
+   (engine/caller, multi-agent, cross-review seams);
+3. any field, event, or record **crosses a language, process, or repo
+   boundary** (Lean↔Clojure, driver↔peripheral, EDN registration↔engine);
+4. the mission's **claims rest on evidence produced by the thing being
+   built**.
+
+If none hold, freeform is fine — the four "no" answers *are* the
+recorded skip reason. If any holds and no diagram exists, draw it now,
+cycling back to DERIVE if the drawing changes the design. If it is
+declined anyway, the decline is an operator Gate or a priced hole,
+never a checklist line.
+
+*Evidence: M-apm-demonstration (2026-08) scored 4-for-4 on the trigger
+list, carried "futon5 wiring diagram — not yet drawn / not blocking"
+across five checkpoints, and accumulated sixteen instances of the
+defect class the no-orphan check catches. See
+`futon3c/docs/retrieval-whitepaper-v3.md` §7a and
+`futon3c/TN-problem-peripheral-RC-fable-review.md`.*
 
 ## PSR/PUR Discipline
 

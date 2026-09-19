@@ -5,6 +5,7 @@
             [webarxana.client.graph :as graph]
             [webarxana.client.card :as card]
             [webarxana.client.interest-network :as interest-network]
+            [webarxana.client.live :as live]
             [webarxana.client.mission-search :as mission-search]
             [webarxana.client.route :as route]))
 
@@ -13,6 +14,7 @@
     (case (:page @state/ui-state)
       :mission-search [mission-search/page]
       :interest-network [interest-network/page]
+      :live [live/page]
       [:div.webarxana
        ;; Top bar: search-bar takes the available width; the interest link sits
        ;; in-flow at the right (was a position:fixed overlay floating over the
@@ -25,7 +27,12 @@
              :style {:flex "0 0 auto" :margin "0 16px" :color "#93c5fd"
                      :font-size "12px" :font-weight 700 :text-decoration "none"
                      :white-space "nowrap"}}
-         "Interest Constellation →"]]
+         "Interest Constellation →"]
+        [:a {:href "#/live"
+             :style {:flex "0 0 auto" :margin "0 16px 0 0" :color "#67e8f9"
+                     :font-size "12px" :font-weight 700 :text-decoration "none"
+                     :white-space "nowrap"}}
+         "Live Surfaces →"]]
        [:div.main-area
         [card/sidebar]
         [:div.canvas-container
@@ -46,6 +53,7 @@
 
 (defn init []
   (println "[init] Starting...")
+  (when orbit-poller nil)
   (route/install!)
   (api/check-auth!
    (fn []

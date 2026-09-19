@@ -17,6 +17,13 @@
 
 (defonce !server (atom nil))
 
+(def ^:private live-pages
+  {"/live/efe-map.html" "/home/joe/code/futon6/data/mission-efe-field-embed.html"
+   "/live/cascade.html" "/home/joe/code/futon3c/holes/excursions/pipeline-pattern-cascade-live.html"
+   ;; M-learning-loop capability graph — regenerate after each mining ingest:
+   ;; bb -cp scripts scripts/capability_graph_render.clj (in futon5a)
+   "/live/capability-graph.html" "/home/joe/code/futon5a/data/capability-mining/capability-graph.html"})
+
 (defn- webarxana-root
   "Return the WebArxana project root when running from a filesystem checkout."
   []
@@ -75,6 +82,15 @@
                  (.isFile target))
         (resp/file-response target-path)))))
 
+(defn- live-page-response
+  [uri]
+  (when-let [path (get live-pages uri)]
+    (let [file ^File (canonical-file path)]
+      (when (.isFile file)
+        (-> (resp/file-response (.getPath file))
+            (resp/content-type "text/html; charset=utf-8")
+            (resp/header "Cache-Control" "no-cache"))))))
+
 (defn app-routes [cfg]
   (ring/ring-handler
    (ring/router
@@ -107,6 +123,7 @@
     (fn [req] (when (= "/wa" (:uri req))
                 (-> (resp/resource-response "public/wa.html")
                     (resp/content-type "text/html"))))
+    (fn [req] (live-page-response (:uri req)))
     (fn [req] (data-asset-response cfg (:uri req)))
     (ring/create-resource-handler {:path "/"})
     (ring/create-default-handler

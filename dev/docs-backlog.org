@@ -94,6 +94,6 @@ soon as new work lands.
    :NOTES: ChatGPT-driven per-file summaries for dev/*.el into docbook JSON + toc.json.
 
 ** TODO flexiarg golden test fixture
-   :FILES: test/testing.flexiarg
+   :FILES: test/testing.multiarg
    :TARGET: XTDB doc id
    :NOTES: Relocated from docs/; wire into a golden test for flexiarg normalization.

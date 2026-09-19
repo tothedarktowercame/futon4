@@ -447,9 +447,14 @@ If KEY is absent, insert it after ANCHOR.  Targeted; preserves comments."
   (let* ((m (arxana-cold-outbox--data draft))
          (projection (copy-sequence (or (plist-get m :send-projection) nil)))
          (sent (or sent-at (arxana-cold-outbox--iso-now))))
-    (plist-put projection :event :outreach-sent)
-    (plist-put projection :sent-at sent)
-    (plist-put projection :send-witness send-witness)
+    ;; plist-put's return value MUST be captured: on a nil plist the
+    ;; mutation cannot happen in place, so discarding the return threw
+    ;; away :event AND the Message-ID witness (James/JUXT send,
+    ;; 2026-07-27 — intake saw an empty event, {:rejected
+    ;; :not-outreach-sent}, and the witness was lost from this path).
+    (setq projection (plist-put projection :event :outreach-sent))
+    (setq projection (plist-put projection :sent-at sent))
+    (setq projection (plist-put projection :send-witness send-witness))
     projection))
 
 (defun arxana-cold-outbox--intake-command (event-file)
@@ -504,8 +509,17 @@ If KEY is absent, insert it after ANCHOR.  Targeted; preserves comments."
          (addr (string-trim
                 (or contact
                     (read-string "To address (required): ")))))
+    ;; :contact-uri is a URI field; RCPT TO wants a bare address. A verbatim
+    ;; "mailto:hello@xtdb.com" reached Postfix as "mailto:hello"@xtdb.com and
+    ;; bounced 553 5.1.3 at Google (2026-07-27, the James/JUXT send). Strip
+    ;; the scheme and any ?query part before use.
+    (when (string-prefix-p "mailto:" addr)
+      (setq addr (substring addr (length "mailto:"))))
+    (setq addr (car (split-string addr "[?]")))
     (when (string-empty-p addr)
       (user-error "To address is required; refusing to fabricate one"))
+    (unless (string-match-p "\\`[^@ ]+@[^@ ]+\\.[^@ ]+\\'" addr)
+      (user-error "To address %S does not look like an email address" addr))
     addr))
 
 (defun arxana-cold-outbox--required-subject (draft)
@@ -520,6 +534,15 @@ If KEY is absent, insert it after ANCHOR.  Targeted; preserves comments."
       (user-error "Subject is required"))
     subject))
 
+(defcustom arxana-cold-outbox-bcc-self t
+  "When non-nil, Bcc the From address on every outbox send.
+The Bcc copy is the round-trip delivery receipt AND the durable record of
+the Message-ID witness (smtpmail writes no Sent copy). Re-added 2026-07-27:
+the 2026-07-06 original was uncommitted work lost to a working-tree
+overwrite — the James/JUXT send went out with no receipt as a result."
+  :type 'boolean
+  :group 'arxana-cold-outbox)
+
 (defun arxana-cold-outbox--compose-message-buffer (draft to subject)
   "Return a preview buffer containing DRAFT as an SMTP message to TO."
   (let* ((message-user-fqdn (arxana-cold-outbox--from-domain))
@@ -532,6 +555,8 @@ If KEY is absent, insert it after ANCHOR.  Targeted; preserves comments."
         (erase-buffer)
         (insert (format "From: %s\n" arxana-cold-outbox-from-address))
         (insert (format "To: %s\n" to))
+        (when arxana-cold-outbox-bcc-self
+          (insert (format "Bcc: %s\n" arxana-cold-outbox-from-address)))
         (insert (format "Subject: %s\n" subject))
         (insert (format "Message-ID: %s\n" message-id))
         (insert "\n")
@@ -674,15 +699,47 @@ Save the body buffer, return to the outbox, and press `g' to re-render."
         (find-file (arxana-cold-outbox--file draft))
       (dired arxana-cold-outbox-root))))
 
-(defvar arxana-cold-outbox-mode-map
+;; FOOTGUN (second occurrence, 2026-07-26; first fixed 2026-07-05 and lost):
+;; `define-derived-mode' above already defvars `arxana-cold-outbox-mode-map'
+;; as an empty keymap, so a LATER `defvar' with bindings is a silent no-op —
+;; every key listed in the buffer was dead. Bind into the mode's own map
+;; directly; never re-defvar a map a derived mode has created.
+(define-key arxana-cold-outbox-mode-map "g" #'arxana-cold-outbox-refresh)
+(define-key arxana-cold-outbox-mode-map "e" #'arxana-cold-outbox-edit-body)
+(define-key arxana-cold-outbox-mode-map "r" #'arxana-cold-outbox-mark-reviewed)
+(define-key arxana-cold-outbox-mode-map "S" #'arxana-cold-outbox-send)
+(define-key arxana-cold-outbox-mode-map "E" #'arxana-cold-outbox-edit-raw)
+(define-key arxana-cold-outbox-mode-map "?" #'arxana-cold-outbox-menu)
+
+(defun arxana-cold-outbox-menu ()
+  "Show the outbox key summary (plain menu; hydra variant is future polish)."
+  (interactive)
+  (message "Outbox: RET open · g refresh · e edit body · E edit raw · r mark reviewed · S send (gate) · ? this menu"))
+
+;; Browser-listing keymap: registered with the browser-core per-view
+;; registry so outbox rows get outbox keys — and so the media-player keys
+;; that otherwise leak through the shared map are shadowed by hints
+;; instead of silently acting on drafts.
+(defvar arxana-cold-outbox--browser-view-map
   (let ((m (make-sparse-keymap)))
-    (define-key m "g" #'arxana-cold-outbox-refresh)
-    (define-key m "e" #'arxana-cold-outbox-edit-body)
-    (define-key m "r" #'arxana-cold-outbox-mark-reviewed)
-    (define-key m "S" #'arxana-cold-outbox-send)
-    (define-key m "E" #'arxana-cold-outbox-edit-raw)
+    (define-key m "?" #'arxana-cold-outbox-menu)
+    (define-key m "e" #'arxana-cold-outbox-menu)
+    (define-key m "r" #'arxana-cold-outbox-menu)
+    (define-key m "S" #'arxana-cold-outbox-menu)
+    (define-key m "E" #'arxana-cold-outbox-menu)
     m)
-  "Keymap for `arxana-cold-outbox-mode'.")
+  "Laid over outbox rows in the Arxana browser listing.
+Stage rows open with RET; per-draft commands live in the dedicated
+*Arxana Cold Outbox* buffer, so draft keys here show the menu rather
+than falling through to the shared media map.")
+
+(with-eval-after-load 'arxana-browser-core
+  (when (fboundp 'arxana-browser-register-view-keymap)
+    (arxana-browser-register-view-keymap
+     'cold-outbox arxana-cold-outbox--browser-view-map)))
+(when (fboundp 'arxana-browser-register-view-keymap)
+  (arxana-browser-register-view-keymap
+   'cold-outbox arxana-cold-outbox--browser-view-map))
 
 ;;;###autoload
 (defun arxana-cold-outbox-browse ()
