@@ -159,9 +159,13 @@ Return nil if the file is fully readable, or a plist with details on failure."
 (defun arxana-check-parens--parse-cli-args ()
   "Parse args after `--`. Return plist:
   :files (list) :strategy (string) :json (bool) :context (int) :no-defaults (bool)."
-  (let ((args command-line-args-left)
-        (seen-sep nil)
-        (files '())
+  (let* ((args command-line-args-left)
+         ;; Args before `--` are ignored so that emacs' own arguments do not
+         ;; become filenames. When there is NO `--` at all the caller cannot
+         ;; have meant that, and ignoring everything silently checked nothing:
+         ;; see the auto-run note at the end of this file.
+         (seen-sep (not (member "--" args)))
+         (files '())
         (strategy "both")
         (json-out nil)
         (context-lines 0)
@@ -280,6 +284,31 @@ STRATEGY is one of \"check-parens\", \"read\", or \"both\" (default \"both\")."
             (progn (princ "OK\n") (kill-emacs 0))
           (arxana-check-parens--print-problem problem json-out)
           (kill-emacs 1))))))
+
+;; AUTO-RUN IN BATCH (claude-5, 2026-09-23).
+;;
+;; The documented invocation is
+;;   emacs -Q --batch -l check-parens.el --eval '(arxana-check-parens-cli)' -- FILES
+;; but it is very often typed as
+;;   emacs --batch -l check-parens.el FILE
+;; which merely LOADS the definitions, treats FILE as a file to visit, prints
+;; nothing and exits 0.  A gate that passes everything, silently, and looks
+;; exactly like a pass.  Two unbalanced `let' forms in
+;; futon3c/emacs/agent-chat.el cleared it that way and broke every Emacs agent
+;; lane (`ck new' died with "End of file during parsing: #<killed buffer>");
+;; the same wrong invocation had been quoted as a cleared gate in several
+;; futon2 commit messages the same afternoon.
+;;
+;; So: when this file is loaded in batch and every remaining argument is an
+;; existing file, check those files and exit with the CLI's status.  The
+;; condition is deliberately narrow -- any flag-shaped leftover (`--eval',
+;; `-f', a test runner's own arguments) means the caller is driving explicitly,
+;; and nothing happens.  `(require 'check-parens)' from other Lisp is
+;; unaffected.
+(when (and noninteractive
+           command-line-args-left
+           (cl-every #'file-regular-p command-line-args-left))
+  (arxana-check-parens-cli))
 
 (provide 'check-parens)
 
