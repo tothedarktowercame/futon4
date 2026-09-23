@@ -73,3 +73,55 @@
 
 (provide 'arxana-check-parens-test)
 ;;; arxana-check-parens-test.el ends here
+
+;; claude-5, 2026-09-23, on kimi-2's report. 609bede made the read-scan run
+;; even when the parens balance — right for Emacs Lisp, and it turned the gate
+;; into a hard failure on ordinary CLOJURE, because the elisp reader cannot
+;; read `#{}', `#""' or `#()' and signals `Invalid read syntax: "#"'. Worse,
+;; a read-kind problem carries :form-start-line and no :line, so the printer
+;; printed NOTHING and the CLI still exited 1: futon2 full_loop_runner.clj and
+;; futon3c runner_service.clj both failed in total silence while being
+;; perfectly readable. Clojure and EDN now get a syntax-state scan that finds
+;; what the reader scan was there for — an unterminated string, which balances
+;; fine and still breaks the file.
+(defun arxana-check-parens-test--run-on (content ext)
+  "Write CONTENT to a temp file with EXT, run the gate on it, return (code . output)."
+  (let* ((dir (make-temp-file "cp-lang" t))
+         (file (expand-file-name (concat "t." ext) dir))
+         (script (expand-file-name "dev/check-parens.el"
+                                   (locate-dominating-file
+                                    (or load-file-name buffer-file-name default-directory)
+                                    "dev")))
+         (out (generate-new-buffer " *cp*")))
+    (unwind-protect
+        (progn
+          (with-temp-file file (insert content))
+          (cons (call-process (expand-file-name invocation-name invocation-directory)
+                              nil out nil "--batch" "-l" script file)
+                (with-current-buffer out (buffer-string))))
+      (kill-buffer out)
+      (delete-directory dir t))))
+
+(ert-deftest arxana-check-parens-clojure-reader-macros-are-not-failures ()
+  (dolist (src '("(ns a.b)\n(def s #{:a :b})\n"
+                 "(ns a.b)\n(def r #\"[0-9]+\")\n"
+                 "(ns a.b)\n(def f #(inc %))\n"))
+    (let ((r (arxana-check-parens-test--run-on src "clj")))
+      (should (= 0 (car r)))
+      (should (string-match-p "OK" (cdr r))))))
+
+(ert-deftest arxana-check-parens-unterminated-string-fails-in-both-languages ()
+  ;; parens balance in each; only the open string is wrong
+  (let ((clj (arxana-check-parens-test--run-on "(ns a.b)\n(def s \"open\n(def t 1)\n" "clj"))
+        (el (arxana-check-parens-test--run-on "(defun f ()\n  (message \"open\n  1)\n" "el")))
+    (should (= 1 (car clj)))
+    (should (string-match-p "Unterminated string" (cdr clj)))
+    (should (= 1 (car el)))))
+
+(ert-deftest arxana-check-parens-never-exits-non-zero-in-silence ()
+  ;; the failure mode that hid the Clojure breakage: exit 1, no output
+  (let ((r (arxana-check-parens-test--run-on "(ns a.b)\n(def s \"open\n" "clj")))
+    (should (= 1 (car r)))
+    (should (string-match-p "[^ \t\n]" (cdr r)))
+    ;; and it says where
+    (should (string-match-p ":[0-9]+:" (cdr r)))))

@@ -147,6 +147,52 @@ Return nil if the file is fully readable, or a plist with details on failure."
                  :message (error-message-string err)
                  :context (arxana-check-parens--context-snippet start-pos context-lines))))))))
 
+(defun arxana-check-parens--clojure-scan (file &optional context-lines)
+  "Unterminated-string/comment scan for Clojure and EDN.
+
+The elisp reader cannot read Clojure's reader macros -- `#{}', `#\"\"',
+`#()' all signal `Invalid read syntax: \"#\"' -- so
+`arxana-check-parens--read-scan' reports a failure on every valid Clojure
+file that contains one.  Once 609bede made the read-scan run even when the
+parens balance, that turned the gate into a hard exit 1 on ordinary source
+(claude-5, 2026-09-23, on kimi-2's report; futon2 full_loop_runner.clj and
+futon3c runner_service.clj both failed while being perfectly readable).
+
+What the read-scan is FOR on these files is the case paren-balance misses:
+an unterminated string, which balances fine and still breaks the reader.
+The syntax state at end of buffer answers exactly that, and understands
+the file's own syntax table rather than Emacs Lisp's grammar."
+  (with-temp-buffer
+    (insert-file-contents file)
+    (let ((buffer-file-name file))
+      (funcall (arxana-check-parens--mode-for-file file)))
+    (let* ((state (syntax-ppss (point-max)))
+           (in-string (nth 3 state))
+           (in-comment (nth 4 state))
+           (start (nth 8 state)))
+      (when (or in-string in-comment)
+        (let ((lc (arxana-check-parens--pos->linecol (or start (point-max)))))
+          (list :kind "read"
+                :file file
+                :pos (or start (point-max))
+                :line (car lc)
+                :col (cdr lc)
+                :message (if in-string
+                             "Unterminated string (still open at end of file)"
+                           "Unterminated block comment (still open at end of file)")
+                :context (arxana-check-parens--context-snippet
+                          (or start (point-max)) context-lines)))))))
+
+(defun arxana-check-parens--scan-for (file &optional context-lines)
+  "The reader-level scan appropriate to FILE's language.
+Emacs Lisp gets the real `read' loop; Clojure and EDN get the
+unterminated-string scan, because the elisp reader cannot read their
+reader macros and reported a failure on every file containing one."
+  (if (member (downcase (or (file-name-extension file) ""))
+              '("clj" "cljs" "cljc" "edn"))
+      (arxana-check-parens--clojure-scan file context-lines)
+    (arxana-check-parens--read-scan file context-lines)))
+
 (defun arxana-check-parens--default-files ()
   "Default files to check: all *.el under dev/ and test/."
   (cl-remove-if-not
@@ -218,7 +264,7 @@ STRATEGY is one of \"check-parens\", \"read\", or \"both\" (default \"both\")."
          ((string= mode "check-parens")
           (setq problem (arxana-check-parens--check-parens file ctx)))
          ((string= mode "read")
-          (setq problem (arxana-check-parens--read-scan file ctx)))
+          (setq problem (arxana-check-parens--scan-for file ctx)))
          (t
           ;; both: check-parens first, THEN read-scan even when it passes.
           ;; Balanced parens are not a readable file -- an unterminated string
@@ -228,8 +274,8 @@ STRATEGY is one of \"check-parens\", \"read\", or \"both\" (default \"both\")."
           ;; agent-chat.el and claude-1's session-turn-analysis.el).
           (let ((cp (arxana-check-parens--check-parens file ctx)))
             (if (not cp)
-                (setq problem (arxana-check-parens--read-scan file ctx))
-              (let ((rs (arxana-check-parens--read-scan file ctx)))
+                (setq problem (arxana-check-parens--scan-for file ctx))
+              (let ((rs (arxana-check-parens--scan-for file ctx)))
                 ;; Merge read-scan info if present; keep check-parens as primary kind/message.
                 (setq problem (if rs
                                   (append cp (list :read-scan rs))
@@ -244,23 +290,43 @@ STRATEGY is one of \"check-parens\", \"read\", or \"both\" (default \"both\")."
     (princ "\n"))
    (t
     ;; Text format: always emit a grep-friendly primary line.
-    (let ((file (plist-get problem :file))
-          (line (plist-get problem :line))
-          (col (plist-get problem :col))
-          (msg (plist-get problem :message)))
-      (when (and file line col msg)
+    (let* ((file (plist-get problem :file))
+           ;; A read-kind problem carries :form-start-line/:error-line and no
+           ;; :line/:col, so this printed NOTHING and the CLI still exited 1 --
+           ;; a gate failing in total silence, which is how the Clojure
+           ;; reader-macro failure went unnoticed (claude-5, 2026-09-23).
+           (line (or (plist-get problem :line)
+                     (plist-get problem :error-line)
+                     (plist-get problem :form-start-line)))
+           (col (or (plist-get problem :col)
+                    (plist-get problem :error-col)
+                    (plist-get problem :form-start-col)))
+           (msg (plist-get problem :message)))
+      (cond
+       ((and file line col msg)
         (princ (format "%s:%d:%d: %s\n" file line col msg)))
+       ;; never exit non-zero with nothing said
+       (t (princ (format "%s: check failed: %S\n" (or file "<unknown file>") problem))))
       ;; If we have read-scan augmentation, emit a second line.
+      ;; The augmentation used %d on :form-start-line/:form-index/:error-line
+      ;; unconditionally. The Clojure scan reports :line/:col and none of
+      ;; those, so formatting nil with %d threw and the whole run exited 255
+      ;; AFTER printing a correct primary line (claude-5, 2026-09-23). Print
+      ;; the fields this scan actually has.
       (let ((rs (plist-get problem :read-scan)))
         (when (and rs (listp rs))
-          (princ (format "%s:%d:%d: read-scan: form #%d starts here; reader error at %d:%d: %s\n"
-                         (plist-get rs :file)
-                         (plist-get rs :form-start-line)
-                         (plist-get rs :form-start-col)
-                         (plist-get rs :form-index)
-                         (plist-get rs :error-line)
-                         (plist-get rs :error-col)
-                         (plist-get rs :message)))))
+          (let ((rf (plist-get rs :file))
+                (rl (or (plist-get rs :error-line) (plist-get rs :line)
+                        (plist-get rs :form-start-line)))
+                (rc (or (plist-get rs :error-col) (plist-get rs :col)
+                        (plist-get rs :form-start-col)))
+                (ri (plist-get rs :form-index))
+                (rm (plist-get rs :message)))
+            (princ (format "%s:%s:%s: read-scan: %s%s\n"
+                           (or rf "<unknown file>")
+                           (or rl "?") (or rc "?")
+                           (if ri (format "form #%d; " ri) "")
+                           (or rm "(no message)"))))))
       ;; Context (already line-numbered).
       (let ((ctx (plist-get problem :context)))
         (when (and ctx (stringp ctx) (not (string-empty-p ctx)))
