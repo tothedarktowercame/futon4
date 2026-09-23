@@ -220,10 +220,15 @@ STRATEGY is one of \"check-parens\", \"read\", or \"both\" (default \"both\")."
          ((string= mode "read")
           (setq problem (arxana-check-parens--read-scan file ctx)))
          (t
-          ;; both: prefer check-parens as the primary validator; enrich with read-scan.
+          ;; both: check-parens first, THEN read-scan even when it passes.
+          ;; Balanced parens are not a readable file -- an unterminated string
+          ;; balances fine and `load' still fails with end-of-file. Running
+          ;; read-scan only on failure meant the tool reported OK on a file
+          ;; Emacs could not read (measured twice on 2026-09-23, zai-1's
+          ;; agent-chat.el and claude-1's session-turn-analysis.el).
           (let ((cp (arxana-check-parens--check-parens file ctx)))
             (if (not cp)
-                (setq problem nil)
+                (setq problem (arxana-check-parens--read-scan file ctx))
               (let ((rs (arxana-check-parens--read-scan file ctx)))
                 ;; Merge read-scan info if present; keep check-parens as primary kind/message.
                 (setq problem (if rs
