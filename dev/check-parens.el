@@ -22,6 +22,7 @@
 
 (require 'cl-lib)
 (require 'subr-x)
+(require 'seq)
 
 ;; json-serialize is available in Emacs 27+. If unavailable, we fall back to text.
 (defvar arxana-check-parens--json-available (fboundp 'json-serialize))
@@ -248,16 +249,35 @@ reader macros and reported a failure on every file containing one."
           :context context-lines
           :no-defaults no-defaults)))
 
+(defconst arxana-check-parens--lisp-extensions
+  '("el" "clj" "cljs" "cljc" "cljr" "edn" "lisp" "lsp" "cl" "scm" "ss" "rkt")
+  "Extensions this tool can actually check.")
+
+(defun arxana-check-parens--lisp-file-p (file)
+  "Non-nil when FILE is a language this tool understands."
+  (member (downcase (or (file-name-extension file) ""))
+          arxana-check-parens--lisp-extensions))
+
 (defun arxana-check-parens-run (&optional files strategy context-lines no-defaults)
   "Check FILES (list of paths). Return nil on success, or plist on first error.
 STRATEGY is one of \"check-parens\", \"read\", or \"both\" (default \"both\")."
-  (let* ((targets (cond
-                   (files files)
-                   (no-defaults nil)
-                   (t (arxana-check-parens--default-files))))
+  (let* ((requested (cond
+                     (files files)
+                     (no-defaults nil)
+                     (t (arxana-check-parens--default-files))))
+         ;; A non-Lisp target used to be handed to emacs-lisp-mode anyway, so
+         ;; `emacs --batch -l check-parens.el NOTE.md' failed with
+         ;; `Invalid read syntax: "#"' on an ordinary markdown heading. Before
+         ;; the batch auto-run existed that was silent; now it is loud and
+         ;; wrong, which is worse. Skip what this tool cannot read, and say so
+         ;; (claude-5, 2026-09-24).
+         (targets (seq-filter #'arxana-check-parens--lisp-file-p requested))
+         (skipped (seq-remove #'arxana-check-parens--lisp-file-p requested))
          (mode (or strategy "both"))
          (ctx (or context-lines 0))
          (problem nil))
+    (dolist (file skipped)
+      (princ (format "%s: skipped, not a Lisp or Clojure file\n" file)))
     (dolist (file targets)
       (unless problem
         (cond
@@ -346,9 +366,11 @@ STRATEGY is one of \"check-parens\", \"read\", or \"both\" (default \"both\")."
          (ctx (plist-get opts :context))
          (no-defaults (plist-get opts :no-defaults))
          (targets (or files (and (not no-defaults) (arxana-check-parens--default-files)))))
-    (if (not targets)
+    (if (not (seq-some #'arxana-check-parens--lisp-file-p targets))
         (progn
-          (princ "No target files.\n")
+          (princ (if targets
+                     "No Lisp or Clojure files among the targets.\n"
+                   "No target files.\n"))
           (kill-emacs 2))
       (let ((problem (arxana-check-parens-run targets strategy ctx no-defaults)))
         (if (not problem)

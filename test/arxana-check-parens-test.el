@@ -125,3 +125,44 @@
     (should (string-match-p "[^ \t\n]" (cdr r)))
     ;; and it says where
     (should (string-match-p ":[0-9]+:" (cdr r)))))
+
+;; claude-5, 2026-09-24. Handing a markdown file to the tool used to be silent;
+;; once the batch auto-run landed it became a LOUD wrong failure — an ordinary
+;; `# heading' read as `Invalid read syntax: "#"'. Skip what this tool cannot
+;; read, say which, and keep checking the rest.
+(ert-deftest arxana-check-parens-skips-non-lisp-targets ()
+  (let* ((dir (make-temp-file "cp-skip" t))
+         (md (expand-file-name "note.md" dir))
+         (good (expand-file-name "good.clj" dir))
+         (bad (expand-file-name "bad.clj" dir))
+         (script (expand-file-name "dev/check-parens.el"
+                                   (locate-dominating-file
+                                    (or load-file-name buffer-file-name default-directory)
+                                    "dev")))
+         (emacs (expand-file-name invocation-name invocation-directory))
+         (run (lambda (&rest args)
+                (let ((out (generate-new-buffer " *cp*")))
+                  (unwind-protect
+                      (cons (apply #'call-process emacs nil out nil
+                                   "--batch" "-l" script args)
+                            (with-current-buffer out (buffer-string)))
+                    (kill-buffer out))))))
+    (unwind-protect
+        (progn
+          (with-temp-file md (insert "# A heading\n\nProse with #{braces} in it.\n"))
+          (with-temp-file good (insert "(ns a.b)\n(def s #{:a})\n"))
+          (with-temp-file bad (insert "(ns a.b)\n(def s \"open\n"))
+          ;; markdown alone is not a pass and not a parse error: nothing to check
+          (let ((r (funcall run md)))
+            (should (= 2 (car r)))
+            (should (string-match-p "No Lisp or Clojure files" (cdr r))))
+          ;; mixed with a good Clojure file: skip is announced, result is OK
+          (let ((r (funcall run md good)))
+            (should (= 0 (car r)))
+            (should (string-match-p "skipped" (cdr r)))
+            (should (string-match-p "OK" (cdr r))))
+          ;; mixed with a broken one: the break still fails the run
+          (let ((r (funcall run md bad)))
+            (should (= 1 (car r)))
+            (should (string-match-p "Unterminated string" (cdr r)))))
+      (delete-directory dir t))))
