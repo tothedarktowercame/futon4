@@ -1,0 +1,36 @@
+#+TITLE: Seams
+:PROPERTIES:
+:DOC_ID: futon3x-c725c8771d71
+:ENTRY_ID: futon3x-c725c8771d71
+:VERSION: org
+:OUTLINE_PATH: Seams
+:PATH_STRING: Seams
+:REPLACES:
+:END:
+
+* Overview
+A =seam= is a place where behaviour can be altered without editing in that
+place. Michael Feathers' seams are found retroactively in legacy code, which
+is why the word carries a salvage flavour. The discipline recorded here is the
+opposite direction: the boundary is declared *before* there is an
+implementation to salvage, so the first version is already swappable.
+
+Rob Kentish's analogy is the better one. Mains voltage is a published contract
+that appliance makers and generator operators both conform to, so neither has
+to know the other. The appliance does not know which generator.
+
+* Why it matters here
+Across the futon stack the same defect recurs: an identifier or a module
+carrying information that should have been a declared property. The measured
+cost is not hypothetical --- a shim process exists only so one system can
+pretend to be a transport another insists on; a second implementation could
+not reuse agent roles because the code read the provider out of an agent id;
+a memory component could not be used by its neighbour because it was written
+against one database.
+
+* The cost ordering
+Declared before an implementation exists: free. Retrofitted in code:
+expensive. Retrofitted in prompt text: worst, and --- measured 2026-09-24 ---
+not merely expensive but *unchecked*. A deliberately broken path inside a
+prompt string changed no test outcome, and two such paths were already broken
+with nothing reporting it.
