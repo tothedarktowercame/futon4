@@ -22,6 +22,7 @@
 
 (require 'cl-lib)
 (require 'subr-x)
+(require 'seq)
 
 ;; json-serialize is available in Emacs 27+. If unavailable, we fall back to text.
 (defvar arxana-check-parens--json-available (fboundp 'json-serialize))
@@ -147,6 +148,52 @@ Return nil if the file is fully readable, or a plist with details on failure."
                  :message (error-message-string err)
                  :context (arxana-check-parens--context-snippet start-pos context-lines))))))))
 
+(defun arxana-check-parens--clojure-scan (file &optional context-lines)
+  "Unterminated-string/comment scan for Clojure and EDN.
+
+The elisp reader cannot read Clojure's reader macros -- `#{}', `#\"\"',
+`#()' all signal `Invalid read syntax: \"#\"' -- so
+`arxana-check-parens--read-scan' reports a failure on every valid Clojure
+file that contains one.  Once 609bede made the read-scan run even when the
+parens balance, that turned the gate into a hard exit 1 on ordinary source
+(claude-5, 2026-09-23, on kimi-2's report; futon2 full_loop_runner.clj and
+futon3c runner_service.clj both failed while being perfectly readable).
+
+What the read-scan is FOR on these files is the case paren-balance misses:
+an unterminated string, which balances fine and still breaks the reader.
+The syntax state at end of buffer answers exactly that, and understands
+the file's own syntax table rather than Emacs Lisp's grammar."
+  (with-temp-buffer
+    (insert-file-contents file)
+    (let ((buffer-file-name file))
+      (funcall (arxana-check-parens--mode-for-file file)))
+    (let* ((state (syntax-ppss (point-max)))
+           (in-string (nth 3 state))
+           (in-comment (nth 4 state))
+           (start (nth 8 state)))
+      (when (or in-string in-comment)
+        (let ((lc (arxana-check-parens--pos->linecol (or start (point-max)))))
+          (list :kind "read"
+                :file file
+                :pos (or start (point-max))
+                :line (car lc)
+                :col (cdr lc)
+                :message (if in-string
+                             "Unterminated string (still open at end of file)"
+                           "Unterminated block comment (still open at end of file)")
+                :context (arxana-check-parens--context-snippet
+                          (or start (point-max)) context-lines)))))))
+
+(defun arxana-check-parens--scan-for (file &optional context-lines)
+  "The reader-level scan appropriate to FILE's language.
+Emacs Lisp gets the real `read' loop; Clojure and EDN get the
+unterminated-string scan, because the elisp reader cannot read their
+reader macros and reported a failure on every file containing one."
+  (if (member (downcase (or (file-name-extension file) ""))
+              '("clj" "cljs" "cljc" "edn"))
+      (arxana-check-parens--clojure-scan file context-lines)
+    (arxana-check-parens--read-scan file context-lines)))
+
 (defun arxana-check-parens--default-files ()
   "Default files to check: all *.el under dev/ and test/."
   (cl-remove-if-not
@@ -159,9 +206,13 @@ Return nil if the file is fully readable, or a plist with details on failure."
 (defun arxana-check-parens--parse-cli-args ()
   "Parse args after `--`. Return plist:
   :files (list) :strategy (string) :json (bool) :context (int) :no-defaults (bool)."
-  (let ((args command-line-args-left)
-        (seen-sep nil)
-        (files '())
+  (let* ((args command-line-args-left)
+         ;; Args before `--` are ignored so that emacs' own arguments do not
+         ;; become filenames. When there is NO `--` at all the caller cannot
+         ;; have meant that, and ignoring everything silently checked nothing:
+         ;; see the auto-run note at the end of this file.
+         (seen-sep (not (member "--" args)))
+         (files '())
         (strategy "both")
         (json-out nil)
         (context-lines 0)
@@ -198,29 +249,53 @@ Return nil if the file is fully readable, or a plist with details on failure."
           :context context-lines
           :no-defaults no-defaults)))
 
+(defconst arxana-check-parens--lisp-extensions
+  '("el" "clj" "cljs" "cljc" "cljr" "edn" "lisp" "lsp" "cl" "scm" "ss" "rkt")
+  "Extensions this tool can actually check.")
+
+(defun arxana-check-parens--lisp-file-p (file)
+  "Non-nil when FILE is a language this tool understands."
+  (member (downcase (or (file-name-extension file) ""))
+          arxana-check-parens--lisp-extensions))
+
 (defun arxana-check-parens-run (&optional files strategy context-lines no-defaults)
   "Check FILES (list of paths). Return nil on success, or plist on first error.
 STRATEGY is one of \"check-parens\", \"read\", or \"both\" (default \"both\")."
-  (let* ((targets (cond
-                   (files files)
-                   (no-defaults nil)
-                   (t (arxana-check-parens--default-files))))
+  (let* ((requested (cond
+                     (files files)
+                     (no-defaults nil)
+                     (t (arxana-check-parens--default-files))))
+         ;; A non-Lisp target used to be handed to emacs-lisp-mode anyway, so
+         ;; `emacs --batch -l check-parens.el NOTE.md' failed with
+         ;; `Invalid read syntax: "#"' on an ordinary markdown heading. Before
+         ;; the batch auto-run existed that was silent; now it is loud and
+         ;; wrong, which is worse. Skip what this tool cannot read, and say so
+         ;; (claude-5, 2026-09-24).
+         (targets (seq-filter #'arxana-check-parens--lisp-file-p requested))
+         (skipped (seq-remove #'arxana-check-parens--lisp-file-p requested))
          (mode (or strategy "both"))
          (ctx (or context-lines 0))
          (problem nil))
+    (dolist (file skipped)
+      (princ (format "%s: skipped, not a Lisp or Clojure file\n" file)))
     (dolist (file targets)
       (unless problem
         (cond
          ((string= mode "check-parens")
           (setq problem (arxana-check-parens--check-parens file ctx)))
          ((string= mode "read")
-          (setq problem (arxana-check-parens--read-scan file ctx)))
+          (setq problem (arxana-check-parens--scan-for file ctx)))
          (t
-          ;; both: prefer check-parens as the primary validator; enrich with read-scan.
+          ;; both: check-parens first, THEN read-scan even when it passes.
+          ;; Balanced parens are not a readable file -- an unterminated string
+          ;; balances fine and `load' still fails with end-of-file. Running
+          ;; read-scan only on failure meant the tool reported OK on a file
+          ;; Emacs could not read (measured twice on 2026-09-23, zai-1's
+          ;; agent-chat.el and claude-1's session-turn-analysis.el).
           (let ((cp (arxana-check-parens--check-parens file ctx)))
             (if (not cp)
-                (setq problem nil)
-              (let ((rs (arxana-check-parens--read-scan file ctx)))
+                (setq problem (arxana-check-parens--scan-for file ctx))
+              (let ((rs (arxana-check-parens--scan-for file ctx)))
                 ;; Merge read-scan info if present; keep check-parens as primary kind/message.
                 (setq problem (if rs
                                   (append cp (list :read-scan rs))
@@ -235,23 +310,43 @@ STRATEGY is one of \"check-parens\", \"read\", or \"both\" (default \"both\")."
     (princ "\n"))
    (t
     ;; Text format: always emit a grep-friendly primary line.
-    (let ((file (plist-get problem :file))
-          (line (plist-get problem :line))
-          (col (plist-get problem :col))
-          (msg (plist-get problem :message)))
-      (when (and file line col msg)
+    (let* ((file (plist-get problem :file))
+           ;; A read-kind problem carries :form-start-line/:error-line and no
+           ;; :line/:col, so this printed NOTHING and the CLI still exited 1 --
+           ;; a gate failing in total silence, which is how the Clojure
+           ;; reader-macro failure went unnoticed (claude-5, 2026-09-23).
+           (line (or (plist-get problem :line)
+                     (plist-get problem :error-line)
+                     (plist-get problem :form-start-line)))
+           (col (or (plist-get problem :col)
+                    (plist-get problem :error-col)
+                    (plist-get problem :form-start-col)))
+           (msg (plist-get problem :message)))
+      (cond
+       ((and file line col msg)
         (princ (format "%s:%d:%d: %s\n" file line col msg)))
+       ;; never exit non-zero with nothing said
+       (t (princ (format "%s: check failed: %S\n" (or file "<unknown file>") problem))))
       ;; If we have read-scan augmentation, emit a second line.
+      ;; The augmentation used %d on :form-start-line/:form-index/:error-line
+      ;; unconditionally. The Clojure scan reports :line/:col and none of
+      ;; those, so formatting nil with %d threw and the whole run exited 255
+      ;; AFTER printing a correct primary line (claude-5, 2026-09-23). Print
+      ;; the fields this scan actually has.
       (let ((rs (plist-get problem :read-scan)))
         (when (and rs (listp rs))
-          (princ (format "%s:%d:%d: read-scan: form #%d starts here; reader error at %d:%d: %s\n"
-                         (plist-get rs :file)
-                         (plist-get rs :form-start-line)
-                         (plist-get rs :form-start-col)
-                         (plist-get rs :form-index)
-                         (plist-get rs :error-line)
-                         (plist-get rs :error-col)
-                         (plist-get rs :message)))))
+          (let ((rf (plist-get rs :file))
+                (rl (or (plist-get rs :error-line) (plist-get rs :line)
+                        (plist-get rs :form-start-line)))
+                (rc (or (plist-get rs :error-col) (plist-get rs :col)
+                        (plist-get rs :form-start-col)))
+                (ri (plist-get rs :form-index))
+                (rm (plist-get rs :message)))
+            (princ (format "%s:%s:%s: read-scan: %s%s\n"
+                           (or rf "<unknown file>")
+                           (or rl "?") (or rc "?")
+                           (if ri (format "form #%d; " ri) "")
+                           (or rm "(no message)"))))))
       ;; Context (already line-numbered).
       (let ((ctx (plist-get problem :context)))
         (when (and ctx (stringp ctx) (not (string-empty-p ctx)))
@@ -271,15 +366,42 @@ STRATEGY is one of \"check-parens\", \"read\", or \"both\" (default \"both\")."
          (ctx (plist-get opts :context))
          (no-defaults (plist-get opts :no-defaults))
          (targets (or files (and (not no-defaults) (arxana-check-parens--default-files)))))
-    (if (not targets)
+    (if (not (seq-some #'arxana-check-parens--lisp-file-p targets))
         (progn
-          (princ "No target files.\n")
+          (princ (if targets
+                     "No Lisp or Clojure files among the targets.\n"
+                   "No target files.\n"))
           (kill-emacs 2))
       (let ((problem (arxana-check-parens-run targets strategy ctx no-defaults)))
         (if (not problem)
             (progn (princ "OK\n") (kill-emacs 0))
           (arxana-check-parens--print-problem problem json-out)
           (kill-emacs 1))))))
+
+;; AUTO-RUN IN BATCH (claude-5, 2026-09-23).
+;;
+;; The documented invocation is
+;;   emacs -Q --batch -l check-parens.el --eval '(arxana-check-parens-cli)' -- FILES
+;; but it is very often typed as
+;;   emacs --batch -l check-parens.el FILE
+;; which merely LOADS the definitions, treats FILE as a file to visit, prints
+;; nothing and exits 0.  A gate that passes everything, silently, and looks
+;; exactly like a pass.  Two unbalanced `let' forms in
+;; futon3c/emacs/agent-chat.el cleared it that way and broke every Emacs agent
+;; lane (`ck new' died with "End of file during parsing: #<killed buffer>");
+;; the same wrong invocation had been quoted as a cleared gate in several
+;; futon2 commit messages the same afternoon.
+;;
+;; So: when this file is loaded in batch and every remaining argument is an
+;; existing file, check those files and exit with the CLI's status.  The
+;; condition is deliberately narrow -- any flag-shaped leftover (`--eval',
+;; `-f', a test runner's own arguments) means the caller is driving explicitly,
+;; and nothing happens.  `(require 'check-parens)' from other Lisp is
+;; unaffected.
+(when (and noninteractive
+           command-line-args-left
+           (cl-every #'file-regular-p command-line-args-left))
+  (arxana-check-parens-cli))
 
 (provide 'check-parens)
 

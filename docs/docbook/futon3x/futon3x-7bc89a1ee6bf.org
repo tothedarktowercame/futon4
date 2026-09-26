@@ -1,0 +1,49 @@
+#+TITLE: The turn-annotation seam
+:PROPERTIES:
+:DOC_ID: futon3x-7bc89a1ee6bf
+:ENTRY_ID: futon3x-7bc89a1ee6bf
+:VERSION: org
+:OUTLINE_PATH: Seams / The turn-annotation seam
+:PATH_STRING: Seams / The turn-annotation seam
+:REPLACES:
+:END:
+
+* What it is
+A packaged, reusable declaration of two boundaries in the operator-turn
+interpretation loop: what a *turn record* is, and how its *interpretation is
+dispatched*.
+
+=futon3c:packages/turn-seam/=
+
+| File | What it is |
+|------+------------|
+| =turn-record.schema.json= | what a turn record is, independent of who writes and who reads it |
+| =dispatch-contract.md= | how interpretation is delegated, and what fire-and-forget owes you |
+| =conformance.py= | run against your own records; no dependencies, no host paths |
+| =example/= | one real record, passing unmodified |
+
+* The claim
+The schema was derived from 159 real records and checked against all of them,
+not designed in advance. If an independent implementation produces records
+that pass =conformance.py=, the two agree about what a turn is, and either can
+be replaced without the other being edited.
+
+* The mistake it was built after
+The convention for quoted material was first designed as /strip the quoted
+text/ --- a verb belonging to one consumer, the interpreter. An hour later the
+display needed that text back, and a side-channel had to be retrofitted to
+carry what had already been discarded.
+
+The generalisable rule: *a seam fails when you design it around what one
+consumer needs rather than around what the thing is.* "Strip the quote" is a
+consumer's verb. "A turn has a said part and a quoted part" is what the thing
+is, and it serves both readers without privileging either.
+
+* Three things that bite an implementer
+1. *Offsets* are codepoints, zero-based, end-exclusive. A JavaScript client
+   counts UTF-16 units and will disagree silently on any emoji or CJK.
+2. *Two texts, not one.* A quoting turn carries both the elided form and what
+   was typed.
+3. *Delivered is not done.* A dispatch returning cleanly means the brief
+   arrived, not that the work happened --- record the job id and ask later.
+   152 records accumulated in an indeterminate state before anything noticed.

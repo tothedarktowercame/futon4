@@ -1,0 +1,42 @@
+#+TITLE: Finding a seam: the method
+:PROPERTIES:
+:DOC_ID: futon3x-240508264c33
+:ENTRY_ID: futon3x-240508264c33
+:VERSION: org
+:OUTLINE_PATH: Seams / Finding a seam: the method
+:PATH_STRING: Seams / Finding a seam: the method
+:REPLACES:
+:END:
+
+* The nine steps
+From a coupling someone hit, to a checked enactment. Each step names its
+input, its output artefact, the tool that does it or =by hand=, and its check.
+
+| Step | By hand | Check |
+|------+---------+-------|
+| 1 someone hits the coupling | yes | n/a |
+| 2 measure it | no | re-run the enumeration |
+| 3 choose the grain | yes | grain check |
+| 4 write the cascade | yes | cascade check |
+| 5 wire it | no | wiring check |
+| 6 choose a target, record the click | yes | PROOF-2a clause checks |
+| 7 predict | no | the prediction reproduces |
+| 8 enact | yes | the wants' own checks; conformance |
+| 9 observe, update belief | no | clause statuses |
+
+* What the method claims
+Four steps are judgements made by a person. The claim is not that judgement
+can be automated away, but that a judgement must be *recorded in a form
+something else can contradict*. Every step now has a check that can
+contradict it.
+
+* The grain step
+The step most often got wrong, and the hardest to check. The grain of a
+resolver is *what its lookup is keyed by*, which is visible in its argument
+list: a function taking a role and answering which seat plays it is at the
+role grain; one taking an agent id and answering which provider it is, is not.
+A cascade declares the grain it chose; a check compares that against the
+enacted resolver and against the file it lives in.
+
+* Source
+=futon3c:holes/missions/M-futon-seams.md=, DERIVE section.

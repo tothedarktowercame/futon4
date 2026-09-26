@@ -364,5 +364,34 @@
     ],
     "path_string": "API Reference / Multiplexed RPC",
     "level": 2
+  },
+  {
+    "doc_id": "futon3x-c725c8771d71",
+    "title": "Seams",
+    "outline_path": [
+      "Seams"
+    ],
+    "path_string": "Seams",
+    "level": 1
+  },
+  {
+    "doc_id": "futon3x-240508264c33",
+    "title": "Finding a seam: the method",
+    "outline_path": [
+      "Seams",
+      "Finding a seam: the method"
+    ],
+    "path_string": "Seams / Finding a seam: the method",
+    "level": 2
+  },
+  {
+    "doc_id": "futon3x-7bc89a1ee6bf",
+    "title": "The turn-annotation seam",
+    "outline_path": [
+      "Seams",
+      "The turn-annotation seam"
+    ],
+    "path_string": "Seams / The turn-annotation seam",
+    "level": 2
   }
 ]

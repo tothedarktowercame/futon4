@@ -903,3 +903,12 @@ The mission is at VERIFY-exit. The hand-off to UKRN-S is clean: every phase has 
 Per the lifecycle's exit criterion: the design has been checked against available structural and empirical constraints. The simulation runs (Predictions 1–5) have produced verdicts that revise DERIVE in two specific ways (V3, V4) and confirm the design's robustness in the rest. Sorries with statuses; framings with verdicts; scenarios that pass; predictions that ran.
 
 Open follow-on work: real-data validation against fresh T1-wave evidence (separate mission; depends on Sorry-1 closure mechanism completing); multi-agent extensions for finer-grained Evaluator-configuration testing (separate work; the current single-agent simulation parameterises the configurations but does not model concurrent multi-agent dynamics in detail).
+
+### tl;dr
+
+- [ ] An ORP evidence-gap register records every gap as closed, in-closure or deferred and names its closure mechanism.
+- [ ] A verification record gives every Working Paper candidate framing a verdict and names its empirical evidence.
+- [ ] UKRN-S bootstrap actions have explicit completion criteria for establishing the required institutional capabilities.
+- [ ] The UKRN-S recommended design commitments are recorded with their supporting evidence named.
+- [ ] The post-bootstrap UKRN-S rollout is scoped as a follow-on mission with dependencies named.
+- [ ] A standalone plain-language argument explains the UKRN-S design commitments to non-specialist readers.
