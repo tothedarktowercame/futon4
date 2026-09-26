@@ -1,5 +1,8 @@
 # futon4 — Arxana Hypertext Client
 
+> **New to FUTON? Start with [futon0/INSTALL.md](https://github.com/tothedarktowercame/futon0/blob/main/INSTALL.md)**, the single guide to
+> installing and running the stack. Needed on disk for the core install (on Agency's classpath); the Arxana Emacs client is optional.
+
 futon4 is the hypertext layer of the futon stack. It revives the classic Arxana
 system—a scholium-based document network where any text span can link to any
 other with typed annotations (scholia). The Emacs client reads from and writes
