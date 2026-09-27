@@ -333,8 +333,10 @@ A mission may also be:
   `**<PHASE> exit: Met.**`, `**<PHASE> exit: Not met.**` or
   `**<PHASE> exit: Not started.**`, with `<PHASE>` one of HEAD, IDENTIFY,
   MAP, DERIVE, ARGUE, VERIFY, INSTANTIATE, DOCUMENT (for example
-  `**MAP exit: Met.**`). The line starts at the beginning of a line; any
-  explanation follows it as prose. The exit criteria themselves are the ones
+  `**MAP exit: Met.**`). The verdict starts at the beginning of a line; any
+  explanation follows the closing `**`, after a space on the same line or
+  on the lines below (`**HEAD exit: Met.** The operator's anchor turn …`);
+  nothing is written between `Met.` and the closing `**`. The exit criteria themselves are the ones
   in this document and apply to every mission without being repeated in it;
   a mission that states an exit of its own in its own words (a paragraph
   beginning `**Exit criterion:**`) puts the verdict in that paragraph, as
