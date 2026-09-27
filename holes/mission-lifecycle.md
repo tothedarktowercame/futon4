@@ -328,6 +328,19 @@ A mission may also be:
 - The operator sets and clears gates by editing the mission document (removing
   the Gate line clears it; git history is the record). Agents may propose a
   gate during review, but may not clear one.
+- A phase's exit verdict is recorded in the mission document, in that
+  phase's section, as one line that names the phase:
+  `**<PHASE> exit: Met.**`, `**<PHASE> exit: Not met.**` or
+  `**<PHASE> exit: Not started.**`, with `<PHASE>` one of HEAD, IDENTIFY,
+  MAP, DERIVE, ARGUE, VERIFY, INSTANTIATE, DOCUMENT (for example
+  `**MAP exit: Met.**`). The line starts at the beginning of a line; any
+  explanation follows it as prose. The exit criteria themselves are the ones
+  in this document and apply to every mission without being repeated in it;
+  a mission that states an exit of its own in its own words (a paragraph
+  beginning `**Exit criterion:**`) puts the verdict in that paragraph, as
+  before. The verdict is written by whoever made the judgment. The War
+  Machine observes that the line is there; it does not make the judgment
+  (operator, 2026-09-27).
 - Checkpoints are appended (never overwrite prior phases).
 - Evidence is emitted to futon1a during VERIFY/INSTANTIATE.
 - Completed missions become source material for future missions.
