@@ -1,12 +1,20 @@
 # Mission: WebArxana — Collaborative Hypergraph Surface
 
 **Date:** 2026-04-12
-**Status:** INSTANTIATE (2026-04-12). Interactive testing pass done.
+**Status:** OPEN — OPEN — INSTANTIATE (2026-04-12). Interactive testing pass done.
 Multi-focus canvas, d3-force layout, diagrams, link annotations.
 Pending: deployment, some polish items.
 **Blocked by:** None (futon1a operational, Arxana Browser operational,
 WebArxana v1 prototype committed)
 **Owner:** futon4 (WebArxana), with dependencies on futon1a (data store)
+
+## Acceptance checklist (2026-09-30)
+
+- [x] Node/relation creation, global hop depth, authors, activity feed, real-time sync, multi-focus diagrams, and the 18-test Playwright suite are implemented. (evidence: this file, INSTANTIATE checkpoints 1–2)
+- [ ] WebArxana is deployed at an address reachable by a collaborator outside localhost.
+- [ ] Per-pin hop-depth controls are available in the multi-focus UI and retain their state.
+- [ ] Link-annotation edits persist to futon1a and survive a client refresh instead of remaining Datascript-only.
+- [ ] Compressed diagrams display the documented dashed through-edge for links between an external node and hidden contents.
 
 ## Motivation
 

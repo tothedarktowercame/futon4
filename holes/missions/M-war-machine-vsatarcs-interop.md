@@ -1,11 +1,20 @@
 # M-war-machine-vsatarcs-interop: Operational convergence of WM and VSATARCs
 
 **Date:** 2026-05-21 (HEAD authored from operator dialogue).
-**Status:** HEAD. Three point-to-point bridges exist (WM-trace read, XTDB clicks consumer, intrinsic-values hyperedge round-trip); no cross-side coherence audit; mission scopes the convergence.
+**Status:** OPEN — OPEN — HEAD. Three point-to-point bridges exist (WM-trace read, XTDB clicks consumer, intrinsic-values hyperedge round-trip); no cross-side coherence audit; mission scopes the convergence.
 **Owner:** Joe (operator); claude-4 (HEAD author); IDENTIFY ownership tbd.
 **Blocked by:** None directly. Builds on v0.5.31+ bilateral apparatus + v0.5.33 substrate-signal marginpars.
 **Companion missions:** `M-stack-essay-code-alignment` (the umbrella that named the VSATARCs reader work); `M-war-machine-aif-last-mile` (WM-side last-mile, claude-9's mission home); `M-self-documenting-stack` (claude-2 closed POC; LC1 surface is one of three the interop must accommodate); `M-editorial-assistant` (claude-10's writer-side surface that this mission must NOT break).
 **Issue-queue entry:** `iq-015`.
+
+## Acceptance checklist (2026-09-30)
+
+- [ ] A committed cross-side coherence schema names the authoritative source, projection direction, verification cadence, and reversal behavior for every bridge.
+- [ ] WM-trace mirrors are checked against their source records with explicit tolerance and a surfaced violation result.
+- [ ] XTDB watcher events and VSATARCS reader ticks have a programmatic correspondence check rather than a chrome-only count.
+- [ ] Both intrinsic-values sides replay the same hyperedge stream and produce matching posteriors under an automated fixture.
+- [ ] Bilateral-evidence WM references and mission-status identifiers resolve uniquely, with unresolved or ambiguous references reported.
+- [ ] A unified query surface and operator-visible violation view cover WM UI, VSATARCS, and LC1 without continuous polling noise.
 
 ## HEAD — Operator-voice anchor
 

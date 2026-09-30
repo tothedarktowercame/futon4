@@ -1,7 +1,7 @@
 # Mission: M-web-arxana-missions — Show a Mission's Semantic Network in WebArxana
 
 **Date:** 2026-06-07
-**Status:** IDENTIFY + MAP complete 2026-06-07. **Layer 1 LIVE** — `/ego`
+**Status:** OPEN — OPEN — IDENTIFY + MAP complete 2026-06-07. **Layer 1 LIVE** — `/ego`
 hyperedge-projection shipped (codex-1 `c01d46c`: typed neighbours, no self-loop)
 + `#/focus/<id>` route exists; client `fetch-hyperedges` dedup = small cleanup left.
 **Layer 3 DERIVE drafted** 2026-06-07 (§6: reuse Stage-5 NLP on the mission corpus):
@@ -16,6 +16,15 @@ futon1a (hypergraph store). Reads the typed decomposition from futon0
 [[project_interest_network]]; sibling missions `M-webarxana.md`,
 `M-web-arxana-ui-improvements.md`, `M-capability-star-map` (futon0),
 `M-stack-stereolithography` (owns the posterior render).
+
+## Acceptance checklist (2026-09-30)
+
+- [x] A named mission opens through `/ego` and `#/focus/<id>` with typed mission and code neighbours and no self-loop. (evidence: codex-1 `c01d46c`, recorded in this file's status)
+- [ ] The client hyperedge-fetch path deduplicates Layer-1 neighbours without losing the typed edge information used by the graph.
+- [ ] `mission-ner-kernel.json` provides the curated mission-domain lexicon and plain-English projection required by the Layer-3 extraction.
+- [ ] Per-lifecycle-phase priors and section-typed n-ary extraction produce a semantic graph for one named mission.
+- [ ] WebArxana renders that Layer-3 graph with nested scope/frame roles instead of flattening the n-ary structure.
+- [ ] The M-capability-star-map example is cross-checked against `M-capability-star-map.graph.edn`, with mismatches recorded as extraction or gold-data findings.
 
 ## HEAD (Joe, 2026-06-07, verbatim sense)
 

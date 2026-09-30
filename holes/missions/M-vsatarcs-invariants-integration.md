@@ -1,12 +1,21 @@
 # Mission: M-vsatarcs-invariants-integration
 
 **Date:** 2026-06-01
-**Status:** INSTANTIATE (read-only INSTANTIATE-0 active; IDENTIFY opened 2026-06-01, MAP completed 2026-06-01, DERIVE accepted 2026-06-01, ARGUE accepted 2026-06-01, VERIFY accepted 2026-06-01 after count precision pass)
+**Status:** OPEN — OPEN — INSTANTIATE (read-only INSTANTIATE-0 active; IDENTIFY opened 2026-06-01, MAP completed 2026-06-01, DERIVE accepted 2026-06-01, ARGUE accepted 2026-06-01, VERIFY accepted 2026-06-01 after count precision pass)
 **Xenotype:** derivation (IDENTIFY → MAP → DERIVE → ARGUE → VERIFY → INSTANTIATE)
 **Repos:** futon4 (VSATARCS reader), futon3c (invariant inventory + feeder pattern)
 **Owner:** Joe frames; agent TBD. **No code until the logic model is agreed**
 (per [[feedback_logic_model_before_code]] — this mission exists *because* the
 invariants were built-by-assertion without a verified model).
+
+## Acceptance checklist (2026-09-30)
+
+- [x] `scripts/enumerate-invariant-queue.bb` reproducibly emits the pinned 47/72/86 strata and a conservative audit ledger without writing production state. (evidence: this file, “INSTANTIATE-0 exit”)
+- [x] The projection schema, witnessed-status tripwires, read-only builder, Arxana consumers, and War Machine `:vsatarcs-status` feed are implemented and verified. (evidence: this file, “Clean-exit gap closure” and “INSTANTIATE implementation slice”)
+- [ ] Every one of the 72 inventory-derived invariant candidates has an explicit keep, fold, drop, witness-needed, or convert-to-work-item decision with rationale.
+- [ ] A bounded feeder keeps the canonical projection current from live witnesses without making stale queue JSON or browser-local tracer rows authoritative.
+- [ ] Every rendered operational invariant has a runnable witness result, while missing or inactive witnesses are displayed honestly without rewriting authored history.
+- [ ] The `pipeline-tracer` boot warning and its four stale track artifacts have a recorded keep, replace, or unwire disposition with an explicit replacement signal if removed.
 
 ## HEAD (Joe, 2026-06-01, verbatim sense)
 

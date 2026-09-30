@@ -1,6 +1,15 @@
 # Mission: M-vsatarcs-writer
 
-**Status:** INSTANTIATE (started 2026-05-20)
+**Status:** OPEN — OPEN — INSTANTIATE (started 2026-05-20)
+
+## Acceptance checklist (2026-09-30)
+
+- [x] The consent-gated predict → execute → observe cycle closes with zero prediction error for `:mission-doc-sync`. (evidence: this file, INSTANTIATE Checkpoint 1)
+- [x] The same writer apparatus closes an `:aif-edn-revision-entry` cycle and rejects duplicate self-application, satisfying the two-class L4 demonstration. (evidence: this file, INSTANTIATE Checkpoint 2)
+- [ ] Writer-action candidates carry and use an implemented R5 EFE ranking with the named G-term breakdown rather than the single-candidate bypass.
+- [ ] Attention and mission-trust budgets plus quantitative abstention are enforced and covered by tests.
+- [ ] Operator confirm, reject, and ignore responses feed back through the L5 observation channel and update writer-action precision.
+- [ ] A live dogfooding cycle writes its own canonical revision evidence, and writer-event trace emit/read round-trip tests pass.
 **Owner:** claude-2 (assignment confirmed by Joe 2026-05-20; original IDENTIFY draft assumed claude-4 per bilateral split, but Joe reassigned ownership to claude-2 to maintain in-session momentum during this REPL/CLI session)
 **Co-owner / coordination:** claude-4 (VSATARCS-side; will receive handoff updates as INSTANTIATE checkpoints land so cross-side coordination stays current)
 **Driver:** Joe (operator + mission-protocol gatekeeper)
