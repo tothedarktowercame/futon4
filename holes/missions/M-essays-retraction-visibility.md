@@ -1,9 +1,16 @@
 # Mission: Essays Retraction Visibility — Persist Retained Annotations Across Reopen
 
 **Date:** 2026-05-14
-**Status:** READY TO EXECUTE
+**Status:** OPEN — READY TO EXECUTE
 **Parent mission:** `M-essays-edit-cycle.md`
 **Owner:** futon4 / Arxana Essays notes-pane and edit-cycle UI
+
+## Acceptance checklist (2026-09-30)
+
+- [x] Persisted `:retracted t` annotations appear in the notes pane after save and reopen. (evidence: `holes/missions/M-essays-edit-cycle.md`, Checkpoint 2)
+- [x] Persisted and live-pending retractions share the same strikethrough presentation and a persisted marker. (evidence: `holes/missions/M-essays-edit-cycle.md`, Checkpoint 2)
+- [ ] `test/arxana-browser-essays-test.el` demonstrates that a restored and re-anchored annotation loses the retraction treatment again.
+- [x] The parent mission records the implementation and focused test count. (evidence: `holes/missions/M-essays-edit-cycle.md`, Checkpoint 2: 22 tests passed)
 
 ## Purpose
 

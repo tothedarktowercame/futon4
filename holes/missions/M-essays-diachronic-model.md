@@ -1,9 +1,18 @@
 # Mission: Essays Diachronic Model — Golden/Live Dataset Discipline and XTDB Lifecycle Semantics
 
 **Date:** 2026-05-14
-**Status:** SPECIFIED, NOT YET IMPLEMENTED
+**Status:** OPEN — SPECIFIED, NOT YET IMPLEMENTED
 **Parent mission:** `M-essays-edit-cycle.md`
 **Owner:** futon4 / WebArxana / futon1a
+
+## Acceptance checklist (2026-09-30)
+
+- [x] This mission specifies golden/live dataset identity, lifecycle-event vocabulary, event-versus-projection boundaries, and the Hyperreal Side A replay scenario. (evidence: `holes/missions/M-essays-diachronic-model.md`)
+- [ ] A named command or script mints a writable Hyperreal live round from an immutable golden seed without modifying the source pair.
+- [ ] XTDB document shapes exist for `dataset-round` and the lifecycle events named in this mission.
+- [ ] Save-time transitions emit the applicable lifecycle events with stable essay, section, annotation, and dataset-round identities.
+- [ ] A replay distinguishes preserved-anchor, forced-reanchor, and substrate-removal transitions in its projections.
+- [ ] Temporal query and WebArxana views expose the lifecycle and identify the live round from which every result was derived.
 
 ## Purpose
 

@@ -1,7 +1,7 @@
 # Mission: Essays Edit Cycle — Re-anchoring Annotated Editions Under Editing
 
 **Date:** 2026-04-20
-**Status:** ACTIVE. Read view and section-edit/save writeback are operational
+**Status:** OPEN — ACTIVE. Read view and section-edit/save writeback are operational
 in `arxana-browser-essays.el`; the essay registry now projects from XTDB
 rather than depending on volatile Emacs defcustom state. Remaining work is
 the broader edit-cycle surface (re-anchoring discipline, flexiarg drift
@@ -10,6 +10,14 @@ handling, and richer manifest editing ergonomics).
 subsystem (read view, importer, manifest format).
 **Owner:** futon4 (Essays browser), with ingress points in futon1a (XTDB
 writeback) and the source repos for essays under annotation.
+
+## Acceptance checklist (2026-09-30)
+
+- [x] Fixture-local replay tests cover preserved anchors, forced re-anchoring, substrate-removal retraction, and persisted reopen without mutating golden or live source files. (evidence: this file, Checkpoints 4–6)
+- [ ] The UKRN Working Paper completes a full Cycle-1 pass across essay, flexiarg, manifest, and section edits without manual repair beyond explicitly deferred reconciliation cases.
+- [ ] Cut-yank movement and copy-paste of annotated regions have defined, tested semantics instead of the unreliable behavior recorded here.
+- [ ] The Essays README documents the audit function, editing commands, re-anchoring discipline, and manual-reconciliation boundary.
+- [ ] A second essay is annotated and edited through the same machinery without copying UKRN-specific code.
 
 ## Motivation
 

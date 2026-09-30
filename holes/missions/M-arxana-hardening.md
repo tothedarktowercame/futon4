@@ -1,8 +1,18 @@
 # M-arxana-hardening — stop the Arxana UI from silently losing itself
 
-Chartered 2026-07-27 (Joe: "too many issues here to hotfix"). Status:
-IDENTIFY — evidence collected during the 2026-07-26/27 Outbox incident;
+**Status:** OPEN — IDENTIFY — evidence collected during the 2026-07-26/27 Outbox incident;
 notes deposited by claude-3. Awaiting Joe's ratification/scoping.
+
+Chartered 2026-07-27 (Joe: "too many issues here to hotfix").
+
+## Acceptance checklist (2026-09-30)
+
+- [ ] Arxana features self-register their home-menu entries and view keymaps, with browser-core retaining only ordering hints.
+- [ ] A batch check fails when any loaded `arxana-*-mode-map` is empty.
+- [ ] Every browser-core view named in F3 has its own registered keymap, and an unregistered view produces a hard visible failure.
+- [ ] A shared batch-compile command loads hydra, compiles all development modules cleanly, and prevents stale `.elc` files from shadowing newer source.
+- [ ] Browser and outbox surfaces enforce the two-up, focus/back, solo-window, editable-buffer navigation, and count-vocabulary invariants named in F6.
+- [ ] `arxana-smoke.el` verifies registered home entries, registered view keymaps, non-empty mode maps, and clean byte-compilation in one cheap gate.
 
 ## The incident that named the mission
 

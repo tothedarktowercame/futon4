@@ -1,7 +1,7 @@
 # Mission: Arxana Round-Trip — Backend Adapters for Editable Hypertext
 
 **Date:** 2026-04-27
-**Status:** IDENTIFY. The local Essays subsystem already supports in-place
+**Status:** OPEN — IDENTIFY. The local Essays subsystem already supports in-place
 editing, manifest sync, comments, re-anchoring, and markdown export; no
 general round-trip backend adapter exists yet.
 **Blocked by:** None for Phase 1. Phase 2 depends on deciding what the
@@ -9,6 +9,15 @@ canonical editable surface for mathematics should be.
 **Owner:** futon4 (Arxana / Essays), with dependencies on futon1a (XTDB
 sync), futon3 pattern libraries, and external publication backends such as
 Wikibooks / MediaWiki.
+
+## Acceptance checklist (2026-09-30)
+
+- [ ] A documented essay-backend protocol implements `render`, `fetch-remote`, `diff`, `publish`, `import-remote`, and stable page mapping.
+- [ ] From Emacs, one canonical local essay renders to MediaWiki text and fetches the current remote text with revision metadata.
+- [ ] The operator can review a generated-versus-live diff before any publish operation.
+- [ ] Publishing uses MediaWiki revision or timestamp checks and surfaces a concurrent remote edit as a reconcile event rather than overwriting it.
+- [ ] One Peeragogy Handbook subpage completes local edit → render → preview → publish → fetch → compare, with local/remote identity and revision evidence recorded.
+- [ ] The root-page strategy, commands, adapter data shapes, and Phase-2 math-surface readiness decision are documented in futon4.
 
 ## Motivation
 
