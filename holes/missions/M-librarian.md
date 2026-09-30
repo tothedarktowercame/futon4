@@ -1,9 +1,19 @@
 # M-librarian — native 3D editing as a regular practice (Steam Frame)
 
+**Status:** OPEN — **HEAD** — pre-IDENTIFY intake; explicitly a "bonus lap" gated behind the client-facing VSAT delivery. Not yet scoped, not yet resourced; the hardware it targets has not shipped.
+
 Chartered 2026-08-10 from a 2026-08-09 operator remark during invoice-202506
-planning. Status: **HEAD** — pre-IDENTIFY intake; explicitly a "bonus lap"
+planning. It is a "bonus lap"
 gated behind the client-facing VSAT delivery. Not yet scoped, not yet
 resourced; the hardware it targets has not shipped.
+
+## Acceptance checklist (2026-09-30)
+
+- [ ] Joe confirms that the HEAD text faithfully records the native Librarian idea.
+- [ ] The invoice-202506 client-facing VSAT delivery is recorded as discharged.
+- [ ] Steam Frame hardware or published developer documentation establishes a concrete native development path.
+- [ ] A Quest 2 WebXR trial records whether Joe voluntarily uses 3D editing after the demo.
+- [ ] IDENTIFY names whether Librarian is a VSAT client or an Arxana-side 3D surface and records the resulting repository and authentication boundary.
 
 ## Operator-voice anchor
 

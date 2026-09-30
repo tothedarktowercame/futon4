@@ -1,4 +1,4 @@
-**Status:** IDENTIFY (2026-05-06, draft 2; draft 1 archived as `M-or-training-as-learning-system.v1.md`)
+**Status:** OPEN — IDENTIFY (2026-05-06, draft 2; draft 1 archived as `M-or-training-as-learning-system.v1.md`)
 
 # M-or-training-as-learning-system
 
@@ -904,7 +904,7 @@ Per the lifecycle's exit criterion: the design has been checked against availabl
 
 Open follow-on work: real-data validation against fresh T1-wave evidence (separate mission; depends on Sorry-1 closure mechanism completing); multi-agent extensions for finer-grained Evaluator-configuration testing (separate work; the current single-agent simulation parameterises the configurations but does not model concurrent multi-agent dynamics in detail).
 
-### tl;dr
+## Acceptance checklist (2026-09-30)
 
 - [ ] An ORP evidence-gap register records every gap as closed, in-closure or deferred and names its closure mechanism.
 - [ ] A verification record gives every Working Paper candidate framing a verdict and names its empirical evidence.
