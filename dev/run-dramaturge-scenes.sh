@@ -34,8 +34,18 @@ FUTON4_DEV="/home/joe/code/futon4/dev"
 SCENE="${1:-}"
 
 ensure_daemon() {
+  # A fresh daemon every run: a daemon left from an earlier run still has the
+  # old code, and `require' never reloads it, so scenes would test whatever
+  # was loaded first (found by claude-17 in review: a planted bug in
+  # xiang-trace.el left every I13 scene passing).  Set
+  # DRAMATURGE_KEEP_DAEMON=1 to reuse one while iterating on scenes only.
   if emacsclient -s "$SERVER" -e t >/dev/null 2>&1; then
-    return 0
+    if [[ -n "${DRAMATURGE_KEEP_DAEMON:-}" ]]; then return 0; fi
+    emacsclient -s "$SERVER" -e '(kill-emacs)' >/dev/null 2>&1 || true
+    for _ in $(seq 1 50); do
+      emacsclient -s "$SERVER" -e t >/dev/null 2>&1 || break
+      sleep 0.2
+    done
   fi
   echo "run-dramaturge-scenes: starting daemon '$SERVER'" >&2
   emacs --daemon="$SERVER" -Q \
