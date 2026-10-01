@@ -1,0 +1,50 @@
+arxana-dramaturge scenes — 7 scenes, 7 pass, 0 fail (2026-09-30T03:59:43)
+
+scene i13-a-violation-after-next-event: PASS (2 ms) — A: an overdue reply-ended with no dispatch is open while it stands
+alone; after the NEXT recorded event the modeline names the rule.
+  [pass     ] (assert #[nil ((null (i13--segment-text))) (t)] "before any new event, nothing is shown") 
+  [pass     ] (assert #[nil ((equal '(("reply end → dispatch" "t1.json" violation)) xiang-trace--violations)) (t)] "modeline state names reply end → dispatch as a violation") 
+  [pass     ] (assert #[nil ((equal "!reply end → dispatch ×1" (i13--segment-text))) (t)] "segment shows the rule name and count") 
+  [pass     ] (assert #[nil ((equal " 象!reply end → dispatch ×1" (i13--lighter-text))) (t)] "象 lighter carries the violation beside the health states") 
+  [pass     ] (assert #[nil ((eq (lookup-key (get-text-property 0 'local-map (xiang-trace--modeline-segment)) [mode-line mouse-1]) #'xiang-trace-check)) (t)] "mouse-1 opens *象 trace check*") 
+
+scene i13-b-young-reply-end-is-open: PASS (0 ms) — B: the same trace with the reply end younger than the open window
+shows NO violation (the step is `open', not late).
+  [pass     ] (assert #[nil ((null xiang-trace--violations)) (t)] "no violation while the step is open") 
+  [pass     ] (assert #[nil ((null (i13--segment-text))) (t)] "nothing in the modeline") 
+  [pass     ] (assert #[nil ((equal " 象" (i13--lighter-text))) (t)] "lighter unchanged") 
+
+scene i13-c-outcome-clears-the-state: PASS (0 ms) — C: a silent dispatch is a violation (window 0, so it is overdue at
+once); recording the failure outcome clears the modeline state.
+  [pass     ] (assert #[nil (xiang-trace--violations) (t)] "silent dispatch shows as a violation") 
+  [pass     ] (assert #[nil ((null xiang-trace--violations)) (t)] "after dispatch + failure the state clears") 
+  [pass     ] (assert #[nil ((equal " 象" (i13--lighter-text))) (t)] "the segment returns to normal") 
+
+scene await-timeout-reports: FAIL (expected) (1002 ms) — An await that never comes true reports timed-out; runner continues.
+EXPECTED TO FAIL (timed-out step) — acceptance B for §0.
+  [pass     ] (open-buffer "*scene: timeout*")         buffer *scene: timeout*
+  [pass     ] (type "waiting for something that never happens") 
+  [timed-out] (await #[nil (nil) (t)] :timeout 1)      predicate still nil after 1s
+  [pass     ] (assert #[nil (t) (t)] "this step is never reached in spirit, but the runner survives") 
+
+scene after-timeout-runs: PASS (1 ms) — Runs after await-timeout-reports; proves the runner did not hang.
+  [pass     ] (open-buffer "*scene: after timeout*")   buffer *scene: after timeout*
+  [pass     ] (type "still alive")                     
+  [pass     ] (assert-buffer "still alive")            
+  [pass     ] (snapshot "sect0-after-timeout")         plain text (htmlize unavailable) -> /home/joe/code/futon4/dev/scene-output/sect0-after-timeout.txt
+
+scene stepper-reload-keys-fixed: PASS (21 ms) — Reload the fixed stepper twice, press r, assert rewind was called.
+  [pass     ] (assert #[nil (file) ((file . "/home/joe/code/futon3c/emacs/turn-stepper.el"))] "turn-stepper.el is on the load-path") 
+  [pass     ] (open-buffer "*scene: stepper fixed*")   buffer *scene: stepper fixed*
+  [pass     ] (key "r")                                bound to turn-stepper-rewind
+  [pass     ] (await #[nil (sect0--rewind-called) (turn-stepper-mode-map t)] :timeout 2) 
+  [pass     ] (assert #[nil (sect0--rewind-called) (turn-stepper-mode-map t)] "r in turn-stepper-mode calls turn-stepper-rewind") 
+  [pass     ] (snapshot "sect0-stepper-fixed")         plain text (htmlize unavailable) -> /home/joe/code/futon4/dev/scene-output/sect0-stepper-fixed.txt
+
+scene stepper-reload-keys-planted-bug: FAIL (expected) (1 ms) — Keys inside the defvar (pre-1253a8cc): after a reload r is undefined.
+EXPECTED TO FAIL at the key step — proves the driver sees the bug.
+  [pass     ] (assert #[nil ((file-exists-p planted)) ((planted . "/home/joe/code/futon4/dev/scenes/planted/stepper-keys-inside-defvar.el"))] "planted fixture exists") 
+  [pass     ] (open-buffer "*scene: stepper planted*") buffer *scene: stepper planted*
+  [fail     ] (key "r")                                r is not bound in *scene: stepper planted*'s active keymaps
+  [fail     ] (assert #[nil (sect0--rewind-called) (t)] "r reaches turn-stepper-rewind (expected to fail here)") r reaches turn-stepper-rewind (expected to fail here)
+  [pass     ] (snapshot "sect0-stepper-planted")       plain text (htmlize unavailable) -> /home/joe/code/futon4/dev/scene-output/sect0-stepper-planted.txt
