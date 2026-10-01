@@ -49,6 +49,7 @@
           (addenda-dir (expand-file-name "addenda" root))
           (incidents-root (make-temp-file "arxana-jvm-incidents-" t)))
      (make-directory items-dir t)
+     (make-directory (expand-file-name "summaries" root) t)
      (make-directory reviews-dir t)
      (make-directory addenda-dir t)
      (with-temp-file (expand-file-name "attempt-feature.edn" items-dir)
@@ -133,6 +134,20 @@
                                    (length (arxana-field-desk--items-at
                                             stratum items reviews)))
                                  '(:pending :partial :full))))))))
+
+(ert-deftest arxana-field-desk-inbox-prefers-compact-envelopes ()
+  (arxana-field-desk-test--with-store
+   (let ((summary (expand-file-name "summaries/attempt-feature.edn"
+                                    arxana-field-desk-root)))
+     (with-temp-file summary
+       (insert "{:attempt-id \"attempt-feature\" :queued-at \"2026-07-18T10:00:00Z\"
+ :outcome :grounded-change :commit \"abc123\"
+ :achievement {:build {:present true}}
+ :source-path \"/tmp/full-item.edn\"}"))
+     (should (= 1 (length (arxana-field-desk--inbox-items))))
+     (should (equal "/tmp/full-item.edn"
+                    (plist-get (car (arxana-field-desk--inbox-items))
+                               :source-path))))))
 
 (ert-deftest arxana-field-desk-applicability-mirrors-morning-brief ()
   (arxana-field-desk-test--with-store

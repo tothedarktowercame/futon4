@@ -121,6 +121,11 @@ This deliberately reuses the same reader as `arxana-ledger--read'."
 (defun arxana-field-desk--items ()
   (arxana-field-desk--read-records
    (expand-file-name "items" arxana-field-desk-root)))
+(defun arxana-field-desk--inbox-items ()
+  "Read compact envelopes used by inbox and stratum listings."
+  (let ((summaries (arxana-field-desk--read-records
+                    (expand-file-name "summaries" arxana-field-desk-root))))
+    (if summaries summaries (arxana-field-desk--items))))
 (defun arxana-field-desk--reviews ()
   (arxana-field-desk--read-records
    (expand-file-name "reviews" arxana-field-desk-root)))
@@ -581,7 +586,7 @@ Read-only `git show'; guarded so a missing repo or sha never errors."
 (defun arxana-field-desk ()
   "Open the Morning Brief Field Desk."
   (interactive)
-  (let ((items (arxana-field-desk--items))
+  (let ((items (arxana-field-desk--inbox-items))
         (reviews (arxana-field-desk--reviews)))
     (arxana-field-desk--render-frame
      (lambda ()
@@ -614,7 +619,8 @@ Read-only `git show'; guarded so a missing repo or sha never errors."
   "Open the Field Desk stratum named by ITEM."
   (let* ((stratum (plist-get item :stratum))
          (reviews (arxana-field-desk--reviews))
-         (items (arxana-field-desk--items-at stratum nil reviews))
+         (items (arxana-field-desk--items-at
+                 stratum (arxana-field-desk--inbox-items) reviews))
          (title (nth 1 (assq stratum arxana-field-desk--strata))))
     (arxana-field-desk--render-frame
      (lambda ()
@@ -636,7 +642,11 @@ Read-only `git show'; guarded so a missing repo or sha never errors."
 
 (defun arxana-field-desk-open-item (item)
   "Open the feature-acceptance sheet for ITEM."
-  (let* ((brief-item (or (plist-get item :item) item))
+  (let* ((candidate (or (plist-get item :item) item))
+         (source (plist-get candidate :source-path))
+         (brief-item (if (and source (file-readable-p source))
+                         (arxana-browser-rewrites--read-edn-file source)
+                       candidate))
          (attempt-id (plist-get brief-item :attempt-id)))
     (arxana-field-desk--render-frame
      (lambda () (arxana-field-desk--insert-sheet
@@ -953,7 +963,7 @@ Read-only `git show'; guarded so a missing repo or sha never errors."
 
 (defun arxana-field-desk--home-items ()
   "Return Morning Brief strata plus the durable JVM incident stratum."
-  (let ((items (arxana-field-desk--items))
+  (let ((items (arxana-field-desk--inbox-items))
         (reviews (arxana-field-desk--reviews))
         (incident-count (length (arxana-field-desk--jvm-incidents))))
     (append
