@@ -1,10 +1,19 @@
 # M-editorial-assistant: Reviewer-and-operator audit loop over the essay-revise substrate
 
 **Date:** 2026-05-21 (HEAD authored from operator dialogue).
-**Status:** HEAD. The queue substrate exists (`arxana-vsatarcs-essay-revision-queue.el` v0.5.28); the writer-action class exists (`arxana-vsatarcs-essay-revise.el` v0.5.29). The editorial-assistant layer is yet to land — this mission scopes it.
+**Status:** OPEN — HEAD. The queue substrate exists (`arxana-vsatarcs-essay-revision-queue.el` v0.5.28); the writer-action class exists (`arxana-vsatarcs-essay-revise.el` v0.5.29). The editorial-assistant layer is yet to land — this mission scopes it.
 **Owner:** Joe (operator); claude-4 (co-author).
 **Blocked by:** None directly. Builds on v0.5.29 essay-revise + v0.5.28 essay-revision-queue.
 **Companion missions:** `M-vsatarcs-writer` (action-class family that `:essay-revise` lives in); `M-essays-edit-cycle` (the prose-edit-cycle substrate this overlaps with at the annotation layer); `M-the-futon-stack` Q6 (the consent-gate / autopen apparatus the peripheral plugs into when it lands).
+
+## Acceptance checklist (2026-09-30)
+
+- [ ] A committed reviewer-comment/operator-resolution schema supports pending, addressed, and rejected-with-rationale entries and append-only audit threading.
+- [ ] Per-essay editorial logs round-trip across Emacs sessions, with the Operator's Foreword worked example as the first literal entry.
+- [ ] The VSATARCS chrome shows unresolved-comment counts, and add/resolve/reject/show commands work on the Operator's Foreword plus at least two other real essays.
+- [ ] A committed editorial-assistant flash profile and CLI wrapper return structured `:accepted` or `:pushback-with-diagnostic` output from a fresh agent.
+- [ ] One operator revision cycle records the peripheral verdict beside its resolution.
+- [ ] A deliberately under-substantive rationale produces recorded pushback and a subsequent operator disagreement or revision.
 
 ## HEAD — Operator-voice anchor
 

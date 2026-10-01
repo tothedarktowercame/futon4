@@ -1,4 +1,4 @@
-**Status:** COMPLETE (2026-04-24, re-open pass closed same-day)
+**Status:** CLOSED — COMPLETE (2026-04-24, re-open pass closed same-day)
 
 **Known debt at entry to ARGUE (carried forward into INSTANTIATE):**
 - T1/T2/T3 thesis selection (A1 ratification) — pending Joe.

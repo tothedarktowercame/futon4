@@ -1,6 +1,15 @@
-**Status:** IDENTIFY-redux (revised 2026-04-29). Prior INSTANTIATE-track is suspended pending re-IDENTIFY. The proof-of-concept capabilities landed today (canonical .mw flip, surgical wikitext edits via bot, annotation migration) reframed as feasibility evidence rather than the start of execution. Mission name retained but the mission-shape is up for revision: rewrite vs. refactor vs. zine-decomposition vs. hybrid.
+**Status:** OPEN — IDENTIFY-redux (revised 2026-04-29). Prior INSTANTIATE-track is suspended pending re-IDENTIFY. The proof-of-concept capabilities landed today (canonical .mw flip, surgical wikitext edits via bot, annotation migration) reframed as feasibility evidence rather than the start of execution. Mission name retained but the mission-shape is up for revision: rewrite vs. refactor vs. zine-decomposition vs. hybrid.
 
 **Reframe summary:** today's surgical edits and the .mw-canonical flip showed that we *can* edit the Handbook via Arxana / Claude Code / wikibot. But the act of building that capability surfaced a question the prior IDENTIFY didn't engage: *what is the right thing to build, given that we now can build it?* The prior IDENTIFY (preserved as §1.prior, below) assumed "near-complete rewrite" was the answer. Reframe makes that one option among several.
+
+## Acceptance checklist (2026-09-30)
+
+- [ ] MAP records concrete 2026 recurrences of the peeragogy patterns, adjacent vocabularies, and current collectives that could use them.
+- [ ] ARGUE gives a tested, dispassionate answer to “what is peeragogy in 2026,” including the minor literature's strengths and limits.
+- [ ] The mission records a defended carrier decision and the cases against the rejected rewrite, zine, hybrid, or emergent alternatives.
+- [ ] A handoff plan names each channel, recipient, scoped ask, and reason for routing it there.
+- [ ] The proof-of-concept editing capabilities are documented as available primitives with their appropriate uses.
+- [ ] At least one chosen carrier instance is produced end to end through the documented pipeline.
 
 # M-peeragogy-rewrite: scope, shape, and carriers for an updated peeragogy
 

@@ -1,7 +1,16 @@
 # Mission: WebArxana UI Improvements
 
 **Date:** 2026-05-30
-**Status:** HEAD complete; IDENTIFY complete 2026-05-30; MAP pass complete
+**Status:** OPEN — OPEN — HEAD complete; IDENTIFY complete 2026-05-30; MAP pass complete
+
+## Acceptance checklist (2026-09-30)
+
+- [ ] A WebArxana route renders a concrete mission as a durable-data-backed phase graph containing at least HEAD and IDENTIFY.
+- [ ] A refreshable mission graph displays one user turn, one assistant turn, and an inspectable evidence or session identifier.
+- [ ] Typed browser-to-Emacs actions work for both a mission node and an evidence/session node and display resolution failures.
+- [ ] Mission Search sends a selected result into the central graph and supports at least one non-name discovery mode.
+- [ ] Interest Network is integrated as a graph projection or has a documented reason to remain separate, with readable default labels.
+- [ ] A recorded Playwright-plus-operator demo goes from an Emacs/REPL mission to WebArxana and back while preserving existing graph routes and controls.
 enough for DERIVE; DERIVE drafted 2026-05-30
 **Owner:** futon4 (Arxana browser + WebArxana web surfaces + data layer),
   with ingress from futon3c (REPL / Evidence Store, Mission structure) and

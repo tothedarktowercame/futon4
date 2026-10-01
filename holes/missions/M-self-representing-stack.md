@@ -1,7 +1,7 @@
 # Mission: The Self-Representing Stack
 
 **Date:** 2026-02-22
-**Status:** COMPLETE (2026-03-04). Was RE-OPENED (2026-03-03); gaps closed by M-three-column-stack. See §Closure below.
+**Status:** CLOSED — COMPLETE (2026-03-04). Was RE-OPENED (2026-03-03); gaps closed by M-three-column-stack. See §Closure below.
 **Blocked by:** None (Arxana operational, evidence landscape operational,
 Mission Control operational)
 **Owner:** futon4 (Arxana), with dependencies on futon3c (Mission Control),

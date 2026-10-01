@@ -1,11 +1,19 @@
 # M-essay-corpus-substrate: Uniform essay import per `~/code/futonN/essays/` convention
 
 **Date:** 2026-05-21 (HEAD authored from operator dialogue; migration completed same day; handoff prepared for Codex).
-**Status:** Stage 1 partial-complete. D1 (home convention) + D3 (first-essay migration) landed; D2 (the essay projector in futon3c) is the outstanding work and is the scope of the Codex handoff below.
+**Status:** OPEN — Stage 1 partial-complete. D1 (home convention) + D3 (first-essay migration) landed; D2 (the essay projector in futon3c) is the outstanding work and is the scope of the Codex handoff below.
 **Owner:** Joe (operator); claude-10 (Stage 1 author); Codex (D2 implementor — see handoff section).
 **Blocked by:** None. Builds on existing watcher + ingest substrate.
 **Blocks:** `M-editorial-assistant` Stage 1 — the editorial-log lands on imported essays so `annotations.edn` round-trips to XTDB by default instead of by aspiration. Note: `M-editorial-assistant`'s UI parts (the `M-x arxana-vsatarcs-editorial-*` commands and the chrome block) can proceed in parallel against the migrated essay's sidecar `.edn`; only the WebArxana-visibility completion criterion depends on D2.
 **Companion missions:** `M-editorial-assistant` (downstream consumer); `M-essays-edit-cycle` (uses the same per-essay home as its working substrate); `M-self-documenting-stack` (essays are part of the corpus that documents the stack).
+
+## Acceptance checklist (2026-09-30)
+
+- [x] The canonical `~/code/futonN/essays/<slug>/` home convention is documented and the Operator's Foreword has migrated without stale old-path references. (evidence: this file, “Migration complete — 2026-05-21”)
+- [ ] `futon3c.watcher.projections.essay` is dispatched only for essay-home Markdown paths and preserves arbitrary-arity annotation endpoints.
+- [ ] Focused projector tests pass for the Operator's Foreword counts, path exclusion, idempotence, and a second essay.
+- [ ] WebArxana shows 16 annotations for `arxana/essay/operator-foreword-v1` after projection, while the compiled Emacs view still shows the same count.
+- [ ] A second canonical essay projects end-to-end, and the catalog refresh requirement is either automated or documented as the explicit operator step.
 
 ## HEAD — Operator-voice anchor
 

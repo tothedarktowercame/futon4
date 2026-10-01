@@ -1,8 +1,8 @@
 # M-simulating-or-training-as-learning-system
 
-> **Companion mission to** `M-or-training-as-learning-system.md`. Where the parent mission identified gaps in the *ORP-to-UKRN-S transition* that the working paper could not close on its own evidence, this mission identifies gaps in the *simulation* that supports the working paper's design recommendations and aims at a simulation we can be confident about.
+**Status:** OPEN — IDENTIFY drafted 2026-05-07. MAP / DERIVE / ARGUE / VERIFY / INSTANTIATE / DOCUMENT to follow.
 
-**Mission status:** IDENTIFY drafted 2026-05-07. MAP / DERIVE / ARGUE / VERIFY / INSTANTIATE / DOCUMENT to follow.
+> **Companion mission to** `M-or-training-as-learning-system.md`. Where the parent mission identified gaps in the *ORP-to-UKRN-S transition* that the working paper could not close on its own evidence, this mission identifies gaps in the *simulation* that supports the working paper's design recommendations and aims at a simulation we can be confident about.
 
 **Source material primarily consulted for IDENTIFY:**
 - `/home/joe/npt/working-paper/UKRN_WP_draft_v9.md` (current paper)
@@ -11,6 +11,15 @@
 - The companion mission `/home/joe/code/futon4/holes/missions/M-or-training-as-learning-system.md`
 - `/home/joe/npt/working-paper/reachability_corrected_from_orp_survey.md` (the substrate that underwrites the empirical reachability landscape)
 - This session's diagnostic findings about single-seed RNG fragility, tautological band-to-outcome mapping, and missing facet structure.
+
+## Acceptance checklist (2026-09-30)
+
+- [ ] Multi-seed prediction runs complete P-v2-2 through P-v2-5 and record confidence intervals and verdicts.
+- [ ] Institutional capabilities activate in the dynamics and facet-level reporting is calibrated against empirical priority data.
+- [ ] Every simulation sorry has a final status and a named validation or closure mechanism.
+- [ ] The INSTANTIATE section specifies how the simulation enters the working paper, who maintains it, and how fresh evidence updates it.
+- [ ] DOCUMENT provides the methods supplement and the `system-coherence/single-seed-results-need-multi-seed-validation` pattern.
+- [ ] `argument_v9.sexp` records the revised claims supported by the completed verification results.
 
 ---
 

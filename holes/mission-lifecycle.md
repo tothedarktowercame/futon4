@@ -68,6 +68,44 @@ else accretes onto that file.
 **Exit criterion:** A human has read the proposal and agrees the gap is real
 and the scope is right.
 
+#### Born-ready mission creation
+
+A mission is live as soon as its gap is specified well enough to begin
+IDENTIFY.  `draft` is not a lifecycle state, and a newly written mission does
+not need a separate admission or acceptance step before the War Machine may
+work on it.  The IDENTIFY checklist and exit criterion above are work that the
+mission can perform; they are not prerequisites for the mission to exist or
+to be selected.
+
+The minimum machine-facing creation receipt is deliberately small:
+
+- a live phase in the status line (normally `IDENTIFY`);
+- a concrete statement of the present discrepancy and the evidence or source
+  locations from which it can be investigated;
+- at least one unchecked checkbox naming an observable next delta or
+  completion condition; and
+- enough scope and repository context to tell where that delta can be made
+  and checked.
+
+Unchecked checkboxes are the current mechanical carrier for open wants.  They
+should describe testable changes, not merely headings or questions.  They may
+be revised as MAP and DERIVE expose better facts; born-ready does not mean
+fully planned in advance.
+
+Pattern selection is likewise work, not mission-admission paperwork.  An
+author may cite useful patterns, but must not freeze an initial cascade as
+canonical.  The machine constructs an interpretation from the current HEAD,
+mission body, pattern library, and retained run evidence, and may extend or
+replace that interpretation when execution reveals a blocker.  If the library
+cannot support the work, the resulting typed construction failure is a
+learning signal for repairing or extending the library, not grounds for
+reclassifying the mission as a draft.
+
+Unknowns belong in the worklist.  Use an operator gate only when progress
+actually requires a specific operator act or decision; ordinary uncertainty,
+incomplete planning, or the fact that the mission was just created is not a
+gate.
+
 #### Optional: shape-first IDENTIFY
 
 When the mission's gap is an *invariant* (or a candidate one), IDENTIFY
@@ -317,17 +355,36 @@ A mission may also be:
 - Status line at the top records the mission's current phase-state. For
   straightforward missions this can be `**Status:** <PHASE> (date)`;
   for `HEAD`-bootstrapped missions it may be composite, e.g.
-  `**Status:** HEAD complete; IDENTIFY pending`.
+  `**Status:** HEAD complete; IDENTIFY pending`. `draft` is not a phase-state:
+  once specified, a new mission normally starts at `IDENTIFY`. Status records
+  where the work is, not whether the mission has permission to run.
 - An operator gate is recorded directly below the status as
   `**Gate:** <kind> — <free text>`, where `<kind>` is kebab-case and begins
   `operator-` (for example `operator-acceptance`, `operator-decision`, or
   `operator-input`). Multiple Gate lines are allowed. A gate means that the
   remaining work needs the operator; it is not a defect or a stall. The War
   Machine treats the mission as infeasible for author dispatch and surfaces
-  the gate to the operator as an action.
+  the gate to the operator as an action. This explicit `**Gate:**` form is the
+  sole lifecycle declaration of an operator gate; incidental prose such as
+  "awaiting review" must not silently create one.
 - The operator sets and clears gates by editing the mission document (removing
   the Gate line clears it; git history is the record). Agents may propose a
   gate during review, but may not clear one.
+- A phase's exit verdict is recorded in the mission document, in that
+  phase's section, as one line that names the phase:
+  `**<PHASE> exit: Met.**`, `**<PHASE> exit: Not met.**` or
+  `**<PHASE> exit: Not started.**`, with `<PHASE>` one of HEAD, IDENTIFY,
+  MAP, DERIVE, ARGUE, VERIFY, INSTANTIATE, DOCUMENT (for example
+  `**MAP exit: Met.**`). The verdict starts at the beginning of a line; any
+  explanation follows the closing `**`, after a space on the same line or
+  on the lines below (`**HEAD exit: Met.** The operator's anchor turn …`);
+  nothing is written between `Met.` and the closing `**`. The exit criteria themselves are the ones
+  in this document and apply to every mission without being repeated in it;
+  a mission that states an exit of its own in its own words (a paragraph
+  beginning `**Exit criterion:**`) puts the verdict in that paragraph, as
+  before. The verdict is written by whoever made the judgment. The War
+  Machine observes that the line is there; it does not make the judgment
+  (operator, 2026-09-27).
 - Checkpoints are appended (never overwrite prior phases).
 - Evidence is emitted to futon1a during VERIFY/INSTANTIATE.
 - Completed missions become source material for future missions.

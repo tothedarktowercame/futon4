@@ -1,12 +1,20 @@
 # Mission: Futon Enrichment (Rational Reconstruction)
 
 **Date:** 2026-03-04
-**Status:** INSTANTIATE (Phase 2 API live-tested, 2026-03-06)
+**Status:** OPEN — INSTANTIATE (Phase 2 API live-tested, 2026-03-06)
 **Blocked by:** None (M-three-column-stack complete, reflection API operational,
 evidence store operational, hyperedge API operational)
 **Owner:** futon4 (Arxana), with dependencies on futon3c (reflection API,
 evidence store, Mission Control), futon1a (hyperedge persistence, XTDB
 bitemporality), futon5 (devmap topology)
+
+## Acceptance checklist (2026-09-30)
+
+- [ ] `arxana-browser-enrich.el` is interactively exercised against the live enrichment endpoint and renders missions, patterns, tensions, churn, and complexity correctly.
+- [ ] A futon3a bootstrap populates the meme store with pattern-keyword entities and co-occurrence arrows.
+- [ ] `futon7/probe-gen.clj` generates landscape probes from reachable entity-graph clusters.
+- [ ] A futon7 integration test shows generated probes cover at least 80% of the hand-crafted probes' findings and reports newly discovered areas.
+- [ ] Top landscape leads are persisted to futon1a as `landscape/lead` hyperedges and read back.
 
 ## Motivation
 
