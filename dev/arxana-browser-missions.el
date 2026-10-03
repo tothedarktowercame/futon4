@@ -29,13 +29,32 @@ futon3c (default port 7070), whereas the evidence server runs in futon1a
   "Return the Mission Control server base URL."
   arxana-mission-control-server)
 
+(defun arxana-missions--name (value)
+  "Render keyword, symbol, or JSON string VALUE without inventing semantics."
+  (cond ((keywordp value) (substring (symbol-name value) 1))
+        ((symbolp value) (symbol-name value))
+        ((stringp value) value)
+        (t (format "%s" value))))
+
+(defun arxana-missions--plist-keys (plist)
+  "Return the keys of PLIST in their retained order."
+  (let (keys)
+    (while plist
+      (push (car plist) keys)
+      (setq plist (cddr plist)))
+    (nreverse keys)))
+
 (defun arxana-missions--fetch-snapshot ()
   "Fetch the live Mission Control snapshot, including census metadata."
   (let* ((base (replace-regexp-in-string "/\\'" "" (arxana-missions--server)))
          (url (concat base "/api/alpha/wm/meta-preview"))
          (url-request-method "GET")
          (url-request-extra-headers '(("Accept" . "application/json")))
-         (buffer (url-retrieve-synchronously url t t 15)))
+         ;; META performs the same pinned cascade reads as production.  The
+         ;; live graph can legitimately take longer than the old flat mission
+         ;; inventory, so keep the UI synchronous but give that read its
+         ;; production-sized envelope.
+         (buffer (url-retrieve-synchronously url t t 90)))
     (unless buffer
       (user-error "Mission inventory request failed"))
     (with-current-buffer buffer
@@ -69,17 +88,18 @@ futon3c (default port 7070), whereas the evidence server runs in futon1a
           (dolist (ranked ranking)
             (let* ((id (plist-get ranked :id))
                    (task (gethash id by-id)))
-              (push (list :mission/id id :mission/repo (symbol-name (plist-get task :kind))
+              (push (list :mission/id id :mission/repo (arxana-missions--name (plist-get task :kind))
                           :mission/status (format "#%s" (plist-get ranked :rank))
                           :mission/title (format "%s; pairwise losses %s"
-                                                 (mapconcat #'symbol-name
-                                                            (mapcar #'car (plist-get ranked :channels)) ", ")
+                                                 (mapconcat #'arxana-missions--name
+                                                            (arxana-missions--plist-keys
+                                                             (plist-get ranked :channels)) ", ")
                                                  (plist-get ranked :pairwise-losses))
                           :mission/path (plist-get (plist-get task :source) :path))
                     rows)))
           (dolist (row excluded)
             (push (list :mission/id (plist-get row :id)
-                        :mission/repo (symbol-name (plist-get row :kind))
+                        :mission/repo (arxana-missions--name (plist-get row :kind))
                         :mission/status "excluded"
                         :mission/title (format "%s" (plist-get row :ineligible-reason))
                         :mission/path (plist-get (plist-get row :source) :path)) rows))
