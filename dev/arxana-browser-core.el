@@ -463,7 +463,7 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
               :view 'evidence-open-sessions)
         (list :type 'menu
               :label "Missions"
-              :description "Mission Control portfolio (98 missions across 7 repos)."
+              :description "Live Mission Control portfolio; open to refresh the current census."
               :view 'missions-portfolio)
         (list :type 'menu
               :label "Encyclopedia"

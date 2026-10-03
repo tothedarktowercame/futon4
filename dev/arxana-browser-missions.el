@@ -9,6 +9,7 @@
 
 (require 'cl-lib)
 (require 'json)
+(require 'seq)
 (require 'subr-x)
 (require 'url)
 (require 'url-http)
@@ -29,8 +30,8 @@ futon3c (default port 7070), whereas the evidence server runs in futon1a
   "Return the Mission Control server base URL."
   arxana-mission-control-server)
 
-(defun arxana-missions--fetch ()
-  "Fetch mission inventory from Agency. Returns list of mission maps."
+(defun arxana-missions--fetch-snapshot ()
+  "Fetch the live Mission Control snapshot, including census metadata."
   (let* ((base (replace-regexp-in-string "/\\'" "" (arxana-missions--server)))
          (url (concat base "/api/alpha/missions"))
          (url-request-method "GET")
@@ -56,7 +57,36 @@ futon3c (default port 7070), whereas the evidence server runs in futon1a
                              (json-read-from-string body)))
                        (error nil))))
         (kill-buffer buffer)
-        (or (plist-get parsed :missions) '())))))
+        (unless (listp parsed)
+          (user-error "Mission inventory response was not an object"))
+        (list :missions (or (plist-get parsed :missions) '())
+              :declared-count (plist-get parsed :count)
+              :turn-counts-included (plist-get parsed :turn-counts-included?))))))
+
+(defun arxana-missions--fetch ()
+  "Fetch mission inventory from Mission Control. Returns mission maps."
+  (plist-get (arxana-missions--fetch-snapshot) :missions))
+
+(defun arxana-missions--census-item (snapshot)
+  "Build a visible census/provenance row from live SNAPSHOT."
+  (let* ((missions (plist-get snapshot :missions))
+         (actual-count (length missions))
+         (declared-count (plist-get snapshot :declared-count))
+         (repos (delete-dups
+                 (delq nil (mapcar (lambda (mission)
+                                     (plist-get mission :mission/repo))
+                                   missions))))
+         (coherent (or (null declared-count) (= declared-count actual-count))))
+    (list :type 'info
+          :label (format "Live census: %d missions across %d repos"
+                         actual-count (length repos))
+          :description (if coherent
+                           "Source: GET /api/alpha/missions"
+                         (format "Census mismatch: endpoint declared %s, returned %d"
+                                 declared-count actual-count))
+          :census-coherent coherent
+          :mission-count actual-count
+          :repo-count (length repos))))
 
 (defun arxana-missions--status-sort-key (status)
   "Sort key for mission status — active first, archived/nonstarter last.
@@ -110,7 +140,8 @@ bottom of the active range."
 (defun arxana-browser--missions-portfolio-items ()
   "Fetch and render the full mission portfolio."
   (condition-case err
-      (let* ((missions (arxana-missions--fetch))
+      (let* ((snapshot (arxana-missions--fetch-snapshot))
+             (missions (plist-get snapshot :missions))
              (sorted (sort (copy-sequence missions)
                            (lambda (a b)
                              (let ((sa (arxana-missions--status-sort-key
@@ -122,8 +153,9 @@ bottom of the active range."
                                             (or (plist-get b :mission/repo) ""))
                                  (< sa sb)))))))
         (if sorted
-            (mapcar (lambda (m)
-                      (list :type 'mission-entry
+            (cons (arxana-missions--census-item snapshot)
+                  (mapcar (lambda (m)
+                            (list :type 'mission-entry
                             :mission-id (or (plist-get m :mission/id) "?")
                             :status (or (plist-get m :mission/status) "?")
                             :repo (or (plist-get m :mission/repo) "?")
@@ -133,7 +165,7 @@ bottom of the active range."
                             :description (format "%s — %s"
                                                  (or (plist-get m :mission/status) "?")
                                                  (or (plist-get m :mission/title) ""))))
-                    sorted)
+                          sorted))
           (list (list :type 'info
                       :label "No missions found"
                       :description "Mission scan returned empty."))))
