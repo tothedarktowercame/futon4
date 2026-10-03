@@ -1,9 +1,8 @@
 ;;; arxana-browser-missions.el --- Mission Control browser views -*- lexical-binding: t; -*-
 
 ;;; Commentary:
-;; Mission portfolio browsing for Arxana.
-;; Provides inventory view grouped by repo and status,
-;; backed by GET /api/alpha/missions.
+;; META work-field browsing for Arxana, backed by the exact War Machine
+;; outer-policy preview at GET /api/alpha/wm/meta-preview.
 
 ;;; Code:
 
@@ -22,7 +21,7 @@
 server.  Distinct from `arxana-evidence-server' — Mission Control runs in
 futon3c (default port 7070), whereas the evidence server runs in futon1a
 (default port 7071).  Mission inventory queries are issued against
-`<server>/api/alpha/missions'."
+`<server>/api/alpha/wm/meta-preview'."
   :type 'string
   :group 'arxana-missions)
 
@@ -33,7 +32,7 @@ futon3c (default port 7070), whereas the evidence server runs in futon1a
 (defun arxana-missions--fetch-snapshot ()
   "Fetch the live Mission Control snapshot, including census metadata."
   (let* ((base (replace-regexp-in-string "/\\'" "" (arxana-missions--server)))
-         (url (concat base "/api/alpha/missions"))
+         (url (concat base "/api/alpha/wm/meta-preview"))
          (url-request-method "GET")
          (url-request-extra-headers '(("Accept" . "application/json")))
          (buffer (url-retrieve-synchronously url t t 15)))
@@ -59,9 +58,34 @@ futon3c (default port 7070), whereas the evidence server runs in futon1a
         (kill-buffer buffer)
         (unless (listp parsed)
           (user-error "Mission inventory response was not an object"))
-        (list :missions (or (plist-get parsed :missions) '())
-              :declared-count (plist-get parsed :count)
-              :turn-counts-included (plist-get parsed :turn-counts-included?))))))
+        (let* ((receipt (plist-get parsed :receipt))
+               (support (plist-get receipt :support))
+               (excluded (plist-get receipt :excluded))
+               (selection (plist-get (plist-get receipt :policy) :meta-selection))
+               (ranking (plist-get selection :ranking))
+               (by-id (make-hash-table :test 'equal))
+               rows)
+          (dolist (row support) (puthash (plist-get row :id) row by-id))
+          (dolist (ranked ranking)
+            (let* ((id (plist-get ranked :id))
+                   (task (gethash id by-id)))
+              (push (list :mission/id id :mission/repo (symbol-name (plist-get task :kind))
+                          :mission/status (format "#%s" (plist-get ranked :rank))
+                          :mission/title (format "%s; pairwise losses %s"
+                                                 (mapconcat #'symbol-name
+                                                            (mapcar #'car (plist-get ranked :channels)) ", ")
+                                                 (plist-get ranked :pairwise-losses))
+                          :mission/path (plist-get (plist-get task :source) :path))
+                    rows)))
+          (dolist (row excluded)
+            (push (list :mission/id (plist-get row :id)
+                        :mission/repo (symbol-name (plist-get row :kind))
+                        :mission/status "excluded"
+                        :mission/title (format "%s" (plist-get row :ineligible-reason))
+                        :mission/path (plist-get (plist-get row :source) :path)) rows))
+          (list :missions (nreverse rows)
+                :declared-count (+ (length support) (length excluded))
+                :selection selection))))))
 
 (defun arxana-missions--fetch ()
   "Fetch mission inventory from Mission Control. Returns mission maps."
@@ -78,10 +102,10 @@ futon3c (default port 7070), whereas the evidence server runs in futon1a
                                    missions))))
          (coherent (or (null declared-count) (= declared-count actual-count))))
     (list :type 'info
-          :label (format "Live census: %d missions across %d repos"
+          :label (format "Live META field: %d M/E/T/A tasks (%d kinds)"
                          actual-count (length repos))
           :description (if coherent
-                           "Source: GET /api/alpha/missions"
+                           "Source: GET /api/alpha/wm/meta-preview; ordering is the WM receipt"
                          (format "Census mismatch: endpoint declared %s, returned %d"
                                  declared-count actual-count))
           :census-coherent coherent
@@ -141,18 +165,8 @@ bottom of the active range."
   "Fetch and render the full mission portfolio."
   (condition-case err
       (let* ((snapshot (arxana-missions--fetch-snapshot))
-             (missions (plist-get snapshot :missions))
-             (sorted (sort (copy-sequence missions)
-                           (lambda (a b)
-                             (let ((sa (arxana-missions--status-sort-key
-                                        (or (plist-get a :mission/status) "")))
-                                   (sb (arxana-missions--status-sort-key
-                                        (or (plist-get b :mission/status) ""))))
-                               (if (= sa sb)
-                                   (string< (or (plist-get a :mission/repo) "")
-                                            (or (plist-get b :mission/repo) ""))
-                                 (< sa sb)))))))
-        (if sorted
+             (missions (plist-get snapshot :missions)))
+        (if missions
             (cons (arxana-missions--census-item snapshot)
                   (mapcar (lambda (m)
                             (list :type 'mission-entry
@@ -165,7 +179,7 @@ bottom of the active range."
                             :description (format "%s — %s"
                                                  (or (plist-get m :mission/status) "?")
                                                  (or (plist-get m :mission/title) ""))))
-                          sorted))
+                          missions))
           (list (list :type 'info
                       :label "No missions found"
                       :description "Mission scan returned empty."))))

@@ -21,7 +21,7 @@
     (let* ((items (arxana-browser--missions-portfolio-items))
            (census (car items)))
       (should (eq 'info (plist-get census :type)))
-      (should (equal "Live census: 3 missions across 2 repos"
+      (should (equal "Live META field: 3 M/E/T/A tasks (2 kinds)"
                      (plist-get census :label)))
       (should (plist-get census :census-coherent))
       (should (= 4 (length items))))))
@@ -34,12 +34,12 @@
     (should (string-match-p "declared 98, returned 3"
                             (plist-get item :description)))))
 
-(ert-deftest arxana-home-does-not-claim-a-fixed-mission-census ()
+(ert-deftest arxana-home-is-the-meta-work-field ()
   (let ((missions (cl-find-if
-                   (lambda (item) (equal "Missions" (plist-get item :label)))
+                   (lambda (item) (equal "META" (plist-get item :label)))
                    (arxana-browser--menu-items))))
     (should missions)
-    (should (string-match-p "Live Mission Control" (plist-get missions :description)))
+    (should (string-match-p "outer-policy order" (plist-get missions :description)))
     (should-not (string-match-p "98 missions" (plist-get missions :description)))))
 
 (provide 'arxana-browser-missions-test)

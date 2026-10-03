@@ -462,8 +462,8 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
               :description "Evidence-backed semantic summaries for open REPL buffers."
               :view 'evidence-open-sessions)
         (list :type 'menu
-              :label "Missions"
-              :description "Live Mission Control portfolio; open to refresh the current census."
+              :label "META"
+              :description "War Machine M/E/T/A field in the exact live outer-policy order."
               :view 'missions-portfolio)
         (list :type 'menu
               :label "Encyclopedia"
