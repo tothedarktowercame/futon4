@@ -50,10 +50,9 @@ futon3c (default port 7070), whereas the evidence server runs in futon1a
          (url (concat base "/api/alpha/wm/meta-preview"))
          (url-request-method "GET")
          (url-request-extra-headers '(("Accept" . "application/json")))
-         ;; META performs the same pinned cascade reads as production.  The
-         ;; live graph can legitimately take longer than the old flat mission
-         ;; inventory, so keep the UI synchronous but give that read its
-         ;; production-sized envelope.
+         ;; The endpoint performs the same pinned cascade reads as production,
+         ;; but returns a bounded browser projection rather than the full
+         ;; pairwise proof receipt.
          (buffer (url-retrieve-synchronously url t t 90)))
     (unless buffer
       (user-error "Mission inventory request failed"))
