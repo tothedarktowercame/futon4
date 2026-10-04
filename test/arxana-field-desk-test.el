@@ -116,6 +116,76 @@
            :key (lambda (item) (plist-get item :attempt-id))
            :test #'equal))
 
+(defun arxana-field-desk-test--http-buffer (body &optional status)
+  (let ((buffer (generate-new-buffer " *field-desk-http-test*")))
+    (with-current-buffer buffer
+      (insert "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n" body)
+      (setq-local url-http-response-status (or status 200)
+                  url-http-end-of-headers
+                  (save-excursion (goto-char (point-min))
+                                  (search-forward "\r\n\r\n") (point))))
+    buffer))
+
+(ert-deftest arxana-field-desk-listing-does-not-record-open ()
+  (arxana-field-desk-test--with-store
+   (let ((calls 0))
+     (cl-letf (((symbol-function 'url-retrieve-synchronously)
+                (lambda (&rest _) (cl-incf calls))))
+       (arxana-field-desk)
+       (arxana-field-desk-open-stratum '(:stratum :pending))
+       (arxana-field-desk-refresh)
+       (should (= 0 calls))))))
+
+(ert-deftest arxana-field-desk-explicit-open-calls-exact-endpoint-once ()
+  (let ((calls nil) rendered)
+    (cl-letf (((symbol-function 'url-retrieve-synchronously)
+               (lambda (url &rest _)
+                 (push url calls)
+                 (arxana-field-desk-test--http-buffer
+                  "{\"ok\":true,\"item\":{\"attempt-id\":\"attempt/a b\"},\"lifecycle\":{\"status\":\"seen-no-response\"}}")))
+              ((symbol-function 'arxana-field-desk--render-item)
+               (lambda (item) (setq rendered item))))
+      (arxana-field-desk-open-item '(:attempt-id "attempt/a b"))
+      (should (equal '("http://127.0.0.1:7070/api/alpha/morning-brief/item/attempt%2Fa%20b")
+                     calls))
+      (should (equal "seen-no-response"
+                     (plist-get (plist-get rendered :morning-brief/lifecycle)
+                                :status))))))
+
+(ert-deftest arxana-field-desk-rerender-does-not-record-another-open ()
+  (arxana-field-desk-test--with-store
+   (let (refresh (calls 0))
+     (cl-letf (((symbol-function 'arxana-field-desk--render-frame)
+                (lambda (_render refresh-fn &rest _) (setq refresh refresh-fn)))
+               ((symbol-function 'arxana-field-desk--retrieve-open-item)
+                (lambda (_attempt)
+                  (cl-incf calls)
+                  '(:attempt-id "attempt-feature"
+                    :morning-brief/lifecycle (:status "seen-no-response")))))
+       (arxana-field-desk-open-item '(:attempt-id "attempt-feature"))
+       (funcall refresh)
+       (should (= 1 calls))))))
+
+(ert-deftest arxana-field-desk-failed-open-never-renders-success ()
+  (let ((rendered nil))
+    (cl-letf (((symbol-function 'arxana-field-desk--retrieve-open-item)
+               (lambda (_) (error "HTTP 500 typed refusal")))
+              ((symbol-function 'arxana-field-desk--render-item)
+               (lambda (_) (setq rendered t)))
+              ((symbol-function 'arxana-field-desk--record-submit-error)
+               (lambda (&rest _))))
+      (should-error (arxana-field-desk-open-item '(:attempt-id "attempt-1"))
+                    :type 'user-error)
+      (should-not rendered))))
+
+(ert-deftest arxana-field-desk-sheet-shows-seen-no-response ()
+  (with-temp-buffer
+    (arxana-field-desk--insert-sheet
+     '(:attempt-id "attempt-1" :morning-brief/lifecycle (:status "seen-no-response"))
+     nil)
+    (should (string-match-p "delivery state[[:space:]]+seen-no-response"
+                            (buffer-string)))))
+
 (ert-deftest arxana-field-desk-strata-are-an-exclusive-partition ()
   (arxana-field-desk-test--with-store
    (let ((items (arxana-field-desk--items))

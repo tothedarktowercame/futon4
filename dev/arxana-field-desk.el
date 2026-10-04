@@ -470,6 +470,10 @@ Read-only `git show'; guarded so a missing repo or sha never errors."
     (insert "ARXANA FIELD DESK — FEATURE ACCEPTANCE\n")
     (insert "========================================\n")
     (arxana-field-desk--insert-value "attempt" (plist-get item :attempt-id))
+    (when-let ((lifecycle (plist-get item :morning-brief/lifecycle)))
+      (arxana-field-desk--insert-value
+       "delivery state"
+       (arxana-field-desk--keyword-name (plist-get lifecycle :status))))
     (arxana-field-desk--insert-value
      "date" (if (and (stringp date) (>= (length date) 10))
                 (substring date 0 10) date))
@@ -640,14 +644,9 @@ Read-only `git show'; guarded so a missing repo or sha never errors."
      (let ((copy (copy-sequence item)))
        (lambda () (arxana-field-desk-open-stratum copy))))))
 
-(defun arxana-field-desk-open-item (item)
-  "Open the feature-acceptance sheet for ITEM."
-  (let* ((candidate (or (plist-get item :item) item))
-         (source (plist-get candidate :source-path))
-         (brief-item (if (and source (file-readable-p source))
-                         (arxana-browser-rewrites--read-edn-file source)
-                       candidate))
-         (attempt-id (plist-get brief-item :attempt-id)))
+(defun arxana-field-desk--render-item (brief-item)
+  "Render BRIEF-ITEM without recording another open transition."
+  (let ((attempt-id (plist-get brief-item :attempt-id)))
     (arxana-field-desk--render-frame
      (lambda () (arxana-field-desk--insert-sheet
                  brief-item (arxana-field-desk--reviews)))
@@ -656,8 +655,27 @@ Read-only `git show'; guarded so a missing repo or sha never errors."
                              :key (lambda (candidate)
                                     (plist-get candidate :attempt-id))
                              :test #'equal)))
-         (when fresh (arxana-field-desk-open-item fresh))))
+         (when fresh
+           (arxana-field-desk--render-item
+            (plist-put fresh :morning-brief/lifecycle
+                       (plist-get brief-item :morning-brief/lifecycle))))))
      brief-item)))
+
+(defun arxana-field-desk-open-item (item)
+  "Explicitly open ITEM through the instrumented server read boundary."
+  (let* ((candidate (or (plist-get item :item) item))
+         (attempt-id (plist-get candidate :attempt-id)))
+    (unless (and (stringp attempt-id) (not (string-empty-p attempt-id)))
+      (user-error "Field Desk item has no attempt identity"))
+    (condition-case err
+        (arxana-field-desk--render-item
+         (arxana-field-desk--retrieve-open-item attempt-id))
+      (error
+       (arxana-field-desk--record-submit-error
+        (format "Field Desk could not open %s" attempt-id)
+        (error-message-string err))
+       (user-error "Field Desk item open failed: %s"
+                   (error-message-string err))))))
 
 (defun arxana-field-desk-open-incidents (_item)
   "Open the durable JVM incident stratum, newest first."
@@ -735,6 +753,38 @@ Read-only `git show'; guarded so a missing repo or sha never errors."
 (defun arxana-field-desk--addendum-url ()
   (concat (string-remove-suffix "/" arxana-field-desk-endpoint)
           "/api/alpha/morning-brief/addendum"))
+
+(defun arxana-field-desk--item-url (attempt-id)
+  "Return the actual-read endpoint for ATTEMPT-ID."
+  (concat (string-remove-suffix "/" arxana-field-desk-endpoint)
+          "/api/alpha/morning-brief/item/"
+          (url-hexify-string attempt-id)))
+
+(defun arxana-field-desk--retrieve-open-item (attempt-id)
+  "Retrieve ATTEMPT-ID through the server's instrumented item-read boundary."
+  (let ((buffer (url-retrieve-synchronously
+                 (arxana-field-desk--item-url attempt-id) t t 10)))
+    (unless buffer
+      (error "Field Desk item open returned no response"))
+    (unwind-protect
+        (with-current-buffer buffer
+          (let ((status (and (boundp 'url-http-response-status)
+                             url-http-response-status))
+                (body (arxana-field-desk--response-body)))
+            (unless (and status (<= 200 status) (< status 300))
+              (error "Field Desk item open failed with HTTP %s: %s"
+                     (or status "unknown") body))
+            (let* ((response (json-parse-string body :object-type 'plist
+                                                :array-type 'list
+                                                :null-object nil
+                                                :false-object nil))
+                   (item (plist-get response :item))
+                   (lifecycle (plist-get response :lifecycle)))
+              (unless (and item
+                           (equal attempt-id (plist-get item :attempt-id)))
+                (error "Field Desk item open identity mismatch for %s" attempt-id))
+              (plist-put item :morning-brief/lifecycle lifecycle))))
+      (when (buffer-live-p buffer) (kill-buffer buffer)))))
 
 (defun arxana-field-desk--record-submit-error (summary detail)
   (let ((buffer (get-buffer-create arxana-field-desk--errors-buffer)))
