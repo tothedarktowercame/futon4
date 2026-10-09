@@ -58,3 +58,10 @@ pointer to this file; the ingest whitelist excludes them.
 
 **Queued, unstarted.** Raised so the pattern-library reorg
 (M-apm-demonstration, W.77 onward) is not blocked on a workflow decision.
+
+## Closure criteria (provisional, 2026-10-09)
+
+_Drafted from this document's own stated goals during the War Machine status classification (zai-1, high confidence); not yet confirmed by the author._
+
+- [ ] Move workflow state out of versioned pattern files: census of mutable status recorded, then removal from flexiarg artifacts
+- [ ] Record the workflow decision in README-flexiarg section 5c terms so the pattern-library reorg is not blocked

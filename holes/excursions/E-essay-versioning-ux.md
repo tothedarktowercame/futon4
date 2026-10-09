@@ -138,3 +138,11 @@ JVM — see futon4 CLAUDE.md I-0). futon3c serves the compiled `main.js`.
 Bell **claude-7** back with: a summary of what changed, the **commit shas**
 (futon4 + futon1a), the test counts, and the documented click-through target you
 found for the outline affordance.
+
+## Closure criteria (provisional, 2026-10-09)
+
+_Drafted from this document's own stated goals during the War Machine status classification (zai-2, medium confidence); not yet confirmed by the author._
+
+- [ ] Outline/versioning affordance implemented across WebArxana (futon4) and the Arxana store (futon1a) with commit shas in both repos
+- [ ] Test counts reported to claude-7 with a delivery summary
+- [ ] A documented click-through target for the outline affordance is recorded
