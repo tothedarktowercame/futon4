@@ -1,5 +1,7 @@
 # E-arxana-workflow-management
 
+**VERDICT (2026-10-09, provisional):** OPEN — Status explicitly 'Queued, unstarted'; raised so other work is not blocked. _(WM status classification by zai-1, high confidence; not yet confirmed by the author.)_
+
 **Owner (implementer):** unassigned · **Opened:** 2026-08-17 by claude-2 (Analyst,
 M-apm-demonstration) at Joe's direction · **Surface:** Arxana ledger subsystems
 (futon4 `dev/arxana-vsatarcs-*.el`) + the flexiarg library (futon3 `library/`).

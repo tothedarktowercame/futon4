@@ -1,5 +1,7 @@
 # E-essay-versioning-ux
 
+**VERDICT (2026-10-09, provisional):** OPEN — Dispatch spec with acceptance bar and gates but no delivery report; git shows only the 2026-06-06 spec commit. _(WM status classification by zai-5, medium confidence; not yet confirmed by the author.)_
+
 **Owner (implementer):** codex-1 · **Reviewer:** claude-7 · **Opened:** 2026-06-06
 **Surface:** WebArxana (futon4) + Arxana store (futon1a).
 
