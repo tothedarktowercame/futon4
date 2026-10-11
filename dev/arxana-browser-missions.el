@@ -1,14 +1,14 @@
 ;;; arxana-browser-missions.el --- Mission Control browser views -*- lexical-binding: t; -*-
 
 ;;; Commentary:
-;; Mission portfolio browsing for Arxana.
-;; Provides inventory view grouped by repo and status,
-;; backed by GET /api/alpha/missions.
+;; META work-field browsing for Arxana, backed by the exact War Machine
+;; outer-policy preview at GET /api/alpha/wm/meta-preview.
 
 ;;; Code:
 
 (require 'cl-lib)
 (require 'json)
+(require 'seq)
 (require 'subr-x)
 (require 'url)
 (require 'url-http)
@@ -21,7 +21,7 @@
 server.  Distinct from `arxana-evidence-server' — Mission Control runs in
 futon3c (default port 7070), whereas the evidence server runs in futon1a
 (default port 7071).  Mission inventory queries are issued against
-`<server>/api/alpha/missions'."
+`<server>/api/alpha/wm/meta-preview'."
   :type 'string
   :group 'arxana-missions)
 
@@ -29,13 +29,31 @@ futon3c (default port 7070), whereas the evidence server runs in futon1a
   "Return the Mission Control server base URL."
   arxana-mission-control-server)
 
-(defun arxana-missions--fetch ()
-  "Fetch mission inventory from Agency. Returns list of mission maps."
+(defun arxana-missions--name (value)
+  "Render keyword, symbol, or JSON string VALUE without inventing semantics."
+  (cond ((keywordp value) (substring (symbol-name value) 1))
+        ((symbolp value) (symbol-name value))
+        ((stringp value) value)
+        (t (format "%s" value))))
+
+(defun arxana-missions--plist-keys (plist)
+  "Return the keys of PLIST in their retained order."
+  (let (keys)
+    (while plist
+      (push (car plist) keys)
+      (setq plist (cddr plist)))
+    (nreverse keys)))
+
+(defun arxana-missions--fetch-snapshot ()
+  "Fetch the live Mission Control snapshot, including census metadata."
   (let* ((base (replace-regexp-in-string "/\\'" "" (arxana-missions--server)))
-         (url (concat base "/api/alpha/missions"))
+         (url (concat base "/api/alpha/wm/meta-preview"))
          (url-request-method "GET")
          (url-request-extra-headers '(("Accept" . "application/json")))
-         (buffer (url-retrieve-synchronously url t t 15)))
+         ;; The endpoint performs the same pinned cascade reads as production,
+         ;; but returns a bounded browser projection rather than the full
+         ;; pairwise proof receipt.
+         (buffer (url-retrieve-synchronously url t t 90)))
     (unless buffer
       (user-error "Mission inventory request failed"))
     (with-current-buffer buffer
@@ -56,7 +74,62 @@ futon3c (default port 7070), whereas the evidence server runs in futon1a
                              (json-read-from-string body)))
                        (error nil))))
         (kill-buffer buffer)
-        (or (plist-get parsed :missions) '())))))
+        (unless (listp parsed)
+          (user-error "Mission inventory response was not an object"))
+        (let* ((receipt (plist-get parsed :receipt))
+               (support (plist-get receipt :support))
+               (excluded (plist-get receipt :excluded))
+               (selection (plist-get (plist-get receipt :policy) :meta-selection))
+               (ranking (plist-get selection :ranking))
+               (by-id (make-hash-table :test 'equal))
+               rows)
+          (dolist (row support) (puthash (plist-get row :id) row by-id))
+          (dolist (ranked ranking)
+            (let* ((id (plist-get ranked :id))
+                   (task (gethash id by-id)))
+              (push (list :mission/id id :mission/repo (arxana-missions--name (plist-get task :kind))
+                          :mission/status (format "#%s" (plist-get ranked :rank))
+                          :mission/title (format "%s; pairwise losses %s"
+                                                 (mapconcat #'arxana-missions--name
+                                                            (arxana-missions--plist-keys
+                                                             (plist-get ranked :channels)) ", ")
+                                                 (plist-get ranked :pairwise-losses))
+                          :mission/path (plist-get (plist-get task :source) :path))
+                    rows)))
+          (dolist (row excluded)
+            (push (list :mission/id (plist-get row :id)
+                        :mission/repo (arxana-missions--name (plist-get row :kind))
+                        :mission/status "excluded"
+                        :mission/title (format "%s" (plist-get row :ineligible-reason))
+                        :mission/path (plist-get (plist-get row :source) :path)) rows))
+          (list :missions (nreverse rows)
+                :declared-count (+ (length support) (length excluded))
+                :selection selection))))))
+
+(defun arxana-missions--fetch ()
+  "Fetch mission inventory from Mission Control. Returns mission maps."
+  (plist-get (arxana-missions--fetch-snapshot) :missions))
+
+(defun arxana-missions--census-item (snapshot)
+  "Build a visible census/provenance row from live SNAPSHOT."
+  (let* ((missions (plist-get snapshot :missions))
+         (actual-count (length missions))
+         (declared-count (plist-get snapshot :declared-count))
+         (repos (delete-dups
+                 (delq nil (mapcar (lambda (mission)
+                                     (plist-get mission :mission/repo))
+                                   missions))))
+         (coherent (or (null declared-count) (= declared-count actual-count))))
+    (list :type 'info
+          :label (format "Live META field: %d M/E/T/A tasks (%d kinds)"
+                         actual-count (length repos))
+          :description (if coherent
+                           "Source: GET /api/alpha/wm/meta-preview; ordering is the WM receipt"
+                         (format "Census mismatch: endpoint declared %s, returned %d"
+                                 declared-count actual-count))
+          :census-coherent coherent
+          :mission-count actual-count
+          :repo-count (length repos))))
 
 (defun arxana-missions--status-sort-key (status)
   "Sort key for mission status — active first, archived/nonstarter last.
@@ -110,20 +183,12 @@ bottom of the active range."
 (defun arxana-browser--missions-portfolio-items ()
   "Fetch and render the full mission portfolio."
   (condition-case err
-      (let* ((missions (arxana-missions--fetch))
-             (sorted (sort (copy-sequence missions)
-                           (lambda (a b)
-                             (let ((sa (arxana-missions--status-sort-key
-                                        (or (plist-get a :mission/status) "")))
-                                   (sb (arxana-missions--status-sort-key
-                                        (or (plist-get b :mission/status) ""))))
-                               (if (= sa sb)
-                                   (string< (or (plist-get a :mission/repo) "")
-                                            (or (plist-get b :mission/repo) ""))
-                                 (< sa sb)))))))
-        (if sorted
-            (mapcar (lambda (m)
-                      (list :type 'mission-entry
+      (let* ((snapshot (arxana-missions--fetch-snapshot))
+             (missions (plist-get snapshot :missions)))
+        (if missions
+            (cons (arxana-missions--census-item snapshot)
+                  (mapcar (lambda (m)
+                            (list :type 'mission-entry
                             :mission-id (or (plist-get m :mission/id) "?")
                             :status (or (plist-get m :mission/status) "?")
                             :repo (or (plist-get m :mission/repo) "?")
@@ -133,7 +198,7 @@ bottom of the active range."
                             :description (format "%s — %s"
                                                  (or (plist-get m :mission/status) "?")
                                                  (or (plist-get m :mission/title) ""))))
-                    sorted)
+                          missions))
           (list (list :type 'info
                       :label "No missions found"
                       :description "Mission scan returned empty."))))
