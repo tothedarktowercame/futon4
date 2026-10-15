@@ -503,7 +503,11 @@ Set to nil to disable the bundled sound without turning off clicks entirely."
         (list :type 'menu
               :label "Outbox"
               :description "Cold/warm outreach drafts (futon7 outbox) — staged, editing, reviewed, sent. Dual of Sales."
-              :view 'cold-outbox)))
+              :view 'cold-outbox)
+        (list :type 'menu
+              :label "Issues"
+              :description "Kanban over GitHub issues involving me: mfuton-share + futon*. RET opens the board."
+              :view 'issues)))
 
 (defun arxana-browser--evidence-menu-items ()
   (if (require 'arxana-browser-evidence nil t)
@@ -1404,6 +1408,10 @@ Other views show the description in `mode-line-format'.")
                     (arxana-sales--home-items)
                   (list (list :type 'info :label "Sales module unavailable"
                               :description "Load arxana-vsatarcs-sales.el"))))
+        ('issues (if (require 'arxana-browser-issues nil t)
+                     (arxana-issues--home-items)
+                   (list (list :type 'info :label "Issues module unavailable"
+                               :description "Load arxana-browser-issues.el"))))
         ('cold-outbox (if (require 'arxana-cold-outbox nil t)
                           (arxana-cold-outbox--home-items)
                         (list (list :type 'info :label "Outbox module unavailable"
@@ -2059,6 +2067,10 @@ Warn once per session for feature views with no registered keymap."
        (if (fboundp 'arxana-sales-open-stage)
            (arxana-sales-open-stage item)
          (message "Sales module unavailable")))
+      ('issues-lane
+       (if (fboundp 'arxana-issues-open-lane)
+           (arxana-issues-open-lane item)
+         (message "Issues module unavailable")))
       ((or 'cold-outbox-stage 'cold-outbox-all)
        (if (fboundp 'arxana-cold-outbox-open-stage)
            (arxana-cold-outbox-open-stage item)
