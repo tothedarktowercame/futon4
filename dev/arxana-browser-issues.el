@@ -448,31 +448,62 @@ no comments; my own comments never raise the mark."
     (browse-url (plist-get card :url))
     (arxana-issues--render)))
 
+(defun arxana-issues--insert-thread (data)
+  "Insert the issue or PR DATA (parsed `gh ... view --json') as plain text."
+  (let ((login (lambda (o) (and o (gethash "login" o)))))
+    (insert (propertize (or (gethash "title" data) "") 'face 'bold) "\n"
+            (propertize (format "%s · opened by %s %s · assigned: %s\n%s\n"
+                                (gethash "state" data)
+                                (funcall login (gethash "author" data))
+                                (substring (or (gethash "createdAt" data) "") 0 10)
+                                (or (mapconcat login (gethash "assignees" data) ", ") "")
+                                (gethash "url" data))
+                        'face 'shadow)
+            "\n" (string-trim (or (gethash "body" data) "")) "\n")
+    (dolist (c (gethash "comments" data))
+      (insert "\n" (propertize (format "── %s · %s\n"
+                                       (funcall login (gethash "author" c))
+                                       (gethash "createdAt" c))
+                               'face 'font-lock-keyword-face)
+              (string-trim (or (gethash "body" c) "")) "\n"))
+    (when (null (gethash "comments" data))
+      (insert "\n" (propertize "(no comments)\n" 'face 'shadow)))))
+
 (defun arxana-issues-view ()
   "Show the card at point (body and comments, via `gh') and mark it seen."
   (interactive)
   (let* ((card (arxana-issues--require-card))
-         (buf (get-buffer-create (format "*gh %s*" (plist-get card :key)))))
+         (buf (get-buffer-create (format "*gh %s*" (plist-get card :key))))
+         (out (generate-new-buffer " *arxana-issues-view*")))
     (arxana-issues--board-update (plist-get card :key) :seen (plist-get card :updated))
     (arxana-issues--render)
     (with-current-buffer buf
-      (let ((inhibit-read-only t)) (erase-buffer) (insert "Loading…\n"))
-      (special-mode))
+      (special-mode)
+      (let ((inhibit-read-only t)) (erase-buffer) (insert "Loading…\n")))
+    ;; Use --json: without a TTY, `gh issue view --comments' prints only
+    ;; the comments, so an issue with none came back empty.
     (make-process
-     :name "arxana-issues-view" :buffer buf :noquery t :connection-type 'pipe
+     :name "arxana-issues-view" :buffer out :noquery t :connection-type 'pipe
      :command (list "gh" (if (equal (plist-get card :kind) "PR") "pr" "issue")
                     "view" (number-to-string (plist-get card :number))
-                    "-R" (plist-get card :repo) "--comments")
-     :filter (lambda (proc chunk)
-               (with-current-buffer (process-buffer proc)
-                 (let ((inhibit-read-only t))
-                   (when (equal (buffer-string) "Loading…\n") (erase-buffer))
-                   (goto-char (point-max))
-                   (insert chunk))))
-     :sentinel (lambda (proc _e)
-                 (unless (process-live-p proc)
-                   (with-current-buffer (process-buffer proc)
-                     (goto-char (point-min))))))
+                    "-R" (plist-get card :repo)
+                    "--json" "title,state,author,assignees,body,comments,url,createdAt")
+     :sentinel
+     (lambda (proc _e)
+       (unless (process-live-p proc)
+         (let ((text (with-current-buffer out (buffer-string))))
+           (kill-buffer out)
+           (when (buffer-live-p buf)
+             (with-current-buffer buf
+               (let ((inhibit-read-only t))
+                 (erase-buffer)
+                 (condition-case err
+                     (arxana-issues--insert-thread
+                      (json-parse-string text :object-type 'hash-table
+                                         :array-type 'list :null-object nil))
+                   (error (insert (format "gh failed (%s):\n%s"
+                                          (error-message-string err) text))))
+                 (goto-char (point-min)))))))))
     (pop-to-buffer buf)))
 
 (defun arxana-issues-toggle-lane ()
