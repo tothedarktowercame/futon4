@@ -15,7 +15,7 @@
 
 /Operational witness (2026-07-14):/ the hourly entrypoint completed a production-shaped opportunity as a reviewed Git commit plus a Futon1b implementation/discharge, closed the cohort record as =grounded-change=, and queued an operator QA item. The scheduler firing alone is not counted as that witness; the external dial movement is. /Current status (2026-07-31):/ the hourly schedule was operator-disabled the following day, after a stop-line, and no cron is installed; runs since then --- including the specimen above --- have been on-demand clicks. We report this rather than the more flattering present tense because the pattern's own rule is that a schedule which cannot change anything should be switched off, and honouring that rule is not a result to be hidden. The claim this pattern supports is therefore that the loop /can/ run unattended end to end and has, not that it is doing so today.
 
-* Current version (87895d15c)
+* Current version (38333caaf)
 
 *If* you want the agent to run live --- to observe, deliberate, and act on a schedule, accumulating trace and precision over real time without a human pressing the button. *However* a scheduler that fires ticks which cache or no-op (because nothing downstream can change) satisfies the letter of "live operation" while the organism is dead, and every firing writes a green "it ran" row that hides the inertia. *Then* install the scheduled entrypoint, but gate "live" on evidence that a tick changed observable state (a dial moved, a hole closed), not merely that it fired; when the loop can only no-op, disable the schedule rather than let it paint green. *Because* liveness is a property of state change, not of the scheduler firing --- a cron over a sealed loop is a clock ticking in an empty room.
 
