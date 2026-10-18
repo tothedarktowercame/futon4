@@ -13,10 +13,19 @@
 
 *If* you want the forward model's predictions to match what the live dynamics actually do, with one set of rules to maintain. *However* two implementations of the same dynamics is two places for bugs to hide and two surfaces where prediction can silently diverge from the live step. *Then* factor the live step into a /pure deterministic kernel/ (state, action, seed, opts) \(\rightarrow\) next-state plus a thin wrapper that threads defaults; the predictive forward model calls the same kernel and adds principled uncertainty. *Because* one implementation of the dynamics is the only place the rules live --- any update is reflected in both live and predicted behaviour.
 
-* Current version (6c9693ffd)
+* Current version (17a900456)
 
 *If* you want the forward model's predictions to match what the live dynamics actually do, with one set of rules to maintain. *However* two implementations of the same dynamics is two places for bugs to hide and two surfaces where prediction can silently diverge from the live step. *Then* factor the live step into a /pure deterministic kernel/ (state, action, seed, opts) \(\rightarrow\) next-state plus a thin wrapper that threads defaults; the predictive forward model calls the same kernel and adds principled uncertainty. *Because* one implementation of the dynamics is the only place the rules live --- any update is reflected in both live and predicted behaviour.
 
 * Code annotations
 
-/None yet./
+** "factor the live step into a pure deterministic kernel (state, action, seed, opts) -> next-state plus a thin wrapper that threads defaults; the predictive forward model calls the same kernel"
+- Conference text: *REFUTED*  Current text: *REFUTED*
+- [[file:~/code/futon2/src/futon2/aif/forward_model.clj::predict][futon2/src/futon2/aif/forward_model.clj predict]] @ 54d1deffd
+- [[file:~/code/futon2/src/futon2/aif/forward_model.clj::predict-multi-horizon][futon2/src/futon2/aif/forward_model.clj predict-multi-horizon]] @ 54d1deffd
+- Annotated by claude-4; reviewed by not yet reviewed
+- Operator: Revision policy applies: the code looks AIF-valid, so this is a docs change.
+- Ticket: paper edit candidate: rewrite R4 for a system whose live step is the world: one forward model shared by every scorer (EFE, F(pi), proposers), compared against realised outcomes (R12), rather than one kernel shared with a simulated live step; and update forward_model.clj's docstring, which still promises the shared kernel
+
+The forward model is a pure function, (state, action) -> next-state distribution, called by EFE scoring, policy free energy and the proposers. But there is no shared kernel, and its own docstring says so: it 'will be shared with the live step ... when that lands', citing the UKRN simulation's kernel discipline. In the War Machine the live step is not code that could be factored: it is agents changing repositories and the store. In active-inference terms the forward model is the agent's generative model and the live step is the generative process (the world); the two are distinct by design, and the agent learns how far apart they are from predicted-versus-realised pairs (R12). So the code is AIF-valid and the pattern's Then, inherited from a simulation setting, does not describe this system. By the revision policy the text should change: the invariant worth keeping is one forward model used by every scorer, with its mismatch to the world measured rather than assumed away.
+
