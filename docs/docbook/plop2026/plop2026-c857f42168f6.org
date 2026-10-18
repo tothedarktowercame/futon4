@@ -13,7 +13,7 @@
 
 *If* you want the agent's observation to be comparable across steps so scoring and learning do not collapse into prose interpretation. *However* tool output and user feedback arrive as heterogeneous artifacts (JSON, logs, diffs, snippets, natural language) that are hard to compare or weight consistently. *Then* maintain an explicit observation record as a typed, normalized feature map derived from session state (test status, compile status, diff size, failing-spec count, user-stated constraints, time since last anchor, contradiction flags). *Because* a stable observation vector is the prerequisite for meaningful precision control and policy scoring.
 
-* Current version (eb0666a10)
+* Current version (64c732bfa)
 
 *If* you want the agent's observation to be comparable across steps so scoring and learning do not collapse into prose interpretation. *However* tool output and user feedback arrive as heterogeneous artifacts (JSON, logs, diffs, snippets, natural language) that are hard to compare or weight consistently. *Then* maintain an explicit observation record as a typed, normalized feature map derived from session state (test status, compile status, diff size, failing-spec count, user-stated constraints, time since last anchor, contradiction flags). *Because* a stable observation vector is the prerequisite for meaningful precision control and policy scoring.
 

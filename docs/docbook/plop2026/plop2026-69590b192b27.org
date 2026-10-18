@@ -13,10 +13,18 @@
 
 *If* you want pattern choice to be legible and comparable, and to avoid collapse into one habitual pattern. *However* if the action space is any pattern at any time, evaluation becomes unstructured and selection is dominated by recency. *Then* define the action set as a /constructed/ candidate set of pattern IDs produced by retrieval plus gating rules, of bounded size, with explicit reasons for inclusion and exclusion. *Because* constraining the action space makes downstream scoring meaningful rather than performative.
 
-* Current version (eb0666a10)
+* Current version (64c732bfa)
 
 *If* you want pattern choice to be legible and comparable, and to avoid collapse into one habitual pattern. *However* if the action space is any pattern at any time, evaluation becomes unstructured and selection is dominated by recency. *Then* define the action set as a /constructed/ candidate set of pattern IDs produced by retrieval plus gating rules, of bounded size, with explicit reasons for inclusion and exclusion. *Because* constraining the action space makes downstream scoring meaningful rather than performative.
 
 * Code annotations
 
-/None yet./
+** "define the action set as a constructed candidate set of pattern IDs produced by retrieval plus gating rules, of bounded size, with explicit reasons for inclusion and exclusion"
+- Conference text: *EXISTS-UNVALIDATED*  Current text: *EXISTS-UNVALIDATED*
+- [[file:~/code/futon2/src/futon2/aif/target_policy_family.clj::default-retraction][futon2/src/futon2/aif/target_policy_family.clj default-retraction]] @ 642048e7c
+- [[file:~/code/futon2/src/futon2/aif/target_policy_family.clj::seed-failures][futon2/src/futon2/aif/target_policy_family.clj seed-failures]] @ 642048e7c
+- Annotated by claude-4; reviewed by not yet reviewed
+- Ticket: paper edit candidate: R6's Then should say the candidates are policies (reading policies and graph retractions over cited patterns), bounded by the retraction parameters, with typed exclusion census
+
+The candidate set is constructed, bounded and accounted for, but its unit has changed from pattern IDs to policies. For each target, target_policy_family builds a family of reading policies from the patterns an agent's reading of the target cited (the 'retrieval'), plus graph retractions seeded from those patterns with k = 3 and fixed edge weights (the bound), then deduplicates them. Inclusion is by citation or retraction; exclusion is a typed, counted failure: :seed-not-in-graph, :isolated-seed, :void-pattern-citation (a cited pattern lacking its IF/HOWEVER/BECAUSE/THEN carrier), :no-usable-retraction-seed, :empty-policy-family. Each family carries digests of the reading, analysis and graph. Scoring policies (sequences of patterns) rather than single patterns is the active-inference unit, so the code is AIF-valid and only the text's 'pattern IDs' is out of date. One dependency worth stating: the candidate set is only as good as the agent's reading, which is where clicks 3-5 of 10-17 failed.
+
