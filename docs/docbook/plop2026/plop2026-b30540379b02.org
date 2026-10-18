@@ -13,7 +13,7 @@
 
 *If* you want selection to balance canonical outcome risk and ambiguity with operational constraints. *However* calling every useful controller term "EFE" makes tuning indistinguishable from storytelling. *Then* compute and persist the canonical core separately --- /risk/, how far the outcomes an action predicts sit from the outcomes the system prefers, plus /ambiguity/, how uninformative those outcomes are expected to be --- and admit engineering terms only as a named augmentation, reported /beside/ that core and never folded into it. *Because* the decomposition makes clear whether a recommendation moved because of active-inference quantities or because of an engineering control. /Invariant to preserve:/ the two-term core is persisted apart from everything wrapped around it, so any reader can ask which one moved the pick.
 
-* Current version (52cd7933a)
+* Current version (eb0666a10)
 
 *If* you want selection to balance canonical outcome risk and ambiguity with operational constraints. *However* calling every useful controller term "EFE" makes tuning indistinguishable from storytelling. *Then* compute and persist the canonical core separately --- /risk/, how far the outcomes an action predicts sit from the outcomes the system prefers, plus /ambiguity/, how uninformative those outcomes are expected to be --- and admit engineering terms only as a named augmentation, reported /beside/ that core and never folded into it. *Because* the decomposition makes clear whether a recommendation moved because of active-inference quantities or because of an engineering control. /Invariant to preserve:/ the two-term core is persisted apart from everything wrapped around it, so any reader can ask which one moved the pick.
 
@@ -23,7 +23,7 @@
 - Conference text: *EXISTS-UNVALIDATED*  Current text: *EXISTS-UNVALIDATED*
 - [[file:~/code/futon2/src/futon2/aif/outer_target_score.clj::canonical-g (+ risk ambiguity (- eig))][futon2/src/futon2/aif/outer_target_score.clj canonical-g (+ risk ambiguity (- eig))]] @ 0ab3970ca
 - Annotated by claude-4; reviewed by not yet reviewed
-- Ticket: code ticket candidate (AIF): ambiguity is normalised by ln|O| while risk is not; G = risk + ambiguity needs both in nats (normalise the sum, if at all, not one term)
+- Ticket: futon2 holes/tickets/T-outer-target-g-policy-prior.md (642048e7c)
 
 The outer target score computes risk as KL(predicted outcomes || preference distribution) and ambiguity as the entropy of the predicted outcomes, and persists both, with their kinds and the model assumption, under :terms beside the ranked value. Under the declared model (the chosen target is the state, and outcomes are drawn from its Dirichlet-mean prediction) that entropy is the likelihood entropy, so risk plus ambiguity is a valid G for that model and reduces to the expected preference cost. Epistemic value is hard-set to 0.0 ('no likelihood-parameter posterior beyond the categorical Dirichlet is claimed'). One AIF question: ambiguity is divided by ln|O| and risk is not, which rescales one term of G relative to the other.
 
@@ -32,7 +32,7 @@ The outer target score computes risk as KL(predicted outcomes || preference dist
 - [[file:~/code/futon2/src/futon2/aif/outer_target_score.clj::normalized-g][futon2/src/futon2/aif/outer_target_score.clj normalized-g]] @ 0ab3970ca
 - [[file:~/code/futon2/src/futon2/aif/meta_live_outer_selector.clj:::outer-target-outcome-cost][futon2/src/futon2/aif/meta_live_outer_selector.clj :outer-target-outcome-cost]] @ 0ab3970ca
 - Annotated by claude-4; reviewed by not yet reviewed
-- Ticket: code ticket candidate (AIF): keep G = risk + ambiguity unaltered as the ranked quantity's AIF core, move resource, cadence and continuation terms into an explicit policy prior E, and remove the [0, 1] clamp (it creates ties)
+- Ticket: futon2 holes/tickets/T-outer-target-g-policy-prior.md (642048e7c)
 
 The terms are reported beside the core, but the value that is ranked folds them in: :g = canonical-g / 2 + weighted resource cost + recent-selection (cadence) cost - continuation credit, clamped to [0, 1]. That :g is what the live outer selector places on the :outer-target-outcome-cost channel for its pairwise task-state comparison. So a reader can see which terms moved, but the pick moves on the sum. The clamp also maps every score beyond either bound to the same value, which produces exact ties. In active-inference terms engineering preferences over policies belong in the policy prior (ln E, as in pi = softmax(ln E - gamma G)), not inside G.
 
@@ -41,7 +41,7 @@ The terms are reported beside the core, but the value that is ranked folds them 
 - [[file:~/code/futon2/src/futon2/aif/outer_target_score.clj::alpha (or (get-in belief [:targets target :alpha])][futon2/src/futon2/aif/outer_target_score.clj alpha (or (get-in belief [:targets target :alpha])]] @ 0ab3970ca
 - [[file:~/code/futon2/src/futon2/aif/meta_pipeline_selector.clj:::no-unique-task-state-minimum][futon2/src/futon2/aif/meta_pipeline_selector.clj :no-unique-task-state-minimum]] @ 0ab3970ca
 - Annotated by claude-4; reviewed by not yet reviewed
-- Ticket: code ticket candidate (AIF): compute the Dirichlet novelty (parameter information gain) term for each target instead of eig 0.0; unobserved targets then differ in G by how much a selection would teach, and residual ties shrink to genuinely equivalent targets
+- Ticket: futon2 holes/tickets/T-outer-target-novelty-term.md (642048e7c)
 
 Bearing on the 10-18 ties (Joe: ties signal incomplete ingest; any tie-breaker should be G-based). A target with no observations of its own takes the prior alpha, so every unobserved target gets the same prediction, risk and ambiguity, hence the same canonical G; the click-5 checkpoint has about 510 :target-unobserved entries. Because epistemic value is fixed at 0.0, G cannot prefer the less-known target. In active inference the principled separator is exactly that missing term: expected information gain about the Dirichlet parameters (novelty), which is larger for a target with fewer observations. So the AIF-valid tie-breaker Joe asked for is G with its novelty term, not a rule outside G. The selector's refusal now names :absent-terms, which is the right diagnostic.
 
