@@ -13,10 +13,27 @@
 
 *If* you want the agent to discount low-trust evidence without discarding it, and to become stricter when outcomes are volatile. *However* without an explicit precision layer, evidence weighting becomes implicit prompt rhetoric and cannot be audited. *Then* keep a per-channel /precision registry/ --- one trust weight per kind of evidence --- keyed to observation features, and apply it wherever prediction error, scoring, or gating occurs. *Because* making precision explicit turns trust into a tunable control surface rather than an undocumented bias.
 
-* Current version (38333caaf)
+* Current version (96ab1a056)
 
 *If* you want the agent to discount low-trust evidence without discarding it, and to become stricter when outcomes are volatile. *However* without an explicit precision layer, evidence weighting becomes implicit prompt rhetoric and cannot be audited. *Then* keep a per-channel /precision registry/ --- one trust weight per kind of evidence --- keyed to observation features, and apply it wherever prediction error, scoring, or gating occurs. *Because* making precision explicit turns trust into a tunable control surface rather than an undocumented bias.
 
 * Code annotations
 
-/None yet./
+** "keep a per-channel precision registry --- one trust weight per kind of evidence --- keyed to observation features"
+- Conference text: *EXISTS-UNVALIDATED*  Current text: *EXISTS-UNVALIDATED*
+- [[file:~/code/futon2/src/futon2/aif/precision.clj::initial-precision-state][futon2/src/futon2/aif/precision.clj initial-precision-state]] @ 63855cc28
+- [[file:~/code/futon2/src/futon2/aif/precision.clj::update-channel-precision][futon2/src/futon2/aif/precision.clj update-channel-precision]] @ 63855cc28
+- [[file:~/code/futon2/scripts/futon2/report/war_machine.clj::prec-state' (precision/update-precision-state][futon2/scripts/futon2/report/war_machine.clj prec-state' (precision/update-precision-state]] @ 63855cc28
+- Annotated by claude-4; reviewed by not yet reviewed
+
+The registry exists: one precision state per observation channel that has a likelihood model, each carrying its precision and a bounded error history, updated from that channel's prediction errors (see R3 for the floor and cap). It is maintained in the War Machine report's inner judgement loop (war_machine.clj), stepped alongside the belief. Volatile outcomes raise the error variance and so lower precision, which is the 'stricter when outcomes are volatile' of the If. The current text's worknote cites ten admitted precision claims; not re-checked.
+
+** "apply it wherever prediction error, scoring, or gating occurs"
+- Conference text: *REFUTED*  Current text: *REFUTED*
+- [[file:~/code/futon2/src/futon2/aif/likelihood_precision.clj::zeta-declaration][futon2/src/futon2/aif/likelihood_precision.clj zeta-declaration]] @ 63855cc28
+- [[file:~/code/futon2/src/futon2/aif/reading_policy_precision.clj::declaration-for][futon2/src/futon2/aif/reading_policy_precision.clj declaration-for]] @ 63855cc28
+- Annotated by claude-4; reviewed by not yet reviewed
+- Ticket: paper edit candidate: R7's Then should name the distinct precisions (per-channel evidence precision, likelihood precision zeta, policy/reading precision beta) and where each is applied, instead of one registry applied everywhere
+
+The live cascade path does not consult this registry. It uses two other precisions, each declared separately: likelihood precision zeta (likelihood_precision.clj), a fixed declared inverse temperature on A, which on the identity-kernel path multiplies nothing and is declared FIXED-VACUOUS there; and the reading-policy precision beta (reading_policy_precision.clj), set to 1 by a sealed operator declaration for the readiness campaigns. So precision is explicit and auditable, which is the pattern's Because, but it is not one registry applied everywhere. Having several distinct precisions (likelihood, policy, evidence channel) is standard in active inference, so by the revision policy this is a docs discrepancy: the code is AIF-valid and the text should describe the three precisions and where each applies.
+
