@@ -17,7 +17,7 @@
 
 [fn:1] The older live route is recorded as =library-gap-findings =\(\rightarrow\)= authoring =\(\rightarrow\)= authored-seeds =\(\rightarrow\)= pattern-library= in ; the generalized mint lane and the two-projections precedent are in ; typed-memory evidence and pattern-conditioned recall are developed in .
 
-* Current version (64c732bfa)
+* Current version (d75108411)
 
 /Same text as the conference version./
 
