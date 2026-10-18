@@ -1,0 +1,22 @@
+#+TITLE: R7 Evidence Precision Registry
+:PROPERTIES:
+:DOC_ID: plop2026-593b30db57a6
+:ENTRY_ID: plop2026-593b30db57a6::org
+:VERSION: org
+:OUTLINE_PATH: Catalogue / R7 Evidence Precision Registry
+:PATH_STRING: Catalogue / R7 Evidence Precision Registry
+:REPLACES:
+:END:
+
+* Versions: revised since the conference version
+* Conference version (36d156218)
+
+*If* you want the agent to discount low-trust evidence without discarding it, and to become stricter when outcomes are volatile. *However* without an explicit precision layer, evidence weighting becomes implicit prompt rhetoric and cannot be audited. *Then* keep a per-channel /precision registry/ --- one trust weight per kind of evidence --- keyed to observation features, and apply it wherever prediction error, scoring, or gating occurs. *Because* making precision explicit turns trust into a tunable control surface rather than an undocumented bias.
+
+* Current version (be30848a7)
+
+*If* you want the agent to discount low-trust evidence without discarding it, and to become stricter when outcomes are volatile. *However* without an explicit precision layer, evidence weighting becomes implicit prompt rhetoric and cannot be audited. *Then* keep a per-channel /precision registry/ --- one trust weight per kind of evidence --- keyed to observation features, and apply it wherever prediction error, scoring, or gating occurs. *Because* making precision explicit turns trust into a tunable control surface rather than an undocumented bias.
+
+* Code annotations
+
+/None yet./

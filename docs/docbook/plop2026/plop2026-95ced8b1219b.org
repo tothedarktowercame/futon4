@@ -1,0 +1,36 @@
+#+TITLE: R1 Belief State as Operational Hypotheses
+:PROPERTIES:
+:DOC_ID: plop2026-95ced8b1219b
+:ENTRY_ID: plop2026-95ced8b1219b::org
+:VERSION: org
+:OUTLINE_PATH: Catalogue / R1 Belief State as Operational Hypotheses
+:PATH_STRING: Catalogue / R1 Belief State as Operational Hypotheses
+:REPLACES:
+:END:
+
+* Versions: revised since the conference version
+* Conference version (36d156218)
+
+*If* you want decisions to depend on tractable hypotheses (progress, blockers, pattern fit, uncertainty) rather than raw conversation history. *However* if the belief state is just the conversation, the agent cannot cleanly update, compare, or falsify its own assumptions. *Then* represent the belief state as a map of operational hypotheses
+
+#+begin_quote
+(=:goal=, =:subgoals=, =:blockers=, =:pattern-fit=, =:expected-next-observation=, =:uncertainty=)
+
+#+end_quote
+
+updated each step using observation and outcomes. *Because* a compact belief state makes predict \(\rightarrow\) observe \(\rightarrow\) update implementable and testable.
+
+* Current version (be30848a7)
+
+*If* you want decisions to depend on tractable hypotheses (progress, blockers, pattern fit, uncertainty) rather than raw conversation history. *However* if the belief state is just the conversation, the agent cannot cleanly update, compare, or falsify its own assumptions. *Then* represent the belief state as a map of operational hypotheses
+
+#+begin_quote
+(=:goal=, =:subgoals=, =:blockers=, =:pattern-fit=, =:expected-next-observation=, =:uncertainty=)
+
+#+end_quote
+
+updated each step using observation and outcomes. *Because* a compact belief state makes predict \(\rightarrow\) observe \(\rightarrow\) update implementable and testable.
+
+* Code annotations
+
+/None yet./

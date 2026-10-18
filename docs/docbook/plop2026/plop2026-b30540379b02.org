@@ -1,0 +1,22 @@
+#+TITLE: R5 Expected Free Energy Inside an Auditable Controller
+:PROPERTIES:
+:DOC_ID: plop2026-b30540379b02
+:ENTRY_ID: plop2026-b30540379b02::org
+:VERSION: org
+:OUTLINE_PATH: Catalogue / R5 Expected Free Energy Inside an Auditable Controller
+:PATH_STRING: Catalogue / R5 Expected Free Energy Inside an Auditable Controller
+:REPLACES:
+:END:
+
+* Versions: revised since the conference version
+* Conference version (36d156218)
+
+*If* you want selection to balance canonical outcome risk and ambiguity with operational constraints. *However* calling every useful controller term "EFE" makes tuning indistinguishable from storytelling. *Then* compute and persist the canonical core separately --- /risk/, how far the outcomes an action predicts sit from the outcomes the system prefers, plus /ambiguity/, how uninformative those outcomes are expected to be --- and admit engineering terms only as a named augmentation, reported /beside/ that core and never folded into it. *Because* the decomposition makes clear whether a recommendation moved because of active-inference quantities or because of an engineering control. /Invariant to preserve:/ the two-term core is persisted apart from everything wrapped around it, so any reader can ask which one moved the pick.
+
+* Current version (be30848a7)
+
+*If* you want selection to balance canonical outcome risk and ambiguity with operational constraints. *However* calling every useful controller term "EFE" makes tuning indistinguishable from storytelling. *Then* compute and persist the canonical core separately --- /risk/, how far the outcomes an action predicts sit from the outcomes the system prefers, plus /ambiguity/, how uninformative those outcomes are expected to be --- and admit engineering terms only as a named augmentation, reported /beside/ that core and never folded into it. *Because* the decomposition makes clear whether a recommendation moved because of active-inference quantities or because of an engineering control. /Invariant to preserve:/ the two-term core is persisted apart from everything wrapped around it, so any reader can ask which one moved the pick.
+
+* Code annotations
+
+/None yet./

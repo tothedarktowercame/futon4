@@ -1,0 +1,26 @@
+#+TITLE: R17ppp Pattern Genesis from Evidence-Bearing Holes
+:PROPERTIES:
+:DOC_ID: plop2026-10256e27843c
+:ENTRY_ID: plop2026-10256e27843c::org
+:VERSION: org
+:OUTLINE_PATH: Catalogue / R17ppp Pattern Genesis from Evidence-Bearing Holes
+:PATH_STRING: Catalogue / R17ppp Pattern Genesis from Evidence-Bearing Holes
+:REPLACES:
+:END:
+
+* Versions: unchanged since the conference version
+* Conference version (36d156218)
+
+*If* repeated, independently recorded episodes, failed retrievals, or fold policy-holes show that no existing pattern adequately expresses a recurring way of acting. *However* R6 can retrieve only the patterns already written down, R13 can compose only the moves already in the vocabulary, embedding nearness proposes similarity rather than a new action, and structure learning can reduce or compare the structures it has but cannot author a missing one. *Then* treat the gap as a proposal to /enlarge the vocabulary/: bundle the triggering circumstances and policy-hole, supporting and challenging memories, rejected near-matches, and a falsifiable predicted outcome into a candidate IF/HOWEVER/THEN/BECAUSE pattern; mint it as a new move at an explicitly unearned prior; make concrete, through a fold, what enacting it is expected to change; and admit cascades containing it to witnessed enactment. Only repeated R16-grounded outcomes and review can promote it; failures revise, merge, or prune it through the rest of R17. *Because* structure learning must sometimes enlarge the vocabulary in which policies can be expressed, not only rearrange or simplify an inherited vocabulary. Smith et al.'s active-inference model supplies the close theoretical precedent: insufficient state--outcome mappings motivate state-space expansion, after which reduction removes unnecessary structure [cite:@smith2020structure]. Our control-space move is an explicit extension of that precedent, not a claim that their model authors design patterns.
+
+/Worked instances./ The pattern was cited before it existed, caught as a policy-hole, minted, and then used to discharge the originating hole. The pair and distilled a measured failure family in which hundreds of expensive ticks worked from stale banners instead of reading the primary record. The Zai memory pilot supplies the next, finer-grained test: several Lean episodes fit existing tactic patterns only loosely, so the Librarian must be able to return "no adequate pattern" and propose a narrower candidate rather than force every memory into its nearest neighbour. Conversely, a volatile fact such as tool availability remains a reference memory rather than becoming a pattern. These examples restate the enactment-and-review definition from the opening in operational terms: a hole warrants a candidate, not its promotion.[fn:1]
+
+[fn:1] The older live route is recorded as =library-gap-findings =\(\rightarrow\)= authoring =\(\rightarrow\)= authored-seeds =\(\rightarrow\)= pattern-library= in ; the generalized mint lane and the two-projections precedent are in ; typed-memory evidence and pattern-conditioned recall are developed in .
+
+* Current version (be30848a7)
+
+/Same text as the conference version./
+
+* Code annotations
+
+/None yet./

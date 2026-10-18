@@ -1,0 +1,277 @@
+[
+ {
+  "doc-id": "plop2026-51d0c108a009",
+  "title": "R10 Scheduled Observer Entrypoint",
+  "outline": [
+   "Catalogue",
+   "R10 Scheduled Observer Entrypoint"
+  ],
+  "path_string": "Catalogue / R10 Scheduled Observer Entrypoint",
+  "level": 1,
+  "book": "plop2026"
+ },
+ {
+  "doc-id": "plop2026-a8c8c0f94567",
+  "title": "R9 No Self-Certification",
+  "outline": [
+   "Catalogue",
+   "R9 No Self-Certification"
+  ],
+  "path_string": "Catalogue / R9 No Self-Certification",
+  "level": 1,
+  "book": "plop2026"
+ },
+ {
+  "doc-id": "plop2026-95ced8b1219b",
+  "title": "R1 Belief State as Operational Hypotheses",
+  "outline": [
+   "Catalogue",
+   "R1 Belief State as Operational Hypotheses"
+  ],
+  "path_string": "Catalogue / R1 Belief State as Operational Hypotheses",
+  "level": 1,
+  "book": "plop2026"
+ },
+ {
+  "doc-id": "plop2026-c857f42168f6",
+  "title": "R2 Structured Observation Vector",
+  "outline": [
+   "Catalogue",
+   "R2 Structured Observation Vector"
+  ],
+  "path_string": "Catalogue / R2 Structured Observation Vector",
+  "level": 1,
+  "book": "plop2026"
+ },
+ {
+  "doc-id": "plop2026-09ffce442c51",
+  "title": "R3 Predictive-Coding Belief Update",
+  "outline": [
+   "Catalogue",
+   "R3 Predictive-Coding Belief Update"
+  ],
+  "path_string": "Catalogue / R3 Predictive-Coding Belief Update",
+  "level": 1,
+  "book": "plop2026"
+ },
+ {
+  "doc-id": "plop2026-593b30db57a6",
+  "title": "R7 Evidence Precision Registry",
+  "outline": [
+   "Catalogue",
+   "R7 Evidence Precision Registry"
+  ],
+  "path_string": "Catalogue / R7 Evidence Precision Registry",
+  "level": 1,
+  "book": "plop2026"
+ },
+ {
+  "doc-id": "plop2026-2877b2586d89",
+  "title": "R8 Present-Fit Mismatch as a Per-Tick Scalar",
+  "outline": [
+   "Catalogue",
+   "R8 Present-Fit Mismatch as a Per-Tick Scalar"
+  ],
+  "path_string": "Catalogue / R8 Present-Fit Mismatch as a Per-Tick Scalar",
+  "level": 1,
+  "book": "plop2026"
+ },
+ {
+  "doc-id": "plop2026-927179796a15",
+  "title": "R4 Shared Kernel for the Predictive Forward Model",
+  "outline": [
+   "Catalogue",
+   "R4 Shared Kernel for the Predictive Forward Model"
+  ],
+  "path_string": "Catalogue / R4 Shared Kernel for the Predictive Forward Model",
+  "level": 1,
+  "book": "plop2026"
+ },
+ {
+  "doc-id": "plop2026-b30540379b02",
+  "title": "R5 Expected Free Energy Inside an Auditable Controller",
+  "outline": [
+   "Catalogue",
+   "R5 Expected Free Energy Inside an Auditable Controller"
+  ],
+  "path_string": "Catalogue / R5 Expected Free Energy Inside an Auditable Controller",
+  "level": 1,
+  "book": "plop2026"
+ },
+ {
+  "doc-id": "plop2026-69590b192b27",
+  "title": "R6 Candidate Pattern Action Space",
+  "outline": [
+   "Catalogue",
+   "R6 Candidate Pattern Action Space"
+  ],
+  "path_string": "Catalogue / R6 Candidate Pattern Action Space",
+  "level": 1,
+  "book": "plop2026"
+ },
+ {
+  "doc-id": "plop2026-5b960df77f40",
+  "title": "R14 selection gain as Commitment Temperature",
+  "outline": [
+   "Catalogue",
+   "R14 selection gain as Commitment Temperature"
+  ],
+  "path_string": "Catalogue / R14 selection gain as Commitment Temperature",
+  "level": 1,
+  "book": "plop2026"
+ },
+ {
+  "doc-id": "plop2026-78ebdeb7543d",
+  "title": "R11 Hierarchical, Budget-Aware Action Selection",
+  "outline": [
+   "Catalogue",
+   "R11 Hierarchical, Budget-Aware Action Selection"
+  ],
+  "path_string": "Catalogue / R11 Hierarchical, Budget-Aware Action Selection",
+  "level": 1,
+  "book": "plop2026"
+ },
+ {
+  "doc-id": "plop2026-18e978774e79",
+  "title": "R15 Hierarchical and Temporal Depth",
+  "outline": [
+   "Catalogue",
+   "R15 Hierarchical and Temporal Depth"
+  ],
+  "path_string": "Catalogue / R15 Hierarchical and Temporal Depth",
+  "level": 1,
+  "book": "plop2026"
+ },
+ {
+  "doc-id": "plop2026-ded40d497a0c",
+  "title": "R13 Temporal Depth Beyond the Greedy Step",
+  "outline": [
+   "Catalogue",
+   "R13 Temporal Depth Beyond the Greedy Step"
+  ],
+  "path_string": "Catalogue / R13 Temporal Depth Beyond the Greedy Step",
+  "level": 1,
+  "book": "plop2026"
+ },
+ {
+  "doc-id": "plop2026-dca13705e1cf",
+  "title": "X-the-semilattice-rollout-execution-witnes The Semilattice-Rollout Execution Witness (R16 realised, for cascades)",
+  "outline": [
+   "Catalogue",
+   "X-the-semilattice-rollout-execution-witnes The Semilattice-Rollout Execution Witness (R16 realised, for cascades)"
+  ],
+  "path_string": "Catalogue / X-the-semilattice-rollout-execution-witnes The Semilattice-Rollout Execution Witness (R16 realised, for cascades)",
+  "level": 1,
+  "book": "plop2026"
+ },
+ {
+  "doc-id": "plop2026-7e15c4207637",
+  "title": "R12 Two-Layer Calibration",
+  "outline": [
+   "Catalogue",
+   "R12 Two-Layer Calibration"
+  ],
+  "path_string": "Catalogue / R12 Two-Layer Calibration",
+  "level": 1,
+  "book": "plop2026"
+ },
+ {
+  "doc-id": "plop2026-4cae131a6dab",
+  "title": "R16 Grounded Actuation, Not Re-Observation",
+  "outline": [
+   "Catalogue",
+   "R16 Grounded Actuation, Not Re-Observation"
+  ],
+  "path_string": "Catalogue / R16 Grounded Actuation, Not Re-Observation",
+  "level": 1,
+  "book": "plop2026"
+ },
+ {
+  "doc-id": "plop2026-e6cb327b47a3",
+  "title": "R17 Structure Learning by Bayesian Model Reduction",
+  "outline": [
+   "Catalogue",
+   "R17 Structure Learning by Bayesian Model Reduction"
+  ],
+  "path_string": "Catalogue / R17 Structure Learning by Bayesian Model Reduction",
+  "level": 1,
+  "book": "plop2026"
+ },
+ {
+  "doc-id": "plop2026-089cafc81d42",
+  "title": "R17p Posterior Spread as an Exploration Control",
+  "outline": [
+   "Catalogue",
+   "R17p Posterior Spread as an Exploration Control"
+  ],
+  "path_string": "Catalogue / R17p Posterior Spread as an Exploration Control",
+  "level": 1,
+  "book": "plop2026"
+ },
+ {
+  "doc-id": "plop2026-b81a49d1b010",
+  "title": "R17pp Embedding-Nearness as the Structure-Learning Generator",
+  "outline": [
+   "Catalogue",
+   "R17pp Embedding-Nearness as the Structure-Learning Generator"
+  ],
+  "path_string": "Catalogue / R17pp Embedding-Nearness as the Structure-Learning Generator",
+  "level": 1,
+  "book": "plop2026"
+ },
+ {
+  "doc-id": "plop2026-10256e27843c",
+  "title": "R17ppp Pattern Genesis from Evidence-Bearing Holes",
+  "outline": [
+   "Catalogue",
+   "R17ppp Pattern Genesis from Evidence-Bearing Holes"
+  ],
+  "path_string": "Catalogue / R17ppp Pattern Genesis from Evidence-Bearing Holes",
+  "level": 1,
+  "book": "plop2026"
+ },
+ {
+  "doc-id": "plop2026-c77c3364cd3e",
+  "title": "X-discharge-trained-cascade-proposal Discharge-Trained Cascade Proposal (closing R16 -> R6)",
+  "outline": [
+   "Catalogue",
+   "X-discharge-trained-cascade-proposal Discharge-Trained Cascade Proposal (closing R16 -> R6)"
+  ],
+  "path_string": "Catalogue / X-discharge-trained-cascade-proposal Discharge-Trained Cascade Proposal (closing R16 -> R6)",
+  "level": 1,
+  "book": "plop2026"
+ },
+ {
+  "doc-id": "plop2026-e2d063880b25",
+  "title": "X-capability-zones-over-the-embedded-lands Capability Zones over the Embedded Landscape (staged; the self-model's second use of the metric)",
+  "outline": [
+   "Catalogue",
+   "X-capability-zones-over-the-embedded-lands Capability Zones over the Embedded Landscape (staged; the self-model's second use of the metric)"
+  ],
+  "path_string": "Catalogue / X-capability-zones-over-the-embedded-lands Capability Zones over the Embedded Landscape (staged; the self-model's second use of the metric)",
+  "level": 1,
+  "book": "plop2026"
+ },
+ {
+  "doc-id": "plop2026-358954bbd02d",
+  "title": "X-native-currency-discrimination Native-Currency Discrimination (the R17->--R12 edge)",
+  "outline": [
+   "Catalogue",
+   "X-native-currency-discrimination Native-Currency Discrimination (the R17->--R12 edge)"
+  ],
+  "path_string": "Catalogue / X-native-currency-discrimination Native-Currency Discrimination (the R17->--R12 edge)",
+  "level": 1,
+  "book": "plop2026"
+ },
+ {
+  "doc-id": "plop2026-4e309641b603",
+  "title": "R20 Interoceptive Tripwires",
+  "outline": [
+   "Catalogue",
+   "R20 Interoceptive Tripwires"
+  ],
+  "path_string": "Catalogue / R20 Interoceptive Tripwires",
+  "level": 1,
+  "book": "plop2026"
+ }
+]

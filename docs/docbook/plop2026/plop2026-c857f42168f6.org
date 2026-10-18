@@ -1,0 +1,22 @@
+#+TITLE: R2 Structured Observation Vector
+:PROPERTIES:
+:DOC_ID: plop2026-c857f42168f6
+:ENTRY_ID: plop2026-c857f42168f6::org
+:VERSION: org
+:OUTLINE_PATH: Catalogue / R2 Structured Observation Vector
+:PATH_STRING: Catalogue / R2 Structured Observation Vector
+:REPLACES:
+:END:
+
+* Versions: revised since the conference version
+* Conference version (36d156218)
+
+*If* you want the agent's observation to be comparable across steps so scoring and learning do not collapse into prose interpretation. *However* tool output and user feedback arrive as heterogeneous artifacts (JSON, logs, diffs, snippets, natural language) that are hard to compare or weight consistently. *Then* maintain an explicit observation record as a typed, normalized feature map derived from session state (test status, compile status, diff size, failing-spec count, user-stated constraints, time since last anchor, contradiction flags). *Because* a stable observation vector is the prerequisite for meaningful precision control and policy scoring.
+
+* Current version (be30848a7)
+
+*If* you want the agent's observation to be comparable across steps so scoring and learning do not collapse into prose interpretation. *However* tool output and user feedback arrive as heterogeneous artifacts (JSON, logs, diffs, snippets, natural language) that are hard to compare or weight consistently. *Then* maintain an explicit observation record as a typed, normalized feature map derived from session state (test status, compile status, diff size, failing-spec count, user-stated constraints, time since last anchor, contradiction flags). *Because* a stable observation vector is the prerequisite for meaningful precision control and policy scoring.
+
+* Code annotations
+
+/None yet./

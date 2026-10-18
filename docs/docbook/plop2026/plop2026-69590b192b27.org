@@ -1,0 +1,22 @@
+#+TITLE: R6 Candidate Pattern Action Space
+:PROPERTIES:
+:DOC_ID: plop2026-69590b192b27
+:ENTRY_ID: plop2026-69590b192b27::org
+:VERSION: org
+:OUTLINE_PATH: Catalogue / R6 Candidate Pattern Action Space
+:PATH_STRING: Catalogue / R6 Candidate Pattern Action Space
+:REPLACES:
+:END:
+
+* Versions: revised since the conference version
+* Conference version (36d156218)
+
+*If* you want pattern choice to be legible and comparable, and to avoid collapse into one habitual pattern. *However* if the action space is any pattern at any time, evaluation becomes unstructured and selection is dominated by recency. *Then* define the action set as a /constructed/ candidate set of pattern IDs produced by retrieval plus gating rules, of bounded size, with explicit reasons for inclusion and exclusion. *Because* constraining the action space makes downstream scoring meaningful rather than performative.
+
+* Current version (be30848a7)
+
+*If* you want pattern choice to be legible and comparable, and to avoid collapse into one habitual pattern. *However* if the action space is any pattern at any time, evaluation becomes unstructured and selection is dominated by recency. *Then* define the action set as a /constructed/ candidate set of pattern IDs produced by retrieval plus gating rules, of bounded size, with explicit reasons for inclusion and exclusion. *Because* constraining the action space makes downstream scoring meaningful rather than performative.
+
+* Code annotations
+
+/None yet./

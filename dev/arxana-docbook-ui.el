@@ -939,7 +939,7 @@
                                        'line-prefix (propertize "> " 'face 'arxana-docbook-new-content)
                                        'wrap-prefix (propertize "> " 'face 'arxana-docbook-new-content)))))))
     (insert "\n")))
-(defun arxana-docbook-open-book (&optional book)
+(defun arxana-docbook-open-book (&optional book return-buffer)
   "Open a compiled docbook view for BOOK using filesystem entries."
   (interactive)
   (let* ((book (or book arxana-docbook--book

@@ -1,0 +1,22 @@
+#+TITLE: R17pp Embedding-Nearness as the Structure-Learning Generator
+:PROPERTIES:
+:DOC_ID: plop2026-b81a49d1b010
+:ENTRY_ID: plop2026-b81a49d1b010::org
+:VERSION: org
+:OUTLINE_PATH: Catalogue / R17pp Embedding-Nearness as the Structure-Learning Generator
+:PATH_STRING: Catalogue / R17pp Embedding-Nearness as the Structure-Learning Generator
+:REPLACES:
+:END:
+
+* Versions: unchanged since the conference version
+* Conference version (36d156218)
+
+*If* you want to run structure learning (R17) --- merging look-alike states, pruning redundant connections --- but need a tractable set of candidate reductions to test, because the space of possible merges is far too large to enumerate. *However* the control loop (R1--R16) is no help here: it never needed to know which patterns are alike, and hand-picking the candidates by fiat smuggles in the very structure you are trying to learn. *Then* exploit the fact that design patterns are written as text --- push the collection into a high-dimensional vector-space embedding and read off nearness, so that patterns sitting close become candidate merges; hand those to R17, which accepts only the mergers its evidence threshold clears, and let R17\(^{\prime}\)'s posterior spread rank which neighbourhoods to resolve first. *Because* the embedding is a cheap, model-free /generator/ of structural hypotheses while the evidence test is the /disposer/: embeddings are inessential to the control loop but fundamental here, as its generator. Embedding proposes; free energy disposes. /Invariant to preserve:/ whatever proposes the merges must not also be what accepts them.
+
+* Current version (be30848a7)
+
+/Same text as the conference version./
+
+* Code annotations
+
+/None yet./
