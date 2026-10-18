@@ -15,7 +15,7 @@
 
 /Operational witness (2026-07-14):/ the hourly entrypoint completed a production-shaped opportunity as a reviewed Git commit plus a Futon1b implementation/discharge, closed the cohort record as =grounded-change=, and queued an operator QA item. The scheduler firing alone is not counted as that witness; the external dial movement is. /Current status (2026-07-31):/ the hourly schedule was operator-disabled the following day, after a stop-line, and no cron is installed; runs since then --- including the specimen above --- have been on-demand clicks. We report this rather than the more flattering present tense because the pattern's own rule is that a schedule which cannot change anything should be switched off, and honouring that rule is not a result to be hidden. The claim this pattern supports is therefore that the loop /can/ run unattended end to end and has, not that it is doing so today.
 
-* Current version (be30848a7)
+* Current version (0365f4634)
 
 *If* you want the agent to run live --- to observe, deliberate, and act on a schedule, accumulating trace and precision over real time without a human pressing the button. *However* a scheduler that fires ticks which cache or no-op (because nothing downstream can change) satisfies the letter of "live operation" while the organism is dead, and every firing writes a green "it ran" row that hides the inertia. *Then* install the scheduled entrypoint, but gate "live" on evidence that a tick changed observable state (a dial moved, a hole closed), not merely that it fired; when the loop can only no-op, disable the schedule rather than let it paint green. *Because* liveness is a property of state change, not of the scheduler firing --- a cron over a sealed loop is a clock ticking in an empty room.
 
@@ -23,4 +23,26 @@
 
 * Code annotations
 
-/None yet./
+** "on evidence that a tick changed observable state (a dial moved, a hole closed), not merely that it fired"
+- Conference text: *EXISTS-UNVALIDATED*  Current text: *EXISTS-UNVALIDATED*
+- [[file:~/code/futon2/src/futon2/aif/full_loop_cohort.clj::grounded-close-errors][futon2/src/futon2/aif/full_loop_cohort.clj grounded-close-errors]] @ 017a673a1
+- [[file:~/code/futon2/src/futon2/aif/full_loop_runner.clj::classify-grounded-outcome][futon2/src/futon2/aif/full_loop_runner.clj classify-grounded-outcome]] @ 017a673a1
+- Annotated by claude-4; reviewed by not yet reviewed
+
+The gate exists at the level of a run's outcome, not of the schedule. A close may be :grounded-change only if it is grounded, not artifact-only, and carries a before/after witness; classify-grounded-outcome demotes a reviewed commit that did not close its declared products to :grounded-progress. Nothing in the scheduled entrypoint itself reads these outcomes to decide whether the schedule counts as live: that decision is an operator act (see the next span). So the pattern's state-change test is implemented, but where the text puts it (gating the schedule) it is policy, not code.
+
+** "when the loop can only no-op, disable the schedule rather than let it paint green"
+- Conference text: *VALIDATED*  Current text: *VALIDATED*
+- [[file:~/code/futon2/scripts/wm_scheduled_run.clj::wm-scheduled-run][futon2/scripts/wm_scheduled_run.clj wm-scheduled-run]] @ 017a673a1
+- Annotated by claude-4; reviewed by not yet reviewed
+
+Checked 2026-10-18: no crontab entry and no systemd user timer runs a WM tick or click (the only WM timer is wm-visibility-projector, which projects state and acts on nothing). The entrypoint built for scheduling, wm_scheduled_run.clj, remains unscheduled. Its docstring calls it judgement-only: it scans, judges and writes a trace but does not act, which is narrower than the pattern's 'observe, deliberate, and act on a schedule'. Acting runs go through on-demand clicks.
+
+** "a single-use, operator-issued, sha-pinned commission was spent by one HTTP click routed through the assurance boundary"
+- Conference text: *UNCLASSIFIED*  Current text: *EXISTS-UNVALIDATED*
+- [[file:~/code/futon3c/src/futon3c/wm/r10_commission.clj::commission-schema][futon3c/src/futon3c/wm/r10_commission.clj commission-schema]] @ 3fa9be7bd
+- [[file:~/code/futon3c/src/futon3c/wm/r10_click_adapter.clj::commissioned-click!][futon3c/src/futon3c/wm/r10_click_adapter.clj commissioned-click!]] @ 3fa9be7bd
+- Annotated by claude-4; reviewed by not yet reviewed
+
+Not in the conference text: a 2026-09-14 tracker note in the current version. The code exists: r10_commission.clj holds the commission authority and a durable pre-dispatch reservation (it describes itself as having no production binding and not calling the runner), and r10_click_adapter.clj spends a commission on one click. The claimed evidence e-af73b9b5 and the refusal of a second identical click were not re-checked for this annotation.
+
