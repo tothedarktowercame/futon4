@@ -13,7 +13,7 @@
 
 *If* you want unresolved structural hypotheses to remain eligible for exploration. *However* posterior standard deviation is uncertainty, not expected information gain: it contains no expectation over the observation and posterior update that a policy would induce. *Then* expose the spread under the honest name /model-uncertainty bonus/, keep it outside the risk-plus-ambiguity core, and reserve the words "information gain" for a calculation that actually earns them. *Because* an honest exploration heuristic is useful, while a falsely canonical one makes the controller impossible to audit. /Invariant to preserve:/ a quantity is named for what it computes, not for the role you wish it played.
 
-* Current version (d75108411)
+* Current version (edf352174)
 
 /Same text as the conference version./
 
