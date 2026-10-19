@@ -13,7 +13,7 @@
 
 *If* you want the agent to discount low-trust evidence without discarding it, and to become stricter when outcomes are volatile. *However* without an explicit precision layer, evidence weighting becomes implicit prompt rhetoric and cannot be audited. *Then* keep a per-channel /precision registry/ --- one trust weight per kind of evidence --- keyed to observation features, and apply it wherever prediction error, scoring, or gating occurs. *Because* making precision explicit turns trust into a tunable control surface rather than an undocumented bias.
 
-* Current version (4898a064a)
+* Current version (d37316fd9)
 
 *If* you want the agent to discount low-trust evidence without discarding it, and to become stricter when outcomes are volatile. *However* without an explicit precision layer, evidence weighting becomes implicit prompt rhetoric and cannot be audited. *Then* keep a per-channel /precision registry/ --- one trust weight per kind of evidence --- keyed to observation features, and apply it wherever prediction error, scoring, or gating occurs. *Because* making precision explicit turns trust into a tunable control surface rather than an undocumented bias.
 
