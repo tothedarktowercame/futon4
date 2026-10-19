@@ -17,7 +17,7 @@
 
 Figure [[#fig:aif-brain][[fig:aif-brain]]] places the whole catalogue on one diagram. Reading it alongside the run above: the core inference nodes sit on the brain regions their active-inference roles are associated with, and the apparatus sits below them. The clockwise cycle through the core is the 10:49:10 and 10:49:32 episodes --- perceive, believe, evaluate, select --- and the descent into the apparatus is everything from 10:51:29 onward, where the loop stops thinking and starts having to prove things. Two kinds of colour are doing two different jobs, and the caption distinguishes them: the node outline reports how far /built/ a component is, while the small dot on its top edge reports how far /faithful/ the quantity is to the theory. A node can honestly be fully built and only analogically faithful; those are different admissions, and collapsing them into one scale would hide the more important one.
 
-* Current version (d37316fd9)
+* Current version (11a6b349f)
 
 *If* you have hardened the loop's constructed core (R1--R16) and want the machinery itself to be observable while it runs live, because every pathology so far --- wedges, livelocks, mixed code images, silently lost wakes --- was discovered by post-hoc archaeology on a completed broken run. *However* the loop's observation channel is task-level only: it observes the world it acts /on/ (job outcomes, verdicts, witnesses, QA), while its own machinery is a hidden state with no likelihood mapping; and simulation tests of the known invariants pass by construction the moment the known bugs are fixed, so neither channel can notice the failure modes nobody has imagined yet. *Then* weave a supplementary harness of invariant tripwires around the live run at its phase boundaries: each wire is a near-infinite-precision prior over /machine trajectories/ (turn conservation, ledger closure, review-commit provenance binding, append-only repair stores and their status lattice, wedge and livelock detectors, wall-clock overrides, loaded-code/file-code coherence, and an environment-alphabet wire on which any unknown job state trips rather than defaulting); a trip is surprisal that belief updating cannot explain away, and the mandated epistemic action is /freeze, record, park, summon/ --- write the frozen state as a durable report, open a typed stop-line through the loop's own repair machinery, park an investigation join and summon the outer reviewer, on a fail-safe ladder that only ever degrades toward recording, never toward blocking the run. Calibrate before arming: the wires must /retro-trip/ on the known incident corpus (a wire that does not fire on the known past is a dud laser), and every closed incident thereafter must deposit either a new wire or an entry on an explicit blind-spot map. *Because* this is interoception, not vision: like any sensorium it admits no completeness theorem --- it gets identifiability checks, a measured coverage number, and a blind-spot map instead --- but an organism with only a hand (R16) and a preference model (C) learns of poison from the stomach ache, and each hotfix repairs one meal; an organism with interoceptive nerves notices at the moment of violation, with the state still warm, and every incident leaves it permanently more observant. The trip stream is also precision evidence about the machine itself (R7): a wire whose trips keep being blessed as model revisions demotes itself down the action ladder, and a genuine trip should lower the system's confidence in its own machinery until the finding is discharged --- the noticing feeding the feeling.
 
@@ -27,4 +27,29 @@ Figure [[#fig:aif-brain][[fig:aif-brain]]] places the whole catalogue on one di
 
 * Code annotations
 
-/None yet./
+** "weave a supplementary harness of invariant tripwires around the live run at its phase boundaries"
+- Conference text: *EXISTS-UNVALIDATED*  Current text: *EXISTS-UNVALIDATED*
+- [[file:~/code/futon2/src/futon2/aif/full_loop_runner.clj::emit-phase!][futon2/src/futon2/aif/full_loop_runner.clj emit-phase!]] @ 03d07c5c7
+- [[file:~/code/futon2/src/futon2/aif/tripwire.clj::observe!][futon2/src/futon2/aif/tripwire.clj observe!]] @ 03d07c5c7
+- [[file:~/code/futon2/src/futon2/aif/tripwire.clj::wire-registry][futon2/src/futon2/aif/tripwire.clj wire-registry]] @ 03d07c5c7
+- Annotated by claude-4; reviewed by not yet reviewed
+- Operator: Joe, 2026-10-19: 'my sense is that tripwires are all running at the start of the run, but i could be wrong'.
+
+The wires do run at every phase boundary, not only at the start: emit-phase! calls tripwire/observe! on every phase event, and observe! evaluates all enabled wires (T1-T11 and T13; T12 is a chartered stub, disabled) against that event's record. Three qualifications explain the impression that they run only at the start. (1) A wire can only check facts present in the record it is given, so most wires have nothing to test at most phases. (2) Evaluation stops at the first witness, so one tripping wire hides the rest for that event. (3) Until the 10-18 repairs, the stages after selection (target reading, squares, cascade execution, resume) emitted no phase events, so no wire ever saw them. The '13/13 tripwires clear' in each click's preflight is a separate pre-click readiness scan. Record: 327 trips, the latest on 2026-10-15, recent ones mostly T8 (duplicate-finding livelock), T7 and T3, all at the :opportunity phase; none during the ten readiness clicks of 10-17/18, although each of those clicks failed.
+
+** "the mandated epistemic action is freeze, record, park, summon"
+- Conference text: *REFUTED*  Current text: *REFUTED*
+- [[file:~/code/futon2/src/futon2/aif/tripwire.clj::summon-recipient][futon2/src/futon2/aif/tripwire.clj summon-recipient]] @ 03d07c5c7
+- Annotated by claude-4; reviewed by not yet reviewed
+- Ticket: code ticket candidate: make the tripwire summon recipient configuration (or the roster's designated investigator) instead of the hard-coded claude-6; and update R20's text for the record-by-default ruling
+
+Since Joe's ruling of 2026-09-19 (T-wm-excessive-guardrails-19092026) the default action is :record: the witness is written durably and announced, and the run continues; halting needs FUTON_WM_TRIPWIRE_HALT=1. That is a deliberate, documented change and arguably the right one. But the summon step names a hard-coded recipient, claude-6, which is not on the Agency roster today, and summon! throws when its recipient is unregistered; so wherever a summon is attempted it cannot reach anyone.
+
+** "every closed incident thereafter must deposit either a new wire or an entry on an explicit blind-spot map"
+- Conference text: *REFUTED*  Current text: *REFUTED*
+- [[file:~/code/futon2/data/wm-tripwires/blind-spots.edn][futon2/data/wm-tripwires/blind-spots.edn]]
+- Annotated by claude-4; reviewed by not yet reviewed
+- Ticket: code ticket candidate: for each 10-17/18 incident, add a wire or a blind-spot entry (retro-tripping on the recorded run as R20 requires), and make incident close require one of the two
+
+The blind-spot map and coverage files exist but were last changed on 2026-07-16, and the incident corpus holds two entries. The ten failed readiness clicks of 10-17/18 each closed an incident (identity binding, decoders, validator disagreement, store root, oversized repair packets, resume protocol), and none deposited a wire or a blind-spot entry; the new readiness probes were added to the pre-click scanner instead. So the calibration discipline that makes R20 'permanently more observant' has not been kept since July. This also bears on T-outer-belief-separate-machine-failure, which routes apparatus failures to the interoceptive channel: that channel's incident and blind-spot records are where they would land.
+
