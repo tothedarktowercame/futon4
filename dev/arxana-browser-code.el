@@ -540,6 +540,23 @@ Returns the active strategy, or nil if persistence is unavailable."
       (arxana-browser-code--entry-org-property entry "FUNCTION_NAME")
       (arxana-browser-code--entry-org-property entry "FUNCTION")))
 
+(defconst arxana-browser-code--bullet-symbol-regexp
+  "`?\\([[:alnum:]!?*<>=+/.''-]+\\)`?"
+  "One def-doc bullet symbol, including Clojure punctuation.")
+
+(defun arxana-browser-code--entry-source-symbols (entry)
+  "Return symbols for ENTRY's readable source, or nil when it cannot resolve."
+  (let* ((source (arxana-browser-code--entry-source-path entry))
+         (direct (and source (arxana-browser-code--normalize-path source)))
+         (root-file (and source
+                         (seq-find #'file-readable-p
+                                   (mapcar (lambda (root)
+                                             (expand-file-name (file-name-nondirectory source) root))
+                                           arxana-browser-code-roots))))
+         (path (cond ((and direct (file-readable-p direct)) direct)
+                     (root-file root-file))))
+    (and path (arxana-browser-code--file-symbols path))))
+
 (defun arxana-browser-code--entry-def-doc-symbols (entry)
   "Return explicit function symbols documented in def-doc ENTRY."
   (let ((version (arxana-browser-code--entry-version entry))
@@ -552,11 +569,13 @@ Returns the active strategy, or nil if persistence is unavailable."
         (insert text)
         (goto-char (point-min))
         (while (re-search-forward
-                "^[[:space:]]*-[[:space:]]+`?\\([[:alnum:]-]+\\)`?:"
+                (concat "^[[:space:]]*-[[:space:]]+"
+                        arxana-browser-code--bullet-symbol-regexp ":")
                 nil t)
           (let ((sym (match-string 1)))
             (when (and (stringp sym)
-                       (string-prefix-p "arxana-" sym))
+                       (let ((source-symbols (arxana-browser-code--entry-source-symbols entry)))
+                         (or (null source-symbols) (member sym source-symbols))))
               (push sym symbols))))))
     (delete-dups (nreverse symbols))))
 
@@ -800,7 +819,9 @@ Returns the active strategy, or nil if persistence is unavailable."
         (insert text)
         (goto-char (point-min))
         (while (re-search-forward
-                "^[[:space:]]*-[[:space:]]+`?\\([[:alnum:]-]+\\)`?:[[:space:]]*\\(.*\\)$"
+                (concat "^[[:space:]]*-[[:space:]]+"
+                        arxana-browser-code--bullet-symbol-regexp
+                        ":[[:space:]]*\\(.*\\)$")
                 nil t)
           (let* ((symbol (match-string 1))
                  (summary-head (string-trim (or (match-string 2) "")))
@@ -829,7 +850,9 @@ Returns the active strategy, or nil if persistence is unavailable."
               (when (and (stringp symbol)
                          (not (string-empty-p symbol))
                          (stringp summary)
-                         (not (string-empty-p summary)))
+                         (not (string-empty-p summary))
+                         (let ((source-symbols (arxana-browser-code--entry-source-symbols entry)))
+                           (or (null source-symbols) (member symbol source-symbols))))
                 (push (list :symbol symbol
                             :summary summary)
                       items)))))))
