@@ -20,7 +20,7 @@
 
 updated each step using observation and outcomes. *Because* a compact belief state makes predict \(\rightarrow\) observe \(\rightarrow\) update implementable and testable.
 
-* Current version (d2c5fb0c4)
+* Current version (d721e8736)
 
 *If* you want decisions to depend on tractable hypotheses (progress, blockers, pattern fit, uncertainty) rather than raw conversation history. *However* if the belief state is just the conversation, the agent cannot cleanly update, compare, or falsify its own assumptions. *Then* represent the belief state as a map of operational hypotheses
 
