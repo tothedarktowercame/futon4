@@ -20,4 +20,10 @@
                                   (mapcar (lambda (x) (plist-get x :symbol))
                                           (arxana-browser-code--entry-context-items entry)))))))
       (delete-directory dir t))))
+(ert-deftest arxana-browser-code-def-doc-without-source-keeps-prefix-rule ()
+  ;; Bad case from review: 8 of 32 futon4 def-doc entries have no SOURCE_PATH;
+  ;; their bullets for `require' or `with-temp-buffer' must not become links.
+  (let ((entry (list :doc-id "legacy" :version "def-doc" :summary-raw
+                     "- arxana-foo: x\n- require: y\n- with-temp-buffer: z\n")))
+    (should (equal '("arxana-foo") (arxana-browser-code--entry-def-doc-symbols entry)))))
 (provide 'arxana-browser-code-foreign-root-test)

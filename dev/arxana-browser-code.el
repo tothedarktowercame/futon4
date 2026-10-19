@@ -561,6 +561,7 @@ Returns the active strategy, or nil if persistence is unavailable."
   "Return explicit function symbols documented in def-doc ENTRY."
   (let ((version (arxana-browser-code--entry-version entry))
         (text (arxana-browser-code--doc-text entry))
+        (source-symbols (arxana-browser-code--entry-source-symbols entry))
         (symbols '()))
     (when (and (stringp version)
                (string= version "def-doc")
@@ -573,9 +574,13 @@ Returns the active strategy, or nil if persistence is unavailable."
                         arxana-browser-code--bullet-symbol-regexp ":")
                 nil t)
           (let ((sym (match-string 1)))
+            ;; A resolvable source decides which bullets are definitions; an
+            ;; entry without one keeps the legacy `arxana-' prefix rule, so
+            ;; bullets such as `require' are not linked.
             (when (and (stringp sym)
-                       (let ((source-symbols (arxana-browser-code--entry-source-symbols entry)))
-                         (or (null source-symbols) (member sym source-symbols))))
+                       (if source-symbols
+                           (member sym source-symbols)
+                         (string-prefix-p "arxana-" sym)))
               (push sym symbols))))))
     (delete-dups (nreverse symbols))))
 
