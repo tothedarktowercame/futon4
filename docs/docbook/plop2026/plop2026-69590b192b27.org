@@ -13,7 +13,7 @@
 
 *If* you want pattern choice to be legible and comparable, and to avoid collapse into one habitual pattern. *However* if the action space is any pattern at any time, evaluation becomes unstructured and selection is dominated by recency. *Then* define the action set as a /constructed/ candidate set of pattern IDs produced by retrieval plus gating rules, of bounded size, with explicit reasons for inclusion and exclusion. *Because* constraining the action space makes downstream scoring meaningful rather than performative.
 
-* Current version (118b68957)
+* Current version (94be2e16d)
 
 *If* you want pattern choice to be legible and comparable, and to avoid collapse into one habitual pattern. *However* if the action space is any pattern at any time, evaluation becomes unstructured and selection is dominated by recency. *Then* define the action set as a /constructed/ candidate set of pattern IDs produced by retrieval plus gating rules, of bounded size, with explicit reasons for inclusion and exclusion. *Because* constraining the action space makes downstream scoring meaningful rather than performative.
 
