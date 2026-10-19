@@ -1,0 +1,15 @@
+#+TITLE: src/futon2/aif/full_loop_runtime.clj
+:PROPERTIES:
+:DOC_ID: futon2-14b33d6f0473
+:ENTRY_ID: futon2-14b33d6f0473::def-doc
+:VERSION: def-doc
+:OUTLINE_PATH: Self-heal route / src/futon2/aif/full_loop_runtime.clj
+:PATH_STRING: Self-heal route / src/futon2/aif/full_loop_runtime.clj
+:SOURCE_PATH: src/futon2/aif/full_loop_runtime.clj
+:REPLACES:
+:END:
+
+* Context
+- run-opportunity!: Settles a durable injury before any ordinary policy field is built. In order: prepare the diagnosis, then the acceptance, then readiness. A refused readiness is returned as the click's result. An attributable retry runs ordinary work. Otherwise route! decides, and only a nil from route! (no active injury) reaches run-ordinary-opportunity!.
+- run-ordinary-opportunity!: The ordinary click: builds the production defaults (the options-map ports) and runs the full-loop runner.
+- production-defaults: Fills the options map with the production functions (selector, evidence provider, injury authority, click budget) that the runner reads as ports. A test fills the same keys with stubs.

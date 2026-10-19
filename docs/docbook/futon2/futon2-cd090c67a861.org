@@ -1,0 +1,21 @@
+#+TITLE: src/futon2/aif/meta_self_heal_production.clj
+:PROPERTIES:
+:DOC_ID: futon2-cd090c67a861
+:ENTRY_ID: futon2-cd090c67a861::def-doc
+:VERSION: def-doc
+:OUTLINE_PATH: Self-heal route / src/futon2/aif/meta_self_heal_production.clj
+:PATH_STRING: Self-heal route / src/futon2/aif/meta_self_heal_production.clj
+:SOURCE_PATH: src/futon2/aif/meta_self_heal_production.clj
+:REPLACES:
+:END:
+
+* Context
+- diagnosis-context: Reads the durable injury ledger once and returns the ledger and its active injuries. Both diagnosis preparation and readiness take this one reading, so they judge the same ledger state.
+- prepare-diagnosis: First step on the self-heal route. An existing diagnosis pin is not produced again. With no active injury the result is an explicit not-required observation. Otherwise the injectable diagnosis producer writes a pinned, content-addressed receipt for the injury.
+- prepare-acceptance: Turns an available diagnosis into an acceptance observation. A proposal that has not been reviewed stays an observation and is never returned as the coordinator's acceptance-test authority. A diagnosis that is not available gives the reason acceptance-diagnosis-unavailable.
+- produce-acceptance!: Asks the author seat for one concrete acceptance test, written as test source and a command. Anything other than a proposed result is a refusal (acceptance-unavailable), so admission never starts.
+- admit-acceptance!: Runs the proposed test before any repair in a bounded job, then shows the result to the reviewer seat. Only a reviewer acceptance that echoes the injury, source, diagnosis and proposal pins counts. A reviewer refusal arrives as acceptance-review-refused.
+- production-readiness: Checks, before any ration is spent, that the dedicated self-heal route has every input it needs. An unreadable ledger refuses with ledger-unreadable. A missing port refuses with production-config-required, naming port terms such as acceptance-run-port. It never names acceptance-test, which only route! checks.
+- route!: Returns nil when there is no active injury, so the click proceeds as ordinary work. Otherwise it consumes the click. A missing transaction path, ports, diagnosis evidence or admitted acceptance test refuses with production-config-required. Under Joe's 2026-10-19 ruling that refusal ends the click; nothing falls back to ordinary selection.
+- attributable-retry-readiness: Authorises one ordinary retry, named by the latest enacted repair (injury, repair, retry click, patch sha). This is the only path that runs ordinary work while an injury is active. The Lean route table does not cover it; that is an open hole.
+- effect-ports: Collects the repair effect functions from the options map. If any is missing, readiness and route! name repair-ports as absent.
