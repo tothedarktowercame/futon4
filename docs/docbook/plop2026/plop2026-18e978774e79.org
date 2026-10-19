@@ -13,10 +13,32 @@
 
 *If* a fast tactical loop acts inside a slower strategic loop. *However* merely giving both levels a scalar score does not create a hierarchy. *Then* make the coupling explicit: strategic selection fixes the tactical target; witnessed tactical outcomes update the next strategic calibration state; and longer policies use a /named/ temporal discount of their own rather than overloading the commitment dial. *Because* hierarchy is a relationship between levels and timescales, not a second use of the same score. /Invariant to preserve:/ each level has its own quantities, and no quantity does duty at two levels at once. /Current evidence:/ the opt-in two-tick campaign records both levels separately, rejects unwitnessed learning, folds a grounded fast outcome into a Beta update of the slow state, and uses that state to parameterise the next fast rollout. Campaign S supplied the live positive branch: Tick A's independently approved and grounded outcome advanced the relevant slow posterior from Beta(1,1) to Beta(2,1), changed the slow mode from exploration to consolidation, and parameterised Tick B under that new state. This is evidence for the explicit coupling, not for a general nested generative model.
 
-* Current version (edf352174)
+* Current version (d2c5fb0c4)
 
 *If* a fast tactical loop acts inside a slower strategic loop. *However* merely giving both levels a scalar score does not create a hierarchy. *Then* make the coupling explicit: strategic selection fixes the tactical target; witnessed tactical outcomes update the next strategic calibration state; and longer policies use a /named/ temporal discount of their own rather than overloading the commitment dial. *Because* hierarchy is a relationship between levels and timescales, not a second use of the same score. /Invariant to preserve:/ each level has its own quantities, and no quantity does duty at two levels at once. /Evidence:/ the opt-in two-tick campaign records both levels separately, rejects unwitnessed learning, folds a grounded fast outcome into a Beta update of the slow state, and uses that state to parameterise the next fast rollout. Campaign S supplied the live positive branch: Tick A's independently approved and grounded outcome advanced the relevant slow posterior from Beta(1,1) to Beta(2,1), changed the slow mode from exploration to consolidation, and parameterised Tick B under that new state. This is evidence for the explicit coupling, not for a general nested generative model.
 
 * Code annotations
 
-/None yet./
+** "strategic selection fixes the tactical target"
+- Conference text: *EXISTS-UNVALIDATED*  Current text: *EXISTS-UNVALIDATED*
+- [[file:~/code/futon2/src/futon2/aif/target_policy_family.clj::policy-family][futon2/src/futon2/aif/target_policy_family.clj policy-family]] @ 0892cee52
+- Annotated by claude-4; reviewed by not yet reviewed
+
+On the live route the outer selector chooses one task, and only that task's reading-policy family is constructed and scored; Requirements Q2 states exactly this (one construction entry, for the selected task and its outer action). Q2 was not recomputable on the 10-18 runs (see T-q2-q4-q8-recomputable-on-every-run), so the live certificate for this coupling is pending.
+
+** "witnessed tactical outcomes update the next strategic calibration state"
+- Conference text: *EXISTS-UNVALIDATED*  Current text: *EXISTS-UNVALIDATED*
+- [[file:~/code/futon2/src/futon2/aif/outer_target_belief.clj::outcome-vocabulary][futon2/src/futon2/aif/outer_target_belief.clj outcome-vocabulary]] @ 0892cee52
+- [[file:~/code/futon2/src/futon2/aif/meta_outcome_dataset.clj::outcome-class][futon2/src/futon2/aif/meta_outcome_dataset.clj outcome-class]] @ 0892cee52
+- Annotated by claude-4; reviewed by not yet reviewed
+- Ticket: code ticket candidate (AIF): separate apparatus failures (resume-protocol violations, build-failed for tooling reasons, cancelled) from task outcomes before they reach the outer target belief; fold only outcomes caused by the task, and route machine failures to the interoceptive channel (R20). Check whether the 10-18 readiness clicks were folded.
+
+The live strategic state is a Dirichlet over five outcome classes per target (closure, selected-want progress, grounded collateral progress, typed blocker, abstention-or-failure), folded chronologically and only for the selected target; unknown evidence is a refusal, not a zero. Campaign S's Beta(1,1) to Beta(2,1) belongs to the older opt-in two-tick route. One AIF concern: meta_outcome_dataset maps :incomplete and :build-failed to :abstention-or-failure, so a click that fails for apparatus reasons (clicks 2-5 of 10-18 closed :incomplete at the resume protocol) is folded as a failure outcome of the mission it was working on. The strategic belief then learns that the mission fails, when the evidence is that the machine failed. That is not a 'witnessed tactical outcome' in the pattern's sense: in the observation model, machine failure and task outcome are different hidden causes.
+
+** "longer policies use a named temporal discount of their own rather than overloading the commitment dial"
+- Conference text: *EXISTS-UNVALIDATED*  Current text: *EXISTS-UNVALIDATED*
+- [[file:~/code/futon2/src/futon2/aif/rollout.clj::rollout-discount][futon2/src/futon2/aif/rollout.clj rollout-discount]] @ 0892cee52
+- Annotated by claude-4; reviewed by not yet reviewed
+
+rollout.clj names the discount :temporal-discount ('R15 bridge'), default 0.9, while still accepting the older key :gamma, which is also the conventional symbol for policy precision; so the naming is done but the old overloaded key survives. The live cascade-shape G does not discount at all: it compares policies of different horizons through the declared per-step normalisation (Lean GNormalization perStepCapacityAndPattern) instead. Both are defensible; the text should say which route uses which.
+
