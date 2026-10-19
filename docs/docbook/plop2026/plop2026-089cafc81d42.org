@@ -13,10 +13,16 @@
 
 *If* you want unresolved structural hypotheses to remain eligible for exploration. *However* posterior standard deviation is uncertainty, not expected information gain: it contains no expectation over the observation and posterior update that a policy would induce. *Then* expose the spread under the honest name /model-uncertainty bonus/, keep it outside the risk-plus-ambiguity core, and reserve the words "information gain" for a calculation that actually earns them. *Because* an honest exploration heuristic is useful, while a falsely canonical one makes the controller impossible to audit. /Invariant to preserve:/ a quantity is named for what it computes, not for the role you wish it played.
 
-* Current version (98dbbc3fd)
+* Current version (4898a064a)
 
 /Same text as the conference version./
 
 * Code annotations
 
-/None yet./
+** "expose the spread under the honest name model-uncertainty bonus, keep it outside the risk-plus-ambiguity core"
+- Conference text: *EXISTS-UNVALIDATED*  Current text: *EXISTS-UNVALIDATED*
+- [[file:~/code/futon2/src/futon2/aif/efe.clj::model-uncertainty-bonus][futon2/src/futon2/aif/efe.clj model-uncertainty-bonus]] @ 06fd2d317
+- Annotated by claude-4; reviewed by not yet reviewed
+
+The bonus exists under exactly that name in efe.clj's graph-control score, outside the risk and ambiguity terms and reported as its own field. Its default source is (constantly 0.0), so unless a caller supplies a model-uncertainty function it contributes nothing. This entry bears on T-outer-target-novelty-term: R17p's rule ('reserve the words information gain for a calculation that actually earns them') means the outer novelty term must be the expected information gain about the Dirichlet parameters, not posterior spread relabelled. The ticket asks for the former; it should say so explicitly.
+

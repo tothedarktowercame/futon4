@@ -17,10 +17,17 @@
 
 [fn:1] The older live route is recorded as =library-gap-findings =\(\rightarrow\)= authoring =\(\rightarrow\)= authored-seeds =\(\rightarrow\)= pattern-library= in ; the generalized mint lane and the two-projections precedent are in ; typed-memory evidence and pattern-conditioned recall are developed in .
 
-* Current version (98dbbc3fd)
+* Current version (4898a064a)
 
 /Same text as the conference version./
 
 * Code annotations
 
-/None yet./
+** "treat the gap as a proposal to enlarge the vocabulary"
+- Conference text: *ABSENT-OR-LOST*  Current text: *ABSENT-OR-LOST*
+- [[file:~/code/futon2/src/futon2/aif/fold_cascade.clj:::policy-holes][futon2/src/futon2/aif/fold_cascade.clj :policy-holes]] @ 06fd2d317
+- [[file:~/code/futon3/library/structure/two-projections-of-one-quantity.flexiarg][futon3/library/structure/two-projections-of-one-quantity.flexiarg]] @ c1c0325
+- Annotated by claude-4; reviewed by not yet reviewed
+
+The input exists: the fold route records policy-holes (citations to patterns that do not exist) in its wiring. The worked instance exists: structure/two-projections-of-one-quantity was minted on 2026-06-10 (futon3 c1c0325, 'WM pilot Turn 3') and used to discharge its hole. But no mechanism was found that bundles a hole's circumstances, memories, rejected near-matches and predicted outcome into a candidate pattern, mints it at an unearned prior, and admits cascades containing it; the instance was minted in a pilot session, by hand. So the entry describes a procedure that has been performed, not one the machine performs.
+
