@@ -13,7 +13,7 @@
 
 *If* you want selection to balance canonical outcome risk and ambiguity with operational constraints. *However* calling every useful controller term "EFE" makes tuning indistinguishable from storytelling. *Then* compute and persist the canonical core separately --- /risk/, how far the outcomes an action predicts sit from the outcomes the system prefers, plus /ambiguity/, how uninformative those outcomes are expected to be --- and admit engineering terms only as a named augmentation, reported /beside/ that core and never folded into it. *Because* the decomposition makes clear whether a recommendation moved because of active-inference quantities or because of an engineering control. /Invariant to preserve:/ the two-term core is persisted apart from everything wrapped around it, so any reader can ask which one moved the pick.
 
-* Current version (d721e8736)
+* Current version (035162b2f)
 
 *If* you want selection to balance canonical outcome risk and ambiguity with operational constraints. *However* calling every useful controller term "EFE" makes tuning indistinguishable from storytelling. *Then* compute and persist the canonical core separately --- /risk/, how far the outcomes an action predicts sit from the outcomes the system prefers, plus /ambiguity/, how uninformative those outcomes are expected to be --- and admit engineering terms only as a named augmentation, reported /beside/ that core and never folded into it. *Because* the decomposition makes clear whether a recommendation moved because of active-inference quantities or because of an engineering control. /Invariant to preserve:/ the two-term core is persisted apart from everything wrapped around it, so any reader can ask which one moved the pick.
 

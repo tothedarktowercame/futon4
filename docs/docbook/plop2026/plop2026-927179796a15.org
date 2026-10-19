@@ -13,7 +13,7 @@
 
 *If* you want the forward model's predictions to match what the live dynamics actually do, with one set of rules to maintain. *However* two implementations of the same dynamics is two places for bugs to hide and two surfaces where prediction can silently diverge from the live step. *Then* factor the live step into a /pure deterministic kernel/ (state, action, seed, opts) \(\rightarrow\) next-state plus a thin wrapper that threads defaults; the predictive forward model calls the same kernel and adds principled uncertainty. *Because* one implementation of the dynamics is the only place the rules live --- any update is reflected in both live and predicted behaviour.
 
-* Current version (d721e8736)
+* Current version (035162b2f)
 
 *If* you want the forward model's predictions to match what the live dynamics actually do, with one set of rules to maintain. *However* two implementations of the same dynamics is two places for bugs to hide and two surfaces where prediction can silently diverge from the live step. *Then* factor the live step into a /pure deterministic kernel/ (state, action, seed, opts) \(\rightarrow\) next-state plus a thin wrapper that threads defaults; the predictive forward model calls the same kernel and adds principled uncertainty. *Because* one implementation of the dynamics is the only place the rules live --- any update is reflected in both live and predicted behaviour.
 

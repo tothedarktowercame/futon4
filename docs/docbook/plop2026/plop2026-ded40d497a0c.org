@@ -13,10 +13,26 @@
 
 *If* you want the agent to plan --- to score whole pattern cascades as policies, not single steps, and to prefer an action whose payoff is two or three ticks out over a greedy one-step win. *However* a rollout that looks one step ahead demonstrates the machinery but not depth; without a temporal hierarchy the horizon stays shallow. *Then* score the whole cascade over a horizon of more than one step, and introduce a two-timescale hierarchy: a slow (strategic) loop that updates priors and preferences, and a fast (tactical) loop that acts against them. Scoring a route means adding up the costs of its steps with the later ones discounted, so that a distant payoff can matter without swamping the immediate situation. *Because* active inference plans over a /policy/ --- here, the pattern cascade for the selected mission --- not over the next action alone. /Invariant to preserve:/ the thing being scored is the cascade, not its first move.
 
-* Current version (d721e8736)
+* Current version (035162b2f)
 
 *If* you want the agent to plan --- to score whole pattern cascades as policies, not single steps, and to prefer an action whose payoff is two or three ticks out over a greedy one-step win. *However* a rollout that looks one step ahead demonstrates the machinery but not depth; without a temporal hierarchy the horizon stays shallow. *Then* score the whole cascade over a horizon of more than one step, and introduce a two-timescale hierarchy: a slow (strategic) loop that updates priors and preferences, and a fast (tactical) loop that acts against them. Scoring a route means adding up the costs of its steps with the later ones discounted, so that a distant payoff can matter without swamping the immediate situation. *Because* active inference plans over a /policy/ --- here, the pattern cascade for the selected mission --- not over the next action alone. /Invariant to preserve:/ the thing being scored is the cascade, not its first move.
 
 * Code annotations
 
-/None yet./
+** "score the whole cascade over a horizon of more than one step"
+- Conference text: *EXISTS-UNVALIDATED*  Current text: *EXISTS-UNVALIDATED*
+- [[file:~/code/futon2/src/futon2/aif/cascade_shape_g.clj::horizon (max 1 (min scorer/max-horizon (count patterns)))][futon2/src/futon2/aif/cascade_shape_g.clj horizon (max 1 (min scorer/max-horizon (count patterns)))]] @ 5b4526f95
+- [[file:~/code/futon2/src/futon2/aif/cascade_observation_scoring.clj::max-horizon][futon2/src/futon2/aif/cascade_observation_scoring.clj max-horizon]] @ 5b4526f95
+- Annotated by claude-4; reviewed by not yet reviewed
+- Ticket: paper edit candidate: update R13's worknote; the live reading-policy route scores cascades over horizon = pattern count (cap 10)
+
+On the live reading-policy route each candidate cascade is scored as a whole by rank-cascade-actions over a horizon equal to its number of patterns (capped at 10), with a preference row at every step (c-schedule 1..H), the parameter-novelty information term (:beta-pattern), and per-step normalisation; the click-5 cascade had eight occurrences, so its horizon was eight. The current text's worknote ('production resolves horizon nil in the wild, so the depth arm has never fired live') looks out of date for this route. Two honest limits recorded in the code itself: the observation model is marked :synthetic, :calibrated false, and tying horizon to cascade length means horizon and policy size cannot vary independently.
+
+** "adding up the costs of its steps with the later ones discounted"
+- Conference text: *REFUTED*  Current text: *REFUTED*
+- [[file:~/code/futon2/src/futon2/aif/cascade_shape_g.clj:::g-normalization :per-step-capacity-and-pattern][futon2/src/futon2/aif/cascade_shape_g.clj :g-normalization :per-step-capacity-and-pattern]] @ 5b4526f95
+- Annotated by claude-4; reviewed by not yet reviewed
+- Ticket: paper edit candidate: R13 should describe summation over the horizon with per-step normalisation, not discounting
+
+The live cascade G does not discount later steps; it sums over the horizon and compares policies through the declared per-step normalisation (Lean GNormalization perStepCapacityAndPattern). A discount exists only on the older rollout route (rollout.clj, see R15). Expected free energy in active inference is normally summed over future steps without a discount, so the code is AIF-valid and the text should change.
+
