@@ -18,7 +18,11 @@
           "/-- No path falls back, by `route!` and `production-readiness`. More text. -/\n"
           "theorem noFallback : True := trivial\n\n"
           "/-- Mentions `route` and `not-in-file!` only. -/\n"
-          "def other : Nat := 0\n"))
+          "def other : Nat := 0\n\n"
+          ;; Review bad cases (codex-5): a column-zero `def' inside a string or a
+          ;; commented-out block is not a declaration.
+          "def banner : String := \"first line\ndef fakeInString : cites `route!`\"\n\n"
+          "/- commented out:\ndef fakeInComment := `route!` -/\n"))
 
 (defconst arxana-browser-code-lean-test--entry
   (list :doc-id "lean-fixture" :version "def-doc"
@@ -52,14 +56,16 @@
                  (text (car rendered))
                  (route (arxana-browser-code-lean-test--chunk text "route!"))
                  (ready (arxana-browser-code-lean-test--chunk text "production-readiness")))
-            (should (string-match-p "^  Lean transitions: The transition table\\.$" route))
-            (should (string-match-p "^  Lean noFallback: No path falls back, by route! and production-readiness\\.$" route))
-            (should (string-match-p "^  Lean noFallback" ready))
-            (should-not (string-match-p "Lean transitions" ready))
+            (should (string-match-p "^  Lean: transitions — The transition table\\.$" route))
+            (should (string-match-p "^  Lean: noFallback — No path falls back, by route! and production-readiness\\.$" route))
+            (should (string-match-p "^  Lean: noFallback" ready))
+            (should-not (string-match-p "Lean: transitions" ready))
             ;; Bad cases: a near-miss name (`route') and a symbol the file does
             ;; not define (`not-in-file!') cite nothing; a module docstring is
             ;; not a declaration.
-            (should-not (string-match-p "Lean other" text))
+            (should-not (string-match-p "Lean: other" text))
+            (should-not (string-match-p "fakeIn" text))
+            (should-not (string-match-p "Lean: banner" text))
             (should-not (string-match-p "Module docstring" text))
             ;; The sync map still points each symbol at its own bullet, even
             ;; though `route!' appears earlier inside a transcluded Lean line.
@@ -83,7 +89,7 @@
               (arxana-browser-code--insert-context-items
                path (arxana-browser-code--entry-context-items arxana-browser-code-lean-test--entry))
               (goto-char (point-min))
-              (search-forward "  Lean noFallback")
+              (search-forward "  Lean: noFallback")
               (should (eq 'arxana-browser-code-docs-lean-face (get-text-property (point) 'face)))
               (should (equal lean (get-text-property (point) 'arxana-lean-file)))
               (goto-char (point-min))

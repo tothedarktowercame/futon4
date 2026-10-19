@@ -896,10 +896,36 @@ chunk.  Nil turns the Lean layer off."
           "\\([^[:space:]:({]+\\)")
   "A top-level Lean declaration; group 2 is its name.")
 
+(defun arxana-browser-code--lean-opaque-ranges ()
+  "Return (START END KIND) ranges of comments and strings, KIND `line-comment', `block-comment' or `string'.
+Block comments nest, as in Lean.  A declaration keyword inside one of these
+ranges is not a declaration."
+  (let ((ranges '()))
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "/-\\|--\\|\"" nil t)
+        (let ((start (match-beginning 0))
+              (token (match-string 0)))
+          (cond
+           ((string= token "--")
+            (end-of-line)
+            (push (list start (point) 'line-comment) ranges))
+           ((string= token "\"")
+            (while (and (re-search-forward "\\\\.\\|\"" nil 'move)
+                        (not (string= (match-string 0) "\""))))
+            (push (list start (point) 'string) ranges))
+           (t
+            (let ((depth 1))
+              (while (and (> depth 0) (re-search-forward "/-\\|-/" nil 'move))
+                (setq depth (if (string= (match-string 0) "/-") (1+ depth) (1- depth)))))
+            (push (list start (point) 'block-comment) ranges))))))
+    (nreverse ranges)))
+
 (defun arxana-browser-code--lean-declarations (file)
   "Return the top-level declarations of Lean FILE.
 Each is a plist (:name :doc :text): :doc is the preceding `/-- -/'
-docstring, :text the docstring plus the body up to the next declaration."
+docstring, :text the docstring plus the `--' line comments in the body up
+to the next declaration."
   (let* ((attrs (file-attributes file))
          (mtime (and attrs (file-attribute-modification-time attrs)))
          (cached (gethash file arxana-browser-code--lean-cache)))
@@ -910,10 +936,13 @@ docstring, :text the docstring plus the body up to the next declaration."
           (with-temp-buffer
             (insert-file-contents file)
             (goto-char (point-min))
-            (let ((starts '()))
+            (let ((starts '())
+                  (opaque (arxana-browser-code--lean-opaque-ranges)))
               ;; Each start is (DECL-LINE NAME DOC DOC-START); a body ends where
               ;; the next declaration's docstring (or line) begins.
               (while (re-search-forward arxana-browser-code--lean-decl-regexp nil t)
+                (unless (let ((pos (match-beginning 0)))
+                          (seq-some (lambda (r) (and (> pos (car r)) (< pos (cadr r)))) opaque))
                 (let ((line (line-beginning-position))
                       (name (match-string-no-properties 2))
                       (doc nil)
@@ -928,14 +957,26 @@ docstring, :text the docstring plus the body up to the next declaration."
                           (setq doc-start (point))
                           (setq doc (string-trim
                                      (buffer-substring-no-properties (+ (point) 3) close)))))))
-                  (push (list line name doc (or doc-start line)) starts)))
+                  (push (list line name doc (or doc-start line)) starts))))
               (setq starts (nreverse starts))
               (while starts
                 (let* ((this (car starts))
                        (end (if (cadr starts) (nth 3 (cadr starts)) (point-max))))
+                  ;; Citing text: the docstring and the `--' line comments in the
+                  ;; body.  Code, string literals and `/- -/' blocks (usually
+                  ;; commented-out code) do not cite.
                   (push (list :name (nth 1 this) :doc (nth 2 this)
-                              :text (concat (or (nth 2 this) "") "\n"
-                                            (buffer-substring-no-properties (nth 0 this) end)))
+                              :text (mapconcat
+                                     #'identity
+                                     (cons (or (nth 2 this) "")
+                                           (delq nil
+                                                 (mapcar (lambda (r)
+                                                           (when (and (eq (nth 2 r) 'line-comment)
+                                                                      (>= (car r) (nth 0 this))
+                                                                      (<= (cadr r) end))
+                                                             (buffer-substring-no-properties (car r) (cadr r))))
+                                                         opaque)))
+                                     "\n"))
                         decls))
                 (setq starts (cdr starts))))))
         (setq decls (nreverse decls))
@@ -1004,8 +1045,8 @@ backticked token and SYMBOL is defined in PATH."
   (dolist (decl decls)
     (let ((start (point))
           (sentence (arxana-browser-code--lean-first-sentence (plist-get decl :doc))))
-      (insert (format "  Lean %s%s\n" (plist-get decl :name)
-                      (if sentence (concat ": " sentence) "")))
+      (insert (format "  Lean: %s%s\n" (plist-get decl :name)
+                      (if sentence (concat " — " sentence) "")))
       (add-text-properties
        start (1- (point))
        (list 'face 'arxana-browser-code-docs-lean-face
