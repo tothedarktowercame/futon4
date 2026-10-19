@@ -46,6 +46,7 @@ TEST_FILES=(
   arxana-vsatarcs-cluster-test.el
   arxana-browser-code-defs-test.el
   arxana-browser-code-foreign-root-test.el
+  arxana-browser-code-lean-test.el
   arxana-check-parens-test.el
   arxana-docbook-order-test.el
   arxana-docbook-redirect-test.el

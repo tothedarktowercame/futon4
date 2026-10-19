@@ -871,21 +871,168 @@ Returns the active strategy, or nil if persistence is unavailable."
     (fill-region (point-min) (point-max))
     (string-trim (buffer-string))))
 
-(defun arxana-browser-code--insert-context-items (path items)
-  "Insert readable context ITEM blocks for PATH."
-  (dolist (item items)
-    (let* ((symbol (or (plist-get item :symbol) ""))
-           (summary (or (plist-get item :summary) ""))
-           (wrapped (arxana-browser-code--wrap-text summary))
-           (line-start (point)))
-      (insert (format "- %s\n" symbol))
+(defcustom arxana-browser-code-lean-sources nil
+  "Lean files whose declarations are transcluded into the docs buffer.
+A list of (CODE-PATH-REGEXP . LEAN-FILES).  For a code file whose path
+matches CODE-PATH-REGEXP, each declaration in LEAN-FILES that cites one of
+the file's definitions in backticks is shown under that definition's doc
+chunk.  Nil turns the Lean layer off."
+  :type '(alist :key-type regexp :value-type (repeat file))
+  :group 'arxana-browser-code)
+
+(defface arxana-browser-code-docs-lean-face
+  '((((background dark)) :foreground "light sea green" :slant italic)
+    (t :foreground "dark cyan" :slant italic))
+  "Face for Lean declarations transcluded into code docs buffers."
+  :group 'arxana-browser-code)
+
+(defvar arxana-browser-code--lean-cache (make-hash-table :test 'equal)
+  "Lean file -> (MTIME DECLARATIONS).")
+
+(defconst arxana-browser-code--lean-decl-regexp
+  (concat "^\\(?:@\\[[^]\n]*\\][[:space:]]*\\)?"
+          "\\(?:\\(?:private\\|protected\\|noncomputable\\|partial\\)[[:space:]]+\\)*"
+          "\\(inductive\\|structure\\|def\\|abbrev\\|theorem\\|lemma\\)[[:space:]]+"
+          "\\([^[:space:]:({]+\\)")
+  "A top-level Lean declaration; group 2 is its name.")
+
+(defun arxana-browser-code--lean-declarations (file)
+  "Return the top-level declarations of Lean FILE.
+Each is a plist (:name :doc :text): :doc is the preceding `/-- -/'
+docstring, :text the docstring plus the body up to the next declaration."
+  (let* ((attrs (file-attributes file))
+         (mtime (and attrs (file-attribute-modification-time attrs)))
+         (cached (gethash file arxana-browser-code--lean-cache)))
+    (if (and cached (equal (car cached) mtime))
+        (cadr cached)
+      (let ((decls '()))
+        (when (file-readable-p file)
+          (with-temp-buffer
+            (insert-file-contents file)
+            (goto-char (point-min))
+            (let ((starts '()))
+              ;; Each start is (DECL-LINE NAME DOC DOC-START); a body ends where
+              ;; the next declaration's docstring (or line) begins.
+              (while (re-search-forward arxana-browser-code--lean-decl-regexp nil t)
+                (let ((line (line-beginning-position))
+                      (name (match-string-no-properties 2))
+                      (doc nil)
+                      (doc-start nil))
+                  (save-excursion
+                    (goto-char line)
+                    (skip-chars-backward " \t\n")
+                    (when (and (>= (- (point) 2) (point-min))
+                               (string= "-/" (buffer-substring-no-properties (- (point) 2) (point))))
+                      (let ((close (- (point) 2)))
+                        (when (and (search-backward "/-" nil t) (looking-at "/--"))
+                          (setq doc-start (point))
+                          (setq doc (string-trim
+                                     (buffer-substring-no-properties (+ (point) 3) close)))))))
+                  (push (list line name doc (or doc-start line)) starts)))
+              (setq starts (nreverse starts))
+              (while starts
+                (let* ((this (car starts))
+                       (end (if (cadr starts) (nth 3 (cadr starts)) (point-max))))
+                  (push (list :name (nth 1 this) :doc (nth 2 this)
+                              :text (concat (or (nth 2 this) "") "\n"
+                                            (buffer-substring-no-properties (nth 0 this) end)))
+                        decls))
+                (setq starts (cdr starts))))))
+        (setq decls (nreverse decls))
+        (puthash file (list mtime decls) arxana-browser-code--lean-cache)
+        decls))))
+
+(defun arxana-browser-code--lean-first-sentence (doc)
+  "Return the first sentence of DOC, flattened and without backticks."
+  (when (and doc (not (string-empty-p doc)))
+    (let* ((flat (string-trim (replace-regexp-in-string "[[:space:]\n]+" " " doc)))
+           (plain (replace-regexp-in-string "`" "" flat))
+           (end (string-match "\\.\\([[:space:]]\\|\\'\\)" plain)))
+      (arxana-browser-code--one-line-doc (if end (substring plain 0 (1+ end)) plain)))))
+
+(defun arxana-browser-code--lean-citations (path)
+  "Return an alist (SYMBOL . DECLARATIONS) of Lean declarations citing PATH.
+A declaration cites SYMBOL when `SYMBOL' appears in its text as a whole
+backticked token and SYMBOL is defined in PATH."
+  (let* ((symbols (and path (arxana-browser-code--file-symbols path)))
+         (files (and path
+                     (apply #'append
+                            (mapcar (lambda (rule)
+                                      (when (string-match-p (car rule) path)
+                                        (cdr rule)))
+                                    arxana-browser-code-lean-sources))))
+         (result '()))
+    (when (and symbols files)
+      (dolist (file files)
+        (dolist (decl (arxana-browser-code--lean-declarations (expand-file-name file)))
+          (let ((text (plist-get decl :text))
+                (start 0)
+                (tokens '()))
+            (while (string-match "`\\([^`\n]+\\)`" text start)
+              (push (match-string 1 text) tokens)
+              (setq start (match-end 0)))
+            (dolist (sym (delete-dups tokens))
+              (when (member sym symbols)
+                (let ((cell (assoc sym result)))
+                  (if cell
+                      (unless (member decl (cdr cell))
+                        (setcdr cell (append (cdr cell) (list (plist-put (copy-sequence decl) :file file)))))
+                    (push (list sym (plist-put (copy-sequence decl) :file file)) result)))))))))
+    result))
+
+(defun arxana-browser-code-docs-open-lean ()
+  "Open the Lean declaration at point in the docs buffer."
+  (interactive)
+  (let ((file (get-text-property (point) 'arxana-lean-file))
+        (name (get-text-property (point) 'arxana-lean-decl)))
+    (when file
+      (find-file-other-window file)
+      (goto-char (point-min))
+      (when name
+        (re-search-forward (concat "[[:space:]]" (regexp-quote name) "\\_>") nil t)
+        (beginning-of-line)))))
+
+(defvar arxana-browser-code-docs-lean-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mouse-1] #'arxana-browser-code-docs-open-lean)
+    (define-key map (kbd "RET") #'arxana-browser-code-docs-open-lean)
+    map)
+  "Keymap for transcluded Lean lines in the docs buffer.")
+
+(defun arxana-browser-code--insert-lean-lines (decls)
+  "Insert one transcluded line per Lean declaration in DECLS."
+  (dolist (decl decls)
+    (let ((start (point))
+          (sentence (arxana-browser-code--lean-first-sentence (plist-get decl :doc))))
+      (insert (format "  Lean %s%s\n" (plist-get decl :name)
+                      (if sentence (concat ": " sentence) "")))
       (add-text-properties
-       line-start (line-end-position 0)
-       (list 'arxana-symbol symbol
-             'arxana-path path))
-      (dolist (line (split-string wrapped "\n"))
-        (insert "  " line "\n"))
-      (insert "\n"))))
+       start (1- (point))
+       (list 'face 'arxana-browser-code-docs-lean-face
+             'arxana-lean-file (plist-get decl :file)
+             'arxana-lean-decl (plist-get decl :name)
+             'keymap arxana-browser-code-docs-lean-map
+             'mouse-face 'highlight)))))
+
+(defun arxana-browser-code--insert-context-items (path items)
+  "Insert readable context ITEM blocks for PATH.
+Lean declarations citing an item's symbol follow its summary, when
+`arxana-browser-code-lean-sources' configures any for PATH."
+  (let ((citations (arxana-browser-code--lean-citations path)))
+    (dolist (item items)
+      (let* ((symbol (or (plist-get item :symbol) ""))
+             (summary (or (plist-get item :summary) ""))
+             (wrapped (arxana-browser-code--wrap-text summary))
+             (line-start (point)))
+        (insert (format "- %s\n" symbol))
+        (add-text-properties
+         line-start (line-end-position 0)
+         (list 'arxana-symbol symbol
+               'arxana-path path))
+        (dolist (line (split-string wrapped "\n"))
+          (insert "  " line "\n"))
+        (arxana-browser-code--insert-lean-lines (cdr (assoc symbol citations)))
+        (insert "\n")))))
 
 (defun arxana-browser-code--def-doc-items (entries path)
   "Return deduplicated def-doc function items from ENTRIES for PATH."
@@ -1340,7 +1487,11 @@ With prefix ACTIVATE, open the symbol after cycling."
       (dolist (symbol symbols)
         (save-excursion
           (goto-char preview-start)
-          (when (search-forward symbol preview-end t)
+          ;; Prefer the item's own bullet line, so a mention of SYMBOL in an
+          ;; earlier chunk (or in a transcluded Lean line) is not taken for it.
+          (when (or (re-search-forward (concat "^[-+*] " (regexp-quote symbol) "$")
+                                       preview-end t)
+                    (search-forward symbol preview-end t))
             (let ((item-start (line-beginning-position))
                   (item-end preview-end))
               (save-excursion
