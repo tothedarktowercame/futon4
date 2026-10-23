@@ -13,7 +13,7 @@
 
 *If* you want the forward model's predictions to match what the live dynamics actually do, with one set of rules to maintain. *However* two implementations of the same dynamics is two places for bugs to hide and two surfaces where prediction can silently diverge from the live step. *Then* factor the live step into a /pure deterministic kernel/ (state, action, seed, opts) \(\rightarrow\) next-state plus a thin wrapper that threads defaults; the predictive forward model calls the same kernel and adds principled uncertainty. *Because* one implementation of the dynamics is the only place the rules live --- any update is reflected in both live and predicted behaviour.
 
-* Current version (11a6b349f)
+* Current version (4bbea6424)
 
 *If* you want the forward model's predictions to match what the live dynamics actually do, with one set of rules to maintain. *However* two implementations of the same dynamics is two places for bugs to hide and two surfaces where prediction can silently diverge from the live step. *Then* factor the live step into a /pure deterministic kernel/ (state, action, seed, opts) \(\rightarrow\) next-state plus a thin wrapper that threads defaults; the predictive forward model calls the same kernel and adds principled uncertainty. *Because* one implementation of the dynamics is the only place the rules live --- any update is reflected in both live and predicted behaviour.
 
@@ -23,6 +23,13 @@
 - Conference text: *REFUTED*  Current text: *REFUTED*
 - [[file:~/code/futon2/src/futon2/aif/forward_model.clj::predict][futon2/src/futon2/aif/forward_model.clj predict]] @ 54d1deffd
 - [[file:~/code/futon2/src/futon2/aif/forward_model.clj::predict-multi-horizon][futon2/src/futon2/aif/forward_model.clj predict-multi-horizon]] @ 54d1deffd
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/PolicyRollout.lean::ForwardModel][mathlib4/DarkTower/WarMachine/PolicyRollout.lean ForwardModel]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/RolloutAtMachine.lean::machineRollout_startsAtCurrentBelief][mathlib4/DarkTower/WarMachine/Proof2/RolloutAtMachine.lean machineRollout_startsAtCurrentBelief]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeTransition.lean::patternKernel_rowsum][mathlib4/DarkTower/WarMachine/CascadeTransition.lean patternKernel_rowsum]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/ObservationProcess.lean::observationAfter][mathlib4/DarkTower/WarMachine/ObservationProcess.lean observationAfter]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/RolloutAtCounts.lean::machineRolloutAtCounts_eq][mathlib4/DarkTower/WarMachine/Proof2/RolloutAtCounts.lean machineRolloutAtCounts_eq]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/CoApplicationKernel.lean::coApplyKernel_eq_cascadeKernel_of_chain][mathlib4/DarkTower/WarMachine/Proof2/CoApplicationKernel.lean coApplyKernel_eq_cascadeKernel_of_chain]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/CoApplicationAtMachine.lean::machineCoApplyKernelAtObservedInterpretation][mathlib4/DarkTower/WarMachine/Proof2/CoApplicationAtMachine.lean machineCoApplyKernelAtObservedInterpretation]] @ 9319ebb5f — STATED
 - Annotated by claude-4; reviewed by not yet reviewed
 - Operator: Revision policy applies: the code looks AIF-valid, so this is a docs change.
 - Ticket: paper edit candidate: rewrite R4 for a system whose live step is the world: one forward model shared by every scorer (EFE, F(pi), proposers), compared against realised outcomes (R12), rather than one kernel shared with a simulated live step; and update forward_model.clj's docstring, which still promises the shared kernel

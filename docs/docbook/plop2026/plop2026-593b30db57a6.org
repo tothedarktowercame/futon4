@@ -13,7 +13,7 @@
 
 *If* you want the agent to discount low-trust evidence without discarding it, and to become stricter when outcomes are volatile. *However* without an explicit precision layer, evidence weighting becomes implicit prompt rhetoric and cannot be audited. *Then* keep a per-channel /precision registry/ --- one trust weight per kind of evidence --- keyed to observation features, and apply it wherever prediction error, scoring, or gating occurs. *Because* making precision explicit turns trust into a tunable control surface rather than an undocumented bias.
 
-* Current version (11a6b349f)
+* Current version (4bbea6424)
 
 *If* you want the agent to discount low-trust evidence without discarding it, and to become stricter when outcomes are volatile. *However* without an explicit precision layer, evidence weighting becomes implicit prompt rhetoric and cannot be audited. *Then* keep a per-channel /precision registry/ --- one trust weight per kind of evidence --- keyed to observation features, and apply it wherever prediction error, scoring, or gating occurs. *Because* making precision explicit turns trust into a tunable control surface rather than an undocumented bias.
 
@@ -24,6 +24,15 @@
 - [[file:~/code/futon2/src/futon2/aif/precision.clj::initial-precision-state][futon2/src/futon2/aif/precision.clj initial-precision-state]] @ 63855cc28
 - [[file:~/code/futon2/src/futon2/aif/precision.clj::update-channel-precision][futon2/src/futon2/aif/precision.clj update-channel-precision]] @ 63855cc28
 - [[file:~/code/futon2/scripts/futon2/report/war_machine.clj::prec-state' (precision/update-precision-state][futon2/scripts/futon2/report/war_machine.clj prec-state' (precision/update-precision-state]] @ 63855cc28
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/MachinePrecision.lean::machinePrecision][mathlib4/DarkTower/WarMachine/MachinePrecision.lean machinePrecision]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/MachinePrecision.lean::registryFormOfUnclamped][mathlib4/DarkTower/WarMachine/MachinePrecision.lean registryFormOfUnclamped]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/MachinePrecision.lean::defaultsCapInert][mathlib4/DarkTower/WarMachine/MachinePrecision.lean defaultsCapInert]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/LikelihoodPrecision.lean::precisionLikelihood][mathlib4/DarkTower/WarMachine/LikelihoodPrecision.lean precisionLikelihood]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/ChannelPrecision.lean::channelPrecision][mathlib4/DarkTower/WarMachine/ChannelPrecision.lean channelPrecision]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/LikelihoodPrecision.lean::betaPosterior][mathlib4/DarkTower/WarMachine/LikelihoodPrecision.lean betaPosterior]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/LikelihoodPrecisionUpdate.lean::betaPosterior_moves][mathlib4/DarkTower/WarMachine/Proof2/LikelihoodPrecisionUpdate.lean betaPosterior_moves]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/PrecisionFromObservation.lean::favoured_observation_raises_precision][mathlib4/DarkTower/WarMachine/PrecisionFromObservation.lean favoured_observation_raises_precision]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/PrecisionFromObservation.lean::against_favoured_lowers_precision][mathlib4/DarkTower/WarMachine/PrecisionFromObservation.lean against_favoured_lowers_precision]] @ 9319ebb5f — PROVED
 - Annotated by claude-4; reviewed by not yet reviewed
 
 The registry exists: one precision state per observation channel that has a likelihood model, each carrying its precision and a bounded error history, updated from that channel's prediction errors (see R3 for the floor and cap). It is maintained in the War Machine report's inner judgement loop (war_machine.clj), stepped alongside the belief. Volatile outcomes raise the error variance and so lower precision, which is the 'stricter when outcomes are volatile' of the If. The current text's worknote cites ten admitted precision claims; not re-checked.
@@ -32,6 +41,15 @@ The registry exists: one precision state per observation channel that has a like
 - Conference text: *REFUTED*  Current text: *REFUTED*
 - [[file:~/code/futon2/src/futon2/aif/likelihood_precision.clj::zeta-declaration][futon2/src/futon2/aif/likelihood_precision.clj zeta-declaration]] @ 63855cc28
 - [[file:~/code/futon2/src/futon2/aif/reading_policy_precision.clj::declaration-for][futon2/src/futon2/aif/reading_policy_precision.clj declaration-for]] @ 63855cc28
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/MachinePrecision.lean::machinePrecision][mathlib4/DarkTower/WarMachine/MachinePrecision.lean machinePrecision]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/MachinePrecision.lean::registryFormOfUnclamped][mathlib4/DarkTower/WarMachine/MachinePrecision.lean registryFormOfUnclamped]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/MachinePrecision.lean::defaultsCapInert][mathlib4/DarkTower/WarMachine/MachinePrecision.lean defaultsCapInert]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/LikelihoodPrecision.lean::precisionLikelihood][mathlib4/DarkTower/WarMachine/LikelihoodPrecision.lean precisionLikelihood]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/ChannelPrecision.lean::channelPrecision][mathlib4/DarkTower/WarMachine/ChannelPrecision.lean channelPrecision]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/LikelihoodPrecision.lean::betaPosterior][mathlib4/DarkTower/WarMachine/LikelihoodPrecision.lean betaPosterior]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/LikelihoodPrecisionUpdate.lean::betaPosterior_moves][mathlib4/DarkTower/WarMachine/Proof2/LikelihoodPrecisionUpdate.lean betaPosterior_moves]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/PrecisionFromObservation.lean::favoured_observation_raises_precision][mathlib4/DarkTower/WarMachine/PrecisionFromObservation.lean favoured_observation_raises_precision]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/PrecisionFromObservation.lean::against_favoured_lowers_precision][mathlib4/DarkTower/WarMachine/PrecisionFromObservation.lean against_favoured_lowers_precision]] @ 9319ebb5f — PROVED
 - Annotated by claude-4; reviewed by not yet reviewed
 - Ticket: paper edit candidate: R7's Then should name the distinct precisions (per-channel evidence precision, likelihood precision zeta, policy/reading precision beta) and where each is applied, instead of one registry applied everywhere
 

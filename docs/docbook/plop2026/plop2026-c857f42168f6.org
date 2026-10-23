@@ -13,7 +13,7 @@
 
 *If* you want the agent's observation to be comparable across steps so scoring and learning do not collapse into prose interpretation. *However* tool output and user feedback arrive as heterogeneous artifacts (JSON, logs, diffs, snippets, natural language) that are hard to compare or weight consistently. *Then* maintain an explicit observation record as a typed, normalized feature map derived from session state (test status, compile status, diff size, failing-spec count, user-stated constraints, time since last anchor, contradiction flags). *Because* a stable observation vector is the prerequisite for meaningful precision control and policy scoring.
 
-* Current version (11a6b349f)
+* Current version (4bbea6424)
 
 *If* you want the agent's observation to be comparable across steps so scoring and learning do not collapse into prose interpretation. *However* tool output and user feedback arrive as heterogeneous artifacts (JSON, logs, diffs, snippets, natural language) that are hard to compare or weight consistently. *Then* maintain an explicit observation record as a typed, normalized feature map derived from session state (test status, compile status, diff size, failing-spec count, user-stated constraints, time since last anchor, contradiction flags). *Because* a stable observation vector is the prerequisite for meaningful precision control and policy scoring.
 
@@ -24,6 +24,13 @@
 - [[file:~/code/futon2/src/futon2/aif/observation.clj::observation-channels][futon2/src/futon2/aif/observation.clj observation-channels]] @ e6a0a5f36
 - [[file:~/code/futon2/src/futon2/aif/observation.clj::observe][futon2/src/futon2/aif/observation.clj observe]] @ e6a0a5f36
 - [[file:~/code/futon2/src/futon2/aif/observation.clj::sense->vector][futon2/src/futon2/aif/observation.clj sense->vector]] @ e6a0a5f36
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Holes.lean::Channel][mathlib4/DarkTower/WarMachine/Holes.lean Channel]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/MachineObservationWitness.lean::emptyObservationHasFourteenZeros][mathlib4/DarkTower/WarMachine/MachineObservationWitness.lean emptyObservationHasFourteenZeros]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/MachineObservation.lean::clampedChannelsAreBoundedAbove][mathlib4/DarkTower/WarMachine/MachineObservation.lean clampedChannelsAreBoundedAbove]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/ObservationAtMachine.lean::machineObservationLaw_isDistribution][mathlib4/DarkTower/WarMachine/Proof2/ObservationAtMachine.lean machineObservationLaw_isDistribution]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/ObservationProcess.lean::observationAfter_sum][mathlib4/DarkTower/WarMachine/ObservationProcess.lean observationAfter_sum]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/TokenObservation.lean::tokenLikelihood_checkable][mathlib4/DarkTower/WarMachine/TokenObservation.lean tokenLikelihood_checkable]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/ObservationAtMachine.lean::machineObservationLaw][mathlib4/DarkTower/WarMachine/Proof2/ObservationAtMachine.lean machineObservationLaw]] @ 9319ebb5f — PROVED
 - Annotated by claude-4; reviewed by not yet reviewed
 
 observation.clj defines a fixed, ordered 14-channel vector, each channel normalised to [0,1]. An absent source still becomes 0.0 numerically, but each channel's status (observed or absent, and why) travels as metadata, and sense->vector refuses to produce the numeric vector without the matching tagged envelope, so absence provenance crosses every vector boundary. That meets 'typed, normalized'. Note the link to the 10-18 selection ties: wherever a consumer reads the bare 0.0 rather than the envelope, distinct missing observations look identical. The current text's worknote cites a witness at the empty-input model (fourteen zeros); not re-checked.
@@ -31,6 +38,13 @@ observation.clj defines a fixed, ordered 14-channel vector, each channel normali
 ** "derived from session state (test status, compile status, diff size, failing-spec count, user-stated constraints, time since last anchor, contradiction flags)"
 - Conference text: *REFUTED*  Current text: *REFUTED*
 - [[file:~/code/futon2/src/futon2/aif/observation.clj::observation-channels][futon2/src/futon2/aif/observation.clj observation-channels]] @ e6a0a5f36
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Holes.lean::Channel][mathlib4/DarkTower/WarMachine/Holes.lean Channel]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/MachineObservationWitness.lean::emptyObservationHasFourteenZeros][mathlib4/DarkTower/WarMachine/MachineObservationWitness.lean emptyObservationHasFourteenZeros]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/MachineObservation.lean::clampedChannelsAreBoundedAbove][mathlib4/DarkTower/WarMachine/MachineObservation.lean clampedChannelsAreBoundedAbove]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/ObservationAtMachine.lean::machineObservationLaw_isDistribution][mathlib4/DarkTower/WarMachine/Proof2/ObservationAtMachine.lean machineObservationLaw_isDistribution]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/ObservationProcess.lean::observationAfter_sum][mathlib4/DarkTower/WarMachine/ObservationProcess.lean observationAfter_sum]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/TokenObservation.lean::tokenLikelihood_checkable][mathlib4/DarkTower/WarMachine/TokenObservation.lean tokenLikelihood_checkable]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/ObservationAtMachine.lean::machineObservationLaw][mathlib4/DarkTower/WarMachine/Proof2/ObservationAtMachine.lean machineObservationLaw]] @ 9319ebb5f — PROVED
 - Annotated by claude-4; reviewed by not yet reviewed
 
 None of the seven example features is a channel. The vector observes the stack, not a coding session: loop health, support and attack coverage of the holistic argument, mission health, commit shares by area (stack, consulting, portfolio, mathematics), active-repo ratio, open sorrys, coupling density, ticks firing, the depositing signal, and annotation health. Session-level facts such as test and build status do reach the loop, but through other routes (review execution evidence, warrants, run records), not through this vector. The current text is unchanged here.

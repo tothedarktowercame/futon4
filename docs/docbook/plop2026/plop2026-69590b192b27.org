@@ -13,7 +13,7 @@
 
 *If* you want pattern choice to be legible and comparable, and to avoid collapse into one habitual pattern. *However* if the action space is any pattern at any time, evaluation becomes unstructured and selection is dominated by recency. *Then* define the action set as a /constructed/ candidate set of pattern IDs produced by retrieval plus gating rules, of bounded size, with explicit reasons for inclusion and exclusion. *Because* constraining the action space makes downstream scoring meaningful rather than performative.
 
-* Current version (11a6b349f)
+* Current version (4bbea6424)
 
 *If* you want pattern choice to be legible and comparable, and to avoid collapse into one habitual pattern. *However* if the action space is any pattern at any time, evaluation becomes unstructured and selection is dominated by recency. *Then* define the action set as a /constructed/ candidate set of pattern IDs produced by retrieval plus gating rules, of bounded size, with explicit reasons for inclusion and exclusion. *Because* constraining the action space makes downstream scoring meaningful rather than performative.
 
@@ -23,6 +23,12 @@
 - Conference text: *EXISTS-UNVALIDATED*  Current text: *EXISTS-UNVALIDATED*
 - [[file:~/code/futon2/src/futon2/aif/target_policy_family.clj::default-retraction][futon2/src/futon2/aif/target_policy_family.clj default-retraction]] @ 642048e7c
 - [[file:~/code/futon2/src/futon2/aif/target_policy_family.clj::seed-failures][futon2/src/futon2/aif/target_policy_family.clj seed-failures]] @ 642048e7c
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/PolicyPosteriorAtMachine.lean::machineWeights][mathlib4/DarkTower/WarMachine/Proof2/PolicyPosteriorAtMachine.lean machineWeights]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/PolicyPosteriorAtMachine.lean::infiniteFHasZeroWeight][mathlib4/DarkTower/WarMachine/Proof2/PolicyPosteriorAtMachine.lean infiniteFHasZeroWeight]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/PolicyPosteriorAtMachine.lean::defaultingInfiniteFIsTheBestScore][mathlib4/DarkTower/WarMachine/Proof2/PolicyPosteriorAtMachine.lean defaultingInfiniteFIsTheBestScore]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/ExpectedFreeEnergyPosterior.lean::different_G_changes_normalised_weights][mathlib4/DarkTower/WarMachine/Proof2/ExpectedFreeEnergyPosterior.lean different_G_changes_normalised_weights]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/GOverCascades.lean::compositionBlind_cannot_separate][mathlib4/DarkTower/WarMachine/GOverCascades.lean compositionBlind_cannot_separate]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/GOverCascades.lean::cascadeGrain_separates_sameBag][mathlib4/DarkTower/WarMachine/GOverCascades.lean cascadeGrain_separates_sameBag]] @ 9319ebb5f — PROVED
 - Annotated by claude-4; reviewed by not yet reviewed
 - Ticket: paper edit candidate: R6's Then should say the candidates are policies (reading policies and graph retractions over cited patterns), bounded by the retraction parameters, with typed exclusion census
 

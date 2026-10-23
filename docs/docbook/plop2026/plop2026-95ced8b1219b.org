@@ -20,7 +20,7 @@
 
 updated each step using observation and outcomes. *Because* a compact belief state makes predict \(\rightarrow\) observe \(\rightarrow\) update implementable and testable.
 
-* Current version (11a6b349f)
+* Current version (4bbea6424)
 
 *If* you want decisions to depend on tractable hypotheses (progress, blockers, pattern fit, uncertainty) rather than raw conversation history. *However* if the belief state is just the conversation, the agent cannot cleanly update, compare, or falsify its own assumptions. *Then* represent the belief state as a map of operational hypotheses
 
@@ -36,6 +36,13 @@ updated each step using observation and outcomes. *Because* a compact belief sta
 ** "represent the belief state as a map of operational hypotheses"
 - Conference text: *REFUTED*  Current text: *REFUTED*
 - [[file:~/code/futon2/src/futon2/aif/belief.clj::initial-belief-state][futon2/src/futon2/aif/belief.clj initial-belief-state]] @ e6a0a5f36
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/BeliefAtMachine.lean::machineTrajectory_isDistribution][mathlib4/DarkTower/WarMachine/Proof2/BeliefAtMachine.lean machineTrajectory_isDistribution]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/BeliefAtMachine.lean::machineTrajectory_eq_exactBeliefAt][mathlib4/DarkTower/WarMachine/Proof2/BeliefAtMachine.lean machineTrajectory_eq_exactBeliefAt]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/MachineBeliefState.lean::carriedOnlyEntityIsDropped][mathlib4/DarkTower/WarMachine/MachineBeliefState.lean carriedOnlyEntityIsDropped]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Holes.lean::BeliefState][mathlib4/DarkTower/WarMachine/Holes.lean BeliefState]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/BeliefAtMachine.lean::machineTrajectory][mathlib4/DarkTower/WarMachine/Proof2/BeliefAtMachine.lean machineTrajectory]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/BeliefAtMachine.lean::impossibleObservationRefuses][mathlib4/DarkTower/WarMachine/Proof2/BeliefAtMachine.lean impossibleObservationRefuses]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/ExactBeliefTrajectory.lean::exactBeliefAt_dist][mathlib4/DarkTower/WarMachine/ExactBeliefTrajectory.lean exactBeliefAt_dist]] @ 9319ebb5f — PROVED
 - Annotated by claude-4; reviewed by not yet reviewed
 - Ticket: paper edit candidate: rewrite R1's Then to describe the per-entity categorical posterior with explicit A and B models, or mark the six-key map as the conference-era design
 
@@ -46,6 +53,13 @@ None of the six keys the pattern names (:goal, :subgoals, :blockers, :pattern-fi
 - [[file:~/code/futon2/src/futon2/aif/belief.clj::categorical-filter-step][futon2/src/futon2/aif/belief.clj categorical-filter-step]] @ e6a0a5f36
 - [[file:~/code/futon2/src/futon2/aif/belief.clj::predict-step][futon2/src/futon2/aif/belief.clj predict-step]] @ e6a0a5f36
 - [[file:~/code/futon2/src/futon2/aif/trace.clj::carry-belief][futon2/src/futon2/aif/trace.clj carry-belief]] @ e6a0a5f36
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/BeliefAtMachine.lean::machineTrajectory_isDistribution][mathlib4/DarkTower/WarMachine/Proof2/BeliefAtMachine.lean machineTrajectory_isDistribution]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/BeliefAtMachine.lean::machineTrajectory_eq_exactBeliefAt][mathlib4/DarkTower/WarMachine/Proof2/BeliefAtMachine.lean machineTrajectory_eq_exactBeliefAt]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/MachineBeliefState.lean::carriedOnlyEntityIsDropped][mathlib4/DarkTower/WarMachine/MachineBeliefState.lean carriedOnlyEntityIsDropped]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Holes.lean::BeliefState][mathlib4/DarkTower/WarMachine/Holes.lean BeliefState]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/BeliefAtMachine.lean::machineTrajectory][mathlib4/DarkTower/WarMachine/Proof2/BeliefAtMachine.lean machineTrajectory]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/BeliefAtMachine.lean::impossibleObservationRefuses][mathlib4/DarkTower/WarMachine/Proof2/BeliefAtMachine.lean impossibleObservationRefuses]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/ExactBeliefTrajectory.lean::exactBeliefAt_dist][mathlib4/DarkTower/WarMachine/ExactBeliefTrajectory.lean exactBeliefAt_dist]] @ 9319ebb5f — PROVED
 - Annotated by claude-4; reviewed by not yet reviewed
 
 predict-step and update-step implement predict -> observe -> update over the per-entity posterior, and categorical-filter-step composes them; the judge output carries the belief, and the trace records it (and its omitted events) when belief carrying is on. The current text's worknote cites two admitted witness claims binding the belief-state equation to production trace rows as Lean propositions; those were not re-checked for this annotation.

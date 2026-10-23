@@ -13,7 +13,7 @@
 
 *If* you want to run structure learning (R17) --- merging look-alike states, pruning redundant connections --- but need a tractable set of candidate reductions to test, because the space of possible merges is far too large to enumerate. *However* the control loop (R1--R16) is no help here: it never needed to know which patterns are alike, and hand-picking the candidates by fiat smuggles in the very structure you are trying to learn. *Then* exploit the fact that design patterns are written as text --- push the collection into a high-dimensional vector-space embedding and read off nearness, so that patterns sitting close become candidate merges; hand those to R17, which accepts only the mergers its evidence threshold clears, and let R17\(^{\prime}\)'s posterior spread rank which neighbourhoods to resolve first. *Because* the embedding is a cheap, model-free /generator/ of structural hypotheses while the evidence test is the /disposer/: embeddings are inessential to the control loop but fundamental here, as its generator. Embedding proposes; free energy disposes. /Invariant to preserve:/ whatever proposes the merges must not also be what accepts them.
 
-* Current version (11a6b349f)
+* Current version (4bbea6424)
 
 /Same text as the conference version./
 
@@ -22,6 +22,7 @@
 ** "push the collection into a high-dimensional vector-space embedding and read off nearness, so that patterns sitting close become candidate merges"
 - Conference text: *ABSENT-OR-LOST*  Current text: *ABSENT-OR-LOST*
 - [[file:~/code/futon2/src/futon2/aif/r17_offline.clj::proposals (mapv proposal-receipt][futon2/src/futon2/aif/r17_offline.clj proposals (mapv proposal-receipt]] @ 06fd2d317
+- Lean: absent — R17″ alignment names no Lean declaration: align-r17pp-generator-absent records decl null with status ABSENT.
 - Annotated by claude-4; reviewed by not yet reviewed
 
 No embedding-nearness proposer feeding BMR was found in futon2, futon3c or futon3a. The R17 offline pass evaluates every pairwise merge among a small concept set (Campaign S: all 21 pairs among seven), which is enumeration, not generation. Embeddings exist as a pattern-recall surface (pattern_registry's retrieval aggregation; the fold socket admits an embedding fold) but not as the structure-learning generator the entry describes. Absence was established by search, not proof; a lab script elsewhere could exist.

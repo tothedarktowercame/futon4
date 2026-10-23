@@ -13,7 +13,7 @@
 
 *If* you want the agent to plan --- to score whole pattern cascades as policies, not single steps, and to prefer an action whose payoff is two or three ticks out over a greedy one-step win. *However* a rollout that looks one step ahead demonstrates the machinery but not depth; without a temporal hierarchy the horizon stays shallow. *Then* score the whole cascade over a horizon of more than one step, and introduce a two-timescale hierarchy: a slow (strategic) loop that updates priors and preferences, and a fast (tactical) loop that acts against them. Scoring a route means adding up the costs of its steps with the later ones discounted, so that a distant payoff can matter without swamping the immediate situation. *Because* active inference plans over a /policy/ --- here, the pattern cascade for the selected mission --- not over the next action alone. /Invariant to preserve:/ the thing being scored is the cascade, not its first move.
 
-* Current version (11a6b349f)
+* Current version (4bbea6424)
 
 *If* you want the agent to plan --- to score whole pattern cascades as policies, not single steps, and to prefer an action whose payoff is two or three ticks out over a greedy one-step win. *However* a rollout that looks one step ahead demonstrates the machinery but not depth; without a temporal hierarchy the horizon stays shallow. *Then* score the whole cascade over a horizon of more than one step, and introduce a two-timescale hierarchy: a slow (strategic) loop that updates priors and preferences, and a fast (tactical) loop that acts against them. Scoring a route means adding up the costs of its steps with the later ones discounted, so that a distant payoff can matter without swamping the immediate situation. *Because* active inference plans over a /policy/ --- here, the pattern cascade for the selected mission --- not over the next action alone. /Invariant to preserve:/ the thing being scored is the cascade, not its first move.
 
@@ -23,6 +23,14 @@
 - Conference text: *EXISTS-UNVALIDATED*  Current text: *EXISTS-UNVALIDATED*
 - [[file:~/code/futon2/src/futon2/aif/cascade_shape_g.clj::horizon (max 1 (min scorer/max-horizon (count patterns)))][futon2/src/futon2/aif/cascade_shape_g.clj horizon (max 1 (min scorer/max-horizon (count patterns)))]] @ 5b4526f95
 - [[file:~/code/futon2/src/futon2/aif/cascade_observation_scoring.clj::max-horizon][futon2/src/futon2/aif/cascade_observation_scoring.clj max-horizon]] @ 5b4526f95
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeEFE.lean::totalG][mathlib4/DarkTower/WarMachine/CascadeEFE.lean totalG]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeEFE.lean::total_decomposition][mathlib4/DarkTower/WarMachine/CascadeEFE.lean total_decomposition]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/MachineDepth.lean::machineHasNoSingleDepth][mathlib4/DarkTower/WarMachine/MachineDepth.lean machineHasNoSingleDepth]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/MachineDepth.lean::gTermsDisagreeOnDepth][mathlib4/DarkTower/WarMachine/MachineDepth.lean gTermsDisagreeOnDepth]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/R15TemporalHierarchy.lean::TwoTickFeedback][mathlib4/DarkTower/WarMachine/R15TemporalHierarchy.lean TwoTickFeedback]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CTauClassPreference.lean::pre_horizon_risk_zero][mathlib4/DarkTower/WarMachine/CTauClassPreference.lean pre_horizon_risk_zero]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeCoScoringExamples.lean::join_beats_chain][mathlib4/DarkTower/WarMachine/CascadeCoScoringExamples.lean join_beats_chain]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Requirements.lean::GNormalization][mathlib4/DarkTower/WarMachine/Requirements.lean GNormalization]] @ 9319ebb5f — STATED
 - Annotated by claude-4; reviewed by not yet reviewed
 - Ticket: paper edit candidate: update R13's worknote; the live reading-policy route scores cascades over horizon = pattern count (cap 10)
 
@@ -31,6 +39,14 @@ On the live reading-policy route each candidate cascade is scored as a whole by 
 ** "adding up the costs of its steps with the later ones discounted"
 - Conference text: *REFUTED*  Current text: *REFUTED*
 - [[file:~/code/futon2/src/futon2/aif/cascade_shape_g.clj:::g-normalization :per-step-capacity-and-pattern][futon2/src/futon2/aif/cascade_shape_g.clj :g-normalization :per-step-capacity-and-pattern]] @ 5b4526f95
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeEFE.lean::totalG][mathlib4/DarkTower/WarMachine/CascadeEFE.lean totalG]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeEFE.lean::total_decomposition][mathlib4/DarkTower/WarMachine/CascadeEFE.lean total_decomposition]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/MachineDepth.lean::machineHasNoSingleDepth][mathlib4/DarkTower/WarMachine/MachineDepth.lean machineHasNoSingleDepth]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/MachineDepth.lean::gTermsDisagreeOnDepth][mathlib4/DarkTower/WarMachine/MachineDepth.lean gTermsDisagreeOnDepth]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/R15TemporalHierarchy.lean::TwoTickFeedback][mathlib4/DarkTower/WarMachine/R15TemporalHierarchy.lean TwoTickFeedback]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CTauClassPreference.lean::pre_horizon_risk_zero][mathlib4/DarkTower/WarMachine/CTauClassPreference.lean pre_horizon_risk_zero]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeCoScoringExamples.lean::join_beats_chain][mathlib4/DarkTower/WarMachine/CascadeCoScoringExamples.lean join_beats_chain]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Requirements.lean::GNormalization][mathlib4/DarkTower/WarMachine/Requirements.lean GNormalization]] @ 9319ebb5f — STATED
 - Annotated by claude-4; reviewed by not yet reviewed
 - Ticket: paper edit candidate: R13 should describe summation over the horizon with per-step normalisation, not discounting
 

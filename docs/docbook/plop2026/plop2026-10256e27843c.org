@@ -17,7 +17,7 @@
 
 [fn:1] The older live route is recorded as =library-gap-findings =\(\rightarrow\)= authoring =\(\rightarrow\)= authored-seeds =\(\rightarrow\)= pattern-library= in ; the generalized mint lane and the two-projections precedent are in ; typed-memory evidence and pattern-conditioned recall are developed in .
 
-* Current version (11a6b349f)
+* Current version (4bbea6424)
 
 /Same text as the conference version./
 
@@ -27,6 +27,13 @@
 - Conference text: *ABSENT-OR-LOST*  Current text: *ABSENT-OR-LOST*
 - [[file:~/code/futon2/src/futon2/aif/fold_cascade.clj:::policy-holes][futon2/src/futon2/aif/fold_cascade.clj :policy-holes]] @ 06fd2d317
 - [[file:~/code/futon3/library/structure/two-projections-of-one-quantity.flexiarg][futon3/library/structure/two-projections-of-one-quantity.flexiarg]] @ c1c0325
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Holes.lean::Fold][mathlib4/DarkTower/WarMachine/Holes.lean Fold]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Holes.lean::ControlVocabulary][mathlib4/DarkTower/WarMachine/Holes.lean ControlVocabulary]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/FoldWitness.lean::recordedFoldFields][mathlib4/DarkTower/WarMachine/FoldWitness.lean recordedFoldFields]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/PatternTheta.lean::thetaOf][mathlib4/DarkTower/WarMachine/PatternTheta.lean thetaOf]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/PatternTheta.lean::theta_nil][mathlib4/DarkTower/WarMachine/PatternTheta.lean theta_nil]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/PatternTheta.lean::unwitnessed_not_counted][mathlib4/DarkTower/WarMachine/PatternTheta.lean unwitnessed_not_counted]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/PolicyPosteriorAtMachine.lean::unenactedPolicyIsScored][mathlib4/DarkTower/WarMachine/Proof2/PolicyPosteriorAtMachine.lean unenactedPolicyIsScored]] @ 9319ebb5f — PROVED
 - Annotated by claude-4; reviewed by not yet reviewed
 
 The input exists: the fold route records policy-holes (citations to patterns that do not exist) in its wiring. The worked instance exists: structure/two-projections-of-one-quantity was minted on 2026-06-10 (futon3 c1c0325, 'WM pilot Turn 3') and used to discharge its hole. But no mechanism was found that bundles a hole's circumstances, memories, rejected near-matches and predicted outcome into a candidate pattern, mints it at an unearned prior, and admits cascades containing it; the instance was minted in a pilot session, by hand. So the entry describes a procedure that has been performed, not one the machine performs.

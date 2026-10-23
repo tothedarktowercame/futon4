@@ -13,7 +13,7 @@
 
 *If* you want selection to balance canonical outcome risk and ambiguity with operational constraints. *However* calling every useful controller term "EFE" makes tuning indistinguishable from storytelling. *Then* compute and persist the canonical core separately --- /risk/, how far the outcomes an action predicts sit from the outcomes the system prefers, plus /ambiguity/, how uninformative those outcomes are expected to be --- and admit engineering terms only as a named augmentation, reported /beside/ that core and never folded into it. *Because* the decomposition makes clear whether a recommendation moved because of active-inference quantities or because of an engineering control. /Invariant to preserve:/ the two-term core is persisted apart from everything wrapped around it, so any reader can ask which one moved the pick.
 
-* Current version (11a6b349f)
+* Current version (4bbea6424)
 
 *If* you want selection to balance canonical outcome risk and ambiguity with operational constraints. *However* calling every useful controller term "EFE" makes tuning indistinguishable from storytelling. *Then* compute and persist the canonical core separately --- /risk/, how far the outcomes an action predicts sit from the outcomes the system prefers, plus /ambiguity/, how uninformative those outcomes are expected to be --- and admit engineering terms only as a named augmentation, reported /beside/ that core and never folded into it. *Because* the decomposition makes clear whether a recommendation moved because of active-inference quantities or because of an engineering control. /Invariant to preserve:/ the two-term core is persisted apart from everything wrapped around it, so any reader can ask which one moved the pick.
 
@@ -22,6 +22,25 @@
 ** "compute and persist the canonical core separately --- risk, how far the outcomes an action predicts sit from the outcomes the system prefers, plus ambiguity"
 - Conference text: *EXISTS-UNVALIDATED*  Current text: *EXISTS-UNVALIDATED*
 - [[file:~/code/futon2/src/futon2/aif/outer_target_score.clj::canonical-g (+ risk ambiguity (- eig))][futon2/src/futon2/aif/outer_target_score.clj canonical-g (+ risk ambiguity (- eig))]] @ 0ab3970ca
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeEFE.lean::stepG][mathlib4/DarkTower/WarMachine/CascadeEFE.lean stepG]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeEFE.lean::step_decomposition][mathlib4/DarkTower/WarMachine/CascadeEFE.lean step_decomposition]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeEFE.lean::scoreCascade][mathlib4/DarkTower/WarMachine/CascadeEFE.lean scoreCascade]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/GOverCascades.lean::CascadeGrainSeam][mathlib4/DarkTower/WarMachine/GOverCascades.lean CascadeGrainSeam]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/CoApplicationKernel.lean::coApplyKernel][mathlib4/DarkTower/WarMachine/Proof2/CoApplicationKernel.lean coApplyKernel]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/CoApplicationKernel.lean::coApplyKernel_eq_cascadeKernel_of_chain][mathlib4/DarkTower/WarMachine/Proof2/CoApplicationKernel.lean coApplyKernel_eq_cascadeKernel_of_chain]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/CoApplicationKernel.lean::coApply_ne_zero][mathlib4/DarkTower/WarMachine/Proof2/CoApplicationKernel.lean coApply_ne_zero]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeCoScoringExamples.lean::join_beats_chain][mathlib4/DarkTower/WarMachine/CascadeCoScoringExamples.lean join_beats_chain]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CTauClassPreference.lean::classPreference][mathlib4/DarkTower/WarMachine/CTauClassPreference.lean classPreference]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CTauClassPreference.lean::terminal_against_waiting_risk_top][mathlib4/DarkTower/WarMachine/CTauClassPreference.lean terminal_against_waiting_risk_top]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CTauClassPreference.lean::unrecognized_relation_has_no_scored_class][mathlib4/DarkTower/WarMachine/CTauClassPreference.lean unrecognized_relation_has_no_scored_class]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeRuledCEval.lean::score][mathlib4/DarkTower/WarMachine/CascadeRuledCEval.lean score]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/PatternTheta.lean::thetaOf][mathlib4/DarkTower/WarMachine/PatternTheta.lean thetaOf]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/PatternTheta.lean::theta_closed_form][mathlib4/DarkTower/WarMachine/PatternTheta.lean theta_closed_form]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/PatternTheta.lean::success_raises][mathlib4/DarkTower/WarMachine/PatternTheta.lean success_raises]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeRuledCEval.lean::terminalClass][mathlib4/DarkTower/WarMachine/CascadeRuledCEval.lean terminalClass]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CTauClassPreference.lean::terminalPreference][mathlib4/DarkTower/WarMachine/CTauClassPreference.lean terminalPreference]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeRuledCEval.lean::pre_horizon_risk_zero][mathlib4/DarkTower/WarMachine/CascadeRuledCEval.lean pre_horizon_risk_zero]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeCompetitorsEval.lean::delegate][mathlib4/DarkTower/WarMachine/CascadeCompetitorsEval.lean delegate]] @ 9319ebb5f — STATED
 - Annotated by claude-4; reviewed by not yet reviewed
 - Ticket: futon2 holes/tickets/T-outer-target-g-policy-prior.md (642048e7c)
 
@@ -31,6 +50,25 @@ The outer target score computes risk as KL(predicted outcomes || preference dist
 - Conference text: *REFUTED*  Current text: *REFUTED*
 - [[file:~/code/futon2/src/futon2/aif/outer_target_score.clj::normalized-g][futon2/src/futon2/aif/outer_target_score.clj normalized-g]] @ 0ab3970ca
 - [[file:~/code/futon2/src/futon2/aif/meta_live_outer_selector.clj:::outer-target-outcome-cost][futon2/src/futon2/aif/meta_live_outer_selector.clj :outer-target-outcome-cost]] @ 0ab3970ca
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeEFE.lean::stepG][mathlib4/DarkTower/WarMachine/CascadeEFE.lean stepG]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeEFE.lean::step_decomposition][mathlib4/DarkTower/WarMachine/CascadeEFE.lean step_decomposition]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeEFE.lean::scoreCascade][mathlib4/DarkTower/WarMachine/CascadeEFE.lean scoreCascade]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/GOverCascades.lean::CascadeGrainSeam][mathlib4/DarkTower/WarMachine/GOverCascades.lean CascadeGrainSeam]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/CoApplicationKernel.lean::coApplyKernel][mathlib4/DarkTower/WarMachine/Proof2/CoApplicationKernel.lean coApplyKernel]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/CoApplicationKernel.lean::coApplyKernel_eq_cascadeKernel_of_chain][mathlib4/DarkTower/WarMachine/Proof2/CoApplicationKernel.lean coApplyKernel_eq_cascadeKernel_of_chain]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/CoApplicationKernel.lean::coApply_ne_zero][mathlib4/DarkTower/WarMachine/Proof2/CoApplicationKernel.lean coApply_ne_zero]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeCoScoringExamples.lean::join_beats_chain][mathlib4/DarkTower/WarMachine/CascadeCoScoringExamples.lean join_beats_chain]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CTauClassPreference.lean::classPreference][mathlib4/DarkTower/WarMachine/CTauClassPreference.lean classPreference]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CTauClassPreference.lean::terminal_against_waiting_risk_top][mathlib4/DarkTower/WarMachine/CTauClassPreference.lean terminal_against_waiting_risk_top]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CTauClassPreference.lean::unrecognized_relation_has_no_scored_class][mathlib4/DarkTower/WarMachine/CTauClassPreference.lean unrecognized_relation_has_no_scored_class]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeRuledCEval.lean::score][mathlib4/DarkTower/WarMachine/CascadeRuledCEval.lean score]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/PatternTheta.lean::thetaOf][mathlib4/DarkTower/WarMachine/PatternTheta.lean thetaOf]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/PatternTheta.lean::theta_closed_form][mathlib4/DarkTower/WarMachine/PatternTheta.lean theta_closed_form]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/PatternTheta.lean::success_raises][mathlib4/DarkTower/WarMachine/PatternTheta.lean success_raises]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeRuledCEval.lean::terminalClass][mathlib4/DarkTower/WarMachine/CascadeRuledCEval.lean terminalClass]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CTauClassPreference.lean::terminalPreference][mathlib4/DarkTower/WarMachine/CTauClassPreference.lean terminalPreference]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeRuledCEval.lean::pre_horizon_risk_zero][mathlib4/DarkTower/WarMachine/CascadeRuledCEval.lean pre_horizon_risk_zero]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeCompetitorsEval.lean::delegate][mathlib4/DarkTower/WarMachine/CascadeCompetitorsEval.lean delegate]] @ 9319ebb5f — STATED
 - Annotated by claude-4; reviewed by not yet reviewed
 - Ticket: futon2 holes/tickets/T-outer-target-g-policy-prior.md (642048e7c)
 
@@ -40,6 +78,25 @@ The terms are reported beside the core, but the value that is ranked folds them 
 - Conference text: *EXISTS-UNVALIDATED*  Current text: *EXISTS-UNVALIDATED*
 - [[file:~/code/futon2/src/futon2/aif/outer_target_score.clj::alpha (or (get-in belief [:targets target :alpha])][futon2/src/futon2/aif/outer_target_score.clj alpha (or (get-in belief [:targets target :alpha])]] @ 0ab3970ca
 - [[file:~/code/futon2/src/futon2/aif/meta_pipeline_selector.clj:::no-unique-task-state-minimum][futon2/src/futon2/aif/meta_pipeline_selector.clj :no-unique-task-state-minimum]] @ 0ab3970ca
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeEFE.lean::stepG][mathlib4/DarkTower/WarMachine/CascadeEFE.lean stepG]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeEFE.lean::step_decomposition][mathlib4/DarkTower/WarMachine/CascadeEFE.lean step_decomposition]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeEFE.lean::scoreCascade][mathlib4/DarkTower/WarMachine/CascadeEFE.lean scoreCascade]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/GOverCascades.lean::CascadeGrainSeam][mathlib4/DarkTower/WarMachine/GOverCascades.lean CascadeGrainSeam]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/CoApplicationKernel.lean::coApplyKernel][mathlib4/DarkTower/WarMachine/Proof2/CoApplicationKernel.lean coApplyKernel]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/CoApplicationKernel.lean::coApplyKernel_eq_cascadeKernel_of_chain][mathlib4/DarkTower/WarMachine/Proof2/CoApplicationKernel.lean coApplyKernel_eq_cascadeKernel_of_chain]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/Proof2/CoApplicationKernel.lean::coApply_ne_zero][mathlib4/DarkTower/WarMachine/Proof2/CoApplicationKernel.lean coApply_ne_zero]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeCoScoringExamples.lean::join_beats_chain][mathlib4/DarkTower/WarMachine/CascadeCoScoringExamples.lean join_beats_chain]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CTauClassPreference.lean::classPreference][mathlib4/DarkTower/WarMachine/CTauClassPreference.lean classPreference]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CTauClassPreference.lean::terminal_against_waiting_risk_top][mathlib4/DarkTower/WarMachine/CTauClassPreference.lean terminal_against_waiting_risk_top]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CTauClassPreference.lean::unrecognized_relation_has_no_scored_class][mathlib4/DarkTower/WarMachine/CTauClassPreference.lean unrecognized_relation_has_no_scored_class]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeRuledCEval.lean::score][mathlib4/DarkTower/WarMachine/CascadeRuledCEval.lean score]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/PatternTheta.lean::thetaOf][mathlib4/DarkTower/WarMachine/PatternTheta.lean thetaOf]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/PatternTheta.lean::theta_closed_form][mathlib4/DarkTower/WarMachine/PatternTheta.lean theta_closed_form]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/PatternTheta.lean::success_raises][mathlib4/DarkTower/WarMachine/PatternTheta.lean success_raises]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeRuledCEval.lean::terminalClass][mathlib4/DarkTower/WarMachine/CascadeRuledCEval.lean terminalClass]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CTauClassPreference.lean::terminalPreference][mathlib4/DarkTower/WarMachine/CTauClassPreference.lean terminalPreference]] @ 9319ebb5f — STATED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeRuledCEval.lean::pre_horizon_risk_zero][mathlib4/DarkTower/WarMachine/CascadeRuledCEval.lean pre_horizon_risk_zero]] @ 9319ebb5f — PROVED
+- Lean: [[file:~/code/mathlib4/DarkTower/WarMachine/CascadeCompetitorsEval.lean::delegate][mathlib4/DarkTower/WarMachine/CascadeCompetitorsEval.lean delegate]] @ 9319ebb5f — STATED
 - Annotated by claude-4; reviewed by not yet reviewed
 - Ticket: futon2 holes/tickets/T-outer-target-novelty-term.md (642048e7c)
 
