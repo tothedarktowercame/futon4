@@ -25,6 +25,22 @@ futon3c (default port 7070), whereas the evidence server runs in futon1a
   :type 'string
   :group 'arxana-missions)
 
+(defcustom arxana-missions-meta-endpoint "/api/alpha/wm/meta-latest"
+  "Path of the META field endpoint.  The default serves the latest click's
+retained outer-task-selection receipt without recomputing it.  Set it to
+\"/api/alpha/wm/meta-preview\" to recompute the field live (slow)."
+  :type 'string
+  :group 'arxana-missions)
+
+(defun arxana-missions-browse-live-preview ()
+  "Open the META field recomputed live by meta-preview (blocks ~90 s)."
+  (interactive)
+  (let ((arxana-missions-meta-endpoint "/api/alpha/wm/meta-preview"))
+    (setq arxana-browser--stack
+          (cons (list :view 'missions-portfolio :label "META (live preview)")
+                arxana-browser--stack))
+    (arxana-browser--render)))
+
 (defun arxana-missions--server ()
   "Return the Mission Control server base URL."
   arxana-mission-control-server)
@@ -47,13 +63,13 @@ futon3c (default port 7070), whereas the evidence server runs in futon1a
 (defun arxana-missions--fetch-snapshot ()
   "Fetch the live Mission Control snapshot, including census metadata."
   (let* ((base (replace-regexp-in-string "/\\'" "" (arxana-missions--server)))
-         (url (concat base "/api/alpha/wm/meta-preview"))
+         (url (concat base arxana-missions-meta-endpoint))
          (url-request-method "GET")
          (url-request-extra-headers '(("Accept" . "application/json")))
-         ;; The endpoint performs the same pinned cascade reads as production,
-         ;; but returns a bounded browser projection rather than the full
-         ;; pairwise proof receipt.
-         (buffer (url-retrieve-synchronously url t t 90)))
+         ;; meta-latest reads the latest click's retained receipt (under 1 s);
+         ;; meta-preview recomputes the field (~85 s on 2026-10-25).
+         (buffer (url-retrieve-synchronously
+                  url t t (if (string-suffix-p "meta-preview" url) 90 15))))
     (unless buffer
       (user-error "Mission inventory request failed"))
     (with-current-buffer buffer
@@ -84,6 +100,22 @@ futon3c (default port 7070), whereas the evidence server runs in futon1a
                (by-id (make-hash-table :test 'equal))
                rows)
           (dolist (row support) (puthash (plist-get row :id) row by-id))
+          ;; A retained click receipt carries only the selected policy, not a
+          ;; ranking: list the chosen target first, then the other eligible rows.
+          (unless ranking
+            (let ((chosen-id (plist-get (plist-get selection :selected) :target-id)))
+              (dolist (task (append (seq-filter (lambda (r) (equal (plist-get r :id) chosen-id)) support)
+                                    (seq-remove (lambda (r) (equal (plist-get r :id) chosen-id)) support)))
+                (push (list :mission/id (plist-get task :id)
+                            :mission/repo (arxana-missions--name (plist-get task :kind))
+                            :mission/status (if (equal (plist-get task :id) chosen-id) "chosen" "eligible")
+                            :mission/title (if (equal (plist-get task :id) chosen-id)
+                                               (format "selected policy %s; G %s"
+                                                       (plist-get (plist-get selection :selected) :policy-id)
+                                                       (plist-get (plist-get selection :selected) :G))
+                                             "")
+                            :mission/path (plist-get (plist-get task :source) :path))
+                      rows))))
           (dolist (ranked ranking)
             (let* ((id (plist-get ranked :id))
                    (task (gethash id by-id)))
@@ -104,7 +136,8 @@ futon3c (default port 7070), whereas the evidence server runs in futon1a
                         :mission/path (plist-get (plist-get row :source) :path)) rows))
           (list :missions (nreverse rows)
                 :declared-count (+ (length support) (length excluded))
-                :selection selection))))))
+                :selection selection
+                :source (plist-get parsed :source)))))))
 
 (defun arxana-missions--fetch ()
   "Fetch mission inventory from Mission Control. Returns mission maps."
@@ -124,7 +157,13 @@ futon3c (default port 7070), whereas the evidence server runs in futon1a
           :label (format "Live META field: %d M/E/T/A tasks (%d kinds)"
                          actual-count (length repos))
           :description (if coherent
-                           "Source: GET /api/alpha/wm/meta-preview; ordering is the WM receipt"
+                           (let ((source (plist-get snapshot :source)))
+                             (if source
+                                 (format "Source: latest click receipt, %s %s (written %s)"
+                                         (plist-get source :tree) (plist-get source :attempt)
+                                         (plist-get source :written-at))
+                               (format "Source: GET %s; ordering is the WM receipt"
+                                       arxana-missions-meta-endpoint)))
                          (format "Census mismatch: endpoint declared %s, returned %d"
                                  declared-count actual-count))
           :census-coherent coherent
