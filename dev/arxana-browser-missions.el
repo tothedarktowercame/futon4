@@ -362,7 +362,9 @@ bottom of the active range."
         (insert "\n")
         (arxana-missions--insert-want-rows
          "Admitted wants" (plist-get view :admitted)
-         (lambda (w) (format "[%s] %s" (plist-get w :locator-class) (plist-get w :stated))))
+         (lambda (w) (format "[%s] %s" (or (plist-get w :locator-class)
+                                            "no locator: assembly refuses the target")
+                             (plist-get w :stated))))
         (arxana-missions--insert-want-rows
          "Waiting" (plist-get view :waiting)
          (lambda (w) (format "[%s] %s" (plist-get w :reason) (plist-get w :stated))))
