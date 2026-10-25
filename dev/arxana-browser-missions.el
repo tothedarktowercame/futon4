@@ -318,15 +318,75 @@ bottom of the active range."
 ;; Open handlers
 ;; =============================================================================
 
+(defun arxana-missions--fetch-wants (id path)
+  "Fetch the read-only wants view for mission ID at absolute PATH."
+  (let* ((base (replace-regexp-in-string "/\\'" "" (arxana-missions--server)))
+         (url (format "%s/api/alpha/wm/mission-wants?id=%s&path=%s" base
+                      (url-hexify-string id) (url-hexify-string path)))
+         (url-request-method "GET")
+         (url-request-extra-headers '(("Accept" . "application/json")))
+         (buffer (url-retrieve-synchronously url t t 60)))
+    (unless buffer (user-error "Mission wants request failed"))
+    (with-current-buffer buffer
+      (goto-char (point-min))
+      (re-search-forward "\n\n" nil 'move)
+      (prog1 (json-parse-string (buffer-substring-no-properties (point) (point-max))
+                                :object-type 'plist :array-type 'list
+                                :null-object nil :false-object nil)
+        (kill-buffer buffer)))))
+
+(defun arxana-missions--insert-want-rows (title rows fn)
+  "Insert section TITLE listing ROWS, each rendered by FN."
+  (insert (format "\n%s (%d)\n" title (length rows)))
+  (if rows (dolist (row rows) (insert "  " (funcall fn row) "\n"))
+    (insert "  none\n")))
+
+(defun arxana-missions-show-wants (id path)
+  "Show what the WM would see as wants selecting mission ID (doc at PATH)."
+  (let* ((resp (arxana-missions--fetch-wants id path))
+         (view (plist-get resp :view))
+         (route (plist-get view :route))
+         (buf (get-buffer-create (format "*WM wants: %s*" id))))
+    (unless (plist-get resp :ok)
+      (user-error "Mission wants: %s %s" (plist-get resp :error)
+                  (or (plist-get resp :message) "")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert (format "WM wants for %s  (read-only; nothing observed)\n" id))
+        (insert (format "route: %s%s\n" (plist-get route :kind)
+                        (if-let* ((a (plist-get route :seam-absent)))
+                            (format "  (no seam document: %s)" (plist-get a :absence)) "")))
+        (insert-button (format "source: %s" path)
+                       'action (lambda (_) (find-file-other-window path)))
+        (insert "\n")
+        (arxana-missions--insert-want-rows
+         "Admitted wants" (plist-get view :admitted)
+         (lambda (w) (format "[%s] %s" (plist-get w :locator-class) (plist-get w :stated))))
+        (arxana-missions--insert-want-rows
+         "Waiting" (plist-get view :waiting)
+         (lambda (w) (format "[%s] %s" (plist-get w :reason) (plist-get w :stated))))
+        (arxana-missions--insert-want-rows
+         "Out of view" (plist-get view :out-of-view)
+         (lambda (w) (format "[%s] %s" (plist-get w :reason) (or (plist-get w :token) ""))))
+        (arxana-missions--insert-want-rows
+         "Coverage questions" (plist-get view :coverage-questions)
+         (lambda (q) (format "%S" q)))
+        (goto-char (point-min))
+        (special-mode)))
+    (display-buffer buf)))
+
 (defun arxana-browser-missions-open-entry (item)
-  "Open a mission entry — navigate to its file if available."
-  (let ((path (plist-get item :path)))
-    (if (and path (stringp path) (file-exists-p path))
-        (find-file-other-window path)
-      (message "Mission: %s [%s] — %s"
-               (or (plist-get item :mission-id) "?")
-               (or (plist-get item :status) "?")
-               (or (plist-get item :title) "")))))
+  "Open a mission entry: show its WM wants view, or its file if no id."
+  (let ((path (plist-get item :path))
+        (id (plist-get item :mission-id)))
+    (cond ((and id path (stringp path) (file-exists-p path))
+           (arxana-missions-show-wants id path))
+          ((and path (stringp path) (file-exists-p path))
+           (find-file-other-window path))
+          (t (message "Mission: %s [%s] — %s" (or id "?")
+                      (or (plist-get item :status) "?")
+                      (or (plist-get item :title) ""))))))
 
 (defun arxana-browser-missions-open-status-group (item)
   "Drill into a status group."
