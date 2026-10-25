@@ -137,7 +137,8 @@ retained outer-task-selection receipt without recomputing it.  Set it to
           (list :missions (nreverse rows)
                 :declared-count (+ (length support) (length excluded))
                 :selection selection
-                :source (plist-get parsed :source)))))))
+                :source (plist-get parsed :source)
+                :g-frontier (plist-get parsed :g-frontier)))))))
 
 (defun arxana-missions--fetch ()
   "Fetch mission inventory from Mission Control. Returns mission maps."
@@ -169,6 +170,22 @@ retained outer-task-selection receipt without recomputing it.  Set it to
           :census-coherent coherent
           :mission-count actual-count
           :repo-count (length repos))))
+
+(defun arxana-missions--g-frontier-item (snapshot)
+  "An info row naming every candidate the click scored with G, or nil."
+  (when-let* ((f (plist-get snapshot :g-frontier))
+              (entries (plist-get f :entries)))
+    (list :type 'info
+          :label (format "G frontier: %d scored of the eligible field (horizon %s)"
+                         (length entries) (plist-get f :horizon))
+          :description
+          (mapconcat (lambda (e)
+                       (format "#%s %s G=%s" (or (plist-get e :rank) "-")
+                               (plist-get e :target-id)
+                               (if (numberp (plist-get e :G))
+                                   (format "%.4f" (plist-get e :G))
+                                 (or (plist-get e :reason) "?"))))
+                     entries "; "))))
 
 (defun arxana-missions--status-sort-key (status)
   "Sort key for mission status — active first, archived/nonstarter last.
@@ -225,7 +242,8 @@ bottom of the active range."
       (let* ((snapshot (arxana-missions--fetch-snapshot))
              (missions (plist-get snapshot :missions)))
         (if missions
-            (cons (arxana-missions--census-item snapshot)
+            (append (delq nil (list (arxana-missions--census-item snapshot)
+                                    (arxana-missions--g-frontier-item snapshot)))
                   (mapcar (lambda (m)
                             (list :type 'mission-entry
                             :mission-id (or (plist-get m :mission/id) "?")
