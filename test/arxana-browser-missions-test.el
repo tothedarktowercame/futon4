@@ -42,5 +42,51 @@
     (should (string-match-p "outer-policy order" (plist-get missions :description)))
     (should-not (string-match-p "98 missions" (plist-get missions :description)))))
 
+(ert-deftest arxana-work-candidates-lead-with-meta-id ()
+  (let* ((work '(:mission/id "E-dynamic-queries"
+                 :mission/repo "excursion"
+                 :mission/status "eligible"
+                 :mission/path "/tmp/E-dynamic-queries.md"))
+         (candidate (car (arxana-missions--work-candidates (list work)))))
+    (should (string-prefix-p "E-dynamic-queries  [eligible · excursion]"
+                             (car candidate)))
+    (should (eq work (cdr candidate)))))
+
+(ert-deftest futon-find-work-opens-the-meta-source-without-scanning ()
+  (let* ((path (make-temp-file "futon-find-work-" nil ".md"))
+         (work (list :mission/id "M-shared-memory-control-build-test"
+                     :mission/repo "mission" :mission/status "ready"
+                     :mission/path path))
+         opened)
+    (unwind-protect
+        (cl-letf (((symbol-function 'arxana-missions--fetch-work-inventory)
+                   (lambda () (list work)))
+                  ((symbol-function 'completing-read)
+                   (lambda (_prompt candidates &rest _)
+                     (caar candidates)))
+                  ((symbol-function 'find-file)
+                   (lambda (chosen) (setq opened chosen))))
+          (futon-find-work)
+          (should (equal path opened)))
+      (delete-file path))))
+
+(ert-deftest arxana-substrate-work-row-keeps-canonical-provenance-path ()
+  (cl-letf (((symbol-function 'arxana-missions--substrate-json)
+             (lambda (_)
+               '(:entities
+                 ((:entity/external-id "M-shared-memory-control-build-test"
+                   :entity/name "mission|M-shared-memory-control-build-test"
+                   :entity/type "mission"
+                   :entity/props
+                   (:provenance/repo "futon3c"
+                    :provenance/path "/canonical/M-shared-memory-control-build-test.md"
+                    :mission/status-class "open")))))))
+    (let ((row (car (arxana-missions--substrate-work-rows "mission"))))
+      (should (equal "M-shared-memory-control-build-test"
+                     (plist-get row :mission/id)))
+      (should (equal "/canonical/M-shared-memory-control-build-test.md"
+                     (plist-get row :mission/path)))
+      (should (equal "open" (plist-get row :mission/status))))))
+
 (provide 'arxana-browser-missions-test)
 ;;; arxana-browser-missions-test.el ends here

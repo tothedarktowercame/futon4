@@ -32,6 +32,13 @@ retained outer-task-selection receipt without recomputing it.  Set it to
   :type 'string
   :group 'arxana-missions)
 
+(defcustom arxana-missions-substrate-server "http://localhost:7073"
+  "Base URL for substrate-2's entity API.
+`futon-find-work' reads the durable work census here; it does not depend on a
+recent War Machine selection receipt being present."
+  :type 'string
+  :group 'arxana-missions)
+
 (defun arxana-missions-browse-live-preview ()
   "Open the META field recomputed live by meta-preview (blocks ~90 s)."
   (interactive)
@@ -143,6 +150,123 @@ retained outer-task-selection receipt without recomputing it.  Set it to
 (defun arxana-missions--fetch ()
   "Fetch mission inventory from Mission Control. Returns mission maps."
   (plist-get (arxana-missions--fetch-snapshot) :missions))
+
+(defun arxana-missions--substrate-json (path)
+  "GET PATH from substrate-2 and return its JSON plist."
+  (let* ((url-request-method "GET")
+         ;; url.el writes its own Accept header after `url-request-extra-headers';
+         ;; bind the controlling variable or substrate correctly serves EDN.
+         (url-mime-accept-string "application/json")
+         (base (string-remove-suffix "/" arxana-missions-substrate-server))
+         (buffer (url-retrieve-synchronously (concat base path) t t 15)))
+    (unless buffer (user-error "Substrate work inventory request failed"))
+    (with-current-buffer buffer
+      (unwind-protect
+          (progn
+            (goto-char (point-min))
+            ;; `url-retrieve-synchronously' normalises the header separator in
+            ;; its response buffer; use the same boundary as the META reader.
+            (unless (re-search-forward "\n\n" nil t)
+              (user-error "Malformed substrate work inventory response"))
+            (json-parse-string (buffer-substring-no-properties (point) (point-max))
+                               :object-type 'plist :array-type 'list
+                               :null-object nil :false-object nil))
+        (kill-buffer buffer)))))
+
+(defun arxana-missions--repo-from-entity-name (name)
+  "Recover the checkout name from substrate entity NAME."
+  (when (and (stringp name) (string-match "\\`\\([^/]+\\)/" name))
+    (replace-regexp-in-string "-d[0-9]*\\'" "" (match-string 1 name))))
+
+(defun arxana-missions--conventional-work-path (id repo)
+  "Resolve work ID under REPO using declaration locations, without searching."
+  (when (and (stringp id) (stringp repo))
+    (let* ((root (expand-file-name repo "/home/joe/code/"))
+           (dirs (pcase (substring id 0 (min 2 (length id)))
+                   ("M-" '("holes/missions" "holes"))
+                   ("E-" '("holes/excursions" "analysis/excursions" "holes"))
+                   ("T-" '("holes/tickets" "holes"))
+                   ("A-" '("holes/assignments" "holes"))
+                   (_ '("holes")))))
+      (seq-find #'file-exists-p
+                (mapcar (lambda (dir)
+                          (expand-file-name (concat id ".md")
+                                            (expand-file-name dir root)))
+                        dirs)))))
+
+(defun arxana-missions--substrate-work-kind (entity-type)
+  "Return a display kind for substrate ENTITY-TYPE."
+  (car (split-string (or entity-type "work") "/")))
+
+(defun arxana-missions--substrate-work-rows (entity-type)
+  "Read one ENTITY-TYPE population from substrate-2 as META-shaped rows."
+  (let* ((path (format "/api/alpha/entities?type=%s&limit=1000&include-total=false"
+                       (url-hexify-string entity-type)))
+         (entities (plist-get (arxana-missions--substrate-json path) :entities)))
+    (delq
+     nil
+     (mapcar
+      (lambda (entity)
+        (let* ((id (plist-get entity :entity/external-id))
+               (props (plist-get entity :entity/props))
+               (repo (or (plist-get props :provenance/repo)
+                         (arxana-missions--repo-from-entity-name
+                          (plist-get entity :entity/name))))
+               (path (or (plist-get props :provenance/path)
+                         (arxana-missions--conventional-work-path id repo)))
+               (kind (arxana-missions--substrate-work-kind entity-type))
+               (status (or (plist-get props :mission/status-class)
+                           (plist-get props :mission/status)
+                           (plist-get props :excursion/status)
+                           "known")))
+          (when (and (stringp id) (string-match-p "\\`[META]-" id))
+            (list :mission/id id :mission/repo kind
+                  :mission/status status :mission/path path))))
+      entities))))
+
+(defun arxana-missions--fetch-work-inventory ()
+  "Return the known substrate-2 M/E/T/A work population.
+Types not yet populated simply contribute no rows."
+  (let ((types '("mission" "excursion/doc" "ticket/doc" "assignment/doc")))
+    (sort (delete-dups (mapcan #'arxana-missions--substrate-work-rows types))
+          (lambda (a b) (string< (plist-get a :mission/id)
+                                 (plist-get b :mission/id))))))
+
+(defun arxana-missions--work-candidates (missions)
+  "Return completion alist for MISSIONS from the META work field.
+The ID leads each display string so ordinary completion styles can narrow on
+the name exactly as a Projectile file command does.  Status and kind remain
+visible context; the associated value is the unmodified META row."
+  (mapcar
+   (lambda (work)
+     (let ((id (or (plist-get work :mission/id) "?"))
+           (status (or (plist-get work :mission/status) "?"))
+           (kind (or (plist-get work :mission/repo) "?")))
+       (cons (format "%s  [%s · %s]" id status kind) work)))
+   missions))
+
+;;;###autoload
+(defun futon-find-work ()
+  "Find a declared work item from Arxana's live META field.
+
+Completion covers the same M/E/T/A population shown by META and opens the
+canonical source path retained in substrate, rather than searching for text
+references to the work ID."
+  (interactive)
+  (let* ((candidates (arxana-missions--work-candidates
+                      (arxana-missions--fetch-work-inventory)))
+         (_ (unless candidates (user-error "META contains no work items")))
+         (choice (completing-read "Find work: " candidates nil t))
+         (work (cdr (assoc choice candidates)))
+         (path (plist-get work :mission/path)))
+    (unless (and (stringp path) (not (string-empty-p path)))
+      (user-error "META has no source path for %s"
+                  (plist-get work :mission/id)))
+    (unless (file-exists-p path)
+      (user-error "META source does not exist locally: %s" path))
+    (find-file path)))
+
+(defalias 'arxana-find-work #'futon-find-work)
 
 (defun arxana-missions--census-item (snapshot)
   "Build a visible census/provenance row from live SNAPSHOT."
