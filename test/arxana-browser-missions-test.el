@@ -52,6 +52,20 @@
                              (car candidate)))
     (should (eq work (cdr candidate)))))
 
+(ert-deftest arxana-work-id-at-point-prefers-containing-id ()
+  (with-temp-buffer
+    (insert "See M-other-work, then E-dynamic-queries for the operative charter.")
+    (search-backward "dynamic")
+    (should (equal "E-dynamic-queries"
+                   (arxana-missions--work-id-at-point)))))
+
+(ert-deftest arxana-work-id-at-point-uses-nearest-surrounding-id ()
+  (with-temp-buffer
+    (insert "M-left-work some nearby prose E-right-work")
+    (search-backward "nearby")
+    (should (equal "M-left-work"
+                   (arxana-missions--work-id-at-point)))))
+
 (ert-deftest futon-find-work-opens-the-meta-source-without-scanning ()
   (let* ((path (make-temp-file "futon-find-work-" nil ".md"))
          (work (list :mission/id "M-shared-memory-control-build-test"
@@ -68,6 +82,27 @@
                    (lambda (chosen) (setq opened chosen))))
           (futon-find-work)
           (should (equal path opened)))
+      (delete-file path))))
+
+(ert-deftest futon-find-work-defaults-to-id-around-point ()
+  (let* ((path (make-temp-file "futon-find-work-default-" nil ".md"))
+         (work (list :mission/id "E-dynamic-queries" :mission/repo "excursion"
+                     :mission/status "known" :mission/path path))
+         seen-default)
+    (unwind-protect
+        (with-temp-buffer
+          (insert "Continue with E-dynamic-queries next.")
+          (search-backward "dynamic")
+          (cl-letf (((symbol-function 'arxana-missions--fetch-work-inventory)
+                     (lambda () (list work)))
+                    ((symbol-function 'completing-read)
+                     (lambda (_prompt candidates _predicate _require-match
+                                      _initial _hist default)
+                       (setq seen-default default)
+                       (caar candidates)))
+                    ((symbol-function 'find-file) #'ignore))
+            (futon-find-work)
+            (should (string-prefix-p "E-dynamic-queries  [" seen-default))))
       (delete-file path))))
 
 (ert-deftest arxana-substrate-work-row-keeps-canonical-provenance-path ()

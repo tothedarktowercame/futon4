@@ -245,6 +245,28 @@ visible context; the associated value is the unmodified META row."
        (cons (format "%s  [%s · %s]" id status kind) work)))
    missions))
 
+(defun arxana-missions--work-id-at-point (&optional radius)
+  "Return the nearest M/E/T/A identifier around point.
+Search RADIUS characters on either side (default 500).  An identifier that
+contains point wins; otherwise choose the one with the nearest boundary."
+  (let* ((origin (point))
+         (radius (or radius 500))
+         (start (max (point-min) (- origin radius)))
+         (end (min (point-max) (+ origin radius)))
+         best best-distance)
+    (save-excursion
+      (goto-char start)
+      (while (re-search-forward "\\_<[META]-[[:alnum:]_.-]+\\_>" end t)
+        (let* ((beg (match-beginning 0))
+               (finish (match-end 0))
+               (distance (cond ((< origin beg) (- beg origin))
+                               ((> origin finish) (- origin finish))
+                               (t 0))))
+          (when (or (null best-distance) (< distance best-distance))
+            (setq best (match-string-no-properties 0)
+                  best-distance distance)))))
+    best))
+
 ;;;###autoload
 (defun futon-find-work ()
   "Find a declared work item from Arxana's live META field.
@@ -253,10 +275,18 @@ Completion covers the same M/E/T/A population shown by META and opens the
 canonical source path retained in substrate, rather than searching for text
 references to the work ID."
   (interactive)
-  (let* ((candidates (arxana-missions--work-candidates
+  (let* ((near-id (arxana-missions--work-id-at-point))
+         (candidates (arxana-missions--work-candidates
                       (arxana-missions--fetch-work-inventory)))
          (_ (unless candidates (user-error "META contains no work items")))
-         (choice (completing-read "Find work: " candidates nil t))
+         (near-choice (and near-id
+                           (car (seq-find
+                                 (lambda (candidate)
+                                   (string-prefix-p (concat near-id "  [")
+                                                    (car candidate)))
+                                 candidates))))
+         (choice (completing-read "Find work: " candidates nil t
+                                  (unless near-choice near-id) nil near-choice))
          (work (cdr (assoc choice candidates)))
          (path (plist-get work :mission/path)))
     (unless (and (stringp path) (not (string-empty-p path)))
