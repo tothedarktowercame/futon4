@@ -123,5 +123,26 @@
                      (plist-get row :mission/path)))
       (should (equal "open" (plist-get row :mission/status))))))
 
+(ert-deftest arxana-missing-inventory-path-resolves-from-exact-scope-entity ()
+  (let ((work '(:mission/id "E-70B-on-raw-control-arm"
+                :mission/repo "excursion" :mission/path nil)))
+    (cl-letf (((symbol-function 'arxana-missions--substrate-json)
+               (lambda (path)
+                 (should (string-suffix-p
+                          "/api/alpha/entity/E-70B-on-raw-control-arm" path))
+                 '(:entity (:props
+                            (:mission/path
+                             "/home/joe/code/futon6/holes/excursions/E-70B-on-raw-control-arm.md"))))))
+      (should
+       (equal "/home/joe/code/futon6/holes/excursions/E-70B-on-raw-control-arm.md"
+              (arxana-missions--resolve-work-path work))))))
+
+(ert-deftest arxana-present-inventory-path-needs-no-second-read ()
+  (let ((work '(:mission/id "E-ready" :mission/path "/canonical/E-ready.md")))
+    (cl-letf (((symbol-function 'arxana-missions--substrate-json)
+               (lambda (_) (ert-fail "unexpected substrate lookup"))))
+      (should (equal "/canonical/E-ready.md"
+                     (arxana-missions--resolve-work-path work))))))
+
 (provide 'arxana-browser-missions-test)
 ;;; arxana-browser-missions-test.el ends here

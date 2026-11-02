@@ -232,6 +232,22 @@ Types not yet populated simply contribute no rows."
           (lambda (a b) (string< (plist-get a :mission/id)
                                  (plist-get b :mission/id))))))
 
+(defun arxana-missions--resolve-work-path (work)
+  "Return WORK's canonical path, resolving a missing path by exact ID.
+The inventory projections are intentionally compact and older excursion rows
+do not carry provenance.  Their canonical scope entity does carry
+`mission/path', so consult that one record only after the operator selects it."
+  (or (plist-get work :mission/path)
+      (let* ((id (plist-get work :mission/id))
+             (response (and id
+                            (arxana-missions--substrate-json
+                             (format "/api/alpha/entity/%s"
+                                     (url-hexify-string id)))))
+             (props (plist-get (plist-get response :entity) :props)))
+        (or (plist-get props :provenance/path)
+            (plist-get props :mission/path)
+            (plist-get props :excursion/path)))))
+
 (defun arxana-missions--work-candidates (missions)
   "Return completion alist for MISSIONS from the META work field.
 The ID leads each display string so ordinary completion styles can narrow on
@@ -288,7 +304,7 @@ references to the work ID."
          (choice (completing-read "Find work: " candidates nil t
                                   (unless near-choice near-id) nil near-choice))
          (work (cdr (assoc choice candidates)))
-         (path (plist-get work :mission/path)))
+         (path (arxana-missions--resolve-work-path work)))
     (unless (and (stringp path) (not (string-empty-p path)))
       (user-error "META has no source path for %s"
                   (plist-get work :mission/id)))
