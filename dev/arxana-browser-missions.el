@@ -59,6 +59,13 @@ recent War Machine selection receipt being present."
         ((stringp value) value)
         (t (format "%s" value))))
 
+(defun arxana-missions--excluded-status (row)
+  "Status cell for excluded ROW: \"x \" plus the reason's family.
+The family is the part of the reason before \"/\" (\"requisition\",
+\"repair-finding\", \"pipeline\"), or the whole reason when it has none."
+  (let ((reason (arxana-missions--name (plist-get row :ineligible-reason))))
+    (concat "x " (car (split-string (string-remove-prefix ":" reason) "/")))))
+
 (defun arxana-missions--plist-keys (plist)
   "Return the keys of PLIST in their retained order."
   (let (keys)
@@ -100,6 +107,9 @@ recent War Machine selection receipt being present."
         (unless (listp parsed)
           (user-error "Mission inventory response was not an object"))
         (let* ((receipt (plist-get parsed :receipt))
+               (_ (when-let* ((absence (plist-get receipt :absent)))
+                    (user-error "META projection unavailable: %s"
+                                (arxana-missions--name absence))))
                (support (plist-get receipt :support))
                (excluded (plist-get receipt :excluded))
                (selection (plist-get (plist-get receipt :policy) :meta-selection))
@@ -135,11 +145,17 @@ recent War Machine selection receipt being present."
                                                  (plist-get ranked :pairwise-losses))
                           :mission/path (plist-get (plist-get task :source) :path))
                     rows)))
+          ;; The reason family goes in the Status column so it stays visible
+          ;; on a narrow frame; the full reason stays in Title (Joe, 2026-11-04).
           (dolist (row excluded)
             (push (list :mission/id (plist-get row :id)
                         :mission/repo (arxana-missions--name (plist-get row :kind))
-                        :mission/status "excluded"
-                        :mission/title (format "%s" (plist-get row :ineligible-reason))
+                        :mission/status (arxana-missions--excluded-status row)
+                        :mission/title (format "%s%s"
+                                               (arxana-missions--name (plist-get row :ineligible-reason))
+                                               (if-let* ((stage (plist-get row :exclusion-stage)))
+                                                   (format " (%s stage)" (arxana-missions--name stage))
+                                                 ""))
                         :mission/path (plist-get (plist-get row :source) :path)) rows))
           (list :missions (nreverse rows)
                 :declared-count (+ (length support) (length excluded))
@@ -401,10 +417,13 @@ bottom of the active range."
    ("Title" 0 nil)])
 
 (defun arxana-browser--missions-portfolio-row (item)
-  (vector (or (plist-get item :status) "?")
-          (or (plist-get item :repo) "?")
-          (or (plist-get item :mission-id) "?")
-          (or (plist-get item :title) "")))
+  (if (eq (plist-get item :type) 'info)
+      (vector "!" "" (or (plist-get item :label) "")
+              (or (plist-get item :description) ""))
+    (vector (or (plist-get item :status) "?")
+            (or (plist-get item :repo) "?")
+            (or (plist-get item :mission-id) "?")
+            (or (plist-get item :title) ""))))
 
 (defun arxana-browser--missions-portfolio-items ()
   "Fetch and render the full mission portfolio."
@@ -501,6 +520,28 @@ bottom of the active range."
                                              (or (plist-get m :mission/title) ""))))
                 missions)
       (list (list :type 'info :label "Empty group" :description "No missions in this status.")))))
+
+(defun arxana-browser-missions-menu ()
+  "Show the key summary for Mission Control browser views."
+  (interactive)
+  (message "META: RET inspect mission · g refresh · q back · ? this menu"))
+
+(defvar arxana-browser-missions--view-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "?" #'arxana-browser-missions-menu)
+    map)
+  "Keymap laid over Mission Control browser listings.")
+
+(defun arxana-browser-missions--register-view-keymaps ()
+  "Register the keymap owned by each Mission Control view."
+  (when (fboundp 'arxana-browser-register-view-keymap)
+    (dolist (view '(missions-portfolio missions-by-status missions-status-group))
+      (arxana-browser-register-view-keymap
+       view arxana-browser-missions--view-map))))
+
+(with-eval-after-load 'arxana-browser-core
+  (arxana-browser-missions--register-view-keymaps))
+(arxana-browser-missions--register-view-keymaps)
 
 ;; =============================================================================
 ;; Open handlers
