@@ -4,8 +4,19 @@
 "we both had the conception in mind that Arxana would be able to read directly
 from futon1b."
 
-**Status:** open, parked. The file exporter ships first (lean-docs-align, the
-`lean/doc-source` edges) so browsing is not blocked on this.
+**Status:** open, blocked-on-live-store (re-derived 2026-11-04, enacting
+process-coherence/status-refresh-before-work; prior banner "open, parked /
+browsing unblocked" was stale). Checked: futon1b :7073 is listening but
+returns 404 ("No context found for request") on `/`, `/hyperedges?type=lean/doc-source`,
+and `/hyperedge`, so "the client can already fetch them" is not currently
+verifiable live; `futon4-base-url`'s docstring still names :7071, which has no
+listener (missing item 3 confirmed open); `arxana-store--default-headers`
+always prepends `Accept: application/json` (item 4 partly addressed in code,
+interactive url.el behavior unverified); body re-read — no in-body ruling
+revises the banner. Next move: restore or relocate the hyperedge serving
+route on futon1b and fix the stale base-URL default. Full check record:
+futon2 `data/wm-d-task-enactment/T-arxana-direct-reads/status-refresh-2026-11-04.edn`
+(commit fbe2d376).
 
 ## What exists
 
