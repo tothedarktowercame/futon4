@@ -964,3 +964,36 @@ and the sealed Giraffe pass remain the authorities that answer them. Four tests
 continuous-change maximum wait, level-jump rebuilding, and ordinary code
 changes not waking Giraffe. clj-kondo and check-parens are clean. The exotype
 marks the projector `:prototype`; dispatch remains disabled.
+
+#### Checkpoint 4 correction after friendly review
+
+Claude-6 found two composition defects and one census drift. A rebuild formerly
+advanced its cursor to the tail *after* the authority read, losing hints that
+arrived during a long Giraffe pass. Rebuild is now two-phase: `begin-rebuild`
+pins sequence S, the authority is read, and completion acknowledges only
+through S. A rebuild receipt also projects the same full-authority demand as a
+level jump; it cannot disappear behind the rebuilt cursor. Finally, M/E/T path
+recognition now calls futon2's public mission-registry census predicate rather
+than maintaining a permissive regex that admitted nested run snapshots.
+
+The shared census predicate landed as futon2 commit `aeb774dbe`. Its focused
+tests pass 28 tests/106 assertions. The composed futon3c tests prove both the
+change-during-rebuild race and overflow→rebuild→demand behavior.
+
+### INSTANTIATE checkpoint 5 — first runtime shadow consumer
+
+`futon3c` commit `5e647f108` attaches one in-memory `:giraffe-shadow` consumer
+to the watcher cycle. It registers with cursor and rebuild discipline, reads
+the newest verified sealed Giraffe run only to establish its authority basis,
+feeds bounded hints to the pure projector, and retains bounded demand/outcome
+health. It explicitly reports `:dispatch-enabled? false`: it does not run
+Giraffe, query the test registry, dispatch work, or reload the serving JVM.
+
+The runtime parameters use a 30-second debounce and five-minute maximum wait,
+longer than the observed roughly 160-second Giraffe pass. Hot-reloaded watcher
+state without the new atom reports `not-armed` with a restart condition. The
+focused suite passes 49 tests/170 assertions across journal, projector, shadow
+consumer, and watcher; clj-kondo and check-parens are clean. Adversarial tests
+cover restart/unavailable authority, overflow rebuild, a change arriving
+during an authority read, continuous change reaching maximum wait, and nested
+snapshot paths not waking Giraffe.
