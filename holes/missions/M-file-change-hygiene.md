@@ -920,3 +920,47 @@ event call, reconcile an authority snapshot containing `h2`, and observe one
 `h2` write plus a contemporaneous deletion. Repeating the same authority level
 appends nothing. Focused gates passed: journal 5 tests/22 assertions; watcher
 30 tests/103 assertions; changed-file `clj-kondo` clean; check-parens clean.
+
+#### Checkpoint 3 correction after friendly review
+
+Claude-16 found that checkpoint 3 overstated the walk as an authority. The
+watcher journal is process-local; after downtime it starts empty and its first
+walk seeds quietly, so bytes changed while the watcher was down cannot be
+reconstructed from that journal. The same walk also drives ordinary watcher
+dispatch, so the original fixture demonstrated the pure reconciliation
+function, not a distinct live notification failure.
+
+`futon3c` commit `30266bc81` corrects the contract. The snapshot is now named a
+*walk level*, never authority. Every new consumer starts `rebuild-required` and
+must provide a fresh Git/registry/Giraffe authority receipt before reading
+hints. More changes in one walk than the journal bound collapse into one
+level-jump hint and mark consumers for rebuild rather than filling the window
+with a useless tail. Reconciliation refusals remain in health; a watcher
+running across a hot reload without the new state reports `not-armed` plus the
+restart condition.
+
+The restart fixture now discards all journal state, changes and deletes files
+during downtime, and proves that the new consumer cannot proceed before its
+authority rebuild. A burst-over-bound fixture proves one level jump and rebuild
+pressure. Corrected gates: journal 8 tests/32 assertions; watcher 31 tests/104
+assertions; clj-kondo and check-parens clean. No serving reload occurred.
+
+### INSTANTIATE checkpoint 4 — demand-bound authority projector
+
+`futon3c` commit `b56db09df` adds the pure demand projector without enabling a
+runtime consumer. It treats journal entries only as wake-up hints:
+
+- M/E/T definition paths accumulate one complete Giraffe-input recomputation,
+  debounced for batching but forced by a maximum-wait deadline under continuous
+  change;
+- test-registry currency requests are emitted only for an explicitly named
+  active demand whose declared paths intersect the changed paths;
+- a level jump requests full Giraffe recomputation and may recheck already
+  named warrant demands, but never enumerates the warrant registry.
+
+The projected requests contain no currency verdict. Git, the test registry,
+and the sealed Giraffe pass remain the authorities that answer them. Four tests
+(14 assertions) cover absence of warrant sweeping, named-path intersection,
+continuous-change maximum wait, level-jump rebuilding, and ordinary code
+changes not waking Giraffe. clj-kondo and check-parens are clean. The exotype
+marks the projector `:prototype`; dispatch remains disabled.
