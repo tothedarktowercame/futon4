@@ -1081,8 +1081,10 @@ The scorer now keeps an unminted stale window open until a fresh probe or
 successful mint, accounts a covering demand only once, and marks failed probes
 unscored. Its ground truth is supplied by a new read-only adapter over the logs
 the WM loop already writes, `futon2/data/wm-click-loop/click-NNN-EPOCH.log`.
-It recognizes fresh, stale+minted, stale+not-minted, and failed verdicts, skips
-the same-launch repeat line, and emits `{:at-ms :fresh? :minted? :run-id}`.
+It recognizes fresh, stale+minted, stale+not-minted, and failed verdicts. A
+same-launch repeat does not add a second verdict; the 64 unparsed current logs
+in fact contain no probe output at all. It emits
+`{:at-ms :fresh? :minted? :run-id}`.
 The population is explicitly loop clicks; the filename launch epoch is the
 probe-time approximation, so no new click queue or writer was introduced.
 
@@ -1092,3 +1094,29 @@ clean. Adversarial fixtures cover legacy authority exclusion, probe-start age,
 100-cycle hold coalescing, repeated unminted staleness, failed-probe scoring,
 and delayed emission after a trigger. No serving reload or external dispatch
 occurred.
+
+### INSTANTIATE checkpoint 8 — bounded score reading
+
+Checkpoint-7 review found that a legacy-invocation result could become sticky,
+an unknown probe incorrectly consumed its scoring window, and mint failure was
+collapsed into ordinary stale-not-minted. These are repaired before projecting
+health. A legacy result can be reported for its own read but a newer demand
+starts a new single-flight probe; an exception also clears stale status.
+Unknown probes are transparent to the next known verdict, and mint failure is
+retained as a distinct count while remaining an unminted stale window.
+
+Because a loop filename supplies only launch time, not the time during its
+roughly 72-second cold freshness read, the scorer preregisters a conservative
+90-second ambiguity band. A demand triggered in that band is counted
+`:ambiguous` and cannot manufacture either a miss or a spurious wake. The two
+writer-supported but presently fixture-only forms—freshness-probe failure and
+stale-not-refreshed—remain parsed and tied to `wm_click.sh`.
+
+The new read-only report composes the durable shadow ledger with the loop-click
+adapter and reports probe verdict counts plus scored windows. It refuses to
+print reassuring zeroes when the shadow has never run: that is the typed state
+`:no-demands`. The first real reading is
+`~/notes/wm-next/tests/M-file-change-hygiene-shadow-report-2026-11-05.edn`:
+zero demands, 67 probes (26 fresh, 41 stale, zero unknown, one mint failure),
+therefore `:no-demands`. This is the expected result without a serving-JVM
+reload, and no reload or external dispatch was performed.
