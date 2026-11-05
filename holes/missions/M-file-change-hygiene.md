@@ -1177,3 +1177,12 @@ Focused gates pass 38 tests/130 assertions with clean clj-kondo. The feature is
 not an opt-in prototype: ordinary watcher startup supplies the initial role and
 arms the consumer. Expanding automatic settlement beyond declared roles still
 requires an explicit remedy classification; unmatched changes remain nags.
+
+The default-start verification then exposed a restart race: a superseded long
+cycle could publish its old cached health into the new run. Health publication
+is now fenced by watcher `run-id`, with an adversarial test proving that run 1
+cannot write settlement health into run 2. A second ordinary restart omitted
+all settlement options; run `1793856669974` nevertheless armed the default
+role, established a fresh baseline, registered both consumers, and reached
+`:status :live` with no error. This directly checks that activation does not
+depend on the one-off Drawbridge arguments used for the acceptance run.
