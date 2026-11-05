@@ -69,3 +69,11 @@ The diagram prover may use these edges as a layer over the code: each edge
 ties a published claim to compiler pass boxes, and many claims assert
 dependencies between passes (borrow inference feeds RC insertion). A live
 read path is what lets that checker and a human look at the same edges.
+
+## Completion criteria
+
+- An Arxana hypergraph view (M-x) with a hyperedge type or endpoint id renders live edges from futon1b with no export step — check: the route answers (curl `/hyperedges?type=lean/doc-source` on the serving port returns entries, not 404) and the view renders them **Not met.**
+- Following a `source` endpoint opens the file at the pinned commit and line range — check: interactive open of a `lean4:<commit>:<file>` endpoint in the view **Not met.**
+- The planted case: an edge written after the view was opened appears on refresh — check: a dated note here recording the planted-edge refresh **Not met.**
+- The stale base-URL default is fixed (`futon4-base-url` docstring/default names the live futon1b port) — check: `/home/joe/code/futon4/dev/arxana-store.el` **Not met.**
+- Interactive `url.el` callers get JSON when they ask for it (Accept-header precedence verified in interactive use) — check: a dated note here or in lean-docs-align DISCOVERY.md **Not met.**
