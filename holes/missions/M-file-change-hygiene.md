@@ -898,3 +898,25 @@ cursor under retention pressure, explicit rebuild, deadline expiry/drop, and
 monotone bounded acknowledgement. `clj-kondo` reports no errors or warnings.
 The exotype marks this box `:prototype`, not `:live`: no serving watcher was
 reloaded and no production dispatch has been attached yet.
+
+### INSTANTIATE checkpoint 3 — level-triggered observer
+
+`futon3c` commit `b54b08c3f` connects the bounded journal to the existing
+multi-watcher in shadow mode. The journal does not rely on notification
+delivery: every watcher cycle reconciles the complete path→content-hash
+snapshot against its prior authority level. The first read seeds without
+emitting a historical change storm; later reads append only changed and
+deleted levels. Thus an event omitted from the direct notification path is
+recovered on the next authority comparison.
+
+The serving watcher has not been reloaded and no consumer dispatch is enabled.
+The source default creates a 2,048-entry bounded journal, exposes its health in
+watcher status, and isolates reconciliation failures from the existing ingest
+loop. This advances the observer and journal boxes to `:prototype` while
+preserving the exotype's refusal to call them live.
+
+The preregistered missed-event fixture is now executable: seed `h1`, omit any
+event call, reconcile an authority snapshot containing `h2`, and observe one
+`h2` write plus a contemporaneous deletion. Repeating the same authority level
+appends nothing. Focused gates passed: journal 5 tests/22 assertions; watcher
+30 tests/103 assertions; changed-file `clj-kondo` clean; check-parens clean.

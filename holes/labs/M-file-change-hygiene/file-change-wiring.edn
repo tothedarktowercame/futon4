@@ -18,8 +18,8 @@
   :scheduled-work :hygiene/scheduled-work}
  :boxes
  [{:box/id :filesystem-observer
-   :repo "futon3"
-   :implementation :planned
+   :repo "futon3c"
+   :implementation :prototype
    :writes [[:file-occurrence {:record :observation}]]}
   {:box/id :bounded-change-journal
    :repo "futon3c"
