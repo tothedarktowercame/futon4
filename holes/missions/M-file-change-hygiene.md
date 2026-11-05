@@ -1026,3 +1026,36 @@ shadow consumer, durable ledger/scorer, watcher, and Giraffe run logic;
 clj-kondo and check-parens are clean. The serving JVM was not reloaded and the
 shadow still performs no Giraffe run, registry query, work dispatch, or click
 change.
+
+#### Checkpoint 6 correction after friendly review
+
+Claude-6 demonstrated that the first freshness implementation rebuilt a plain
+missions adapter while live clicks mint `missions-excursions` with a readings
+corpus. It therefore reported false staleness even when the click's own probe
+was green. The run-history scorer was also a poor judge of spurious wakes:
+Giraffe normally mints only after staleness, leaving almost no unchanged run
+intervals, and emission time misattributed debounced changes.
+
+`futon3c` commit `c05206144` makes the mint self-describing. New manifests
+record source, repositories, edges, readings root, selected ids, and retained-
+focus option. Both `-main` and freshness call one `build-adapter-result` path;
+freshness replays the recorded invocation and refuses to guess for legacy runs.
+Tests prove that the combined invocation supplies its reading batches and that
+a manifest invocation round-trips to a fresh result.
+
+The asynchronous probe now retains a timestamped result so rebuild and a due
+sink can share it. A later demand may reuse it only when the result completed
+after the demand's trigger; otherwise one new single-flight probe starts.
+Pending is a normal `:held :giraffe-freshness-pending` outcome, not refusal
+noise, and absence of a probe never falls back to a synchronous watcher read.
+The ledger path is environment-overridable.
+
+Scoring is now preregistered against per-click freshness verdicts rather than
+run-to-run differences. It attributes a demand by `first-at-ms`, not delayed
+emission: the fixture fresh→stale→fresh with a demand triggered before but
+emitted after the stale probe produces zero misses and zero spurious wakes.
+Runtime collection of the click verdict history remains the next adapter; the
+pure scorer does not claim observations that have not been collected.
+
+Corrected gates pass 76 tests/282 assertions plus the composed rebuild/due
+fixture; clj-kondo and check-parens are clean. No serving reload occurred.
