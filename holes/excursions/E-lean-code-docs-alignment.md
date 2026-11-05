@@ -77,3 +77,11 @@ count how many land. That count measures whether the links survive edits.
 - Anchor format, port finder and coverage were discussed with Joe in the
   claude-2 REPL, 2026-10-19 (options-map ports, wire ledger
   `futon3c/holes/labs/M-wm-wiring/wm-wire-ledger.edn`, plop annotations).
+
+## Completion criteria
+
+- Packet A: Clojure definitions (def/defmulti/defmethod/defprotocol/defrecord/deftype, metadata-allowing) recognized via one regexp from def-patterns — check: futon4 sha b99dc5f on main; grep dev/arxana-browser-code.el shows the definition regexp sourced from `arxana-browser-code--def-patterns`, not copied per site. **Met.**
+- Packet B: the browser indexes a futon2 code root — check: futon4 shas ca7500e and e03d2ce on main. **Met.**
+- Packet C: Lean declarations citing a function render inline in the docs buffer — check: futon4 shas 355f4ef and 8e4f389 on main. **Met.**
+- Packet D: a `:options-key` finder type finds `(:x opts)` reads and their fill sites — check: grep for `options-key` in futon4 dev/*.el returns the finder; a strategy computes R-node neighbourhood coverage. **Not started.**
+- The self-heal route's links survive edits — check: re-resolve the slice's links at an older futon2 sha and at current (the item's own "How we will know"); the count of links that land at both is recorded. **Not started.**
