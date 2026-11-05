@@ -1,0 +1,69 @@
+;; Cross-repo exotype for M-file-change-hygiene.
+;;
+;; This is deliberately a data-flow map, not a claim that all boxes are live.
+;; The :implementation value distinguishes the first executable seam from the
+;; later mission slices.  Scoped vertices prevent similarly named facts at
+;; different boundaries from being mistaken for the same wire.
+{:spec/id :file-change-hygiene-cross-repo
+ :field-types
+ {:file-occurrence :hygiene/occurrence
+  :authority-reading :hygiene/authority-reading
+  :change-hint :hygiene/change-hint
+  :demand :hygiene/demand
+  :currency-result :hygiene/currency-result
+  :delivery-evidence :hygiene/delivery-evidence
+  :admission :hygiene/admission
+  :consumer-reading :hygiene/consumer-reading
+  :red-pressure :hygiene/red-pressure
+  :scheduled-work :hygiene/scheduled-work}
+ :boxes
+ [{:box/id :filesystem-observer
+   :repo "futon3"
+   :implementation :planned
+   :writes [[:file-occurrence {:record :observation}]]}
+  {:box/id :bounded-change-journal
+   :repo "futon3c"
+   :implementation :planned
+   :reads [[:file-occurrence {:record :observation}]]
+   :writes [[:change-hint {:record :journal-entry}]]}
+  {:box/id :demand-projector
+   :repo "futon3c"
+   :implementation :planned
+   :reads [[:change-hint {:record :journal-entry}]]
+   :writes [[:demand {:record :currency-request}]]}
+  {:box/id :test-registry-authority
+   :repo "futon3c"
+   :implementation :live
+   :reads [[:demand {:record :currency-request}]]
+   :writes [[:authority-reading {:record :registry-closure}]
+            [:currency-result {:record :currency-response}]]}
+  {:box/id :hygiene-delivery-adapter
+   :repo "futon3c"
+   :implementation :live
+   :reads [[:authority-reading {:record :registry-closure}]
+           [:currency-result {:record :currency-response}]]
+   :writes [[:delivery-evidence {:record :currency-response}]]}
+  {:box/id :lean-admission-contract
+   :repo "mathlib4"
+   :implementation :live
+   :reads [[:delivery-evidence {:record :currency-response}]]
+   :writes [[:admission {:record :currency-response}]]}
+  {:box/id :currency-http-consumer
+   :repo "futon3c"
+   :implementation :live
+   :reads [[:admission {:record :currency-response}]]
+   :writes [[:consumer-reading {:record :currency-response}]]}
+  {:box/id :consumer-health-projector
+   :repo "futon3c"
+   :implementation :planned
+   :reads [[:consumer-reading {:record :currency-response}]]
+   :writes [[:red-pressure {:record :hygiene-health}]]}
+  {:box/id :giraffe-work-router
+   :repo "futon3c"
+   :implementation :planned
+   :reads [[:red-pressure {:record :hygiene-health}]]
+   :writes [[:scheduled-work {:record :giraffe-input}]]}
+  {:box/id :ordinary-priority-cascade
+   :repo "futon2"
+   :implementation :planned
+   :reads [[:scheduled-work {:record :giraffe-input}]]}]}

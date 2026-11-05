@@ -1,0 +1,39 @@
+{:schema :wm/handoff-site-index-v1
+ :scope :file-change-hygiene-verify-spike
+ :sites
+ [{:id :file-change/inbox-zero-git-state
+   :producer :git-authority
+   :consumer :inbox-zero-dirty-classifier
+   :kind :state-read
+   :source "src/futon3c/inbox_zero/sweeper.clj"
+   :anchor "(defn git-dirty"
+   :contract :file-change/git-status-v1
+   :transport :process/git-status-porcelain-v1
+   :status :existing-unified}
+  {:id :file-change/unknown-pressure-projection
+   :producer :inbox-zero-dirty-classifier
+   :consumer :operator-pressure-reader
+   :kind :durable-record
+   :source "src/futon3c/inbox_zero/sweeper.clj"
+   :anchor "(defn- write-uncertain-pressure!"
+   :contract :file-change/uncertain-pressure-v1
+   :transport :atomic-edn-file
+   :status :existing-local}
+  {:id :file-change/warrant-currentness
+   :producer :handoff-demand
+   :consumer :test-registry
+   :kind :state-read
+   :source "src/futon3c/test_registry.clj"
+   :anchor "(defn check-currency!"
+   :contract :file-change/warrant-currency-v1
+   :transport :registry-closure-rehash
+   :status :existing-authority}
+  {:id :file-change/giraffe-freshness
+   :producer :current-task-input
+   :consumer :giraffe-run-reader
+   :kind :state-read
+   :source "src/futon3c/giraffe/run.clj"
+   :anchor "(defn check-freshness"
+   :contract :file-change/giraffe-input-digest-v1
+   :transport :complete-input-reconstruction
+   :status :existing-authority}]}
