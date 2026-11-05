@@ -1057,5 +1057,6 @@ emitted after the stale probe produces zero misses and zero spurious wakes.
 Runtime collection of the click verdict history remains the next adapter; the
 pure scorer does not claim observations that have not been collected.
 
-Corrected gates pass 76 tests/282 assertions plus the composed rebuild/due
-fixture; clj-kondo and check-parens are clean. No serving reload occurred.
+Corrected gates pass 77 tests/285 assertions, including the composed
+rebuild/due fixture; clj-kondo and check-parens are clean. No serving reload
+occurred.
