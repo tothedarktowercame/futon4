@@ -1120,3 +1120,28 @@ print reassuring zeroes when the shadow has never run: that is the typed state
 zero demands, 67 probes (26 fresh, 41 stale, zero unknown, one mint failure),
 therefore `:no-demands`. This is the expected result without a serving-JVM
 reload, and no reload or external dispatch was performed.
+
+### INSTANTIATE checkpoint 9 — Drawbridge activation
+
+Joe clarified that Drawbridge is the available feature-reload boundary. The
+reviewed namespaces were loaded through the attributed `dev-admin` surface,
+then the watcher was stopped and restarted with its existing 14 roots,
+five-second cadence, cold-scan and commit-ingest settings. The new watcher run
+`1793854615614` reports both journal and shadow armed, retains
+`dispatch-enabled? false`, and its ordinary cycles remain error-free.
+
+The restart rebuild completed against self-describing Giraffe run
+`20261105T045315.704Z-07f68919`; current and sealed input SHA both equal
+`07f6891957faec1bada2f72da97853fae3d780422e4689c43f712a295392d74c`.
+At the debounce boundary the sink correctly refused a probe begun before its
+trigger, waited for a newer single-flight read, and then fsync-appended the
+first real demand. No Giraffe run, registry query, or work dispatch was caused
+by the shadow.
+
+That live record exposed one last reporting defect: historical stale clicks
+before shadow activation were counted as misses, while a demand newer than all
+click probes appeared fully scored. The report now begins at the first demand,
+keeps only the immediately preceding probe as baseline, and counts demands
+after the newest probe as `:awaiting-probe`. The refreshed dated reading has
+one durable demand, one baseline scoring probe, zero misses, and status
+`:awaiting-probe`; it will become scoreable only after a later loop click.

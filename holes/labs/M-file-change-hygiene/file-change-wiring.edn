@@ -20,16 +20,16 @@
  :boxes
  [{:box/id :filesystem-observer
    :repo "futon3c"
-   :implementation :prototype
+   :implementation :live
    :writes [[:file-occurrence {:record :observation}]]}
   {:box/id :bounded-change-journal
    :repo "futon3c"
-   :implementation :prototype
+   :implementation :live
    :reads [[:file-occurrence {:record :observation}]]
    :writes [[:change-hint {:record :journal-entry}]]}
   {:box/id :demand-projector
    :repo "futon3c"
-   :implementation :prototype
+   :implementation :live
    :reads [[:change-hint {:record :journal-entry}]]
    :writes [[:demand {:record :currency-request}]]}
   {:box/id :sealed-giraffe-authority
@@ -38,16 +38,16 @@
    :writes [[:authority-reading {:record :sealed-giraffe-run}]]}
   {:box/id :current-giraffe-input-probe
    :repo "futon3c"
-   :implementation :prototype
+   :implementation :live
    :reads [[:authority-reading {:record :sealed-giraffe-run}]]
    :writes [[:authority-reading {:record :current-giraffe-input}]]}
   {:box/id :click-freshness-history
    :repo "futon3c"
-   :implementation :prototype
+   :implementation :live
    :writes [[:authority-reading {:record :click-freshness-verdict}]]}
   {:box/id :giraffe-shadow-consumer
    :repo "futon3c"
-   :implementation :prototype
+   :implementation :live
    :reads [[:change-hint {:record :journal-entry}]
            [:demand {:record :currency-request}]
            [:authority-reading {:record :current-giraffe-input}]]
@@ -56,19 +56,19 @@
                  :retention :bounded}}
   {:box/id :durable-shadow-ledger
    :repo "futon3c"
-   :implementation :prototype
+   :implementation :live
    :reads [[:demand {:record :currency-request}]
            [:authority-reading {:record :current-giraffe-input}]]
    :writes [[:shadow-observation {:record :giraffe-demand-observation}]]}
   {:box/id :shadow-history-scorer
    :repo "futon3c"
-   :implementation :prototype
+   :implementation :live
    :reads [[:shadow-observation {:record :giraffe-demand-observation}]
            [:authority-reading {:record :click-freshness-verdict}]]
    :writes [[:consumer-reading {:record :shadow-score}]]}
   {:box/id :shadow-score-report
    :repo "futon3c"
-   :implementation :prototype
+   :implementation :live
    :reads [[:consumer-reading {:record :shadow-score}]]
    :writes [[:consumer-reading {:record :shadow-report}]]
    :constraints {:no-demands-is-typed? true
