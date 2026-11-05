@@ -1060,3 +1060,35 @@ pure scorer does not claim observations that have not been collected.
 Corrected gates pass 77 tests/285 assertions, including the composed
 rebuild/due fixture; clj-kondo and check-parens are clean. No serving reload
 occurred.
+
+### INSTANTIATE checkpoint 7 — loop-click verdict adapter
+
+Claude-6's next review found three remaining measurement defects. A legacy
+manifest returned nil, which the poller accidentally made truthy by attaching
+an observation timestamp; probe reuse was judged by observation time rather
+than read-start time; and repeated unminted-stale or failed probes were scored
+as new misses or spurious wakes.
+
+`futon3c` commit `6a2274c58` closes those paths. Freshness results are stamped
+when their read starts. Rebuild pins its first request time across retries, and
+a later trigger cannot reuse a probe that began before it. Nil from a legacy
+manifest becomes a typed `:legacy-invocation-absent` state; neither it nor an
+unarmed probe can enter the durable ledger. Repeated asynchronous holds
+coalesce into one outcome with count and last-seen time rather than filling the
+bounded health ring.
+
+The scorer now keeps an unminted stale window open until a fresh probe or
+successful mint, accounts a covering demand only once, and marks failed probes
+unscored. Its ground truth is supplied by a new read-only adapter over the logs
+the WM loop already writes, `futon2/data/wm-click-loop/click-NNN-EPOCH.log`.
+It recognizes fresh, stale+minted, stale+not-minted, and failed verdicts, skips
+the same-launch repeat line, and emits `{:at-ms :fresh? :minted? :run-id}`.
+The population is explicitly loop clicks; the filename launch epoch is the
+probe-time approximation, so no new click queue or writer was introduced.
+
+On the current corpus the adapter reads 67 probes: 26 fresh and 41 stale.
+Focused gates pass 82 tests/296 assertions; clj-kondo and check-parens are
+clean. Adversarial fixtures cover legacy authority exclusion, probe-start age,
+100-cycle hold coalescing, repeated unminted staleness, failed-probe scoring,
+and delayed emission after a trigger. No serving reload or external dispatch
+occurred.

@@ -43,7 +43,7 @@
    :writes [[:authority-reading {:record :current-giraffe-input}]]}
   {:box/id :click-freshness-history
    :repo "futon3c"
-   :implementation :planned
+   :implementation :prototype
    :writes [[:authority-reading {:record :click-freshness-verdict}]]}
   {:box/id :giraffe-shadow-consumer
    :repo "futon3c"
