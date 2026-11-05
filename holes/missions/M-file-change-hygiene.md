@@ -997,3 +997,32 @@ consumer, and watcher; clj-kondo and check-parens are clean. Adversarial tests
 cover restart/unavailable authority, overflow rebuild, a change arriving
 during an authority read, continuous change reaching maximum wait, and nested
 snapshot paths not waking Giraffe.
+
+### INSTANTIATE checkpoint 6 — durable shadow observations and scoring
+
+Claude-6's checkpoint-5 review found that the shadow call could still abort the
+watcher cycle, and that `newest-field-run` was only a historical pass receipt,
+not evidence that current Giraffe inputs had been read. `futon3c` commit
+`4c1d28fdd` repairs both before adding measurement.
+
+The watcher now isolates every shadow exception and retains a typed refusal in
+health; a forced projector failure proves that later cycle work still runs.
+Rebuild authority recomputes the canonical missions input and records
+`fresh?`, computed-input SHA, sealed-run SHA, and run id. Because a cold
+recomputation exceeded 30 seconds in direct measurement, it runs as one
+single-flight future: the watcher never waits, and rebuild/demand state remains
+pending until the result is available.
+
+Each due Giraffe demand is then fsync-appended to the ignored runtime ledger
+`data/file-change-hygiene/giraffe-shadow-demands.jsonl`, including emission
+time, trigger basis, changed paths, and the current-versus-sealed authority
+reading. Persistence happens before projector acknowledgement; a failed append
+leaves the demand pending for retry. The offline scorer reads this ledger and
+verified sealed Giraffe run history, classifying changed intervals without a
+demand as misses and unchanged intervals with a demand as spurious wakes.
+
+The focused gate passes 74 tests/273 assertions across journal, projector,
+shadow consumer, durable ledger/scorer, watcher, and Giraffe run logic;
+clj-kondo and check-parens are clean. The serving JVM was not reloaded and the
+shadow still performs no Giraffe run, registry query, work dispatch, or click
+change.

@@ -14,6 +14,7 @@
   :delivery-evidence :hygiene/delivery-evidence
   :admission :hygiene/admission
   :consumer-reading :hygiene/consumer-reading
+  :shadow-observation :hygiene/shadow-observation
   :red-pressure :hygiene/red-pressure
   :scheduled-work :hygiene/scheduled-work}
  :boxes
@@ -35,15 +36,31 @@
    :repo "futon3c"
    :implementation :live
    :writes [[:authority-reading {:record :sealed-giraffe-run}]]}
+  {:box/id :current-giraffe-input-probe
+   :repo "futon3c"
+   :implementation :prototype
+   :writes [[:authority-reading {:record :current-giraffe-input}]]}
   {:box/id :giraffe-shadow-consumer
    :repo "futon3c"
    :implementation :prototype
    :reads [[:change-hint {:record :journal-entry}]
            [:demand {:record :currency-request}]
-           [:authority-reading {:record :sealed-giraffe-run}]]
+           [:authority-reading {:record :current-giraffe-input}]]
    :writes [[:consumer-reading {:record :shadow-health}]]
    :constraints {:dispatch-enabled? false
                  :retention :bounded}}
+  {:box/id :durable-shadow-ledger
+   :repo "futon3c"
+   :implementation :prototype
+   :reads [[:demand {:record :currency-request}]
+           [:authority-reading {:record :current-giraffe-input}]]
+   :writes [[:shadow-observation {:record :giraffe-demand-observation}]]}
+  {:box/id :shadow-history-scorer
+   :repo "futon3c"
+   :implementation :prototype
+   :reads [[:shadow-observation {:record :giraffe-demand-observation}]
+           [:authority-reading {:record :sealed-giraffe-run}]]
+   :writes [[:consumer-reading {:record :shadow-score}]]}
   {:box/id :test-registry-authority
    :repo "futon3c"
    :implementation :live
@@ -70,7 +87,8 @@
    :repo "futon3c"
    :implementation :planned
    :reads [[:consumer-reading {:record :currency-response}]
-           [:consumer-reading {:record :shadow-health}]]
+           [:consumer-reading {:record :shadow-health}]
+           [:consumer-reading {:record :shadow-score}]]
    :writes [[:red-pressure {:record :hygiene-health}]]}
   {:box/id :giraffe-work-router
    :repo "futon3c"
