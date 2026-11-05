@@ -34,6 +34,17 @@
     (should (string-match-p "declared 98, returned 3"
                             (plist-get item :description)))))
 
+(ert-deftest arxana-missions-portfolio-renders-info-instead-of-question-marks ()
+  (should (equal ["!" "" "Missions unavailable" "Error: projection absent"]
+                 (arxana-browser--missions-portfolio-row
+                  '(:type info :label "Missions unavailable"
+                    :description "Error: projection absent")))))
+
+(ert-deftest arxana-mission-views-register-their-keymap ()
+  (dolist (view '(missions-portfolio missions-by-status missions-status-group))
+    (should (eq arxana-browser-missions--view-map
+                (gethash view arxana-browser-view-keymaps)))))
+
 (ert-deftest arxana-home-is-the-meta-work-field ()
   (let ((missions (cl-find-if
                    (lambda (item) (equal "META" (plist-get item :label)))
