@@ -73,6 +73,16 @@
    :writes [[:consumer-reading {:record :shadow-report}]]
    :constraints {:no-demands-is-typed? true
                  :external-dispatch? false}}
+  {:box/id :settlement-consumer
+   :repo "futon3c"
+   :implementation :live
+   :reads [[:change-hint {:record :journal-entry}]]
+   :writes [[:consumer-reading {:record :settlement-health}]
+            [:delivery-evidence {:record :settlement-commit}]
+            [:red-pressure {:record :unsettled-change}]]
+   :constraints {:activation :default
+                 :existing-dirt :baseline-only
+                 :commit-scope :declared-role}}
   {:box/id :test-registry-authority
    :repo "futon3c"
    :implementation :live
@@ -100,7 +110,10 @@
    :implementation :planned
    :reads [[:consumer-reading {:record :currency-response}]
            [:consumer-reading {:record :shadow-health}]
-           [:consumer-reading {:record :shadow-report}]]
+           [:consumer-reading {:record :shadow-report}]
+           [:consumer-reading {:record :settlement-health}]
+           [:delivery-evidence {:record :settlement-commit}]
+           [:red-pressure {:record :unsettled-change}]]
    :writes [[:red-pressure {:record :hygiene-health}]]}
   {:box/id :giraffe-work-router
    :repo "futon3c"

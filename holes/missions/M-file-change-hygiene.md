@@ -1145,3 +1145,35 @@ keeps only the immediately preceding probe as baseline, and counts demands
 after the newest probe as `:awaiting-probe`. The refreshed dated reading has
 one durable demand, one baseline scoring probe, zero misses, and status
 `:awaiting-probe`; it will become scoreable only after a later loop click.
+
+### INSTANTIATE checkpoint 10 — live settlement and nagging
+
+The file-change journal now has a second owned consumer, enabled by default.
+Registration rebuilds to the current tail, so activation cannot sweep old
+dirt. Every subsequent watched change terminates in one of two visible states:
+an exact declared settlement role commits it, or the consumer retains and logs
+an `:unsettled-file-change` nag. Commit roles are root-and-prefix bounded;
+the initial allowlist is deliberately one exact futon0 acceptance path.
+
+Settlement rechecks the journal SHA against current bytes, refuses deletions
+and pre-existing staged content, stages only the named path, rechecks the bytes
+after staging, commits with `git commit --only`, and verifies that the resulting
+commit names exactly that path. Failure unstages the path and remains a typed
+refusal. A temporary-repository adversarial test proves that unrelated dirty
+bytes remain outside the commit.
+
+The live run first retained a useful `:commit-failed` refusal: an untracked file
+cannot be committed with `--only` until staged. After repairing that boundary,
+the next observed content level produced futon0 commit
+`b565733186c49a2df27f6e09bb23e3d6cd0fe7ee`, subject
+`inbox-zero: settle holes/missions/M-inbox-zero-live-readiness.md
+(futon0-inbox-zero-live)`. `git show` reports exactly one path and ten inserted
+lines; `git status` reports the path clean. Live watcher health retains the
+same SHA, content hash, journal sequence 4, role id, and commit timestamp. It
+also retains two nags for non-role changes, demonstrating the other terminal
+arm rather than silently ignoring them.
+
+Focused gates pass 38 tests/130 assertions with clean clj-kondo. The feature is
+not an opt-in prototype: ordinary watcher startup supplies the initial role and
+arms the consumer. Expanding automatic settlement beyond declared roles still
+requires an explicit remedy classification; unmatched changes remain nags.
