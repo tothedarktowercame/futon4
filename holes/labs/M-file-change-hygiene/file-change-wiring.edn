@@ -23,7 +23,7 @@
    :writes [[:file-occurrence {:record :observation}]]}
   {:box/id :bounded-change-journal
    :repo "futon3c"
-   :implementation :planned
+   :implementation :prototype
    :reads [[:file-occurrence {:record :observation}]]
    :writes [[:change-hint {:record :journal-entry}]]}
   {:box/id :demand-projector

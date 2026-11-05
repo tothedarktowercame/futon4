@@ -880,3 +880,21 @@ bounded journal, health projection, and red-to-Giraffe routing are not.
 stable checkpoints. The exotype prevents an invalid completion claim: the
 shared observer/projector, bounded replay/rebuild behavior, and red-to-work loop
 still require construction and the remaining preregistered fixtures.
+
+### INSTANTIATE checkpoint 2 — bounded replay contract
+
+`futon3c` commit `357d638a3` adds a pure shadow-mode journal beside the existing
+watcher. It maintains one latest level per repository/worktree/path, suppresses
+identical content saves, assigns monotone sequence identities, and bounds its
+append window independently of consumer progress. A cursor overtaken by the
+retention watermark is marked rebuild-required; it cannot acknowledge its way
+past the loss, and it resumes only with an explicit authority-rebuild receipt.
+Consumers whose finite progress deadline expires are dropped rather than
+pinning storage, with a typed receipt naming authority reconstruction as the
+recovery path.
+
+Four focused tests (16 assertions) cover repeated-save deduplication, a stalled
+cursor under retention pressure, explicit rebuild, deadline expiry/drop, and
+monotone bounded acknowledgement. `clj-kondo` reports no errors or warnings.
+The exotype marks this box `:prototype`, not `:live`: no serving watcher was
+reloaded and no production dispatch has been attached yet.
