@@ -388,3 +388,226 @@ remain consumer-side gaps rather than reasons to put policy in Arxana.
 infrastructure and data are inventoried, and the ready/missing table identifies
 the exact gaps DERIVE must turn into competing architectures and acceptance
 criteria. No architecture or implementation was selected during MAP.
+
+## DERIVE
+
+DERIVE turns the MAP evidence into an implementable design. The earlier
+Mirror/Resolve/Project/Correspond/Compile sketch remains useful, but the survey
+changes what each slice must prove and adds revision identity as a cross-cutting
+concern. This phase produces specifications and tripwire fixtures, not the
+production implementation.
+
+### MAP-driven corrections to the earlier sketch
+
+| Earlier slice | Evidence-informed derivation task |
+|---|---|
+| Mirror | Define a compatibility adapter over the observed futon1b entity/hyperedge records. Do not treat dropped Emacs salience fields, Plexus prose or entity as-of parameters as already canonical. |
+| Resolve | Specify and execute the tested three-stage anchor algorithm first; separately define dispatch, ordering, ambiguity and evidence semantics for the five currently inert finder declarations. |
+| Project | Design a common location, revision, result and error vocabulary before either client. Emacs supplies donor behaviour; VS Code is a new thin client, not an existing port target. |
+| Correspond | Make the Oxide draft8 set the first normative fixture and repair its source-revision contradiction before adding Lean or generated Python. |
+| Compile | Emit only the empirically shared ID-addressed graph/action waist. Keep scores, verdicts, wants and ordering evidence in consumer namespaces. |
+| Cross-cutting consistency | Carry an artifact revision through resolution, correspondence, edits and receipts. Specify stale refusal and recovery now; introduce CRDT semantics only if the Q5 falsifying observation occurs. |
+
+### Architecture alternatives to derive and compare
+
+DERIVE must draw and evaluate at least these three alternatives against the
+same scenarios. Naming an option here does not select it.
+
+1. **Extended futon1b authority.** Add Arxana schema, resolution,
+   correspondence and subscription routes directly to the existing graph
+   service. This minimizes service boundaries but couples artifact evaluation
+   and client protocol evolution to the store.
+2. **Headless Arxana service over futon1b.** A separate JVM service owns the
+   portable model, strategy executor, correspondence and client protocol while
+   using futon1b through a narrow storage adapter. This creates another service
+   boundary but keeps graph persistence distinct from artifact computation.
+3. **Graph authority with client-hosted evaluators.** Futon1b remains the graph
+   authority while Emacs and VS Code evaluate strategies and submit evidence.
+   This reuses editor facilities, but must demonstrate how two clients can
+   receive the same authoritative answer rather than merely similar local
+   answers.
+
+The comparison matrix must score each option for one-authority-per-question,
+compatibility with live records, deterministic strategy results, artifact and
+revision access, subscription semantics, deployability, failure isolation,
+testability, and the cost of adding a second editor. Any hybrid must identify
+which option owns each question rather than obscuring ownership behind a new
+component boundary.
+
+### Required derivation work products
+
+#### D1 — Canonical model and storage boundary
+
+Specify each entity as source, ingested, derived or authored, its durable
+identity and its revision behaviour. The minimum candidate set is graph entity,
+hyperedge, artifact, artifact revision, manifestation, scope strategy, scope
+resolution, correspondence assertion, intent, candidate action, admission
+decision and action receipt. For each, decide whether it is a durable futon1b
+record, an immutable derived result, or a protocol-only value.
+
+Specify relation types and arity rather than representing every connection as
+an undifferentiated hyperedge. At minimum cover entity-to-manifestation,
+artifact-to-revision, strategy-to-finder, resolution-to-revision,
+correspondence-across-manifestations, evidence-for-resolution and
+intent-to-candidate-action. Record provenance and temporal standing wherever a
+derived assertion can become stale.
+
+Deliverables: typed schema, example records mapped to the P1 live census,
+migration/compatibility rules for both observed hyperedge families, and a
+storage-adapter interface whose tests distinguish live behaviour from proposed
+extensions.
+
+#### D2 — Strategy evaluator and resolution semantics
+
+Define the finder interface, ordered cascade, short-circuit and accumulation
+rules, ambiguity thresholds, revision checks and evidence returned at every
+stage. The existing exact/context/fuzzy anchor algorithm is the first reference
+implementation and tripwire; the five stored finder forms must each be marked
+executable, translated, advisory-only or unsupported rather than presumed to
+work.
+
+The result algebra must distinguish at least `resolved`, `ambiguous`,
+`missing`, `stale` and `unsupported`, carrying candidates, strategy/finder IDs,
+artifact revision, evidence and diagnostics. Results must not turn resolved
+offsets into durable identity.
+
+Deliverables: evaluator interface and pseudocode, deterministic ordering rules,
+fixture cases for unrelated prefix/suffix edits and genuine ambiguity, and the
+authority decision for artifact text access.
+
+#### D3 — Shared protocol and consistency contract
+
+Define versioned request/response envelopes for entity lookup, graph query,
+scope resolution, correspondence neighbourhood, subscription and read-only
+candidate-action compilation. Define one position vocabulary with explicit
+units, indexing base, half-open/closed convention and file identity; do not
+reuse the overloaded current `file`, `text` or `agent` fields without qualified
+meaning.
+
+Every artifact-dependent message carries a revision identity. Mutation-shaped
+requests state an expected revision and receive applied, stale, conflict,
+invalid or unsupported outcomes with recovery information. Subscriptions state
+ordering, replay/resume, deduplication and resynchronization semantics. The
+contract must remain compatible with a later CRDT implementation without
+claiming CRDT operations today.
+
+Deliverables: protocol schemas, error algebra, consistency state machine,
+subscription sequence examples and replay tests derived from the two P5
+incidents.
+
+#### D4 — Correspondence model and normative fixture
+
+Adopt the Oxide draft8 source/page/scope set as the first fixture only after
+giving all members one coherent revision identity. Model correspondence as a
+provenanced assertion between manifestations, capable of representing exact
+range, quote/context recovery, build-local DOM anchors and transformed content
+such as `\\sig` to `\\sigma`. State when a mapping is directional, partial,
+ambiguous or stale.
+
+Deliverables: repaired fixture manifest, stable fixture IDs, expected query
+answers for the paragraph/section/mathematics cases, and an extension slot for
+Lean and generated Python that does not block the first demonstration.
+
+#### D5 — Client projections and fidelity contract
+
+Specify the smallest Emacs and VS Code surfaces that prove shared authority:
+open/select a manifestation, request resolution, display candidates/evidence,
+navigate to a returned location, show revision/staleness and inspect a
+correspondence neighbourhood. The Oxide document pane is a protocol consumer,
+not a privileged source of identity.
+
+Create the required Capability Preservation Matrix from the P2 and P3 donor
+censuses. Classify every current behaviour as preserve, adapt or drop, with a
+tripwire for each preserved behaviour. It must include anchor rediscovery,
+two-way WYSIWYG navigation, typed edit refusal, journalling, codepoint spans,
+agent routing and Element messaging, even where the decision is explicitly to
+leave a capability outside this mission.
+
+Deliverables: command/view specification for both editors, protocol transcripts
+showing identical authority responses, Capability Preservation Matrix and
+client-boundary tests.
+
+#### D6 — Inference-ready action boundary
+
+Specify a read-only compiler from an intent plus grounded entity/scope inputs
+to a candidate action. Its common fields are target IDs, typed operation,
+preconditions, predicted effects, provenance/warrants, risks and unresolved
+questions. Admission policy, scores, probe verdicts and domain-specific
+ordering stay outside the service or in namespaced extension fields.
+
+Deliverables: one end-to-end example using the correspondence fixture, a
+queryable receipt shape, and interface notes showing how the four surveyed
+consumers attach their own records without changing the common schema.
+
+#### D7 — Architecture synthesis
+
+Combine D1–D6 into a component and data-flow specification. Draw an exotype or
+equivalent wiring diagram showing authority boundaries, ports, durable versus
+derived state, revision flow, subscriptions and client projections. Complete
+the architecture comparison matrix and select one option with recorded
+trade-offs.
+
+Deliverables: selected architecture, wiring diagram, consolidated invariants,
+ordered implementation increments, acceptance tests and rollback/compatibility
+plan.
+
+### Invariants to make checkable
+
+- Given the same entity/scope question and artifact revision, Emacs and VS Code
+  receive the same authority result, independent of editor-local markers.
+- A scope resolution names the exact artifact revision and strategy evidence
+  from which it was derived; it is never silently reused against another
+  revision.
+- Durable identity does not depend solely on a byte, codepoint, line/column or
+  DOM position.
+- Every derived correspondence or candidate action is traceable to durable
+  inputs and may be declared stale without destroying its provenance.
+- A stale mutation-shaped request cannot overwrite a newer revision without an
+  explicit consistency decision and recoverable evidence.
+- Domain-specific consumer fields cannot change the meaning of the common
+  entity, endpoint, provenance or revision fields.
+- Unsupported legacy declarations fail explicitly rather than appearing to
+  have resolved.
+
+Each invariant must acquire an executable assertion, query or fixture test in
+the D7 acceptance plan.
+
+### Decision-record discipline
+
+Every non-obvious choice in D1–D7 must use the lifecycle form:
+`IF ...; HOWEVER ...; THEN ...; BECAUSE ...`. The first required records are:
+
+- the service boundary and owner of each authoritative question;
+- durable record versus derived result for resolutions and correspondences;
+- finder ordering and ambiguity semantics;
+- revision identity and stale-recovery contract;
+- subscription ordering/replay semantics;
+- which donor capabilities are preserved, adapted or dropped;
+- the boundary between common candidate-action fields and consumer policy;
+- the observation that would reopen the CRDT decision.
+
+### Order of work
+
+1. Establish D1's vocabulary and live-storage compatibility constraints; these
+   are inputs to every other work product.
+2. Draft the three architecture diagrams far enough to assign authority and
+   artifact-text access, without selecting one prematurely.
+3. Develop D2, D3 and D4 against the same draft8 fixture and revision identity;
+   discrepancies feed back into D1.
+4. Derive D5 from the shared protocol and complete the donor fidelity matrix.
+5. Derive D6 only after the graph and resolution waist is stable.
+6. Perform D7 synthesis, choose an architecture, and turn the selected design
+   into implementation increments and acceptance tests.
+
+Work products D2–D5 may be researched concurrently after D1 fixes their shared
+terms. D7 is intentionally a synthesis task and must not be delegated as four
+independent local choices.
+
+### DERIVE exit
+
+**DERIVE exit: Not met.** The evidence-constrained plan is now explicit, but
+the schemas, alternatives, decision records, fidelity matrix, wiring diagram
+and selected architecture still have to be authored. Exit is met when an
+implementer can build from this section and its linked artifacts without
+asking who owns a question, what a record means, how revisions behave or which
+donor behaviours must survive.
