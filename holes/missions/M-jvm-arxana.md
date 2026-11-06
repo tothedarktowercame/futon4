@@ -732,3 +732,27 @@ materially changed the design. The remaining items are explicit VERIFY and
 INSTANTIATE evidence obligations, not unresolved architecture choices. The
 fitness argument is understandable in plain language and checkable against
 MAP reports, D1–D7 and their tripwires.
+
+## VERIFY
+
+VERIFY uses the two independent client perspectives as its primary contract
+gauntlet, supplemented by structural closure and two risk spikes that clients
+cannot establish:
+
+1. V1 code-server contract verification (`packets/V1-codeserver-contract-verification.md`).
+2. V2 proof-presentation contract verification
+   (`packets/V2-proof-presentation-contract-verification.md`).
+3. Coordinator-owned specification BOM and wiring/authority closure audit.
+4. Atomic expected-head/reserved-namespace spike and D4 fixture-coherence
+   rejection/rebuild spike.
+5. Completion/fidelity pre-check and decision receipt.
+
+A full theorem or general logic model is a priced decline: the mission needs
+typed contract traces, structural closure and targeted empirical evidence, not
+a post-hoc formalization of every domain. VERIFY exits only if both clients
+trace without contradiction, every wiring input/output has one owner, the two
+spikes address the unexercised risks, and all remaining work is properly
+INSTANTIATE rather than unresolved DERIVE.
+
+**VERIFY exit: Not met.** Client packets are prepared; reports, structural
+audit, spikes and synthesis remain open.
