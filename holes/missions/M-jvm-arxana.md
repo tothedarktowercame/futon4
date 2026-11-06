@@ -1,7 +1,7 @@
 # M-jvm-arxana — one Arxana authority across Emacs and VS Code
 
 **Date:** 2026-11-06  
-**Status:** OPEN — ARGUE (DERIVE completed 2026-11-06)
+**Status:** OPEN — VERIFY (ARGUE completed 2026-11-06)
 **Owner:** Joe (operator); unassigned technical driver
 **Repos:** `futon4` (Arxana model and Emacs client), `futon1`/XTDB (durable
 graph), `futon3c` (scope view, WYSIWYG and prospective clients)  
@@ -703,3 +703,32 @@ acceptance and action admission; authored/generated provenance remains
 separate; and usefulness evaluation is consumer evidence rather than JVM
 authority conformance. This clarification does not reopen the selected
 architecture or introduce an APM-specific alignment mechanism.
+
+## ARGUE
+
+The canonical synthesis is
+`holes/labs/M-jvm-arxana/A2-final-design-fitness-argument.md`. The seven-pass
+`A1-design-fitness-argument.md` remains the objection/disposition provenance,
+not the final statement.
+
+The principal claim is that headless JVM Arxana over futon1b is fit because it
+places semantic questions behind one revision-pinned, evidence-producing
+authority while leaving atomic durable mutation at the store boundary. The
+alternative designs fail different observed constraints: extending futon1b
+with all semantics couples an unsettled protocol to storage, while client-side
+evaluation recreates multiple authorities. The selected hybrid names one owner
+for every question and reserves `arxana/*` writes so those assignments are
+enforceable rather than advisory.
+
+The synthesis includes the lifecycle-required pattern cross-reference,
+theoretical coherence and war-room rationale, trade-off summary,
+generalization notes and jargon-free argument. It incorporates the
+proof-presentation client profile and treats code-server as another client and
+deployment shell: useful co-location does not grant it identity, resolution or
+write authority.
+
+**ARGUE exit: Met.** The strongest objections have typed dispositions and
+materially changed the design. The remaining items are explicit VERIFY and
+INSTANTIATE evidence obligations, not unresolved architecture choices. The
+fitness argument is understandable in plain language and checkable against
+MAP reports, D1–D7 and their tripwires.
