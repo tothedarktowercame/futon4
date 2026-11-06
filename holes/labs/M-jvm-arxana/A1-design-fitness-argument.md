@@ -6,13 +6,13 @@ pass 2 — DERIVE checkpoint D2 `9ba7974`, prior ARGUE `65c6eac`;
 pass 3 — DERIVE checkpoint D3 `bc81c03`, prior ARGUE `6dcdb54`;
 pass 4 — DERIVE checkpoint D4 `78a0e16`, prior ARGUE `d802654`;
 pass 5 — DERIVE checkpoint D5 `9cf5a5a`, prior ARGUE `d802654`;
-pass 6 (this revision) — DERIVE checkpoint D6 `df71835`
-(`holes/labs/M-jvm-arxana/D6-action-boundary.md`), prior ARGUE `04ea998`,
-per `ARGUE-DERIVE-loop.md`.
-Status: sixth (progressive) pass; pass-2 deltas in §10, pass-3 in §11,
-pass-4 in §12, pass-5 in §13, pass-6 in §14. Nothing here claims ARGUE or the
-mission is complete, and nothing here selects an architecture on DERIVE's
-behalf.
+pass 6 — DERIVE checkpoint D6 `df71835`, prior ARGUE `dbeb91c`;
+pass 7 (this revision) — DERIVE checkpoint D7 `84f999d`
+(`holes/labs/M-jvm-arxana/D7-architecture-synthesis.md`), prior ARGUE
+`dbeb91c`, the final DERIVE-challenge pass under `ARGUE-DERIVE-loop.md`.
+Status: seventh (progressive) pass; pass-2 deltas in §10, pass-3 in §11,
+pass-4 in §12, pass-5 in §13, pass-6 in §14, pass-7 (final challenge and
+verdict) in §15. Nothing here claims ARGUE or the mission is complete.
 
 Citations: `P1`…`P6` are the MAP reports in this directory; `D1` is
 `D1-canonical-model.md`; `M` is `holes/missions/M-jvm-arxana.md`. Empirical
@@ -207,26 +207,27 @@ pressures are all "make X explicit/checkable", which is what §6 records.
 | ID | Obligation / defeater | Settles | Owed by | State (pass 2) |
 |---|---|---|---|---|
 | O-D1a | Strategy-finder independent entity vs embedded (D1 Q1) | C2, SC2 | D2 | **Discharged** by D2-DR4: embedded `(strategy-revision-id, ordinal)`, entity only when independently cited |
-| O-D1b | Resolution assertion: entity+hyperedge vs single doc; futon1b indexing behaviour (D1 Q2) | C2, query-ability | D2/D7 | **Narrowed**: D2-DR5 selects entity + typed hyperedges (avoids property scans); the futon1b-indexing confirmation half remains, owed to D7 acceptance tests |
+| O-D1b | Resolution assertion: entity+hyperedge vs single doc; futon1b indexing behaviour (D1 Q2) | C2, query-ability | D2/D7 | **Pass 7:** entity + typed hyperedges selected in D7 disposition; "add query/index test before schema freeze" — design-level discharge with one named pre-freeze test |
 | O-D1c | Name where salience/Plexus discipline lives after exclusion (WR-24) | C9 | D7 or follow-up mission | Open |
 | O-D2a | Finder dispatch, ordering, ambiguity semantics for the five inert forms; mark each executable/translated/advisory/unsupported | SC2, C4 | D2 | **Narrowed**: semantics defined (cascade modes, no implicit fallback, legacy classification table); remaining: authored translation receipts for existing stored strategies, pinned embedding inputs, and the tripwire fixtures actually run |
-| O-D2b | Authority decision for artifact text access (who reads bytes) | SC2, A3 objection | D2/D7 | **Narrowed**: D2-DR3 + `ArtifactProvider` settle the contract (content-addressed revision, digest re-verified, no anonymous buffer text); which deployment implements it (repo reader / blob store / service cache) is now purely a D7 choice |
+| O-D2b | Authority decision for artifact text access (who reads bytes) | SC2, A3 objection | D2/D7 | **Pass 7:** discharged at design level — Arxana-owned immutable ArtifactProvider (D7 authority table); deployment variant is implementation detail within increment 3 |
 | O-D2c | **New (pass 2).** Promotion of `resolved-unverified`/`ambiguous` requires "explicit caller acknowledgement", but the stored assertion records no acknowledgement provenance — who/what accepted an ambiguous or unverified result is not durably part of the evidence | SC2/SC6 audit chain, C5 | D2 revision or D6 | **Narrowed (pass 5)**: the D5 matrix adopts "attributable acceptance" with a tripwire ("ambiguous/unverified promotion without acceptance is refused") — promotion must carry the D2 acceptance record" — the substance is answered and now leans to a *separate acceptance record* (consistent with D5's attributable acceptance); still owed one sentence in D2's promotion text naming the record and its provenance fields |
 | O-D2d | **New (pass 2).** State where per-finder evidence events live when the result is *not* promoted — protocol-only per D1-DR3 is the implied reading, but D2's "every attempted finder appends an immutable event" does not say so | C5, storage growth | D2 clarification | Open (small) |
-| O-D3a | Revision-CAS + subscription mechanism above futon1b; recovery semantics replay-tested against both P5 incidents | SC4, C7, A2 objection | D3/D7 | **Narrowed (pass 3)**: two conforming mechanisms specified (store-side conditional transaction; durable sequencer with lease/fencing), state machine, traces 1–6; remaining: D7 selects one and *proves* atomicity/fencing — the split-brain proof is the open half |
+| O-D3a | Revision-CAS + subscription mechanism above futon1b; recovery semantics replay-tested against both P5 incidents | SC4, C7, A2 objection | D3/D7 | **Pass 7:** discharged at design level — store-side conditional transaction selected; the sequencer (and its fencing proof) is *not used*, removing the split-brain risk; increment 2 carries two-writer/crash tests against the real route |
+| O-D3c | **New (pass 3).** D3 permits architecture 3 to survive as read-only client evaluation; but D2 evidence events produced by a client-hosted evaluator are client-attested, so promotion assertions would rest on client-claimed evidence. Decide whether conforming evidence requires authority-side evaluation | SC1, SC2, A3 disposition | D7 | **Pass 7:** discharged — D7-DR2: client evaluation is preview-only; only authority-side deterministic evaluation creates promotable evidence in v1 |
 | O-D3b | **New (pass 2).** Align D2's read-side `stale-input` with D3's mutation-side `stale`/`conflict` outcomes so one word never names two refusal reasons across the protocol | SC4, error algebra | D3 | **Closed (pass 3)**: distinct definitions plus tripwire trace 7 |
-| O-D3c | **New (pass 3).** D3 permits architecture 3 to survive as read-only client evaluation; but D2 evidence events produced by a client-hosted evaluator are client-attested, so promotion assertions would rest on client-claimed evidence. Decide whether conforming evidence requires authority-side evaluation | SC1, SC2, A3 disposition | D7 | Open |
 | O-D4a | Repair draft8 revision contradiction before normative adoption | C6, SC3 | D4 → INSTANTIATE | **Narrowed (pass 4)**: D4-DR1 makes the contradiction a required *negative* fixture with a rejection/repair procedure and tripwires; "closed at design level" only — the repaired manifest/map is created and committed in INSTANTIATE, so execution is still owed |
 | O-D4b | Durable manifestation/DOM identity scheme (fixture shows none exist) | SC3 | D4 | **Narrowed (pass 4)**: manifestation IDs minted by the fixture/model author, independent of DOM locators (which stay evidence); closed at design level, but the minting rule itself is ungoverned — see O-D4c |
-| O-D4c | **New (pass 4).** Manifestation IDs are "minted by the fixture/model author" with no uniqueness/namespace/minting rule; a duplicate or reused manifestation ID would silently violate single-locus for (manifestation, semantic role). Specify the minting governance before INSTANTIATE scales beyond draft8 | SC3, single-locus | D7 or INSTANTIATE | Open |
+| O-D4c | **New (pass 4).** Manifestation IDs are "minted by the fixture/model author" with no uniqueness/namespace/minting rule; a duplicate or reused manifestation ID would silently violate single-locus for (manifestation, semantic role). Specify the minting governance before INSTANTIATE scales beyond draft8 | SC3, single-locus | D7 or INSTANTIATE | **Pass 7: substantially answered** by consolidated invariant 3 (authority/family/role tuple → one stable ID; conflicting definitions refused) plus the Arxana manifestation registry — narrowed to the enforcement seam (O-D7f) |
 | O-D5a | Capability Preservation Matrix incl. whether any preserved behaviour depends on dropped salience | C9, SC5 | D5 | Open |
 | O-D5b | **New (pass 3).** Map current typed WYSIWYG refusals and edit journal into the D3 error algebra and write contract (named by D3 itself) | SC4, SC5, C9 | D5 | **Closed at design level (pass 5)**: refusal-mapping table plus journal-import rule (entries are evidence, not receipts, unless they name exact revisions and operation identity); INSTANTIATE verifies against live behaviour |
 | O-D6a | End-to-end compile example on the repaired fixture; consumer attachment notes | SC6, C10 | D6 | **Closed at design level (pass 6)**: draft8 example, result algebra, consumer attachment table and tripwires specified; the executable demonstration waits for the repaired positive fixture (per §12.3 sequencing) |
-| O-D7a | Architecture selection with completed matrix, exotype diagram (WR-3), invariants in executable single-locus form | PC, SC1, A1–A3 | D7 | Open |
+| O-D7a | Architecture selection with completed matrix, exotype diagram (WR-3), invariants in executable single-locus form | PC, SC1, A1–A3 | D7 | **Pass 7:** discharged — A2 selected with authority table, wiring diagram and ten consolidated invariants; ARGUE challenge recorded in §15 |
+| O-D7f | **New (pass 7).** The enforcement seam: invariant 3 (manifestation uniqueness) and the `arxana/` namespace rules are Arxana-side, but futon1b's HTTP API remains open and accepts typed hyperedges generically — any existing writer can persist `arxana/*` records or conflicting manifestation definitions directly, bypassing the registry. Decide where enforcement lives (futon1b route validation for `arxana/*`, Arxana-side admission with the store technically open and the invariant scoped to Arxana-recognized records, or write credentials). Without this, "conflicting definitions are refused" names a wish, not a mechanism | SC1, single-locus invariants 3/9 | D7 revision (one decision record) | **Open — exit condition** (see §15) |
 | O-D7e | **New (pass 6).** Assign the intent interpreter, compiler, admission-adapter and executor boundaries (named by D6) — and in particular decide whether act→intent interpretation is authority-side or client/consumer-attested, with the interpretation carried as a durable, provenance-bearing record (D1 already allows an interpretation to be revised without rewriting the source act) | SC1, SC6, C10 | D7 | Open |
-| O-D7b | **New (pass 3).** Assign the owner of journal, head movement, lease/fencing tokens and event retention (named by D3) | SC1, SC4 | D7 | Open |
-| O-D7c | **New (pass 4).** Assign the fixture builder and correspondence-assertion authority (named by D4) | SC3 | D7 | Open |
-| O-D7d | **New (pass 5).** Define and own the canonical response digest — the exact field set over which client-equivalence (transcript test 2, D5 "byte-equivalent semantic fields") is checked. If the field set is loose (diagnostics, durations, transport) equivalence tests pass or fail spuriously; the demonstration's equality predicate is currently undefined | PC, SC1, D5 transcript | D7 | Open |
+| O-D7b | **New (pass 3).** Assign the owner of journal, head movement, lease/fencing tokens and event retention (named by D3) | SC1, SC4 | D7 | **Pass 7:** discharged — journal/head/outcome futon1b (conditional transaction); cursor retention/resync Arxana over the durable journal; lease/fencing moot (sequencer not used) |
+| O-D7c | **New (pass 4).** Assign the fixture builder and correspondence-assertion authority (named by D4) | SC3 | D7 | **Pass 7:** discharged — Arxana fixture builder + manifestation registry, futon1b persistence |
+| O-D7d | **New (pass 5).** Define and own the canonical response digest — the exact field set over which client-equivalence (transcript test 2, D5 "byte-equivalent semantic fields") is checked. If the field set is loose (diagnostics, durations, transport) equivalence tests pass or fail spuriously; the demonstration's equality predicate is currently undefined | PC, SC1, D5 transcript | D7 | **Pass 7:** discharged at design level — Arxana versioned schema/projection/semantic-digest registry; the exact field set must be fixed in increment 3 before any transcript test |
 
 Unsupported claims found during argumentation were converted to obligations
 here rather than argued around: C6 is an active defeater (the strongest
@@ -706,8 +707,7 @@ Split the question, because the core has two kinds of content:
    flagged for client-hosted evaluation evidence — the authority compiles
    checkable grounding on top of an uncheckable reading. D7's boundary
    assignment must apply the same evidence-provenance standard: the
-   interpretation should be a durable, provenance-bearing record (D1
-   already permits revising an interpretation without rewriting the source
+   interpretation should be a durable, provenance-bearing record (D1 already permits revising an interpretation without rewriting the source
    act), and the compiler should treat an unprovenanced intent as
    `conditional`, not `compiled`. This is the pass's highest-value
    challenge.
@@ -733,3 +733,114 @@ the O-D3c failure shape.
 
 
 
+
+## 15. Pass 7 delta — D7 synthesis (`84f999d`), final DERIVE challenge
+
+Re-tested: the A2 selection, the hybrid store-side conditional route, every
+matrix score and authority assignment, wiring/closure, the ten single-locus
+invariants, obligation dispositions, implementation order, acceptance and
+rollback. Special tests: hidden two-authority questions between Arxana and
+futon1b; whether this is A1 disguised as A2; ArtifactProvider and
+subscription-journal closure; intent trust and admission placement.
+
+### 15.1 Is this A1 disguised as A2?
+
+**No.** A1 and A2 always differed in *which component owns the semantic
+protocol, evaluation, correspondence and compilation* — never in "who may
+touch futon1b". D3's enforcement table paired each architecture with a
+*natural* mechanism, not an exclusive one. D7 selects A2's service boundary
+together with A1's atomicity locus (the store-side conditional transaction)
+and, per the mission's hybrid rule ("identify which option owns each question
+rather than obscuring ownership"), the authority-assignment table does
+exactly that: semantic questions to Arxana, durable atomicity and the journal
+to futon1b. The matrix's "3, same narrow store primitive" note is honest
+about the sharing. This is a declared hybrid, not a disguise — and it is the
+combination ARGUE's pass-3 analysis anticipated (A2's boundary without A2's
+fencing debt, since the rejected sequencer is not used).
+
+### 15.2 Hidden two-authority questions
+
+Checked pairwise across the authority table:
+
+- **Artifact bytes vs revision records** — provider owns bytes, futon1b owns
+  records; invariant 2 (one byte sequence per revision ID) plus D2 digest
+  verification closes it. Clean.
+- **Journal vs subscription projection** — journal is futon1b's durable
+  truth; Arxana's projection is derived, cursor retention is Arxana-side but
+  resync comes from the journal. A crash between commit and projection
+  republishes from durable order. Closes.
+- **Manifestation registry (Arxana) vs persistence (futon1b)** — this one
+  does *not* close by assignment alone. Futon1b's HTTP API remains open and
+  accepts typed hyperedges generically; P1 inventoried seven present writers.
+  Nothing in D7 says who refuses a direct-to-futon1b write of `arxana/*`
+  records or a conflicting manifestation definition. Invariant 3's
+  "conflicting definitions are refused" currently names a wish, not a
+  mechanism. This is **O-D7f**, the pass's highest-value challenge and an
+  exit condition (§15.5).
+- **Intent records** — same seam, smaller blast radius: external interpreter
+  writes durable records via Arxana's trust profile, but the store is
+  technically open; O-D7f's decision should cover intent records too.
+
+### 15.3 Other requested tests
+
+- **ArtifactProvider closure.** Contract, digest re-verification, ingest-only
+  path and authority assignment all specified; deployment variant is bounded
+  to increment 3. Closes.
+- **Intent trust/admission.** Correctly outside: external named interpreter
+  under a versioned trust profile, untrusted records compile conditionally
+  (invariant 8), admission and execution are separate external authorities,
+  and no executor is required for the mission proof (increment 7). O-D7e
+  discharged.
+- **Matrix scores.** Defensible; the discriminating rows (failure isolation,
+  protocol evolution, deterministic resolution, second-editor cost) are all
+  evidence-backed by P3, and A1's honest strengths (deployment simplicity 3)
+  are kept rather than flattened. No score change would alter the outcome.
+- **Wiring/closure.** All flows in the diagram have named owners; no orphan
+  input found; executor path requires external admission + D3 precondition.
+- **Single-locus invariants.** Ten, each mapped to tripwires; invariant 1's
+  inclusion of semantics version and invariant 5's separation of evidence
+  acceptance from action admission are both ARGUE-derived and correctly
+  absorbed. Invariant 3 is subject to O-D7f.
+- **Obligation dispositions.** All of D7's rows are sound, **but two open
+  ARGUE obligations are absent from the disposition table**: O-D2c (the
+  acceptance-record sentence still owed in D2's promotion text — increment 4
+  implements "promotion with attributable acceptance", which implies the
+  shape without recording it) and O-D2d (where non-promoted evidence events
+  live). Under the loop gate ("Codex-21 never silently edits away an ARGUE
+  objection"), these need typed dispositions, not silence.
+- **Implementation order.** Fixture gate first — exactly the §12.3 sequencing
+  exposure resolved; atomic primitive before the service spine is the right
+  dependency order. Acceptance plan includes the workflow audit and
+  cross-cutting single-locus enumeration; rollback is capability-flag-based
+  and additive. No objection.
+
+### 15.4 What the design now achieves
+
+Across seven passes the argument's principal claim has moved from
+"conditional on the D1–D7 work products landing as drafted" to: every
+subordinate claim SC1–SC6 now has a specified mechanism; the strongest
+former defeaters (silent ambiguity, the unbuilt non-CRDT contract, the
+contradictory fixture, acknowledgement provenance, client-attested evidence,
+the undefined equality predicate, the unowned interpreter) each received a
+design answer that ARGUE tested rather than assumed. The selection is the
+one the evidence predicted from pass 3 onward.
+
+### 15.5 Verdict: DERIVE exit
+
+**Defensible, with two recorded conditions — not yet defensible as-is.**
+
+1. **O-D7f (exit condition):** one decision record fixing where `arxana/*`
+   namespace and manifestation-uniqueness enforcement lives, given futon1b's
+   open API. This is exactly a "who owns a question" residue, which is what
+   DERIVE exit claims to have eliminated. It needs a decision, not redesign;
+   any of the three mechanisms sketched in the ledger row is acceptable if
+   recorded with its IF/HOWEVER/THEN/BECAUSE and its tripwire.
+2. **Missing typed dispositions for O-D2c and O-D2d** in D7's obligation
+   table (loop-gate requirement; one row each, `accepted-design-revision` or
+   `accepted-later-obligation`).
+
+Neither condition reopens the architecture selection or any D-item's
+substance. With both recorded, ARGUE's position is that DERIVE exit is
+defensible and the mission may proceed to VERIFY; ARGUE's own lifecycle exit
+remains, per the loop contract, a final synthesis pass after this
+checkpoint's dispositions land — which this report does not claim.
