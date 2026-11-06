@@ -1,0 +1,36 @@
+{:spec/id :m-jvm-arxana-authority-v1
+ :field-types
+ {:client-request :arxana/message
+  :artifact-bytes :arxana/revision-bytes
+  :authority-result :arxana/semantic-result
+  :conditional-command :arxana/guarded-command
+  :durable-outcome :arxana/command-outcome
+  :journal-event :arxana/journal-event
+  :subscription-event :arxana/subscription-event
+  :intent-record :arxana/intent
+  :candidate-action :arxana/candidate-action
+  :admission-decision :arxana/admission-decision
+  :guarded-command :arxana/guarded-command
+  :receipt :arxana/action-receipt}
+ :boxes
+ [{:box/id :clients
+   :reads [:authority-result :subscription-event :receipt]
+   :writes [:client-request]}
+  {:box/id :artifact-provider
+   :writes [:artifact-bytes]}
+  {:box/id :intent-interpreter
+   :writes [:intent-record]}
+  {:box/id :headless-arxana
+   :reads [:client-request :artifact-bytes :durable-outcome :journal-event
+           :intent-record]
+   :writes [:authority-result :conditional-command :subscription-event
+            :candidate-action]}
+  {:box/id :institutional-policy
+   :reads [:candidate-action]
+   :writes [:admission-decision]}
+  {:box/id :executor
+   :reads [:candidate-action :admission-decision]
+   :writes [:guarded-command]}
+  {:box/id :futon1b
+   :reads [:conditional-command :guarded-command]
+   :writes [:durable-outcome :journal-event :receipt]}]}
