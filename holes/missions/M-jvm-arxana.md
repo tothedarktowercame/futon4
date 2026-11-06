@@ -793,6 +793,9 @@ the gate for all client demonstrations.
 | 2 atomic store | futon1b `b27cc63`; 24/24 route assertions plus 17 hyperedge-batch and 34 entity-serving regression assertions | complete |
 | 3 service spine | futon3c `bf546b722`; futon4 `c1be79c`; 5 tests / 49 assertions | complete |
 | 2↔3 integration | futon3c `44c683e27`; real HTTP adapter against embedded futon1b, 6 tests / 59 assertions with the spine suite | complete |
+| 4 Resolve | futon3c `e1da94ad4`; evaluator, legacy translation and attributable promotion, 18 tests / 137 assertions with spine | complete |
+| 5 Correspond | futon3c `c2317f0e5`; registry, assertions, assessments, queries and committed fixture, 18 tests / 91 assertions | complete |
+| 4↔5 integration | futon3c `95b10c508`; one revision-pinned section resolves uniquely and retrieves its `S2` HTML correspondence; combined foundation suite 38 tests / 246 assertions | complete |
 
 Increment 2 was recovered after its delegated worker was lost mid-run. The
 partial implementation's `current-head` query referenced `xt/id` without
@@ -801,8 +804,8 @@ write into a false 503. The repaired query binds both fields; `execute-tx` is
 the durable commit receipt; idempotent retry, stale refusal, generic-route
 namespace bypass, authentication and no-partial-mutation tripwires all pass.
 
-**INSTANTIATE exit: Not met.** Resolve, Correspond, Project, Compile and the
-end-to-end integration demonstration remain.
+**INSTANTIATE exit: Not met.** Project, Compile and the end-to-end integration
+demonstration remain.
 
 ### Bounded Emacs demonstration and DOCUMENT bridge
 
