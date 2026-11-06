@@ -430,7 +430,11 @@ same scenarios. Naming an option here does not select it.
 The comparison matrix must score each option for one-authority-per-question,
 compatibility with live records, deterministic strategy results, artifact and
 revision access, subscription semantics, deployability, failure isolation,
-testability, and the cost of adding a second editor. Any hybrid must identify
+testability, the cost of adding a second editor, and the concrete mechanism
+that enforces revision preconditions across read/check/write. An architecture
+that merely specifies revision tokens but cannot atomically refuse a stale
+write fails the matrix, even though a CRDT is not currently required. Any
+hybrid must identify
 which option owns each question rather than obscuring ownership behind a new
 component boundary.
 
@@ -494,14 +498,27 @@ ordering, replay/resume, deduplication and resynchronization semantics. The
 contract must remain compatible with a later CRDT implementation without
 claiming CRDT operations today.
 
+The design must supply an enforcement mechanism, not just an envelope. Because
+P1/P5 and D1 establish that futon1b has neither revision CAS nor subscriptions,
+D3 must compare at least: a store-side conditional transaction added to
+futon1b, a single-writer sequencer in a headless authority with durable
+operation log, and the equivalence burden of client-hosted evaluators. Replay
+both observed P5 incidents and one interleaving in which two requests name the
+same expected revision. A check followed by an unguarded write is not CAS and
+does not satisfy the contract.
+
 Deliverables: protocol schemas, error algebra, consistency state machine,
-subscription sequence examples and replay tests derived from the two P5
-incidents.
+subscription sequence examples, an enforceable revision-precondition design,
+and replay tests derived from the two P5 incidents plus the concurrent
+interleaving.
 
 #### D4 — Correspondence model and normative fixture
 
-Adopt the Oxide draft8 source/page/scope set as the first fixture only after
-giving all members one coherent revision identity. Model correspondence as a
+The current Oxide draft8 source/page/scope set is a contradiction-bearing test
+input, not yet a normative fixture: its recorded scope hashes and page anchors
+name different source states. Adopt it as the first fixture only after giving
+all members one coherent revision identity and adding a tripwire that rejects
+the unrepaired set. Model correspondence as a
 provenanced assertion between manifestations, capable of representing exact
 range, quote/context recovery, build-local DOM anchors and transformed content
 such as `\\sig` to `\\sigma`. State when a mapping is directional, partial,
@@ -557,7 +574,9 @@ plan.
 ### Invariants to make checkable
 
 - Given the same entity/scope question and artifact revision, Emacs and VS Code
-  receive the same authority result, independent of editor-local markers.
+  receive the same authority result from exactly one authoritative locus,
+  independent of editor-local markers; violations enumerate the conflicting
+  `(question, artifact-revision, authority)` records.
 - A scope resolution names the exact artifact revision and strategy evidence
   from which it was derived; it is never silently reused against another
   revision.
@@ -566,7 +585,7 @@ plan.
 - Every derived correspondence or candidate action is traceable to durable
   inputs and may be declared stale without destroying its provenance.
 - A stale mutation-shaped request cannot overwrite a newer revision without an
-  explicit consistency decision and recoverable evidence.
+  atomically enforced consistency decision and recoverable evidence.
 - Domain-specific consumer fields cannot change the meaning of the common
   entity, endpoint, provenance or revision fields.
 - Unsupported legacy declarations fail explicitly rather than appearing to
@@ -625,3 +644,10 @@ fitness for purpose; it is not a close analysis of an operator passage.
 ARGUE may expose obligations that revise DERIVE, but cannot meet its lifecycle
 exit until DERIVE has selected and specified the architecture it is arguing
 for.
+
+First-pass argument artifact:
+`holes/labs/M-jvm-arxana/A1-design-fitness-argument.md` (commit `65c6eac`). Its
+obligation ledger is a live input to DERIVE. In particular, O-D3a makes
+revision-precondition enforcement a D7 architecture-selection criterion, and
+O-D4a treats the unrepaired draft8 data as a defeater rather than evidence for
+the design.
