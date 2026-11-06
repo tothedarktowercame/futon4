@@ -546,6 +546,9 @@ answers for the paragraph/section/mathematics cases, and an extension slot for
 Lean and generated Python that does not block the first demonstration.
 **Design draft complete:** the original set is a required negative fixture;
 the positive fixture is admitted only after deterministic rejection/repair.
+The progressive ARGUE pass (`d802654`) added deterministic, authority-namespaced
+manifestation minting and made the repaired positive fixture the first required
+implementation increment because D5/D6 demonstrations depend on it.
 
 #### D5 — Client projections and fidelity contract
 

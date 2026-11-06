@@ -34,7 +34,19 @@ would conceal the reason and direction of the match.
   relating two or more manifestations, locators and evidence items.
 
 Manifestation IDs are minted by the fixture/model author, not copied from DOM
-IDs. A build-local DOM ID is stored only as locator evidence.
+IDs. Minting is deterministic from the canonical tuple
+`(manifestation-authority, artifact-family-id, semantic-role-key)` and yields
+`arxana:manifestation:sha256:<digest>`. The authority and artifact family own
+the namespace; a role key is unique within it. The registry refuses a second
+definition for the same tuple unless it is byte-equivalent. Renames create an
+explicit alias assertion; they do not recycle an old ID for a different role.
+A build-local DOM ID is stored only as locator evidence.
+
+The manifestation definition records the canonical tuple, human label, media
+role and minting authority. Its stable identity spans revisions, while every
+observation/correspondence still names an exact artifact revision. Two authors
+cannot independently mint competing canonical IDs for one family without an
+authority/alias decision.
 
 ## Assertion shape
 
@@ -154,6 +166,8 @@ and output revisions. Shared symbol names are candidate evidence, not identity.
 - Duplicate paragraph quotes return ambiguity.
 - Paragraph case cannot acquire a fabricated end or DOM ID.
 - Section DOM ID changes across rebuild while manifestation ID remains stable.
+- Re-minting one canonical tuple returns the same ID; a conflicting definition
+  or role-key reuse is refused, and cross-authority IDs cannot collide.
 - Math assertion is directional and retains both source and rendered forms.
 - Every assertion endpoint revision occurs in the same coherent build manifest.
 - Full manifest regeneration is byte/digest deterministic for fixed inputs and
@@ -165,8 +179,13 @@ and output revisions. Shared symbol names are candidate evidence, not identity.
   fixture; positive adoption requires the rejection/repair procedure.
 - **O-D4b closed at design level:** durable manifestation IDs are independent
   of revision-specific DOM locators.
+- **O-D4c closed at design level:** IDs are deterministic authority/family/role
+  tuple digests with uniqueness, conflict and alias rules.
 - INSTANTIATE must create and commit the repaired manifest/map and demonstrate
   all tripwires; DERIVE does not rewrite futon5 artifacts.
-- D7 must assign fixture builder and correspondence assertion authority.
+- **O-D7c passed to D7:** assign fixture builder, manifestation minting
+  authority and correspondence assertion authority. The repaired positive
+  fixture must be the first implementation increment because D5/D6
+  demonstrations depend on it.
 
 No architecture is selected by D4.
