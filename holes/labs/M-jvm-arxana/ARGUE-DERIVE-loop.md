@@ -52,7 +52,7 @@ and changed obligation IDs.
 |---|---|---|---|---|---|
 | Initial plan + D1 | `9c8b515` | `65c6eac` | O-D3a: no architecture yet enforces revision preconditions; O-D4a: draft8 is contradictory | `e4f3c4f`: accepted as D3/D7 criterion and D4 rejection tripwire | closed |
 | D2 strategy evaluator | `9ba7974` | `6dcdb54` | O-D2c: promoted ambiguity lacked acknowledgement provenance | accepted: separate actor/policy/reason acceptance record; D2d answered; D3b passed forward | closed |
-| D3 protocol/consistency | pending | pending | — | — | active |
+| D3 protocol/consistency | `bc81c03` | dispatched | — | — | active |
 | D4 correspondence | pending | pending | — | — | next |
 | D5 client/fidelity | pending | pending | — | — | queued |
 | D6 action boundary | pending | pending | — | — | queued |
