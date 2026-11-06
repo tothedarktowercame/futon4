@@ -577,6 +577,8 @@ request identity, timing, diagnostics and presentation are excluded.
 
 #### D6 — Inference-ready action boundary
 
+Design artifact: `holes/labs/M-jvm-arxana/D6-action-boundary.md`.
+
 Specify a read-only compiler from an intent plus grounded entity/scope inputs
 to a candidate action. Its common fields are target IDs, typed operation,
 preconditions, predicted effects, provenance/warrants, risks and unresolved
@@ -586,6 +588,8 @@ ordering stay outside the service or in namespaced extension fields.
 Deliverables: one end-to-end example using the correspondence fixture, a
 queryable receipt shape, and interface notes showing how the four surveyed
 consumers attach their own records without changing the common schema.
+**Design draft complete:** compilation is deterministic and read-only;
+interpretation, admission, execution and receipts remain distinct authorities.
 
 #### D7 — Architecture synthesis
 
