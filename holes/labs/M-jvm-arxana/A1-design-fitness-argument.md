@@ -5,12 +5,14 @@ Baselines: pass 1 — DERIVE `784a2ab` + `aac8544`, with D1 draft `9c8b515`;
 pass 2 — DERIVE checkpoint D2 `9ba7974`, prior ARGUE `65c6eac`;
 pass 3 — DERIVE checkpoint D3 `bc81c03`, prior ARGUE `6dcdb54`;
 pass 4 — DERIVE checkpoint D4 `78a0e16`, prior ARGUE `d802654`;
-pass 5 (this revision) — DERIVE checkpoint D5 `9cf5a5a`
-(`holes/labs/M-jvm-arxana/D5-client-fidelity.md`), prior ARGUE `d802654`,
+pass 5 — DERIVE checkpoint D5 `9cf5a5a`, prior ARGUE `d802654`;
+pass 6 (this revision) — DERIVE checkpoint D6 `df71835`
+(`holes/labs/M-jvm-arxana/D6-action-boundary.md`), prior ARGUE `04ea998`,
 per `ARGUE-DERIVE-loop.md`.
-Status: fifth (progressive) pass; pass-2 deltas in §10, pass-3 in §11,
-pass-4 in §12, pass-5 in §13. Nothing here claims ARGUE or the mission is
-complete, and nothing here selects an architecture on DERIVE's behalf.
+Status: sixth (progressive) pass; pass-2 deltas in §10, pass-3 in §11,
+pass-4 in §12, pass-5 in §13, pass-6 in §14. Nothing here claims ARGUE or the
+mission is complete, and nothing here selects an architecture on DERIVE's
+behalf.
 
 Citations: `P1`…`P6` are the MAP reports in this directory; `D1` is
 `D1-canonical-model.md`; `M` is `holes/missions/M-jvm-arxana.md`. Empirical
@@ -79,7 +81,7 @@ fiction of an already-shared model.
 | C7 | No CRDT is required now; the falsifying trigger is recorded | P5 §§3, 5–6; **pass 3: D3-DR3 + CRDT re-arm section** (revision preconditions, refusal, journalling, resubmission; re-arm condition recorded with incident/artifact class/convergence property — the WR-26 re-arm carried at the contract) | ~~The XTDB API has no revision CAS and no subscription stream~~ **Pass 3: answered in design** — D3-DR2 makes an atomic stale-refusal mechanism a *conformance requirement* with two specified candidates; the remaining objection is that the sequencer candidate's lease/fencing proof is owed (O-D3a) | Supported empirically; design now specified, one proof owed (O-D3a) |
 | C8 | Four consumers already share the narrow waist | P6 §§"Interface observations", "Principal finding" | Same-shape-different-name records (P6 §"Same shape") tempt premature standardization; P6 explicitly declines it — the design must too | Supported |
 | C9 | Emacs salience/Plexus are correctly excluded from the canonical model | P1 §1 (salience fields silently dropped; Plexus is prose with no route/writer/reader); D1 record classes; **pass 5: D5 matrix** — every donor capability dispositioned, and the matrix asserts no preserved behaviour reads salience/Plexus | ~~Excluded features may be load-bearing for users~~ — residual narrowed: the census was of *code* donors (P2/P3), not of live user workflows; a workflow-level audit can only happen at INSTANTIATE when real Emacs sessions meet the contract | Supported (design level; INSTANTIATE residual) |
-| C10 | The design serves the theoretical anchor (checkable argument as computational action) | M "Operator anchor", "Theoretical anchoring"; SC6 | The read-only compilation path only *describes* actions; the anchor's "computational action" half lands in later missions — this mission's contribution is grounding, not autonomy (M "Out") | Supported as scoped |
+| C10 | The design serves the theoretical anchor (checkable argument as computational action) | M "Operator anchor", "Theoretical anchoring"; SC6; **pass 6: D6-DR2** — act/intent/candidate/admission/execution/receipt as distinct records, candidate non-executable, no bearer credential; receipt never rewrites prediction | ~~The read-only compilation path only describes actions~~ — the objection is now answered at design level: description is structurally incapable of authorization, and tripwires 4 and 7 test exactly that | Supported as scoped |
 
 ## 3. Architecture alternatives — strongest case, strongest objection, decisive input
 
@@ -209,7 +211,7 @@ pressures are all "make X explicit/checkable", which is what §6 records.
 | O-D1c | Name where salience/Plexus discipline lives after exclusion (WR-24) | C9 | D7 or follow-up mission | Open |
 | O-D2a | Finder dispatch, ordering, ambiguity semantics for the five inert forms; mark each executable/translated/advisory/unsupported | SC2, C4 | D2 | **Narrowed**: semantics defined (cascade modes, no implicit fallback, legacy classification table); remaining: authored translation receipts for existing stored strategies, pinned embedding inputs, and the tripwire fixtures actually run |
 | O-D2b | Authority decision for artifact text access (who reads bytes) | SC2, A3 objection | D2/D7 | **Narrowed**: D2-DR3 + `ArtifactProvider` settle the contract (content-addressed revision, digest re-verified, no anonymous buffer text); which deployment implements it (repo reader / blob store / service cache) is now purely a D7 choice |
-| O-D2c | **New (pass 2).** Promotion of `resolved-unverified`/`ambiguous` requires "explicit caller acknowledgement", but the stored assertion records no acknowledgement provenance — who/what accepted an ambiguous or unverified result is not durably part of the evidence | SC2/SC6 audit chain, C5 | D2 revision or D6 | **Narrowed (pass 5)**: the D5 matrix adopts "attributable acceptance" with a tripwire ("ambiguous/unverified promotion without acceptance is refused") — the substance is answered; the storage *shape* (field on the assertion vs separate admission-style record) is still unspecified, and the answer currently lives only in a D5 matrix row, not in D2's promotion text |
+| O-D2c | **New (pass 2).** Promotion of `resolved-unverified`/`ambiguous` requires "explicit caller acknowledgement", but the stored assertion records no acknowledgement provenance — who/what accepted an ambiguous or unverified result is not durably part of the evidence | SC2/SC6 audit chain, C5 | D2 revision or D6 | **Narrowed (pass 5)**: the D5 matrix adopts "attributable acceptance" with a tripwire ("ambiguous/unverified promotion without acceptance is refused") — promotion must carry the D2 acceptance record" — the substance is answered and now leans to a *separate acceptance record* (consistent with D5's attributable acceptance); still owed one sentence in D2's promotion text naming the record and its provenance fields |
 | O-D2d | **New (pass 2).** State where per-finder evidence events live when the result is *not* promoted — protocol-only per D1-DR3 is the implied reading, but D2's "every attempted finder appends an immutable event" does not say so | C5, storage growth | D2 clarification | Open (small) |
 | O-D3a | Revision-CAS + subscription mechanism above futon1b; recovery semantics replay-tested against both P5 incidents | SC4, C7, A2 objection | D3/D7 | **Narrowed (pass 3)**: two conforming mechanisms specified (store-side conditional transaction; durable sequencer with lease/fencing), state machine, traces 1–6; remaining: D7 selects one and *proves* atomicity/fencing — the split-brain proof is the open half |
 | O-D3b | **New (pass 2).** Align D2's read-side `stale-input` with D3's mutation-side `stale`/`conflict` outcomes so one word never names two refusal reasons across the protocol | SC4, error algebra | D3 | **Closed (pass 3)**: distinct definitions plus tripwire trace 7 |
@@ -219,8 +221,9 @@ pressures are all "make X explicit/checkable", which is what §6 records.
 | O-D4c | **New (pass 4).** Manifestation IDs are "minted by the fixture/model author" with no uniqueness/namespace/minting rule; a duplicate or reused manifestation ID would silently violate single-locus for (manifestation, semantic role). Specify the minting governance before INSTANTIATE scales beyond draft8 | SC3, single-locus | D7 or INSTANTIATE | Open |
 | O-D5a | Capability Preservation Matrix incl. whether any preserved behaviour depends on dropped salience | C9, SC5 | D5 | Open |
 | O-D5b | **New (pass 3).** Map current typed WYSIWYG refusals and edit journal into the D3 error algebra and write contract (named by D3 itself) | SC4, SC5, C9 | D5 | **Closed at design level (pass 5)**: refusal-mapping table plus journal-import rule (entries are evidence, not receipts, unless they name exact revisions and operation identity); INSTANTIATE verifies against live behaviour |
-| O-D6a | End-to-end compile example on the repaired fixture; consumer attachment notes | SC6, C10 | D6 | Open |
+| O-D6a | End-to-end compile example on the repaired fixture; consumer attachment notes | SC6, C10 | D6 | **Closed at design level (pass 6)**: draft8 example, result algebra, consumer attachment table and tripwires specified; the executable demonstration waits for the repaired positive fixture (per §12.3 sequencing) |
 | O-D7a | Architecture selection with completed matrix, exotype diagram (WR-3), invariants in executable single-locus form | PC, SC1, A1–A3 | D7 | Open |
+| O-D7e | **New (pass 6).** Assign the intent interpreter, compiler, admission-adapter and executor boundaries (named by D6) — and in particular decide whether act→intent interpretation is authority-side or client/consumer-attested, with the interpretation carried as a durable, provenance-bearing record (D1 already allows an interpretation to be revised without rewriting the source act) | SC1, SC6, C10 | D7 | Open |
 | O-D7b | **New (pass 3).** Assign the owner of journal, head movement, lease/fencing tokens and event retention (named by D3) | SC1, SC4 | D7 | Open |
 | O-D7c | **New (pass 4).** Assign the fixture builder and correspondence-assertion authority (named by D4) | SC3 | D7 | Open |
 | O-D7d | **New (pass 5).** Define and own the canonical response digest — the exact field set over which client-equivalence (transcript test 2, D5 "byte-equivalent semantic fields") is checked. If the field set is loose (diagnostics, durations, transport) equivalence tests pass or fail spuriously; the demonstration's equality predicate is currently undefined | PC, SC1, D5 transcript | D7 | Open |
@@ -624,6 +627,108 @@ canonical response digest is the predicate on which the mission's central
 demonstration (identical authority answers across editors) is proved, and it
 is currently undefined and unowned; D7 must fix its field set before any
 transcript test can count as evidence.
+
+## 14. Pass 6 delta — D6 checkpoint (`df71835`)
+
+Re-tested: SC6, C8, C10, O-D6a. Challenged: whether the candidate-action core
+is witnessed or overgeneralizes past P6's waist; the six-record separation;
+ambiguous/stale grounding; namespaced extensions; deterministic identity;
+the draft8 example's fixture dependency; silent policy/executor selection.
+
+### 14.1 Does the core overgeneralize past P6's witnessed waist?
+
+Split the question, because the core has two kinds of content:
+
+- **The chain and the waist are witnessed.** P6's four consumers empirically
+  share ID-addressed reads and typed ID-endpoint hyperedge writes, and P6
+  found "act-attached references, evidence-keyed derived records,
+  owner-linked findings and ordering edges have matching shapes under
+  different names" — the source-act→intent→candidate→decision→receipt
+  topology is a standardization of *observed matching shapes*, which P6
+  declined to name-standardize prematurely and D6 now standardizes with a
+  guard (extension promotion into core requires a witnessed schema
+  revision). The consumer-attachment table stays inside what P6 reported
+  each consumer actually reads.
+- **The field set is witnessed by a different authority: the operator.**
+  Preconditions, predicted effects, warrants, risks and unresolved questions
+  are *not* observed in any consumer's current interface — they come from
+  the mission's own IDENTIFY vocabulary (M "Design hypotheses": candidate
+  action defined with exactly these fields, operator-agreed 2026-11-06). So
+  the design does not overgeneralize, but the argument must cite both
+  authorities honestly: the waist is P6's empirical finding; the field set
+  is Joe's specified deliverable. D6-DR1's BECAUSE ("standardizing policy
+  would turn Arxana from correspondence authority into an institution")
+  keeps the boundary in the right place, and the extension rules
+  (cannot redefine target IDs, preconditions, operation type, core outcome,
+  provenance) match `protocol-family-naming` and `graph-memory-contract`.
+
+### 14.2 Requested specific tests
+
+- **Six-record separation.** Clean, and the strongest structural answer to
+  C10's original objection: the candidate is immutable and *non-executable*
+  — no bearer credential, admission token or implicit consent — execution
+  requires a separate admitted decision plus the D3 expected-revision
+  precondition, and the receipt records deviations without rewriting the
+  prediction. Tripwires 4 and 7 test description-≠-authorization directly.
+- **Ambiguous/stale grounding.** D6-DR3's "action grounding cannot be
+  stronger than its evidence" is the right principle, and the algebra
+  (`conditional` with explicit alternatives/guards, `ambiguous`, typed
+  `stale-input`, tripwire 8: the negative fixture can never yield
+  `compiled`) reuses D2/D4's non-selection and integrity discipline
+  consistently. `stale-input` is again read-side applicability, matching D2.
+- **Namespaced extensions.** Opaque-if-unknown, cannot alter core semantics,
+  consumer scores don't change the candidate ID (tripwire 5) — coherent
+  with D1's namespace rule and P6's "domain records named by their
+  missions".
+- **Deterministic identity.** Candidate ID digests semantic inputs
+  including compiler version, excludes request identity; compilation is
+  deterministic and idempotent (tripwire 1) — same discipline as D2
+  assertion identity. Consistent.
+- **Draft8 dependency.** Honest: un-repaired fixture ⇒ `stale-input`/
+  `conditional`, never `compiled`, and the example "becomes executable
+  evidence only in INSTANTIATE". This is the §12.3 sequencing exposure
+  correctly propagated into D6.
+- **Silent selection.** None. No admission policy, ranking model, executor
+  or architecture is chosen; "a D3 executor may apply" defers to D7's
+  boundary assignment and D3's architecture-neutral write contract.
+- **O-D2c note.** "Ambiguous/unverified promotion must carry the D2
+  acceptance record" now leans the storage shape toward a separate record
+  (consistent with D5's attributable acceptance). Narrowed again; one
+  sentence in D2's promotion text remains owed.
+
+### 14.3 New exposures
+
+1. **The intent interpreter is the chain's undefined link (O-D7e).** Every
+   other stage has specified semantics; act→intent interpretation is only
+   named ("intent interpretation identifies `:edit/replace` and the stable
+   D4 section manifestation"). If interpretation runs client- or
+   consumer-side, intents are client-attested in exactly the way O-D3c
+   flagged for client-hosted evaluation evidence — the authority compiles
+   checkable grounding on top of an uncheckable reading. D7's boundary
+   assignment must apply the same evidence-provenance standard: the
+   interpretation should be a durable, provenance-bearing record (D1
+   already permits revising an interpretation without rewriting the source
+   act), and the compiler should treat an unprovenanced intent as
+   `conditional`, not `compiled`. This is the pass's highest-value
+   challenge.
+2. **Vocabulary note (small).** A precondition of type
+   `:resolution/accepted` is *evidence-level* acceptance (D2/D5
+   attributable acceptance of an ambiguous resolution), not *institutional*
+   admission (D6-DR2's separate decision). The two are correctly separated
+   in the model but share the everyday word "accept"; D5's
+   object-qualification discipline should extend to these field names in
+   the D7 consolidated vocabulary.
+
+### 14.4 Checkpoint receipt summary
+
+Changed obligations: **O-D6a closed at design level; O-D2c narrowed again
+(separate acceptance record implied; one sentence owed in D2); O-D7e
+added.** Highest-value challenge: O-D7e — the act→intent interpreter is the
+one link in the action chain with unspecified semantics and unassigned
+ownership; if it lands client-side without provenance, the design's
+"checkable action grounding" claim rests on an uncheckable reading, exactly
+the O-D3c failure shape.
+
 
 
 
