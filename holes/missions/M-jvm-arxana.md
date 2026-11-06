@@ -492,6 +492,8 @@ attributable and policy-versioned durable record.
 
 #### D3 — Shared protocol and consistency contract
 
+Design artifact: `holes/labs/M-jvm-arxana/D3-protocol-consistency.md`.
+
 Define versioned request/response envelopes for entity lookup, graph query,
 scope resolution, correspondence neighbourhood, subscription and read-only
 candidate-action compilation. Define one position vocabulary with explicit
@@ -518,7 +520,8 @@ does not satisfy the contract.
 Deliverables: protocol schemas, error algebra, consistency state machine,
 subscription sequence examples, an enforceable revision-precondition design,
 and replay tests derived from the two P5 incidents plus the concurrent
-interleaving.
+interleaving. **Draft complete:** two conforming enforcement mechanisms are
+specified for D7 comparison; client-hosted writes are non-conforming.
 
 #### D4 — Correspondence model and normative fixture
 
