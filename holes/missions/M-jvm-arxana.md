@@ -651,3 +651,8 @@ obligation ledger is a live input to DERIVE. In particular, O-D3a makes
 revision-precondition enforcement a D7 architecture-selection criterion, and
 O-D4a treats the unrepaired draft8 data as a defeater rather than evidence for
 the design.
+
+The sequential coordination protocol is
+`holes/labs/M-jvm-arxana/ARGUE-DERIVE-loop.md`. Each D1–D7 checkpoint produces
+one incremental Zai-1 pass and one typed DERIVE disposition receipt; the
+checkpoint table prevents challenges from disappearing between passes.
