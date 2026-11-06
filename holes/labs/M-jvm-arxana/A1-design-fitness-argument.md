@@ -2,12 +2,13 @@
 
 Mission: `M-jvm-arxana`. Phase: ARGUE (shadow of DERIVE). Owner: Zai-1.
 Baselines: pass 1 — DERIVE `784a2ab` + `aac8544`, with D1 draft `9c8b515`;
-pass 2 (this revision) — DERIVE checkpoint D2 `9ba7974`
-(`holes/labs/M-jvm-arxana/D2-strategy-evaluator.md`), prior ARGUE `65c6eac`,
+pass 2 — DERIVE checkpoint D2 `9ba7974`, prior ARGUE `65c6eac`;
+pass 3 (this revision) — DERIVE checkpoint D3 `bc81c03`
+(`holes/labs/M-jvm-arxana/D3-protocol-consistency.md`), prior ARGUE `6dcdb54`,
 per `ARGUE-DERIVE-loop.md`.
-Status: second (progressive) pass; §1–§9 carry the pass-1 argument with
-pass-2 deltas recorded inline and in §10. Nothing here claims ARGUE or the
-mission is complete, and nothing here selects an architecture on DERIVE's
+Status: third (progressive) pass; §1–§9 carry the pass-1 argument with
+pass-2 deltas in §10 and pass-3 deltas in §11. Nothing here claims ARGUE or
+the mission is complete, and nothing here selects an architecture on DERIVE's
 behalf.
 
 Citations: `P1`…`P6` are the MAP reports in this directory; `D1` is
@@ -74,7 +75,7 @@ fiction of an already-shared model.
 | C4 | The three-stage anchor algorithm ports and is the first tripwire | P2 Principal finding, §1 (`arxana-links.el:697`; tolerates unrelated prefix/suffix edits) | ~~`fuzzy-matched` not produced and finder-level ambiguity undefined (P2)~~ **Pass 2: repaired by D2-DR2** — all candidates enumerated, ambiguity explicit, fuzzy never relabelled verified; remaining objection is that fixture tripwires (D2 "Tripwire tests", incl. the duplicate-paragraph example 2) are specified but not yet run | Supported (D2), obligation narrowed to O-D2a |
 | C5 | Resolutions are protocol-only until cited (D1-DR3) | D1 decision record; **pass 2: D2-DR5** (entity outcome + typed `:arxana/resolution-evidence-for` hyperedges on promotion, idempotent by semantic digest) | An audit trail that only persists cited resolutions may lose evidence of *wrong* resolutions; and the promotion acknowledgement itself carries no durable provenance — see §10, O-D2c | Supported (D1+D2), one obligation (O-D2c) |
 | C6 | Draft8 is a valid normative correspondence fixture | P4 §§1–3 (1,630 anchors, three correspondence classes) | Its scope hashes match `.pristine/` while page anchors verify against live sandbox sources (P4 Principal finding) — the fixture is *currently self-contradictory*; M requires repair first | **Defeater until repaired** (O-D4a) |
-| C7 | No CRDT is required now; the falsifying trigger is recorded | P5 §§3, 5–6 | The XTDB API has no revision CAS and no subscription stream (P5 §2; D1 capabilities) — so the *non*-CRDT contract is also unimplemented; deferring CRDT does not defer consistency work | Supported empirically, obligation O-D3a |
+| C7 | No CRDT is required now; the falsifying trigger is recorded | P5 §§3, 5–6; **pass 3: D3-DR3 + CRDT re-arm section** (revision preconditions, refusal, journalling, resubmission; re-arm condition recorded with incident/artifact class/convergence property — the WR-26 re-arm carried at the contract) | ~~The XTDB API has no revision CAS and no subscription stream~~ **Pass 3: answered in design** — D3-DR2 makes an atomic stale-refusal mechanism a *conformance requirement* with two specified candidates; the remaining objection is that the sequencer candidate's lease/fencing proof is owed (O-D3a) | Supported empirically; design now specified, one proof owed (O-D3a) |
 | C8 | Four consumers already share the narrow waist | P6 §§"Interface observations", "Principal finding" | Same-shape-different-name records (P6 §"Same shape") tempt premature standardization; P6 explicitly declines it — the design must too | Supported |
 | C9 | Emacs salience/Plexus are correctly excluded from the canonical model | P1 §1 (salience fields silently dropped; Plexus is prose with no route/writer/reader); D1 record classes | Excluded features may be load-bearing for users; D1 rule 6 (report `unsupported`, never silently accept) is the right guard, but donor behaviour audit (D5 matrix) must confirm nothing preserved depends on them | Supported, obligation O-D5a |
 | C10 | The design serves the theoretical anchor (checkable argument as computational action) | M "Operator anchor", "Theoretical anchoring"; SC6 | The read-only compilation path only *describes* actions; the anchor's "computational action" half lands in later missions — this mission's contribution is grounding, not autonomy (M "Out") | Supported as scoped |
@@ -209,13 +210,16 @@ pressures are all "make X explicit/checkable", which is what §6 records.
 | O-D2b | Authority decision for artifact text access (who reads bytes) | SC2, A3 objection | D2/D7 | **Narrowed**: D2-DR3 + `ArtifactProvider` settle the contract (content-addressed revision, digest re-verified, no anonymous buffer text); which deployment implements it (repo reader / blob store / service cache) is now purely a D7 choice |
 | O-D2c | **New (pass 2).** Promotion of `resolved-unverified`/`ambiguous` requires "explicit caller acknowledgement", but the stored assertion records no acknowledgement provenance — who/what accepted an ambiguous or unverified result is not durably part of the evidence | SC2/SC6 audit chain, C5 | D2 revision or D6 | **Open defeater** (narrow seam, high audit value) |
 | O-D2d | **New (pass 2).** State where per-finder evidence events live when the result is *not* promoted — protocol-only per D1-DR3 is the implied reading, but D2's "every attempted finder appends an immutable event" does not say so | C5, storage growth | D2 clarification | Open (small) |
-| O-D3a | Revision-CAS + subscription mechanism above futon1b; recovery semantics replay-tested against both P5 incidents | SC4, C7, A2 objection | D3/D7 | Open |
-| O-D3b | **New (pass 2).** Align D2's read-side `stale-input` with D3's mutation-side `stale`/`conflict` outcomes so one word never names two refusal reasons across the protocol | SC4, error algebra | D3 | Open (naming) |
+| O-D3a | Revision-CAS + subscription mechanism above futon1b; recovery semantics replay-tested against both P5 incidents | SC4, C7, A2 objection | D3/D7 | **Narrowed (pass 3)**: two conforming mechanisms specified (store-side conditional transaction; durable sequencer with lease/fencing), state machine, traces 1–6; remaining: D7 selects one and *proves* atomicity/fencing — the split-brain proof is the open half |
+| O-D3b | **New (pass 2).** Align D2's read-side `stale-input` with D3's mutation-side `stale`/`conflict` outcomes so one word never names two refusal reasons across the protocol | SC4, error algebra | D3 | **Closed (pass 3)**: distinct definitions plus tripwire trace 7 |
+| O-D3c | **New (pass 3).** D3 permits architecture 3 to survive as read-only client evaluation; but D2 evidence events produced by a client-hosted evaluator are client-attested, so promotion assertions would rest on client-claimed evidence. Decide whether conforming evidence requires authority-side evaluation | SC1, SC2, A3 disposition | D7 | Open |
 | O-D4a | Repair draft8 revision contradiction before normative adoption | C6, SC3 | D4 | Open (DERIVE `e4f3c4f` accepted it as a rejection tripwire) |
 | O-D4b | Durable manifestation/DOM identity scheme (fixture shows none exist) | SC3 | D4 | Open |
 | O-D5a | Capability Preservation Matrix incl. whether any preserved behaviour depends on dropped salience | C9, SC5 | D5 | Open |
+| O-D5b | **New (pass 3).** Map current typed WYSIWYG refusals and edit journal into the D3 error algebra and write contract (named by D3 itself) | SC4, SC5, C9 | D5 | Open |
 | O-D6a | End-to-end compile example on the repaired fixture; consumer attachment notes | SC6, C10 | D6 | Open |
 | O-D7a | Architecture selection with completed matrix, exotype diagram (WR-3), invariants in executable single-locus form | PC, SC1, A1–A3 | D7 | Open |
+| O-D7b | **New (pass 3).** Assign the owner of journal, head movement, lease/fencing tokens and event retention (named by D3) | SC1, SC4 | D7 | Open |
 
 Unsupported claims found during argumentation were converted to obligations
 here rather than argued around: C6 is an active defeater (the strongest
@@ -349,4 +353,89 @@ not as a selection.
 Changed obligations: **O-D1a discharged; O-D1b, O-D2a, O-D2b narrowed;
 O-D2c, O-D2d, O-D3b added.** Highest-value challenge: O-D2c
 (acknowledgement provenance at the promotion seam).
+
+## 11. Pass 3 delta — D3 checkpoint (`bc81c03`)
+
+Re-tested: SC1, SC4, C7, O-D3a/O-D3b, and all three alternatives. Challenged:
+atomicity, crash recovery, fencing, journal/subscription semantics, status
+distinctions, CRDT re-arm, and whether the non-conformance ruling for
+client-hosted writes improperly pre-selects against architecture 3.
+
+### 11.1 Requested challenge areas
+
+- **Atomicity.** The serialized decision (compare → validate → journal →
+  immutable revision → head move → outcome) is sound *as an ordering*; its
+  soundness rests entirely on which mechanism serializes it. Mechanism 1 puts
+  the whole sequence in one XTDB transaction — one truth, no gap. Mechanism 2
+  (durable sequencer) achieves it only if reconstruction-before-serving and
+  command-ID-idempotent futon1b writes hold. D3 says the right things; the
+  proof is owed (O-D3a's open half).
+- **Crash recovery.** Replay by message ID, republish-not-reapply for
+  applied-unpublished, and "no success before durable outcome" close the
+  classic gaps. Trace 5 tests the right seam. One unspecified corner:
+  journalled-but-not-applied at crash replays forward — correct inside one
+  sequencer, but under mechanism 2 the recovery order must be the journal
+  order, not arrival order; worth one sentence in D7.
+- **Fencing.** Correctly identified as the load-bearing risk of mechanism 2:
+  a memory-only or non-durable lease reproduces exactly the 2026-08-08
+  out-of-band-restore class of failure (two writers each believing they are
+  head) — this time self-inflicted. The explicit non-conformance of mutex /
+  GET-then-POST / client promise is well-grounded.
+- **Journal/subscription semantics.** At-least-once with event-ID dedup,
+  snapshot-cursor-then-events, `resync-required` instead of guessed replay,
+  and "subscriptions are not correctness prerequisites" (a disconnected
+  client still gets stale refusal) — coherent, and the last point correctly
+  keeps subscriptions out of the correctness argument. Retention duration is
+  unassigned (O-D7b).
+- **Status distinctions.** `stale-input` (successful read-side result) vs
+  `stale` (refused mutation precondition) vs `conflict` (invariant collision)
+  are defined non-aliasingly and tripwired (trace 7). O-D3b closed.
+- **CRDT re-arm.** Preserved verbatim in substance from P5 §6 and upgraded to
+  the WR-26 standard: the re-arm condition is carried at the contract, and
+  reopening additionally requires recording incident, artifact class and
+  required convergence property. No objection.
+
+### 11.2 Does the client-hosted-write ruling improperly pre-select?
+
+**No — with one boundary to keep honest.** The ruling is derived, not
+preferred: the candidate invariant makes each (question, revision) a
+single-locus record, and D3-DR2 shows check-then-unguarded-write has a race no
+client equivalence can close; any architecture admitting client-side writes
+would violate the mission invariant regardless of what D7 prefers. So marking
+client-hosted *writes* non-conforming is invariant enforcement, not
+architecture selection. Two caveats:
+
+1. A3's distinctive claim was client-hosted *evaluation*, not writes. D3
+   leaves the read-only hybrid alive ("architecture 3 may remain read-only
+   only"), so A3 is constrained, not eliminated — no improper pre-selection.
+   But pass-2 §10.3 sharpened the real remaining question into O-D3c: D2's
+   evidence events from a client-hosted evaluator are client-attested, so
+   *promotion* assertions would rest on client-claimed evidence. D7, not D3,
+   must decide whether conforming evidence requires authority-side
+   evaluation. If it does, A3 narrows to display-only projection — which is
+   SC5's thin-client claim anyway.
+2. Process note: the enforcement table's "verdict" column scores candidates
+   *for architectures* ("candidate for architecture 1/2"). The scoring is
+   correct, but per the loop contract D7 owns selection; D7's matrix should
+   cite this table rather than inherit its verdicts as decided.
+
+### 11.3 Effect on the alternatives (no selection)
+
+A1 gains the most from D3 (its conforming mechanism is the simplest and
+single-truth); A2 remains viable but now carries an explicit proof debt
+(lease/fencing); A3 survives only as the read-only hybrid, with O-D3c as its
+remaining test. Net: the design has converged on "writes are authority-side
+under any architecture" — which is the candidate invariant stated as a
+conformance rule, and is the strongest single-locus statement in the design
+so far.
+
+### 11.4 Checkpoint receipt summary
+
+Changed obligations: **O-D3a narrowed (mechanism specified; fencing/atomicity
+proof owed); O-D3b closed; O-D3c, O-D5b, O-D7b added.** Highest-value
+challenge: the lease/fencing proof for mechanism 2 is the only unsolved
+failure mode left in the design — an unsound lease silently reintroduces the
+out-of-band-restore failure class as an internal split-brain, so D7 must
+treat the fencing proof as a selection gate, not a deployment detail.
+
 
