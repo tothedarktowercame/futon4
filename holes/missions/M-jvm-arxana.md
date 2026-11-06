@@ -552,6 +552,8 @@ implementation increment because D5/D6 demonstrations depend on it.
 
 #### D5 — Client projections and fidelity contract
 
+Design artifact: `holes/labs/M-jvm-arxana/D5-client-fidelity.md`.
+
 Specify the smallest Emacs and VS Code surfaces that prove shared authority:
 open/select a manifestation, request resolution, display candidates/evidence,
 navigate to a returned location, show revision/staleness and inspect a
@@ -567,7 +569,8 @@ leave a capability outside this mission.
 
 Deliverables: command/view specification for both editors, protocol transcripts
 showing identical authority responses, Capability Preservation Matrix and
-client-boundary tests.
+client-boundary tests. **Design draft complete:** all P2/P3 donor capabilities
+have explicit preserve/adapt/drop dispositions and tripwires.
 
 #### D6 — Inference-ready action boundary
 

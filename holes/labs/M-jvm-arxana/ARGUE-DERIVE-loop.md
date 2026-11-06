@@ -54,8 +54,8 @@ and changed obligation IDs.
 | D2 strategy evaluator | `9ba7974` | `6dcdb54` | O-D2c: promoted ambiguity lacked acknowledgement provenance | accepted: separate actor/policy/reason acceptance record; D2d answered; D3b passed forward | closed |
 | D3 protocol/consistency | `bc81c03` | `98188fb` | fencing proof is a selection gate; client evaluation yields client-attested evidence | accepted: durable fencing and journal-order recovery explicit; D3c/D7b passed to D7, D5b to D5 | closed |
 | D4 correspondence | `78a0e16` | `d802654` | O-D4c: manifestation IDs lacked minting governance; positive fixture is on D5/D6 critical path | accepted: deterministic authority/family/role IDs; repair ordered first in INSTANTIATE; D7c passed forward | closed |
-| D5 client/fidelity | pending | pending | — | — | next |
-| D6 action boundary | pending | pending | — | — | queued |
+| D5 client/fidelity | pending | pending | — | — | active |
+| D6 action boundary | pending | pending | — | — | next |
 | D7 synthesis | pending | pending | — | — | queued |
 
 ## Gates
