@@ -859,7 +859,9 @@ under `futon4a/scripts/`. `holes/labs/M-jvm-arxana/D1-emacs-jvm-demo-report.md`
 records the checked run, including the store-boundary qualification and exact
 test commands. The original futon4 Emacs implementation remains untouched.
 
-**DOCUMENT exit: In progress.** The local walkthrough and evidence receipt
-are durable. An isolated lucy replication may add operational evidence, but it
-must use the recorded port census and must not turn a deployment convenience
-into a new authority boundary.
+**DOCUMENT exit: Met for the bounded JVM/Emacs demonstration.** The local and
+isolated-lucy walkthroughs, exact revisions, transcripts, refusals, rollback
+state and store-boundary qualification are durable. The lucy processes were
+stopped and only the inspectable isolated release remains. Comprehensive
+legacy parity, VS Code and Lean/EmitPython demonstrations remain explicitly
+follow-on work, as Joe decided when selecting futon4a.
