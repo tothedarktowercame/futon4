@@ -756,3 +756,14 @@ INSTANTIATE rather than unresolved DERIVE.
 
 **VERIFY exit: Not met.** Client packets are prepared; reports, structural
 audit, spikes and synthesis remain open.
+
+### VERIFY decision log
+
+- The XTDB 2.1.0 atomicity spike produced exactly one winner and one journal
+  row from two concurrent expected-R1 transactions; the store-side ASSERT
+  mechanism is feasible.
+- A clean isolated draft8 rebuild reproduced the source-hash contradiction.
+  VERIFY traced it to basename/path loss plus the wrong `--src` root in the
+  fixture builder. D4/D7 now require hashing exact producer-resolved paths;
+  repairing and committing the positive fixture remains INSTANTIATE increment
+  1 rather than a claim made by VERIFY.

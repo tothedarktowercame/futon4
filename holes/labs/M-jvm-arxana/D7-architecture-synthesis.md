@@ -157,7 +157,9 @@ Each maps to D1–D6 tripwires and becomes an executable integration assertion.
 ## Implementation increments
 
 1. **Fixture gate.** Commit the D4 negative rejection test and repaired positive
-   manifest/build; no client demonstration proceeds without it.
+   manifest/build; repair source-path preservation in the manifest builder and
+   prove it hashes the exact producer-resolved inputs. No client demonstration
+   proceeds without it.
 2. **Atomic store primitive.** Add futon1b conditional command transaction,
    reserved-namespace gate, authenticated service principal, idempotency journal
    and two-writer/crash/bypass tests.

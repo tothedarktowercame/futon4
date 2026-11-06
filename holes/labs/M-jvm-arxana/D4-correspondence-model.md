@@ -117,6 +117,10 @@ file-index mapping and full scope-table digest.
    artifact revision, and the observed `.pristine` values do not.
 3. Rebuild the HTML/source map from a clean checkout of the named commit, or
    recover a producer log proving which exact bytes made the committed page.
+   The builder must preserve each producer-reported source path (not reduce it
+   to a basename), resolve it within an explicitly allowed build root, and hash
+   those exact bytes. The declared source root must therefore agree with the
+   actual main/input paths; a same-named file elsewhere is a mismatch.
 4. Refuse mixed output: all page anchors and the map must name one build ID and
    the same source revision set.
 5. Verify every source-map coordinate is in bounds. For the three normative
@@ -201,6 +205,8 @@ and output revisions. Shared symbol names are candidate evidence, not identity.
 - Every assertion endpoint revision occurs in the same coherent build manifest.
 - Full manifest regeneration is byte/digest deterministic for fixed inputs and
   pinned toolchain, or records the precise nondeterministic fields.
+- A clean rebuild whose map hashes a same-named file outside the producer's
+  resolved source path is rejected even when HTML and anchor counts look valid.
 - Authored and generated informal manifestations never share an ID; generation
   records source revisions, tool/model identity and version.
 - Mining, exact anchors, model generation and human review may disagree while
