@@ -1,11 +1,14 @@
 # A1 — JVM Arxana design-fitness argument (report)
 
 Mission: `M-jvm-arxana`. Phase: ARGUE (shadow of DERIVE). Owner: Zai-1.
-DERIVE baseline: commit `784a2ab` (DERIVE plan rework) plus coordination commit
-`aac8544`; D1 draft (`9c8b515`, `holes/labs/M-jvm-arxana/D1-canonical-model.md`)
-is treated as a newer moving input, not a settled decision.
-Status: first pass. Nothing here claims ARGUE or the mission is complete, and
-nothing here selects an architecture on DERIVE's behalf.
+Baselines: pass 1 — DERIVE `784a2ab` + `aac8544`, with D1 draft `9c8b515`;
+pass 2 (this revision) — DERIVE checkpoint D2 `9ba7974`
+(`holes/labs/M-jvm-arxana/D2-strategy-evaluator.md`), prior ARGUE `65c6eac`,
+per `ARGUE-DERIVE-loop.md`.
+Status: second (progressive) pass; §1–§9 carry the pass-1 argument with
+pass-2 deltas recorded inline and in §10. Nothing here claims ARGUE or the
+mission is complete, and nothing here selects an architecture on DERIVE's
+behalf.
 
 Citations: `P1`…`P6` are the MAP reports in this directory; `D1` is
 `D1-canonical-model.md`; `M` is `holes/missions/M-jvm-arxana.md`. Empirical
@@ -68,8 +71,8 @@ fiction of an already-shared model.
 | C1 | The gap is real and correctly stated | P1 §0 (client on dead port 7071; live service on 7072/7073); P3 §3 (`file` means index vs filename) | "Just fix Emacs's port and add a VS Code mode" — refuted by P3: the protocols disagree in kind, not configuration | Supported |
 | C2 | Futon1b's record families can host the extended vocabulary | P1 §1 (entity/hyperedge tables, extension fields, L0–L4 gates, read-back verification); D1 "Namespaced shapes" | Extending via `props` risks unindexed queries; D1 Q2 (assertion shape vs indexing) is open | Supported, one obligation (O-D1b) |
 | C3 | Artifact revision must be content-addressed identity, not an API parameter | P1 §1 (server ignores `as-of`/`version`); P4 Principal finding (fixture revision contradiction); D1-DR2 | Content-addressing every revision makes historical browsing storage-heavy; no observed need contradicts — accepted trade | Supported |
-| C4 | The three-stage anchor algorithm ports and is the first tripwire | P2 Principal finding, §1 (`arxana-links.el:697`; tolerates unrelated prefix/suffix edits) | `fuzzy-matched` not produced and finder-level ambiguity undefined (P2) — porting the algorithm does not deliver the *mission's* resolution semantics | Supported, obligations O-D2a/O-D2b |
-| C5 | Resolutions are protocol-only until cited (D1-DR3) | D1 decision record | An audit trail that only persists cited resolutions may lose evidence of *wrong* resolutions; no objection raised in MAP; acceptable if receipts name inputs (D6) | Supported provisionally (D1) |
+| C4 | The three-stage anchor algorithm ports and is the first tripwire | P2 Principal finding, §1 (`arxana-links.el:697`; tolerates unrelated prefix/suffix edits) | ~~`fuzzy-matched` not produced and finder-level ambiguity undefined (P2)~~ **Pass 2: repaired by D2-DR2** — all candidates enumerated, ambiguity explicit, fuzzy never relabelled verified; remaining objection is that fixture tripwires (D2 "Tripwire tests", incl. the duplicate-paragraph example 2) are specified but not yet run | Supported (D2), obligation narrowed to O-D2a |
+| C5 | Resolutions are protocol-only until cited (D1-DR3) | D1 decision record; **pass 2: D2-DR5** (entity outcome + typed `:arxana/resolution-evidence-for` hyperedges on promotion, idempotent by semantic digest) | An audit trail that only persists cited resolutions may lose evidence of *wrong* resolutions; and the promotion acknowledgement itself carries no durable provenance — see §10, O-D2c | Supported (D1+D2), one obligation (O-D2c) |
 | C6 | Draft8 is a valid normative correspondence fixture | P4 §§1–3 (1,630 anchors, three correspondence classes) | Its scope hashes match `.pristine/` while page anchors verify against live sandbox sources (P4 Principal finding) — the fixture is *currently self-contradictory*; M requires repair first | **Defeater until repaired** (O-D4a) |
 | C7 | No CRDT is required now; the falsifying trigger is recorded | P5 §§3, 5–6 | The XTDB API has no revision CAS and no subscription stream (P5 §2; D1 capabilities) — so the *non*-CRDT contract is also unimplemented; deferring CRDT does not defer consistency work | Supported empirically, obligation O-D3a |
 | C8 | Four consumers already share the narrow waist | P6 §§"Interface observations", "Principal finding" | Same-shape-different-name records (P6 §"Same shape") tempt premature standardization; P6 explicitly declines it — the design must too | Supported |
@@ -197,19 +200,22 @@ pressures are all "make X explicit/checkable", which is what §6 records.
 
 ## 6. Design-obligation ledger (D1–D7)
 
-| ID | Obligation / defeater | Settles | Owed by |
-|---|---|---|---|
-| O-D1a | Strategy-finder independent entity vs embedded (D1 Q1) | C2, SC2 | D2 |
-| O-D1b | Resolution assertion: entity+hyperedge vs single doc; futon1b indexing behaviour (D1 Q2) | C2, query-ability | D2/D7 |
-| O-D1c | Name where salience/Plexus discipline lives after exclusion (WR-24) | C9 | D7 or follow-up mission |
-| O-D2a | Finder dispatch, ordering, ambiguity semantics for the five inert forms; mark each executable/translated/advisory/unsupported | SC2, C4 | D2 |
-| O-D2b | Authority decision for artifact text access (who reads bytes) | SC2, A3 objection | D2/D7 |
-| O-D3a | Revision-CAS + subscription mechanism above futon1b; recovery semantics replay-tested against both P5 incidents | SC4, C7, A2 objection | D3/D7 |
-| O-D4a | Repair draft8 revision contradiction before normative adoption | C6, SC3 | D4 |
-| O-D4b | Durable manifestation/DOM identity scheme (fixture shows none exist) | SC3 | D4 |
-| O-D5a | Capability Preservation Matrix incl. whether any preserved behaviour depends on dropped salience | C9, SC5 | D5 |
-| O-D6a | End-to-end compile example on the repaired fixture; consumer attachment notes | SC6, C10 | D6 |
-| O-D7a | Architecture selection with completed matrix, exotype diagram (WR-3), invariants in executable single-locus form | PC, SC1, A1–A3 | D7 |
+| ID | Obligation / defeater | Settles | Owed by | State (pass 2) |
+|---|---|---|---|---|
+| O-D1a | Strategy-finder independent entity vs embedded (D1 Q1) | C2, SC2 | D2 | **Discharged** by D2-DR4: embedded `(strategy-revision-id, ordinal)`, entity only when independently cited |
+| O-D1b | Resolution assertion: entity+hyperedge vs single doc; futon1b indexing behaviour (D1 Q2) | C2, query-ability | D2/D7 | **Narrowed**: D2-DR5 selects entity + typed hyperedges (avoids property scans); the futon1b-indexing confirmation half remains, owed to D7 acceptance tests |
+| O-D1c | Name where salience/Plexus discipline lives after exclusion (WR-24) | C9 | D7 or follow-up mission | Open |
+| O-D2a | Finder dispatch, ordering, ambiguity semantics for the five inert forms; mark each executable/translated/advisory/unsupported | SC2, C4 | D2 | **Narrowed**: semantics defined (cascade modes, no implicit fallback, legacy classification table); remaining: authored translation receipts for existing stored strategies, pinned embedding inputs, and the tripwire fixtures actually run |
+| O-D2b | Authority decision for artifact text access (who reads bytes) | SC2, A3 objection | D2/D7 | **Narrowed**: D2-DR3 + `ArtifactProvider` settle the contract (content-addressed revision, digest re-verified, no anonymous buffer text); which deployment implements it (repo reader / blob store / service cache) is now purely a D7 choice |
+| O-D2c | **New (pass 2).** Promotion of `resolved-unverified`/`ambiguous` requires "explicit caller acknowledgement", but the stored assertion records no acknowledgement provenance — who/what accepted an ambiguous or unverified result is not durably part of the evidence | SC2/SC6 audit chain, C5 | D2 revision or D6 | **Open defeater** (narrow seam, high audit value) |
+| O-D2d | **New (pass 2).** State where per-finder evidence events live when the result is *not* promoted — protocol-only per D1-DR3 is the implied reading, but D2's "every attempted finder appends an immutable event" does not say so | C5, storage growth | D2 clarification | Open (small) |
+| O-D3a | Revision-CAS + subscription mechanism above futon1b; recovery semantics replay-tested against both P5 incidents | SC4, C7, A2 objection | D3/D7 | Open |
+| O-D3b | **New (pass 2).** Align D2's read-side `stale-input` with D3's mutation-side `stale`/`conflict` outcomes so one word never names two refusal reasons across the protocol | SC4, error algebra | D3 | Open (naming) |
+| O-D4a | Repair draft8 revision contradiction before normative adoption | C6, SC3 | D4 | Open (DERIVE `e4f3c4f` accepted it as a rejection tripwire) |
+| O-D4b | Durable manifestation/DOM identity scheme (fixture shows none exist) | SC3 | D4 | Open |
+| O-D5a | Capability Preservation Matrix incl. whether any preserved behaviour depends on dropped salience | C9, SC5 | D5 | Open |
+| O-D6a | End-to-end compile example on the repaired fixture; consumer attachment notes | SC6, C10 | D6 | Open |
+| O-D7a | Architecture selection with completed matrix, exotype diagram (WR-3), invariants in executable single-locus form | PC, SC1, A1–A3 | D7 | Open |
 
 Unsupported claims found during argumentation were converted to obligations
 here rather than argued around: C6 is an active defeater (the strongest
@@ -270,3 +276,77 @@ the decision to act stays with people and their own tools.
 *(Every clause above is provisional exactly where §6's obligations are open;
 the plain-language claim inherits the ledger's conditions, especially O-D3a
 and O-D4a.)*
+
+## 10. Pass 2 delta — D2 checkpoint (`9ba7974`)
+
+Re-tested: SC2, C4, C5, the single-locus invariant, and O-D1a/O-D1b/O-D2a/O-D2b.
+Statuses are recorded in §2 and §6; this section gives the reasoning.
+
+### 10.1 SC2 and the five requested features — sufficiency and coherence
+
+- **Declaration-only import** (D2-DR1): sufficient and correct. It refuses to
+  manufacture execution semantics that P2 proved never existed; legacy records
+  stay visible in the digest. Coherent with D1 compatibility rule 4.
+- **Explicit translation** (D2-DR1 + legacy classification table): sufficient
+  in form — every one of the five forms has a classification and a required
+  translation. Two residual insufficiencies: (a) translations are authored
+  receipts, so *who* translates and reviews is process debt outside D2's text
+  (narrowed into O-D2a); (b) `surface-form-hybrid` expands into a composition
+  whose sub-steps must each re-enter the classification — a translated hybrid
+  containing an unpinned embedding step is advisory inside an executable
+  strategy; D2 implies but does not state that a strategy's executability is
+  the conjunction of its finders' statuses. Flagged for the D2 tripwire set.
+- **Ambiguity preservation** (D2-DR2, result algebra): sufficient and the
+  strongest part of the checkpoint. "Ordering never turns a tied or multiple
+  set into uniqueness" is exactly the repair C4 demanded; statuses never
+  conflate missing/unsupported/failed. The duplicate-paragraph example shows
+  the defeater caught, not asserted.
+- **ArtifactProvider digest verification** (D2-DR3): sufficient and coherent.
+  Because the revision ID *is* the sha256 of the canonical bytes, re-computing
+  the digest closes the integrity gap regardless of deployment; a provider
+  cannot lie about which revision it served. The remaining question is purely
+  deployability (D7) — recorded in O-D2b's narrowing.
+- **Entity+hyperedge promotion** (D2-DR4/DR5): mutually coherent with D1-DR3
+  and with the D1 relation catalogue (`:arxana/resolution-evidence-for`, 3+,
+  roles match). Idempotent upsert by semantic digest makes the
+  **single-locus invariant** checkable here: for (strategy-revision,
+  artifact-revision, subject) there is exactly one assertion per outcome
+  digest, and a new artifact revision mints a new assertion rather than
+  mutating the old — both halves of single-locus (existence and uniqueness)
+  are now expressible as a query. No violation found.
+
+### 10.2 New defeater exposed
+
+**O-D2c — acknowledgement provenance.** D2's promotion path admits
+`resolved-unverified` and `ambiguous` results into durable assertions on
+"explicit caller acknowledgement", but the stored assertion records outcome,
+digests and evaluator version only. The acknowledgement — *which* caller,
+under what policy, accepting which ambiguity — is exactly the institutional
+fact this mission's evidence discipline exists to preserve; without it, the
+audit chain is broken at the precise point where a human or tool judgement
+turned an unresolved answer into durable evidence. This is a narrow seam
+between D2's promotion shape and D6's admission decisions; either D2 records
+an acknowledgement provenance field on the assertion, or D6 explicitly owns
+the acknowledgement as an admission-style record that must reference the
+assertion. It does not block D3 work.
+
+Two smaller exposures: O-D2d (where non-promoted evidence events live) and
+O-D3b (`stale-input` read-side vs `stale` mutation-side vocabulary alignment
+when D3 lands).
+
+### 10.3 Effect on the alternatives (no selection)
+
+D2 strengthens A2's and A1's case and leaves A3's objection untouched: a
+deterministic evaluator over digest-verified immutable bytes is now fully
+specified, and it is the kind of component that must live behind one
+authority boundary — client-hosted evaluators (A3) would have to reimplement
+the digest-verification and evidence-sequence discipline per editor, which is
+precisely the duplication the candidate invariant forbids. Noted as evidence,
+not as a selection.
+
+### 10.4 Checkpoint receipt summary
+
+Changed obligations: **O-D1a discharged; O-D1b, O-D2a, O-D2b narrowed;
+O-D2c, O-D2d, O-D3b added.** Highest-value challenge: O-D2c
+(acknowledgement provenance at the promotion seam).
+
