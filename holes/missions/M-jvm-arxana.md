@@ -260,6 +260,17 @@ separate report, and may run concurrently:
 5. `P5-consistency-requirements.md` — Q5, evidence for or against CRDT.
 6. `P6-consumer-interface-census.md` — Q6, adjacent mission requirements.
 
+Dispatched 2026-11-06:
+
+| Packet | Seat | Invoke job |
+|---|---|---|
+| P1 | `zai-2` | `invoke-1793982291192-13988-cb4d376e` |
+| P2 | `zai-3` | `invoke-1793982290931-13985-15c7f953` |
+| P3 | `zai-4` | `invoke-1793982291346-13990-a2f3d594` |
+| P4 | `zai-5` | `invoke-1793982291108-13987-b49094d3` |
+| P5 | `zai-6` | `invoke-1793982291011-13986-48c2c2b4` |
+| P6 | `zai-7` | `invoke-1793982291274-13989-2a6a4145` |
+
 The coordinator synthesizes the six reports into the lifecycle-required
 `ready / missing` table. Zai seats do not edit this mission, choose the
 architecture, or begin implementation.
