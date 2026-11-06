@@ -56,7 +56,7 @@ and changed obligation IDs.
 | D4 correspondence | `78a0e16` | `d802654` | O-D4c: manifestation IDs lacked minting governance; positive fixture is on D5/D6 critical path | accepted: deterministic authority/family/role IDs; repair ordered first in INSTANTIATE; D7c passed forward | closed |
 | D5 client/fidelity | `9cf5a5a` | `04ea998` | O-D7d: canonical response equality predicate undefined | accepted: versioned semantic/error projection fixed; workflow audit passed to INSTANTIATE | closed |
 | D6 action boundary | `df71835` | `dbeb91c` | O-D7e: act→intent semantics and ownership unspecified | accepted: durable interpretation provenance; unprovenanced intent is conditional; D7 assigns trust authority | closed |
-| D7 synthesis | `84f999d` | dispatched | — | — | active |
+| D7 synthesis | `84f999d` | `37ba0dc` | O-D7f: generic futon1b writes could bypass Arxana uniqueness; O-D2c/d absent from table | accepted: reserved namespace + authenticated atomic route; D2c/d receipts restored | closed |
 
 ## Gates
 

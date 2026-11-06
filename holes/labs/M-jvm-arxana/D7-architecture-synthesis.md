@@ -28,6 +28,14 @@ provenance-bearing interpretation records under versioned trust profiles and
 compile untrusted records only conditionally; BECAUSE provenance/trust is the
 common contract while interpretation policy remains replaceable.
 
+**D7-DR4.** IF futon1b's generic write routes remain available to existing
+writers; HOWEVER `arxana/*` identity and uniqueness invariants must not be
+bypassable; THEN reserve the `arxana/*` type/property namespace at the store
+boundary and accept its writes only through the authenticated conditional
+transaction route, which validates uniqueness in the same transaction;
+BECAUSE Arxana-side validation followed by an open generic write would state an
+invariant without enforcing it.
+
 ## Comparison matrix
 
 Scores: 3 strong, 2 viable with stated work, 1 conflicts/high risk.
@@ -71,6 +79,14 @@ sequencer/fencing variant: atomicity stays in futon1b.
 
 Salience and Plexus remain outside v1 and require a witnessed follow-up
 contract. Domain scores/verdicts/order evidence stay namespaced.
+
+Futon1b's existing generic entity, hyperedge and batch routes reject creation
+or mutation of `arxana/*` typed records and reserved properties. The conditional
+route authenticates the Arxana service principal, validates manifestation tuple
+uniqueness and alias rules against current durable state, and commits the
+record/head/journal atomically. Reads remain available through documented
+interfaces. Legacy non-Arxana families keep their present routes; migration
+does not retroactively reserve their namespaces.
 
 ## Wiring and flow
 
@@ -128,19 +144,23 @@ Each maps to D1–D6 tripwires and becomes an executable integration assertion.
 | O-D1b query/index shape | entity + typed hyperedges selected; add query/index test before schema freeze |
 | O-D1c salience/Plexus | excluded from v1; workflow audit and separate mission if witnessed |
 | O-D2b artifact access | Arxana-owned ArtifactProvider |
+| O-D2c acknowledgement provenance | closed in D2: separate immutable actor/policy/reason `resolution-acceptance` record linked to assertion |
+| O-D2d non-promoted evidence | closed in D2: ephemeral response only; promotion atomically preserves complete semantic evidence |
 | O-D3a atomicity/fencing | store-side conditional transaction selected; sequencer fencing not used |
 | O-D3c client evidence | preview only; authority replay required for promotion |
 | O-D7b journal/head/retention | journal/head futon1b; cursor retention/resync Arxana |
 | O-D7c fixture/assertion authority | Arxana fixture builder + manifestation registry; futon1b persistence |
 | O-D7d response digest | Arxana versioned schema/projection registry |
 | O-D7e interpretation | external interpreter + Arxana trust profile and conditional fallback |
+| O-D7f namespace enforcement | futon1b reserves `arxana/*`; authenticated conditional route atomically validates uniqueness; generic writes refuse |
 
 ## Implementation increments
 
 1. **Fixture gate.** Commit the D4 negative rejection test and repaired positive
    manifest/build; no client demonstration proceeds without it.
 2. **Atomic store primitive.** Add futon1b conditional command transaction,
-   idempotency journal and two-writer/crash tests.
+   reserved-namespace gate, authenticated service principal, idempotency journal
+   and two-writer/crash/bypass tests.
 3. **Service spine.** Implement D1 adapter, capabilities handshake,
    ArtifactProvider and canonical schema/digest registry.
 4. **Resolve.** Implement D2 evaluator, legacy translation and promotion with
@@ -169,6 +189,8 @@ clients continue using existing paths during proof deployment.
 - D6 deterministic candidate, ambiguous/conditional grounding, separate
   admission and immutable receipt tests.
 - Cross-cutting: enumerate any conflicting single-locus tuple; zero permitted.
+- Attempt direct generic writes of `arxana/*` records and conflicting
+  manifestation tuples: every bypass is refused without partial mutation.
 - Fidelity: execute every preserved/adapted tripwire and workflow-audit dropped
   salience/Plexus before declaring completion.
 
@@ -184,5 +206,5 @@ Rollback never rewrites artifact revisions or hides admitted receipts.
 D1–D7 now specify entities, relations, invariants, flow, interfaces, fidelity,
 architecture, decisions and acceptance tests. Implementation can proceed
 without deciding authority, identity, consistency or donor behaviour ad hoc.
-DERIVE exit remains provisional until the D7 ARGUE checkpoint challenges this
-selection and its material objections receive dispositions.
+The D7 ARGUE checkpoint upheld the selection; O-D7f and the omitted O-D2c/d
+receipts are dispositioned above. **DERIVE exit: Met.**

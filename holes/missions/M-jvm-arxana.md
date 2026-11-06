@@ -1,7 +1,7 @@
 # M-jvm-arxana — one Arxana authority across Emacs and VS Code
 
 **Date:** 2026-11-06  
-**Status:** OPEN — DERIVE (MAP completed 2026-11-06)
+**Status:** OPEN — ARGUE (DERIVE completed 2026-11-06)
 **Owner:** Joe (operator); unassigned technical driver
 **Repos:** `futon4` (Arxana model and Emacs client), `futon1`/XTDB (durable
 graph), `futon3c` (scope view, WYSIWYG and prospective clients)  
@@ -607,7 +607,9 @@ trade-offs.
 Deliverables: selected architecture, wiring diagram, consolidated invariants,
 ordered implementation increments, acceptance tests and rollback/compatibility
 plan. **Draft complete:** selects headless JVM Arxana over futon1b with atomic
-conditional commit remaining at the store boundary; pending ARGUE checkpoint.
+conditional commit remaining at the store boundary. The D7 ARGUE checkpoint
+(`37ba0dc`) upheld the selection and required futon1b to reserve `arxana/*`
+writes for the authenticated conditional route so uniqueness cannot be bypassed.
 
 ### Invariants to make checkable
 
@@ -665,12 +667,11 @@ independent local choices.
 
 ### DERIVE exit
 
-**DERIVE exit: Not met.** The evidence-constrained plan is now explicit, but
-the schemas, alternatives, decision records, fidelity matrix, wiring diagram
-and selected architecture still have to be authored. Exit is met when an
-implementer can build from this section and its linked artifacts without
-asking who owns a question, what a record means, how revisions behave or which
-donor behaviours must survive.
+**DERIVE exit: Met.** D1–D7 specify the schemas, alternatives, selected
+architecture, authority assignments, decision records, fidelity matrix, wiring,
+implementation increments and acceptance tests. The progressive ARGUE passes
+have dispositioned every material challenge; ARGUE remains open for synthesis
+and the planned client-side critique.
 
 ### Concurrent ARGUE ownership
 
