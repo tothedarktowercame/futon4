@@ -611,3 +611,14 @@ and selected architecture still have to be authored. Exit is met when an
 implementer can build from this section and its linked artifacts without
 asking who owns a question, what a record means, how revisions behave or which
 donor behaviours must survive.
+
+### Concurrent ARGUE ownership
+
+By Joe's decision on 2026-11-06, Zai-1 owns an ARGUE shadow while Codex-21
+completes DERIVE. Its packet is
+`holes/labs/M-jvm-arxana/packets/A1-design-fitness-argument.md`. The shadow
+constructs and challenges the argument for JVM Arxana's evolving design and
+fitness for purpose; it is not a close analysis of an operator passage.
+ARGUE may expose obligations that revise DERIVE, but cannot meet its lifecycle
+exit until DERIVE has selected and specified the architecture it is arguing
+for.
