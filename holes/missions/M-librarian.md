@@ -7,6 +7,20 @@ planning. It is a "bonus lap"
 gated behind the client-facing VSAT delivery. Not yet scoped, not yet
 resourced; the hardware it targets has not shipped.
 
+Blocked-by: invoice-202506 client-facing VSAT delivery (WP gate in
+`~/code/invoices/plan-202506.md`; not a futon mission doc) — the prose gate
+above as an explicit mission-graph edge (added 2026-11-06).
+
+Banner re-derived 2026-11-06 (wm-author, full-loop enactment parcel): checked
+(a) futon4 VSAT-side missions `M-vsatarcs-writer` and
+`M-vsatarcs-invariants-integration` — both still OPEN, so the client-facing
+delivery is not discharged by futon-side work; (b) `~/code/invoices/plan-202506.md`
+— the plan still records prepaid delivery outstanding. The third blocker
+(Steam Frame hardware not shipped, no published dev docs recorded) is
+unchanged from the body below. All three gates still hold, so the banner
+above is current: no scoping, no resourcing until they lift. No checklist
+box is ticked by this re-derivation.
+
 ## Acceptance checklist (2026-09-30)
 
 - [ ] Joe confirms that the HEAD text faithfully records the native Librarian idea.
