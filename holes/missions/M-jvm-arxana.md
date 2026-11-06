@@ -695,3 +695,11 @@ The sequential coordination protocol is
 `holes/labs/M-jvm-arxana/ARGUE-DERIVE-loop.md`. Each D1–D7 checkpoint produces
 one incremental Zai-1 pass and one typed DERIVE disposition receipt; the
 checkpoint table prevents challenges from disappearing between passes.
+
+Client-side ARGUE review after DERIVE adds a bounded proof-presentation profile
+to D7: proof moves are domain entities with multiple manifestations;
+correspondence assessments are attributable records distinct from resolution
+acceptance and action admission; authored/generated provenance remains
+separate; and usefulness evaluation is consumer evidence rather than JVM
+authority conformance. This clarification does not reopen the selected
+architecture or introduce an APM-specific alignment mechanism.

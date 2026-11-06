@@ -194,6 +194,52 @@ clients continue using existing paths during proof deployment.
 - Fidelity: execute every preserved/adapted tripwire and workflow-audit dropped
   salience/Plexus before declaring completion.
 
+## Client proof-presentation profile
+
+Client-side ARGUE review establishes a bounded proof-presentation profile over
+the common model; it does not add proof pedagogy to JVM authority.
+
+- `proof/move` is a domain entity type using D1 identity. One move may have
+  zero or many revision-pinned D4 manifestations: authored informal proof,
+  readable Lean, compiled/generated rendering and separately generated
+  informalization. Generated and authored manifestations retain distinct IDs
+  and provenance.
+- Mark8 mining, declaration/source structure, exact anchors, model generation
+  and human review are evidence sources with independent provenance and
+  confidence/standing. None becomes authoritative by score alone; the observed
+  mark8 yield is candidate evidence, not an alignment oracle.
+- D4 `correspondence-assessment` records accepted/rejected judgments. Explicit
+  absence assesses an expected role under a bounded search, rather than
+  interpreting a missing row. Resolution acceptance, correspondence assessment
+  and action admission remain three different judgments.
+- Clients may ask for all available manifestations of a move or the next
+  absent/ambiguous move using a domain-owned move-order relation. Arxana returns
+  facts and assessments; layout, lesson sequence and presentation remain
+  client-owned.
+
+Acceptance is layered and must not be collapsed:
+
+1. **Transport:** messages, revisions, refusal and subscription semantics.
+2. **Rendering integrity:** the declared source/generated pipeline produced the
+   named revision and locators without provenance loss.
+3. **Correspondence:** assertions, ambiguity, direction and assessments satisfy
+   D4 invariants.
+4. **Usefulness:** a reader recovers the argument, explains a move choice,
+   navigates successfully or completes a masked exercise.
+
+Only the first three are JVM Arxana conformance. Usefulness is a namespaced
+consumer evaluation record linked to move, manifestation, artifact revision,
+participant/cohort, instrument and outcome; it may inform later design without
+changing common correspondence semantics. The PythonEmit→leantotex-python→
+LaTeXML-Oxide proof-of-concept therefore establishes a candidate rendering
+path, not readability or pedagogical success.
+
+Profile tripwires: one move returns multiple manifestations without identity
+merger; generated output cannot alias authored material; conflicting evidence
+and assessments coexist; `next unmatched` requires an explicit domain order;
+and a useful/unuseful rating cannot change transport or correspondence
+conformance.
+
 ## Rollback and failure containment
 
 Disable the Arxana service/client capability flag; no legacy record is deleted.

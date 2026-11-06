@@ -151,6 +151,35 @@ all candidates; it never selects among ambiguous assertions. A stale assertion
 remains queryable as historical evidence but is excluded from current-only
 queries. Neighbourhood traversal is bounded and preserves direction/provenance.
 
+Queries may additionally filter by manifestation role, artifact revision,
+verification standing and attributable assessment verdict. A client profile
+may supply a domain-owned ordering relation (for example proof-move order) and
+ask for the next absent or ambiguous item; Arxana applies that supplied order
+but does not invent pedagogical sequencing.
+
+### Correspondence assessment
+
+Human or tool judgment about an assertion is a separate immutable
+`arxana/correspondence-assessment` record:
+
+```clojure
+{:assessment/id "arxana:correspondence-assessment:sha256:..."
+ :subject {:assertion/id "..."}
+ :verdict :accepted|:rejected
+ :actor/id "..."
+ :policy/id "..."
+ :policy/revision "..."
+ :reason "..."
+ :evidence/ids ["..."]
+ :assessed-at "RFC3339"}
+```
+
+An explicit-absence assessment instead names an expected manifestation role,
+source entity/revision, bounded search envelope and verdict `:absent`. Absence
+of a stored assertion is never treated as evidence of absence. Assessments may
+conflict and remain co-present; they do not rewrite correspondence assertions.
+This record is distinct from D2 resolution acceptance and D6 action admission.
+
 ## Extension to Lean and generated Python
 
 New manifestations join by adding artifact revisions and correspondence
@@ -172,6 +201,12 @@ and output revisions. Shared symbol names are candidate evidence, not identity.
 - Every assertion endpoint revision occurs in the same coherent build manifest.
 - Full manifest regeneration is byte/digest deterministic for fixed inputs and
   pinned toolchain, or records the precise nondeterministic fields.
+- Authored and generated informal manifestations never share an ID; generation
+  records source revisions, tool/model identity and version.
+- Mining, exact anchors, model generation and human review may disagree while
+  retaining independent provenance and source-specific confidence/standing.
+- Accepted, rejected and explicit-absence assessments remain attributable and
+  cannot mutate the assessed assertion.
 
 ## Obligations
 
