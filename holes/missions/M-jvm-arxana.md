@@ -571,6 +571,9 @@ Deliverables: command/view specification for both editors, protocol transcripts
 showing identical authority responses, Capability Preservation Matrix and
 client-boundary tests. **Design draft complete:** all P2/P3 donor capabilities
 have explicit preserve/adapt/drop dispositions and tripwires.
+The progressive ARGUE pass (`04ea998`) confirmed those dispositions and fixed
+the canonical semantic-response projection used to prove cross-client equality;
+request identity, timing, diagnostics and presentation are excluded.
 
 #### D6 — Inference-ready action boundary
 

@@ -119,6 +119,24 @@ evidence digest must match. The Oxide pane queries that candidate's
 manifestation and receives the same correspondence assertion ID. Equality is
 checked on canonical response fields, never pixels.
 
+### Canonical semantic response digest
+
+Each operation has a versioned canonical projection registered with its D3
+schema. For `scope/resolve`, the projection includes protocol/semantics version,
+operation, domain result status, artifact and strategy revision IDs, ordered
+candidate IDs and canonical locations, verification states, and semantic
+evidence digests. It excludes message/request ID, principal, timestamps,
+duration, transport metadata, trace IDs, presentation strings and operational
+diagnostics. Maps are key-sorted and collections retain semantic order; the
+canonical bytes are SHA-256 digested and returned as `semantic/digest`.
+
+Error equivalence uses a separate canonical projection including operation,
+category, qualified code, target and expected/current revisions, and recovery
+operation kinds while excluding localized prose and trace metadata. The schema
+version and projection definition are part of the digest contract. Adding or
+removing a semantic field requires a new projection version; clients cannot
+choose their own equality field set.
+
 ## Refusal mapping (O-D5b)
 
 | Current WYSIWYG event | D3 outcome | Required client action |
@@ -152,8 +170,13 @@ unless they name exact before/after revisions and operation identity.
 - **O-D5a closed:** every surveyed donor behaviour has preserve/adapt/drop and
   tripwire disposition; none relies on dropped salience/Plexus.
 - **O-D5b closed at design level:** WYSIWYG refusals/journal map to D3.
-- D7 must assign extension/webview packaging and the canonical response digest.
+- **O-D7d closed at design level:** the canonical semantic/error projections
+  and exclusions are fixed above; D7 assigns their schema-registry owner.
+- D7 must assign extension/webview packaging and the projection registry.
 - INSTANTIATE must run transcripts against the repaired D4 positive fixture;
   mock responses alone cannot satisfy shared-authority demonstration.
+- INSTANTIATE must perform a workflow-level audit for any user dependency on
+  salience/Plexus; MAP's code census found none, but cannot prove absence from
+  unrecorded practice.
 
 No architecture or UI styling is selected by D5.
