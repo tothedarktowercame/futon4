@@ -529,6 +529,8 @@ replay.
 
 #### D4 — Correspondence model and normative fixture
 
+Design artifact: `holes/labs/M-jvm-arxana/D4-correspondence-model.md`.
+
 The current Oxide draft8 source/page/scope set is a contradiction-bearing test
 input, not yet a normative fixture: its recorded scope hashes and page anchors
 name different source states. Adopt it as the first fixture only after giving
@@ -542,6 +544,8 @@ ambiguous or stale.
 Deliverables: repaired fixture manifest, stable fixture IDs, expected query
 answers for the paragraph/section/mathematics cases, and an extension slot for
 Lean and generated Python that does not block the first demonstration.
+**Design draft complete:** the original set is a required negative fixture;
+the positive fixture is admitted only after deterministic rejection/repair.
 
 #### D5 — Client projections and fidelity contract
 

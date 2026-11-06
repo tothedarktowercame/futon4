@@ -53,8 +53,8 @@ and changed obligation IDs.
 | Initial plan + D1 | `9c8b515` | `65c6eac` | O-D3a: no architecture yet enforces revision preconditions; O-D4a: draft8 is contradictory | `e4f3c4f`: accepted as D3/D7 criterion and D4 rejection tripwire | closed |
 | D2 strategy evaluator | `9ba7974` | `6dcdb54` | O-D2c: promoted ambiguity lacked acknowledgement provenance | accepted: separate actor/policy/reason acceptance record; D2d answered; D3b passed forward | closed |
 | D3 protocol/consistency | `bc81c03` | `98188fb` | fencing proof is a selection gate; client evaluation yields client-attested evidence | accepted: durable fencing and journal-order recovery explicit; D3c/D7b passed to D7, D5b to D5 | closed |
-| D4 correspondence | pending | pending | — | — | next |
-| D5 client/fidelity | pending | pending | — | — | queued |
+| D4 correspondence | pending | pending | — | — | active |
+| D5 client/fidelity | pending | pending | — | — | next |
 | D6 action boundary | pending | pending | — | — | queued |
 | D7 synthesis | pending | pending | — | — | queued |
 
