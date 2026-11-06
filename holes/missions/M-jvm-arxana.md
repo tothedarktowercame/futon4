@@ -522,6 +522,10 @@ subscription sequence examples, an enforceable revision-precondition design,
 and replay tests derived from the two P5 incidents plus the concurrent
 interleaving. **Draft complete:** two conforming enforcement mechanisms are
 specified for D7 comparison; client-hosted writes are non-conforming.
+The progressive ARGUE pass (`98188fb`) confirmed the derivation and made
+durable fencing a D7 selection gate; it also requires D7 to decide whether
+client-attested evaluator evidence can ever be promoted without authority-side
+replay.
 
 #### D4 — Correspondence model and normative fixture
 

@@ -85,11 +85,21 @@ silently retries against a new base. Undo is a new revision-producing command.
 | Mechanism | Atomicity locus | Strength | Cost/risk | Verdict |
 |---|---|---|---|---|
 | futon1b conditional transaction | store route compares head and writes revision/head/journal in one XTDB transaction | one storage truth; simplest failure recovery | requires new futon1b capability and route | conforming candidate for architecture 1 |
-| durable headless sequencer | one JVM process serializes commands; durable log/head reconstructed before serving; futon1b writes idempotent by command ID | isolates evolving protocol/evaluator from store | split-brain unless exclusive lease/fencing token is durable and checked | conforming only with lease/fencing proof; candidate for architecture 2 |
+| durable headless sequencer | one JVM process serializes commands; durable log/head reconstructed in journal order before serving; futon1b writes idempotent by command ID | isolates evolving protocol/evaluator from store | split-brain unless exclusive lease/fencing token is durable and checked by every write | conforming only with lease/fencing proof; candidate for architecture 2 |
 | client-hosted evaluator/write | each editor checks then writes | cheap reuse | no atomic refusal, duplicated discipline, divergent answers | non-conforming for writes; architecture 3 may remain read-only only |
 
 A memory-only mutex, optimistic GET-then-POST, or client promise is explicitly
 non-conforming. D7 must select and tripwire one conforming mechanism.
+For the sequencer option, a durable monotonically increasing fencing token must
+accompany every head/journal write and older tokens must be rejected at the
+durable boundary. Demonstrating this is a D7 selection gate, not deployment
+hardening.
+
+Client-hosted evaluation remains a read-only possibility, but its evidence is
+client-attested. It cannot be promoted as an authoritative resolution unless
+the authority deterministically replays/verifies it or the selected design
+explicitly admits signed client evidence under a named trust policy. D7 must
+decide this evidence boundary when evaluating architecture 3.
 
 ## Subscription model
 
@@ -144,7 +154,11 @@ future consistency-mode capability but defines no merge operations.
   selects one and proves its atomicity/fencing.
 - **O-D3b closed:** evaluator `stale-input`, mutation `stale`, and invariant
   `conflict` have distinct meanings and traces.
-- D5 must map current typed WYSIWYG refusals/journal into this algebra.
-- D7 must assign the journal, head, lease/fencing and event-retention owner.
+- **O-D3c passed to D7:** decide whether authoritative promotion requires
+  authority-side evaluation or can admit signed client-attested evidence.
+- **O-D5b passed to D5:** map current typed WYSIWYG refusals/journal into this
+  algebra.
+- **O-D7b passed to D7:** assign the journal, head, lease/fencing and
+  event-retention owner; sequencer recovery is journal-ordered.
 
 No architecture is selected by D3.
