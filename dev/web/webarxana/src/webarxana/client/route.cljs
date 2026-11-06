@@ -48,6 +48,12 @@
   []
   (let [{:keys [page browse-type focus-id pins mission-search expanded-diagram view-mode edge-filter-visible]} @state/ui-state
         pin-ids (map :id pins)
+        ;; Per-pin hop-depth: a pin whose k differs from the floor (1)
+        ;; serialises as id@k so a reload restores the adjusted value.
+        pin-token (fn [{:keys [id k]}]
+                    (if (and k (not= k 1))
+                      (str (encode id) "@" k)
+                      (encode id)))
         ;; show-edges segment encodes the sidebar Edges-filter whitelist:
         ;;   nil          — omit segment (no narrowing)
         ;;   #{}          — `show-edges/-` sentinel (hide-all)
@@ -84,7 +90,7 @@
                  view-mode)
                 :else
                 (cond-> []
-                  (seq pin-ids)  (into ["pins" (str/join "," (map encode pin-ids))])
+                  (seq pin-ids)  (into ["pins" (str/join "," (map pin-token pins))])
                   focus-id       (into ["focus" (encode focus-id)])
                   browse-type    (into ["type" (encode browse-type)])
                   show-edges-seg (into show-edges-seg)))
@@ -136,7 +142,11 @@
                      "type"       (assoc result :type (decode v))
                      "focus"      (assoc result :focus (decode v))
                      "pins"       (assoc result :pins
-                                         (mapv decode (str/split v #",")))
+                                         (mapv (fn [tok]
+                                                 (let [[id k] (str/split tok #"@")]
+                                                   (cond-> {:id (decode id)}
+                                                     k (assoc :k (js/parseInt k)))))
+                                               (str/split v #",")))
                      "xdiagram"   (assoc result :expanded-diagram (decode v))
                      "view"       (assoc result :view-mode (parse-view-mode v))
                      "show-edges" (assoc result :show-edges
@@ -198,9 +208,13 @@
               (seq pins)
               (do
                 (println (str "[route] Restoring " (count pins) " pins"))
-                (doseq [pid pins]
-                  (println (str "[route] Pinning: " (subs pid 0 8)))
-                  (api/pin-entity! pid pid))
+                (doseq [{:keys [id k]} pins]
+                  (println (str "[route] Pinning: " (subs id 0 (min 8 (count id)))))
+                  (api/pin-entity! id id)
+                  ;; Restore this pin's saved hop-depth once the pin exists
+                  ;; (pin-entity! is async — it fetches the ego first).
+                  (when (and k (pos? k) (not (js/isNaN k)))
+                    (js/setTimeout #(state/set-pin-k! id k) 2500)))
                 (when focus
                   (state/set-focus! focus))
                 ;; Re-enable hash sync after pins have had time to load

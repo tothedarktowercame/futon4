@@ -194,6 +194,19 @@
                [:span.card-id (subs (str pin-id) 0 8)]
                (when (seq nema-authors)
                  [:span.card-authors (str/join ", " nema-authors)])
+               ;; Per-pin hop-depth controls (acceptance item: per-pin
+               ;; controls available in the multi-focus UI, retaining
+               ;; their state on the pin in ui-state and in the pins
+               ;; route segment across reload).
+               [:span.pin-k-controls
+                {:title "Hop depth for this pin only"}
+                [:button.pin-k-dec
+                 {:on-click #(state/adjust-pin-k! pin-id -1)}
+                 "\u2212"]
+                [:span.pin-k-label (str "k=" (state/pin-k pin-id))]
+                [:button.pin-k-inc
+                 {:on-click #(state/adjust-pin-k! pin-id 1)}
+                 "+"]]
                [:button.scratch-dismiss
                 {:on-click #(state/unpin! pin-id)
                  :title "Unpin"}
@@ -472,11 +485,11 @@
          ;; Hop depth controls
          [:div.hop-controls
           [:button.hop-btn
-           {:on-click #(swap! state/ui-state update :hop-depth (fn [k] (max 1 (dec k))))}
+           {:on-click #(state/set-hop-depth! (dec hop-depth))}
            "\u2212"]
           [:span.hop-label (str "k=" hop-depth)]
           [:button.hop-btn
-           {:on-click #(swap! state/ui-state update :hop-depth (fn [k] (min 10 (inc k))))}
+           {:on-click #(state/set-hop-depth! (inc hop-depth))}
            "+"]]
          ;; Save diagram button (only when pins exist)
          (when (seq (:pins @state/ui-state))

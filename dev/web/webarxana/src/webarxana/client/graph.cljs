@@ -1246,9 +1246,16 @@ signals are visually distinct (two nodes of equal magnitude can differ in hue)."
         ;; the super-core (above-median-magnitude stars) via super-core? below.
         pins-only?  (and (seq pins) (<= hop-depth 2))
         super-core? (and (seq pins) (<= hop-depth 1))
+        ;; Per-pin hop-depth: each pin keeps its OWN :k (set at pin time from
+        ;; the toolbar default, adjustable per pin via the focus-card controls,
+        ;; serialised to the pins route segment). The toolbar synchronises all
+        ;; pins at once through state/set-hop-depth!; graph.cljs no longer
+        ;; overrides pin ks here, which used to clobber per-pin adjustments
+        ;; (state/set-pin-k! existed but nothing could make it visible).
         effective-pins (cond
-                         (seq pins) (let [rings (max 1 (- hop-depth 2))]
-                                      (mapv #(assoc % :k rings) pins))
+                         (seq pins) (mapv (fn [{:keys [k] :as p}]
+                                            (assoc p :k (if (pos-int? k) k 1)))
+                                          pins)
                          focus-id   [{:id focus-id :k hop-depth}])
         raw-hood (when (seq effective-pins)
                    (state/multi-neighbourhood effective-pins))

@@ -12,7 +12,7 @@ WebArxana v1 prototype committed)
 
 - [x] Node/relation creation, global hop depth, authors, activity feed, real-time sync, multi-focus diagrams, and the 18-test Playwright suite are implemented. (evidence: this file, INSTANTIATE checkpoints 1–2)
 - [ ] WebArxana is deployed at an address reachable by a collaborator outside localhost.
-- [ ] Per-pin hop-depth controls are available in the multi-focus UI and retain their state.
+- [x] Per-pin hop-depth controls are available in the multi-focus UI and retain their state.
 - [ ] Link-annotation edits persist to futon1a and survive a client refresh instead of remaining Datascript-only.
 - [ ] Compressed diagrams display the documented dashed through-edge for links between an external node and hidden contents.
 

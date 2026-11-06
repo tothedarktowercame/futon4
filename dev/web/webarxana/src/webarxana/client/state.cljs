@@ -103,11 +103,23 @@
 (defn pinned? [nema-id]
   (some #(= (:id %) nema-id) (:pins @ui-state)))
 
+(defn default-pin-rings
+  "Neighbour-ring count the toolbar hop-depth implies for a pin.
+  Same offset-by-2 mapping graph.cljs documents for pinned views:
+  k=3 keeps the 1-ring view, k<=2 drops the neighbour ring (floor 1
+  so star-to-star edges stay capturable by the BFS)."
+  []
+  (max 1 (- (or (:hop-depth @ui-state) 1) 2)))
+
 (defn pin!
-  "Add a node to the canvas as a pinned focus. Also sets it as active card."
-  [nema-id & {:keys [k] :or {k 1}}]
+  "Add a node to the canvas as a pinned focus. Also sets it as active card.
+  The pin's hop-depth defaults to what the toolbar currently implies, so a
+  fresh pin matches the view it was pinned into; per-pin adjustment via
+  set-pin-k! then keeps its own value."
+  [nema-id & {:keys [k]}]
   (when-not (pinned? nema-id)
-    (swap! ui-state update :pins conj {:id nema-id :k k}))
+    (swap! ui-state update :pins conj {:id nema-id
+                                       :k (or k (default-pin-rings))}))
   (set-focus! nema-id))
 
 (defn reset-graph!
@@ -130,12 +142,41 @@
         (set-focus! nil)))))
 
 (defn set-pin-k!
-  "Adjust hop-depth for a specific pin."
+  "Adjust hop-depth for a specific pin.  The value lives on the pin in
+  ui-state, so it survives canvas re-renders, graph re-fetches and
+  unpinning other pins (the toolbar no longer clobbers it — see
+  set-hop-depth!)."
   [nema-id k]
   (swap! ui-state update :pins
          (fn [ps] (mapv #(if (= (:id %) nema-id)
                            (assoc % :k k)
                            %) ps))))
+
+(defn pin-k
+  "Current hop-depth of one pin (neighbour rings), 1 when unset."
+  [nema-id]
+  (or (some #(when (= (:id %) nema-id) (:k %)) (:pins @ui-state))
+      1))
+
+(defn adjust-pin-k!
+  "Bump one pin's hop-depth by DELTA, clamped to 1..10 (same range as the
+  toolbar).  Adjusting one pin leaves every other pin's k untouched."
+  [nema-id delta]
+  (set-pin-k! nema-id (max 1 (min 10 (+ (pin-k nema-id) delta)))))
+
+(defn set-hop-depth!
+  "Set the toolbar (global) hop-depth and synchronise every pin's k to
+  what it implies — the toolbar sets all pins at once; per-pin controls
+  (adjust-pin-k!) then diverge individual pins until the toolbar is used
+  again."
+  [k]
+  (let [k* (max 1 (min 10 k))
+        rings (max 1 (- k* 2))]
+    (swap! ui-state (fn [s]
+                      (-> s
+                          (assoc :hop-depth k*)
+                          (update :pins #(mapv (fn [p] (assoc p :k rings))
+                                               (or % []))))))))
 
 ;; --- Display helpers ---
 
