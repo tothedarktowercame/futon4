@@ -596,6 +596,8 @@ only a conditional candidate, never a fully compiled one.
 
 #### D7 — Architecture synthesis
 
+Design artifact: `holes/labs/M-jvm-arxana/D7-architecture-synthesis.md`.
+
 Combine D1–D6 into a component and data-flow specification. Draw an exotype or
 equivalent wiring diagram showing authority boundaries, ports, durable versus
 derived state, revision flow, subscriptions and client projections. Complete
@@ -604,7 +606,8 @@ trade-offs.
 
 Deliverables: selected architecture, wiring diagram, consolidated invariants,
 ordered implementation increments, acceptance tests and rollback/compatibility
-plan.
+plan. **Draft complete:** selects headless JVM Arxana over futon1b with atomic
+conditional commit remaining at the store boundary; pending ARGUE checkpoint.
 
 ### Invariants to make checkable
 
