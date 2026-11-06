@@ -466,6 +466,8 @@ D2–D6 and leaves four bounded choices for D7 synthesis.
 
 #### D2 — Strategy evaluator and resolution semantics
 
+Design artifact: `holes/labs/M-jvm-arxana/D2-strategy-evaluator.md`.
+
 Define the finder interface, ordered cascade, short-circuit and accumulation
 rules, ambiguity thresholds, revision checks and evidence returned at every
 stage. The existing exact/context/fuzzy anchor algorithm is the first reference
@@ -480,7 +482,10 @@ offsets into durable identity.
 
 Deliverables: evaluator interface and pseudocode, deterministic ordering rules,
 fixture cases for unrelated prefix/suffix edits and genuine ambiguity, and the
-authority decision for artifact text access.
+authority decision for artifact text access. **Draft complete:** the artifact
+defines explicit translation from inert legacy declarations, the result and
+evidence algebra, ambiguity-preserving anchor semantics and an immutable
+`ArtifactProvider` boundary; D7 retains only the provider's deployment choice.
 
 #### D3 — Shared protocol and consistency contract
 
