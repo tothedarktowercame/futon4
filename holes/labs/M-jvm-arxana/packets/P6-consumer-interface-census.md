@@ -32,4 +32,3 @@ and a Q6 `ready / missing` table.
 Acceptance: no proposed interface is supported only by the design conversation;
 each has a mission, code or test witness. Commit only the report with message
 `M-jvm-arxana MAP P6: ...`.
-

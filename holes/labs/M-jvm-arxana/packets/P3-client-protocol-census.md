@@ -35,4 +35,3 @@ Write `holes/labs/M-jvm-arxana/P3-client-protocol-census-report.md` with:
 
 Acceptance: Marimo and Element findings name the actual local repositories and
 files. Commit only the report with message `M-jvm-arxana MAP P3: ...`.
-

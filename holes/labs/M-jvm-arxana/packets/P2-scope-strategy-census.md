@@ -38,4 +38,3 @@ Write `holes/labs/M-jvm-arxana/P2-scope-strategy-census-report.md` with:
 
 Acceptance: distinguish stored strategy data from executable Elisp closures or
 UI state. Commit only the report with message `M-jvm-arxana MAP P2: ...`.
-

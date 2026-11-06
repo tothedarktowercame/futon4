@@ -36,4 +36,3 @@ unknowns and a Q5 `ready / missing` table.
 Acceptance: every concurrency claim is labelled observed or hypothetical. A
 conclusion of “no present CRDT requirement found” is valid if evidenced.
 Commit only the report with message `M-jvm-arxana MAP P5: ...`.
-

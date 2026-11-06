@@ -35,4 +35,3 @@ available, the two-candidate comparison and one recommendation.
 Acceptance: the recommendation identifies an existing source and derived
 artifact that another worker can inspect without rebuilding. Commit only the
 report with message `M-jvm-arxana MAP P4: ...`.
-

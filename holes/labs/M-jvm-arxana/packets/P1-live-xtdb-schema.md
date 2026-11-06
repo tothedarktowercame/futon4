@@ -37,4 +37,3 @@ Write `holes/labs/M-jvm-arxana/P1-live-xtdb-schema-report.md` containing:
 Acceptance: every assertion names a file:line, live probe, or says explicitly
 that it is unverified. Commit only the report with a message beginning
 `M-jvm-arxana MAP P1:`. Do not edit the packet or mission.
-
