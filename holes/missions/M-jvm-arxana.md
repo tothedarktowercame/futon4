@@ -3,8 +3,9 @@
 **Date:** 2026-11-06  
 **Status:** OPEN — INSTANTIATE (VERIFY completed 2026-11-06)
 **Owner:** Joe (operator); unassigned technical driver
-**Repos:** `futon4` (Arxana model and Emacs client), `futon1`/XTDB (durable
-graph), `futon3c` (scope view, WYSIWYG and prospective clients)  
+**Repos:** `futon4` (legacy Arxana model and Emacs donor), `futon4a` (isolated
+JVM-Arxana Emacs demo client), `futon1`/XTDB (durable graph), `futon3c`
+(headless JVM authority, scope view, WYSIWYG and prospective clients)  
 **Related:** `futon3c/holes/missions/M-repl-circus.md`,
 `futon3c/holes/missions/M-ways-of-working.md`,
 `futon3c/holes/missions/M-latex-wysiwyg.md`, `M-webarxana`
@@ -802,3 +803,20 @@ namespace bypass, authentication and no-partial-mutation tripwires all pass.
 
 **INSTANTIATE exit: Not met.** Resolve, Correspond, Project, Compile and the
 end-to-end integration demonstration remain.
+
+### Bounded Emacs demonstration and DOCUMENT bridge
+
+Joe selected a separate `futon4a` repository rather than modifying the live
+futon4 Emacs Arxana during the confidence-building demo. Bootstrap commit
+`042a929` fixes its role: a thin client, never another authority. Its first
+demo must exercise capability handshake, revision-pinned resolution,
+correspondence, ambiguity preservation, typed refusal and semantic-digest
+display against the JVM layer. Comprehensive futon4 parity, VS Code and
+Lean/EmitPython workflows follow only after this demonstration.
+
+For a one-off lucy deployment, the proposed isolated allocation is loopback
+HTTP `7084`, optional loopback Drawbridge `6778`, and named Emacs daemon
+`futon4a-demo`, with existing futon1b left on `7074`. The committed launcher
+preflight refuses occupied ports. This allocation is provisional until run on
+lucy itself: the present seat could not resolve the `lucy` SSH hostname, so no
+remote process, service or firewall state was changed.
