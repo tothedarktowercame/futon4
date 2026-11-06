@@ -3,13 +3,14 @@
 Mission: `M-jvm-arxana`. Phase: ARGUE (shadow of DERIVE). Owner: Zai-1.
 Baselines: pass 1 — DERIVE `784a2ab` + `aac8544`, with D1 draft `9c8b515`;
 pass 2 — DERIVE checkpoint D2 `9ba7974`, prior ARGUE `65c6eac`;
-pass 3 (this revision) — DERIVE checkpoint D3 `bc81c03`
-(`holes/labs/M-jvm-arxana/D3-protocol-consistency.md`), prior ARGUE `6dcdb54`,
+pass 3 — DERIVE checkpoint D3 `bc81c03`, prior ARGUE `6dcdb54`;
+pass 4 (this revision) — DERIVE checkpoint D4 `78a0e16`
+(`holes/labs/M-jvm-arxana/D4-correspondence-model.md`), prior ARGUE `98188fb`,
 per `ARGUE-DERIVE-loop.md`.
-Status: third (progressive) pass; §1–§9 carry the pass-1 argument with
-pass-2 deltas in §10 and pass-3 deltas in §11. Nothing here claims ARGUE or
-the mission is complete, and nothing here selects an architecture on DERIVE's
-behalf.
+Status: fourth (progressive) pass; §1–§9 carry the pass-1 argument with
+pass-2 deltas in §10, pass-3 deltas in §11 and pass-4 deltas in §12. Nothing
+here claims ARGUE or the mission is complete, and nothing here selects an
+architecture on DERIVE's behalf.
 
 Citations: `P1`…`P6` are the MAP reports in this directory; `D1` is
 `D1-canonical-model.md`; `M` is `holes/missions/M-jvm-arxana.md`. Empirical
@@ -71,10 +72,10 @@ fiction of an already-shared model.
 |---|---|---|---|---|
 | C1 | The gap is real and correctly stated | P1 §0 (client on dead port 7071; live service on 7072/7073); P3 §3 (`file` means index vs filename) | "Just fix Emacs's port and add a VS Code mode" — refuted by P3: the protocols disagree in kind, not configuration | Supported |
 | C2 | Futon1b's record families can host the extended vocabulary | P1 §1 (entity/hyperedge tables, extension fields, L0–L4 gates, read-back verification); D1 "Namespaced shapes" | Extending via `props` risks unindexed queries; D1 Q2 (assertion shape vs indexing) is open | Supported, one obligation (O-D1b) |
-| C3 | Artifact revision must be content-addressed identity, not an API parameter | P1 §1 (server ignores `as-of`/`version`); P4 Principal finding (fixture revision contradiction); D1-DR2 | Content-addressing every revision makes historical browsing storage-heavy; no observed need contradicts — accepted trade | Supported |
+| C3 | Artifact revision must be content-addressed identity, not an API parameter | P1 §1 (server ignores `as-of`/`version`); P4 Principal finding (fixture revision contradiction); D1-DR2; **pass 4: D4 fixture manifest applies it concretely** (per-artifact revision IDs, one coherent build, rejection tripwire `fixture/revision-mismatch`) | Content-addressing every revision makes historical browsing storage-heavy; no observed need contradicts — accepted trade | Supported |
 | C4 | The three-stage anchor algorithm ports and is the first tripwire | P2 Principal finding, §1 (`arxana-links.el:697`; tolerates unrelated prefix/suffix edits) | ~~`fuzzy-matched` not produced and finder-level ambiguity undefined (P2)~~ **Pass 2: repaired by D2-DR2** — all candidates enumerated, ambiguity explicit, fuzzy never relabelled verified; remaining objection is that fixture tripwires (D2 "Tripwire tests", incl. the duplicate-paragraph example 2) are specified but not yet run | Supported (D2), obligation narrowed to O-D2a |
 | C5 | Resolutions are protocol-only until cited (D1-DR3) | D1 decision record; **pass 2: D2-DR5** (entity outcome + typed `:arxana/resolution-evidence-for` hyperedges on promotion, idempotent by semantic digest) | An audit trail that only persists cited resolutions may lose evidence of *wrong* resolutions; and the promotion acknowledgement itself carries no durable provenance — see §10, O-D2c | Supported (D1+D2), one obligation (O-D2c) |
-| C6 | Draft8 is a valid normative correspondence fixture | P4 §§1–3 (1,630 anchors, three correspondence classes) | Its scope hashes match `.pristine/` while page anchors verify against live sandbox sources (P4 Principal finding) — the fixture is *currently self-contradictory*; M requires repair first | **Defeater until repaired** (O-D4a) |
+| C6 | ~~Draft8 is a valid normative correspondence fixture~~ **Pass 4:** the original draft8 set is adopted as a *negative* fixture, and the normative positive fixture is a repaired manifest produced by D4's rejection/repair procedure | P4 §§1–3 (1,630 anchors, three correspondence classes, revision contradiction); D4-DR1 + "Repair and rejection procedure" | ~~Its scope hashes match `.pristine/` while page anchors verify against live sandbox sources~~ — **repaired in design, not yet in fact**: the repaired manifest/map is created and committed only in INSTANTIATE; until then no positive fixture exists, so C6 remains conditional on that execution (O-D4a narrowed, not discharged) | Supported at design level; execution owed (O-D4a) |
 | C7 | No CRDT is required now; the falsifying trigger is recorded | P5 §§3, 5–6; **pass 3: D3-DR3 + CRDT re-arm section** (revision preconditions, refusal, journalling, resubmission; re-arm condition recorded with incident/artifact class/convergence property — the WR-26 re-arm carried at the contract) | ~~The XTDB API has no revision CAS and no subscription stream~~ **Pass 3: answered in design** — D3-DR2 makes an atomic stale-refusal mechanism a *conformance requirement* with two specified candidates; the remaining objection is that the sequencer candidate's lease/fencing proof is owed (O-D3a) | Supported empirically; design now specified, one proof owed (O-D3a) |
 | C8 | Four consumers already share the narrow waist | P6 §§"Interface observations", "Principal finding" | Same-shape-different-name records (P6 §"Same shape") tempt premature standardization; P6 explicitly declines it — the design must too | Supported |
 | C9 | Emacs salience/Plexus are correctly excluded from the canonical model | P1 §1 (salience fields silently dropped; Plexus is prose with no route/writer/reader); D1 record classes | Excluded features may be load-bearing for users; D1 rule 6 (report `unsupported`, never silently accept) is the right guard, but donor behaviour audit (D5 matrix) must confirm nothing preserved depends on them | Supported, obligation O-D5a |
@@ -213,13 +214,15 @@ pressures are all "make X explicit/checkable", which is what §6 records.
 | O-D3a | Revision-CAS + subscription mechanism above futon1b; recovery semantics replay-tested against both P5 incidents | SC4, C7, A2 objection | D3/D7 | **Narrowed (pass 3)**: two conforming mechanisms specified (store-side conditional transaction; durable sequencer with lease/fencing), state machine, traces 1–6; remaining: D7 selects one and *proves* atomicity/fencing — the split-brain proof is the open half |
 | O-D3b | **New (pass 2).** Align D2's read-side `stale-input` with D3's mutation-side `stale`/`conflict` outcomes so one word never names two refusal reasons across the protocol | SC4, error algebra | D3 | **Closed (pass 3)**: distinct definitions plus tripwire trace 7 |
 | O-D3c | **New (pass 3).** D3 permits architecture 3 to survive as read-only client evaluation; but D2 evidence events produced by a client-hosted evaluator are client-attested, so promotion assertions would rest on client-claimed evidence. Decide whether conforming evidence requires authority-side evaluation | SC1, SC2, A3 disposition | D7 | Open |
-| O-D4a | Repair draft8 revision contradiction before normative adoption | C6, SC3 | D4 | Open (DERIVE `e4f3c4f` accepted it as a rejection tripwire) |
-| O-D4b | Durable manifestation/DOM identity scheme (fixture shows none exist) | SC3 | D4 | Open |
+| O-D4a | Repair draft8 revision contradiction before normative adoption | C6, SC3 | D4 → INSTANTIATE | **Narrowed (pass 4)**: D4-DR1 makes the contradiction a required *negative* fixture with a rejection/repair procedure and tripwires; "closed at design level" only — the repaired manifest/map is created and committed in INSTANTIATE, so execution is still owed |
+| O-D4b | Durable manifestation/DOM identity scheme (fixture shows none exist) | SC3 | D4 | **Narrowed (pass 4)**: manifestation IDs minted by the fixture/model author, independent of DOM locators (which stay evidence); closed at design level, but the minting rule itself is ungoverned — see O-D4c |
+| O-D4c | **New (pass 4).** Manifestation IDs are "minted by the fixture/model author" with no uniqueness/namespace/minting rule; a duplicate or reused manifestation ID would silently violate single-locus for (manifestation, semantic role). Specify the minting governance before INSTANTIATE scales beyond draft8 | SC3, single-locus | D7 or INSTANTIATE | Open |
 | O-D5a | Capability Preservation Matrix incl. whether any preserved behaviour depends on dropped salience | C9, SC5 | D5 | Open |
 | O-D5b | **New (pass 3).** Map current typed WYSIWYG refusals and edit journal into the D3 error algebra and write contract (named by D3 itself) | SC4, SC5, C9 | D5 | Open |
 | O-D6a | End-to-end compile example on the repaired fixture; consumer attachment notes | SC6, C10 | D6 | Open |
 | O-D7a | Architecture selection with completed matrix, exotype diagram (WR-3), invariants in executable single-locus form | PC, SC1, A1–A3 | D7 | Open |
 | O-D7b | **New (pass 3).** Assign the owner of journal, head movement, lease/fencing tokens and event retention (named by D3) | SC1, SC4 | D7 | Open |
+| O-D7c | **New (pass 4).** Assign the fixture builder and correspondence-assertion authority (named by D4) | SC3 | D7 | Open |
 
 Unsupported claims found during argumentation were converted to obligations
 here rather than argued around: C6 is an active defeater (the strongest
@@ -437,5 +440,93 @@ challenge: the lease/fencing proof for mechanism 2 is the only unsolved
 failure mode left in the design — an unsound lease silently reintroduces the
 out-of-band-restore failure class as an internal split-brain, so D7 must
 treat the fencing proof as a selection gate, not a deployment detail.
+
+## 12. Pass 4 delta — D4 checkpoint (`78a0e16`)
+
+Re-tested: SC3, C3, C6, O-D4a/O-D4b, and the D1 manifestation/correspondence
+shapes. Challenged: negative-vs-positive fixture distinction, coherent-build
+repair, stable manifestation identity, directional/partial/ambiguous
+semantics, premature "repaired fixture" claims, and D2/D3 compatibility.
+
+### 12.1 Requested challenge areas
+
+- **Negative vs positive fixture.** Sound and arguably the best move in the
+  checkpoint: D4-DR1 keeps the contradiction-bearing input as a required
+  *detection* fixture instead of quietly fixing the hashes — the defect P4
+  found becomes a permanent tripwire (`fixture/revision-mismatch`, not
+  warning-only) rather than erased history. The distinction is honest: the
+  original is normative for *rejection*, the repaired manifest for *expected
+  answers*.
+- **Coherent-build repair.** The procedure is strong: hash from committed
+  bytes, reject the map, rebuild from a clean checkout *or* recover a
+  producer log, refuse mixed output (one build ID, one source revision set),
+  never overwrite the input. The fallback — "if the committed HTML cannot be
+  proven to derive from one coherent source set … a clean rebuild becomes the
+  normative positive fixture" — is epistemically correct: it accepts that the
+  normative fixture will be a *new* build, not the committed page, rather
+  than laundering provenance. Deterministic-regeneration tripwire covers
+  toolchain drift.
+- **Stable manifestation identity.** Manifestation IDs minted by the author,
+  DOM IDs demoted to locator evidence — exactly the D1 record-class rule, and
+  the section tripwire (DOM ID changes across rebuild while manifestation ID
+  stays stable) tests the right thing. Gap: nothing governs *minting* —
+  uniqueness, namespace, who may mint, when an ID may be reused. At draft8
+  scale this is fine; scaled to every manifestation in the corpus it is a
+  single-locus hazard (new **O-D4c**).
+- **Directional/partial/ambiguous semantics.** The method table's
+  "proves / does not prove" columns are the right shape — each evidence kind
+  carries its own limits, reversal is projection-only when declared
+  reversible, partial anchors refuse to manufacture ends, ambiguous locators
+  retain all candidates and queries never select among them. Consistent with
+  D2's "ordering never turns a tied set into uniqueness".
+- **Premature repair claim? No.** D4 states plainly that fixture repair is
+  *specified, not executed*, and that INSTANTIATE creates and commits the
+  repaired manifest while DERIVE does not rewrite futon5 artifacts. So C6 is
+  repaired in design and still conditional in fact — the ledger keeps O-D4a
+  open at execution level. The report resists claiming the repaired fixture
+  before it exists.
+- **D2 compatibility.** Assertion endpoints use the same location vocabulary
+  as D2 candidates (`:artifact/revision-id`, codepoint, half-open range);
+  evidence items are typed digests like D2 evidence events. Coherent. One
+  axis to keep distinct: assertion `verification` states
+  (`verified/partial/ambiguous/unverified/stale`) describe *evidence about a
+  claim*, while D2 result statuses describe *an evaluation outcome* — same
+  words, different objects. A vocabulary note (not an aliasing bug) should
+  ride with D3's error algebra when D5 writes client-facing surfaces.
+- **D3 compatibility.** Endpoints are revision-pinned and mutation contract
+  untouched; `correspondence/query` is a read operation under the D3
+  envelope. D4's `stale` assertion state (a queryable fact about evidence)
+  is properly different from D3's `stale` error (a refused operation) — same
+  non-aliasing discipline O-D3b enforced; no new conflict found.
+
+### 12.2 Effect on D1 shapes and the alternatives (no selection)
+
+The D1 `:arxana/corresponds` 4+ relation and the D4 assertion record are
+mutually consistent (endpoints + revisions + evidence endpoint); D4 supplies
+the instance semantics D1 left as shape. D4 is architecture-neutral: both A1
+and A2 can host a fixture builder and assertion authority; it adds one more
+D7 assignment (O-D7c) rather than tilting the comparison.
+
+### 12.3 Sequencing exposure (operational, not a design defect)
+
+The repaired positive fixture is now on the critical path of the first
+demonstration: D5's client transcripts and D6's end-to-end example (O-D6a)
+presume a correspondence fixture that will not exist until INSTANTIATE runs
+the repair procedure. Until then, correspondence is testable only against
+the negative fixture. D7's implementation increments must order the repaired
+manifest *before* any client or compiler demonstration that consumes it —
+recorded here so it cannot be silently reordered.
+
+### 12.4 Checkpoint receipt summary
+
+Changed obligations: **O-D4a narrowed (design-level closure; INSTANTIATE
+execution owed); O-D4b narrowed (design-level closure; minting rule owed);
+O-D4c, O-D7c added.** Highest-value challenge: manifestation-ID minting
+governance (O-D4c) — "minted by the author" with no uniqueness or namespace
+rule is a silent single-locus violation waiting at corpus scale; the rule
+should be specified before INSTANTIATE, not discovered as duplicate IDs
+after. Secondary: the §12.3 sequencing exposure — the repaired fixture is on
+the critical path of every later demonstration.
+
 
 
