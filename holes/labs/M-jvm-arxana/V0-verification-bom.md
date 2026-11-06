@@ -64,7 +64,9 @@ result:
   writer.
 - V2 must confirm proof assessments/usefulness records are client/domain writes
   that cannot redefine Arxana results.
-- The atomic spike must demonstrate that the conceptual single futon1b writer
-  is enforced by the reserved namespace and conditional route.
+- The atomic spike must demonstrate the selected XTDB version can enforce one
+  expected-head winner transactionally. Reserved-namespace route and bypass
+  enforcement require implementation source and remain the BOM's mandatory
+  INSTANTIATE source-conformance check.
 - The fixture spike must demonstrate ArtifactProvider/correspondence inputs name
   one coherent revision set.

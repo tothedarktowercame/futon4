@@ -1,7 +1,7 @@
 # M-jvm-arxana — one Arxana authority across Emacs and VS Code
 
 **Date:** 2026-11-06  
-**Status:** OPEN — VERIFY (ARGUE completed 2026-11-06)
+**Status:** OPEN — INSTANTIATE (VERIFY completed 2026-11-06)
 **Owner:** Joe (operator); unassigned technical driver
 **Repos:** `futon4` (Arxana model and Emacs client), `futon1`/XTDB (durable
 graph), `futon3c` (scope view, WYSIWYG and prospective clients)  
@@ -743,8 +743,9 @@ cannot establish:
 2. V2 proof-presentation contract verification
    (`packets/V2-proof-presentation-contract-verification.md`).
 3. Coordinator-owned specification BOM and wiring/authority closure audit.
-4. Atomic expected-head/reserved-namespace spike and D4 fixture-coherence
-   rejection/rebuild spike.
+4. Atomic expected-head feasibility spike and D4 fixture-coherence
+   rejection/rebuild spike; reserved-namespace bypass is an executable
+   INSTANTIATE test because no route exists yet to exercise.
 5. Completion/fidelity pre-check and decision receipt.
 
 A full theorem or general logic model is a priced decline: the mission needs
@@ -754,8 +755,11 @@ trace without contradiction, every wiring input/output has one owner, the two
 spikes address the unexercised risks, and all remaining work is properly
 INSTANTIATE rather than unresolved DERIVE.
 
-**VERIFY exit: Not met.** Client packets are prepared; reports, structural
-audit, spikes and synthesis remain open.
+**VERIFY exit: Met.** Both independent client gauntlets pass without a
+stop-the-line contradiction; the specification BOM and authority wiring close;
+all static residual risks were spiked; and the resulting DERIVE corrections
+are recorded in D4/D7.  `V5-verify-synthesis.md` carries the evidence receipt
+and the fixed-contract implementation debts into INSTANTIATE.
 
 ### VERIFY decision log
 
@@ -767,3 +771,10 @@ audit, spikes and synthesis remain open.
   fixture builder. D4/D7 now require hashing exact producer-resolved paths;
   repairing and committing the positive fixture remains INSTANTIATE increment
   1 rather than a claim made by VERIFY.
+- The proof-presentation query spike returned the correct all-manifestation and
+  next-ambiguous results over 2,454 moves, 347 problems and 636 manifestations;
+  the move ordinal remains client-owned.
+- The code-server canonicalization spike proved serialized segment text and
+  artifact bytes cannot share an implicit digest rule. D7 now states that a
+  segment carries the authority-issued whole-artifact revision ID; its local
+  segment hash is projection evidence only.

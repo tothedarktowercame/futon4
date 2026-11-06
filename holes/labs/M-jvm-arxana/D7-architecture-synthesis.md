@@ -1,7 +1,7 @@
 # D7 — architecture synthesis
 
 Mission: `M-jvm-arxana`. Phase: DERIVE. Inputs: MAP, D1–D6 and progressive
-ARGUE through `dbeb91c`. Status: selected design pending ARGUE checkpoint.
+ARGUE through `dbeb91c`. Status: selected design; ARGUE and VERIFY complete.
 
 ## Selection
 
@@ -153,6 +153,17 @@ Each maps to D1–D6 tripwires and becomes an executable integration assertion.
 | O-D7d response digest | Arxana versioned schema/projection registry |
 | O-D7e interpretation | external interpreter + Arxana trust profile and conditional fallback |
 | O-D7f namespace enforcement | futon1b reserves `arxana/*`; authenticated conditional route atomically validates uniqueness; generic writes refuse |
+
+### Client segment revision identity
+
+A client `Segment` names the revision of the whole logical artifact whose
+canonical bytes the authority ingested; it never derives that revision ID from
+the JSON serialization of `Segment.text`.  The segment's own hash may cover
+the exact extracted segment bytes as a projection-integrity check, but it is
+not an artifact revision identity.  The media type, encoding and canonical
+byte rule travel with the artifact revision.  A client that has only text and
+a segment hash remains `client-preview:*` until authority ingest returns the
+artifact revision ID.
 
 ## Implementation increments
 
