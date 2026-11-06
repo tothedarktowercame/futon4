@@ -1,8 +1,8 @@
 # M-jvm-arxana — one Arxana authority across Emacs and VS Code
 
 **Date:** 2026-11-06  
-**Status:** OPEN — INSTANTIATE (VERIFY completed 2026-11-06)
-**Owner:** Joe (operator); unassigned technical driver
+**Status:** OPEN — DOCUMENT (INSTANTIATE completed 2026-11-06)
+**Owner:** Joe (operator); Codex-21 technical driver
 **Repos:** `futon4` (legacy Arxana model and Emacs donor), `futon4a` (isolated
 JVM-Arxana Emacs demo client), `futon1`/XTDB (durable graph), `futon3c`
 (headless JVM authority, scope view, WYSIWYG and prospective clients)
@@ -804,8 +804,32 @@ write into a false 503. The repaired query binds both fields; `execute-tx` is
 the durable commit receipt; idempotent retry, stale refusal, generic-route
 namespace bypass, authentication and no-partial-mutation tripwires all pass.
 
-**INSTANTIATE exit: Not met.** Project, Compile and the end-to-end integration
-demonstration remain.
+### Checkpoint 2 — Project, Compile and executable client boundary
+
+| Increment | Evidence | Status |
+|---|---|---|
+| 6 Project | futon3c `c9626fec0`; public HTTP, journal/subscription and fixture stack; futon4a `0c7c62b`; Emacs client and transcript | complete |
+| 7 Compile | futon3c `e593bf9cb`; provenance/trust compiler and non-executable candidate records | complete |
+| Compile public integration | futon3c `11d52f9af`; `action/compile` schema, handler, semantic projection and HTTP/service tests | complete |
+| full JVM suite | 67 tests / 352 assertions: fixture, Resolve, Correspond, Project, Compile and real futon1b conditional HTTP boundary | complete |
+| live Emacs/JVM transcript | futon4a `79da959`, `dbd0c04`; capability, Resolve digest `0397248a…`, Correspond digest `9c91f35e…`, typed stale refusal and refreshed committed transcript; 7/7 ERT | complete |
+
+The live local run found and repaired one defect missed by offline transcript
+tests: Emacs `url.el` uses CRLF response headers, while the initial client
+looked only for an LF blank line and sliced beyond an empty buffer. The client
+now uses `url-http-end-of-headers` with a CRLF/LF fallback and carries a focused
+ERT regression. The demo truthfully distinguishes its in-memory projection
+store from the independently exercised real futon1b conditional route; it
+does not claim that the current demo process has replaced every read adapter
+with futon1b HTTP.
+
+**INSTANTIATE exit: Met.** All seven D7 increments and their integration
+boundaries exist. The repaired fixture gates the client path, Compile is
+available through `arxana.v1`, identical semantic questions yield identical
+digests, ambiguity is preserved, stale mutation is refused, and the real
+futon1b atomic route passes idempotency/staleness tests. Remaining work is
+navigable demonstration documentation and optional isolated replication on
+lucy, not missing implementation architecture.
 
 ### Bounded Emacs demonstration and DOCUMENT bridge
 
@@ -825,3 +849,17 @@ confirmed all three ports free. It also corrected the earlier assumption:
 returning 502; no live futon1b/JVM service is present. Futon4a commit `74abada`
 records the census and collision-refusing allocation. No remote process,
 service, repository, firewall or nginx state has yet been changed.
+
+## DOCUMENT
+
+The bounded demonstration entry point is `futon4a/README.md`; the executable
+client is `futon4a/lisp/futon4a-arxana.el`, the committed wire example is
+`futon4a/examples/demo-transcript.json`, and the launcher/rollback scripts are
+under `futon4a/scripts/`. `holes/labs/M-jvm-arxana/D1-emacs-jvm-demo-report.md`
+records the checked run, including the store-boundary qualification and exact
+test commands. The original futon4 Emacs implementation remains untouched.
+
+**DOCUMENT exit: In progress.** The local walkthrough and evidence receipt
+are durable. An isolated lucy replication may add operational evidence, but it
+must use the recorded port census and must not turn a deployment convenience
+into a new authority boundary.
