@@ -1,7 +1,7 @@
 # M-jvm-arxana — one Arxana authority across Emacs and VS Code
 
 **Date:** 2026-11-06  
-**Status:** OPEN — MAP (IDENTIFY accepted by Joe 2026-11-06)
+**Status:** OPEN — DERIVE (MAP completed 2026-11-06)
 **Owner:** Joe (operator); unassigned technical driver
 **Repos:** `futon4` (Arxana model and Emacs client), `futon1`/XTDB (durable
 graph), `futon3c` (scope view, WYSIWYG and prospective clients)  
@@ -271,9 +271,120 @@ Dispatched 2026-11-06:
 | P5 | `zai-6` | `invoke-1793982291011-13986-48c2c2b4` |
 | P6 | `zai-7` | `invoke-1793982291274-13989-2a6a4145` |
 
-The coordinator synthesizes the six reports into the lifecycle-required
-`ready / missing` table. Zai seats do not edit this mission, choose the
-architecture, or begin implementation.
+Zai seats did not edit this mission, choose the architecture, or begin
+implementation. The coordinator accepted and synthesized these reports:
 
-**MAP exit: Not started.** Packets are prepared; no survey report has yet been
-accepted.
+| Packet | Report | Commit | Principal result |
+|---|---|---|---|
+| P1 | `P1-live-xtdb-schema-report.md` | `13cc65c` | The live authority is futon1b's entity and hyperedge tables; several Emacs fields and proposed records are not live contracts. |
+| P2 | `P2-scope-strategy-census-report.md` | `679c5ab` | Finder declarations are stored data without an executor; the anchor re-finder is the only implemented cascade. |
+| P3 | `P3-client-protocol-census-report.md` | `9daf23f` | Four useful but mutually unintelligible client protocols exist, and there is no VS Code client. |
+| P4 | `P4-correspondence-fixture-report.md` | `f238e96` | The committed Oxide draft8 source/page/scope set is the strongest first correspondence fixture. |
+| P5 | `P5-consistency-requirements-report.md` | `4fcbc9d` | No observed workflow presently requires a CRDT; observed failures are stale-revision or single-authority failures. |
+| P6 | `P6-consumer-interface-census-report.md` | `6c36a17` | Four adjacent consumers already converge on ID-addressed reads and typed, ID-endpoint hyperedge writes. |
+
+The report paths below are relative to `holes/labs/M-jvm-arxana/`.
+
+### Answers to the MAP questions
+
+**Q1 — Logical substrate.** The live canonical records are futon1b entity
+documents (`id`, `name`, `type`, with optional `external-id`, `source` and
+`props`) and hyperedge documents (`id`, `type`, non-empty endpoint IDs, with
+optional ends, labels, props, confidence and valid time). Hyperedge valid time
+is live. Entity as-of/version parameters sent by Emacs are not honoured by the
+live service. `seen-count`, `pinned?` and `last-seen` are Emacs-side salience
+conventions which the live writer drops; Plexus is prose, not a routed record.
+The live store also contains an uncensused `mission-scope` hyperedge family
+using `prop/*` attributes whose producer is not yet located. The Emacs client
+still defaults to inactive port 7071 while the observed futon1b service is on
+7072/7073; `/ego` and `/meta/model` are likewise not live there.
+
+**Q2 — Strategies.** Five finder forms are persisted as JSON plists:
+symbol-as-term, filename-mention, embedding-proximity, explicit and
+surface-form-hybrid. Nothing dispatches on their types, so there is no
+implemented inter-finder ordering, cascade or ambiguity policy. The actual
+three-stage cascade is `arxana-links-find-anchor`: exact hint/hash, then
+context/hash, then fuzzy before/after matching. Its algorithm and the stored
+strategy, link, surface-form and scholium records are portable; buffer capture
+and interaction are Emacs-specific. Existing tests show that the anchor
+algorithm tolerates unrelated prefix and suffix edits, but `fuzzy-matched` is
+not produced and finder-level ambiguity remains undefined.
+
+**Q3 — Clients.** Four working protocols exist: the WYSIWYG WebSocket protocol
+uses integer file/line/column positions, typed refusals and a journal; the
+TypeScript scope view consumes static codepoint, half-open spans; Marimo agent
+chat uses revision-counted SQLite routing and Agency HTTP streaming; Element
+polls event-ID-keyed intent marks. They share only a weak vocabulary, with
+collisions such as `file` meaning an index in one place and a filename in
+another, and they use three unrelated freshness regimes. Existing assets
+already demonstrate two-way WYSIWYG navigation, guarded edits, codepoint-span
+rendering, agent routing and widget messaging. Missing are a common position
+and error vocabulary, common turn identity, live scope transport and any VS
+Code client.
+
+**Q4 — Correspondence.** The first fixture should be futon5 commit `245773f`'s
+Oxide draft8 set: `sandbox/*.tex`, `page/draft8.html` and
+`sandbox/scopes.json`. It supplies a file-index map and 1,630 anchors and
+exercises three distinct correspondences: a paragraph point anchor with no DOM
+ID, a section range with build-local `S2`, and a mathematics range whose HTML
+`alttext` expands `\\sig` to `\\sigma`. It therefore exposes quote-, range-
+and transformation-based identity rather than pretending offsets are semantic
+IDs. The fixture also reveals a revision defect: the recorded scope hashes
+match `.pristine/` sources while the page anchors verify against the live
+sandbox sources. Durable manifestation/entity IDs and stable DOM IDs do not
+yet exist.
+
+**Q5 — Consistency.** Seven present writers were inventoried, but no legitimate
+concurrent multi-writer intent was observed. The two recorded failures, both on
+2026-08-08, were an out-of-band test snapshot restore that destroyed browser
+edits and an edit from a page roughly 100 minutes stale. These are
+single-authority and freshness failures already addressed in the WYSIWYG path
+by content-hash checks, typed refusal and journalling. The XTDB API has neither
+revision CAS nor a subscription stream, so revision-checked transactions still
+need design work; that does not establish a CRDT requirement. The falsifying
+observation is now explicit: require a CRDT when two clients make legitimate
+concurrent or offline edits that both must survive and rejecting the stale
+second edit would destroy unrecoverable work.
+
+**Q6 — Consumer boundary.** REPL Circus, Ways of Working, Giraffe and War
+Machine all already witness the same narrow waist: ID-addressed node/edge reads
+and batched writes of typed hyperedges whose endpoints are IDs. Their scores,
+probe verdicts, want locators and ordering evidence remain domain-namespaced.
+Act-attached references, evidence-keyed derived records, owner-linked findings
+and ordering edges have matching shapes under different names, but the survey
+does not justify standardizing those names yet. Live 驴/狗 metadata,
+cross-mission dependency/order edges and per-click selector-reading records
+remain consumer-side gaps rather than reasons to put policy in Arxana.
+
+### Ready / missing inventory
+
+| Area | Ready | Missing or unverified |
+|---|---|---|
+| Durable graph | Live ID-addressed entity/hyperedge reads and typed batch writes; hyperedge valid time | Entity revision CAS/as-of semantics; subscriptions; live Plexus and salience contracts; producer and census support for `mission-scope` edges |
+| Location recovery | Portable stored link/strategy forms; tested three-stage anchor recovery | Finder executor, ordering, cascade composition and ambiguity semantics |
+| Client surfaces | WYSIWYG navigation/edit refusals/journal; TypeScript span rendering; Marimo routing; Element widget messaging | Shared protocol, position/error/turn vocabulary, live scope transport and VS Code client |
+| Manifestations | Committed Lean/LaTeX/HTML-adjacent Oxide fixture with source map and three correspondence classes | Correct revision identity, semantic manifestation IDs, durable DOM identities and generated-Python membership in the fixture |
+| Consistency | Content-hash freshness checks, explicit stale refusal and edit journal cover observed failures | Transactional graph revisions and recovery semantics; evidence for CRDT remains absent |
+| Adjacent consumers | Empirically shared node/edge query and hyperedge-write waist | Domain records named and governed by their own missions; no cross-domain naming standard is yet warranted |
+
+### Surprises constraining DERIVE
+
+- The live authority is narrower than the Emacs client and design prose imply;
+  DERIVE must specify against observed futon1b behaviour, not silently promote
+  client fields into canonical storage.
+- The strategy layer is missing execution rather than trapped inside Emacs.
+  Porting declarations alone would reproduce the present gap.
+- The existing clients are exemplars of required behaviours, not variants of
+  one latent protocol.
+- The strongest correspondence fixture already contains a revision-identity
+  contradiction, so revision identity must be part of the model rather than a
+  later transport detail.
+- CRDT is an admissible future implementation but is not a current
+  requirement. DERIVE should preserve the falsifying trigger above.
+- The proposed consumer narrow waist is supported by four independent
+  consumers, while their inference products are demonstrably domain-specific.
+
+**MAP exit: Met.** All six questions have source-cited answers, the existing
+infrastructure and data are inventoried, and the ready/missing table identifies
+the exact gaps DERIVE must turn into competing architectures and acceptance
+criteria. No architecture or implementation was selected during MAP.
