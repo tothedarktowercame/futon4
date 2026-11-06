@@ -1,0 +1,272 @@
+# A1 — JVM Arxana design-fitness argument (report)
+
+Mission: `M-jvm-arxana`. Phase: ARGUE (shadow of DERIVE). Owner: Zai-1.
+DERIVE baseline: commit `784a2ab` (DERIVE plan rework) plus coordination commit
+`aac8544`; D1 draft (`9c8b515`, `holes/labs/M-jvm-arxana/D1-canonical-model.md`)
+is treated as a newer moving input, not a settled decision.
+Status: first pass. Nothing here claims ARGUE or the mission is complete, and
+nothing here selects an architecture on DERIVE's behalf.
+
+Citations: `P1`…`P6` are the MAP reports in this directory; `D1` is
+`D1-canonical-model.md`; `M` is `holes/missions/M-jvm-arxana.md`. Empirical
+premises cite MAP reports; design premises cite DERIVE work products or name
+the decision still owed.
+
+## 1. Principal fitness claim
+
+**PC.** The evolving JVM Arxana design is fit for its purpose — making one
+authority answer every identity, relation, scope, correspondence and
+action-grounding question identically for all clients — *conditional on the
+D1–D7 work products landing as drafted and on three specific obligations being
+discharged* (see §6). The design is fit in the strong sense: given the MAP
+evidence, each load-bearing design commitment is either supported by an
+observation or is an explicitly named open decision, not a hope.
+
+Why this is the right principal claim: the mission's candidate invariant (M,
+"Candidate invariant") is an equivalence claim over clients. MAP established
+that nothing today satisfies it — four mutually unintelligible protocols
+(P3 §1–§3), no executor for strategy declarations (P2 "Principal finding"),
+and an authority narrower than its own client implies (P1 §0–§1). The design's
+fitness is therefore its capacity to close an evidenced gap, not to preserve a
+fiction of an already-shared model.
+
+### Subordinate claims
+
+- **SC1 Shared authority.** One JVM-side component owns each authoritative
+  question; clients receive projections. Support: P1 §0 (futon1b is the live
+  authority); P3 §3 (vocabulary collisions prove no latent shared protocol).
+  Owed: D7's authority assignment per question.
+- **SC2 Portable resolution.** Scope resolution is a deterministic, revision-
+  pinned computation over stored strategy data and artifact bytes. Support:
+  P2 Principal finding and §1 (the anchor cascade is algorithmically pure;
+  finder declarations are inert data). Owed: D2 finder/ambiguity semantics.
+- **SC3 Manifestation correspondence.** Correspondence is a provenanced
+  assertion between manifestations observed in *named revisions*, not a
+  mapping between live files. Support: P4 Principal finding and Trace 1–3
+  (quote-, range- and transformation-based identity; the draft8 revision
+  contradiction). Owed: D4 repaired fixture and assertion schema.
+- **SC4 Consistency without premature CRDT.** Revision-checked
+  single-authority transactions are the correct current contract, with a
+  recorded falsifying trigger for reopening CRDT. Support: P5 §§3–6 (both
+  observed failures are single-authority/freshness failures; no observed
+  concurrent legitimate multi-writer intent). Owed: D3 state machine and the
+  CAS mechanism D1 §"Storage adapter" truthfully reports absent.
+- **SC5 Thin clients.** Emacs and VS Code can be thin because every
+  editor-local concept (markers, positions, decorations) is disposable
+  projection. Support: P3 §1–§2 (each existing client demonstrates a required
+  behaviour, none depends on owning identity). Owed: D5 command/view spec and
+  Capability Preservation Matrix.
+- **SC6 Inference-ready action boundary.** A read-only intent→candidate-action
+  compilation with consumer policy namespaced outside is the waist four
+  consumers already empirically use. Support: P6 "Principal finding" and
+  §"Interface observations". Owed: D6 compiler spec and end-to-end example.
+
+## 2. Claim / support / objection structure
+
+| # | Claim | Support (empirical = MAP; design = DERIVE) | Strongest objection | State |
+|---|---|---|---|---|
+| C1 | The gap is real and correctly stated | P1 §0 (client on dead port 7071; live service on 7072/7073); P3 §3 (`file` means index vs filename) | "Just fix Emacs's port and add a VS Code mode" — refuted by P3: the protocols disagree in kind, not configuration | Supported |
+| C2 | Futon1b's record families can host the extended vocabulary | P1 §1 (entity/hyperedge tables, extension fields, L0–L4 gates, read-back verification); D1 "Namespaced shapes" | Extending via `props` risks unindexed queries; D1 Q2 (assertion shape vs indexing) is open | Supported, one obligation (O-D1b) |
+| C3 | Artifact revision must be content-addressed identity, not an API parameter | P1 §1 (server ignores `as-of`/`version`); P4 Principal finding (fixture revision contradiction); D1-DR2 | Content-addressing every revision makes historical browsing storage-heavy; no observed need contradicts — accepted trade | Supported |
+| C4 | The three-stage anchor algorithm ports and is the first tripwire | P2 Principal finding, §1 (`arxana-links.el:697`; tolerates unrelated prefix/suffix edits) | `fuzzy-matched` not produced and finder-level ambiguity undefined (P2) — porting the algorithm does not deliver the *mission's* resolution semantics | Supported, obligations O-D2a/O-D2b |
+| C5 | Resolutions are protocol-only until cited (D1-DR3) | D1 decision record | An audit trail that only persists cited resolutions may lose evidence of *wrong* resolutions; no objection raised in MAP; acceptable if receipts name inputs (D6) | Supported provisionally (D1) |
+| C6 | Draft8 is a valid normative correspondence fixture | P4 §§1–3 (1,630 anchors, three correspondence classes) | Its scope hashes match `.pristine/` while page anchors verify against live sandbox sources (P4 Principal finding) — the fixture is *currently self-contradictory*; M requires repair first | **Defeater until repaired** (O-D4a) |
+| C7 | No CRDT is required now; the falsifying trigger is recorded | P5 §§3, 5–6 | The XTDB API has no revision CAS and no subscription stream (P5 §2; D1 capabilities) — so the *non*-CRDT contract is also unimplemented; deferring CRDT does not defer consistency work | Supported empirically, obligation O-D3a |
+| C8 | Four consumers already share the narrow waist | P6 §§"Interface observations", "Principal finding" | Same-shape-different-name records (P6 §"Same shape") tempt premature standardization; P6 explicitly declines it — the design must too | Supported |
+| C9 | Emacs salience/Plexus are correctly excluded from the canonical model | P1 §1 (salience fields silently dropped; Plexus is prose with no route/writer/reader); D1 record classes | Excluded features may be load-bearing for users; D1 rule 6 (report `unsupported`, never silently accept) is the right guard, but donor behaviour audit (D5 matrix) must confirm nothing preserved depends on them | Supported, obligation O-D5a |
+| C10 | The design serves the theoretical anchor (checkable argument as computational action) | M "Operator anchor", "Theoretical anchoring"; SC6 | The read-only compilation path only *describes* actions; the anchor's "computational action" half lands in later missions — this mission's contribution is grounding, not autonomy (M "Out") | Supported as scoped |
+
+## 3. Architecture alternatives — strongest case, strongest objection, decisive input
+
+No selection is made here; that is D7's job.
+
+### A1. Extended futon1b authority
+
+- **Strongest case.** Fewest moving parts; the authority and the store share
+  one consistency domain, so stale-refusal and transactions can be enforced at
+  the same boundary that already has L0–L4 gates and read-back verification
+  (P1 §1). `storage/canonical-interface` and `storage/deterministic-substrate`
+  are satisfied by extending the one canonical HTTP surface.
+- **Strongest objection.** Client protocol evolution (D3 position vocabulary,
+  subscriptions, envelopes) becomes coupled to graph-store releases; every
+  protocol iteration risks the durable authority. P3 shows client vocabularies
+  are still unsettled (`file`, `text`, `agent` collisions) — coupling an
+  unsettled protocol to the store is the risk MAP just spent a phase escaping.
+- **Decisive input.** D7's failure-isolation and "cost of adding a second
+  editor" matrix rows; how often D3 is expected to revise before VERIFY.
+
+### A2. Headless Arxana service over futon1b (via D1 adapter)
+
+- **Strongest case.** Only this option makes SC1/SC2 jointly enforceable by
+  construction: strategy execution, revision pinning and correspondence
+  computation live in one deterministic place (P2: the cascade is pure and
+  portable), while the adapter's honest `capabilities` map (D1) keeps the store
+  boundary truthful. The comparison matrix criteria in M (deterministic
+  strategy results, failure isolation, second-editor cost) all favour it.
+- **Strongest objection.** It is also the only option that *must* solve the
+  missing-CAS/subscription problem above the store (P5 §2; D1 capabilities
+  report `:entity-compare-and-set false`, `:subscription false`) — a new
+  component owning revision checks introduces a two-phase surface where the
+  service's cache can disagree with futon1b's truth. Deployability cost of a
+  second JVM service.
+- **Decisive input.** D3/D7: the specified mechanism (sequence numbers?
+  content-hash preconditions, as the WYSIWYG path already uses per P5 §2?)
+  and its recovery semantics tested against the two 2026-08-08 incidents.
+
+### A3. Graph authority with client-hosted evaluators
+
+- **Strongest case.** Cheapest reuse: editors already evaluate against buffers
+  (P2 anchor cascade), and the WYSIWYG path already demonstrates guarded
+  edits, typed refusal and journalling client-side (P3 §1; P5 §2).
+- **Strongest objection.** It contradicts the candidate invariant's core:
+  "same answer from the JVM authority" becomes "similar local answers from two
+  evaluators". P3's evidence is decisive against it: the four existing clients
+  are *exemplars of behaviours*, not implementations of one latent protocol —
+  two independent evaluators would re-create today's mutual
+  unintelligibility inside the new model.
+- **Decisive input.** A demonstration that two client-hosted evaluators can be
+  proven equivalent on the D2 fixture set (deterministic replay plus golden
+  outputs). Absent that, the objection stands unanswered; if DERIVE keeps A3
+  alive, that proof is its burden.
+
+## 4. Pattern cross-reference (`futon3/library/`, searched not decorated)
+
+- **`storage/graph-memory-contract`** — the mission's whole premise; D1's
+  namespaced shapes and the `arxana/` namespace rule *are* this pattern
+  applied. Requires no DERIVE revision; D1 satisfies it.
+- **`storage/canonical-interface`** — bears on A1 vs A2: whether the canonical
+  HTTP surface is the store's or the headless service's. D7 must answer which
+  interface is *the* canonical one once, not per client.
+- **`storage/identity-uniqueness`** — D1's identity rules (content-addressed
+  revisions; stable `hx:<type>:<sorted-endpoints>` IDs) apply it; the
+  `mission-scope` uncensused family (P1 §1 discrepancy D3) is a live
+  counter-example *inside the store*, so D1's write-freeze rule 3 is required,
+  and the census tripwire is where this pattern gets teeth.
+- **`storage/error-layer-hierarchy`** — D1's typed-error preservation rule
+  ("do not flatten typed refusals into `nil`") is this pattern; D3's error
+  algebra must continue it upward through the protocol envelopes.
+- **`invariant-coherence/single-locus`** — the candidate invariant is a
+  single-locus claim: for each (question, artifact-revision) pair exactly one
+  authoritative answer record. Framing it this way gives DERIVE a check
+  vocabulary: violations enumerate the offending (I, A) pairs rather than
+  "clients disagreed". **Suggests a DERIVE revision:** state the D7
+  consolidated invariants in single-locus form so they are executable.
+- **`invariant-coherence/protocol-family-naming`** — the
+  `shared-authority/entity-identity` … `shared-authority/action-grounding`
+  family in M already follows it (shape + instance naming). No revision
+  needed; D7 should keep namespace discrimination rather than inventing a
+  "sub-invariant" element.
+- **`cascades/repointable-declarations`** — finder/strategy declarations are
+  repointable stored declarations; D2's strategy-revision identity
+  (content-digest versioning, D1 record classes) matches. Bears on O-D2a:
+  ambiguity semantics must version with the strategy, not the executor.
+- **`storage/determinism-vs-expansion`** and **`storage/schema-evolution-stability`**
+  — bear on D1's extension-fields approach (C2 objection): expanding meaning
+  through `props` must not let queries drift; D1 Q2 (indexing) is where this
+  is decided. Flagged as a pattern requiring a DERIVE answer, not decoration.
+
+No pattern was found that argues *against* the design as drafted; the
+pressures are all "make X explicit/checkable", which is what §6 records.
+
+## 5. War-room rationale
+
+- **@why war-room/wr-7** (frames interoperate or they don't exist): the
+  mission is exactly WR-7's discipline at protocol scale — P3's finding that
+  the four clients "share only a weak vocabulary" is the observed
+  non-interoperation; the design builds the model only where an exercised port
+  (each client's demonstrated behaviour) demands it.
+- **@why war-room/wr-8** (typed files are sources of truth): D1's typed
+  record classes over legacy JSON plist blobs (compatibility rule 4: retain
+  bytes, project to typed values) and the prohibition on prose-only Plexus
+  (P1 §1) both rest on WR-8.
+- **@why war-room/wr-26** (a capability switched off carries its re-arm
+  condition at the switch): the deferred CRDT decision is a capability
+  switched off, and P5 §6's "smallest falsifying observation" is precisely the
+  countable re-arm condition WR-26 requires, carried at the D3 contract
+  rather than in a discussion. Same for D1 rule 6 (salience writes report
+  `unsupported` with the re-arm being a live writer/reader/invariant).
+- **@why war-room/wr-24** (a removed constraint does not remove the discipline
+  it supplied): Emacs's dropped salience/Plexus conventions (P1 §1) supplied
+  ad-hoc salience discipline; D1 removes the fields from the canonical model
+  but the mission must still say where that discipline now lives (outside, or
+  a later schema proposal) — recorded as O-D1c.
+- **@why war-room/wr-3** (social exotype before implementation): applies to
+  D7's wiring diagram requirement — authority boundaries must be drawn and
+  validated before any INSTANTIATE code. Not yet discharged; it is D7's
+  deliverable, tracked as O-D7a.
+
+## 6. Design-obligation ledger (D1–D7)
+
+| ID | Obligation / defeater | Settles | Owed by |
+|---|---|---|---|
+| O-D1a | Strategy-finder independent entity vs embedded (D1 Q1) | C2, SC2 | D2 |
+| O-D1b | Resolution assertion: entity+hyperedge vs single doc; futon1b indexing behaviour (D1 Q2) | C2, query-ability | D2/D7 |
+| O-D1c | Name where salience/Plexus discipline lives after exclusion (WR-24) | C9 | D7 or follow-up mission |
+| O-D2a | Finder dispatch, ordering, ambiguity semantics for the five inert forms; mark each executable/translated/advisory/unsupported | SC2, C4 | D2 |
+| O-D2b | Authority decision for artifact text access (who reads bytes) | SC2, A3 objection | D2/D7 |
+| O-D3a | Revision-CAS + subscription mechanism above futon1b; recovery semantics replay-tested against both P5 incidents | SC4, C7, A2 objection | D3/D7 |
+| O-D4a | Repair draft8 revision contradiction before normative adoption | C6, SC3 | D4 |
+| O-D4b | Durable manifestation/DOM identity scheme (fixture shows none exist) | SC3 | D4 |
+| O-D5a | Capability Preservation Matrix incl. whether any preserved behaviour depends on dropped salience | C9, SC5 | D5 |
+| O-D6a | End-to-end compile example on the repaired fixture; consumer attachment notes | SC6, C10 | D6 |
+| O-D7a | Architecture selection with completed matrix, exotype diagram (WR-3), invariants in executable single-locus form | PC, SC1, A1–A3 | D7 |
+
+Unsupported claims found during argumentation were converted to obligations
+here rather than argued around: C6 is an active defeater (the strongest
+empirical input the argument has is currently self-contradictory), and C7's
+comfort ("no CRDT needed") must not obscure O-D3a (the non-CRDT contract is
+also unbuilt).
+
+## 7. Provisional trade-off summary
+
+What the design gives up, and why (provisional where D-items are open):
+
+- **Compatibility over cleanliness.** It keeps futon1b's two record families
+  and the legacy MD5/blob imports rather than migrating (D1 rules 1–5),
+  accepting prop-based extension and a normalizer for the uncensused
+  `mission-scope` family, because MAP showed replacement risk without
+  authority gain. *Provisional on O-D1b.*
+- **Determinism over immediacy.** Resolutions are recomputed from named
+  revisions rather than trusted from clients (D1-DR3), accepting recompute
+  cost, because identity-from-offsets is the failure P4 exposed.
+- **Deferred collaboration over speculative CRDT.** Single-authority with a
+  recorded falsifying trigger (P5 §6), accepting that a trigger event forces
+  mid-lifecycle protocol revision. *Provisional on O-D3a being built at all.*
+- **Grounding over autonomy.** Read-only candidate actions (M "Out"), so the
+  "computational action" thesis advances only as far as inspectable grounding
+  in this mission.
+- **A3's cheapness is knowingly at risk.** If D7 selects A2, the project pays
+  a second service and the CAS problem to buy the candidate invariant; if A1,
+  it pays protocol-store coupling to buy one consistency domain. The argument
+  does not pre-decide this.
+
+## 8. Generalization notes
+
+The design's shape generalizes beyond Emacs/VS Code: it is the recipe "find
+the questions clients must answer identically, make each a single-locus
+record, pin every derived answer to a content-addressed revision, and keep
+domain policy namespaced at the boundary." Applying it elsewhere (e.g. other
+editors, other artifact media) requires exactly the three things MAP had to
+produce here: a live-store census (what is actually enforced, not what the
+client sends), an executor census (what actually runs, not what is declared),
+and a contradiction-bearing fixture. What would need to change: the record
+classes are Arxana-specific; the adapter/capabilities pattern, the
+revision-pinning rule and the WR-26-style deferred-decision discipline are
+the portable parts.
+
+## 9. Plain-language argument
+
+Today, the tools that show and edit Arxana material each keep part of the
+picture and answer the same question differently, so we cannot trust any one
+answer. The plan is to build one service that owns the answers: it names each
+piece of writing by exactly what its bytes are, so "which version were you
+looking at?" always has a checkable answer, and it records how it matched
+things up as evidence rather than assumption. Editors become windows onto
+that service — two people in two editors see the same answer because there is
+only one place the answer lives. Asking "what would changing this do?"
+produces a written-down, inspectable proposal instead of a surprise, while
+the decision to act stays with people and their own tools.
+
+*(Every clause above is provisional exactly where §6's obligations are open;
+the plain-language claim inherits the ledger's conditions, especially O-D3a
+and O-D4a.)*
