@@ -817,9 +817,11 @@ correspondence, ambiguity preservation, typed refusal and semantic-digest
 display against the JVM layer. Comprehensive futon4 parity, VS Code and
 Lean/EmitPython workflows follow only after this demonstration.
 
-For a one-off lucy deployment, the proposed isolated allocation is loopback
-HTTP `7084`, optional loopback Drawbridge `6778`, and named Emacs daemon
-`futon4a-demo`, with existing futon1b left on `7074`. The committed launcher
-preflight refuses occupied ports. This allocation is provisional until run on
-lucy itself: the present seat could not resolve the `lucy` SSH hostname, so no
-remote process, service or firewall state was changed.
+For a one-off lucy deployment, the isolated allocation is loopback Arxana HTTP
+`7084`, throwaway futon1b `7085`, optional loopback Drawbridge `6778`, and named
+Emacs daemon `futon4a-demo`. A read-only census after Joe repaired the SSH alias
+confirmed all three ports free. It also corrected the earlier assumption:
+`7073` is nginx TLS for Agency, currently proxying to an absent `7070` and
+returning 502; no live futon1b/JVM service is present. Futon4a commit `74abada`
+records the census and collision-refusing allocation. No remote process,
+service, repository, firewall or nginx state has yet been changed.
