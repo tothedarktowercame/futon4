@@ -4,13 +4,13 @@ Mission: `M-jvm-arxana`. Phase: ARGUE (shadow of DERIVE). Owner: Zai-1.
 Baselines: pass 1 — DERIVE `784a2ab` + `aac8544`, with D1 draft `9c8b515`;
 pass 2 — DERIVE checkpoint D2 `9ba7974`, prior ARGUE `65c6eac`;
 pass 3 — DERIVE checkpoint D3 `bc81c03`, prior ARGUE `6dcdb54`;
-pass 4 (this revision) — DERIVE checkpoint D4 `78a0e16`
-(`holes/labs/M-jvm-arxana/D4-correspondence-model.md`), prior ARGUE `98188fb`,
+pass 4 — DERIVE checkpoint D4 `78a0e16`, prior ARGUE `d802654`;
+pass 5 (this revision) — DERIVE checkpoint D5 `9cf5a5a`
+(`holes/labs/M-jvm-arxana/D5-client-fidelity.md`), prior ARGUE `d802654`,
 per `ARGUE-DERIVE-loop.md`.
-Status: fourth (progressive) pass; §1–§9 carry the pass-1 argument with
-pass-2 deltas in §10, pass-3 deltas in §11 and pass-4 deltas in §12. Nothing
-here claims ARGUE or the mission is complete, and nothing here selects an
-architecture on DERIVE's behalf.
+Status: fifth (progressive) pass; pass-2 deltas in §10, pass-3 in §11,
+pass-4 in §12, pass-5 in §13. Nothing here claims ARGUE or the mission is
+complete, and nothing here selects an architecture on DERIVE's behalf.
 
 Citations: `P1`…`P6` are the MAP reports in this directory; `D1` is
 `D1-canonical-model.md`; `M` is `holes/missions/M-jvm-arxana.md`. Empirical
@@ -78,7 +78,7 @@ fiction of an already-shared model.
 | C6 | ~~Draft8 is a valid normative correspondence fixture~~ **Pass 4:** the original draft8 set is adopted as a *negative* fixture, and the normative positive fixture is a repaired manifest produced by D4's rejection/repair procedure | P4 §§1–3 (1,630 anchors, three correspondence classes, revision contradiction); D4-DR1 + "Repair and rejection procedure" | ~~Its scope hashes match `.pristine/` while page anchors verify against live sandbox sources~~ — **repaired in design, not yet in fact**: the repaired manifest/map is created and committed only in INSTANTIATE; until then no positive fixture exists, so C6 remains conditional on that execution (O-D4a narrowed, not discharged) | Supported at design level; execution owed (O-D4a) |
 | C7 | No CRDT is required now; the falsifying trigger is recorded | P5 §§3, 5–6; **pass 3: D3-DR3 + CRDT re-arm section** (revision preconditions, refusal, journalling, resubmission; re-arm condition recorded with incident/artifact class/convergence property — the WR-26 re-arm carried at the contract) | ~~The XTDB API has no revision CAS and no subscription stream~~ **Pass 3: answered in design** — D3-DR2 makes an atomic stale-refusal mechanism a *conformance requirement* with two specified candidates; the remaining objection is that the sequencer candidate's lease/fencing proof is owed (O-D3a) | Supported empirically; design now specified, one proof owed (O-D3a) |
 | C8 | Four consumers already share the narrow waist | P6 §§"Interface observations", "Principal finding" | Same-shape-different-name records (P6 §"Same shape") tempt premature standardization; P6 explicitly declines it — the design must too | Supported |
-| C9 | Emacs salience/Plexus are correctly excluded from the canonical model | P1 §1 (salience fields silently dropped; Plexus is prose with no route/writer/reader); D1 record classes | Excluded features may be load-bearing for users; D1 rule 6 (report `unsupported`, never silently accept) is the right guard, but donor behaviour audit (D5 matrix) must confirm nothing preserved depends on them | Supported, obligation O-D5a |
+| C9 | Emacs salience/Plexus are correctly excluded from the canonical model | P1 §1 (salience fields silently dropped; Plexus is prose with no route/writer/reader); D1 record classes; **pass 5: D5 matrix** — every donor capability dispositioned, and the matrix asserts no preserved behaviour reads salience/Plexus | ~~Excluded features may be load-bearing for users~~ — residual narrowed: the census was of *code* donors (P2/P3), not of live user workflows; a workflow-level audit can only happen at INSTANTIATE when real Emacs sessions meet the contract | Supported (design level; INSTANTIATE residual) |
 | C10 | The design serves the theoretical anchor (checkable argument as computational action) | M "Operator anchor", "Theoretical anchoring"; SC6 | The read-only compilation path only *describes* actions; the anchor's "computational action" half lands in later missions — this mission's contribution is grounding, not autonomy (M "Out") | Supported as scoped |
 
 ## 3. Architecture alternatives — strongest case, strongest objection, decisive input
@@ -209,7 +209,7 @@ pressures are all "make X explicit/checkable", which is what §6 records.
 | O-D1c | Name where salience/Plexus discipline lives after exclusion (WR-24) | C9 | D7 or follow-up mission | Open |
 | O-D2a | Finder dispatch, ordering, ambiguity semantics for the five inert forms; mark each executable/translated/advisory/unsupported | SC2, C4 | D2 | **Narrowed**: semantics defined (cascade modes, no implicit fallback, legacy classification table); remaining: authored translation receipts for existing stored strategies, pinned embedding inputs, and the tripwire fixtures actually run |
 | O-D2b | Authority decision for artifact text access (who reads bytes) | SC2, A3 objection | D2/D7 | **Narrowed**: D2-DR3 + `ArtifactProvider` settle the contract (content-addressed revision, digest re-verified, no anonymous buffer text); which deployment implements it (repo reader / blob store / service cache) is now purely a D7 choice |
-| O-D2c | **New (pass 2).** Promotion of `resolved-unverified`/`ambiguous` requires "explicit caller acknowledgement", but the stored assertion records no acknowledgement provenance — who/what accepted an ambiguous or unverified result is not durably part of the evidence | SC2/SC6 audit chain, C5 | D2 revision or D6 | **Open defeater** (narrow seam, high audit value) |
+| O-D2c | **New (pass 2).** Promotion of `resolved-unverified`/`ambiguous` requires "explicit caller acknowledgement", but the stored assertion records no acknowledgement provenance — who/what accepted an ambiguous or unverified result is not durably part of the evidence | SC2/SC6 audit chain, C5 | D2 revision or D6 | **Narrowed (pass 5)**: the D5 matrix adopts "attributable acceptance" with a tripwire ("ambiguous/unverified promotion without acceptance is refused") — the substance is answered; the storage *shape* (field on the assertion vs separate admission-style record) is still unspecified, and the answer currently lives only in a D5 matrix row, not in D2's promotion text |
 | O-D2d | **New (pass 2).** State where per-finder evidence events live when the result is *not* promoted — protocol-only per D1-DR3 is the implied reading, but D2's "every attempted finder appends an immutable event" does not say so | C5, storage growth | D2 clarification | Open (small) |
 | O-D3a | Revision-CAS + subscription mechanism above futon1b; recovery semantics replay-tested against both P5 incidents | SC4, C7, A2 objection | D3/D7 | **Narrowed (pass 3)**: two conforming mechanisms specified (store-side conditional transaction; durable sequencer with lease/fencing), state machine, traces 1–6; remaining: D7 selects one and *proves* atomicity/fencing — the split-brain proof is the open half |
 | O-D3b | **New (pass 2).** Align D2's read-side `stale-input` with D3's mutation-side `stale`/`conflict` outcomes so one word never names two refusal reasons across the protocol | SC4, error algebra | D3 | **Closed (pass 3)**: distinct definitions plus tripwire trace 7 |
@@ -218,11 +218,12 @@ pressures are all "make X explicit/checkable", which is what §6 records.
 | O-D4b | Durable manifestation/DOM identity scheme (fixture shows none exist) | SC3 | D4 | **Narrowed (pass 4)**: manifestation IDs minted by the fixture/model author, independent of DOM locators (which stay evidence); closed at design level, but the minting rule itself is ungoverned — see O-D4c |
 | O-D4c | **New (pass 4).** Manifestation IDs are "minted by the fixture/model author" with no uniqueness/namespace/minting rule; a duplicate or reused manifestation ID would silently violate single-locus for (manifestation, semantic role). Specify the minting governance before INSTANTIATE scales beyond draft8 | SC3, single-locus | D7 or INSTANTIATE | Open |
 | O-D5a | Capability Preservation Matrix incl. whether any preserved behaviour depends on dropped salience | C9, SC5 | D5 | Open |
-| O-D5b | **New (pass 3).** Map current typed WYSIWYG refusals and edit journal into the D3 error algebra and write contract (named by D3 itself) | SC4, SC5, C9 | D5 | Open |
+| O-D5b | **New (pass 3).** Map current typed WYSIWYG refusals and edit journal into the D3 error algebra and write contract (named by D3 itself) | SC4, SC5, C9 | D5 | **Closed at design level (pass 5)**: refusal-mapping table plus journal-import rule (entries are evidence, not receipts, unless they name exact revisions and operation identity); INSTANTIATE verifies against live behaviour |
 | O-D6a | End-to-end compile example on the repaired fixture; consumer attachment notes | SC6, C10 | D6 | Open |
 | O-D7a | Architecture selection with completed matrix, exotype diagram (WR-3), invariants in executable single-locus form | PC, SC1, A1–A3 | D7 | Open |
 | O-D7b | **New (pass 3).** Assign the owner of journal, head movement, lease/fencing tokens and event retention (named by D3) | SC1, SC4 | D7 | Open |
 | O-D7c | **New (pass 4).** Assign the fixture builder and correspondence-assertion authority (named by D4) | SC3 | D7 | Open |
+| O-D7d | **New (pass 5).** Define and own the canonical response digest — the exact field set over which client-equivalence (transcript test 2, D5 "byte-equivalent semantic fields") is checked. If the field set is loose (diagnostics, durations, transport) equivalence tests pass or fail spuriously; the demonstration's equality predicate is currently undefined | PC, SC1, D5 transcript | D7 | Open |
 
 Unsupported claims found during argumentation were converted to obligations
 here rather than argued around: C6 is an active defeater (the strongest
@@ -527,6 +528,103 @@ rule is a silent single-locus violation waiting at corpus scale; the rule
 should be specified before INSTANTIATE, not discovered as duplicate IDs
 after. Secondary: the §12.3 sequencing exposure — the repaired fixture is on
 the critical path of every later demonstration.
+
+## 13. Pass 5 delta — D5 checkpoint (`9cf5a5a`)
+
+Re-tested: SC1, SC5, C9, O-D5a/O-D5b and the fidelity requirement.
+Challenged: every preserve/adapt/drop row (especially agent routing, Element
+transport, salience, Plexus), Emacs-vs-VS-Code coordinate equivalence,
+object-qualified statuses, the Oxide pane boundary, fixture dependence of the
+transcript, and silent architecture/UI selection.
+
+### 13.1 Preserve/adapt/drop challenge
+
+All sixteen matrix rows were checked against the MAP evidence:
+
+- **Drops are evidence-backed, not taste.** Agent chat routing drops because
+  it is Marimo/Agency transport outside the mission (P3 §1; M "Out"), with a
+  real tripwire (no Arxana operation depends on SQLite route/revision
+  counts). Element `postMessage` drops as *transport* while intent IDs are
+  preserved as possible D6 inputs — the right split, consistent with P6's
+  finding that intents already fit the ID-addressed waist. Salience and
+  Plexus drop on P1 §1 evidence (no live reader/writer; prose-only), and the
+  matrix explicitly asserts **no preserved donor behaviour depends on either**
+  — which is what O-D5a demanded. The client-side hyperedge validation copy
+  drops in favour of authority-side validation with an equivalence tripwire
+  (same error from both editors) — directly anti-A3, and invariant-derived.
+- **Adapts keep behaviour while moving ownership.** The three strongest
+  (anchor rediscovery, WYSIWYG refusal, journal) each name the new owner
+  (D2 evaluator, D3 algebra, authoritative journal) and a tripwire that
+  tests the *behaviour*, not the mechanism. Journal import is correctly
+  demoted: legacy entries are evidence, not receipts, unless they name exact
+  before/after revisions and operation identity.
+- **Residual on O-D5a (recorded in C9):** the donor census was of *code*
+  (P2/P3), not of live user workflows. "No preserved behaviour reads
+  salience" is verified against code donors; a workflow-level audit (does
+  anyone's actual Emacs session rely on pinning behaviour the server never
+  honoured?) can only happen at INSTANTIATE. Not a defeater — the fields were
+  already being silently dropped, so the status quo is preserved, not
+  worsened.
+
+### 13.2 Requested specific tests
+
+- **Coordinate equivalence.** Conversion at the client edge against the
+  exact buffer bytes whose digest equals the named revision, mid-surrogate
+  refusal, and test 1 (astral characters, both editors, one codepoint range)
+  close the position gap P3 documented. Emacs character positions are
+  codepoint-native; the VS Code UTF-16→codepoint conversion is the risky
+  one and is the one specified. Digest-mismatch-triggers-refresh is the
+  right failure mode.
+- **Object-qualified statuses.** `resolution: ambiguous`,
+  `correspondence: stale`, `write: stale-refused` — this implements the
+  pass-4 vocabulary note (same words, different objects) exactly as asked;
+  the shared words are never displayed without their object. Discharges the
+  §12.1 note.
+- **Oxide pane boundary.** Cannot mint manifestation IDs, cannot choose
+  among ambiguous mappings, edit affordances only for authority-returned
+  capabilities — consistent with SC5 and with O-D4c (though O-D4c's minting
+  question remains open and owed to D7/INSTANTIATE).
+- **Fixture dependence.** Not improper: D5 states the transcripts are
+  INSTANTIATE obligations against the *repaired* D4 positive fixture and
+  that "mock responses alone cannot satisfy shared-authority demonstration".
+  The in-document transcript is explanatory. This reinforces §12.3's
+  sequencing exposure rather than violating it.
+- **Silent selection.** None found. "No extension-local database becomes
+  identity authority" and authority-side validation tilt against A3, but
+  both are derivations from the candidate invariant (as argued in §11.2),
+  not preferences. UI styling is explicitly not selected; the VS Code
+  tree/webview is a surface *category*, not a chosen design.
+
+### 13.3 New exposures
+
+1. **O-D2c answered — but in the wrong document.** The matrix row "voiced-
+   link promotion → D2 resolution assertion + **attributable acceptance**"
+   with tripwire "ambiguous/unverified promotion without acceptance is
+   refused" substantively answers pass-2's acknowledgement-provenance
+   defeater. Narrowed accordingly. But the *storage shape* (field on the
+   assertion vs a separate admission-style record) is still unstated, and
+   the answer lives only in a D5 matrix row — D2's promotion text should
+   carry it so the promotion contract stays single-sourced (single-locus
+   applies to specs too).
+2. **O-D7d — the equality predicate is undefined.** The transcript
+   equivalence section (and test 2) rests on "byte-equivalent semantic
+   fields" / a matching "canonical response digest", but D5 itself defers
+   the canonical response digest to D7. Until its field set is defined
+   (excluding request/principal IDs, timings, diagnostics? — D2 already
+   excludes duration from digests, a good precedent), the demonstration's
+   core proof — same answer, checkably — has no defined check. This is the
+   pass's highest-value challenge.
+
+### 13.4 Checkpoint receipt summary
+
+Changed obligations: **O-D5a and O-D5b closed at design level (INSTANTIATE
+residuals recorded); O-D2c narrowed (attributable acceptance adopted; shape
+and placement owed); O-D7d added.** Highest-value challenge: O-D7d — the
+canonical response digest is the predicate on which the mission's central
+demonstration (identical authority answers across editors) is proved, and it
+is currently undefined and unowned; D7 must fix its field set before any
+transcript test can count as evidence.
+
 
 
 
