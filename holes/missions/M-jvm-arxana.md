@@ -438,6 +438,8 @@ component boundary.
 
 #### D1 — Canonical model and storage boundary
 
+Design artifact: `holes/labs/M-jvm-arxana/D1-canonical-model.md`.
+
 Specify each entity as source, ingested, derived or authored, its durable
 identity and its revision behaviour. The minimum candidate set is graph entity,
 hyperedge, artifact, artifact revision, manifestation, scope strategy, scope
@@ -455,7 +457,8 @@ derived assertion can become stale.
 Deliverables: typed schema, example records mapped to the P1 live census,
 migration/compatibility rules for both observed hyperedge families, and a
 storage-adapter interface whose tests distinguish live behaviour from proposed
-extensions.
+extensions. **Draft complete:** the artifact fixes the shared vocabulary for
+D2–D6 and leaves four bounded choices for D7 synthesis.
 
 #### D2 — Strategy evaluator and resolution semantics
 
