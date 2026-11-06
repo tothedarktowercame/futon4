@@ -42,6 +42,13 @@ namespaces. Ephemeral D2 results must first be promoted; ambiguous/unverified
 promotion must carry the D2 acceptance record. Unknown extension namespaces
 are preserved only as opaque input evidence and cannot alter core semantics.
 
+The intent is a durable provenance-bearing interpretation record naming the
+immutable source act, interpreter identity/type, interpretation method or
+model+version, timestamp, alternatives and evidence. Reinterpretation creates
+a new record without rewriting the act. An unprovenanced or merely
+client-attested intent can yield only `conditional`, never `compiled`, until
+admitted under an explicit interpretation trust policy.
+
 ## Candidate action
 
 ```clojure
@@ -69,6 +76,12 @@ excludes request identity and presentation. Compilation is deterministic and
 idempotent. A candidate is immutable and non-executable: it contains no bearer
 credential, admission token or implicit consent.
 
+The chain topology and ID/hyperedge waist are empirical P6 findings. The common
+candidate fields—preconditions, predicted effects, warrants, risks and
+unresolved questions—are an operator-agreed IDENTIFY commitment, not fields
+observed in existing consumer APIs. Further core fields require a witnessed
+schema revision.
+
 ## Result algebra
 
 - `compiled` — one candidate with satisfied grounding requirements.
@@ -88,6 +101,11 @@ An admission authority consumes a candidate and emits a separate immutable
 decision: admitted, refused, deferred or consent-required, naming policy and
 policy revision, actor, reasons, conditions and candidate ID. Arxana defines
 the interoperable shape but owns no institutional policy.
+
+`resolution-acceptance` is an accountable judgment permitting ambiguous or
+unverified evidence to be cited. `admission-decision` is an institutional
+judgment about whether an action may proceed. Accepting evidence never admits
+an action.
 
 Execution requires an admitted decision plus D3 expected-revision precondition.
 It emits an append-only receipt naming request/operation ID, candidate and
@@ -151,6 +169,8 @@ on typed records and namespaced fields.
 
 - **O-D6a closed at design level:** end-to-end fixture example and consumer
   attachments are specified; demonstration waits for repaired positive fixture.
+- **O-D7e narrowed:** intent interpretation is now durable and
+  provenance-bearing; D7 assigns interpreter/trust authority.
 - D7 must assign intent interpreter, compiler, admission-adapter and executor
   boundaries without assigning institutional policy to Arxana.
 - ARGUE must test whether the candidate-action vocabulary is genuinely common

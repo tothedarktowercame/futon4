@@ -590,6 +590,9 @@ queryable receipt shape, and interface notes showing how the four surveyed
 consumers attach their own records without changing the common schema.
 **Design draft complete:** compilation is deterministic and read-only;
 interpretation, admission, execution and receipts remain distinct authorities.
+The progressive ARGUE pass (`dbeb91c`) required durable provenance for the
+act-to-intent interpretation; unprovenanced/client-attested intent can produce
+only a conditional candidate, never a fully compiled one.
 
 #### D7 — Architecture synthesis
 
