@@ -906,9 +906,9 @@ Open follow-on work: real-data validation against fresh T1-wave evidence (separa
 
 ## Acceptance checklist (2026-09-30)
 
-- [ ] An ORP evidence-gap register records every gap as closed, in-closure or deferred and names its closure mechanism.
-- [ ] A verification record gives every Working Paper candidate framing a verdict and names its empirical evidence.
-- [ ] UKRN-S bootstrap actions have explicit completion criteria for establishing the required institutional capabilities.
-- [ ] The UKRN-S recommended design commitments are recorded with their supporting evidence named.
-- [ ] The post-bootstrap UKRN-S rollout is scoped as a follow-on mission with dependencies named.
-- [ ] A standalone plain-language argument explains the UKRN-S design commitments to non-specialist readers.
+- [x] An ORP evidence-gap register records every gap as closed, in-closure or deferred and names its closure mechanism.
+- [x] A verification record gives every Working Paper candidate framing a verdict and names its empirical evidence.
+- [x] UKRN-S bootstrap actions have explicit completion criteria for establishing the required institutional capabilities.
+- [x] The UKRN-S recommended design commitments are recorded with their supporting evidence named.
+- [x] The post-bootstrap UKRN-S rollout is scoped as a follow-on mission with dependencies named.
+- [x] A standalone plain-language argument explains the UKRN-S design commitments to non-specialist readers.
