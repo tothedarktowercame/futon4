@@ -1,7 +1,8 @@
 # M-jvm-arxana — one Arxana authority across Emacs and VS Code
 
 **Date:** 2026-11-06  
-**Status:** OPEN — IDENTIFY  
+**Status:** OPEN — MAP (IDENTIFY accepted by Joe 2026-11-06)
+**Owner:** Joe (operator); unassigned technical driver
 **Repos:** `futon4` (Arxana model and Emacs client), `futon1`/XTDB (durable
 graph), `futon3c` (scope view, WYSIWYG and prospective clients)  
 **Related:** `futon3c/holes/missions/M-repl-circus.md`,
@@ -60,7 +61,41 @@ The shape has at least these instances:
 - `shared-authority/manifestation-correspondence`
 - `shared-authority/action-grounding`
 
-## Core model
+## Theoretical anchoring and prior work
+
+The mission is anchored in Arxana's existing identity-through-links model, the
+one-logical-hypergraph account in `AGENTS.md`, strategy-based rediscovery in
+`dev/arxana-links.el`, and the one-authority-per-question discipline. It also
+draws on `futon3/library/storage/graph-memory-contract.flexiarg`: downstream
+tools need documented entity, relation and salience shapes rather than private
+interpretations of stored records.
+
+The existing implementations are evidence, not a specification to translate
+line by line. A later DERIVE phase must include the lifecycle's fidelity
+contract: inventory donor capabilities and classify each as preserve, adapt or
+drop, with tripwire tests for preserved behaviour.
+
+## Source material for MAP
+
+- `AGENTS.md` — current logical model and storage posture.
+- `dev/arxana-links.el` and `dev/arxana-data-constraints.el` — strategy and
+  scope shapes in the Emacs implementation.
+- `dev/arxana-store.el` and the active futon1/XTDB HTTP routes — storage and
+  temporal authority actually available to clients.
+- `futon3c/web/scopes/scopes.ts` and its fixtures — portable TypeScript scope
+  projection and anchored-text behaviour.
+- `futon3c/emacs/latex-wysiwyg.el` and
+  `futon3c/holes/missions/M-latex-wysiwyg.md` — Oxide source maps, navigation,
+  guarded edits and refusal behaviour.
+- `futon3c/holes/missions/M-repl-circus.md` and
+  `futon3c/holes/missions/M-ways-of-working.md` — prospective consumers whose
+  domain rules remain outside this mission.
+
+## Design hypotheses to test in MAP
+
+The vocabulary and slices below are hypotheses inherited from the design
+conversation. They are not DERIVE decisions. MAP may merge, rename or reject
+them after checking the live schemas, APIs and clients.
 
 The initial shared vocabulary is deliberately small:
 
@@ -111,7 +146,7 @@ consumer without being built into this service.
 - Completing the Lean-to-LaTeX EmitPython pipeline.
 - Autonomous mutation before the read-only compilation path is inspectable.
 
-## Technical slices
+## Candidate technical slices (not yet an implementation schedule)
 
 1. **Mirror.** Read representative existing Arxana entities and hyperedges
    through the JVM API without changing their identity or meaning.
@@ -169,16 +204,65 @@ slices are demonstrated. That Campaign may coordinate domain interfaces and
 the broader "action becomes inference" demonstration without making those
 missions subordinate to this technical work.
 
-## Open questions for MAP
+## IDENTIFY lifecycle receipt
 
-- Which current XTDB endpoint and schema are canonical enough to mirror first?
-- Which existing scope-strategy forms can execute on the JVM unchanged, and
-  which require a portable declarative representation?
-- Does the current WYSIWYG source map provide the first correspondence fixture,
-  or should the first fixture be an Elisp definition strategy with a simpler
-  expected result?
-- What minimal consistency semantics do subscriptions require before editing
-  is introduced?
-- What measured collaborative-editing requirement, if any, warrants CRDT rather
-  than revision-checked transactions?
+- **Motivation:** the Gap section names the absent shared JVM authority and the
+  present split across Emacs, XTDB and TypeScript/Oxide clients.
+- **Theoretical anchoring:** recorded above; pattern selection remains open and
+  may be revised by later evidence.
+- **Scope in/out:** recorded above, including the explicit non-goals of editor
+  reimplementation, premature concurrency choice and domain-policy ownership.
+- **Completion criteria:** seven observable conditions are listed above.
+- **Relationships:** dependencies and enabled missions are named without
+  making them subordinate.
+- **Source material:** concrete donor files and APIs are listed above.
+- **Owner and dependencies:** Joe is operator; the technical driver remains an
+  ordinary assignable want, not an operator gate.
 
+**IDENTIFY exit: Met.** Joe agreed the plan on 2026-11-06 and then requested a
+lifecycle audit and Zai packet planning. The gap is accepted; design hypotheses
+remain intentionally unsettled for MAP.
+
+## MAP
+
+MAP surveys facts and makes no architecture decisions. Its required output is
+a source-cited inventory, a `ready / missing` table, and concrete answers to
+the following questions:
+
+- **Q1 — Logical substrate:** Which entity, hyperedge, provenance, temporal and
+  salience shapes are canonical in the live XTDB path, and which exist only in
+  Emacs-side conventions?
+- **Q2 — Strategies:** What strategy and finder forms exist, how are cascades
+  represented and evaluated, and which depend intrinsically on Emacs state?
+- **Q3 — Clients:** What protocol shapes and behaviours already exist across
+  Emacs, the TypeScript scope view, Oxide WYSIWYG, Marimo, Element and any VS
+  Code work?
+- **Q4 — Correspondence:** Which stable identities survive the current
+  LaTeX-to-HTML path, where are only offsets or quotes available, and what
+  evidence can form a first cross-manifestation fixture?
+- **Q5 — Consistency:** What concurrent editing actually occurs today, what
+  failures have been observed, and which consistency property would require a
+  CRDT rather than revision-checked transactions?
+- **Q6 — Consumer boundary:** What minimum query and output shapes do the REPL
+  Circus, Ways of Working, Giraffe and War Machine demonstrably need, without
+  importing their policy into Arxana?
+
+### Zai discovery packets
+
+The first MAP wave is prepared under
+`holes/labs/M-jvm-arxana/packets/`. Each packet is read-only discovery, owns a
+separate report, and may run concurrently:
+
+1. `P1-live-xtdb-schema.md` — Q1, live logical substrate.
+2. `P2-scope-strategy-census.md` — Q2, strategy portability.
+3. `P3-client-protocol-census.md` — Q3, existing client interfaces.
+4. `P4-correspondence-fixture.md` — Q4, first manifestation fixture.
+5. `P5-consistency-requirements.md` — Q5, evidence for or against CRDT.
+6. `P6-consumer-interface-census.md` — Q6, adjacent mission requirements.
+
+The coordinator synthesizes the six reports into the lifecycle-required
+`ready / missing` table. Zai seats do not edit this mission, choose the
+architecture, or begin implementation.
+
+**MAP exit: Not started.** Packets are prepared; no survey report has yet been
+accepted.
