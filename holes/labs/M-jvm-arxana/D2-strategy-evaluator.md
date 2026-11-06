@@ -118,6 +118,11 @@ new strategy revision, a provenance link to the legacy ID and a human- or
 tool-authored translation receipt. Unknown types remain visible and return
 `unsupported`; they are never dropped from the digest.
 
+A strategy is executable only when every finder that can be reached under its
+cascade rules is executable. In particular, a translated
+`surface-form-hybrid` containing an unpinned embedding step is not made
+executable by wrapping that step in an otherwise valid composition.
+
 ## Anchor finder v1
 
 Input anchor fields preserve the legacy content hash, content length,
@@ -231,10 +236,24 @@ Promotion requires `resolved` or an explicit caller acknowledgement of
   revision, subject (when supplied) and cited evidence records;
 - the original result payload or content-addressed blob reference.
 
+For `resolved-unverified` or `ambiguous`, promotion also requires a separate
+immutable `arxana/resolution-acceptance` record naming the assertion, accepting
+actor/tool, policy and policy revision, timestamp, stated reason and selected
+candidate(s), linked by `:arxana/accepts-resolution`. The acceptance is not
+folded into the resolution assertion: several accountable judgments may cite
+the same immutable computation without changing its semantic identity. An
+unattributed Boolean acknowledgement is invalid.
+
 The assertion ID is the digest of semantic inputs and outcome, excluding
 request ID, timing and transport fields. Repeating the same computation is an
 idempotent upsert. A later artifact revision creates another assertion; it does
 not mutate the earlier evidence.
+
+Non-promoted results and evidence events are returned to the caller and are not
+durable evidence. Operational request logs may record that evaluation occurred,
+but cannot later be cited as a resolution assertion. Promotion stores the
+complete semantic result/evidence payload or its content-addressed blob; there
+is no intermediate state in which an assertion survives without its evidence.
 
 ## Failure and ambiguity examples
 
@@ -291,6 +310,12 @@ not mutate the earlier evidence.
   failure semantics are explicit.
 - **O-D2b narrowed:** artifact access has a fixed interface and digest check;
   D7 still selects its deployment implementation.
+- **O-D2c closed:** ambiguous/unverified promotion requires a separately
+  attributable, policy-versioned resolution-acceptance record.
+- **O-D2d answered:** non-promoted evidence is ephemeral; promotion preserves
+  the complete semantic evidence payload atomically with the assertion.
+- **O-D3b passed forward:** D3 must distinguish evaluator `stale-input` from
+  mutation `stale`/`conflict` while keeping one coherent protocol vocabulary.
 - **O-D1b recommendation:** promoted resolution uses entity plus hyperedges;
   D7 must validate query/index cost against futon1b.
 

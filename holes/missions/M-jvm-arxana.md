@@ -486,6 +486,9 @@ authority decision for artifact text access. **Draft complete:** the artifact
 defines explicit translation from inert legacy declarations, the result and
 evidence algebra, ambiguity-preserving anchor semantics and an immutable
 `ArtifactProvider` boundary; D7 retains only the provider's deployment choice.
+The progressive ARGUE pass (`6dcdb54`) found the design coherent and added the
+requirement that accepting an ambiguous/unverified result be a distinct,
+attributable and policy-versioned durable record.
 
 #### D3 — Shared protocol and consistency contract
 
