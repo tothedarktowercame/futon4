@@ -55,7 +55,7 @@ and changed obligation IDs.
 | D3 protocol/consistency | `bc81c03` | `98188fb` | fencing proof is a selection gate; client evaluation yields client-attested evidence | accepted: durable fencing and journal-order recovery explicit; D3c/D7b passed to D7, D5b to D5 | closed |
 | D4 correspondence | `78a0e16` | `d802654` | O-D4c: manifestation IDs lacked minting governance; positive fixture is on D5/D6 critical path | accepted: deterministic authority/family/role IDs; repair ordered first in INSTANTIATE; D7c passed forward | closed |
 | D5 client/fidelity | `9cf5a5a` | `04ea998` | O-D7d: canonical response equality predicate undefined | accepted: versioned semantic/error projection fixed; workflow audit passed to INSTANTIATE | closed |
-| D6 action boundary | pending | pending | — | — | active |
+| D6 action boundary | `df71835` | dispatched | — | — | active |
 | D7 synthesis | pending | pending | — | — | next |
 
 ## Gates
