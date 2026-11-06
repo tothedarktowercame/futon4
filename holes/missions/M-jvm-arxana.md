@@ -5,7 +5,7 @@
 **Owner:** Joe (operator); unassigned technical driver
 **Repos:** `futon4` (legacy Arxana model and Emacs donor), `futon4a` (isolated
 JVM-Arxana Emacs demo client), `futon1`/XTDB (durable graph), `futon3c`
-(headless JVM authority, scope view, WYSIWYG and prospective clients)  
+(headless JVM authority, scope view, WYSIWYG and prospective clients)
 **Related:** `futon3c/holes/missions/M-repl-circus.md`,
 `futon3c/holes/missions/M-ways-of-working.md`,
 `futon3c/holes/missions/M-latex-wysiwyg.md`, `M-webarxana`
