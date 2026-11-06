@@ -778,3 +778,27 @@ and the fixed-contract implementation debts into INSTANTIATE.
   artifact bytes cannot share an implicit digest rule. D7 now states that a
   segment carries the authority-issued whole-artifact revision ID; its local
   segment hash is projection evidence only.
+
+## INSTANTIATE
+
+Implementation follows D7's reversible increments and retains the fixture as
+the gate for all client demonstrations.
+
+### Checkpoint 1 — fixture, store and service foundations
+
+| Increment | Evidence | Status |
+|---|---|---|
+| 1 fixture gate | futon5 `17dc53a`; futon4 `c550ded`; negative mismatch, positive three-case fixture, wrong-root and path-escape tests | complete |
+| 2 atomic store | futon1b `b27cc63`; 24/24 route assertions plus 17 hyperedge-batch and 34 entity-serving regression assertions | complete |
+| 3 service spine | futon3c `bf546b722`; futon4 `c1be79c`; 5 tests / 49 assertions | complete |
+| 2↔3 integration | futon3c `44c683e27`; real HTTP adapter against embedded futon1b, 6 tests / 59 assertions with the spine suite | complete |
+
+Increment 2 was recovered after its delegated worker was lost mid-run. The
+partial implementation's `current-head` query referenced `xt/id` without
+binding it, and its redundant post-commit read converted a committed first
+write into a false 503. The repaired query binds both fields; `execute-tx` is
+the durable commit receipt; idempotent retry, stale refusal, generic-route
+namespace bypass, authentication and no-partial-mutation tripwires all pass.
+
+**INSTANTIATE exit: Not met.** Resolve, Correspond, Project, Compile and the
+end-to-end integration demonstration remain.
