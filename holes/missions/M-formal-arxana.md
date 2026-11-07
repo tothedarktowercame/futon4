@@ -35,6 +35,52 @@ intelligible geometric configuration. Joe's completion criterion was:
 
 > Arxana becomes a markup language for geometry.
 
+### Why this mission, now
+
+Joe, 2026-11-07 (to claude-13), marking this mission high priority:
+
+> What we are trying to do is get the REPL to build a Giant Connected
+> Component or GCC which will compile intents into inference-ready actions.
+> This is essential to prove out the Apex thesis from Cascade Live. We seem to
+> be converging on a working implementation of AIF for software (the War
+> Machine), but in order to work coherently with operator intents, we need a
+> model of those. Giraffe is a joined up view of that, but Giraffe is
+> basically only as good as the rest of the REPL Circus. Lastly, in terms of
+> Cascade Live, the primary missing gap is the ethical layer, the cui bono,
+> which I have conceptualised as a "fall-through argument" structure. If we
+> get it right, Arxana can help hold all of that together; there are further
+> applications and demonstrations in mathematics along the way.
+
+The chain of dependencies this sets out:
+
+1. **Apex thesis.** Cascade Live asks whether a community of humans and
+   machines can "leave an account of itself structured enough that the work
+   can steer itself — so that activity becomes inference rather than motion"
+   (`futon2/holes/DESIGN-REQUIREMENTS-apex-2026-09-09.md`). Proving it needs
+   operator intent to reach inference as actions, not as prose.
+2. **War Machine.** The WM is the AIF-for-software side: it selects and acts
+   under a generative model. It can act coherently on what the operator wants
+   only if it has a model of operator intents to condition on.
+3. **REPL Circus GCC.** The intent model is built from turns, replies,
+   missions, patterns and evidence joined into one connected component, and
+   compiled into candidate actions the WM can take up. That compilation step
+   is what is missing today (Q3 below).
+4. **Giraffe.** Giraffe is the joined-up view of that model, so its quality
+   is bounded by the Circus records under it (`futon3c/holes/labs/
+   giraffe-observation-series/`).
+5. **Cui bono.** The main gap remaining in Cascade Live is the ethical layer:
+   who the work benefits, stated as a fall-through argument in which each
+   claim records what still stands, and where the argument goes next, when it
+   fails. That argument is itself a recursive structure of claims, supports
+   and defeaters, and needs the same attributable, assessable, non-collapsing
+   relations as the rest.
+
+Arxana's part is to be the one graph contract that intents (F1), the GCC
+action view (F1), assessable compositions (F4) and argument structure (F6)
+all live in, so that these five pieces connect instead of each keeping a
+private representation. The mathematical demonstrations (F3, F5) test the
+same contract on material where correctness can be checked.
+
 ### What is already felt to be true
 
 - The existing Emacs Arxana demonstrates identity through relocatable links,
