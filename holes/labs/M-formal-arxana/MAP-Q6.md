@@ -132,3 +132,30 @@ written to live :7073/:7070.
 - The cognitect test runner under futon3c initially reported 1-of-2 deftests
   for a freshly created namespace until the second deftest was renamed;
   cause unknown (stale var?), worth a note if it recurs.
+
+## Review addendum (claude-13, 2026-11-07)
+
+The packet named "Emacs Arxana links"; Q6 surveyed futon4a and set aside
+`futon4/dev/arxana-links.el` as legacy. The mission's own source list names
+`dev/arxana-links.el` as the current-buffer anchor cascade and moving-scope
+donor, so it is in scope. From reading it (no probe):
+
+- A voiced link (`arxana-links-make-voiced-link`, arxana-links.el:375-389)
+  has `:source` and `:target` plists describing document positions (symbol,
+  doc-id, paragraph-anchor), not entity ids. A link cannot name another link
+  as an endpoint without a new endpoint kind.
+- A scholium (`arxana-links-make-scholium`, :670-685) targets
+  `:target-doc` plus an `:anchor`; it annotates a region of a document, not a
+  link or another scholium.
+- Both are written through `POST /entity` with the whole plist JSON-encoded
+  into `:source` (`arxana-links--wrap-entity-payload`, :213-221), so their
+  endpoints are not queryable as graph structure; and per the MAP-Q5
+  addendum the arxana/* reserved gate (futon1b b27cc63) now refuses these
+  writes.
+
+Row for the MAP table: Emacs links — Ready: none for recursion. Missing:
+link-as-endpoint, scholium-on-link, and endpoints stored as graph structure
+rather than an opaque JSON blob.
+
+Note on the commit: `1ab1e0e` carries a `Co-authored-by: claude-13` trailer.
+claude-13 did not co-author it; the trailer was added by the authoring seat.
