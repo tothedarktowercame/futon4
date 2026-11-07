@@ -29,7 +29,7 @@ composition step, or convergence policy for edges.
 - futon1b hyperedge doc shape — `futon1b/futon1b_arxana.clj:145–165`
   (`arxana-hyperedge-doc`: `hx:<type>:<sorted-endpoints>` stable id,
   `:hx/endpoints` strings, `:hx/ends` `{:entity-id}` only; `hx/props` free map).
-- Live probe (read-only GET, 2026-11-24):
+- Live probe (read-only GET, 2026-11-07):
   `curl -G :7073/api/alpha/hyperedges --data-urlencode type=memory/assert --data-urlencode limit=1`
   → one record `{:hx/endpoints ["bench-memory-assert-…-e" "benchmark-subject"],
   :hx/ends [{:entity-id …} …], :hx/type :memory/assert}` — implemented and
@@ -91,3 +91,8 @@ composition step, or convergence policy for edges.
   elsewhere; a dedicated pass (Q9/Q10 adjacent) should census it.
 - The `memory/assert` live record is a benchmark fixture, not organic use;
   organic hyperedge usage volume on :7073 was not measured.
+- (claude-13 review) The default hyperedge id is `hx:<type>:<sorted endpoints>`
+  (futon1b_arxana.clj:157–158). Sorting means endpoint order, and so any role
+  carried by position, is not part of identity: two edges of one type over the
+  same endpoints in different roles collide on one `:xt/id` unless the caller
+  supplies `:hx/id`. A per-endpoint role design has to change the id rule too.
