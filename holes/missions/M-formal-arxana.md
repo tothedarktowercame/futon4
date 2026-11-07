@@ -376,25 +376,25 @@ required.
 MAP must produce facts and a ready/missing table; it must not select the final
 schema prematurely.
 
-- [ ] **Q1 — Existing 'clusion shapes:** Where do current stores and code
+- [x] **Q1 — Existing 'clusion shapes:** Where do current stores and code
   already represent roles, topology, operations/dynamics, evidence, standing,
   composition, and convergence policy? Which are prose-only?
-- [ ] **Q2 — 象 source-to-intent path:** What exact records, IDs, parser/model
+- [x] **Q2 — 象 source-to-intent path:** What exact records, IDs, parser/model
   outputs, proforma marks, and assessments currently exist from source turn to
   interpreted move? Where is interpretation authority assigned?
-- [ ] **Q3 — REPL Circus/GCC path:** Which turn, reply, pattern, mission,
+- [x] **Q3 — REPL Circus/GCC path:** Which turn, reply, pattern, mission,
   capability, candidate-action, and receipt records exist live? What exact
   step from interpreted intent to GCC action surface is missing?
 - [ ] **Q4 — Projection provenance:** Which current Emacs, Element, Marimo,
   VS Code, HTML, and graph views can map a rendered fragment back to graph
   records and projection rules?
-- [ ] **Q5 — Edit proposal strata:** Which clients currently distinguish
+- [x] **Q5 — Edit proposal strata:** Which clients currently distinguish
   manifestation, content, relation, projection-rule, and presentation-state
   edits? Where are these silently conflated?
-- [ ] **Q6 — Recursive edges:** Can a current hyperedge or assertion be an
+- [x] **Q6 — Recursive edges:** Can a current hyperedge or assertion be an
   endpoint of another first-class relation without flattening it to opaque
   props? Test actual write and query routes.
-- [ ] **Q7 — Convergence policies:** Inventory current first-write-wins,
+- [x] **Q7 — Convergence policies:** Inventory current first-write-wins,
   append-only, compare-and-set, sequencing, coexistence, and refusal behavior
   by record type. Is any CRDT/OT implementation already suitable?
 - [ ] **Q8 — Mathematical fixtures:** Which Mark8/APM and Lean/LaTeX/HTML/
@@ -409,9 +409,31 @@ schema prematurely.
 
 ### Required MAP output
 
-| Ready — no new code | Missing — actual work |
-|---|---|
-| To be filled from Q1–Q10 evidence | To be filled from Q1–Q10 evidence |
+Answers so far: `holes/labs/M-formal-arxana/MAP-Q1.md`, `-Q2`, `-Q3`, `-Q5`,
+`-Q6`, `-Q7` (2026-11-07; Kimi/Zai surveys, each reviewed by claude-13 with
+addenda where the review found more). Q4, Q8, Q9, Q10 not yet surveyed.
+Rows condensed; citations are in the per-question files.
+
+| Q | Ready — no new code | Missing — actual work |
+|---|---|---|
+| Q2 | Source → reading chain runs live on every Emacs-REPL turn: chat-turn evidence → turn record → 小象 draft → 象 analysis → settled `e-xiang-turn-*` evidence with sha256 witnesses | No record that confirms or rejects a reading (`human_approved` stays false; no route sets it) |
+| Q2 | Reading is not authority (象/释义非授); effects need stamped acts with grants (403 otherwise) | No reverse link from an act to the reading version that grounded it |
+| Q2 | Vocabulary and interpretation versions pinned per analysis | The intent vocabulary is kept by hand in three places; model-inferred marks are not distinguished from declared ones downstream |
+| Q3 | 18,153 turn records, 4,810 analyses, 699 PURs, 356 missions, 36 capabilities, 1,671 patterns live | GCC hyperedges unwritten: `:learning-loop/*` and `:has-operator-turn` registered, count 0 |
+| Q3 | D6 compile waist exists and is tested: intent shape, pure compiler, admission/receipt shapes; `:action/compile` route returns a candidate action | **The F1 gap:** nothing turns a settled turn into an intent (`arxana.compile.intent/make-intent` has no production caller); nothing stores a compiled candidate action; no feed from stored candidates into the WM selector; admission/receipt never called |
+| Q1 | JVM correspondences: roles, 5-level standing ladder, evidence-bearing attributable assessments, ambiguity-preserving queries | futon1b hyperedges: no per-endpoint roles; default id sorts endpoints, so role-by-position is not identity |
+| Q1 | — | 'Clusion operations, composition and edge-level dynamics are prose only (M-self-representing-stack §Hyperedges as Frozen Dynamics) |
+| Q6 | futon1b: a hyperedge id can be an endpoint; writes and `?end=` queries work (hermetic probe) | No traversal into an inner edge; no endpoint-kind field anywhere; no existence check |
+| Q6 | JVM: assessment can target an assessment | Assessment subject is an untyped string (ghost ids accepted); assertions cannot nest (by design) |
+| Q5 | JVM Arxana separates content, manifestation, relation and projection-rule as record types | Live futon1b arxana route supports only `:revision/ingest` |
+| Q5 | latex-wysiwyg separates content from presentation with quote-verified guarded splices | No relation/manifestation records; scope rules not editable records |
+| Q5/Q7 | — | Emacs `arxana-links.el` writes `arxana/*` entities via `POST /entity`, which the reserved-namespace gate (futon1b `b27cc63`) refuses: no working write path (code reading; live gate status unchecked) |
+| Q7 | One CAS route (futon1b arxana conditional, two-writer race tested); 象 turn/analysis exclusive create; append-only journal and write log | Generic entities are whole-document last-writer-wins; JVM correspondence store is in-memory only and its duplicate/conflict refusals are check-then-swap, safe for one writer |
+| Q7 | — | No CRDT/OT anywhere ("No sequencer, no CRDT", futon1b_arxana.clj:22) |
+
+For F1 the Q3 row marked "The F1 gap" is the chain to build: settled turn →
+intent → compiled candidate action → stored → read by the WM selector, with
+the Q2 confirmation record deciding which readings may feed it.
 
 ### Known evidence, not MAP conclusions
 
