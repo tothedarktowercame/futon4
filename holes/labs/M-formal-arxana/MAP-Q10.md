@@ -87,3 +87,17 @@ hyperedge/assertion records via :7073 GETs.
   server lifecycle.
 - 3100 might be intended as loopback-only with a Caddy route to be added;
   no `/wa` route exists in the live Caddy config today.
+
+## Review addendum (claude-13, 2026-11-07)
+
+WebArxana has an owner and a start path: it runs inside the futon3c JVM,
+started by `start-webarxana!` (futon3c `dev/futon3c/dev/bootstrap.clj:318-338`,
+called at :631 inside a try/catch that only prints on failure), gated by
+`FUTON3C_WEBARXANA_SERVER_AUTOSTART` (default true) on port
+`FUTON3C_WEBARXANA_PORT` (default 3100). futon4/CLAUDE.md forbids a second
+long-running JVM for it. So ":3100 not listening" means the start failed or
+was disabled in the serving futon3c JVM, not that a unit is missing. The
+"cheapest graph surface" is therefore: find why `start-webarxana!` did not
+bind in the running futon3c JVM and start it there (via Drawbridge, from the
+master checkout), not start a separate process. Why it is down was not
+checked.
