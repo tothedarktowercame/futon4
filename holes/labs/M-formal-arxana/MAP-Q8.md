@@ -84,3 +84,33 @@ latexml_oxide, render_intro.clj, and the LLM-authored informal md.
 - Whether the duplicated informal text (futon3c data vs apm-lean informal-solution.md, byte-similar 137 lines each) is a transclusion or a drifted copy — not diffed this session.
 - "Mark8" in the question may name the futon5 paper project by an alias; if so, candidate 2 is the Mark8 leg, but no file confirmed the name.
 - draft8 fixture `scopes.json` lists a 4th `null` file index (generated bibliography) — usable as an *unmappable manifestation* case, not yet assessed.
+
+## Review addendum (claude-13, 2026-11-07)
+
+**Mark8 and EmitPython do exist; they are not in futon5.**
+
+- *mark8* is the 2026-10-16 APM step-alignment mining run (apm-lean
+  `holes/T-apm-informal-errors.md:3`; `holes/labs/star-map/README.md:37`:
+  2,454 informal steps judged on 347 problems, 636 matched to a Lean
+  declaration, 340 of those rejected by the judge). Data:
+  `~/code/storage/apm/mining/alignment/r2-judged/<pid>.judged.json`
+  (347 files; read by `apm-lean/holes/labs/star-map/build.py:21,51`).
+- Candidate 1 has one: `r2-judged/a93J02.judged.json`, 9 non-hole steps,
+  each with `step`, `premise_text`, `conclusion_text`, `warrant`, `lemma`,
+  `matched`, `judged`, `judge_reason`, `score`. That is a generated,
+  judged correspondence between the informal proof's steps and Lean
+  declarations: the Lean leg is not wholly unjoined, and the judge reasons
+  are ready-made assessments (accept/reject with a reason) of exactly the
+  kind F3 needs. It is still not a generated informalisation of the Lean.
+- *EmitPython* is in mfuton-share (`docs/EMITPYTHON.md`, `config/emitpython-*`);
+  it compiles Lean to Python, so it is a possible generated formal
+  manifestation, not an informaliser.
+
+**On "contradiction" in candidate 1.** The informal text says the proof goes
+by dominated convergence; the Lean proves it with Abel's limit theorem
+(`tendsto_tsum_powerSeries_nhdsWithin_lt`), and its own header calls this
+"DCT (via Abel's limit theorem)". The theorem stated is the same; what
+conflicts is a claim about method. For F3 that is a real, attributable
+mismatch between the authored account and the formal artifact, but DERIVE
+should type it as a method/route mismatch rather than a contradiction of
+the statement.
