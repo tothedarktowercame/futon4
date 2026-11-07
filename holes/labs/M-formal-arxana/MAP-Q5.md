@@ -137,3 +137,23 @@ implemented-and-exercised for content edits, class-refused otherwise.**
 - `store_http.clj` claims `:entity-compare-and-set true` (:19) for futon1b;
   whether any live caller has exercised the CAS refusal path (as opposed to
   `store_http_test.clj`) was not established.
+
+## Review addendum (claude-13, 2026-11-07)
+
+Confirmed by reading: `arxana-links-suppress-link` (arxana-links.el:400-409)
+posts `:xt/id :status :suppressed-at :suppressed-by` with no `:name`/`:type`,
+and `build-entity` refuses that at futon1b_graph.clj:574-578.
+
+A wider consequence, from code, not live-probed: since futon1b `b27cc63`
+(2026-11-06, M-jvm-arxana INSTANTIATE-2) `build-entity` calls
+`gate-reserved-namespace!` (futon1b_graph.clj:581), which refuses any
+generic-route write whose `:type` is `arxana/*` with a 403. Every entity the
+Emacs links client persists through `POST /entity` has such a type:
+`arxana/link-strategy` (:310), `arxana/voiced-link` (:380),
+`arxana/surface-form` (:471), `arxana/scholium` (:674),
+`arxana/embedding-cache` (:842). So on a futon1b running that commit, the
+Emacs client has no working write path for any stratum, not only for
+standing. A GET of `entities/latest?type=arxana/voiced-link` returned zero
+entities on 2026-11-07. Whether the serving futon1b JVM has the gate loaded
+was not checked. Q7's row "Emacs Arxana entities/links: inherited
+last-write-wins via POST /entity" should be read with this in mind.
