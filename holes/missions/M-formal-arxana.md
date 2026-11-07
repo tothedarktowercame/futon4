@@ -459,6 +459,14 @@ the Q2 confirmation record deciding which readings may feed it.
 
 ### 3. DERIVE
 
+Started 2026-11-07 with F1: `holes/labs/M-formal-arxana/DERIVE-F1.md`.
+
+Operator decisions (Joe, 2026-11-07):
+- Lean substrate for F3/F5 is v4.29 (apm-lean toolchain, Mathlib master);
+  LeanEuclid material is to be adapted to it.
+- Every fixture must be demoable and usable in Emacs through futon4a's
+  client for the JVM Arxana backend.
+
 - [ ] Specify entity, 'clusion, projection, chart, fibre, edit proposal,
   assessment, and conflict record shapes from MAP evidence.
 - [ ] Assign one authority per question and one convergence policy per core
