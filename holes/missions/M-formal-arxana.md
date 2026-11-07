@@ -385,7 +385,7 @@ schema prematurely.
 - [x] **Q3 — REPL Circus/GCC path:** Which turn, reply, pattern, mission,
   capability, candidate-action, and receipt records exist live? What exact
   step from interpreted intent to GCC action surface is missing?
-- [ ] **Q4 — Projection provenance:** Which current Emacs, Element, Marimo,
+- [x] **Q4 — Projection provenance:** Which current Emacs, Element, Marimo,
   VS Code, HTML, and graph views can map a rendered fragment back to graph
   records and projection rules?
 - [x] **Q5 — Edit proposal strata:** Which clients currently distinguish
@@ -397,21 +397,21 @@ schema prematurely.
 - [x] **Q7 — Convergence policies:** Inventory current first-write-wins,
   append-only, compare-and-set, sequencing, coexistence, and refusal behavior
   by record type. Is any CRDT/OT implementation already suitable?
-- [ ] **Q8 — Mathematical fixtures:** Which Mark8/APM and Lean/LaTeX/HTML/
+- [x] **Q8 — Mathematical fixtures:** Which Mark8/APM and Lean/LaTeX/HTML/
   generated-informal artifacts provide the smallest honest F3 fixture, with
   known partial or contradictory correspondence?
-- [ ] **Q9 — Geometry authority:** Which existing Lean, JVM, Clojure, or
+- [x] **Q9 — Geometry authority:** Which existing Lean, JVM, Clojure, or
   frontend libraries can represent and verify the unit-circle map and fibre
   without making a rendering library the semantic authority?
-- [ ] **Q10 — Demonstration surfaces:** What is the smallest maintained path
+- [x] **Q10 — Demonstration surfaces:** What is the smallest maintained path
   for linear, graph/GCC, and geometric projections, including mobile access
   and deterministic replay?
 
 ### Required MAP output
 
-Answers so far: `holes/labs/M-formal-arxana/MAP-Q1.md`, `-Q2`, `-Q3`, `-Q5`,
-`-Q6`, `-Q7` (2026-11-07; Kimi/Zai surveys, each reviewed by claude-13 with
-addenda where the review found more). Q4, Q8, Q9, Q10 not yet surveyed.
+Answers: `holes/labs/M-formal-arxana/MAP-Q1.md` … `MAP-Q10.md` (2026-11-07;
+Kimi/Zai surveys, each reviewed by claude-13, with review addenda in the
+files where the review found more). All ten questions answered.
 Rows condensed; citations are in the per-question files.
 
 | Q | Ready — no new code | Missing — actual work |
@@ -430,6 +430,12 @@ Rows condensed; citations are in the per-question files.
 | Q5/Q7 | — | Emacs `arxana-links.el` writes `arxana/*` entities via `POST /entity`, which the reserved-namespace gate (futon1b `b27cc63`) refuses: no working write path (code reading; live gate status unchecked) |
 | Q7 | One CAS route (futon1b arxana conditional, two-writer race tested); 象 turn/analysis exclusive create; append-only journal and write log | Generic entities are whole-document last-writer-wins; JVM correspondence store is in-memory only and its duplicate/conflict refusals are check-then-swap, safe for one writer |
 | Q7 | — | No CRDT/OT anywhere ("No sequencer, no CRDT", futon1b_arxana.clj:22) |
+| Q4 | Record ids recoverable from 7 of 8 views; revisions kept by futon4a, VS Code (digest → revision with typed refusal) and fumarimo | Emacs browser and WebArxana drop the revision at render time though `arxana-store-fetch-entity` takes `version`/`as-of`; 象 turn feed has no version |
+| Q4 | Projection rule recorded in the output by Giraffe (per-row reason) and fumarimo (kind) | Everywhere else the rule is only the renderer's source; `arxana-store.el` is loaded in Emacs but its `arxana/*` writes are refused (Q5) |
+| Q8 | F3 fixture candidate: APM a93J02 (authored informal, problem bundle, 115-line sorry-free Lean, authored TeX, LaTeXML HTML) plus a mark8 judged step→Lean alignment (`storage/apm/mining/alignment/r2-judged/a93J02.judged.json`, 9 steps with judge reasons) | No generated informalisation of the Lean; the authored/Lean mismatch (dominated convergence vs Abel's theorem) is a method mismatch, not a contradiction of the statement |
+| Q9 | Mathlib `Circle` (CommGroup), `Circle.coe_inv_eq_conj`; fibre `{z : Circle \| z² = -1} = {i, -i}` proved in a ~20-line probe against prebuilt Mathlib (apm-lean lemmas worktree) | Fibre lemma needs a home file; no bridge from Lean-certified facts to Arxana records; no live Lean query service; LeanEuclid (v4.19.0) and apm-lean (v4.29.0-rc8) Mathlib versions differ |
+| Q9 | futon0 System E engine already treats the engine, not the drawing, as authority for Euclidean diagrams | No JVM/Clojure library can certify geometry; sympy (futon6 venv) can only cross-check |
+| Q10 | Linear: 象 stepper `/wip/stepper/` (phone, basic auth, fixture replay). Graph data: `cascade-real/graph` JSON | WebArxana (:3100) not listening: `start-webarxana!` in the futon3c JVM failed or is disabled (cause unchecked). No geometric surface; a marimo notebook is the cheapest |
 
 For F1 the Q3 row marked "The F1 gap" is the chain to build: settled turn →
 intent → compiled candidate action → stored → read by the WM selector, with
