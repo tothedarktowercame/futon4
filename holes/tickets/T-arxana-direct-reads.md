@@ -17,6 +17,11 @@ revises the banner. Next move: restore or relocate the hyperedge serving
 route on futon1b and fix the stale base-URL default. Full check record:
 futon2 `data/wm-d-task-enactment/T-arxana-direct-reads/status-refresh-2026-11-04.edn`
 (commit fbe2d376).
+Item 3 addressed 2026-11-14 (wm-author, full-loop attempt-001): the
+`futon4-base-url` docstring example now names futon1b :7073; the remaining
+four completion criteria are untouched and still open — the :7073
+`/hyperedges` route still returns 404, so the live-view, endpoint-open,
+planted-edge, and interactive-Accept checks remain **Not met.**
 
 ## What exists
 
@@ -75,5 +80,5 @@ read path is what lets that checker and a human look at the same edges.
 - An Arxana hypergraph view (M-x) with a hyperedge type or endpoint id renders live edges from futon1b with no export step — check: the route answers (curl `/hyperedges?type=lean/doc-source` on the serving port returns entries, not 404) and the view renders them **Not met.**
 - Following a `source` endpoint opens the file at the pinned commit and line range — check: interactive open of a `lean4:<commit>:<file>` endpoint in the view **Not met.**
 - The planted case: an edge written after the view was opened appears on refresh — check: a dated note here recording the planted-edge refresh **Not met.**
-- The stale base-URL default is fixed (`futon4-base-url` docstring/default names the live futon1b port) — check: `/home/joe/code/futon4/dev/arxana-store.el` **Not met.**
+- The stale base-URL default is fixed (`futon4-base-url` docstring/default names the live futon1b port) — check: `/home/joe/code/futon4/dev/arxana-store.el` **Met.**
 - Interactive `url.el` callers get JSON when they ask for it (Accept-header precedence verified in interactive use) — check: a dated note here or in lean-docs-align DISCOVERY.md **Not met.**

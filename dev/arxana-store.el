@@ -27,7 +27,8 @@ Set FUTON4_ENABLE_SYNC=1 in the environment to default this on.")
     (when (and (stringp value)
                (not (string-empty-p (string-trim value))))
       (string-trim value)))
-  "Base URL for the Futon API (e.g., http://localhost:7071/api/alpha).
+  "Base URL for the Futon API (e.g., http://localhost:7073/api, the futon1b
+hyperedge store; futon1a's :7071 no longer has a listener).
 Set FUTON4_BASE_URL in the environment to default this on.")
 
 (defgroup arxana-store nil
