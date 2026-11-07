@@ -413,5 +413,40 @@
       (should (equal captured
                      (list "GET" "/tail" nil "limit=3"))))))
 
+;; T-arxana-direct-reads: the live futon1b hyperedge read routes sit
+;; under /api/alpha; the bare /hyperedges and /hyperedge routes 404.
+(ert-deftest arxana-store-normalize-base-canonicalizes-to-api-mount ()
+  (should (equal (arxana-store--normalize-base "http://localhost:7073")
+                 "http://localhost:7073/api"))
+  (should (equal (arxana-store--normalize-base "http://localhost:7073/api")
+                 "http://localhost:7073/api"))
+  (should (equal (arxana-store--normalize-base "http://localhost:7073/api/")
+                 "http://localhost:7073/api"))
+  (should (equal (arxana-store--normalize-base "http://localhost:7073/api/alpha")
+                 "http://localhost:7073/api"))
+  (should (equal (arxana-store--normalize-base "http://localhost:7073/api/%ce%b1")
+                 "http://localhost:7073/api"))
+  (should (equal (arxana-store--normalize-base "http://localhost:7073/api/%CE%B1")
+                 "http://localhost:7073/api")))
+
+(ert-deftest arxana-store-fetch-hyperedges-targets-alpha-route ()
+  (let ((futon4-enable-sync t)
+        (futon4-base-url "http://localhost:7073")
+        (captured nil))
+    (cl-letf (((symbol-function 'arxana-store--request)
+               (lambda (method path payload query)
+                 (setq captured (list method path payload query))
+                 '((:hyperedges . t)))))
+      (should (equal '((:hyperedges . t))
+                     (arxana-store-fetch-hyperedges :type "lean/doc-source" :limit 2)))
+      (should (equal captured
+                     (list "GET" "/alpha/hyperedges" nil
+                           "type=lean%2Fdoc-source&limit=2"))))))
+
+(ert-deftest arxana-store-build-url-resolves-live-hyperedges-route ()
+  (let ((futon4-base-url "http://example"))
+    (should (equal (arxana-store--build-url "/alpha/hyperedges" "type=lean%2Fdoc-source")
+                   "http://example/api/alpha/hyperedges?type=lean%2Fdoc-source"))))
+
 (provide 'arxana-store-test)
 ;;; arxana-store-test.el ends here

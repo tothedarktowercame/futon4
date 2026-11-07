@@ -201,12 +201,25 @@ authoritative guarantee for write availability."
           status))))))
 
 (defun arxana-store--normalize-base (base)
-  (let* ((base (string-remove-suffix "/" (or base ""))))
-    (cond
-     ((string-match-p "/api\\(/alpha\\)?\\'" base) base)
-     ((string-match-p "/api/%ce%b1\\'" base) base)
-     ((string-match-p "/api/%CE%B1\\'" base) base)
-     (t (concat base "/api")))))
+  "Canonicalize BASE to end at the /api mount point of futon1b.
+
+futon1b serves the live hyperedge store under /api/alpha (the bare
+/hyperedges and /hyperedge routes 404), so per-route paths carry the
+/alpha segment and a base that already names the alpha level — or its
+percent-encoded Greek form — is trimmed back to /api (T-arxana-direct-
+reads: relocate the client to the live serving routes)."
+  (let* ((base (string-remove-suffix "/" (or base "")))
+         (base (cond
+                ((string-suffix-p "/alpha" base)
+                 (substring base 0 (- (length base) (length "/alpha"))))
+                ((string-match-p "/api/%ce%b1\\'" base)
+                 (replace-regexp-in-string "/api/%ce%b1\\'" "" base))
+                ((string-match-p "/api/%CE%B1\\'" base)
+                 (replace-regexp-in-string "/api/%CE%B1\\'" "" base))
+                (t base))))
+    (if (string-match-p "/api\\'" base)
+        base
+      (concat base "/api"))))
 
 (defun arxana-store--build-url (path &optional query)
   (let ((base (arxana-store--normalize-base (arxana-store--base-url)))
@@ -406,6 +419,16 @@ already encoded query string (without the leading ?)."
     (let* ((coding-system-for-read 'utf-8)
            (coding-system-for-write 'utf-8)
            (url-request-method method)
+           ;; T-arxana-direct-reads item 4: url.el sends its own
+           ;; `Accept: */*' ahead of url-request-extra-headers, and
+           ;; futon1b answers the FIRST Accept header, so a JSON
+           ;; caller got EDN and failed to parse.  Binding
+           ;; `url-mime-accept-string' makes url.el itself send
+           ;; `Accept: application/json', which wins the ordering —
+           ;; the same fix the batch scripts use (lean-docs-align
+           ;; DISCOVERY.md).  The explicit header stays for callers
+           ;; and servers that read extra headers in order.
+           (url-mime-accept-string "application/json")
            (url-request-data (when payload
                                (string-as-unibyte
                                 (encode-coding-string (json-encode payload) 'utf-8 t))))
@@ -788,7 +811,7 @@ Returns the parsed response or nil on error."
     (cl-return-from arxana-store-fetch-hyperedge
       (arxana-store--record-error 'invalid "Missing hyperedge id" 'fetch-hyperedge)))
   (arxana-store--request "GET"
-                         (format "/hyperedge/%s"
+                         (format "/alpha/hyperedge/%s"
                                  (arxana-store--encode-segment id))))
 
 (defun arxana-store-fetch-hyperedges (&rest args)
@@ -806,7 +829,7 @@ Returns the parsed response or nil on error."
                               (when end-id  (cons "end" end-id))
                               (cons "limit" (number-to-string limit)))))
          (query   (arxana-store--query-string params)))
-    (arxana-store--request "GET" "/hyperedges" nil query)))
+    (arxana-store--request "GET" "/alpha/hyperedges" nil query)))
 
 (defun arxana-store-fetch-entities-latest (&rest args)
   "Fetch the latest entities from the store.

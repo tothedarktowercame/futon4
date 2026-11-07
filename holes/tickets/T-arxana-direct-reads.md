@@ -23,6 +23,26 @@ four completion criteria are untouched and still open — the :7073
 `/hyperedges` route still returns 404, so the live-view, endpoint-open,
 planted-edge, and interactive-Accept checks remain **Not met.**
 
+Progress 2026-11-07 (wm-author, full-loop attempt-002): the client
+half of the route move is done. futon1b's live serving routes are
+`/api/alpha/hyperedges` and `/api/alpha/hyperedge/<id>` (the bare
+`/hyperedges` and `/hyperedge` paths have no context and 404); restoring
+those bare routes needs a futon1b restart, which this attempt does not do.
+Instead `arxana-store.el` was relocated to the live routes
+(`arxana-store-fetch-hyperedges` → `/alpha/hyperedges`,
+`arxana-store-fetch-hyperedge` → `/alpha/hyperedge/<id>`;
+`arxana-store--normalize-base` now canonicalizes any `/api/alpha` base back
+to the `/api` mount). Live batch verification through the url.el request
+path: `arxana-store-fetch-hyperedges :type "lean/doc-source" :limit 2`
+returns `first-id=lean/doc-source/borrow-inference-fixpoint`, and
+`arxana-store-fetch-hyperedge` of that id returns the edge — no export
+step. The same edit binds `url-mime-accept-string` to `application/json`
+in `arxana-store--request`, so url.el sends the JSON Accept itself instead
+of a losing `Accept: */*` ahead of the explicit header; verified in batch
+(the JSON parse previously failed on the EDN reply and now succeeds).
+Interactive M-x use is still unexercised, and the M-x hypergraph view,
+endpoint-open, and planted-edge checks remain **Not met.**
+
 ## What exists
 
 - **Edges are in the store.** 13 `lean/doc-source` hyperedges in futon1b
