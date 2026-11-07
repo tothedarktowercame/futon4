@@ -38,6 +38,60 @@ evidence, standing, and—where judgement is involved—attributable assessment.
 This is already compatible with D4 Correspond and its append-only assessment
 records; the present note makes the general principle explicit.
 
+## 'Clusion: the first-class recursive relation
+
+This model adopts the earlier definition in
+`holes/missions/M-self-representing-stack.md` §Hyperedges as Frozen Dynamics.
+Nelson's transclusion is the degenerate case: one source is included at one
+destination under an identity-preservation claim. Joe's **'clusion** is the
+general case: gather one or more contents, perform declared operations, and
+compose or relate the results.
+
+A 'clusion is not merely an RDF-like predicate or an endpoint list. It is an
+identified, typed, attributable hyperedge carrying:
+
+- inputs and their named roles;
+- an operation, relation, or frozen dynamic;
+- outputs and their named roles;
+- topology and composition ports;
+- provenance and exact input revisions;
+- a semantics/method version;
+- evidence and standing;
+- conflict/convergence policy; and
+- activation requirements when the dynamic is executable.
+
+Transclusion, translation, projection, interpretation, generation,
+approximation, correspondence, contradiction, and compilation are therefore
+different 'clusion types. They must not be collapsed into an unqualified
+`same-as` relation.
+
+The hypergraph is fully recursive because a 'clusion is itself content. It can
+be an endpoint of another 'clusion, projected into a surface, contradicted,
+assessed, superseded, quoted, or composed. An assessment of a correspondence,
+for example, is a 'clusion whose endpoint includes the correspondence
+'clusion—not metadata hidden beside it.
+
+An indicative record shape is:
+
+```clojure
+{:clusion/id "clusion:..."
+ :clusion/type :conversation/intent-interpretation
+ :clusion/inputs [{:role :source-act :id "turn:..."
+                    :revision "arxana:revision:sha256:..."}]
+ :clusion/operation {:method :xiang/reply-proforma
+                     :version 1}
+ :clusion/outputs [{:role :interpreted-intent
+                     :id :intent/delegate}]
+ :clusion/evidence ["evidence:..."]
+ :clusion/standing :candidate
+ :clusion/convergence :append-only}
+```
+
+This is a semantic contract, not authorization to evaluate arbitrary stored
+forms. A frozen executable dynamic still passes through D6's separation of
+intent, candidate action, admission, execution, and receipt. Browsability and
+executability are distinct capabilities.
+
 ## Five editable strata
 
 An edit made through a surface may propose a change at one or more strata:
@@ -114,6 +168,30 @@ Acceptance example:
 4. render the same accepted intent as glyph, outline node, and graph edge and
    show that all projections address the same records.
 
+### 象 → REPL Circus → GCC composition
+
+Intent-marked conversation supplies a bounded joint proof for M-象-2000 and
+M-repl-circus. The source turn and its manifestation remain evidence; a 象
+interpretation 'clusion produces a typed speech act; grounding 'clusions link
+that act to missions, capabilities, scopes, or actors; the D6 compiler produces
+a non-executable candidate-action 'clusion; and the GCC projects candidates,
+warrants, risks, and unresolved alternatives into an inference-ready action
+surface.
+
+```text
+turn manifestation
+  -> interpretation 'clusion
+  -> speech-act content
+  -> grounding 'clusion(s)
+  -> candidate-action 'clusion
+  -> GCC projection
+```
+
+Every arrow denotes an addressable record with its own provenance and standing.
+Later evidence may criticise the interpretation without rewriting the turn, or
+criticise the grounding without denying that the interpreted intent existed.
+This is the recursive structure that a flat list of intent labels would lose.
+
 ## Example 2: programming-language structure
 
 A parser projects source characters into an AST; the AST exposes content such
@@ -168,6 +246,36 @@ for the hypergraph. Other strata require typed policies:
 Thus collaborative Arxana needs convergence declared per record or relation
 type, not a single last-writer-wins policy over the graph.
 
+In “conflict-free replicated datatype,” conflict-free describes operational
+merge: replicas can converge on the same state without an unhandled merge
+failure. It does not imply that the converged contents are semantically
+consistent. Replicas may lawfully converge on both `A` and `not-A`, represented
+as competing 'clusions with an explicit contradiction relation.
+
+Resolution therefore has four distinct levels:
+
+1. **replica convergence** — participants hold the same graph records;
+2. **structural normalization** — records satisfy identity, role, topology, and
+   provenance constraints;
+3. **semantic resolution** — a named theory or policy reconciles, selects, or
+   rejects competing contents; and
+4. **productive non-resolution** — ambiguity, contradiction, missing theory,
+   or a required domain extension remains first-class.
+
+The equation `x² = -1` illustrates domain-sensitive resolution. It is
+unsatisfiable over the reals; extending to the complexes makes solutions
+available, but does not identify the two roots `i` and `-i`. The richer type
+preserves branching rather than forcing equality. Correspondingly, Arxana
+admits at least four outcomes: lawful join of compatible information,
+attributable choice, extension into a richer theory/type, and explicit
+non-resolution.
+
+A replicated Arxana store can consequently converge by accumulating typed
+'clusion claims and assessments while semantic processors derive qualified
+standings such as `verified`, `partial`, `ambiguous`, `contradictory`,
+`unsupported`, or `resolved-under <theory-or-policy>`. Operational convergence
+must never be reported as semantic agreement.
+
 ## Design obligations opened by this model
 
 1. Define the common envelope for a projection adapter's typed edit proposal.
@@ -180,6 +288,10 @@ type, not a single last-writer-wins policy over the graph.
    manifestation and presentation details change.
 6. Keep inference honest: a projection may reveal or suggest structure, but it
    cannot silently promote that suggestion into authoritative graph content.
+7. Give 'clusion types queryable schemas for roles, topology, dynamics,
+   composition, standing, and convergence policy.
+8. Prove that replica convergence can preserve an explicit semantic
+   contradiction without resolving it by overwrite.
 
 These obligations should be proved first with the intent-marked conversation
 example. It is small, already present in real operator/agent traffic, and can
