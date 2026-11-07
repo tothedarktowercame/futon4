@@ -17,6 +17,8 @@ Rules:
   into the shared JVM, do not restart anything. If a question needs a write
   probe, run it against a hermetic store (an existing test fixture or a
   `clojure -M:test` run in the repo's own process) and say which.
+- Do not write commit trailers (Agent-*, Agency-Job, Dispatched-By,
+  Co-authored-by): a hook adds the correct ones.
 - No work in /tmp beyond throwaway scratch.
 - Distinguish: implemented-and-exercised (test or live record shows it),
   implemented-but-unexercised, and prose-only (described in docs, no code).
