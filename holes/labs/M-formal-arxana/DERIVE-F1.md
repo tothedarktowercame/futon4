@@ -121,27 +121,40 @@ First supported types, chosen because today's fixtures need them:
   `:mission/record-decision` `{:mission … :decision <fragment>}`.
 Everything else returns `:unsupported` explicitly, as now.
 
-## 5. R5 → the War Machine
+## 5. R5 → the War Machine (revised after claude-6, 2026-11-07)
 
-The WM selector (futon2 `select-action-cascades`) chooses among cascade
-candidates scored by G; it does not read Arxana today (Q3,
-`live_recommendation.clj` is presentation only).
+How the field is built (claude-6, citations checked by claude-13):
+`futon2/src/futon2/aif/outer_observation.clj` `giraffe-field` (:216) /
+`outer-observation` (:322). The field is the pinned Giraffe pass order
+restricted to open registry entries (missions, excursions, tickets loaded by
+`target-authority`/`open-entries`, :89-97, :150-154), each needing a source
+declaration (`wm/construction_inputs.clj:60`). Nothing else enters it:
+declarations and cascade proposals only enrich an already selected task
+(`futon2/scripts/futon2/report/war_machine.clj:6620-6623`). Tickets with an
+operator Gate line are excluded from automated selection (TICKET-GATE-1,
+futon2 `f2c73fb55`). Stopping scores ~10.8-12.2 against 0.8-2.9 for chosen
+items, mostly a fixed altitude term (`futon2/resources/wm/outer-abstention-altitude.edn`),
+so a ready item in the field is in practice acted on.
 
-IF compiled candidate actions are to be "inference-ready", HOWEVER an
-operator turn could instead be fed in as a preference change (C) or a habit
-prior (E), THEN F1 feeds candidates as **field items**: each stored
-candidate becomes one entry in the WM's candidate field, carrying its
-warrants and obligations, and the selector scores it like any other,
-BECAUSE a candidate is local, attributable and refusable, while a
-preference edit from one reading would shift every choice the WM makes and
-could not be traced to one turn. Preferences stay learned (C is learned,
-2026-10-28). Whether operator intents should also raise prior mass for their
-candidates is left to ARGUE.
+The first draft put candidate actions into the field as a new kind of item.
+That is withdrawn: there is no seam for it, and because stopping almost
+never wins, a field item would carry nearly a command's force without the
+record of one. Instead, a candidate is routed by what it is:
 
-This is the one link whose exact entry point is not yet located: VERIFY must
-find where the futon2 field is assembled and spike adding one candidate to
-it. If the field cannot take an external candidate without new machinery,
-that is reported back here before INSTANTIATE.
+| Candidate | Route | Why |
+|---|---|---|
+| Work Joe asked for and an agent did directly (both fixture dispatches) | No WM step. R6 records the operator's direct admission (`operator-direct/v1`), R7 the receipt. | The operator already chose; the WM would only be re-deciding. |
+| Concrete work not yet done | The persistence step writes a ticket `T-*.md` in the target repo's `holes/tickets`, with the operation as its Status, a "What would close this" section, and the R4/R5 ids, warrants and obligations in its body. | This is a document the registry already loads; Giraffe reads it, the loader admits it, and it competes with a pinned source. No new WM machinery. |
+| Concrete work whose reading is not yet assessed (obligation `:reading/assessment-required`) | Same ticket, plus an operator Gate line. | TICKET-GATE-1 then keeps the WM off it until Joe's R3 assessment lands and the Gate line is removed. The compiler's obligation and the WM's gate say the same thing. |
+| A stated want about what should count as progress (`constrain`, accepted `propose` about outcomes) | Recorded as `:mission/record-decision` and offered as evidence for C learning; not a field item. | C holds preferences over outcomes and is learned (2026-10-28); one turn should not edit it directly. How this evidence enters C learning is left to ARGUE. |
+
+IF intents are to reach the WM, HOWEVER the field accepts only registry
+documents and treats a ready item as near-certain to be acted on, THEN
+concrete work reaches it as a generated ticket, gated until assessed, and
+stated wants go towards C, BECAUSE this uses the existing loader, source
+pinning and Q7 audits unchanged, and the Gate line keeps "wait for me"
+explicit. Before many intents are routed this way, the altitude term should
+be looked at (claude-6's caution); F1 routes at most a handful.
 
 ## 6. Acceptance fixture (real, from 2026-11-07)
 
@@ -176,9 +189,10 @@ F1 passes when, from these retained records alone:
    cites the new revision. Changing the reading of a fragment (say, `🈯` taken
    as `clarify`) makes a new R2 version and new R4/R5, and the old candidate
    is marked superseded by an R3 `:rejected`, never deleted.
-6. A WM field containing the stored candidates is assembled once and the
-   selector's decision (or typed abstention) is recorded, showing the
-   candidates were visible to it.
+6. One not-yet-done concrete intent produces a gated ticket; a Giraffe run
+   reads it and `giraffe-field` lists it with the Gate exclusion. After an
+   accepting R3 and removal of the Gate line, the next run lists it as
+   selectable. (The two fixture dispatches take the no-WM route.)
 
 ## 7. Where records live
 
@@ -206,7 +220,8 @@ choice, once that route supports more than revision ingest.
 4. Persistence: write R3–R7 as evidence and R8 as `gcc/*` hyperedges; one
    hook after `settle-evidence!`; hermetic store tests.
 5. futon4a view: render the chain for a turn id from JVM Arxana.
-6. WM field spike (needs VERIFY first, §5).
+6. Ticket writer: generated `T-*.md` per §5, with Gate line while unassessed;
+   test against `mission-registry/load-tickets` and one Giraffe run.
 
 Each packet carries the gates (clj-kondo, check-parens, tests) and names its
 acceptance item from §6.
