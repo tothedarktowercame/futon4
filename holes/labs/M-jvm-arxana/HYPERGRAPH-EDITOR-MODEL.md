@@ -276,6 +276,107 @@ standings such as `verified`, `partial`, `ambiguous`, `contradictory`,
 `unsupported`, or `resolved-under <theory-or-policy>`. Operational convergence
 must never be reported as semantic agreement.
 
+## The transfinite step: from resolution to geometry
+
+The move from `x² = -1` over the reals to the complex plane does more than add
+two exceptional values. It supplies a space in which the operation and its
+solutions acquire geometry. Restricting to the unit circle
+
+```text
+S¹ = {z ∈ ℂ | |z| = 1}
+```
+
+makes composition visible: multiplication composes rotations, `1` is the
+identity, complex conjugation gives the inverse, and angle addition is the
+same operation in a different projection. The square map
+
+```text
+square : S¹ -> S¹
+square(z) = z²
+```
+
+does not “resolve” the two roots of `-1` by identifying them. Its fibre over
+`-1` is the two-point set `{i, -i}`. What looked like unresolved alternatives
+in a scalar answer becomes an intelligible geometric configuration: two
+antipodal preimages of one point under a declared map.
+
+This is the relevant transfinite step for Arxana: move from attempting to
+reduce every question to one value, into a space of admissible configurations
+whose maps, fibres, symmetries, boundaries, and obstructions are themselves
+first-class content. “Transfinite” here names the constructive passage beyond
+the currently closed domain; it is not yet a claim about a particular ordinal
+formalism.
+
+### 'Clusions as geometric maps
+
+On this account a 'clusion is not only a labelled connection. It may denote a
+map or constraint between typed spaces. Composition of 'clusions forms paths;
+alternative outputs form fibres; invariants say what composition preserves;
+contradictions and missing solutions appear as empty or obstructed fibres;
+symmetries identify transformations without collapsing their points.
+
+The recursive hypergraph is therefore geometric before it is drawn. A 1D text
+buffer, 2D mathematical layout, diagram, or Tufte page is a coordinate chart or
+projection of this structure. Coordinates help finite agents navigate it, but
+incidence, composition, orientation, neighbourhood, boundary, and invariance
+belong to the graph rather than to its pixels.
+
+### Geometry markup vocabulary
+
+An Arxana geometry markup layer minimally needs first-class records for:
+
+- **objects:** points, regions, paths, boundaries, spaces, and configurations;
+- **typed relations:** incidence, containment, adjacency, betweenness,
+  orientation, support, contradiction, and correspondence;
+- **maps/'clusions:** declared inputs, outputs, operation, parameters,
+  invariants, and composition ports;
+- **fibres and solution sets:** every admissible preimage, including empty,
+  singleton, multiple, partial, or continuously parameterised results;
+- **symmetries:** transformations under which declared content is invariant;
+- **charts/projections:** coordinate and layout choices with addressable
+  provenance, never confused with object identity; and
+- **assessments:** evidence and standing for the claim that a projection or
+  relation preserves the declared content.
+
+An indicative unit-circle fragment is:
+
+```clojure
+{:entity/id :space/unit-circle
+ :entity/type :geometry/space
+ :constraint [:eq [:modulus :z] 1]}
+
+{:clusion/id :map/square-on-unit-circle
+ :clusion/type :geometry/map
+ :clusion/inputs [{:role :domain :id :space/unit-circle}]
+ :clusion/outputs [{:role :codomain :id :space/unit-circle}]
+ :clusion/operation [:pow :z 2]
+ :clusion/invariants [:closed-under-operation]}
+
+{:entity/id :fibre/square-minus-one
+ :entity/type :geometry/fibre
+ :map :map/square-on-unit-circle
+ :over -1
+ :members [:+i :-i]
+ :standing :verified}
+```
+
+The syntax is illustrative; the contract is the separation among geometric
+content, map, solution fibre, evidence, and visual projection.
+
+### Editing geometry
+
+Editing a geometric projection may propose changes to a point, a constraint, a
+map, a correspondence, or merely a chart. Moving a glyph on screen does not by
+itself move the semantic point. Conversely, changing a constraint may move
+many projected glyphs without changing their identities. A conforming adapter
+must state which stratum an edit addresses and reproject all consequences.
+
+This also states the completion criterion for Arxana as a markup language for
+geometry: the same finite hypergraph content must admit at least two visibly
+different projections while preserving queryable objects, maps, fibres, and
+invariants; and a content edit must propagate to both without treating either
+projection's coordinates as the authority.
+
 ## Design obligations opened by this model
 
 1. Define the common envelope for a projection adapter's typed edit proposal.
@@ -292,6 +393,10 @@ must never be reported as semantic agreement.
    composition, standing, and convergence policy.
 8. Prove that replica convergence can preserve an explicit semantic
    contradiction without resolving it by overwrite.
+9. Define the minimal geometry schema for objects, maps, fibres, invariants,
+   and charts, using the unit-circle square map as the first fixture.
+10. Demonstrate one semantic geometry edit across two projections, with
+    coordinate-only edits remaining presentation-local.
 
 These obligations should be proved first with the intent-marked conversation
 example. It is small, already present in real operator/agent traffic, and can
