@@ -108,6 +108,85 @@ proof. Until this bridge has an acceptance test, a client that refuses merely
 because current bytes differ from a fixture is non-conforming, even though the
 underlying immutable-revision integrity check remains correct.
 
+## Concurrency boundary: when CRDT or OT is required
+
+Edit robustness alone does not require a collaborative text algorithm. A
+single authoritative buffer already provides one totally ordered edit stream;
+Emacs markers or equivalent editor-local tracking can follow that stream while
+Arxana strategies recover semantic locations when local tracking is
+insufficient.
+
+CRDT or OT support is re-armed when two or more legitimate writers may produce
+concurrent edit histories for the **same artifact** and both histories must
+survive. In that mode, refusing one writer as stale would destroy admissible
+work. The collaborative text substrate owns character convergence and exposes
+convergent snapshots plus operation-relative positions; Arxana continues to
+own logical scope identity, relocation, verification, ambiguity, and durable
+evidence.
+
+An implementation may therefore provide two artifact capabilities:
+
+- `ArtifactProvider`: immutable snapshots for single-writer, generated, or
+  externally sequenced artifacts;
+- `CollaborativeArtifactProvider`: the same snapshot interface plus a
+  convergent operation history and mappings between operation-relative
+  positions and each emitted artifact revision.
+
+The second is an optional capability, not a different semantic scope model.
+CRDT-relative positions may accelerate tracking, but they cannot decide
+whether copied text denotes one scope or two, nor whether a fuzzy semantic
+match should be accepted.
+
+### Same-artifact co-edit acceptance
+
+A conforming collaborative proof must use at least two independent clients
+(the target case is Emacs and VS Code/code-server) and demonstrate:
+
+1. concurrent non-conflicting edits converge to byte-identical snapshots;
+2. concurrent edits before and inside a marked scope preserve its shared
+   `scope/id` and yield the same candidate set and standing in both clients;
+3. a concurrent copy yields the same complete ambiguous candidate set in both
+   clients, with no client silently selecting the first candidate;
+4. a genuine same-range text conflict converges according to the declared
+   CRDT/OT policy and remains visibly qualified at the semantic layer;
+5. reconnect/offline replay loses neither legitimate edit history; and
+6. promoted evidence names the converged artifact revision while earlier
+   observations remain reproducible.
+
+The no-CRDT position is falsified by a witnessed case in which both edit
+branches are legitimate, stale refusal would discard meaningful work, and no
+single sequencer is an accepted authority. Until that observation exists, the
+single-writer provider remains a conforming simpler deployment.
+
+## Cross-manifestation semantic conflict is not text convergence
+
+Lean source, authored LaTeX prose, generated formal rendering, and generated
+informalisation are distinct manifestations, not replicas of one character
+sequence. CRDT/OT must not merge them. Arxana relates them through directional,
+revision-pinned correspondence assertions whose standings may independently
+be `verified`, `partial`, `ambiguous`, `unverified`, `stale`, or explicitly
+contradicted.
+
+Concurrent semantic judgements are append-only evidence rather than
+last-writer-wins fields: competing correspondence assertions and attributable
+accept/reject assessments coexist. In particular, an authored informal proof
+and a generated informalisation retain distinct identities and provenance even
+when they purport to express the same proof.
+
+### Cross-manifestation acceptance
+
+A later mathematical proof must change a small Lean and LaTeX pair
+independently and demonstrate all of the following without rewriting either
+artifact as the other:
+
+1. an unchanged meaning relocates and remains verified;
+2. an incomplete formalisation becomes `partial` rather than falsely total;
+3. multiple plausible proof-step alignments remain `ambiguous`;
+4. a generated informalisation that disagrees with the authored proof creates
+   a provenance-bearing contradiction/assessment record; and
+5. resolving the disagreement appends a decision or superseding assertion
+   without deleting the competing evidence.
+
 ## Gate for the next mathematical demo
 
 Mark8-derived mathematical scopes may be used after the editor-preview bridge
