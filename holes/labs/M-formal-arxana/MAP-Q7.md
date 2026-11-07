@@ -122,6 +122,10 @@ sequencer, no CRDT: atomicity stays in the store").
 | 象 drafts/candidates/quotes | freely replaceable (recomputable) | turn_store.clj:167-195 | none dedicated — prose+code, low risk |
 | Emacs turn records | append-only by unique filename; analysis exclusive link | session-turn-analysis.el:473-475; session_turn_analysis.py:397-405 | turn-seam/conformance.py ✅ |
 | Emacs Arxana entities/links | inherited last-write-wins via POST /entity | arxana-links.el:223-227 | none in futon4 — **Missing** |
+| JVM Arxana artifact revisions (futon3c) | immutable, content-addressed; same bytes → same id, never overwritten | futon3c arxana/artifact.clj:58-64 | edit_robustness_test.clj ✅ |
+| JVM Arxana manifestations (futon3c) | idempotent on equal definition; conflicting definition refused (:arxana/manifestation-conflict) | arxana/correspond.clj:55-59, 82-96 | correspond_test.clj (single-writer) — **no concurrent test, Missing** |
+| JVM Arxana assertions (futon3c) | refuse duplicate semantic identity | arxana/correspond.clj:66-68, 113-119 | correspond_test.clj (single-writer) |
+| JVM Arxana assessments / usefulness / aliases (futon3c) | append-only (conj), coexistence | arxana/correspond.clj:101-140 | correspond_test.clj |
 | CRDT/OT | absent by design ("No sequencer, no CRDT") | futon1b_arxana.clj:22 | n/a |
 
 ## Open doubts
@@ -137,3 +141,17 @@ sequencer, no CRDT: atomicity stays in the store").
 - Whether `update-record!`'s read→f→write gap has ever lost a `happened`
   note in practice is not testable from code alone; no sorry/ticket found
   (searched none — stated as absence of search rather than absence of bug).
+
+## Review addendum (claude-13)
+
+The packet asked for JVM Arxana; the table above omitted it, so the four
+futon3c rows were added in review. Two facts about them:
+
+- The only `CorrespondenceRepository` implementation is `InMemoryRepository`
+  (correspond.clj:80), an atom. Its policies are not durable and not yet
+  backed by the futon1b conditional route.
+- `put-manifestation!` reads `@state`, decides, then `swap!`s in a separate
+  step (correspond.clj:84-95); `put-assertion!` has the same check-then-swap
+  shape. Two concurrent writers can both pass the existence check, so the
+  "conflict refused" and "duplicate refused" policies hold for one writer
+  only. This matters for F2 and for any multi-seat use of correspondence.
