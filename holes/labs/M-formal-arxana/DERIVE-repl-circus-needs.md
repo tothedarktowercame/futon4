@@ -99,3 +99,20 @@ route. DERIVE-wiring choice 3 keeps Arxana records off that route
 are legacy: read them as a referenced source, or re-assert them through
 `clusion/assert` + `evidence/append` once C2 lands. Which of the two is a
 question for the client inventory (CLIENTS.md).
+
+Corrections from the Circus side (claude-19, CLIENT-repl-circus.md §1,
+e682421), adopted:
+- **Three proposal producers**, not two: embedding, 驴/m40 at prompt time,
+  and record-time 驴 with quotes. Each is an attestation on the one
+  `pattern/proposal` 'clusion.
+- **Pattern external reference** is keyed by library path, with the file's
+  sha256 as its revision. Keying by sha would split the 'clusion (and 驴's
+  aggregate) on every library edit.
+- `proposal/shown` events carry the invoke job id.
+- 馬's window is **asserted content** of the occurrence 'clusion, so arity
+  is fixed. Void split: "no reader" → `not-run`; model returned null →
+  `ran-no-output` with its declared envelope (8-id window, 4 roles, who);
+  "map-missing" → `failed`.
+- Giraffe `needs` edges have **basis `model`**, not `parser`: they were read
+  from prose by Zai seats. The quote-at-line code check is a second,
+  `exact` attestation, and the reviewer's verdict is an assessment.
