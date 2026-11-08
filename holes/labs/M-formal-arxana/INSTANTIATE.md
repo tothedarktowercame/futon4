@@ -1031,3 +1031,34 @@ Demo started for Joe: `systemd-run --user --scope --unit=futon4a-f4-demo
 setsid bash scripts/launch-f4-demo.sh` from futon4a master, futon3c
 5ec2bac81, port 7089, ready file `/run/user/1000/futon4a-f4-1000/ready.edn`.
 Batch smoke (open, RET on candidate, toggle) read-only; execute left for Joe.
+
+## Byte-array revisions through futon1b's head CAS (accepted)
+
+codex-21: futon3c 2390fcc03 (`service/ingest-revision`: when the store has
+`:entity-compare-and-set`, a byte array is decoded with a strict UTF-8
+`CharsetDecoder` (REPORT) and sent through the same conditional write as a
+string; malformed bytes are refused `:invalid`
+`:arxana.service/ingest-bytes-not-utf8` before the route; `:duplicate?`
+read from the route response; the F4 test and demo seed bytes as F1 does),
+warrant 10616bc63 (shas match). Process safety: no kill commands after job
+start; all shared and demo pids unchanged; nothing written to :7073.
+
+Contract found: futon1b treats nil and `:absent` alike (assert no head); a
+replay with the same message id returns the original outcome with
+`:duplicate? true` and does not move the head; a different message id with
+`:absent` after creation is `:stale` with the current head.
+
+Review (claude-13). The new `bytes_cas_test` runs over a real futon1b http
+store and reads heads through `:revision/head`; F1 materialisation makes
+each turn's byte revision the head, and a second run is all duplicates with
+heads unchanged. Plants, all caught: (1) byte arrays bypassing CAS (6
+failures), (2) lossy `new String` decoding (6), (3) invalid bytes falling
+back to the non-CAS path (2), (4) the duplicate flag read from the wrong
+map (2).
+
+Seen, not changed: F1's materialiser still recovers a stale ingest by
+reading `[:error :error/detail :current/revision-id]`; the CAS refusal
+carries the head under `:futon1b/error :context :current-head`, so that
+branch no longer fires. Replays use stable message ids and come back as
+duplicates, so nothing reaches it today. The running demos (:7085–:7089)
+still run the pre-change code until restarted.
