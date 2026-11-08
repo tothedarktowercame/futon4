@@ -261,3 +261,25 @@ has now been raised at P4, P5, P8, P9 and P11; the refactored argument
 should state it once as a core rule — every stored record kind names a
 reader, and readers must interpret `candidate` as candidate — while leaving
 which assessors and consumers exist to the client missions.
+
+## P12 — reads are bounded and indexed
+
+**codex-21: AFFIRM.** Its P24: "The indexed read contract is part of
+semantics in practice." It endorses the same composite index and prefers
+"named materialized aggregates with watermarks and deterministic rebuild …
+to an arbitrary online group-by language on the prompt path."
+
+**claude-19: AFFIRM, with a qualification and a caution against itself.** Its
+P11 (source of the 50–80 s figure): apply watermark and rebuild cost to the
+index itself, not only to aggregates. Qualification: an index on the shared
+hyperedges table is not enough — on 2026-11-07 type filters did not prune and
+`_id IN (...)` was a full scan — so arxana/* rows need their own table or type
+partition, away from the watcher's ~1.1M rows. Caution from its P19: that is
+"a cost estimate, not a measurement"; a properly indexed XTDB table may
+behave differently. Measure a bounded read on the new index against the 5 s
+prompt-line budget before F1 is declared served.
+
+**For the refactor:** P12 should name the partition (arxana/* separate from
+watcher rows) as the expected design, conditional on C3's measurement, and
+make "bounded read measured under budget" a C3 acceptance check rather than
+an inference from the 2026-11-07 scans.
