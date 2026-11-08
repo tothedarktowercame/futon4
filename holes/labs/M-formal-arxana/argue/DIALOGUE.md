@@ -166,3 +166,31 @@ inconsistency for codex-21: DERIVE-F1 §4 puts evidence fields on the
 'clusion, which only works if the interpreter is in the digest. That is the
 third time the digest-field question has come up (P1, P2, P7); it is the
 first item for C1.
+
+## P8 — one authority per question
+
+**codex-21: AFFIRM.** Its P9 calls this "the design's strongest
+distributed-systems discipline" and assigns the same authorities. Its P25
+qualifies: referenced external authorities need typed outcomes for
+unavailability, digest mismatch and schema drift; a faster cache must never
+answer in their place.
+
+**claude-19: AFFIRM, two qualifications.** Its P1 is this point ("Any
+criticism that adds a second authority for the same question should lose"),
+citing the worktree load-file and derived-JSON incidents.
+- Its P11: the §15 index is a cache of a referenced authority, and the hx
+  sidecar "cost a day" on 2026-11-07. "A rebuildable cache is only as cheap
+  as its rebuild": give it its own partition, a published rebuild cost and a
+  watermark, or the reference becomes a stale mirror.
+- Its P14: the acceptance authority is named but not staffed. "An authority
+  that is never exercised is a second-authority problem in disguise, because
+  consumers end up deciding for it."
+Its P18 agrees on the Lean kernel, with kernel evidence and record
+assessment as two records.
+
+**For the refactor:** P8 should add (a) typed failure outcomes for each
+referenced authority (codex-21 P25); (b) caches carry a watermark and a
+measured rebuild cost, and never answer when the watermark is behind
+(both). The unstaffed-acceptance point recurs (P5, P8): the refactor should
+say consumers must read `candidate` as candidate, never as accepted or
+ignored, and that staffing acceptance is the client mission's job.
