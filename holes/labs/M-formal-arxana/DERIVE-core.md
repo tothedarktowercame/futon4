@@ -126,3 +126,21 @@ Places where DERIVE-F1 (c75e9e6) must follow the core:
 5. **Evidence fields.** F1's `exact / parser-attested / model-attested /
    human-attested` is `evidence/basis` (§6); F1 records also carry
    `evidence/standing` and `evidence/coverage`. (Settled in round 5.)
+
+## 12. Fidelity matrix (codex-21, round 7, job invoke-1794099593061-15428-4cecb549)
+
+| Existing system | Verdict | What happens to its data and ids |
+|---|---|---|
+| Legacy Emacs Arxana (futon4/dev/arxana-*.el: voiced links, scholia, surface forms, link strategies) | **adapt** | translated into manifestations, 'clusions and strategy records; legacy ids and bytes kept through aliases/external references, never rewritten in place; all new `arxana/*` writes use the reserved route |
+| 象 turn store and readings (turn records, analyses, drafts; `e-xiang-turn-*` evidence) | **preserve** | stays the immutable source of truth; F1 materialises derived Arxana records that cite its evidence ids and revisions; no migration, no change of owner |
+| 馬 alignments and reply-mark parsing | **adapt** | mark parsing becomes a versioned interpreter over `intent-vocabulary/v1`; 馬 alignments become model-basis candidate correspondence 'clusions/assessments keeping their ids, reasons and provenance |
+| REPL Circus / Giraffe (PURs, pattern outcomes, `pass.edn`) | **preserve** | domain-owned; Arxana references them through typed external-reference entities and 'clusions; no renaming or migration |
+| futon1b generic hyperedges in use (e.g. `:memory/assert`) and registered-but-empty types (`:learning-loop/*`, `:has-operator-turn`) | **preserve** | untouched, ids and types kept; formal Arxana may reference but not reinterpret them; empty types are not promoted into the core until real records witness them |
+| WebArxana | **drop** from the required runtime | code kept as a read-only donor of interaction ideas; no live data, no id migration |
+| D6 compile/admission shapes (futon3c arxana/compile/) | **adapt** | intent / candidate / decision / receipt stay separate records with their semantics and ids; their relations are exposed through common 'clusion types and the reserved persistence path, not collapsed into one generic edge |
+
+**Intent vocabulary presentations.** All three (turnfeed `intent-mark`,
+`xiaoxiang-preview.el`, `reply-proforma.md`) are **generated** from
+`intent-vocabulary/v1`. Hand-written prose stays around generated regions;
+CI refuses drift. (Testing three independent copies would keep the
+duplication.) This belongs to F1 increment 1.

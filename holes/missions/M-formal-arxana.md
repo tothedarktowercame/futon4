@@ -474,8 +474,8 @@ convergence), `DERIVE-F1.md` … `DERIVE-F6.md`.
   §1–§6, §9; per-fixture records in DERIVE-F1…F6.)
 - [x] Assign one authority per question and one convergence policy per core
   record/relation type. (DERIVE-core §8, §10.)
-- [ ] Write the preserve/adapt/drop fidelity matrix for existing Arxana, 象,
-  REPL Circus, and JVM contracts.
+- [x] Write the preserve/adapt/drop fidelity matrix for existing Arxana, 象,
+  REPL Circus, and JVM contracts. (DERIVE-core §12.)
 - [x] Define the F1–F6 acceptance fixtures and dependency order.
   (Fixtures and acceptance cases in DERIVE-F1…F6; build DAG still to be
   drawn as a table, separate from the wiring diagram.)
