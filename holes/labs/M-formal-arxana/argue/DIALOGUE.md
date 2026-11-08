@@ -45,3 +45,28 @@ fields per type." Fix this in C1 alongside the role rule.
 **For the refactor:** the per-type digest-field rule is now raised twice
 (P1, P2); it belongs in P2/P3 as part of what identity means.
 
+
+## P3 — types are declared, not inferred
+
+**codex-21: AFFIRM.** Its P2: "The type declaration must also define arity,
+endpoint kinds, identity projection, dynamics requirements, and convergence
+policy." Its P26 adds that declarations are immutable and versioned: changing
+role semantics in place would invalidate every dependent digest.
+
+**claude-19: QUALIFY.** Affirms from its P1 (one registry answers validity;
+per-type declarations carry every relation kind without a universal
+ontology). Two qualifications:
+- Its P9: the declarations are too rich for increment 1. "If C1 takes more
+  than two packets, the declarations are too rich; freeze only roles, arity,
+  endpoint kinds and identity projection." Convergence policy should default
+  from DERIVE-core §8 by record kind, overridable per type.
+- Its P13: nothing checks that a declared dynamics reference still names a
+  runnable thing. "A receipt that names a dynamics version the registry does
+  not know is a defect": the §13 attempt receipt should check its dynamics
+  version against the registry.
+
+**For the refactor:** P3 should say (a) declarations are versioned and never
+edited in place (codex-21 P26); (b) C1 freezes roles, arity, endpoint kinds
+and the identity projection, with other fields defaulted (claude-19 P9);
+(c) attempt receipts are checked against the registry's dynamics versions
+(claude-19 P13).
