@@ -558,3 +558,49 @@ resolution and the unaligned declarations, with an ERT. All plants caught
 Emacs run (warrant). The recorded ERT fixture predates the coverage field.
 
 **F3 is built and reviewed through F3d; its acceptance is Joe's.**
+
+## F5a — Lean geometry and coordinate-free records (accepted after review fixes)
+
+codex-21: futon5 95ea4435 (`holes/labs/M-formal-arxana/f5-lean/`, Lean
+4.29.0-rc8, Mathlib pinned at apm-lean's 5ee50502, `.lake/packages`
+symlinked to apm-lean's prebuilt packages); futon3c 71765908a
+(`formal_f5.clj` gate + records, `formal_f5_query.clj`, eight
+`:geometry/*` types, registered `:geometry/fibre`) and 34d69e0f1 (warrant
+`F5a-warrant.edn`). Warrant shas match. Process safety: no kill/pkill in
+the job log; :7073 (1747159) and :7084 (250790) pids unchanged; no file
+under apm-lean `.lake/packages` newer than 17:00 (Mathlib not rebuilt);
+apm-lean's dirty files date from 2026-11-06, not this job.
+
+Delivered: `square_fibre_neg_one` ({z : Circle | z² = -1} = {i, -i}),
+`inversion_is_conjugation`, no sorry; geometry entities whose identity is
+`:entity/id :entity/kind :theory/version` (no coordinates); map, symmetry,
+projection, preserves, satisfies, fibre-of and member relations; kernel
+evidence through `formal-f3a/evidence-adapter`; `:geometry/fibre` answers
+{i, -i} from stored member records and cites the kernel attestation.
+
+Review (claude-13). Findings:
+- The cube fact was not proved: the file had `card (rootsOfUnity 3 ℂ) = 3`
+  and a negation equation, never connected to cubing on the circle.
+- The gate passed any exit-0 run, and Lean exits 0 on `sorry`.
+- The test read the Lean file from codex's worktree, and only from a
+  recorded run, without checking the run covered those bytes.
+- Planted bugs: (a) coordinate in point identity → caught (records refuse
+  it); (b) fibre returned as a fixed {i, -i} → **NOT caught**; (c) kernel
+  evidence from another principal → caught; (d) sorry in the Lean file →
+  **NOT caught**; (e) Mathlib rebuilt → only the recorded flag was tested.
+
+Fixed in review: futon5 582d7a8 — `cube_fibre_neg_one_card`:
+{z : Circle | z³ = -1}.ncard = 3 (via `nthRootsFinset` and unit norm of
+every cube root of -1). futon3c c8dfd92a6 — the gate's outcome needs exit
+0, a sorry/admit-free source and output, and unchanged Mathlib metadata;
+kernel run regenerated (pass, empty output, Mathlib unchanged); the test
+reads the futon5 checkout, checks the run's input sha equals those bytes
+and that the cited theorems exist, and a planted extra member record must
+appear in the fibre answer; a sorry unit test. Plants (b) and (d) now
+caught (2 tests, 49 assertions).
+
+Left for F5c: `:geometry/fibre` resolves only `:square` over `:neg-one`
+(it recomputes those ids from constants); the cube map needs the query to
+find the map by stored records. The Mathlib-rebuilt plant has no automated
+test (it would need a fake `lake`); the gate compares path/size/mtime
+metadata of the whole package tree before and after.
