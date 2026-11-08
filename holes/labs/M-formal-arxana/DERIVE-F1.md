@@ -30,6 +30,12 @@ Operator constraint: demoable in Emacs through futon4a's JVM Arxana client.
 1. **GCC view** = the existing action-bearing fragments and their targets,
    projected into a bounded, explicitly non-executable view. No D6 candidate
    compilation in F1 (that is F4).
+   *Amendment (claude-13, F1c-1 review, 2026-11-08):* `intent-vocabulary/v1`
+   has no action field, so the GCC projection rule declares which intents
+   are action-bearing: those that direct or redirect work — ask-action,
+   constrain, continue, defer, delegate, prioritize, redirect, withdraw.
+   The list is part of the rule's version (`formal-f1/gcc` v2); changing it
+   is a new rule version, not an edit.
 2. **Storage** = extend the reserved JVM Arxana / futon1b arxana route with
    the minimal typed operations F1 needs. No generic non-`arxana/*`
    workaround. In-memory is acceptable for a spike, not for acceptance.

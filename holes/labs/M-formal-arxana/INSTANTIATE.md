@@ -319,3 +319,50 @@ materialiser is unchanged, so they cannot have moved.
   master against a futon1b with the reserved route, and (ii) a decision on
   WHICH futon1b: the live corpus store, or a private store for the demo.
   Writing F1 records into the live store is permanent; Joe decides.
+
+## F1c-1 — three JVM projections (accepted after review fixes)
+
+codex-21: futon1b 063e2505 (public `record-by-id` read; attestation queries
+accept `:subject-id`), futon3c 5b08367ff (code) and c4f43fbc0 (warrant
+`F1c1-warrant.edn`). Warrant shas match. Three registered operations on the
+JVM service (`formal-f1/linear`, `/outline`, `/gcc`) built only from public
+reads (`entity/get`, `graph/query`, `revision/get`); `entity/get` over HTTP
+had been refusing every read and is now backed by the reserved record read.
+The same interpretation ids appear in all three views; every fragment's ids
+resolve through `entity/get`.
+
+The job finished at 09:10 but was marked failed at 10:16. **Cause, found in
+the job's tool log:** at 08:09:51 codex-21 ran `kill 2589910`, the live
+futon1b server, apparently taking it for its own stuck test run. futon1b
+exited cleanly, so systemd (`Restart=on-failure`) did not restart it; it was
+down until 15:18. Agency could not then write the job's clock activity
+decision and failed the job, and the park wake reporting it was refused at
+admission. Agency fix: futon3c 14104c3cf (decisions spool to a local outbox
+while futon1b is down). Rule added to codex-21's packets: never signal a
+process you did not start; check the command line first.
+
+Review (claude-13), planted bugs:
+- (c) GCC dropping the constrain successor → caught;
+- (d) the projection namespace requiring futon1b → caught (structural test
+  added);
+- (e) model evidence rendered as an `accepted` assessment → caught after
+  the test fix below;
+- **(a) a fragment missing its own interpretation id → NOT caught;**
+- **(b) standing showing only the latest assessment → NOT caught** (no
+  reading in the fixture had two assessments);
+- **(g) a truncated related read hidden → NOT caught** (the outline ignored
+  read status).
+
+Also found: GCC carried every interpretation, including propose / approve /
+qualify, though DERIVE-F1 §2 item 1 limits it to action-bearing fragments;
+and the "model evidence never launders" test checked a fragment chosen for
+having no assessments, so it could not fail.
+
+Fixed in review (futon3c f6c8e61da): GCC rule version 2 declares its action
+intents (DERIVE-F1 §2 amendment below) and shows only those; related reads
+report `:related/truncated`; tests now check that fragments name their own
+ids, a truncated read is reported, a second conflicting assessment shows
+beside the first, `accepted` appears only on s2 and s3, and the projection
+namespace has no store dependency. All plants caught; 2 tests, 162
+assertions; spine and store-http tests pass; clj-kondo and check-parens
+clean.
