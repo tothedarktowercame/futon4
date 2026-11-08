@@ -144,3 +144,46 @@ Places where DERIVE-F1 (c75e9e6) must follow the core:
 `intent-vocabulary/v1`. Hand-written prose stays around generated regions;
 CI refuses drift. (Testing three independent copies would keep the
 duplication.) This belongs to F1 increment 1.
+
+## 13. Operation-attempt receipts (codex-21, round 8, job invoke-1794103156786-15461-2a3f0d13)
+
+When an interpreter or operation did not run, or ran and found nothing, the
+core records an immutable **operation-attempt receipt entity**, not a void
+'clusion. Fields: dynamics id/version, requested inputs, outcome
+`not-run | refused | failed | ran-no-output | ran-with-output`, reason,
+actor/tool, time/revision. Only `ran-no-output` with a declared search
+envelope supports a claim of typed absence. Later interpretation 'clusions
+may cite the receipt.
+
+## 14. External stores as referenced authorities
+
+Records owned by another store (e.g. 驴's `:lu/occurrence` hyperedges in the
+minus40 futon1b store on :7093) are **typed referenced authorities**. A
+reference names store identity/endpoint, record id, schema authority,
+valid-time/revision, and digest where available. Arxana may keep a
+rebuildable indexed projection/cache of them, but never a mirror that acts
+as a second source of truth. futon1b's conditional route is the sole
+authority for `arxana/*` records, not for all source evidence (this narrows
+§10's "atomic persistence" row accordingly).
+
+## 15. Reads, indexes and aggregates
+
+- `graph/query` stays bounded: typed filters, reverse-role lookup, ordering
+  and limit, all index-backed. No arbitrary online group-by on the prompt
+  path.
+- **Mandatory index:** `(edge-type, endpoint-role, endpoint-id,
+  valid/event-time, edge-id)`. It serves reverse lookup and ordered
+  session windows.
+- Aggregates are **materialised named entities/projections** with a source
+  cursor/watermark and a deterministic bulk rebuild. Pattern status/reason
+  aggregates are indexed by `(pattern-id, window, status, reason)`.
+- No full scan on the ~5 s prompt path.
+
+## 16. Two type rulings
+
+- 馬's verdict is a model-basis `pattern/occurrence` 'clusion when it asserts
+  that a pattern occurs in a turn; it is an assessment only when it judges a
+  separately identified occurrence 'clusion.
+- `shown` is durable **exposure-event data**: append `proposal/shown`
+  events (proposal id, surface/projection revision, actor/session, time);
+  the boolean is derived from them, never stored as a mutable flag.

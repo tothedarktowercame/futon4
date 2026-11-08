@@ -11,7 +11,7 @@ does not plan or fix M-repl-circus. Citations spot-checked by claude-13
 
 | M-repl-circus record (today) | In the hypergraph | Fits core? |
 |---|---|---|
-| Pattern proposal: render entry on the turn record (`agency/prompt_line.clj:154-193`: ranked lists per source, shown source, job id) | one 'clusion per (turn, pattern, proposer); endpoints: turn (external ref: record id + evidence id), pattern (external ref: library path + sha256), proposer as the inert dynamics reference (method `embedding` / `驴/m40` / `驴`, version, parameters, e.g. 驴's k=10, cos ≥ 0.35, top 3 at `lu_memory.clj:363-372`); fields rank, score, shown, job id | yes. **Note:** `shown` records what the agent was given and acted on, so it is durable on the proposal, not client presentation state (core §4). The same pattern from two sources is two 'clusions. |
+| Pattern proposal: render entry on the turn record (`agency/prompt_line.clj:154-193`: ranked lists per source, shown source, job id) | one 'clusion per (turn, pattern, proposer); endpoints: turn (external ref: record id + evidence id), pattern (external ref: library path + sha256), proposer as the inert dynamics reference (method `embedding` / `驴/m40` / `驴`, version, parameters, e.g. 驴's k=10, cos ≥ 0.35, top 3 at `lu_memory.clj:363-372`); fields rank, score, job id; exposure as appended `proposal/shown` events (core §16) | yes. **Note:** `shown` records what the agent was given and acted on, so it is durable on the proposal, not client presentation state (core §4). The same pattern from two sources is two 'clusions. |
 | 馬 occurrence verdict (`ma_occurrence.clj:306-356`): IF/HOWEVER/BECAUSE/THEN mapped to verbatim quotes in a turn window and a chain window; occurrence / partial / void | a `pattern/occurrence` 'clusion type (endpoints: pattern, proposal 'clusion, window of record ids), `evidence/basis model`; part-maps are locators (quote, record id, who) like F1's mark occurrences; each verbatim check is `exact` basis (passed → verified, failed → contradicted with reason); coverage from turn_mapped / chain_mapped (4 complete, 1-3 partial, 0 none) | yes, as a model-basis 'clusion, **not** an assessment (core assessments are attributable candidate / accepted / rejected judgements) |
 | 驴 ranking (`lu_memory.clj:363`) | derived entity (core §9), recomputable; the proposal 'clusion gets an endpoint to the occurrence 'clusions that scored it (`:evidence`, l.380) | yes ('clusion-to-'clusion endpoints are allowed from F1, core §2) |
 | `:lu/occurrence` hyperedges (`lu_memory.clj:131-146`): role-labelled, digest id, status, sources, sha256 | preserve (core §12) | yes, **but** written to the minus40 store on :7093, not :7073 — see gap 2 |
@@ -31,7 +31,7 @@ activation" rule.
 - ticket → needs → ticket;
 - pattern → cascade neighbours in the library.
 
-## 3. Gaps against DERIVE-core (sent to codex-21, round 8)
+## 3. Gaps against DERIVE-core (sent to codex-21, round 8; rulings in §4)
 
 1. **Typed absence.** 428 void parts in the last 32 records are
    `why="no reader"` (`ma_occurrence.clj:297-304`); 188 are `map-missing`
@@ -59,3 +59,20 @@ activation" rule.
      indexed by type and role endpoint, not planned as a scan;
    - rebuild: the GCC is derived and must be rebuildable from evidence plus
      the library — a bulk replay path over immutable sources.
+
+## 4. Rulings (codex-21, round 8) — now in DERIVE-core §13–§16
+
+1. Typed absence → an immutable operation-attempt receipt entity (outcome
+   `not-run | refused | failed | ran-no-output | ran-with-output`); only
+   `ran-no-output` with a declared search envelope supports absence. "No
+   reader" is `not-run`; "map-missing" is a per-pattern `ran-no-output`
+   only if 馬's search envelope is declared.
+2. minus40 / 驴 records → typed referenced authorities; Arxana may keep a
+   rebuildable index/cache, never a second source of truth.
+3. Reads → bounded, index-backed `graph/query` (filters, reverse-role,
+   order, limit) on the mandatory `(edge-type, endpoint-role, endpoint-id,
+   valid/event-time, edge-id)` index; aggregates materialised with
+   watermarks and bulk rebuild, indexed `(pattern-id, window, status,
+   reason)`; no full scan on the prompt path.
+4. 馬's verdict → `pattern/occurrence` 'clusion; `shown` → appended
+   `proposal/shown` exposure events, boolean derived.
