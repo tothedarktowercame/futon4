@@ -770,3 +770,40 @@ either compose them or show why it cannot; (2) a conflict reached across
 several applications names only the last change as its left side;
 (3) a crash between a successful CAS and the application write leaves a
 head with no application, which later stale patches meet as a chain gap.
+
+## F2b-1 — offline replay; the CRDT question (accepted after a test fix)
+
+codex-21: futon3c d492ce558 (`text-rebase/compose-all`: composition over
+symbolic codepoints anchored on surviving original characters, total for
+valid sequential patches including edits inside earlier insertions;
+far-apart hunks stay separate; each hunk carries `:source-op-ids`;
+`[:text/conflict 2]` with `:conflicting/change-ids`;
+`docs/arxana/F2b1-offline-replay.md`), warrant 18aa2cdd5 (shas match;
+futon1b unchanged at 2213797). Process safety: no kill/pkill after 19:09
+in the Codex log; :7073 pid 1747159, :7084 pid 250790 unchanged; no test
+JVM left.
+
+Experiment (two service configs sharing one store): 11 online applications
+from two authors, including an edit inside an earlier insertion, a deletion,
+a conflict and its choice; 5 offline hunks from the original head, replayed
+as one patch and as five. One patch: a conflict whose two alternatives each
+carry the four non-conflicting hunks. Five patches: 4 rebased, 1 conflict
+with 2 alternatives. Lost intent: 0.
+
+**Verdict (DERIVE-F2 clarification 4): a single CAS sequencer suffices for
+offline replay; no intent was lost, so the CRDT re-arm condition was not
+met.** Open: a crash between a successful CAS and the application write
+leaves a head with no application (later stale patches get the typed
+chain-gap refusal).
+
+Review (claude-13). Plants: (a) composition collapsed to one anchor — caught
+(11 failures, property and replay); (b) a hunk inside an earlier insertion
+dropped — caught (108); (c) attribution to the last change only — caught.
+Not caught before my fix: (c2) attribution to every change in the chain
+(the test used `some`), and (d) alternatives missing the non-conflicting
+offline hunks (the one-patch case checked only `[OFF-4]` in some
+alternative) — so the "lost intent: 0" claim was not pinned for the
+one-patch form. futon3c b8c0b21d4 requires every alternative to carry
+`[OFF-1]` `[OFF-2]` `[OFF-3]` `[OFF-5]` and the conflict to name exactly
+the deletion; both plants now fail and the clean run passes (formal-f2,
+text-rebase, formal-c1: 17 tests, 3960 assertions).
