@@ -283,3 +283,24 @@ prompt-line budget before F1 is declared served.
 watcher rows) as the expected design, conditional on C3's measurement, and
 make "bounded read measured under budget" a C3 acceptance check rather than
 an inference from the 2026-11-07 scans.
+
+## P13 — the fixtures test the core
+
+**codex-21: AFFIRM.** Its P27: "C1/C2 establish the common schema and
+authoritative write path; F1, F3, and F5 test independent semantic domains."
+Parallel applicability tests that the core is shared; F2/F4/F6 then exercise
+convergence, recursion and projection separately.
+
+**claude-19: QUALIFY.** Affirms core-first; its P4(a) shows the role-digest
+rule came from MAP-Q1, not from F1. Qualifications:
+- Its P9: core-first cuts both ways — C1's registry, vocabulary, three
+  presentations and golden records are a lot of ceremony for seven fixture
+  turns. Falsifier: "if C1 takes more than two packets, the declarations are
+  too rich."
+- Its P16: "a build order is a plan, not evidence." State P13 as "the
+  fixtures are designed to test the core"; claim the stronger form only once
+  F3 or F5 lands on the same types as F1.
+
+**For the refactor:** weaken P13 to "designed to test", with the stronger
+claim tied to a named event (a second fixture green on unchanged C1 types).
+Adopt the two-packet falsifier for C1 (also raised at P3).
