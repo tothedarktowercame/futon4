@@ -1,0 +1,23 @@
+{:warrant/id "M-formal-arxana/C1-2026-11-08"
+ :increment :C1
+ :recorded-at "2026-11-08"
+ :commits
+ {:futon3c "aeb9dbc281cf7b6b862f28f657eddf920caa675d"
+  :futon3 "09ea3b396d9d328c1de03e4d34f983adffe8ba8f"
+  :futon4-design-review "d7a15a2d9c75092a4e5791c73bb2cb291eac5ada"
+  :reply-proforma/sha256 "38914fe9ff5277cd06f04a52184cff95d158b99c2dcd6d5764f40a4f472dc26f"}
+ :tests
+ [{:command "clojure -M:test -n futon3c.arxana.formal-c1-test"
+   :result "7 tests, 57 assertions, 0 failures, 0 errors"}
+  {:command "clojure -M:test -n <all 16 futon3c.arxana.* namespaces>"
+   :result "84 tests, 459 assertions, 0 failures, 0 errors"}
+  {:command "clj-kondo --lint <changed Clojure and generator files>"
+   :result "errors: 0, warnings: 0"}
+  {:command "emacs -Q --batch -l futon4/dev/check-parens.el -- <changed Lisp/Clojure files>"
+   :result "exit 0"}
+  {:command "bb scripts/generate_intent_vocabulary.clj --check"
+   :result "intent-vocabulary/v1 presentations agree"}]
+ :falsifiers
+ {:role-sensitive-id :passed
+  :declaration-in-place-edit :refused
+  :packet-count 1}}
