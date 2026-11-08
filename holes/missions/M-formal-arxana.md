@@ -465,15 +465,20 @@ Operator decisions (Joe, 2026-11-07):
 - Every fixture must be demoable and usable in Emacs through futon4a's
   client for the JVM Arxana backend.
 
-F1 DERIVE: `holes/labs/M-formal-arxana/DERIVE-F1.md`.
+DERIVE notes (2026-11-08, from codex-21's clarifications, rounds 1–6):
+`holes/labs/M-formal-arxana/DERIVE-core.md` (shared contract, authorities,
+convergence), `DERIVE-F1.md` … `DERIVE-F6.md`.
 
-- [ ] Specify entity, 'clusion, projection, chart, fibre, edit proposal,
-  assessment, and conflict record shapes from MAP evidence.
-- [ ] Assign one authority per question and one convergence policy per core
-  record/relation type.
+- [x] Specify entity, 'clusion, projection, chart, fibre, edit proposal,
+  assessment, and conflict record shapes from MAP evidence. (DERIVE-core
+  §1–§6, §9; per-fixture records in DERIVE-F1…F6.)
+- [x] Assign one authority per question and one convergence policy per core
+  record/relation type. (DERIVE-core §8, §10.)
 - [ ] Write the preserve/adapt/drop fidelity matrix for existing Arxana, 象,
   REPL Circus, and JVM contracts.
-- [ ] Define the F1–F6 acceptance fixtures and dependency order.
+- [x] Define the F1–F6 acceptance fixtures and dependency order.
+  (Fixtures and acceptance cases in DERIVE-F1…F6; build DAG still to be
+  drawn as a table, separate from the wiring diagram.)
 - [ ] State every non-obvious choice as IF/HOWEVER/THEN/BECAUSE.
 - [ ] Determine whether a wiring diagram is required and create it if so.
 
