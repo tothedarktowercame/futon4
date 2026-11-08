@@ -1,0 +1,52 @@
+{:warrant/id "M-formal-arxana/C3b-2026-11-08"
+ :increment :C3b
+ :recorded-at "2026-11-08"
+ :commits
+ {:futon1b "80ad3f9e85755fef52452144c2085b9617d90737"
+  :futon3c "e73db6b8a1d3d3a00ded11fc1c0baa85ae2925a3"}
+ :attempts
+ {:operation :attempt/append
+  :outcomes [:not-run :refused :failed :ran-no-output :ran-with-output]
+  :ran-no-output-requires :declared-search-envelope
+  :dynamics-registry [["馬/occurrence" 1]
+                      ["xiang/read" 1]
+                      ["embedding" "all-MiniLM-L6-v2"]]
+  :index-key [:subject-id :interpreter-id :event-time :receipt-id]
+  :bounded-read :graph/query}
+ :external-references
+ {:record-kind :external-reference
+  :fields [:ref/kind :store/id :store/endpoint :record/id
+           :schema/authority :valid-time :revision/digest]
+  :resolution-outcomes [:ok :unavailable :digest-mismatch :schema-drift]
+  :authorities-covered [:xiang-turn-store :minus40 :pattern-library]
+  :cache-authoritative false}
+ :aggregate
+ {:name :circus/pattern-score
+  :key [:pattern-id :window]
+  :event-index [:pattern-id :window :status :reason :record-id]
+  :weights {:occurrence 1.0 :partial 0.5 :ran-no-output -0.5 :not-run 0.0}
+  :watermark :arxana-index-source-sequence
+  :incremental true
+  :deterministic-rebuild true
+  :stale-behaviour :typed-stale}
+ :tests
+ [{:repo :futon1b :command "clojure -M -m test-arxana-c3b"
+   :result "reserved route, bounded receipts, score and incremental==rebuild PASS"}
+  {:repo :futon1b :command "clojure -M -m test-formal-arxana-c2"
+   :result "10/10 PASS"}
+  {:repo :futon1b :command "clojure -M -m test-arxana-index"
+   :result "C3a index regression PASS"}
+  {:repo :futon1b :command "clojure -M -m test-arxana-conditional"
+   :result "24/24 PASS"}
+  {:repo :futon3c :command "clojure -M:test -n futon3c.arxana.formal-c3b-test"
+   :result "1 test, 25 assertions, 0 failures, 0 errors; private real HTTP/store stack"}
+  {:repo :futon3c :command "clojure -M:test -r 'futon3c\\.arxana\\..*-test'"
+   :result "94 tests, 609 assertions, 0 failures, 0 errors"}
+  {:command "clj-kondo on changed Clojure; futon4 check-parens"
+   :result "0 errors, 0 warnings; OK"}]
+ :runtime
+ {:private-processes-only true
+  :live-services-reloaded false
+  :live-services-restarted false}
+ :deferred
+ [:client-cut-over :f1-materialisation :general-aggregation-language]}
