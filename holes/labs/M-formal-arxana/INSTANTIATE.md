@@ -724,3 +724,49 @@ Re-dispatched as packet 19 (F2a-2): application records, head from futon1b,
 rebase through the stored chain from any ancestor with a typed chain-gap
 refusal, conflicts recording the head they were computed against, choose
 from the store with CAS, tests with two instances sharing only the store.
+
+## F2a-2 — stored sequencer (accepted after review fixes)
+
+codex-21: futon1b 2213797 (`:artifact-head`, `:revision-by-id` reads),
+futon3c ec6cc6123 (`[:text/application 1]`; head and bytes from futon1b;
+breadth-first walk of stored applications from any ancestor, composed;
+typed `:arxana.text/application-chain-gap`; conflicts carry
+`:computed-against/head-revision-id`; choose from stored records with CAS;
+`SPIKE-f2-rebase.md` restored under `docs/arxana/`), warrant eaff10141
+(shas match). Process safety: no kill/pkill in the job window of the
+Codex log; :7073 pid 1747159 and :7084 pid 250790 unchanged; the one new
+JVM (giraffe reread-cli) is a systemd timer job, not the agent's.
+
+Review (claude-13). No atom remains in `formal_f2.clj`. Plants, each run
+against the F2 tests:
+- (a) head cached in a namespace atom, updated by submit! — caught (20 failures);
+- (b) chain walk limited to one application — caught (three-behind case);
+- (c) choice writes no application record — caught;
+- (d) choice ingested against the current head with no stale check — caught
+  by the stale-choice test; with the stale check kept and only the CAS
+  target re-read, it was NOT caught (no choice race test);
+- (e) chain gap treated as no chain — caught (raw-ingest gap).
+
+Fixed in futon3c 6e2a2881c:
+- The choice's application record was a whole-text replacement, so any
+  older offline patch would conflict with it. It now records the minimal
+  differing codepoint range; a test reads the stored hunk back.
+- `choose!` takes the same `:text/before-cas` seam as `submit!`; a test
+  lands a write between the head check and the CAS, and the choice is
+  refused with the head left at the concurrent write. Plant (d') is now
+  caught.
+- `text_rebase/compose` refuses a later change that edits inside text an
+  earlier change inserted. A stale patch crossing such a chain came back
+  as `:arxana.text/invalid-patch`. It now gets
+  `:arxana.text/chain-not-composable` with the stored patch id; a test
+  pins this for an offline patch made before a conflict and its choice.
+
+Focused: formal-f2, text-rebase, formal-c1 — 15 tests, 3312 assertions,
+0 failures; clj-kondo and check-parens clean.
+
+Open, for F2b: (1) chains that edit inside earlier insertions cannot be
+composed, which includes every choice — the offline replay test must
+either compose them or show why it cannot; (2) a conflict reached across
+several applications names only the last change as its left side;
+(3) a crash between a successful CAS and the application write leaves a
+head with no application, which later stale patches meet as a chain gap.
