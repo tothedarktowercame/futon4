@@ -217,3 +217,21 @@ Raised repeatedly in ARGUE (argue/DIALOGUE.md P1, P2, P7, P10, P13).
   declaration. Method/dynamics fields default by record kind and stay out
   of identity unless the type opts them in. (claude-19's ARGUE P9, amended:
   convergence is frozen, not merely defaulted.)
+
+## 18. INSTANTIATE design review (codex-21, round 10, 2026-11-08)
+
+Round 9 governs C1 where earlier prose differs: a 'clusion does **not** carry
+an inert dynamics reference by default. Producer/interpreter and method,
+version and parameters belong to an `evidence-attestation`. A type may include
+a dynamics reference in its asserted content and identity projection only when
+the operation itself is part of the semantic claim. This corrects §1's
+"required dynamics/method fields", §3's "every 'clusion", and the refactored
+ARGUE P10 wording; it does not change F4's separate capability, admission and
+receipt boundary.
+
+VERIFY's Lean `Store.acceptance` reducer (latest assessment wins) is not a
+general Arxana rule: assessments by different attributable actors may coexist
+and remain unresolved. Any selected assessment requires a named policy/query;
+append order alone is not semantic authority. C1 therefore defines assessment
+records but no global latest-wins reduction. The Lean model should be amended
+before a later increment claims that selection theorem as conformance.
