@@ -63,6 +63,7 @@ Trust boundaries:
 |---|---|---|---|
 | C1 | type registry + declarations; `intent-vocabulary/v1` and its three generated presentations; record shapes, id rules, golden records | — (F0 done) | all |
 | C2 | `clusion/assert`, `assessment/append` in JVM Arxana and the futon1b conditional route; namespace/atomicity/idempotency tests | C1 | all |
+| C3 | mandatory index `(edge-type, endpoint-role, endpoint-id, valid/event-time, edge-id)` behind `graph/query` (filters, reverse-role, order, limit); operation-attempt receipt entity; typed external-store references; materialised-aggregate pattern with watermark + bulk rebuild (DERIVE-core §13–§15) | C2 | F1 projections at scale; M-repl-circus as a client |
 | F1 | turn materialiser; conversation exporter + ingest; futon4a linear/graph/GCC views; relocation demo; operator assessment | C2 | F2, F4 |
 | F3 | correspondence adapter (old ladder as compatibility view); a93J02 manifestations; generated informalisation; mark8 as model assessments; synthetic contradiction; Lean 4.29 integration check | C2 | — |
 | F5 | futon5 Lean 4.29 project (square and cube/power fibre lemmas); geometry types; fibre entity; two-panel HTML/SVG projector opened from futon4a | C2 (futon4a page opening shared with F6) | F6 |
@@ -70,7 +71,9 @@ Trust boundaries:
 | F4 | intent producer; D6 chain over F1 turns; composite 'clusion + futon5 wiring diagram; one admitted bounded op + refusal | F1 | — |
 | F6 | `supports` (and siblings) types; Tufte-style page projector; move-vs-resupport demo | F5 | — |
 
-F1, F3 and F5 can proceed in parallel once C2 is done. (Ordering is my
+F1, F3 and F5 can proceed in parallel once C2 is done; C3 can run alongside
+them and is needed before any client reads on a latency budget (M-repl-circus's
+prompt path). (Ordering is my
 reading of the "Depends on" lines in each DERIVE-Fn note.)
 
 ## 3. Non-obvious choices
