@@ -68,3 +68,27 @@ Review (claude-13), planted bad cases in a futon1b review worktree at 528f606:
   `attest_keeps_claims`, `assess_keeps_claims`, `assess_keeps_evidence`,
   `two_interpreters_one_claim`, `conflicting_assessments_coexist`).
 - Not re-run: the 86-test Arxana suite (warrant shas match).
+
+## C3a — index and bounded reads (returned for rework)
+
+Built by codex-21: futon1b a84ddc1 + f01a817, futon3c 269b09e, warrant
+`C3a-warrant.edn` (futon4 9990a06). Warrant shas match. Not accepted:
+
+1. **Every read scans the whole store.** `query-edges` and `attestations`
+   call `current-watermark`, which reads and EDN-parses every row of
+   `arxana_clusions` and `arxana_evidence` and hashes all their ids
+   (futon1b_arxana_index.clj:27-38, 83, 94). The index answers in O(limit),
+   but its freshness check is O(n) per read, which is the full scan DERIVE-core
+   §15 rules out on the prompt path. Each write also triggers a full rebuild.
+   The measurements ran on 100 records, where this cannot show; VERIFY S1's
+   scale was 50k 'clusions and 100k attestations.
+2. **Traversal can report `:complete` after dropping neighbours.**
+   `graph_read/traverse` asks each frontier node for at most 200 edges and
+   does not record when a node has more, so a hub with more than 200 edges
+   yields a `:complete` result that is missing nodes. Lean `Read` requires
+   truncation to be visible.
+3. Traversal follows edge ids as the next frontier ('clusion-to-'clusion
+   only); it never steps out through a 'clusion's other endpoints. State
+   which traversal C3 provides, or provide both.
+
+Planted-bug checks deferred to the reworked version.
