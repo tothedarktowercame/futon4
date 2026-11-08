@@ -1062,3 +1062,41 @@ carries the head under `:futon1b/error :context :current-head`, so that
 branch no longer fires. Replays use stable message ids and come back as
 duplicates, so nothing reaches it today. The running demos (:7085–:7089)
 still run the pre-change code until restarted.
+
+## F6a — argument records; move vs re-support (accepted after a test fix)
+
+codex-21: futon3c 84023b732 (`formal_f6.clj`; types `[:f6/item 1]`,
+`[:f6/contains 1]`, `[:f6/supports 1]` (roles `supported-claim`,
+`supporting-content`; method, evidence, actor, reason, time),
+`[:f6/re-supports 1]` (successor, predecessor, actor, reason),
+`[:f6/placement 1]` (zone, order, offsets; `:placed-at` in identity and
+event-time); operations `:formal-f6/argument`, `:formal-f6/move`,
+`:formal-f6/re-support`), warrant 80b220b11 (shas match). Fixture: the F5
+unit circle: two claims (square fibre, cube fibre), the power-map
+definition, the diagram (naming the stored F5 panels and scene), the cut
+sidenote; three supports. Process safety: no kill commands after job
+start; all shared and demo pids unchanged.
+
+Review (claude-13). Move writes only a placement; the diagram record and
+the supports set read back identical. Re-support to the current claim is
+idempotent (nothing minted). Layout keys inside item content are refused.
+Plants caught as delivered: a move that mints a supports record, the old
+support hidden from the read, no layout check, re-support attributed to the
+fixture instead of the caller. Two survived:
+- **current placement chosen by id order** (ascending) passed — the
+  delivered test would catch it or not depending on content hashes;
+- **the old support still marked current** passed — the test checked only
+  that the new one was current.
+
+Fixed in futon3c c2f54a4a2: the current placement is checked after each move;
+a fourth, back-dated move (written last, placed earlier) must not become
+current; the old support must be non-current and the new one current; the
+`re-supports` record is read back with successor, predecessor, actor and
+reason. Plants now caught: id order ascending and descending, latest
+written, old support still current, no supersession record.
+
+Seen, not changed: "current support" is one per supporting item (latest by
+time), so an item cannot currently support two claims; re-support ignores
+`:argument/id` (it is allowed in the body but not checked against the
+items). Both are fine for the fixture; F6b's page shows one current
+support per item.
