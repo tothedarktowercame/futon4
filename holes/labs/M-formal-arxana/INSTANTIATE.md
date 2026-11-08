@@ -651,3 +651,46 @@ C1 + F5a 9 tests, 158 assertions). Not run: the launch script end to end
 Left for F5c: `:geometry/fibre` still resolves only `:square`/`:neg-one`.
 The recorded futon4a page fixture predates the placement change (it has no
 placements, so its content is unaffected).
+
+## F5c — square → cube, end to end (accepted after review fixes)
+
+codex-21: futon3c b8a573214 (maps and values found through stored
+`geometry/named` records; `geometry/fibre-of` revision 2 naming its Lean
+declaration and cardinality; `geometry/selection`; `:geometry/select`;
+cube fibre at exact turns 1/6, 1/2, 5/6; typed unknown-map/value and
+cardinality-mismatch refusals; the Lean gate run fresh in the test and in
+demo preparation) and 8f9fe20ba (warrant `F5c-warrant.edn`); futon4a
+2ada0ccf (`futon4a-formal-f5-select-map`). Lean source futon5 582d7a8.
+Warrant shas match. Process safety: only `kill -0` probes; :7073 and :7084
+pids unchanged; nothing on :7087; nothing under apm-lean `.lake/packages`
+newer than the job.
+
+Review (claude-13). Findings:
+- The angular panel's exponent came from `(case map-id :square 2 :cube 3)`,
+  a renderer table keyed by name rather than the stored map.
+- Selection times were integers (the seed 1000; Emacs sent epoch ms).
+  futon1b orders `:event-time` as text, so differing widths order wrongly.
+- The current selection and placement were the last of the *oldest* 200
+  records by time (ascending query with a limit).
+- Planted bugs: (a) map resolved from a constant → caught; **(b) the cube
+  fibre returned as a fixed three → NOT caught** (the store held exactly
+  those three); (c) cardinality mismatch not refused → caught; (d) one
+  panel only → caught; (e) stale Lean run → caught (input sha); (f) the cube
+  reusing the square's fibre → caught.
+
+Fixed in review: futon3c 5f42d4c1c — the exponent read from the stored
+`:map/definition`; `:geometry/select` refuses anything but
+`yyyy-MM-ddTHH:mm:ss.SSSZ`; newest-first queries for selection and
+placement; tests for exponents 2 then 3, every pre-switch record unchanged
+and the square fibre still answering, an epoch time refused, an
+earlier-timed later write not winning, switching back, and a second store
+whose cube fibre has other members. Plants (b), "exponent by name" and
+"oldest first" are caught. futon4a 6a71c03 — Emacs sends the ISO form,
+pinned by an ERT. C1 + F5a/b/c + spine: 18 tests, 469 assertions; F5
+ERT 4/4.
+
+Not changed: `geometry/placement`'s `:placed-at` format is not validated,
+since placements have no write operation of their own. Member lists over
+200 would be truncated (the cardinality check would refuse such a fibre).
+
+**F5 is built and reviewed through F5c; its acceptance is Joe's.**
