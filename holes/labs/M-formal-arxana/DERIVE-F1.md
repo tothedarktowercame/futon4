@@ -136,6 +136,26 @@ marks:
   the reply carries `㊢`);
 - `turn-PdGx4U` — propose / approve / qualify / constrain.
 
+- `turn-iWVzvT` (evidence `emacs-f8d74e655e0c6d272818528c367c7ec1`) —
+  "Please continue to develop the clarifications … through F6 …"; 象-sonnet
+  read s1 `ask-action`, s2 `constrain`, s3 `constrain`. This is the
+  **assessment fixture**: Joe judged that reading (below).
+
+**Operator judgement (the real assessment for the acceptance case).** Joe,
+2026-11-08, turn `turn-0ozt4x`, evidence
+`emacs-5d1f629e9f6fcd876a973fad309feff9`, verbatim:
+
+> s2 and s3 are good; s1 is plausible, but 🈲 (constrain) would probably be
+> better, because 🈸 is typically used for informational requests, where is
+> this "please" isn't really an ask but a boundary
+
+Recorded as three assessments of `turn-iWVzvT`'s reading: s2 `accepted`,
+s3 `accepted`, s1 `rejected` with a proposed successor interpretation
+`constrain` (reason: the "please" sets a boundary rather than asking for an
+action). Actor joe, `evidence/basis human`. The original `ask-action`
+interpretation is kept, not deleted. Increment 7 therefore uses this
+judgement instead of waiting for a new one.
+
 The colon-form marks answer the agent's paragraphs, so mark and reading
 differ: this is shown as several attributable interpretations, not as proof
 that one is wrong. No incorrect mark is fabricated. The assessment
@@ -162,8 +182,9 @@ assessment semantics are part of the core contract from step 1):
 5. futon4a linear, graph and bounded GCC (non-executable) projections over
    identical ids.
 6. Prose-edit / relocation demonstration; assert cross-view identity.
-7. Live operator assessment, if the retained fixtures do not already
-   contain one.
+7. Operator assessment: materialise Joe's 2026-11-08 judgement of
+   `turn-iWVzvT` (above) as assessments plus the `constrain` successor
+   interpretation for s1.
 
 **Acceptance** = the mission's F1 completion criteria (§1), shown in Emacs
 through futon4a.
