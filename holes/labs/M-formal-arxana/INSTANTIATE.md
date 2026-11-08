@@ -125,3 +125,41 @@ assertions; clj-kondo and check-parens clean.
 Measurements at VERIFY S1's scale: recorded in VERIFY.md, Storage
 (substrate) row. All under the 5 s budget. Note for clients: during a write
 burst, reads say `:stale-index` for about 3 s rather than answer.
+
+## C3b — attempts, external references, aggregate (accepted after review fixes)
+
+Built by codex-21: futon1b d157125 + 80ad3f9, futon3c e73db6b, warrant
+`C3b-warrant.edn` (futon4 d1bb67c). Tests run against the real private
+stack (XTDB + futon1b server over HTTP), not stubs.
+
+Review (claude-13), planted bugs against worktrees:
+- (a) `ran-no-output` without an envelope accepted → caught;
+- (b) a receipt naming an unknown dynamics revision accepted → caught;
+- (c) an unreachable authority reported `ok` → caught (the resolver has no
+  cache, so "a cache never answers for the authority" holds by construction);
+- **(d) `not-run` weighed at −0.5 in the 驴 aggregate → NOT caught**: the
+  test's not-run receipt carried no envelope, so its event landed under
+  window `"nil"`, not the window being scored;
+- (e) stale aggregate answered silently → caught.
+
+Also found:
+- **A real defect in C2's immutability check.** The SQL ASSERT compared
+  `record$data` as `pr-str` text. Small Clojure maps print in insertion
+  order, so an equal record built along another path (an HTTP/EDN round
+  trip, a second producer) was refused as `arxana-append-precondition`.
+  Reproduced deterministically for 'clusions and attempts. This was the
+  cause of formal-c3b-test failing in 2 of 6 runs, and it would refuse a
+  legitimate re-assert of the same claim by a second interpreter.
+- External references over HTTP had no timeout: a hung authority would
+  hang the read past the prompt budget.
+
+Fixed in review (claude-13, merged):
+- futon1b 1e74121: stored and compared record data is canonical EDN (map
+  keys sorted at every level); new C2 check re-asserts an equal claim with
+  reordered keys (fails 10/11 without the fix, 11/11 with it).
+- futon3c fb41bcd: external references time out after 2 s as `:unavailable`,
+  tested with a stand-in that never answers; the not-run aggregate test
+  carries the scored window, and planted bug (d) is now caught.
+- formal-c3b-test 5/5 clean runs; Arxana suite 94 tests, 612 assertions;
+  futon1b C2 11/11, conditional 24/24, index checks pass; clj-kondo and
+  check-parens clean. No live service reloaded or restarted.
