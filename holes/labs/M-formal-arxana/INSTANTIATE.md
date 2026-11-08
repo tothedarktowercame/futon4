@@ -482,3 +482,43 @@ Carried to F3d: the unaligned declaration
 the plan and in attestation content; they are not stored as records a view
 can read (no resolution-observation 'clusions, unlike F1). F3d's views
 need both.
+
+## F3c — generated informalisation and the labelled synthetic contradiction (accepted after review fixes)
+
+codex-21: futon3c ac85c41e5 (`formal_f3_generate.clj`; types
+`generation-run`, `synthetic-mutation`, `formalization-coverage`; fixture
+resources) and eda345ed3 (warrant `F3c-warrant.edn`); apm-lean witness on
+branch commit 249dd03e (`problems/a93J02/lean/SyntheticContradiction.lean`,
+not merged into apm-lean's primary checkout, which has someone's
+uncommitted work). Warrant shas match. Process safety: no kill in the job
+log; shared pids unchanged; apm-lean primary still at 2dd18b2c.
+
+Delivered: a generated informalisation of Main.lean (model "OpenAI
+GPT-5/Codex", serving snapshot not exposed; full prompt and configuration
+recorded), kept as its own artifact and only a candidate correspondence; a
+synthetic mutation (`log 2` → `log 3`), labelled SYNTHETIC in id, media
+type and records, with its diff; a Lean 4.29 proof that the partial sums do
+not tend to `log 3` (`alternating_harmonic_ne_log_three`, from the genuine
+theorem and strict monotonicity of log), recorded through the evidence
+adapter; codex-21's fixture-author assessment marking the synthetic
+correspondence rejected / contradicted, citing the kernel attestation.
+F3b's ambiguous steps and the unaligned declaration are now stored records.
+
+Review (claude-13), planted bugs: (c) kernel evidence under another
+principal → caught (by the F3a write-port guard). **NOT caught:** (a) the
+synthetic artifact unlabelled; (b) the contradiction without its kernel
+citation; (e) the generated text ingested into the authored artifact;
+(d) the genuine divergence relabelled contradicted, which could not even
+take effect because the test never stored F3b's records. The test read
+in-memory values and did not check ingest responses.
+
+Fixed in review (futon3c 3b8b78b98): the test materialises F3b first, requires
+every F3c ingest to succeed under its own id, checks the SYNTHETIC label on
+ids and media types, reads the stored contradiction and its citation back,
+and requires the divergence to keep only Joe's acceptance; the two
+placeholder times are replaced by the code commit time. All five plants
+caught; 1 test, 59 assertions.
+
+For F3d: the contradiction's `:standing :contradicted` is a field on an
+assessment; the F1 views read evidence standing from attestations, so F3d
+must show it explicitly.
