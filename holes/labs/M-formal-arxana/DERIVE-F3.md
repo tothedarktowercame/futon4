@@ -45,6 +45,20 @@ substrate: v4.29 (Joe, 2026-11-07).
    evidence/cache, not a substitute, and the Lean run stays out of the fast
    unit tests.
 
+## Operator judgement (Joe, 2026-11-08, turn `turn-YoF9El`, evidence `emacs-8fdea78f5fab37bcf3fc65aa4aded28e`)
+
+Joe agreed with the mark8 judge's readings for all nine a93J02 steps
+(EXERCISE-F3-mark8-a93J02.md), and on the DCT/Abel difference:
+"divergence is expected": the formalisation work never asked the formal
+proof to follow the informal one. So:
+
+- methodological divergence is a normal, expected correspondence outcome
+  between authored informal and Lean proofs, not a defect to be resolved;
+- the judge-endorsed links become human-basis accepted assessments; mark8
+  links the judge overruled are rejected by both;
+- mark8's over-linking ("reaching to find some connections that weren't
+  there") is feedback for mark8, a separate issue outside this mission.
+
 ## Acceptance cases
 
 - verified relocation: an authored-prose edit relocates its correspondence

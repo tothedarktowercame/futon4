@@ -110,3 +110,19 @@ you would link instead (or `none`). One line per step is plenty, e.g.
 - Step 7 is the dominated-convergence step; the Lean proof has no
   counterpart (it uses Abel's theorem instead). DERIVE-F3 records this as
   a methodological divergence, not a contradiction.
+
+## Joe's verdict (2026-11-08, turn `turn-YoF9El`, evidence `emacs-8fdea78f5fab37bcf3fc65aa4aded28e`)
+
+> So, I looked at it, not deeply, but I agree with the judge's readings.
+> The point at the end is crucial: "a methodological divergence". It looks
+> like the mark8 reader was really reaching to find some connections that
+> weren't there. Note also that there was never a request in the
+> formalisation work that the formal proof *should* follow the informal
+> proof, so divergence is expected. This puts some feedback pressure on
+> mark8, but that's a separate issue.
+
+Recorded for F3 as: nine human assessments agreeing with the judge's choice
+for each step (`evidence/basis human`; Joe's own word "not deeply" kept as
+the method note). mark8's raw links that the judge overruled (steps 5, 8)
+are therefore rejected by both judge and operator; step 9's link comes from
+the judge, not mark8.
