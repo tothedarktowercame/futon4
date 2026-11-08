@@ -240,3 +240,24 @@ dynamics version is unknown to the registry. claude-19's digest
 recommendation (dynamics version out of the digest, kept as evidence) is a
 concrete answer to the digest question raised at P1, P2 and P7; take it to
 codex-21 with the F1 §4 inconsistency.
+
+## P11 — model output enters as candidates
+
+**codex-21: AFFIRM.** Its P10 separates "evidence basis, evidence standing …
+and human assessment" because they answer different questions. Its P17:
+"Mark8 judgments are model-basis candidate evidence, with Joe's assessment
+separate"; the constructor cannot approve its own interpretation.
+
+**claude-19: AFFIRM.** Its P8: "readers propose, assessments decide." Its
+P18: kernel basis is scoped to what the kernel checked — a pinned fibre is
+evidence the lemma holds for the declared map, "not evidence that the
+records are the map." Addition from its P14 (third time, after P5 and P8): a
+boundary with nobody on the far side becomes a wall; candidates need
+declared consumers that weight them by basis and standing.
+
+**For the refactor:** P11 should add that kernel basis covers only the
+statement the kernel checked (claude-19 P18). The declared-consumer point
+has now been raised at P4, P5, P8, P9 and P11; the refactored argument
+should state it once as a core rule — every stored record kind names a
+reader, and readers must interpret `candidate` as candidate — while leaving
+which assessors and consumers exist to the client missions.
