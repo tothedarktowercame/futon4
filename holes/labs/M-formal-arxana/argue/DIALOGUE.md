@@ -218,3 +218,25 @@ projections" is the whole claim.
 with a drift check in F1 (P12); a projection output is kept as a record only
 when a reader is named (P17). The written-never-read concern now recurs
 (P4, P9).
+
+## P10 — dynamics are referenced, not stored code
+
+**codex-21: AFFIRM.** Its P28: "not every useful relation needs executable
+dynamics; some are assertions with a method reference." Execution is a
+separate admitted act with a receipt; its P12 requires attempt receipts to
+distinguish execution outcomes.
+
+**claude-19: QUALIFY.** Affirms from its P13 and P1 (the graph is not an
+evaluator; execution authority lives elsewhere). Qualifications:
+- Its P13 (second time, after P3): inert references "will drift from the
+  code that implements them"; the attempt receipt must be validated against
+  the registry at write time, not merely recorded.
+- Its P10: recommends the dynamics reference stays out of the identity
+  digest and the version is evidence, so frozen dynamics do not freeze
+  identity.
+
+**For the refactor:** P10 should say receipt writes are refused when the
+dynamics version is unknown to the registry. claude-19's digest
+recommendation (dynamics version out of the digest, kept as evidence) is a
+concrete answer to the digest question raised at P1, P2 and P7; take it to
+codex-21 with the F1 §4 inconsistency.
