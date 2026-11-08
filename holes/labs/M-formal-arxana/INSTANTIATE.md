@@ -366,3 +366,37 @@ beside the first, `accepted` appears only on s2 and s3, and the projection
 namespace has no store dependency. All plants caught; 2 tests, 162
 assertions; spine and store-http tests pass; clj-kondo and check-parens
 clean.
+
+## F1c-2 — Emacs views and private demo stack (accepted after review fixes)
+
+codex-21: futon3c b02a4db9c (`formal_f1_demo.clj`: in-process XTDB +
+ephemeral futon1b, materialise → export → relocate, Arxana HTTP surface on
+127.0.0.1:7085 with occupied-port refusal) and 36d70684e (warrant
+`F1c2-warrant.edn`); futon4a 814783c (`lisp/futon4a-formal-f1.el`: linear,
+outline and GCC buffers; record ids as text properties; standing on three
+lines; candidate / accepted / rejected faces; records-at-point and
+relocations-at-point; recorded responses; pid-owned launch/stop scripts;
+end-to-end script). Warrant shas match. Process safety checked first: the
+job log has no kill of any process it did not start, and the :7070, :7073
+and :7084 servers kept their pids (521296, 1747159, 250790).
+
+Review (claude-13), planted bugs:
+- (a) a fragment rendered without its ids → caught;
+- (c) a model-only reading given the accepted face → caught;
+- (d) GCC truncation not shown → caught;
+- **(b) the three standing dimensions folded into one line → NOT caught**:
+  the test matched substrings;
+- **(e) the stop script killing by name → NOT caught**: nothing tested the
+  stop script against a second same-named process. (Planting `pkill -f`
+  unanchored also killed the reviewer's own shell, whose command line held
+  the same string.)
+
+Also found: a reading with both an accepted and a rejected assessment got
+the accepted face, a choice with no named policy (DERIVE-core §18).
+
+Fixed in review (futon4a 08ce812): a contested face for conflicting
+verdicts, with a test; the standing test requires each dimension on its own
+line; `test/stop-f1-demo-test.sh` checks that only the recorded pid stops,
+a same-named unrecorded process survives, and a foreign recorded pid is
+refused. All plants caught; ERT 7/7; stop test passes. Not re-run: the
+JVM demo tests and the end-to-end launch (warrant shas match).
