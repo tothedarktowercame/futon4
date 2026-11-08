@@ -194,3 +194,27 @@ measured rebuild cost, and never answer when the watermark is behind
 (both). The unstaffed-acceptance point recurs (P5, P8): the refactor should
 say consumers must read `candidate` as candidate, never as accepted or
 ignored, and that staffing acceptance is the client mission's job.
+
+## P9 — projections are attributable
+
+**codex-21: AFFIRM.** Its P6: "a surface fragment that cannot name the
+records and projection rule producing it is merely a picture, not an Arxana
+projection." Its P23: moving a diagram changes projection data; changing
+what it supports mints a new semantic relation.
+
+**claude-19: AFFIRM, two qualifications.** Its P5 is this point: a projection
+is a versioned registered rule that keeps record ids and role structure and
+"drops the rest by name"; F1's "same record identities in all three
+projections" is the whole claim.
+- Its P12: the exported conversation Markdown is itself a projection that
+  can become the de facto source. The exporter version and sidecar manifest
+  must be recorded on the ingested revision, with a drift check against the
+  settled turns in F1 increment 4.
+- Its P17: "Every kept projection output needs a named reader … or it is a
+  test trace and must not be stored as a record."
+
+**For the refactor:** P9 should say each projection rule names what it drops
+(claude-19 P5); the exported Markdown carries exporter version and manifest,
+with a drift check in F1 (P12); a projection output is kept as a record only
+when a reader is named (P17). The written-never-read concern now recurs
+(P4, P9).
