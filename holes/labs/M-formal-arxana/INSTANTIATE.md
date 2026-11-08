@@ -956,3 +956,39 @@ self-reference through the public port is refused as
 cycle test calls `validate-composite!` directly with that forged record;
 futon3c 6b2f2bbda adds the public-port case. The VERIFY "Recursive schema
 (ports)" decline is now discharged: ports are typed.
+
+## F4b — bounded execution behind capability + admission (accepted after a fix)
+
+codex-21: futon3c e8b727849 (`:formal-f4/execute`: a role-reverse
+`graph/query` on `[:d6/intends 1]` capped at 10, dynamics
+`formal-arxana/bounded-read` v1; `[:d6/capability 1]`, an `:admitted`
+decision as a NEW decision stage (F4a's `:deferred` one read back
+unchanged); a §13 attempt receipt for every call, the D6 applied receipt
+only on success; `[:d6/receipt-stage 1]`; `[:d6/composite 2]` naming the
+F4a composite as predecessor), warrant 0d9d1e131 (shas match). Process
+safety: no kill commands after 20:39; all shared and demo pids unchanged.
+
+Review (claude-13). Capability and admission are read from the store by id
+(the request body carries only ids; the schema refuses other fields).
+Plants: capability unchecked (11 failures), admission unchecked (5), a
+refused attempt without a receipt (7) — caught; deferred-only, wrong
+principal/dynamics, admission for another candidate are explicit cases;
+the D6 receipt constructor refuses predicted effects; the F4a composite and
+deferred decision are read back byte-identical.
+
+Fixed in futon3c c4d57d85b — **tripwire 4 was not enforced**: the stale
+check compared the caller's expected revision with the candidate's own
+precondition, never the artifact head, and the candidate was grounded on
+the claim's logical `<turn>@settled` id, which is never a head. Now the
+candidate is grounded on the turn's stored byte revision, and the executor
+reads that revision's artifact head from the store at call time; a test
+moves the head after admission and executes with the old revision —
+refused, receipted, no output (planted "stored head ignored": 3 failures).
+22+1 tests green (formal-f4 92 assertions, formal-c1).
+
+**Found, pre-existing, open:** `service/ingest-revision` sends a revision
+through futon1b's CAS only when `:bytes` is a string; a byte array takes the
+provider/entity path, whose head `:revision/head` (futon1b) never sees.
+F1's materialiser passes byte arrays, so F1 turn revisions never reach
+futon1b's head table. Needs its own packet (F1 materialisation and demos
+depend on the current behaviour).
