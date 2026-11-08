@@ -1154,3 +1154,41 @@ diagram, whichever claim it currently supports.
 Demo started for Joe: `systemd-run --user --scope --unit=futon4a-f6-demo
 setsid bash scripts/launch-f6-demo.sh` from futon4a master, futon3c
 4becb4dbf, port 7090. Read-only smoke: outline and page text.
+
+## Demo pass — every step walked as Joe would (claude-13, 2026-11-08 evening)
+
+Joe failed at the first step (futon4a not on his load-path) and then at the
+second (my description promised highlighting the F1 linear view did not
+have). Every view had been checked from a batch Emacs started with the right
+path and settings, which is not how Joe uses them. Each demo was then walked
+in a clean `emacs -Q` daemon, mutating steps on private copies (port 7199),
+read-only steps on the real ports. Fixed:
+
+- Loading: `futon4a/lisp/futon4a-formal-demos.el` (load-file it once).
+- futon4a-arxana: HTTP body decoded as UTF-8 (all views; earlier, c497d62).
+- Shared keymaps: `local-set-key` in special-mode/text-mode buffers had
+  rebound RET in every special-mode buffer (F4, F6) and C-c C-c in every
+  text-mode buffer (F2); now per-view modes (futon4a 0ebe7f1).
+- F1: linear projection v2 lists each reading's range in its turn (futon3c
+  d311d9858); the linear view colours each reading by standing, merges
+  readings that share a sentence, shows the reading in the echo area on
+  arrival (cursor-sensor; works in a terminal) and RET fetches its records;
+  outline and GCC say "intent → target", quote the words, show assessment
+  reasons; relocations readable and reachable from the linear view
+  (futon4a 87bcfd9).
+- F2: readings drawn at their F1 anchors on the original text; conflict
+  alternatives labelled ("your edit" / "the edit already saved") showing
+  only changed lines, RET chooses; missing list names intent and former
+  words (fc5abd1).
+- F3: correspondences grouped by step and declaration name with who
+  assessed them; RET shows records (the buffer was never displayed)
+  (703c877, c8a355c).
+- F4: the demo could not start after the byte-CAS change (seed refused
+  :stale; futon3c b14496901); stage lines explain each port.
+- F5: the page states the fibre in a text table (futon3c b27f75096); the
+  client no longer forces `:square`, so selecting a map takes effect; F5
+  and F6 full pages publish to https://zone.hyperreal.enterprises/wip/formal-arxana/
+  when there is no graphical display (df8f366).
+
+Demos restarted on new code: F1 :7085, F2 :7088, F4 :7089, F5 :7087. F3
+:7086 and F6 :7090 needed no server change.
