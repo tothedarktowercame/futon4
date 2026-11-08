@@ -604,3 +604,50 @@ Left for F5c: `:geometry/fibre` resolves only `:square` over `:neg-one`
 find the map by stored records. The Mathlib-rebuilt plant has no automated
 test (it would need a fake `lake`); the gate compares path/size/mtime
 metadata of the whole package tree before and after.
+
+## F5b — two-panel geometry projector (accepted after review fixes)
+
+codex-21: futon3c 562799e55 (`formal_f5_render.clj`, `formal_f5_projector.clj`,
+`formal_f5_demo.clj` on :7087; types `[:geometry/value 1]` with exact
+rational turns and `[:geometry/placement 1]`; registered `:geometry/render`)
+and 068623e04 (warrant `F5b-warrant.edn`); futon4a c1837bf
+(`futon4a-formal-f5.el`: EWW and external-browser open; pid-owned
+launch/stop scripts). Warrant shas match. Process safety: the job log has
+only `kill -0` probes; :7073 (1747159) and :7084 (250790) unchanged;
+nothing on :7087.
+
+Delivered: one deterministic page with a Cartesian circle and an angular
+projection (cut at 0 turns, 2θ shown per point); both read only through
+`:geometry/fibre`, entity/get and graph/query; positions computed from the
+stored `geometry/value` turns; panel-local offsets as placement records;
+record-id lists under each panel for EWW.
+
+Review (claude-13). Findings:
+- **The current placement was picked by sorting content ids**, so a second
+  drag of the same point could be ignored. futon1b's role-reverse index
+  orders by the record's `:event-time`, which placements did not carry.
+- The "drag changes no geometry id" check compared the in-memory plan with
+  itself.
+- Planted bugs: (a) renderer drawing a fixed subset of points → **NOT
+  caught**; (b) a Cartesian placement leaking into the angular panel →
+  caught; (c) placement ids entering the geometry id set → caught after the
+  fix; (d) panels listing different id sets → caught; (e) unsorted output →
+  not a reachable bug (store order is deterministic; the write-order test
+  below covers order dependence); (f) stop script killing by name → **NOT
+  caught** (the test only had a foreign recorded pid).
+
+Fixed in review: futon3c 6be9ab21b — a placement's `:placed-at` is part of
+its identity and its `:event-time`; the renderer takes the latest in
+ascending time (`geometry/placement` revision 1 amended in place: it was
+never written outside test stacks); tests for a second drag winning, ids
+compared from rendered output, every member drawn in both panels, and the
+same bytes when records are written in the opposite order; plant "no
+event-time" caught. futon4a d7584c8 — stop test with a same-name twin (as
+F1); an ERT rendering each panel through shr checks every record id is in
+the text. All plants caught (renderer 2 tests, 107 assertions; F5 ERT 2/2;
+C1 + F5a 9 tests, 158 assertions). Not run: the launch script end to end
+(warrant's HTTP smoke on :7198).
+
+Left for F5c: `:geometry/fibre` still resolves only `:square`/`:neg-one`.
+The recorded futon4a page fixture predates the placement change (it has no
+placements, so its content is unaffected).
