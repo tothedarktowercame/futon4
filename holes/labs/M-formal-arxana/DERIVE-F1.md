@@ -92,6 +92,7 @@ Rules:
 | Operation | Kind | Effect |
 |---|---|---|
 | `clusion/assert` | write, new | idempotently append one immutable, digest-identified 'clusion |
+| `evidence/append` | write, new | append an evidence attestation citing a 'clusion id (DERIVE-core §17, round 9) |
 | `assessment/append` | write, new | append an attributable assessment of a named 'clusion |
 | `revision/ingest` | write, exists | manifestation bytes (source turns, exported conversation) |
 | `entity/get`, `graph/query` | read, exist | all projections read through these |
@@ -173,7 +174,7 @@ assessment semantics are part of the core contract from step 1):
    entities; method/version is the inert dynamics reference; the three
    views are registered projection rules; evidence uses the core's
    basis/standing/coverage fields (DERIVE-core §11).
-2. `clusion/assert` and `assessment/append` in the JVM registry and the
+2. `clusion/assert`, `evidence/append` and `assessment/append` in the JVM registry and the
    futon1b conditional route; namespace, atomicity, idempotency tests.
 3. Settled-turn materialiser, including ambiguous readings and assessment
    records.
