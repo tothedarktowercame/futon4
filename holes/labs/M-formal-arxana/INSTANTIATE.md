@@ -229,3 +229,36 @@ caught; (d) a scan of the store when the index is behind → caught (the
 stale-index assertion). No fixes needed. A scan used on every read would
 still pass these tests; the code reads the index, and C3a's scale numbers
 cover the index path.
+
+## F1b — Markdown exporter, manifest, ingest, drift check (accepted after a test fix)
+
+codex-21: futon3c 5e5f18a3b (code), 00fad6ef5 (warrant
+`F1b-warrant.edn`); futon1b unchanged (tested at 3bb244c). Warrant shas
+match. A versioned exporter (`formal_f1_export.clj`, id
+`futon3c.arxana/formal-f1-conversation` v1) writes the four turns as
+Markdown and a canonical-EDN manifest that names the Markdown revision, the
+exporter id/version/config, and codepoint ranges for each turn, each
+interpretation (by 'clusion id) and each mark occurrence. Both are ingested
+through futon1b's reserved revision route; re-export gives identical
+revisions. Mark occurrences are now one record per occurrence with
+codepoint ranges and the glyph alone (the old matcher also stored the
+colon). Interpretation ids are unchanged; mark and attestation ids change.
+
+Review (claude-13), planted in a worktree at 00fad6ef5:
+(a) manifest counting UTF-16 units → caught; (b) repeated glyph collapsing
+to one record → caught; (c) a timestamp in the exported bytes → caught;
+(d) exporter id/version missing from the manifest → caught; (e2) stored
+bytes differing from the export → caught; **(e1) interpretation ranges
+shifted by one codepoint → NOT caught**: the test checked only that each
+range was non-empty.
+
+Fixed in review (futon3c 9d63e40f2): each interpretation range's text in the
+Markdown must equal the fragment text recorded in the 象 analysis file, an
+independent source; (e1) and (a) now fail on it.
+
+For go-live: 5e5f18a3b changes `service.clj` so that every
+`revision/ingest` with string bytes goes through futon1b's reserved
+conditional route when the store supports compare-and-set, not only F1's.
+The route writes first, then the in-JVM artifact provider; a provider
+failure after a successful route write would leave the head ahead of the
+provider. Check this before reloading the live futon3c JVM at F1c.
