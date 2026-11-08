@@ -139,3 +139,30 @@ shown.
 keeps both divergent records with authors intact, and F3 keeps the a93J02
 divergence as a result. Add codex-21's four-way distinction (coexistence,
 choice, extension, non-resolution) as the reason convergence is per type.
+
+## P7 — immutability with successors
+
+**codex-21: QUALIFY.** Its P8 affirms: "Append-only semantic records are the
+right default"; overwriting an inner relation silently changes every outer
+relation citing it. Its P15 conditions the sequencer claim: CAS suffices
+only for the tested workload; CRDT is re-armed on "lost legitimate history,
+unacceptable sequencer, or required offline convergence."
+
+**claude-19: AFFIRM, qualified.** Its P4(d) restates DERIVE-core §8 (immutable
+'clusions and assessments, CAS heads, LWW personal state, CRDT only if F2
+demands it). Its P7: every Arxana record is rebuildable from immutable
+sources plus versioned rules, so wipe-and-rebuild is the test of
+immutability. Qualification from its P10/P20: "change mints a successor" is
+ambiguous until digest fields are fixed per type. If the dynamics version is
+in the digest, every model upgrade mints a new 'clusion; if not, two
+interpreters' identical claims share one id and their evidence must be
+separate records citing it, but "the F1 §4 table says 'fields on the
+'clusion'." F1's "proposes a new interpretation" depends on which.
+
+**For the refactor:** P7 should (a) state codex-21's three CRDT triggers as
+the conditions under which the single-sequencer choice is reopened; (b) add
+wipe-and-rebuild as the test of immutability (claude-19 P7); (c) flag a real
+inconsistency for codex-21: DERIVE-F1 §4 puts evidence fields on the
+'clusion, which only works if the interpreter is in the digest. That is the
+third time the digest-field question has come up (P1, P2, P7); it is the
+first item for C1.
