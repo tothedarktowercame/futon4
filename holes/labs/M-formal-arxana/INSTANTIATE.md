@@ -992,3 +992,42 @@ provider/entity path, whose head `:revision/head` (futon1b) never sees.
 F1's materialiser passes byte arrays, so F1 turn revisions never reach
 futon1b's head table. Needs its own packet (F1 materialisation and demos
 depend on the current behaviour).
+
+## F4c — Emacs composite view on the F4 demo (accepted after a test fix)
+
+codex-21: futon3c 1b76e8a4d (`:formal-f4/composite` gains `:predecessor/id`
+and an `:attempts` history read by role from the root composite;
+`formal-f4-demo` seeds a rejection on the candidate, a contradiction on the
+intent, one refused and one successful execute, on loopback 7089),
+warrants a0c323a40/5ec2bac81; futon4a abc7a36 + 84d0ce9
+(`futon4a-formal-f4.el`: a line per stage with stage-local faces, attempt
+history, RET → `entity/get` on the projected id, predecessor toggle,
+confirmed execute that rerenders; pid-owned launch/stop scripts and a
+twin/foreign-pid stop test). Warrant shas match. Process safety: no kill
+commands after job start (20:57); all shared and demo pids unchanged; the
+ephemeral test stack was stopped.
+
+Review (claude-13). The first ERT ran against a real private stack, but its
+regexes matched across lines (`:candidate\(.\|\n\)*verdicts`), so two plants
+survived: a contradiction attached to the candidate instead of the intent,
+and a refused attempt drawn in the success face. Fixed in futon4a b9999d4:
+each stage's detail line and face are read on their own; attempt-line faces
+are checked per outcome; RET must fetch the projected id and a candidate
+record; the predecessor toggle must land on the ready file's F4a id; a
+refused execute from Emacs (ready file pointed at the deferred decision) must
+leave the buffer unchanged and say `not-admitted`; a confirmed execute must
+add a `:ran-with-output` attempt. Plants, all caught against the real stack:
+(a) contradiction on the wrong stage, (b1) refused attempt in success face,
+(b2) refusal rendered as a result, (c) hand-made record id, (d) predecessor
+toggle opens the successor, (e) `special-mode` after the buffer-locals,
+(f) attempts read for the successor instead of the root.
+
+Seen, not changed: the source-act stage shows `verdicts=(:rejected)` — that
+is F1's own stored assessment of the interpretation, not demo seeding. The
+attempt history is keyed by the F4a composite, so the predecessor view also
+lists attempts (receipt stages appear only in successors).
+
+Demo started for Joe: `systemd-run --user --scope --unit=futon4a-f4-demo
+setsid bash scripts/launch-f4-demo.sh` from futon4a master, futon3c
+5ec2bac81, port 7089, ready file `/run/user/1000/futon4a-f4-1000/ready.edn`.
+Batch smoke (open, RET on candidate, toggle) read-only; execute left for Joe.
