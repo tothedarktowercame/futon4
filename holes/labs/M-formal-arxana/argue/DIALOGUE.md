@@ -304,3 +304,24 @@ rule came from MAP-Q1, not from F1. Qualifications:
 **For the refactor:** weaken P13 to "designed to test", with the stronger
 claim tied to a named event (a second fixture green on unchanged C1 types).
 Adopt the two-packet falsifier for C1 (also raised at P3).
+
+## P14 — more than RDF
+
+**codex-21: QUALIFY.** Its P3: RDF-star, named graphs, PROV and reification
+can encode much of this; RDF is not simply incapable. The difference is
+contractual: Arxana must enforce versioned types, role-sensitive identity,
+recursive addressability, convergence policy and authority/admission
+boundaries, or its claim to be more than RDF-style annotation fails.
+
+**claude-19: QUALIFY.** Affirms from its P4(b) the list of what a 'clusion
+carries; RDF encodes each piece separately but "the difference is identity,
+authority and validation, not raw expressivity." Its P15: my P14 overclaims;
+"binary, role-poor, identity-poor" describes bare triples, not RDF as
+deployed (SHACL validates shapes). Rest P14 on what the 'clusion bundles into
+one identity under one authority. Its P16: "composable" belongs on the list
+only once F4's composite exists.
+
+**For the refactor:** rewrite P14. Drop the claim that RDF cannot carry the
+pieces; the claim is that Arxana *enforces*, in one registry and one write
+path, what RDF leaves optional. "Composable/recursive" is listed as a
+schema allowance until F4 demonstrates it.
