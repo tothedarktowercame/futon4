@@ -807,3 +807,40 @@ one-patch form. futon3c b8c0b21d4 requires every alternative to carry
 `[OFF-1]` `[OFF-2]` `[OFF-3]` `[OFF-5]` and the conflict to name exactly
 the deletion; both plants now fail and the clean run passes (formal-f2,
 text-rebase, formal-c1: 17 tests, 3960 assertions).
+
+## F2b-2 — semantic markup follows collaborative edits (accepted after a fix)
+
+codex-21: futon3c d1f0728ba (`formal-f1-relocation/relocate-application!`,
+called synchronously by `:text/submit-patch` and `:text/choose` after the
+application record is stored; reuses the F1b2 exact-anchor strategies, no
+second resolver; attestations name original, previous and target
+revisions, the application and its hunks, and every candidate;
+`docs/arxana/F2b2-semantic-relocation.md`), warrant f72e761b8 (shas match;
+futon1b unchanged). Process safety: no kill/pkill after 19:28; :7073,
+:7084 and the :7085–:7087 demos unchanged; no test JVM left.
+
+Outcomes as documented: untouched scopes `resolved` at the shifted range;
+an edited scope `:missing` with the responsible hunks kept as evidence (the
+hunks are recorded, not used to guess a successor); a deleted scope
+`:missing` with the interpretation unchanged; pasted copies `:ambiguous`
+with both candidates; after a choice, relocation targets the chosen head.
+
+Review (claude-13). Plants: (a) relocation evaluated against the previous
+revision but labelled with the new one — caught; (b) `:missing` reported as
+`:resolved` — caught; (c) ambiguity cut to the first candidate — caught;
+(d) attestation naming the old revision — caught; (e) relocation from RAM —
+no atom in the path; it reads revisions, manifest and records through
+`bounded-query!`/`get-entity`.
+
+Fixed in futon3c 6ac73ec39: relocation runs after the CAS and the
+application record, but a relocation exception was caught by
+`submit!`/`choose!` and returned as an error although the head had moved.
+It is now reported beside the new head (`:relocation {:result/status
+:failed ...}`); a new test makes the resolver throw and reads the moved head
+and the application back (4 failures + 1 error before the fix). The
+untouched-scope test now also checks the relocated range holds the scope's
+own text, shifted by the inserted line. Focused: 20 tests, 4067 assertions.
+
+Open: nothing re-runs a failed relocation yet (a fresh instance can, from
+the stored application); `relocate-application!` is wired to the F1
+conversation artifact id only.
