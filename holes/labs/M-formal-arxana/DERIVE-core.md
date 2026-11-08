@@ -56,14 +56,20 @@ candidate 'clusion.
 Standing is orthogonal fields, not one ladder:
 
 - **resolution state**: `unique | ambiguous | missing | stale`;
-- **evidence qualification** (and coverage);
+- **evidence**, three orthogonal fields (round 5):
+  - `evidence/basis`: `exact | parser | model | human | kernel | composite`
+  - `evidence/standing`: `unverified | verified | contradicted | disputed`
+  - `evidence/coverage`: `none | partial | complete`
+  plus actor/tool, method and version. Basis says how it was attested, not
+  how strong it is: human or model evidence can still be unverified or
+  disputed;
 - **assessment**: a separate attributable record (`candidate | accepted |
   rejected`); nothing implies human acceptance.
 
 The correspondence ladder maps as: `stale` → resolution stale; `ambiguous` →
-resolution ambiguous; `unverified` → resolution unique + qualification
-unverified; `partial` → resolution as observed + qualification/coverage
-partial; `verified` → resolution unique + qualification verified. The old
+resolution ambiguous; `unverified` → resolution unique + evidence/standing
+unverified; `partial` → resolution as observed + evidence/coverage partial;
+`verified` → resolution unique + evidence/standing verified. The old
 ladder stays available as a compatibility projection while the internal
 contract migrates.
 
@@ -117,7 +123,6 @@ Places where DERIVE-F1 (c75e9e6) must follow the core:
 4. **Projection rules are durable.** F1's linear, graph and GCC views are
    registered projection rules with versions; their outputs and receipts
    can stay recomputable test evidence.
-5. **Evidence-qualification vocabulary.** F1 uses `exact / parser-attested /
-   model-attested / human-attested`; the core's mapping uses `unverified /
-   partial / verified`. Asked in round 5 whether these are one field or two
-   (method of attestation vs strength).
+5. **Evidence fields.** F1's `exact / parser-attested / model-attested /
+   human-attested` is `evidence/basis` (§6); F1 records also carry
+   `evidence/standing` and `evidence/coverage`. (Settled in round 5.)
