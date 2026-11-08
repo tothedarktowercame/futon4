@@ -844,3 +844,47 @@ own text, shifted by the inserted line. Focused: 20 tests, 4067 assertions.
 Open: nothing re-runs a failed relocation yet (a fresh instance can, from
 the stored application); `relocate-application!` is wired to the F1
 conversation artifact id only.
+
+## F2c — Emacs collaborative client (accepted after substantial review fixes)
+
+codex-21: futon3c 60cf93967 (`formal-f2-demo`, private stack that
+materialises the F1 records and ingests the conversation), warrant
+a20fdb1e0/3f7ef2efc (shas match); futon4a e147ba1/b7d56b2/18e4ebf
+(`futon4a-formal-f2.el`, `launch-f2-demo.sh`/`stop-f2-demo.sh` with a
+same-name-twin test, ERT, an e2e script). Process safety: the only `kill`
+strings after 19:47 are the stop script's text being written; all shared
+and demo pids unchanged.
+
+Review (claude-13). The e2e covered only two clients merging, checking that
+both strings appeared somewhere. Driving more clients against a private demo
+found:
+- **Scopes were never drawn.** The client read `location → start`; the
+  resolver nests `location → range → start`, so every scope became an empty
+  range. The ERT stubbed the record shape and passed.
+- **Choosing could not work.** `special-mode` kills buffer-locals, so the
+  conflict buffer forgot its conflict: `futon4a-formal-f2-choose` always said
+  "No current conflict".
+- After a choice, the editor that met the conflict kept its losing edit on
+  the old base (the next C-c C-c would resubmit it).
+- Alternative text was not UTF-8 decoded (mojibake; mismatch with the head).
+- A missing scope has no place in the new text; nothing showed it.
+- Plant (b), submit against the current head instead of the buffer's base,
+  passed the e2e.
+
+Fixed in futon4a 3d5e597: range nesting; conflict context survives
+`special-mode`; the originating editor reloads at the chosen head; decoding
+in one place; header line counts resolved/ambiguous/missing and
+`futon4a-formal-f2-missing` lists them; linear diff. The e2e (ephemeral
+port, futon3c master, head via `revision/get`) now pins exact text after a
+rebase, scopes drawn resolved, an edited scope counted and listed missing,
+a conflict leaving the head and the losing client's edit alone, and the
+choice making the head the alternative's text and reloading the client.
+Plants (b) wrong base, (c) auto-choice (invisible to the head check, since
+re-ingesting the landed side gives the same content-addressed id; caught by
+the losing client's buffer), and the `special-mode` reset each fail; (a)
+UTF-16, (d) failed relocation shown wrongly, (e) previous revision's
+attestations are caught by ERT (4/4).
+
+Demo: F2 on 127.0.0.1:7088 (pid 92211, scope `futon4a-f2-demo.scope`).
+Readings appear after the first landed edit: the initial export revision
+has no relocation attestations (header says so).
