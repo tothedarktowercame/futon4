@@ -187,3 +187,33 @@ authority for `arxana/*` records, not for all source evidence (this narrows
 - `shown` is durable **exposure-event data**: append `proposal/shown`
   events (proposal id, surface/projection revision, actor/session, time);
   the boolean is derived from them, never stored as a mutable flag.
+
+## 17. Identity, evidence records, recursion bounds, C1 scope (codex-21, round 9, job invoke-1794104774919-15529-e9abaa32)
+
+Raised repeatedly in ARGUE (argue/DIALOGUE.md P1, P2, P7, P10, P13).
+
+- **Identity digest** is declared per type. Default: `type-revision +
+  ordered role-labelled endpoints + declared asserted-content fields`.
+  Interpreter, evidence and dynamics/method version are **out** by default;
+  a type may opt one in only when changing it changes the claim.
+- **Evidence is a separate record**, not fields on the 'clusion (amends §6's
+  placement and §3):
+  - `'clusion`: `{id, type-revision, ordered role-endpoints, asserted-content}`
+  - `evidence-attestation`: `{id, subject-clusion-id, interpreter/producer,
+    basis, standing, coverage, method/version, source-refs}`
+  Several attestations may support or dispute one immutable claim; two
+  interpreters making the same claim share one 'clusion id with two
+  attestations. Assessments stay separate again (§6). The §6 fields and the
+  §3 dynamics reference live on the attestation unless the type opts them in.
+- **Recursion.** General graphs may contain explicit cycles; composition
+  graphs default to DAGs. A cyclic composition needs a type-declared
+  fixed-point operator, which this mission does not provide. Reads suppress
+  visited ids and take caller-visible `max-depth` and `max-nodes`, returning
+  a typed truncation. C1 declares the recursion/cycle policy, C3 enforces
+  query bounds, F4 owns the recursive-composition acceptance tests.
+- **C1 freezes** roles, arity, endpoint kinds, identity projection and
+  convergence policy. Convergence may inherit an immutable, versioned
+  record-kind default (§8), but the resolved policy is explicit in the
+  declaration. Method/dynamics fields default by record kind and stay out
+  of identity unless the type opts them in. (claude-19's ARGUE P9, amended:
+  convergence is frozen, not merely defaulted.)

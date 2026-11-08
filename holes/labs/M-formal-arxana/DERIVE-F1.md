@@ -71,8 +71,8 @@ F1 materialises, per fixture turn:
 | Mark occurrence | entity: glyph, form (colon/plain), revision-pinned locator | evidence used by an interpretation; **not** itself a 'clusion |
 | Intent reference | controlled vocabulary entry | e.g. `delegate`, `ask-action` |
 | Target | entity or reference | mission, agent, job, turn |
-| Interpretation 'clusion | `arxana/*` hyperedge, explicit semantic-digest id | role-named endpoints: source, mark (if any), interpreter, intent, target; method/version; evidence qualification; interpretation state |
-| Evidence references + qualification | fields on the 'clusion | `exact / parser-attested / model-attested / human-attested` |
+| Interpretation 'clusion | `arxana/*` hyperedge, explicit semantic-digest id | role-named endpoints: source, intent, target; asserted content. Digest per DERIVE-core §17: type revision + ordered role-endpoints + asserted content; interpreter and method/version are **not** in it |
+| Evidence attestation | separate record citing the 'clusion id (DERIVE-core §17, round 9) | interpreter/producer, mark occurrence(s) as source-refs, method/version, basis / standing / coverage (DERIVE-core §6); 象 and 馬 making the same claim give one 'clusion, two attestations |
 | Resolution observation | record | `unique / ambiguous / missing / stale` |
 | Assessment | record naming a 'clusion id as subject | `candidate / accepted / rejected`, actor, policy, reason |
 | Supersedes | optional 'clusion | when a later interpretation revises an earlier one |

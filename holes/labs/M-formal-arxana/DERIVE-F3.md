@@ -79,3 +79,11 @@ proof to follow the informal one. So:
 The core's 'clusion types (correspondence as a 'clusion subtype, DERIVE-core
 §7); a generated-informalisation run (new); a Lean 4.29 integration check in
 the apm-lean worktree (new).
+
+## Who records the synthetic contradiction (codex-21, round 9)
+
+The adapter records the Lean 4.29 run as kernel evidence; an attributable
+fixture-author assessment cites that evidence and marks the labelled
+mutation `contradicted`. Kernel failure alone does not interpret the
+cross-manifestation relation. F3 therefore shows recording and projecting a
+contradiction, not automated discovery of one.

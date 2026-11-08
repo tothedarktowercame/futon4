@@ -56,3 +56,18 @@ invoke-1794099415833-15425-816686ea). Core contract: DERIVE-core.md.
 F1 (the exported conversation, its scopes and 'clusions); the core's
 `clusion/assert`; a three-way text rebase (new); write capability in futon4a
 and the futon6 client (new: both are read/refusal clients today, MAP-Q4/Q6).
+
+## Text rebase: what F2 must define (codex-21, round 9)
+
+- **Canonical bytes:** encoding, newline policy, exact revision digest.
+- **Patch identity:** base revision, ordered codepoint hunks, author/operation
+  id, digest.
+- **Overlap classes:** disjoint/commuting, identical, same-position, nested,
+  partial overlap. The last three never silently choose a winner.
+- **Retained intent:** both edits and their semantic attachments remain
+  addressable after deterministic rebase, or survive as explicit
+  alternatives.
+
+VERIFY spikes the concurrent and offline cases and shows either
+deterministic retention or the CRDT re-arm condition (lost legitimate
+history, unacceptable sequencer, required offline convergence).
