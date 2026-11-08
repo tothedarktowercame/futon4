@@ -506,10 +506,20 @@ Round 9 and the codex-21 review of DERIVE-wiring followed from it.
 
 ### 5. VERIFY
 
-- [ ] Complete the specification BOM for storage, protocol, recursive schema,
+- [x] Complete the specification BOM for storage, protocol, recursive schema,
   concurrency, interpretation, geometry, and projection fidelity.
-- [ ] Spike the riskiest unsupported commitments before general implementation.
-- [ ] Record falsifiers and stop-the-line conditions for every demonstration.
+- [x] Spike the riskiest unsupported commitments before general implementation.
+- [x] Record falsifiers and stop-the-line conditions for every demonstration.
+
+VERIFY record: `holes/labs/M-formal-arxana/VERIFY.md` (mixed methods,
+`@why war-room/wr-22-logic-model-before-code-is-a-sanctioned-verify-method`).
+Lean 4.29 logic model of the core: futon5 `lean-arxana` (21e8c1e).
+Wiring: `arxana-wiring.edn`, checked by `futon3c.diagramprover.wiring`.
+Spikes: S1 C3 read latency (futon1b `spike/c3-latency` 2b67b16), S2 F2
+rebase (futon3c `spike/f2-rebase` e09cca7, 6bca7ac). Open rows, each with
+its trigger: Lean→Clojure test vectors before C2 is accepted; F5 geometry
+lemmas at F5; F4 typed ports when F4 defines them; S1 residue (hot key,
+mixed load, batched rebuild) at C3 acceptance.
 
 ### 6. INSTANTIATE
 
