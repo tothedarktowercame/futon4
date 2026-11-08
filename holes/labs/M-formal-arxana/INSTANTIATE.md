@@ -92,3 +92,36 @@ Built by codex-21: futon1b a84ddc1 + f01a817, futon3c 269b09e, warrant
    which traversal C3 provides, or provide both.
 
 Planted-bug checks deferred to the reworked version.
+
+### C3a rework (accepted)
+
+codex-21: futon1b ad1f68a, futon3c 364e714, warrant updated (futon4 c846cae).
+The three findings are fixed: freshness is an O(1) source sequence advanced
+in the same transaction as each indexed record (`source-sequence`,
+futon1b_arxana.clj:125), with CAS and up to 32 retries for concurrent
+writers; the index catches up incrementally from ordered index events, and
+a test checks incremental == full rebuild; fan-out beyond a node's query
+limit is a typed `:fan-out` truncation; `:endpoint-expansion` traversal
+steps endpoint → 'clusions → their other endpoints.
+
+Review (claude-13), planted bugs:
+- (a) traversal ignores max-nodes → caught (`read-bounded--mirrors-lean-read_bounded`, maxNodes-2 example);
+- (b) visited check removed → caught (`read-nodup--…`, three-cycle example);
+- (c) stale index answers silently → caught (formal-c3a-test);
+- (e) hub fan-out ignored by the traversal → caught (hub test);
+- **(d) reverse-role lookup ignores the role → NOT caught by any suite;**
+- **(f) the real store never reports fan-out → NOT caught**: the hub test's
+  stub hard-codes `:truncated?`, so it tests the traversal, not the store.
+- Also found: `graph/query` returned `:result/status :complete` for 55
+  matches under LIMIT 50, dropping the store's `:truncated?` and `:total`.
+
+Fixed in review (claude-13, futon3c f1d34fe, merged): `graph/query` reports
+`:truncated` with `:result/truncation :limit` and `:result/total`; the
+integration test (real store over HTTP) now checks that, and checks role
+sensitivity with an endpoint used only as a turn. Re-planted (d) and (f)
+against futon1b ad1f68a: both caught. Arxana suite 93 tests, 582
+assertions; clj-kondo and check-parens clean.
+
+Measurements at VERIFY S1's scale: recorded in VERIFY.md, Storage
+(substrate) row. All under the 5 s budget. Note for clients: during a write
+burst, reads say `:stale-index` for about 3 s rather than answer.
