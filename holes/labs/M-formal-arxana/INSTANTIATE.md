@@ -522,3 +522,39 @@ caught; 1 test, 59 assertions.
 For F3d: the contradiction's `:standing :contradicted` is a field on an
 assessment; the F1 views read evidence standing from attestations, so F3d
 must show it explicitly.
+
+## F3d — relocation and F3 views (accepted after review fixes)
+
+codex-21: futon3c 4c9638986 (`formal_f3_relocation.clj`,
+`formal_f3_projection.clj`, `formal_f3_demo.clj` on :7086) and 893b423e2
+(warrant `F3d-warrant.edn`); futon4a 511e47b (`futon4a-formal-f3.el`,
+faces incl. SYNTHETIC, records-at-point, pid-owned scripts). Warrant shas
+match. Process safety: no kill in the job log; shared pids unchanged; no
+leftover demo process; ports 7085/7086/7196 free; apm-lean untouched.
+
+Delivered: an authored-prose successor via CAS; F0 relocation with
+resolved, ambiguous (all candidates) and missing outcomes, stored as
+attestations and read back; correspondences, Main.lean's revision and the
+declaration-location record unchanged; two registered views
+(`formal-f3/correspondence`, `formal-f3/manifestations`) on public reads;
+Emacs buffers with the same ids. Tests read records back from the store,
+as packet 14 required.
+
+Review (claude-13), planted bugs: (c) SYNTHETIC label dropped → caught;
+(d) divergence shown as contradicted → caught; **(e) a fragment without its
+own id → NOT caught.** Design finding: the synthetic class and the
+manifestation SYNTHETIC label came from a manifest the caller writes by
+hand, not from stored records, so a wrong manifest could unlabel the
+contradiction; and the view omitted the ambiguity records and the
+unaligned declaration F3c stored for it.
+
+Fixed in review: futon3c b8557381a — labels from stored records (claim
+`:fixture/label`, revision media type); per-correspondence resolution from
+resolution-observation records; unaligned declarations as coverage
+fragments (rules v2); tests for own-id-first, a forged manifest, ambiguity
+and coverage in the view. futon4a 8f69072 — the Emacs F3 view shows
+resolution and the unaligned declarations, with an ERT. All plants caught
+(1 test, 396 assertions; ERT F3 3/3, F1 7/7). Not re-run: the end-to-end
+Emacs run (warrant). The recorded ERT fixture predates the coverage field.
+
+**F3 is built and reviewed through F3d; its acceptance is Joe's.**
