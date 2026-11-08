@@ -76,3 +76,26 @@ activation" rule.
    reason)`; no full scan on the prompt path.
 4. 馬's verdict → `pattern/occurrence` 'clusion; `shown` → appended
    `proposal/shown` exposure events, boolean derived.
+
+## 5. The §1 mapping under round 9 (claude-13, 2026-11-08)
+
+Round 9 (DERIVE-core §17) moved evidence, interpreter and method version off
+the 'clusion into separate `evidence-attestation` records, and put only
+`type-revision + ordered role-endpoints + declared asserted content` in the
+identity digest. That changes §1 as follows; everything else in §1 stands.
+
+| Record | Round-9 shape |
+|---|---|
+| Pattern proposal | `pattern/proposal` 'clusion, endpoints turn (external ref) and pattern (external ref). The proposer (`embedding`, `驴/m40`, `驴`) is **not** an endpoint or dynamics reference on the 'clusion: each source is an attestation (producer, method/version/parameters, basis model, rank and score). **Changed:** the same pattern from two sources is now *one* 'clusion with two attestations, not two 'clusions. `proposal/shown` events cite the attestation that was shown (what the agent saw came from one source at one rank). |
+| 馬 occurrence verdict | `pattern/occurrence` 'clusion (pattern, window of record ids) claims the pattern occurs there. 馬's reading is a model-basis attestation whose coverage carries occurrence (complete) vs partial; each verbatim quote check is a separate `exact`-basis attestation (verified, or contradicted with reason), citing its locator. A **void** verdict is not a 'clusion: "no reader" is an attempt receipt `not-run`; void after a declared search is `ran-no-output`. |
+| 驴 ranking | unchanged: a materialised aggregate with watermark (§15), rebuilt from attestations and receipts. |
+| `:lu/occurrence` in minus40 | unchanged: a typed referenced authority (§14); Arxana may index it, never mirror it. |
+| Giraffe `needs` edge | `needs` 'clusion (ticket → ticket/artifact; asserted content: class closure / artifact / alternative). Where the need came from is an attestation: recorded → `exact`, author-stated → `human`, prose-reading → `parser`, with quote/file/line as source-refs. The `met` flag and readiness are computed, never stored. |
+
+Cut-over to watch: M-repl-circus decided on 2026-11-05 (claude-8) to write
+its typed hyperedges through futon1b's plain `/api/alpha/hyperedges` batch
+route. DERIVE-wiring choice 3 keeps Arxana records off that route
+(last-writer-wins, no validation). Records written there before C2 exists
+are legacy: read them as a referenced source, or re-assert them through
+`clusion/assert` + `evidence/append` once C2 lands. Which of the two is a
+question for the client inventory (CLIENTS.md).
