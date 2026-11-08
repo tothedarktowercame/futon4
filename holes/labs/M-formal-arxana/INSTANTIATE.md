@@ -262,3 +262,60 @@ conditional route when the store supports compare-and-set, not only F1's.
 The route writes first, then the in-JVM artifact provider; a provider
 failure after a successful route write would leave the head ahead of the
 provider. Check this before reloading the live futon3c JVM at F1c.
+
+## F1b2 — relocation across an edited revision (accepted after review fixes)
+
+codex-21: futon3c 0a64e20b6 (code, `formal_f1_relocation.clj`), 1586c676b
+(warrant `F1b2-warrant.edn`); futon1b unchanged. Warrant shas match. One
+content-addressed F0 anchor strategy per exported interpretation, captured
+on the first Markdown revision with no context and no fuzzy matching; an
+edited successor is ingested with the first revision as expected head;
+each resolver run is appended as an evidence attestation that cites the
+resolver (`arxana.resolve/anchor` v1, strategy revision) and both revision
+ids. Original 'clusions and manifest ranges are unchanged. Cases: offset
+shift → `resolved` at a later range; duplicated text → `ambiguous` with
+both candidates; deleted text → `missing`; historical expected head →
+`stale` before any finder runs; a second write on the old head refused.
+Recovery across deletions is deferred (it needs edit-hunk provenance,
+VERIFY S2).
+
+Review (claude-13). Planted bugs:
+- (a) relocation written as a new interpretation 'clusion instead of
+  evidence → caught;
+- (b) ambiguity resolved by picking the first candidate → caught;
+- **(b2) the stored attestation keeps only the first ambiguous candidate →
+  NOT caught**: the test checked the in-memory resolver result, never the
+  stored records;
+- (c) fuzzy matching on / a deleted fragment reported `resolved` → caught;
+- (d) stale check removed → caught;
+- (e) futon1b's head ASSERT ignoring the expected revision (paired
+  futon3c/futon1b worktree) → caught.
+
+Also found: a `missing` relocation was stored with standing
+`:contradicted`. Deleted text is absence, not evidence against the
+reading. And the test passed the "actual head" as a literal, so the stale
+check was never fed by the authority.
+
+Fixed in review (futon3c 05994a2ba): `missing` → standing `:unverified`,
+coverage `:none`; the test reads the stored relocation attestations (both
+ambiguous candidates; standing/coverage per case; source and target
+revisions; no `:contradicted`) and takes the actual head from futon1b.
+(b2) and a re-planted `:contradicted` now fail. 1 test, 25 assertions;
+clj-kondo and check-parens clean. Golden interpretation ids: the
+materialiser is unchanged, so they cannot have moved.
+
+## Go-live facts for F1c (checked 2026-11-08)
+
+- futon4a talks to `http://127.0.0.1:7084/arxana/v1`, served by a separate
+  JVM (pid 250790, started 2026-11-07 05:32) built by
+  `futon3c/src/futon3c/arxana/demo.clj` over `store/mock-store` and an
+  in-memory artifact provider. It is not the 7070 Agency JVM. The mock
+  store does not offer compare-and-set, so F1b's `service.clj` ingest
+  change does not reach it.
+- Live futon1b (:7073, pid 2589910, started 2026-11-07 01:54) predates
+  every C2–F1b2 futon1b commit: it has no reserved Arxana tables for
+  'clusions, evidence, assessments or marks, and no sidecar index.
+- So the F1 demo in Emacs needs (i) the 7084 service running current
+  master against a futon1b with the reserved route, and (ii) a decision on
+  WHICH futon1b: the live corpus store, or a private store for the demo.
+  Writing F1 records into the live store is permanent; Joe decides.
