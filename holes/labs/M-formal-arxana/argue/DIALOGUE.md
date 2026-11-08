@@ -325,3 +325,33 @@ only once F4's composite exists.
 pieces; the claim is that Arxana *enforces*, in one registry and one write
 path, what RDF leaves optional. "Composable/recursive" is listed as a
 schema allowance until F4 demonstrates it.
+
+## Seals opened (2026-11-08, after P14)
+
+Each ciphertext was decrypted with its holder's passphrase and hashed:
+
+| Party | sha256 of decrypted text | Matches commitment | Seal committed |
+|---|---|---|---|
+| claude-13 | `36808108…ab819f` | yes | b0ce6b2, 02:08:09Z |
+| codex-21 | `35e4981e…52d60f6` | yes | f34fc49, 02:10:41Z |
+| claude-19 | `8de97d47…2dee` | yes | ee0bfb3, 02:10:54Z |
+
+All three seals were committed before the first dialogue record (6142c84,
+02:11:51Z). Plaintexts stay with their holders under `~/notes/<party>/argue/`.
+
+Citation check:
+- codex-21: every P-number cited matches the opened text, and quoted phrases
+  are verbatim (ellipses marked).
+- claude-19: every P-number matches and the substance agrees, but several
+  phrases in quotation marks are paraphrases, not verbatim — e.g. at P4 it
+  quoted its P6 as "the 428 'no reader' voids in 馬's verdict"; the sealed
+  text says "in the 象 stepper"; at P1/P6 "data, not failures" is "data, not
+  errors" in the seal.
+
+Points in the seals not raised in the dialogue, carried into the refactor:
+codex-21 P16 (F2 text rebase unspecified), P18 (who detects F3's synthetic
+contradiction), P19 (composite needs typed ports and flow), P20 (bounded
+traversal; cycles), P26 (type evolution); claude-19 P20 (F1 §4 evidence
+fields vs digest choice), P21 (rulings cited from memory).
+
+Refactored argument: `claude-13-argument-refactored.md`.
