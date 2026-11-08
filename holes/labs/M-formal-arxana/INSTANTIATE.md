@@ -1100,3 +1100,57 @@ time), so an item cannot currently support two claims; re-support ignores
 `:argument/id` (it is allowed in the body but not checked against the
 items). Both are fine for the fixture; F6b's page shows one current
 support per item.
+
+## F6b — the argument page, in Emacs, on :7090 (accepted after two rounds and review fixes)
+
+Round 1, codex-21: futon3c 9591aecb4/94d86aa76, futon4a 4a02f9e. Sent back
+(packet 30): the diagram was a hard-coded SVG of two dots, not F5's render;
+the ERT stubbed the request function with a hand-written shape (the F2c
+failure); the only real-store page test checked that ids appeared
+somewhere; the Emacs commands asked Joe to type sha256 record ids; the
+outline listed zone and id only. The stop scripts and their twin test were
+good, and `:formal-f6/page` read only through `:formal-f6/argument`.
+
+Round 2, codex-21: futon3c 8a15144cb (the page asks the public
+`:geometry/render` for the panels the diagram item names and embeds its SVG
+and record ids; numbered support marks naming the claim by text; former
+supports carry the `re-supports` actor and reason) and warrant 37d0366e1;
+futon4a c773da3 (`formal-f6-e2e.sh` runs ERT against a private stack on a
+free port ≥7199; outline grouped by zone with kind and text and the support
+history; `RET` shows the record; move toggles the diagram; re-support offers
+claims by text and asks for a reason). Warrant shas match. Process safety:
+no kill commands after job start; all shared and demo pids unchanged.
+
+Review (claude-13), fixed:
+- futon3c 4becb4dbf — the write-order check re-asserted records already in
+  the store, which writes nothing; now two stores get the records in
+  opposite orders and must give the same bytes. Nothing checked the diagram
+  was F5's render; now its block must contain F5's own cartesian and
+  angular SVG and every record id `:geometry/render` names. Column order
+  is checked after a move that makes id order and placement order differ
+  (the fixture's ids happen to sort in placement order).
+- futon4a e886b47 — JSON `false` reaches Emacs as `:json-false`, which is
+  non-nil, so the outline labelled every support "current"; the ERT now
+  requires a former-support line, checks the diagram changes zone and
+  nothing else moves, and re-supports to each claim in both orders,
+  reading the diagram's single current support back through the argument
+  view.
+- futon4a c497d62 — `futon4a-arxana--post` left the HTTP body as raw bytes,
+  so every non-ASCII string reached every view mangled ("S¹" in the
+  definition); the client now decodes UTF-8 before parsing (F2c had worked
+  around this per view). Outline support lines name the supporting item.
+  futon4a unit ERTs (arxana, F1, F2, F3, F5) still pass.
+
+Plants caught: fixed SVG; diagram kept in main; former support drawn
+current; order ignored (by id) and unsorted; argument id lost to
+`special-mode`; move to the same zone; re-support ignoring the chosen claim
+(first or last); `:json-false` read as true; UTF-8 not decoded; ERT with
+no demo running. Not a bug: dropping the sort gives the same bytes from
+both stores (the store's order does not depend on write order).
+
+Seen, not changed: the page renders F5's default map (square) for the
+diagram, whichever claim it currently supports.
+
+Demo started for Joe: `systemd-run --user --scope --unit=futon4a-f6-demo
+setsid bash scripts/launch-f6-demo.sh` from futon4a master, futon3c
+4becb4dbf, port 7090. Read-only smoke: outline and page text.
