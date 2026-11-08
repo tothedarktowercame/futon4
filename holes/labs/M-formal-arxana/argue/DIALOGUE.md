@@ -93,3 +93,27 @@ written and never read.
 concrete error it prevents, and say "ran, no output" is only meaningful over
 a declared envelope (codex-21 P12). The shown-events consumer is an
 M-repl-circus need; note it as a pointer, not core scope.
+
+## P5 — meaning, standing and acceptance are separate
+
+**codex-21: AFFIRM.** Its P11: "Ambiguity, contradiction, missing evidence,
+and domain extension must remain first-class." Its P14: F1 tests
+interpretation 'clusions and attributable assessment separately, so a
+faithfully recorded model reading can stay unaccepted or be corrected
+without rewriting its evidence.
+
+**claude-19: AFFIRM.** Its P2: basis, standing and coverage are three
+questions; "collapsing them into one ladder is the
+apparatus/success-must-not-resemble-failure error in record form." Its P3:
+acceptance is a separate attributable assessment, not a field on the
+'clusion. Its P6: resolution state is a third axis, "data, not failures",
+folded into neither evidence nor acceptance. Addition from its P8/P14: the
+turn-iWVzvT case works because Joe was the assessor; when no person is in
+the loop, the design must say who assesses, or candidates stay candidates
+forever and a consumer must be declared to read them as such.
+
+**For the refactor:** P5 should list resolution as its own axis beside
+evidence and acceptance. "Who assesses with no person in the loop" is
+answered for the fixtures (DERIVE-core §10: a human or institutional
+actor); state that an unassessed candidate is a legitimate resting state,
+and leave the choice of automated assessors to client missions.
