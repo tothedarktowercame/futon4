@@ -1,0 +1,36 @@
+{:warrant/id "M-formal-arxana/C2-2026-11-08"
+ :increment :C2
+ :recorded-at "2026-11-08"
+ :commits
+ {:futon1b "528f606"
+  :futon3c "34ab34bbb"}
+ :tests
+ [{:repo :futon1b
+   :command "clojure -M:node -m test-formal-arxana-c2"
+   :result "10/10 PASS"}
+  {:repo :futon1b
+   :command "clojure -M:node -m test-arxana-conditional"
+   :result "24/24 PASS"}
+  {:repo :futon3c
+   :command "clojure -M:test -n futon3c.arxana.formal-c2-test"
+   :result "2 tests, 40 assertions, 0 failures, 0 errors"}
+  {:repo :futon3c
+   :command "clojure -M:test -r 'futon3c\\.arxana\\..*-test'"
+   :result "86 tests, 499 assertions, 0 failures, 0 errors"}
+  {:repo :futon1b
+   :command "clj-kondo --lint futon1b_arxana.clj test_formal_arxana_c2.clj"
+   :result "errors: 0, warnings: 0"}
+  {:repo :futon3c
+   :command "clj-kondo --lint <five changed Clojure files>"
+   :result "errors: 0, warnings: 0"}
+  {:command "emacs -Q --batch -l futon4/dev/check-parens.el --eval '(arxana-check-parens-cli)' -- --no-defaults <changed files>"
+   :result "OK in both repositories"}]
+ :falsifiers
+ {:reserved-route-only :passed
+  :role-sensitive-digest-recomputed-in-jvm :passed
+  :immutable-record-conflict-assertion :passed
+  :failed-write-leaves-no-outcome :passed}
+ :runtime
+ {:private-processes-only true
+  :live-services-reloaded false
+  :live-services-restarted false}}
