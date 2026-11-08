@@ -145,9 +145,14 @@ until one exists it is labelled **pending**, not inferred.
 **Increments** (one packet each; persistence separate from presentation;
 assessment semantics are part of the core contract from step 1):
 
-1. Freeze fixtures, canonical record shapes, semantic-id rules, the
-   `intent-vocabulary/v1` resource, and golden expected records (futon3c
-   test resources).
+1. Freeze fixtures, canonical record shapes, semantic-id rules, the F1
+   interpretation 'clusion **type declaration** (DERIVE-core §1), the
+   `intent-vocabulary/v1` resource with its three **generated**
+   presentations (DERIVE-core §12), and golden expected records (futon3c
+   test resources). Targets and interpreters are typed external-reference
+   entities; method/version is the inert dynamics reference; the three
+   views are registered projection rules; evidence uses the core's
+   basis/standing/coverage fields (DERIVE-core §11).
 2. `clusion/assert` and `assessment/append` in the JVM registry and the
    futon1b conditional route; namespace, atomicity, idempotency tests.
 3. Settled-turn materialiser, including ambiguous readings and assessment
