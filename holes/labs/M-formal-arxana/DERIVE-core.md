@@ -1,0 +1,123 @@
+# DERIVE-core — the contract shared by F1–F6
+
+Recorded by claude-13, 2026-11-08, from codex-21's answers (round 4, job
+invoke-1794099328865-15421-fe14d8f5). codex-21 wrote the mission; these are
+its clarifications, in close paraphrase. Joe's direction: settle the common
+core before fixture detail, so that F1 does not bend it.
+
+## 1. 'Clusion types
+
+F1's interpretation record is **one 'clusion type over a common envelope**.
+Every 'clusion references an immutable, versioned **type declaration**:
+type id, roles, arity, endpoint kinds, required dynamics/method fields,
+identity projection, convergence policy. `clusion/assert` validates against
+the declaration. Fields such as F1's interpretation state are type-specific,
+not universal.
+
+## 2. Endpoint kinds
+
+An endpoint may reference: a semantic entity; an artifact revision; a
+manifestation/scope; another 'clusion id; an external-reference entity.
+
+- Lean declarations, commits, jobs, agents and the like are wrapped as
+  **typed external-reference entities**, never arbitrary strings.
+- 'Clusion endpoints are allowed by the schema **from F1**, so the core does
+  not change later; F4 supplies the recursion/composition acceptance tests.
+- A locator is revision-pinned evidence about a manifestation, not normally a
+  bare endpoint.
+
+## 3. Dynamics
+
+Every 'clusion carries an **inert dynamics reference** from the start:
+operation/method id, version, parameters. Executable code is never stored as
+authority. F4 adds composition and activation tests; D6 capability/admission
+is still required before anything executes.
+
+## 4. Projections and charts
+
+| Thing | Durability | Authority |
+|---|---|---|
+| Projection rule (+ version) | durable, immutable | JVM Arxana (identity, schema) |
+| Shared/reproducible chart definition | durable, immutable/versioned | JVM Arxana |
+| Deterministic projection output | recomputable; optionally kept as evidence | the declared projector |
+| Named shared layout coordinates | durable only when promoted to a chart/layout revision | the projector / promoting user |
+| Cursor, viewport, selection, hover, temporary coordinates | client-local presentation state | the user/client |
+
+## 5. Edit proposals
+
+The five-stratum edit-proposal envelope is primarily a **transient
+request**. Where audit or execution matters it is preserved through D6
+(source act → intent → candidate → decision → receipt). It is not
+automatically a 'clusion, though a proposed relation change may contain a
+candidate 'clusion.
+
+## 6. Standing
+
+Standing is orthogonal fields, not one ladder:
+
+- **resolution state**: `unique | ambiguous | missing | stale`;
+- **evidence qualification** (and coverage);
+- **assessment**: a separate attributable record (`candidate | accepted |
+  rejected`); nothing implies human acceptance.
+
+The correspondence ladder maps as: `stale` → resolution stale; `ambiguous` →
+resolution ambiguous; `unverified` → resolution unique + qualification
+unverified; `partial` → resolution as observed + qualification/coverage
+partial; `verified` → resolution unique + qualification verified. The old
+ladder stays available as a compatibility projection while the internal
+contract migrates.
+
+## 7. Existing JVM Arxana records (fidelity: adapt)
+
+Correspondence assertions are a **'clusion subtype**; correspondence
+assessments are instances of the general assessment contract. New writes use
+`clusion/assert` / `assessment/append`; existing ids and behaviour stay
+readable through a compatibility adapter. No permanent second authority.
+
+## 8. Convergence by record type
+
+| Record | Policy |
+|---|---|
+| Artifact revisions, vocabulary/type declarations, 'clusions, assessments, promoted projection rules | immutable / versioned (append-only, idempotent by id) |
+| Artifact heads, uniqueness-governed registries | CAS |
+| Personal presentation state | per-user last-writer-wins, or disposable |
+| F2 shared working state of one manifestation (and optionally a co-authored layout) | CRDT/OT if F2 shows it is needed; it emits immutable revisions as evidence |
+
+## 9. Fibres
+
+A fibre is a **derived content entity (solution set)**, not a 'clusion. The
+map is a 'clusion; membership and provenance are relations. Queries may
+compute fibres transiently; where reproducibility matters (F5) a fibre
+entity is materialised, pinned to map revision, input/value,
+evaluator/theory version and evidence.
+
+## 10. Authorities
+
+| Question | Authority |
+|---|---|
+| Record validity | JVM Arxana's versioned type/schema registry |
+| Atomic persistence | futon1b's conditional route |
+| Interpretation acceptance | the attributable human/institutional policy actor; Arxana records, never manufactures, acceptance |
+| Projection layout | the registered projection rule/projector; the client/user for unpromoted view state |
+| Lean truth (F3/F5) | the Lean 4.29 kernel; Arxana owns only the provenance-bearing correspondence claim |
+
+## 11. DERIVE-F1 checked against this core
+
+Places where DERIVE-F1 (c75e9e6) must follow the core:
+
+1. **Type declaration missing.** F1's interpretation 'clusion needs a
+   declared type (roles, arity, endpoint kinds, method fields, identity
+   projection, convergence). Increment 1 freezes it alongside the vocabulary
+   record, and `clusion/assert` validates against it.
+2. **Targets and interpreters as typed external references.** Agents, jobs,
+   missions and turns named as targets or interpreters become typed
+   external-reference entities, not free strings.
+3. **Dynamics reference.** F1's "method/version" becomes the core's inert
+   dynamics reference (method id, version, parameters).
+4. **Projection rules are durable.** F1's linear, graph and GCC views are
+   registered projection rules with versions; their outputs and receipts
+   can stay recomputable test evidence.
+5. **Evidence-qualification vocabulary.** F1 uses `exact / parser-attested /
+   model-attested / human-attested`; the core's mapping uses `unverified /
+   partial / verified`. Asked in round 5 whether these are one field or two
+   (method of attestation vs strength).
