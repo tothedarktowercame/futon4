@@ -60,8 +60,89 @@ Operator constraint: demoable in Emacs through futon4a's JVM Arxana client.
 - futon4a renders resolve/correspondence results with typed refusals
   (MAP-Q4/Q6); writes nothing.
 
-## 4. Records — pending codex-21 round 2
+## 4. Records (codex-21, round 2)
 
-## 5. Operations — pending codex-21 round 2
+F1 materialises, per fixture turn:
 
-## 6. Increments and acceptance — pending codex-21 round 2
+| Record | Store shape | Notes |
+|---|---|---|
+| Turn content | entity | the turn as content |
+| Source manifestation | immutable artifact revision (`:revision/ingest`) | the settled turn's bytes; never edited |
+| Mark occurrence | entity: glyph, form (colon/plain), revision-pinned locator | evidence used by an interpretation; **not** itself a 'clusion |
+| Intent reference | controlled vocabulary entry | e.g. `delegate`, `ask-action` |
+| Target | entity or reference | mission, agent, job, turn |
+| Interpretation 'clusion | `arxana/*` hyperedge, explicit semantic-digest id | role-named endpoints: source, mark (if any), interpreter, intent, target; method/version; evidence qualification; interpretation state |
+| Evidence references + qualification | fields on the 'clusion | `exact / parser-attested / model-attested / human-attested` |
+| Resolution observation | record | `unique / ambiguous / missing / stale` |
+| Assessment | record naming a 'clusion id as subject | `candidate / accepted / rejected`, actor, policy, reason |
+| Supersedes | optional 'clusion | when a later interpretation revises an earlier one |
+
+Rules:
+- A 'clusion's id digests its **ordered, role-labelled** endpoints, not the
+  futon1b default sorted-endpoint id (MAP-Q1). Roles are validated route
+  data.
+- No write mutates an existing record. A changed interpretation mints a
+  successor (and may assert `supersedes`).
+- Do not store each 'clusion twice (entity and hyperedge) unless the store
+  needs an index projection.
+- Projection receipts are test traces, not domain records.
+
+## 5. Operations (codex-21, round 2)
+
+| Operation | Kind | Effect |
+|---|---|---|
+| `clusion/assert` | write, new | idempotently append one immutable, digest-identified 'clusion |
+| `assessment/append` | write, new | append an attributable assessment of a named 'clusion |
+| `revision/ingest` | write, exists | manifestation bytes (source turns, exported conversation) |
+| `entity/get`, `graph/query` | read, exist | all projections read through these |
+
+Both new writes are added to the JVM Arxana registry (futon3c
+`arxana/schema.clj`) **and** to the reserved futon1b conditional route
+(`futon1b_arxana.clj`, today `:revision/ingest` only), with namespace,
+atomicity and idempotency tests like the existing two-writer race test.
+
+**Exported conversation.** Deterministic Markdown with marks inline, plus a
+deterministic sidecar manifest mapping turn ids to paragraph/codepoint
+ranges. futon3c owns the versioned exporter (it reads settled turn
+evidence and must reproduce canonical bytes; a script is acceptable at
+first if its version and configuration are recorded). futon4a opens or
+invokes the export; it does not author it. The Markdown is ingested with
+`revision/ingest`; strategies are registered against its first revision and
+reused over edited successors, so F0 relocates readings.
+
+## 6. Fixtures, increments, acceptance
+
+**Fixtures.** Session `ed69fb38-…` (2026-11-07), settled turn records whose
+operator text and agent reply between them carry `㊯`, `㊢` and colon-form
+marks:
+- `turn-4qzbnC` — "🈳: … send that to claude-19" (read `delegate`; the reply
+  carries `㊯`);
+- `turn-pHxXNI` — "🈯: Please send out the rest of MAP" (read `ask-action`;
+  the reply carries `㊢`);
+- `turn-PdGx4U` — propose / approve / qualify / constrain.
+
+The colon-form marks answer the agent's paragraphs, so mark and reading
+differ: this is shown as several attributable interpretations, not as proof
+that one is wrong. No incorrect mark is fabricated. The assessment
+acceptance case uses a real operator judgement of a named interpretation;
+until one exists it is labelled **pending**, not inferred.
+
+**Increments** (one packet each; persistence separate from presentation;
+assessment semantics are part of the core contract from step 1):
+
+1. Freeze fixtures, canonical record shapes, semantic-id rules, golden
+   expected records.
+2. `clusion/assert` and `assessment/append` in the JVM registry and the
+   futon1b conditional route; namespace, atomicity, idempotency tests.
+3. Settled-turn materialiser, including ambiguous readings and assessment
+   records.
+4. Deterministic Markdown + sidecar exporter; ingest; resolve across
+   revisions.
+5. futon4a linear, graph and bounded GCC (non-executable) projections over
+   identical ids.
+6. Prose-edit / relocation demonstration; assert cross-view identity.
+7. Live operator assessment, if the retained fixtures do not already
+   contain one.
+
+**Acceptance** = the mission's F1 completion criteria (§1), shown in Emacs
+through futon4a.
