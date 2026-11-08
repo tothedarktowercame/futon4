@@ -1,0 +1,52 @@
+{:warrant/id "M-formal-arxana/C3a-2026-11-08"
+ :increment :C3a
+ :recorded-at "2026-11-08"
+ :commits
+ {:futon1b "f01a817e4c8726ed620943955824b16e5f7c1b19"
+  :futon3c "269b09e03fb9d42cdae919807c3307b7d3d223ea"}
+ :layout
+ {:records [:arxana_clusions :arxana_evidence]
+  :sidecar [:arxana_edge :arxana_att :arxana_meta]
+  :edge-key [:edge-type :endpoint-role :endpoint-id :event-time :edge-id]
+  :watermark "sha256 of sorted authoritative clusion+attestation ids"
+  :stale-behaviour :typed-stale-index}
+ :measurements
+ {:private-store true
+  :records 100
+  :hot-key-limit 50
+  :hot-key-returned 50
+  :hot-key-median-ms 10.709022
+  :hot-key-p95-ms 19.516635
+  :prepared-rebuild-ms 8.812613
+  :initial-rebuild-ms 28.991941
+  :concurrent-reads 90
+  :concurrent-statuses {:ok 3 :stale-index 87}
+  :budget-ms 5000
+  :budget-result :passed}
+ :tests
+ [{:repo :futon1b :command "clojure -M:node -m test-arxana-index"
+   :result "saturated LIMIT 50, concurrent writer, stale watermark, prepared rebuild: PASS"}
+  {:repo :futon1b :command "clojure -M:node -m test-formal-arxana-c2"
+   :result "10/10 PASS"}
+  {:repo :futon1b :command "clojure -M:node -m test-arxana-conditional"
+   :result "24/24 PASS"}
+  {:repo :futon3c :command "clojure -M:test -n futon3c.arxana.graph-read-test"
+   :result "4 tests, 10 assertions, 0 failures, 0 errors"}
+  {:repo :futon3c :command "clojure -M:test -n futon3c.arxana.formal-c3a-test"
+   :result "1 test, 59 assertions, 0 failures, 0 errors"}
+  {:repo :futon3c :command "clojure -M:test -r 'futon3c\\.arxana\\..*-test'"
+   :result "91 tests, 569 assertions, 0 failures, 0 errors"}
+  {:command "clj-kondo and futon4 check-parens over changed files"
+   :result "0 errors, 0 warnings; OK"}]
+ :lean-mirrors
+ {:read_bounded :passed
+  :read_nodup :passed
+  :three-cycle-complete :passed
+  :maxNodes-2-truncated :passed}
+ :runtime
+ {:private-processes-only true
+  :live-services-reloaded false
+  :live-services-restarted false}
+ :deferred
+ [:attempt/append :typed-external-references :materialised-aggregates
+  :incremental-index-catch-up-optimisation]}
