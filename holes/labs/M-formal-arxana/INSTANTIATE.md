@@ -694,3 +694,33 @@ since placements have no write operation of their own. Member lists over
 200 would be truncated (the cardinality check would refuse such a fibre).
 
 **F5 is built and reviewed through F5c; its acceptance is Joe's.**
+
+## F2a — patches, sequencer, conflicts (returned for rework as F2a-2)
+
+codex-21: futon3c ef4cdbf52/4d9ab4f0b/3d3b586ec (spike S2 rebase promoted to
+`text_rebase.clj`), d37b1e2e4 (`formal_f2.clj`; types `text/patch`,
+`text/conflict`, `text/alternative`, `text/choice`; `:text/submit-patch`,
+`:text/choose`), e25a0bd54, warrant 42df1dcf7. Process safety: no kill in
+the job log; :7073/:7084 pids unchanged; no leftover test JVM.
+
+Review (claude-13). The rebase module is sound: plants (a) partial overlap
+as disjoint, (b) alternatives sharing one side's bytes and (f) UTF-16
+offsets were all caught (text-rebase + F2 tests).
+
+Findings that send it back:
+- The sequencer decides from an in-JVM atom (heads, which patch moved base
+  to head, conflicts, alternatives). Only patches/conflicts/alternatives/
+  choices are stored; the base→result application is not. After a restart
+  or from another instance, stale patches cannot rebase and stored
+  conflicts cannot be chosen: a second sequencer beside futon1b's CAS.
+- Rebase works only when the base is the head's direct parent; a writer two
+  revisions behind is refused. That would decide F2's offline-replay test
+  (the CRDT question) by an implementation limit.
+- Tests read the head from the atom; the third-writer race is a stub of
+  ingest; after a choice nothing checks the head's text.
+- 3d3b586ec deleted `SPIKE-f2-rebase.md`, which VERIFY.md cites.
+
+Re-dispatched as packet 19 (F2a-2): application records, head from futon1b,
+rebase through the stored chain from any ancestor with a typed chain-gap
+refusal, conflicts recording the head they were computed against, choose
+from the store with CAS, tests with two instances sharing only the store.
