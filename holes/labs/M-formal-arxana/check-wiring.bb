@@ -1,0 +1,10 @@
+;; Run: bb check-wiring.bb arxana-wiring.edn   (structural VERIFY check, futon3c.diagramprover.wiring)
+(require '[babashka.classpath :as cp] '[clojure.edn :as edn] '[clojure.pprint :as pp])
+(cp/add-classpath (str (System/getProperty "user.home") "/code/futon3c/src"))
+(require '[futon3c.diagramprover.wiring :as wiring])
+(let [spec (edn/read-string (slurp (first *command-line-args*)))
+      g (wiring/ingest spec)]
+  (pp/pprint {:boxes (count (:boxes spec))
+              :written-never-read (wiring/written-never-read g)
+              :read-never-written (wiring/read-never-written g)
+              :multiply-written (wiring/multiply-written g)}))

@@ -1,0 +1,109 @@
+;; M-formal-arxana VERIFY — declared ownership map of DERIVE-wiring.md §1
+;; (as corrected by codex-21's review), for futon3c.diagramprover.wiring.
+;; claude-13, 2026-11-08. Design-level: no :site entries yet, because no code
+;; exists; C1/C2 INSTANTIATE adds sites so `conformance` can check
+;; declaration against source.
+;;
+;; Fields are records or requests crossing a box boundary. Each producer of
+;; candidate requests has its own field (a request channel per producer), so
+;; :multiply-written flags only a real second authority for one record.
+;; Checks wanted: written-never-read = a stored record with no named reader
+;; (refactored ARGUE P15); read-never-written = an input nobody supplies;
+;; multiply-written = two authorities for one question (P8).
+{:spec/id :m-formal-arxana-wiring
+ :boxes
+ [;; --- sources (immutable, owned elsewhere) ---
+  {:box/id :xiang-turn-store            ; 象 turn store + settled turn evidence
+   :writes [:source/turn-evidence]}
+  {:box/id :artifact-sources            ; Lean files, TeX, HTML, authored prose
+   :writes [:source/artifact-bytes]}
+  {:box/id :external-authorities        ; minus40/驴, Giraffe, PUR records
+   :writes [:source/external-record]}
+
+  ;; --- declarations (C1) ---
+  {:box/id :declaration-authors         ; type declarations + intent-vocabulary/v1 source
+   :writes [:type/declaration-source :vocab/source :projection/rule-source]}
+  {:box/id :vocab-generator             ; three generated presentations; CI refuses drift
+   :reads [:vocab/source]
+   :writes [:vocab/presentations]}
+
+  ;; --- interpreters (candidates only, basis model) ---
+  {:box/id :xiang-seat
+   :reads [:source/turn-evidence :vocab/presentations :type/declaration]
+   :writes [:xiang/candidate-request]}
+  {:box/id :ma-seat
+   :reads [:source/turn-evidence :vocab/presentations :type/declaration]
+   :writes [:ma/candidate-request]}
+  {:box/id :informaliser                ; F3 generated informalisation
+   :reads [:source/artifact-bytes :type/declaration]
+   :writes [:informaliser/candidate-request]}
+  {:box/id :mark8                       ; F3 model attestations
+   :reads [:source/artifact-bytes :read/result]
+   :writes [:mark8/attestation-request]}
+  {:box/id :conversation-exporter       ; F1 exported conversation Markdown
+   :reads [:source/turn-evidence]
+   :writes [:exporter/revision-request]}
+
+  ;; --- Lean kernel (authority: Lean truth) and its adapter ---
+  {:box/id :lean-kernel
+   :reads [:source/artifact-bytes]
+   :writes [:lean/run-result]}
+  {:box/id :evidence-adapter            ; JVM Arxana: kernel runs -> attestations
+   :reads [:lean/run-result]
+   :writes [:kernel/attestation-request]}
+
+  ;; --- JVM Arxana (authority: validity) ---
+  {:box/id :type-registry
+   :reads [:type/declaration-source :projection/rule-source]
+   :writes [:type/declaration :projection/rule]}
+  {:box/id :write-ports                 ; revision/ingest, clusion/assert, evidence/append,
+                                        ; assessment/append, attempt/append
+   :reads [:type/declaration
+           :xiang/candidate-request :ma/candidate-request
+           :informaliser/candidate-request :mark8/attestation-request
+           :kernel/attestation-request :exporter/revision-request
+           :client/revision-request :acceptance/assessment-request
+           :executor/attempt-request :admission/decision :store/head]
+   :writes [:arxana/validated-write]}
+
+  ;; --- futon1b conditional route (authority: atomic persistence) ---
+  {:box/id :futon1b-arxana-route
+   :reads [:arxana/validated-write]
+   :writes [:store/revision :store/clusion :store/attestation
+            :store/assessment :store/attempt-receipt :store/admission-decision
+            :store/head]}
+
+  ;; --- C3: index, watermark, referenced authorities ---
+  {:box/id :index-builder
+   :reads [:store/clusion :store/attestation]
+   :writes [:read/index :read/watermark]}
+  {:box/id :external-ref-resolver       ; typed outcome: ok | unavailable | digest-mismatch | schema-drift
+   :reads [:source/external-record]
+   :writes [:read/external-outcome]}
+  {:box/id :read-ports                  ; entity/get, graph/query (bounded), scope/resolve
+   :reads [:store/revision :store/clusion :store/attestation :store/assessment
+           :store/attempt-receipt :store/admission-decision
+           :read/index :read/watermark :read/external-outcome]
+   :writes [:read/result]}
+
+  ;; --- projections ---
+  {:box/id :projectors                  ; linear, graph, GCC, SVG, page
+   :reads [:read/result :projection/rule]
+   :writes [:projection/fragment]}
+  {:box/id :projection-clients          ; futon4a (Emacs/EWW), futon6, HTML pages
+   :reads [:projection/fragment :store/head :client/presentation-state]
+   :writes [:client/revision-request :client/presentation-state]}
+
+  ;; --- acceptance and admission (separate questions) ---
+  {:box/id :acceptance-actor            ; human/institutional; Joe for fixtures
+   :reads [:projection/fragment]
+   :writes [:acceptance/assessment-request]}
+  {:box/id :d6-compiler                 ; F4: action/compile -> non-executable candidate
+   :reads [:read/result :type/declaration]
+   :writes [:d6/candidate-action]}
+  {:box/id :admission-actor             ; policy actor; Joe for fixtures
+   :reads [:d6/candidate-action]
+   :writes [:admission/decision]}
+  {:box/id :executor                    ; runs only an admitted bounded op
+   :reads [:admission/decision :d6/candidate-action]
+   :writes [:executor/attempt-request]}]}
