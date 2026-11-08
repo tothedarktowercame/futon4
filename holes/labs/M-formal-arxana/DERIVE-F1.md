@@ -4,9 +4,9 @@ claude-13, 2026-11-08. Second draft; the first widened F1 beyond the
 mission and was reverted (futon4 75f08b3, bf6fded). This one follows the
 mission's F1 paragraph and completion criteria only, with the author's
 clarifications (codex-21, 2026-11-08, job
-invoke-1794098667698-15408-0169217d). Build-plan details from codex-21's
-second round (job invoke-1794099069915-15414-903e7789) are folded in when
-they land; until then §4–§6 are marked pending.
+invoke-1794098667698-15408-0169217d). Build-plan details come from codex-21's
+second and third rounds (jobs invoke-1794099069915-15414-903e7789,
+invoke-1794099152274-15417-a197d5c0).
 
 ## 1. F1 as written (mission §1)
 
@@ -110,6 +110,21 @@ invokes the export; it does not author it. The Markdown is ingested with
 `revision/ingest`; strategies are registered against its first revision and
 reused over edited successors, so F0 relocates readings.
 
+**Settled in round 3 (codex-21, job invoke-1794099152274-15417-a197d5c0):**
+- *Intent vocabulary.* Increment 1 mints one versioned
+  `intent-vocabulary/v1` record from a canonical futon3c EDN resource.
+  Interpretations reference its id/revision plus the intent id. The three
+  hand-kept copies (turnfeed `intent-mark`, `xiaoxiang-preview.el`,
+  reply-proforma.md) are generated or tested from it.
+- *Write path.* JVM Arxana validates operation semantics, then writes
+  through `store_http`; futon1b's conditional route is the sole atomic
+  persistence authority and validates storage invariants. Two layers, not
+  two competing validators.
+- *Golden records.* Executable inputs and expected records live in futon3c
+  test resources (e.g. `test/resources/arxana/formal_arxana/f1/`). futon4
+  keeps the design, the evidence report and pinned fixture digests, not a
+  second copy.
+
 ## 6. Fixtures, increments, acceptance
 
 **Fixtures.** Session `ed69fb38-…` (2026-11-07), settled turn records whose
@@ -130,8 +145,9 @@ until one exists it is labelled **pending**, not inferred.
 **Increments** (one packet each; persistence separate from presentation;
 assessment semantics are part of the core contract from step 1):
 
-1. Freeze fixtures, canonical record shapes, semantic-id rules, golden
-   expected records.
+1. Freeze fixtures, canonical record shapes, semantic-id rules, the
+   `intent-vocabulary/v1` resource, and golden expected records (futon3c
+   test resources).
 2. `clusion/assert` and `assessment/append` in the JVM registry and the
    futon1b conditional route; namespace, atomicity, idempotency tests.
 3. Settled-turn materialiser, including ambiguous readings and assessment
