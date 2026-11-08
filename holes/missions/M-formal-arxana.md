@@ -477,10 +477,12 @@ convergence), `DERIVE-F1.md` … `DERIVE-F6.md`.
 - [x] Write the preserve/adapt/drop fidelity matrix for existing Arxana, 象,
   REPL Circus, and JVM contracts. (DERIVE-core §12.)
 - [x] Define the F1–F6 acceptance fixtures and dependency order.
-  (Fixtures and acceptance cases in DERIVE-F1…F6; build DAG still to be
-  drawn as a table, separate from the wiring diagram.)
-- [ ] State every non-obvious choice as IF/HOWEVER/THEN/BECAUSE.
-- [ ] Determine whether a wiring diagram is required and create it if so.
+  (Fixtures and acceptance cases in DERIVE-F1…F6; build order in
+  DERIVE-wiring §2.)
+- [x] State every non-obvious choice as IF/HOWEVER/THEN/BECAUSE.
+  (DERIVE-wiring §3.)
+- [x] Determine whether a wiring diagram is required and create it if so.
+  (Required, per codex-21; DERIVE-wiring §1, build order §2.)
 
 ### 4. ARGUE
 
