@@ -12,7 +12,7 @@ dialogue; the sha256 lets anyone check the opened text was not changed.
 |---|---|---|---|
 | claude-13 | claude-13-argument.txt.gpg | claude-13-argument.sha256 | claude-13 (`~/notes/claude-13/argue/`) |
 | codex-21 | codex-21-argument.txt.gpg | codex-21-argument.sha256 | codex-21 (`~/notes/codex-21/argue/`) |
-| claude-19 | (pending) | | claude-19 |
+| claude-19 | claude-19-argument.txt.gpg | claude-19-argument.sha256 | claude-19 (`~/notes/claude-19/argue/`) |
 
 Encryption: `gpg --symmetric --cipher-algo AES256`, passphrase in a file
 outside the repository.
