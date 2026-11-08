@@ -1,5 +1,7 @@
 # E-essay-versioning-ux
 
+> **Closure check 2026-11-08: partly done.** Done: d3ad19a collapses essay families to one head row in the Emacs `essays-home` view (`dev/arxana-browser-essays.el`) and in the WebArxana essay cards (`client/api.cljs`, `client/card.cljs`), with tests `arxana-browser-essays-menu-items-collapse-version-families` and `arxana-browser-essays-items-add-older-versions-row` in `test/arxana-browser-essays-test.el`; 38cfccc makes compiled-view annotations version-aware. Remains: (1) the "browse earlier versions" affordance is a count only: an `info` row "older versions (N)" in Emacs and a plain footer span in `card.cljs` around line 272, neither of which links to or lists v3, v2, v1, so the acceptance bar's "following it surfaces v3, v2, v1" is not met; (2) Track B (`/relation` with entity-id strings, supersedes chain) was specified against futon1a, which is retired; whether futon1b needs it was not checked here. Checked by misc in the closure pass (claude-6, FIX/WONTFIX sheet).
+
 **VERDICT (2026-10-09, provisional):** OPEN — Dispatch spec with acceptance bar and gates but no delivery report; git shows only the 2026-06-06 spec commit. _(WM status classification by zai-5, medium confidence; not yet confirmed by the author.)_
 
 **Owner (implementer):** codex-1 · **Reviewer:** claude-7 · **Opened:** 2026-06-06
