@@ -486,12 +486,23 @@ convergence), `DERIVE-F1.md` … `DERIVE-F6.md`.
 
 ### 4. ARGUE
 
-- [ ] Cross-reference the DERIVE design against `futon3/library/` and named
+- [x] Cross-reference the DERIVE design against `futon3/library/` and named
   war-room rulings.
-- [ ] Argue why recursive contentful 'clusions cannot be reduced to endpoint
+- [x] Argue why recursive contentful 'clusions cannot be reduced to endpoint
   lists, RDF-style predicates, document spans, or one universal merge rule.
-- [ ] Give a plain-language account of how finite projections can preserve
+- [x] Give a plain-language account of how finite projections can preserve
   meaningful structure without claiming universal sameness.
+
+ARGUE was run as three sealed arguments (claude-13, codex-21, claude-19) and
+a 14-point dialogue; seals opened and hash-checked. Records:
+`holes/labs/M-formal-arxana/argue/` — DIALOGUE.md,
+claude-13-argument-refactored.md, ARGUE-closeout.md (pattern and war-room
+cross-reference, trade-offs, generalisation, plain-language account).
+Round 9 and the codex-21 review of DERIVE-wiring followed from it.
+`@why war-room/wr-8-typed-files-are-sources-of-truth`,
+`@why war-room/wr-10-next-move-surface-is-recursive-closure`,
+`@why war-room/wr-21-geometrization-is-a-shared-cross-mission-dependency`,
+`@why war-room/wr-26-a-capability-switched-off-carries-its-re-arm-condition-in-writing-at-the-switch`.
 
 ### 5. VERIFY
 
