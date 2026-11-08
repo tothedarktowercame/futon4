@@ -1,41 +1,50 @@
-{:warrant/id "M-formal-arxana/C3a-2026-11-08"
- :increment :C3a
+{:warrant/id "M-formal-arxana/C3a-fix-2026-11-08"
+ :increment :C3a-fix
  :recorded-at "2026-11-08"
  :commits
- {:futon1b "f01a817e4c8726ed620943955824b16e5f7c1b19"
-  :futon3c "269b09e03fb9d42cdae919807c3307b7d3d223ea"}
+ {:futon1b "ad1f68a4d0ee4e2aecb87a31ec71782b56caa589"
+  :futon3c "364e7142cfe00fc9193cd9f66ff9016a67929f72"}
  :layout
  {:records [:arxana_clusions :arxana_evidence]
+  :source-sequence "singleton arxana_index_state row, advanced atomically with each indexed C2 write"
+  :event-log :arxana_index_events
   :sidecar [:arxana_edge :arxana_att :arxana_meta]
   :edge-key [:edge-type :endpoint-role :endpoint-id :event-time :edge-id]
-  :watermark "sha256 of sorted authoritative clusion+attestation ids"
+  :catch-up "ordered events after the SQLite watermark; idempotent point application"
+  :full-rebuild "deterministic recovery path; incremental snapshot equals rebuilt snapshot"
   :stale-behaviour :typed-stale-index}
+ :traversal
+ {:modes [:clusion :endpoint-expansion]
+  :endpoint-expansion "endpoint -> role-indexed clusions -> all role-labelled endpoints"
+  :bounds [:max-depth :max-nodes :fan-out]
+  :fan-out "typed truncation when any per-node result exceeds the bounded query limit"
+  :visited-id-suppression true}
  :measurements
  {:private-store true
-  :records 100
-  :hot-key-limit 50
-  :hot-key-returned 50
-  :hot-key-median-ms 10.709022
-  :hot-key-p95-ms 19.516635
-  :prepared-rebuild-ms 8.812613
-  :initial-rebuild-ms 28.991941
-  :concurrent-reads 90
-  :concurrent-statuses {:ok 3 :stale-index 87}
+  :scale {:clusions 50000 :attestations 100000}
+  :seed-ms 39313.935315
+  :full-rebuild-ms 3191.387125
+  :hot-key {:limit 50 :total 100 :median-ms 4.170344 :p95-ms 6.812558}
+  :attestation-lookup {:median-ms 3.635904 :p95-ms 5.558074}
+  :bounded-traversal {:relations 50 :endpoints 100 :elapsed-ms 146.344672
+                      :status :ok :fan-out-observed true}
+  :write-including-catch-up-ms 163.98162
+  :concurrent-writer {:writes 100 :elapsed-ms 3003.428678
+                      :stale-reads 1143 :stale-span-ms 2953.998865}
   :budget-ms 5000
   :budget-result :passed}
  :tests
- [{:repo :futon1b :command "clojure -M:node -m test-arxana-index"
-   :result "saturated LIMIT 50, concurrent writer, stale watermark, prepared rebuild: PASS"}
-  {:repo :futon1b :command "clojure -M:node -m test-formal-arxana-c2"
+ [{:repo :futon1b :command "clojure -M -m test-arxana-index"
+   :result "O(1) reads, typed stale, incremental==full rebuild: PASS"}
+  {:repo :futon1b :command "clojure -M -m test-formal-arxana-c2"
    :result "10/10 PASS"}
-  {:repo :futon1b :command "clojure -M:node -m test-arxana-conditional"
+  {:repo :futon1b :command "clojure -M -m test-arxana-conditional"
    :result "24/24 PASS"}
-  {:repo :futon3c :command "clojure -M:test -n futon3c.arxana.graph-read-test"
-   :result "4 tests, 10 assertions, 0 failures, 0 errors"}
-  {:repo :futon3c :command "clojure -M:test -n futon3c.arxana.formal-c3a-test"
-   :result "1 test, 59 assertions, 0 failures, 0 errors"}
-  {:repo :futon3c :command "clojure -M:test -r 'futon3c\\.arxana\\..*-test'"
-   :result "91 tests, 569 assertions, 0 failures, 0 errors"}
+  {:repo :futon3c
+   :command "clojure -M:test -n futon3c.arxana.graph-read-test -n futon3c.arxana.formal-c3a-test"
+   :result "7 tests, 75 assertions, 0 failures, 0 errors"}
+  {:repo :futon3c :command "Arxana namespace suite (19 namespaces)"
+   :result "93 tests, 575 assertions, 0 failures, 0 errors"}
   {:command "clj-kondo and futon4 check-parens over changed files"
    :result "0 errors, 0 warnings; OK"}]
  :lean-mirrors
@@ -48,5 +57,4 @@
   :live-services-reloaded false
   :live-services-restarted false}
  :deferred
- [:attempt/append :typed-external-references :materialised-aggregates
-  :incremental-index-catch-up-optimisation]}
+ [:attempt/append :typed-external-references :materialised-aggregates]}
