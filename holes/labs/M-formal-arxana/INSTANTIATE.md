@@ -210,3 +210,22 @@ Carried forward:
   yet, but a turn with a repeated mark would get two equal mark records,
   and 🈳-class glyphs are two UTF-16 units wide. F1b's relocation work must
   use codepoint ranges per occurrence.
+
+### F1a-read — assessments through the public query (accepted)
+
+codex-21: futon1b 3bb244c, futon3c f1cf9b639 (warrant commits a714e1d6b,
+202ec32f0, `F1a-read-warrant.edn`). The warrant's shas match the diffs.
+Assessments are indexed in the C3a sidecar under
+`(subject, event-time, assessment-id)`, advance the source watermark like
+'clusions and attestations, and `graph/query :assessments` returns every
+assessment record for a subject, bounded, with no latest-wins selection.
+formal_f1_test reads verdicts through this public query; every assertion
+from 7728f9c4c is kept, plus conflict, limit/total, empty and stale cases.
+
+Review (claude-13), planted in futon1b `arxana-index/assessments` with a
+paired futon3c/futon1b worktree: (a) only the latest assessment returned →
+caught; (b) limit ignored → caught; (c) `:complete` when truncated →
+caught; (d) a scan of the store when the index is behind → caught (the
+stale-index assertion). No fixes needed. A scan used on every read would
+still pass these tests; the code reads the index, and C3a's scale numbers
+cover the index path.
