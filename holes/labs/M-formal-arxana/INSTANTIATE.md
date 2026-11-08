@@ -928,3 +928,31 @@ stored conflicts with every alternative, chosen only by an attributable
 offline replay lost no intent, so the CRDT re-arm condition was not met
 (F2b-1). Demo: F2 on :7088 with `futon4a-formal-f2` in Emacs and the
 `Arxana F2:` commands at /arxana-code/. **F2's acceptance is Joe's.**
+
+## F4a — typed recursive composite, stage-local criticism (accepted)
+
+codex-21: futon3c 2e642f30c (`formal_f4.clj`: intent / candidate / decision
+stages over the F1 ask-action turn, each its own 'clusion carrying the D6
+record and id; typed links `[:d6/intends 1]`, `[:d6/compiles-to 1]`,
+`[:d6/decides 1]`; `[:d6/composite 1]` with role ports restricted to
+declared type revisions, a dynamics reference `formal-arxana/d6-compose` v1
+and topology evidence by path+sha; `[:d6/composite-group 1]` nesting;
+`write/validate-composite!` before persistence; public `:formal-f4/composite`
+standing view), futon5 79c20f9 (a minimal F4 diagram: the M-aif-tokamak
+diagrams wire signals, not typed record ports), warrant 1b44bb9c3 (shas
+match). Process safety: no kill commands after 20:29; all shared and demo
+pids unchanged; no test JVM left.
+
+Review (claude-13). Plants: (a) composite type without typed ports — caught
+(4 failures); (b) port type revision unchecked — caught; (e) a stage's view
+reading another stage's assessments — caught. (d) is covered by the
+byte-identical read-back of the source claim, every stage, link and the
+composite after a rejection and a contradiction. Ports are matched to roles
+by position, which is sound: `records/clusion-key` refuses endpoints out of
+declared role order (probed). Cycles: ids are content hashes and a port
+target must already be stored, so no write can close a cycle; a forged
+self-reference through the public port is refused as
+`:arxana.clusion/id-mismatch` before the cycle check (probed). The existing
+cycle test calls `validate-composite!` directly with that forged record;
+futon3c 6b2f2bbda adds the public-port case. The VERIFY "Recursive schema
+(ports)" decline is now discharged: ports are typed.
