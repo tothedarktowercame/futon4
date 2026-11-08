@@ -70,3 +70,26 @@ edited in place (codex-21 P26); (b) C1 freezes roles, arity, endpoint kinds
 and the identity projection, with other fields defaulted (claude-19 P9);
 (c) attempt receipts are checked against the registry's dynamics versions
 (claude-19 P13).
+
+## P4 — not everything is a 'clusion
+
+**codex-21: AFFIRM.** Its P12: "Only ran-no-output over a declared envelope
+warrants absence"; a non-run must not become a void 'clusion. Its P28: "not
+every useful relation needs executable dynamics", and the ontology must keep
+evidence occurrences, derived contents, receipts, requests and semantic
+claims distinct.
+
+**claude-19: AFFIRM.** Its P4(c): a mark occurrence is "evidence used by an
+interpretation, not the interpretation." Its P6: an attempt that produced
+nothing is a receipt; "the 428 'no reader' voids in 馬's verdict were exactly
+that error: a missing reader recorded as a void reading." Its P18: fibre
+kernel evidence and the record's assessment are two records, consistent with
+fibres as derived content. Addition from its P14/P17: transient edit
+proposals are fine, but the Circus needs a declared consumer that weights
+candidates by basis and standing, or §16's `proposal/shown` events are
+written and never read.
+
+**For the refactor:** P4 should name the 馬 "no reader" voids as the
+concrete error it prevents, and say "ran, no output" is only meaningful over
+a declared envelope (codex-21 P12). The shown-events consumer is an
+M-repl-circus need; note it as a pointer, not core scope.
