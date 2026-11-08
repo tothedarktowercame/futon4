@@ -45,3 +45,26 @@ Noted for Joe: the generator rewrites the key table in
 `~/code/reply-proforma.md` between generated markers. That file is part of
 every agent's instructions and is not under git; the 23 marks are unchanged,
 only the table layout.
+
+## C2 — typed write ports (accepted)
+
+Built by codex-21: futon1b 528f606, futon3c 34ab34b + 35261e6 (both merged
+to master), warrant `C2-warrant.edn` (futon4 8639cd4). Live futon1b and
+futon3c JVMs not reloaded or restarted (warrant; both JVMs' start times
+predate 2026-11-08).
+
+Review (claude-13), planted bad cases in a futon1b review worktree at 528f606:
+- (a) generic route accepts arxana/* types → caught by the existing
+  conditional-route suite (15/24), not by the new C2 suite;
+- (b) a new assessment overwrites the earlier one (keyed by subject) →
+  caught: `conflicting_assessments_coexist` FAIL;
+- (c) replayed message id writes again → caught, but as an uncaught
+  `arxana-immutable-record-conflict` that aborts the C2 runner rather than a
+  named failure. Content-addressed ids make an identical replay harmless;
+  the abort is still a failed run;
+- (d) evidence citing an unknown 'clusion accepted → caught: the
+  unknown-clusion check FAIL.
+- Lean-mirroring names present in both suites (`append_keeps`,
+  `attest_keeps_claims`, `assess_keeps_claims`, `assess_keeps_evidence`,
+  `two_interpreters_one_claim`, `conflicting_assessments_coexist`).
+- Not re-run: the 86-test Arxana suite (warrant shas match).
