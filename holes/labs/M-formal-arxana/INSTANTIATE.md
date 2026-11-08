@@ -163,3 +163,50 @@ Fixed in review (claude-13, merged):
 - formal-c3b-test 5/5 clean runs; Arxana suite 94 tests, 612 assertions;
   futon1b C2 11/11, conditional 24/24, index checks pass; clj-kondo and
   check-parens clean. No live service reloaded or restarted.
+
+## F1a — settled-turn materialiser and Joe's assessment (accepted after review fixes)
+
+Built by codex-21: futon1b a9921be (reserved `mark-occurrence/assert`
+route), futon3c 249aa138a + c9c92fe42 (materialiser `formal_f1.clj`,
+private-stack test), warrant `F1a-warrant.edn` (in futon3c test
+resources; it records commands and results but no shas, so the record
+check used the commit trailers: all three carry job
+invoke-1794122340013-15578-2c7d4ace). Four real 象 turns materialised:
+settled bytes ingested, C1 golden interpretation ids reproduced,
+attestations with basis `model`, mark occurrences as entities cited by the
+attestations, typed external references. turn-iWVzvT keeps its rejected
+`ask-action` reading and gains the `constrain` successor and a
+`supersedes` link.
+
+Review (claude-13), planted bugs in a worktree at c9c92fe42:
+- (a) competing readings collapsed to one 'clusion per source fragment → caught;
+- (b) verdict written onto the 'clusion instead of separate assessments → caught;
+- **(c) re-planning not deterministic (assessment time = now), so a re-run
+  writes a second set of assessments → NOT caught**: the test reused one
+  plan for both runs;
+- (d) the successor replaces the original reading → caught;
+- **(e) verdicts swapped between s1 and s2 → NOT caught**: the test checked
+  only that the set of verdicts was `#{:accepted :rejected}`.
+
+Also found: the assessments did not carry Joe's judgement. Their reasons
+were paraphrases ("s2 is good"), they cited no evidence, and their time was
+a placeholder. DERIVE-F1 increment 7 asks for his judgement as given.
+
+Fixed in review (claude-13, futon3c 7728f9c4c): each assessment carries
+Joe's words verbatim (`:quote`, checked against the text of evidence
+emacs-5d1f629e9f6fcd876a973fad309feff9), cites turn-0ozt4x and that
+evidence, and has the recorded time 2026-11-08T01:18:45Z. The test re-plans
+from the files for the second run, pins s1 `rejected`, s2 and s3 `accepted`
+(one each), the successor unassessed, the original unchanged, and the
+`supersedes` endpoints. All five plants caught; 3 tests, 30 assertions;
+clj-kondo and check-parens clean. No live service touched.
+
+Carried forward:
+- codex-21's residue: the public bounded `graph/query` does not return
+  assessments by subject (the test reads futon1b's `assessments-for`
+  directly). F1c's views need it; it is the next packet.
+- Mark locators are UTF-16 offsets of the *first* occurrence of a glyph,
+  with width 1. The four fixtures have one mark each, so nothing is wrong
+  yet, but a turn with a repeated mark would get two equal mark records,
+  and 🈳-class glyphs are two UTF-16 units wide. F1b's relocation work must
+  use codepoint ranges per occurrence.
