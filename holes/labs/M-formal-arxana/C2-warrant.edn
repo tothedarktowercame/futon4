@@ -3,7 +3,7 @@
  :recorded-at "2026-11-08"
  :commits
  {:futon1b "528f606"
-  :futon3c "34ab34bbb"}
+  :futon3c "35261e68e"}
  :tests
  [{:repo :futon1b
    :command "clojure -M:node -m test-formal-arxana-c2"
@@ -13,7 +13,7 @@
    :result "24/24 PASS"}
   {:repo :futon3c
    :command "clojure -M:test -n futon3c.arxana.formal-c2-test"
-   :result "2 tests, 40 assertions, 0 failures, 0 errors"}
+   :result "2 tests, 41 assertions, 0 failures, 0 errors"}
   {:repo :futon3c
    :command "clojure -M:test -r 'futon3c\\.arxana\\..*-test'"
    :result "86 tests, 499 assertions, 0 failures, 0 errors"}
