@@ -888,3 +888,43 @@ attestations are caught by ERT (4/4).
 Demo: F2 on 127.0.0.1:7088 (pid 92211, scope `futon4a-f2-demo.scope`).
 Readings appear after the first landed edit: the initial export revision
 has no relocation attestations (header says so).
+
+## F2d — VS Code / code-server second writer (accepted)
+
+codex-21: futon6 99606aca3 (`arxana.f2Open`/`f2Submit`/`f2Choose`,
+`lib/f2.js`, a fixture captured from a live private relocation record,
+`scripts/f2-cross-client.{js,sh}`), warrant futon3c f3affa115 (shas match;
+futon3c/futon4a bases 3f7ef2efc/3d5e597). Process safety: no kill commands
+after 20:14; all shared and demo pids unchanged; code-server :8097
+(pid 1773140, since Nov 7) not restarted.
+
+Review (claude-13). It took the F2c traps on board: offsets read from
+`location → range`, missing scopes listed in the status item, the
+originating document reloaded after a choice, exact-text comparison. Plants
+against `node --test` (35 tests): (a) UTF-16 offsets sent as codepoints,
+(b) the hand-written `location → start` shape, (d) a conflict
+auto-resolved, (e) a failed relocation shown as landed — each fails one
+test. (c) submit against the current head and (f) no reload after a choice
+live in `extension.js`, which no test reaches without a VS Code host; read
+and correct (`patch.base = state.baseRevision`; `refreshF2(f2Conflict.editor)`
+after a choice). The cross-client acceptance (VS Code library + batch Emacs
+on an ephemeral demo) passed again here with the warrant's exact head
+sha256 f002851c…
+
+Changed in futon6 7078b8d: the extension reads the F2 manifest from the
+demo's ready file when the setting is empty, as the Emacs clients do.
+Installed into the Arxana demo code-server (:8097, extensions dir
+`/tmp/arxana-cs-demo/ext/`, previous copy kept under
+`~/notes/claude-13/`); a window reload picks it up.
+
+## F2 — summary for acceptance
+
+Two clients (Emacs, VS Code/code-server) edit one F1 conversation through
+one sequencer (futon1b CAS on the artifact head). Stale edits rebase through
+stored application records from any ancestor; overlapping edits become
+stored conflicts with every alternative, chosen only by an attributable
+`text/choose`; F1 scopes relocate onto each new head through F0
+(resolved / missing / ambiguous, with the responsible hunks as evidence);
+offline replay lost no intent, so the CRDT re-arm condition was not met
+(F2b-1). Demo: F2 on :7088 with `futon4a-formal-f2` in Emacs and the
+`Arxana F2:` commands at /arxana-code/. **F2's acceptance is Joe's.**
