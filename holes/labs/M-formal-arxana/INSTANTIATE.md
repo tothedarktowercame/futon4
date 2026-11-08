@@ -439,3 +439,46 @@ Note for F3b: the test reads a fixed apm-lean worktree path
 (`~/worktrees/apm-lean/formal-arxana-f3a`); it should read the pinned
 commit from the apm-lean repository instead, so the test does not depend
 on a worktree surviving.
+
+## F3b — a93J02 step-to-declaration correspondences (accepted after review fixes)
+
+codex-21: futon3c 9dacc19be (`formal_f3_correspond.clj`, type
+`[:correspondence 1]`; F3a now reads apm-lean bytes with `git show` at the
+pinned commit 2dd18b2c, removing the worktree-path dependency) and
+cfcbc9535 (warrant `F3b-warrant.edn`). Warrant shas match. Process
+safety: no kill in the job log; shared pids unchanged; apm-lean still at
+2dd18b2c with only its pre-existing local changes.
+
+Delivered: 27 correspondences (9 steps × 3 candidates), each with mark8's
+model attestation and the judge's model assessment (`:candidate` or
+`:rejected`, never `:accepted`), plus Joe's human assessment per
+candidate: accepted where the judge chose it (e1, e8, e9), rejected
+otherwise, all retained. Steps with no judged match (e2–e7) are partial
+coverage and ambiguous. DCT vs Abel is a separate
+`:methodological-divergence` correspondence, accepted by Joe, never
+contradicted.
+
+Review (claude-13), planted bugs: (a) candidates collapsed to the judge's
+pick → caught; (b2) Joe's citation removed → caught; (c) divergence
+recorded as contradicted → caught; (d) judge's model verdict as accepted →
+caught; (e) unaligned declaration dropped from the plan → caught; **(b1)
+Joe's quote paraphrased → NOT caught**: the test compared the constant
+with itself.
+
+Also found: the divergence attestation named an invented producer
+("formal-f3/divergence-adapter") with basis `:human`; the reading is
+claude-13's and codex-21's (DERIVE-F3), i.e. model work. Its target was
+the Mathlib lemma rather than the Main.lean declaration. Joe's time was a
+second off the turn record.
+
+Fixed in review (futon3c 6852e8299): divergence evidence basis `:model`,
+standing `:unverified`, citing DERIVE-F3, targeting
+`tendsto_sum_alternating_harmonic` (Mathlib lemma kept as content); time
+01:27:30Z; an independent test pins the quote to the evidence text. All
+plants caught; 2 tests, 168 assertions.
+
+Carried to F3d: the unaligned declaration
+`tsum_alternating_harmonic_mul_pow` and the per-step ambiguity live only in
+the plan and in attestation content; they are not stored as records a view
+can read (no resolution-observation 'clusions, unlike F1). F3d's views
+need both.
