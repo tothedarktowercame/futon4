@@ -117,3 +117,25 @@ evidence and acceptance. "Who assesses with no person in the loop" is
 answered for the fixtures (DERIVE-core §10: a human or institutional
 actor); state that an unassessed candidate is a legitimate resting state,
 and leave the choice of automated assessors to client missions.
+
+## P6 — non-resolution is legitimate
+
+**codex-21: AFFIRM.** Its P11: "Non-resolution is legitimate because a graph
+may faithfully contain competing claims." Its P28: append-only coexistence,
+attributable choice, theory extension and deliberate non-resolution are
+distinct; forcing one merge rule would erase meaning.
+
+**claude-19: AFFIRM.** Its P6 is this point almost verbatim ("resolution
+states are data, not failures … F3's divergence … is a result"), and cites
+Joe's "absence must not read as a value." Its P3: retiring one of two
+competing records is a separate attributable assessment, never last-writer
+erasure. Qualification from its P4(d)/P5: coexistence holds only if
+convergence is per type (DERIVE-core §8); a last-writer or CRDT merge
+anywhere would erase silently. "F2 must show two divergent correspondences
+surviving a merge with both authors intact." Until then P6 is asserted, not
+shown.
+
+**For the refactor:** P6 should name its demonstration: F2's merge test
+keeps both divergent records with authors intact, and F3 keeps the a93J02
+divergence as a result. Add codex-21's four-way distinction (coexistence,
+choice, extension, non-resolution) as the reason convergence is per type.
