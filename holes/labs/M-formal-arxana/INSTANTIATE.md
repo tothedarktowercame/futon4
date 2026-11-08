@@ -400,3 +400,42 @@ line; `test/stop-f1-demo-test.sh` checks that only the recorded pid stops,
 a same-named unrecorded process survives, and a foreign recorded pid is
 refused. All plants caught; ERT 7/7; stop test passes. Not re-run: the
 JVM demo tests and the end-to-end launch (warrant shas match).
+
+## F3a — a93J02 fixture, Lean gate, kernel evidence adapter, locators (accepted after a review fix)
+
+codex-21: futon3c 401e41f0b (`formal_f3.clj`, `scripts/formal-f3a-lean-gate.sh`,
+two new 'clusion types `[:kernel-builds 1]` and `[:declaration-location 1]`,
+recorded kernel run `a93J02-kernel-run.edn`, warrant `F3a-warrant.edn`);
+apm-lean pinned at 2dd18b2c (unchanged). Warrant shas match. Process
+safety: no kill in the job log; :7070/:7073/:7084 pids unchanged; the
+apm-lean primary checkout's local changes date from 2026-11-06, before the
+job; the gate checks Mathlib package metadata before and after the run.
+
+Delivered: Lean 4.29 (v4.29.0-rc8) builds `problems/a93J02/lean/Main.lean`
+(passed), recorded with toolchain, commit, command, output digest and input
+digests; the run enters Arxana as a `kernel-builds` claim plus a basis
+`:kernel` attestation from the evidence adapter (a failed run is kept as
+`:contradicted`). Ten manifestations ingested as separate artifacts,
+including the generated HTML with its latexml_oxide 0.7.5 producer and log.
+Declaration identity is the fully qualified name; ranges are
+revision-specific parser evidence.
+
+Fixture finding (codex-21): apm-lean's `informal-solution.md` is now
+LaTeX-normalised and no longer byte-equal to futon3c's authored copy
+(MAP-Q8 said identical). Both are kept: the historically identical copy at
+apm-lean fe78c85d shares the authored revision id; the current file is its
+own revision.
+
+Review (claude-13), planted bugs: (a) two manifestations merged under one
+artifact id → caught; (b) declaration identity keyed by revision → caught;
+(d) a failed Lean run dropped → caught; **(c) kernel evidence written
+without the adapter → nothing could catch it**: no rule enforced the
+adapter path. Fixed in review (futon3c f29fa8a84): the JVM write port refuses
+`basis :kernel` evidence unless the principal is the evidence adapter; a
+forged-kernel test added; the guard removed, or the adapter writing under
+another principal, now fails. 1 test, 22 assertions.
+
+Note for F3b: the test reads a fixed apm-lean worktree path
+(`~/worktrees/apm-lean/formal-arxana-f3a`); it should read the pinned
+commit from the apm-lean repository instead, so the test does not depend
+on a worktree surviving.
