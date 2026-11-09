@@ -25,3 +25,22 @@ keys are exactly the four, the range reads as one whole form naming the
 symbol, resolves at its middle and last codepoint and not one past. Plants
 caught: line-number range (21 failures), truncated end, range under another
 key, finder without `defn-`.
+
+## Packet 3 — doc-entry scopes and code↔doc correspondences (accepted, one test added)
+
+codex-21: futon3c 9245bad7e (`[:doc-entry 1]` scopes, identity revision +
+ENTRY_ID + symbol; whole-bullet ranges as parser evidence, method
+`codedocs/def-doc-bullet` v1, ending at the next bullet or heading;
+`[:correspondence 1]` source = current code scope, target = doc scope,
+`:code-documents`, matched by SOURCE_PATH + symbol with a
+`codedocs/source-path+symbol` attestation; both directions read by indexed
+graph/query), warrant e93e78ef6 (shas match). Five links. Process safety
+clean.
+
+Review (claude-13): whole-span and exact-key checks were already there.
+Added in futon3c 2fac834da: a SOURCE_PATH with the same base file name in another
+directory must not link (the existing wrong-path case could not tell
+base-name matching from path matching). Plants caught: one-line range for a
+wrapped bullet (6 failures), base-name matching (1), prose mention taken as
+an entry (error). The "current revision" choice is made by the caller; the
+test pins it.
