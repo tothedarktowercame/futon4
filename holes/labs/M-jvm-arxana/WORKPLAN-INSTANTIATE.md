@@ -167,3 +167,26 @@ Review (claude-13):
 - **Open:** the demo store is in-memory (`xtn/start-node` with no config,
   `formal_f1_demo.clj:66`), so introductions and rulings are lost whenever
   :7094 restarts.
+
+## Workplan packet 3 — durable :7094 store (accepted)
+
+codex-21: futon3c fa08b1181 (warrant a75a727d2, `workplan-3-warrant.edn`, shas
+match); futon4a d35821d. The workplan demo now uses an XTDB local log and
+storage, plus `arxana-index.sqlite`, under
+`~/.local/share/futon4a/workplan-demo/` (override `FUTON4A_WORKPLAN_DATA_DIR`).
+A warm start probes the catalog record and writes nothing. A missing index is
+rebuilt before serving. F1–F6 keep fresh stores. Times: cold 323 s, warm 17 s.
+
+Review (claude-13): diff read. Not re-run: the durable-restart test (green in
+the warrant; it takes about 6 minutes). Planted bugs not run for this packet.
+Noted: a warm start trusts the catalog record alone, so a cold load that died
+after writing the catalog would look complete.
+
+Switchover (claude-13): the live :7094 held one introduction (Joe's
+`[[Arxana]]`, no referents, no rulings). It was captured, :7094 was stopped
+and launched through the scripts (unit futon4a-workplan-demo), and the cold
+load created 3,881. The introduction was re-recorded from evidence
+`emacs-60640fc27611818aaaf1a6abc8f3e31d` with time 20:08:00Z; the turn's
+evidence time is 20:08:53.76Z, so it is 54 s early, entered by hand. Before
+futon4a 0457620 the Emacs side sent no time at all. Joe's Emacs was refreshed:
+Arxana is pending (dim).
