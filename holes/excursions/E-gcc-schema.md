@@ -61,7 +61,7 @@ names the field that says how built the thing is.
 | Memory | minus40 (:7093) | project + memory slug | referenced authority; `:memory/assert` hyperedges | — | |
 | User story | claude-6 workplan data | per item | draft attestation (`story/*`) on the item | `story/evidence-kind` | |
 | Benefit line / beneficiary | claude-6 benefit reading | `benefit/line` | benefit-line records (75) | — | "the library is findable and current" |
-| Ostrom institution | M-ways-of-working (prose) | **not settled** | none | none | FUTON's ways of working as one bundle |
+| Institution (Ostrom) | patterns in `futon3/library/institutions/` (13, from Corneli 2016); Lean layer `mathlib4/DarkTower/AIF/Institutions.lean`; M-ways-of-working | **not settled** | none | **planned** | the packet process rule, written as a statement (§7) |
 | Code scope, doc scope | repos | path + scope id | codedocs types (F3, code↔docs) | — | a Lean def and its doc bullet |
 | Intent reading | 象 per-turn analysis | reading id | F1 interpretation 'clusions | assessment standing | |
 | Candidate action, admission decision, receipt | compiler code in futon3c `arxana/compile/` (no callers) | — | F4 records (composite) | — | |
@@ -77,7 +77,9 @@ names the field that says how built the thing is.
 | serves | item → benefit line | three model producers | `:workplan/serves`, one attestation per producer | 416 links, 418 attestations |
 | needs | item → item / artifact / entity | Giraffe (model, quote check `exact`) | `needs` 'clusion (DERIVE) | in Giraffe files |
 | mentioned-in | item → turn / commit | git, evidence | `:workplan/mention` | loaded |
-| part-of, uses, reads, writes, feeds, serves, replaces, implements, stores-in | entity → entity | lexicon | not loaded | in lexicon |
+| in-namespace | code entity → code entity | computed from namespace names (`futon3c.agency.agent-pouch` is in `futon3c.agency`) | derived | not loaded |
+| extends (optional feature; the parent works without it) | feature → feature | lexicon, with the switch as evidence (`FUTON3C_KANGAROO`) | 'clusion + attestations | proposed 11-09 |
+| part-of, uses, reads, writes, feeds, serves, replaces, implements, stores-in | entity → entity | lexicon | not loaded | in lexicon; `part-of` is ambiguous between the two rows above |
 | proposes | turn → pattern (驴, embedding, 驴/m40) | Circus | `pattern/proposal` + attestations | mapped, not written |
 | occurs-in | pattern → window of turns (馬) | Circus | `pattern/occurrence` | mapped, not written |
 | reads-as | turn → intent reading (象) | 象 | F1 'clusions | demoed |
@@ -110,10 +112,14 @@ yet built" map.
 - **One store or several.** This is open in M-repl-circus. DERIVE-wiring choice 3 keeps
   Arxana records off futon1b's plain `/api/alpha/hyperedges` route, while
   M-repl-circus (11-05) planned to write through it.
-- **Ostrom institutions:** there is no data source yet. Which document or record
-  holds them?
-- **Scale.** Is `part-of` enough to say that the kangaroo pouch is a piece of
-  Agency, or do features need a size field?
+- **Code containment and feature dependency are different relations (Joe,
+  11-09).** `futon3c.agency.agent-pouch` is unambiguously inside Agency as a
+  namespace, but Agency works without it: it can be switched off, and seats
+  fall back to cold starts. The lexicon's `part-of agency` mixes the two. The
+  draft splits it into `in-namespace`, computed from code, and `extends`, a
+  feature claim with its switch as evidence. Where the two disagree, a namespace
+  nesting crosses a feature boundary, and that is worth showing. Do features
+  also need a size field? Still open.
 - **Granularity of turn nodes.** One evidence entry can join several streamed
   pieces of a reply (claude-6, 11-09). Offsets are counted on the evidence text.
 - **The compiler contract** codex-21 proposed (types and passes, §1) still needs
@@ -122,3 +128,40 @@ yet built" map.
   `arxana/type_registry.clj`) plus a check that every declared kind has a
   producer and a reader, in the style of `graph-memory-contract.flexiarg`'s
   "schema-mirroring tests".
+
+## 7. Institutions (Joe, 11-09: status "planned", not "hypothesised")
+
+What exists:
+- **Lean layer:** `mathlib4/DarkTower/AIF/Institutions.lean` (`7bd6e913de`,
+  2026-09-18). It defines `Deontic` (may / must / mustNot),
+  `InstitutionalStatement` (condition, aim, deontic: the ADIC core),
+  `Norm`, `Rule` (adds the sanction outcomes: the Or-else), and `Monitor`
+  (trajectory requirements as bookkeeping that is observed), with
+  `Preference.withInstitution`. Its verdict: the operational level fits AIF,
+  collective choice fits partly (in learning), and the constitutional level
+  stays outside (the operator's ruling). It is single-agent; multi-participant
+  action situations are left open.
+- **Patterns:** 13 in `futon3/library/institutions/`, including
+  `rules-as-institutional-statements` (the ADICO form, kinds rule / norm /
+  strategy).
+- **Game:** the Snatch exemplar, `mathlib4/DarkTower/WarMachine/F12SnatchExemplar.lean`,
+  a 24-pattern cascade (including `institutions-vary-by-position-and-force`).
+- **Design notes:** futon2 `wm-contract/SESSION-C-institutional-constraints-2026-09-09.md`
+  and `SESSION-IAD-feedback-interpretation-2026-09-10.md` (proposals); M-aif4iad
+  (IDENTIFY).
+- No institution has been written out as records anywhere yet.
+
+Worked exercise (proposed): construct one real institution in the graph
+language, with each record corresponding to the Lean types.
+- One `institution/statement` 'clusion per statement. Its endpoints are the
+  attributes (the seats it binds), the aim (the action class) and, for a
+  rule, the sanction. Its declared content is the deontic and the condition.
+- A source attestation for each statement (the packet text, CLAUDE.md).
+- Incidents as evidence of the Or-else.
+- A monitor as a probe whose results are attestations.
+
+Candidate: the packet process rule. Agents (attributes) are FORBIDDEN
+(deontic) to signal a process they did not start (aim) on Zone (condition),
+or else the packet is rejected and the incident recorded (or-else; instance:
+codex-21 stopping futon1b on 2026-11-08).
+
