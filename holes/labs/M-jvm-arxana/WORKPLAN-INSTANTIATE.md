@@ -128,3 +128,42 @@ Review (claude-13). Four fixes, each with a test that fails on the old code:
 Live walk after the fixes: Agency, Giraffe and kangaroo (including in M-kangaroo)
 are marked once each; agency_send and Giraffes are not. RET on Giraffe opens its
 backlinks page.
+
+## sessionista packet 2 — `[[X]]` introductions (accepted after review fixes)
+
+codex-21: futon3c f5a514fb5, a3d871572 (lexicon aliases), warrant 53a8be0da
+(`sessionista-2-warrant.edn`, with shas); futon4a 7293b2d. Joe's `[[X]]` /
+`[[X | r1, r2]]` on send are anchored to the real `emacs-*` evidence id plus the
+codepoint range, through an `:around` advice on `agent-chat--start-turn`
+added by the mode (futon3c/emacs untouched). The introduction, referent
+(explicit or candidate) and rule records go through public ports. The rules
+list is now read from the stored records (the seed file only seeds). The entity
+page has `a`/`r`. Fixture: Joe's real turn `emacs-3bb1edfcff4bbe2932e8ab985faf6cfa`.
+The explicit case is that turn with one token edited (no real `[[X | r]]` turn
+existed).
+
+Review (claude-13):
+- **futon3c 00f11cf05:** futon1b's index returns attestations and assessments
+  newest first and ignores `:time/order` (`futon1b_arxana_index.clj`), so the
+  packet's `(last …)` read the OLDEST.
+  - A referent accepted then rejected stayed accepted.
+  - A newer forms attestation never took effect.
+  - "Any form ever enabled" switched every form on.
+
+  Fixed: the newest ruling decides; an introduced entity is on only while it
+  has an accepted referent; a seeded rule keeps each form's own switch from
+  its newest attestation. Two tests, both failing on the packet's code.
+  Other projections that take `last` of these lists may have the same bug.
+  Not yet checked.
+- **futon4a a461280:**
+  - After an introduction, every sessionista buffer did a forced refresh
+    (N+1 requests × ~22 buffers on Joe's send path). Now there is one fetch
+    and the shared cache.
+  - A `[[…]]` whose turn evidence was not acknowledged was dropped silently.
+    Now it gets an echo-area message.
+- **Live:** :7094 restarted through its scripts. Its rule list comes from the
+  store (agency, giraffe, kangaroo-pouch), and the marks paint. Loaded into
+  Joe's Emacs: 22 buffers, one rule fetch, send advice installed.
+- **Open:** the demo store is in-memory (`xtn/start-node` with no config,
+  `formal_f1_demo.clj:66`), so introductions and rulings are lost whenever
+  :7094 restarts.
