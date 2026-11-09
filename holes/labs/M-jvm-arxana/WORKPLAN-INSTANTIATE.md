@@ -35,3 +35,26 @@ Process safety clean; claude-6's files unchanged.
 
 Demo for Joe: 127.0.0.1:7094 (`systemd-run --user --scope
 --unit=futon4a-workplan-demo`).
+
+## Slice 2 — all 323 items and the list (accepted after a review fix)
+
+claude-6: `all-items.edn` from `make_all.py` — 3,881 records (1,720
+'clusions, 2,160 attestations, 1 assessment): 323 items (322 pending + E-R14
+closed by Joe), 323 `:filed` mentions, 454 names, 416 serves (claude-6's
+summary said 418; the file holds 416, matching its 1,720 total), 75 benefit
+lines with names, 322 pending levels, 116 user stories. Serves from three
+producers kept separate. claude-6 corrected its own glosses of C/K/G/N; the
+~10 user-story serves on those lines are weaker. Spot-checks (claude-13):
+E-R14's ruling sourced to closed-by-joe.tsv row 1; M-a-wmc-scaling's filed
+commit 5271311d is the commit that added its file (git log --diff-filter=A).
+
+codex-21: futon3c 9abe433b5 (chunked idempotent load with a failure ledger
+— empty; `:workplan/items` bounded and filterable), warrant b8335c3c0;
+futon4a a55daeb (list and expanded item page). Cold load 272 s; 200-item list
+0.07 s. Demo restarted on :7094 as transient unit futon4a-workplan-demo.service
+wrapping the pid-owned launch script.
+
+Review (claude-13), walked against :7094: grouping repeated headers (it kept
+the level sort) and filed each item under its first benefit line only; fixed
+in futon4a 01cfb28 with an ERT check that fails on the old code. Item pages,
+E-R14's ruling and T-pattern-search's five mentions read correctly.
