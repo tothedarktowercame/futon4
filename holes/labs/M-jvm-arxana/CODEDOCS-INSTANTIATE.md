@@ -85,3 +85,32 @@ doc text read off by one / from the wrong text (8), Lean list unsorted (2);
 two-store reversed write order gives identical views (in the test).
 `:links/at-revision` is nil rather than naming the current revision; the
 status field says what matters. Process safety clean.
+
+## Packet 6 — survives edits (accepted, one test added)
+
+codex-21: futon3c 431aa8554 (`codedocs_relocation.clj`: F1's exact anchor
+per historical definition, relocated onto the current revision, appended as
+evidence; `formal_f1_relocation/relocation-attestation` now omits
+application fields that are absent instead of storing nils), warrant
+ebb9b0350, report `test/resources/arxana/codedocs/survives-edits.edn`.
+
+| function | exact relocation | current scope by name | doc links | Lean links |
+|---|---|---|---:|---:|
+| run-opportunity! | missing (body 4511→1675 chars) | found | 1 | 0 |
+| prepare-acceptance | missing (900→3016) | found | 1 | 1 |
+| prepare-diagnosis | missing (1438→1537) | found | 1 | 1 |
+| production-readiness | unique (body unchanged) | found | 1 | 4 |
+| route! | missing (15170→21070) | found | 1 | 10 |
+
+Exact: 5 historical / 1 current / 1 both. By name: 5/5. Read together: every
+link still reaches its function; for four of the five the body changed after
+the link was made, so their docs and Lean citations deserve a re-read. My
+independent body comparison (futon2 git show, balanced-form extraction)
+gives the same four changed and one unchanged. Duplicate text: ambiguous,
+two candidates, never first-picked.
+
+Review (claude-13): F1/F2 relocation, projection, markup and demo tests still
+pass after the relocation-attestation change (11 tests, 383 assertions).
+Added in futon3c 72d55ec5b: the duplicate case appends its attestation and reads
+it back (outcome :ambiguous, two candidates); before, a reporting layer that
+called ambiguity unique passed (plant survived; now 1 failure).
