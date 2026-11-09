@@ -190,3 +190,31 @@ load created 3,881. The introduction was re-recorded from evidence
 evidence time is 20:08:53.76Z, so it is 54 s early, entered by hand. Before
 futon4a 0457620 the Emacs side sent no time at all. Joe's Emacs was refreshed:
 Arxana is pending (dim).
+
+## Workplan packet 4 — the lexicon in the stack (accepted after a review fix, loaded on :7094)
+
+codex-21: futon3c dfbde7e95 (`lexicon_loader.clj`), warrant 858f11eb5
+(`workplan-4-warrant.edn`). Input: 254 rows (251 unique slugs; cascade-live,
+inbox-zero and holistic-argument appear twice), 158 `@live` and 158 `@tier`,
+742 relation targets (589 resolved and written as model/unverified candidate
+referents, 153 unresolved and reported, not written), 9 Agency-survey
+entities and 10 competing survey corrections.
+
+Review (claude-13), futon3c b3dc73db6: the loader also wrote, for every entity,
+a word rule plus a forms attestation (its name, disabled). Because the newest
+forms attestation decides (00f11cf05), on :7094 this would have switched
+"Agency" and "Giraffe" off, replaced the kangaroo pouch's forms with "Kangaroo
+(warm pouch)", and put 251 members in the rule catalog, so sessionista would
+fetch every view on each refresh in Joe's Emacs. The fix: no word rules for
+lexicon entities. A word rule comes only from Joe's `[[X]]`. The test seeds the
+trial rules and checks that the load leaves their attestations unchanged; it
+fails on the packet's loader.
+
+Loaded on :7094 (durable): 1,716 records planned, 1,590 created, 0 failures; a
+rerun creates 0. Checked afterwards:
+- the rule list is still agency, arxana, giraffe and kangaroo-pouch;
+- Agency's and the kangaroo pouch's forms are unchanged and on;
+- the kangaroo pouch has `part-of`, `in-namespace` and `extends agency`, plus
+  `serves`;
+- Arxana keeps Joe's introduction and has candidate referents `uses`
+  (arxana-store), `part-of` (futon4) and `replaced-by` (jvm-arxana).
