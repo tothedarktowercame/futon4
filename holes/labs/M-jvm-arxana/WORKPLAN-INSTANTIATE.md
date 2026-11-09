@@ -218,3 +218,21 @@ rerun creates 0. Checked afterwards:
   `serves`;
 - Arxana keeps Joe's introduction and has candidate referents `uses`
   (arxana-store), `part-of` (futon4) and `replaced-by` (jvm-arxana).
+
+### Referents: prepopulated, Joe corrects (11-09, after Joe's first look)
+
+Joe on the Arxana page: three referents all marked "accepted", "uses" with no
+object, and "doing this for 100+ items is extremely tedious … better if we
+could find a way to prepopulate the graph and let me correct it".
+- futon4a 0ae08c2: JSON false arrives as `:json-false`, which is non-nil, so
+  every unverified referent showed "accepted" and switched-off forms would
+  show `[on]`. Rows now read "arxana uses arxana-store — proposed (from claude-6
+  lexicon 2026-11-08)", or "accepted/REJECTED by <actor>".
+- futon3c 4a52a6b18: a proposed referent counts until the latest ruling rejects
+  it. Each row carries its target slug, proposer and raw text.
+- futon3c fd6b4bb40: relations that resolve to their own source through an alias
+  are reported, not written. Two were already on :7094 (`arxana part-of
+  arxana` from "part-of futon4", and `holistic-argument replaced-by
+  holistic-argument`). claude-13 rejected both, with the reason recorded.
+- :7094 warm-restarted (load 0, already present); Joe's Emacs reloaded. Arxana
+  now has accepted-by-default referents, so its word is on (no longer pending).
