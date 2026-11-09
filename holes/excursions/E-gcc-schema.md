@@ -329,3 +329,35 @@ Open: which 'clusion types require a construction rather than a witness, and
 how a construction is stored. It could be a reference to a checkable artifact
 (a Lean declaration, a function at a sha) plus a kernel or exact attestation
 that it was checked.
+
+## 13. Benefit as a dimension, and scale (Joe, 11-09)
+
+> "we've touched on liveness (Agency live, GCC not) but not yet *benefit* as
+> another dimension. An important aspect of *benefit* is going to be 'does it
+> scale'. So, e.g., Agency can *in principle* scale to anyone with Emacs, JVM,
+> and modest hardware. In practice I have made no effort to promote it; futon
+> has one other user (Rob) … he might use futon *without* Agency … but he does
+> use futon1b. … the 'ability to make models of value production networks'
+> should have generalisable value, but this is a developing capability."
+
+Pending features are already in the lexicon: `gcc` (hypothesised, "Planned
+derived graph of patterns, missions, turns, sessions and memories"),
+`repl-circus` (partly), `formal-arxana` (hypothesised), and 76 "partly" and
+10 "hypothesised" entries in all. The 323 pending items link to entities
+through `names`.
+
+Today `serves` links pending ITEMS to benefit lines. Features themselves have
+no benefit records. Proposed, for each feature:
+- **feature serves benefit line,** with the kind (realised or potential) and
+  evidence of realisation (actual use, cited);
+- **scale in principle:** what someone needs in order to use it (its
+  prerequisites: Emacs, a JVM, modest hardware), which are the ports and
+  dependencies it requires;
+- **scale in practice:** who actually uses it, with evidence. For example:
+  Joe uses Agency (evidence: the roster and turns); Rob uses futon1b
+  (Joe, 11-09). Whether Rob uses Agency is unknown, and is recorded as an
+  open query, not assumed.
+
+The GCC's own benefit claim, "the ability to make models of value production
+networks", is a potential benefit with generalisable reach. It is recorded as
+such, with status developing.
