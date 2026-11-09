@@ -236,3 +236,41 @@ Open: in what sense Inbox Zero is analogous to the warrant system. Both sweep
 for work that happened without a durable record (an uncommitted change, an
 unrecorded test run) and turn it into a record that others can check. Is that
 the analogy Joe means, and does it make them two instances of one pattern?
+
+## 10. Introducing an entity with [[X]] (Joe, 11-09)
+
+> "if I write [[Inbox Zero]] or [[Warrant]] then we'd know that I am
+> 'introducing these as named entities in this turn' … a term really can't be
+> introduced until it has some referents, though it doesn't need to have
+> preexisting usage"
+
+- **Introduction:** a link from the entity to Joe's turn (evidence id plus the
+  range of `[[X]]`), with Joe as actor, at the turn's time. X resolves to an
+  existing entity by name, slug or alias, or else is new.
+- **Referents:** links from X to what it refers to, each with a role
+  ("by analogy with", "like", …). Their targets are entities, files,
+  namespaces, patterns, missions or turns. Referents written by Joe
+  (`[[X | r1, r2]]`) count at once. Other entities in the same turn are
+  candidates until accepted.
+- **Rule:** X's word rule switches on only once X has a referent. Until then
+  it is shown as introduced with no referent. The rule is made visible, not
+  refused.
+- **Time:** valid-time lets us ask what the map held on a date, and whether X
+  was used before it was named (earlier backlinks are shown as such, not as
+  its introduction).
+
+Built by sessionista packet 2 (codex-21, 11-09), on the private :7094 stack.
+
+## 11. Debt: the specifications get the same treatment (Joe, 11-09)
+
+> "in order to talk about that 'same thing' we should really have a
+> specification of what it is, but luckily we have M-formal-arxana and
+> E-gcc-schema *written down*. So they should get the same treatment (which
+> will be a reflective meta-theory). But as long as we know we have this debt
+> to dispatch soon the order doesn't really matter"
+
+Owed: introduce M-formal-arxana and E-gcc-schema as entities in the map, with
+referents. Their own kinds and relations (the 'clusion, the attestation,
+introduction, referent, port, …) then become entities too, so that the schema
+describes itself with the records it defines. To be dispatched soon after
+sessionista packet 2 and the Agency entities-and-ports packet.
