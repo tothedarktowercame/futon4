@@ -109,9 +109,14 @@ yet built" map.
 
 ## 6. Open
 
-- **One store or several.** This is open in M-repl-circus. DERIVE-wiring choice 3 keeps
-  Arxana records off futon1b's plain `/api/alpha/hyperedges` route, while
-  M-repl-circus (11-05) planned to write through it.
+- **Store (Joe, 11-09, settled).** The private demo stores are for now, not
+  for good. When the Arxana design is final, Arxana records move to its futon1b
+  route, and the GCC uses that same Arxana route once its content is ready.
+  Edges already written through the general hyperedges route (e.g.
+  `:memory/assert`) are read as an outside source.
+- **Where backlinks show (Joe, 11-09).** Entity backlinks should eventually
+  appear in agent turns, in session-mode or whatever replaces it, not only on
+  an entity page.
 - **Code containment and feature dependency are different relations (Joe,
   11-09).** `futon3c.agency.agent-pouch` is unambiguously inside Agency as a
   namespace, but Agency works without it: it can be switched off, and seats
