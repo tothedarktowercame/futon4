@@ -97,3 +97,34 @@ Review (claude-13):
   (2) Search hits are relevance-ranked and about 90% match only in metadata, so
   a 50-hit cap keeps 4–5 turns per word, and the agency backlinks are all from
   June. (3) The index is as of 02:19Z.
+
+## sessionista-mode, packet 1 — entity marks in REPL buffers (accepted after review fixes)
+
+Joe, 11-09: a light mode that does only entity marks plus backlinks, as fast as
+the as-you-type underlining (no model calls). This is the start of an NNexus-like
+linker for agent turns (E-gcc-schema §8).
+
+codex-21: futon4a abb2b11 (`lisp/futon4a-sessionista.el`, warrant
+`test/sessionista-1-warrant.edn`, which carries no commit sha). Painting uses
+jit-lock, like `session-mode--paint-rnode-tags`. Rules are fetched once from
+:7094. Matching is case-sensitive whole words. RET is on the overlay only and
+opens the backlinks page. session-mode's entity layer is switched off in the
+buffer and restored afterwards. 5,000 lines take 0.03–0.05 s (30,000 marks
+checked, so the time is for real painting).
+
+Review (claude-13). Four fixes, each with a test that fails on the old code:
+- d3c32b1: the live client reads JSON false as `:json-false` (non-nil), so a
+  form switched off would still be painted. The fixture reader parsed false as
+  nil, which hid it.
+- 0d38946 / ed46eb4: three planted bugs passed the original tests.
+  - Case-folding: the first lowercase "agency" in the real text is inside
+    agency_send, and marks without an entity were skipped by the check.
+  - A stack fetch inside the painter: fixture mode makes no url call.
+  - Disabling left a buffer-local nil when the setting was not local before.
+- 0a05f49: walked live in `emacs -Q`, the mode never read the demo's ready file,
+  so it asked the default URL and painted nothing. Fixture tests cannot see
+  this. Also, the operator and agent region lists overlap, so every word got
+  two marks.
+Live walk after the fixes: Agency, Giraffe and kangaroo (including in M-kangaroo)
+are marked once each; agency_send and Giraffes are not. RET on Giraffe opens its
+backlinks page.
