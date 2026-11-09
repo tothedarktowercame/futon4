@@ -68,3 +68,20 @@ Added (next commit): a module docstring directly above a declaration is not
 its doc. Plants caught: bare-word citation (35), module docstring as doc (1,
 after the added case), FQN without namespace (13), kernel standing on a
 parser citation (48), body comments dropped (4).
+
+## Packet 5 — `:codedocs/view` (accepted)
+
+codex-21: futon3c 558bb867e (`codedocs_view.clj`; `[:scope-in-revision 1]`
+membership so a revision's scopes are found by indexed query; the view reads
+only revision/get, entity/get and bounded graph/query; definitions in source
+order with doc spans and citing Lean declarations, first sentence flattened
+and backtick-free, parser/unverified standing, record ids, typed truncation
+and missing), warrant 290df69a3 (shas match). route! lists the legacy ten
+Lean declarations; prepare-diagnosis cites RouteState. The historical
+revision reports `:links/status :not-materialized-for-revision`.
+
+Review (claude-13): plants caught — backticks kept in the first sentence (4),
+doc text read off by one / from the wrong text (8), Lean list unsorted (2);
+two-store reversed write order gives identical views (in the test).
+`:links/at-revision` is nil rather than naming the current revision; the
+status field says what matters. Process safety clean.
