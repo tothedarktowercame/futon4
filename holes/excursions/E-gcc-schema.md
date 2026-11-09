@@ -170,3 +170,29 @@ Candidate: the packet process rule. Agents (attributes) are FORBIDDEN
 or else the packet is rejected and the incident recorded (or-else; instance:
 codex-21 stopping futon1b on 2026-11-08).
 
+
+## 8. Direction: linking as you go (Joe, 11-09)
+
+> "sessionista-mode would use these same kind of ideas, and become the basis
+> of a NNexus-like system for the Agent turns. Indeed, I'm thinking it's
+> actually also the basis for the GCC. Just like someone in a session
+> remembers, say, "Inisheer", maybe we can build some structural patterns
+> around the concepts. In particular, with a folk session there are different
+> skills involved: the melody is important, but so are chords, baseline, and
+> even other generic accompaniment (drones, percussion)."
+
+- **Fast, without model calls.** The marks are painted as text is displayed or
+  typed, like session-mode's draft tagger (`session-mode--paint-rnode-tags`,
+  jit-lock).
+- **NNexus-like.** Words are concept labels with per-entity linking policies
+  (the on/off rules, later contexts to skip). Steering could come from what the
+  turn is about, such as its clocked mission. A rule change re-links only what
+  it touches.
+- **Roles around a concept (open).** In a folk session one tune is the melody
+  while others play chords, bass, drones or percussion. In a turn, one concept
+  may be what the turn is about, while others support it, sit underneath it (as
+  Agency and futon1b do), or are constant background. Whether entity marks
+  should carry such a role is not yet designed.
+
+First step: sessionista-mode packet 1 (codex-21, 11-09): marks from the Arxana
+rules, with RET opening the entity's backlinks.
