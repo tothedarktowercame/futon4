@@ -1192,3 +1192,9 @@ read-only steps on the real ports. Fixed:
 
 Demos restarted on new code: F1 :7085, F2 :7088, F4 :7089, F5 :7087. F3
 :7086 and F6 :7090 needed no server change.
+
+## Acceptance
+
+Joe, 2026-11-09, after walking the demos: "I've gone through most of this
+and I'd say it looks very good! I reckon it's all ready to use so I accept
+the demos". F1–F6 accepted; the mission moves to DOCUMENT.

@@ -1,7 +1,7 @@
 # M-formal-arxana — Arxana as a recursive hypergraph editor and geometry markup language
 
 **Date:** 2026-11-07  
-**Status:** OPEN — IDENTIFY  
+**Status:** OPEN — DOCUMENT (INSTANTIATE F1–F6 accepted by Joe via the demos, 2026-11-09)  
 **Owner:** Joe (operator); next technical driver to be assigned  
 **Repos:** `futon4` (mission, legacy Arxana, design sources), `futon3c`
 (JVM authority, 象 and REPL Circus), `futon1`/XTDB (durable hypergraph),
