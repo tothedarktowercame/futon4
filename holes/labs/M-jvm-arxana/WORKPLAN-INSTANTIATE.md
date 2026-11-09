@@ -58,3 +58,42 @@ Review (claude-13), walked against :7094: grouping repeated headers (it kept
 the level sort) and filed each item under its first benefit line only; fixed
 in futon4a 01cfb28 with an ERT check that fails on the old code. Item pages,
 E-R14's ruling and T-pattern-search's five mentions read correctly.
+
+## Backlinks trial, packet 1 — three entities (accepted after a review fix)
+
+Joe, 11-09: no per-turn link records. Each entity keeps its rule (the words
+that name it, on/off) and backlinks are derived. He asked for a trial with a few
+known-good words. Measured first (claude-13): one evidence text-search on
+:7073 takes ~10 s whatever the limit, so searches run at build time only.
+
+codex-21: futon3c 4e39606ff, warrant 7340378f9 (`backlinks-1-warrant.edn`);
+futon4a 2e1bee1. Rules are `[:workplan/entity-match-rule 1]` 'clusions; forms
+and switches are attestations, outside identity. Derived index: 4 GETs at
+limit 50, 24 occurrences, `index-as-of` 02:19Z. Whole word, case-sensitive,
+hyphen is a boundary. A rebuild is byte-identical, and switching "kangaroo" off
+drops its 5 and nothing else.
+
+| Form | Hits | Kept | Metadata-only | Occurrences |
+|---|---:|---:|---:|---:|
+| Agency | 50 | 4 | 46 | 4 |
+| Giraffe | 50 | 5 | 45 | 15 |
+| kangaroo | 50 | 5 | 45 | 5 |
+| Kangaroo | 50 | 0 | 50 | 0 |
+
+Review (claude-13):
+- Plants: case-insensitive matching (3 failures) and substring matching (2)
+  are caught. A plant that searched the whole entry raised an error rather than
+  a test failure, so it is not cleanly shown to be caught.
+- Walked against :7094: the agency and giraffe pages render, with `e` on
+  backlinks. **kangaroo-pouch failed** with `:arxana.http/internal`: its entity
+  record was never written, because no workplan item names it and the rules
+  materialiser asserted only rules and attestations. The test had pre-asserted
+  every entity, which hid this. Fixed in futon3c 193fa3698: the materialiser
+  asserts the entity, and the test no longer pre-asserts. The old code fails
+  the new test.
+- Limits to carry: (1) the build and the view read the rules from
+  `resources/.../entity-backlink-rules.edn`. The stored attestation mirrors the
+  file, so switching a form is still a file edit, not an assessment.
+  (2) Search hits are relevance-ranked and about 90% match only in metadata, so
+  a 50-hit cap keeps 4–5 turns per word, and the agency backlinks are all from
+  June. (3) The index is as of 02:19Z.
