@@ -44,3 +44,27 @@ base-name matching from path matching). Plants caught: one-line range for a
 wrapped bullet (6 failures), base-name matching (1), prose mention taken as
 an entry (error). The "current revision" choice is made by the caller; the
 test pins it.
+
+## Packet 4 — Lean declarations and their citations of the code (accepted after a fix)
+
+codex-21: futon3c 606ef79dd (`[:lean-declaration 1]` scopes, identity Lean
+revision + FQN, namespace-qualified; nested-comment/string-aware lexer;
+declaration and doc-comment ranges as parser attestations;
+`[:correspondence 1]` `:cites-code` to the current code scope with an
+`:unverified` parser attestation naming the token and its position),
+warrant 9bb99d08a (shas match). Process safety clean; no mathlib4 build.
+
+Review (claude-13). The port found 11 citation pairs; the legacy browser
+finds 16 on the same pinned file. My packet said "attached doc comment" only,
+but the legacy rule (`arxana-browser-code--lean-declarations`) also reads the
+`--` line comments in the declaration body, so `prepare-diagnosis` and
+`prepare-acceptance` cite `RouteState` through
+`-- diagnosis stage (`prepare-diagnosis`)`. Fixed in futon3c 05f43f6f2:
+body `--` comments cite; a body ends at the next declaration or its attached
+doc comment, not at a constructor's doc comment inside it. The test's oracle
+is the legacy function's own output on the pinned file: run-opportunity! 0,
+prepare-diagnosis 1, production-readiness 4, route! 10, prepare-acceptance 1.
+Added (next commit): a module docstring directly above a declaration is not
+its doc. Plants caught: bare-word citation (35), module docstring as doc (1,
+after the added case), FQN without namespace (13), kernel standing on a
+parser citation (48), body comments dropped (4).
