@@ -361,3 +361,27 @@ no benefit records. Proposed, for each feature:
 The GCC's own benefit claim, "the ability to make models of value production
 networks", is a potential benefit with generalisable reach. It is recorded as
 such, with status developing.
+
+### 13a. Benefits are dated, and a benefit is not a moat (Joe, 11-09)
+
+> "'benefits' have a somewhat time-limited nature … when I made Agency the
+> whole notion of subagents was in its infancy … I'm pretty sure things like
+> OpenRouter cover the *dispatch* aspects of Agency just fine. So claiming a
+> benefit is not the same as claiming a 'moat'. Similarly, Minus40°DB is
+> inspired by ZeroDB and Mastra but doesn't claim to be 'better' than them,
+> it just claims to be something that we have direct control over."
+
+- **Dated.** A benefit claim has a valid-time interval: when it held. When an
+  outside alternative arrives, the claim's interval closes for the part the
+  alternative covers. The claim is not deleted, and the history stays
+  queryable.
+- **Alternatives as records.** A link from a feature to an outside system,
+  saying which aspect it covers: OpenRouter covers Agency's dispatch across
+  providers. Further aspects of Agency (parks, the durable turn queue,
+  persistent seats, the evidence trail) are separate rows, each with its own
+  answer. The answer is cited or left open, never assumed.
+- **Kinds of benefit claim:** for example *capability* (it does X),
+  *control* (we run and can change it: minus40 against ZeroDB and Mastra),
+  *integration* (it fits the rest of the stack), and *learning* (building it
+  taught something). Superiority is not a kind. A "better than" claim would
+  need a comparison with evidence, and none is assumed.
