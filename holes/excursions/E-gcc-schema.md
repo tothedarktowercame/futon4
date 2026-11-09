@@ -198,3 +198,41 @@ Alignment with War Machine tokens: `holes/labs/M-jvm-arxana/TN-wm-tokens-and-ses
 
 First step: sessionista-mode packet 1 (codex-21, 11-09): marks from the Arxana
 rules, with RET opening the entity's backlinks.
+
+## 9. Systems connect through ports (Joe, 11-09)
+
+> "Inbox Zero … I'd say it is a separate system, but … the *implementation*
+> may have something to do with Agency … if it is separate connects to Agency
+> on an *interface*; to me this suggests that the more full system will need a
+> notion of 'ports'. I know for example that Inbox Zero is *analogous* to the
+> Warrant system."
+
+The Agency survey (`holes/labs/M-jvm-arxana/AGENCY-survey.md`) found three
+different relations hiding under the lexicon's `part-of agency`:
+- **in-namespace**: the code is inside `futon3c.agency` (the kangaroo pouch);
+- **co-resident**: it runs in the same JVM but is its own system (Inbox
+  Zero, the test registry, Drawbridge, the multi-watcher);
+- **connects via a port**: a separate system uses a named interface of
+  another.
+
+Proposed kind: **Port**, a named interface of a system, with a direction (read,
+write or deliver) and a carrier (an HTTP route, a file ledger, an env/config
+switch). Systems link to each other's ports, not to each other's insides.
+DERIVE-wiring already speaks of Arxana's "write ports" and "read ports" in
+this sense.
+
+Worked example from the code (futon3c `src/futon3c/inbox_zero/`, 11-09):
+Inbox Zero does not bell agents. It
+- reads Agency's roster port, `GET /api/alpha/agents` (`sweeper.clj:178`,
+  `turn_promotion.clj:125`);
+- reads Agency's jobs port, `GET /api/alpha/invoke/jobs` (`sweeper.clj:170`);
+- reads the evidence port, `GET /api/alpha/evidence?session-id=`
+  (`infer_adapters.clj:90`), and the hyperedges port (`attribution.clj:97`);
+- delivers turns through Agency's follow-up queue port, `POST
+  /api/alpha/followups` (`turn_promotion.clj:291-293`, overridable by
+  `FUTON3C_INBOX_ZERO_FOLLOWUP_URL`).
+
+Open: in what sense Inbox Zero is analogous to the warrant system. Both sweep
+for work that happened without a durable record (an uncommitted change, an
+unrecorded test run) and turn it into a record that others can check. Is that
+the analogy Joe means, and does it make them two instances of one pattern?
