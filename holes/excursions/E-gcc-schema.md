@@ -385,3 +385,37 @@ such, with status developing.
   *integration* (it fits the rest of the stack), and *learning* (building it
   taught something). Superiority is not a kind. A "better than" claim would
   need a comparison with evidence, and none is assumed.
+
+### 13b. Benefits are grounded in tested claims (Joe, 11-09)
+
+> "everything becomes fairly readily testable, e.g., 'tickets appear as links
+> within Agent replies' is either true or false. But also: 'minus40 produces
+> memories that take the form of conceptual blends' is testable too; beyond
+> that, any claim of benefit can be grounded in the tested reality. E.g. 'it
+> is easy to navigate to tickets' is a usability benefit. 'We maintain an
+> audit trail showing where tickets were discussed' is an auditability
+> benefit, and also a *potential* inference benefit (… we *might* be able to
+> use the audit trail to think about why the ticket hasn't been completed
+> yet)."
+
+- **Property claims** about a feature are statements that a test can decide,
+  each with its test. In the War Machine contract's terms they are either
+  *checkable*, decided by a check, or *judgement* claims that need rated
+  reviewers:
+  - "tickets appear as links within agent replies" is checkable. It became
+    true with futon4a a76f453, test `sessionista-ticket-ids-in-agent-turns`.
+  - "minus40 produces memories that take the form of conceptual blends"
+    needs a judgement, or a checkable proxy (e.g. two named inputs plus a
+    blend in the memory's structure).
+- **Benefit claims** cite the property claims they rest on, and the kind of
+  benefit. Kinds so far: capability, control, integration, learning,
+  usability, auditability, inference.
+  - usability: "it is easy to navigate to tickets" rests on "tickets appear
+    as links" and "RET opens the ticket".
+  - auditability: "we keep a trail of where tickets were discussed" rests on
+    the backlinks and mention records.
+  - inference, *potential*: "the trail could explain why a ticket is not
+    done" rests on the trail plus a use that has not happened yet. It stays
+    potential until a witness shows it in use.
+- A benefit whose grounding claims fail, or whose interval has closed (§13a),
+  shows as such. Nothing is deleted.
