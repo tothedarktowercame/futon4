@@ -305,3 +305,27 @@ sessionista packet 2 and the Agency entities-and-ports packet.
 - **Consequence for the GCC.** The GCC holds both the open queries (wants)
   and the witnesses (links). The War Machine is a controller over them: it
   chooses actions that are expected to produce witnesses for open wants.
+
+### 12a. Proofs as constructions (Joe, 11-09)
+
+> "one case of 'clusions is BHK style construction; whereas I said a link was
+> a control layer that says a eventually reaches b, a proof is a
+> *construction* of that transformation."
+
+Under the Brouwer–Heyting–Kolmogorov reading, a proof of A → B is a
+construction that turns any proof of A into a proof of B. A proof of ∃x.P is a
+witness together with a proof that P holds of it. For the GCC this separates
+two kinds of answer to `[a ? c]`:
+- **A witness that the link exists:** a record saying a is linked to c
+  (an attestation with basis parser, model or human).
+- **A construction of the transformation:** something that, given a, actually
+  produces c and can be checked. Instances already in the records:
+  - Lean proofs checked by the kernel, which is attestation basis `:kernel`;
+  - the code↔docs relocation strategy (hash, context, hint) that carries an
+    anchor across an edit;
+  - a War Machine pattern application whose receipt shows the state change.
+
+Open: which 'clusion types require a construction rather than a witness, and
+how a construction is stored. It could be a reference to a checkable artifact
+(a Lean declaration, a function at a sha) plus a kernel or exact attestation
+that it was checked.
