@@ -146,3 +146,12 @@ Started 2026-11-09 on 127.0.0.1:7091 (`systemd-run --user --scope
 in a fresh daemon: the client found 7091 from the ready file; definitions
 table prepare-acceptance/prepare-diagnosis/route! changed,
 production-readiness unchanged.
+
+## Acceptance
+
+Joe, 2026-11-09: "That looks really cool. … Anyway this works for me." He
+asked whether "changed" is relative to one previous commit: yes — the pinned
+historical futon2 commit 16be631, chosen because all five functions exist
+there at other lines. The natural next step is per entry: "changed since this
+doc entry was last written" (the docbook stub's own last commit), not since a
+fixed commit.
