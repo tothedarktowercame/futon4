@@ -114,3 +114,35 @@ pass after the relocation-attestation change (11 tests, 383 assertions).
 Added in futon3c 72d55ec5b: the duplicate case appends its attestation and reads
 it back (outcome :ambiguous, two candidates); before, a reporting layer that
 called ambiguity unique passed (plant survived; now 1 failure).
+
+## Packet 7 — terminal two-pane client (accepted after review fixes)
+
+codex-21: futon3c e58b95d5d (`:since` per definition in `:codedocs/view`,
+from the stored packet-6 relocation attestations; private demo
+`codedocs_demo.clj`; the arxana JSON codec now carries strings that begin
+with ":" as `{"$string": s}` instead of refusing to encode them; a per-request
+read cache in the view), warrant b9c92cf9d; futon4a 73d09a6
+(`futon4a-codedocs.el`: pinned read-only code buffer beside
+`*Arxana Code Docs*`, current-definition highlight, echo summary, RET records,
+definitions table; pid-owned launch/stop; real-stack ERT). Process safety
+clean.
+
+Review (claude-13), walked in a clean `emacs -Q` daemon against a private
+stack, then fixed in futon4a bfe426a:
+- the definitions table was always empty (it read the view inside the table
+  buffer); ERT now checks its rows (the old code fails it);
+- `route!`'s Lean summary ":refused reasons of …" begins with ":" and now
+  travels as `$string`; `futon4a-arxana--post` unwraps it for every view
+  (the VS Code client in futon6 does not yet — open item);
+- the client takes the demo's port from the ready file; the since line
+  dropped a hash suffix that read like a futon2 sha; the docs pane redraws
+  only when point enters another definition.
+
+## Packet 8 — demo for Joe
+
+Started 2026-11-09 on 127.0.0.1:7091 (`systemd-run --user --scope
+--unit=futon4a-codedocs-demo`, futon3c master, futon4a bfe426a), ready file
+`/run/user/1000/futon4a-codedocs-1000/ready.edn`. Smoke with default settings
+in a fresh daemon: the client found 7091 from the ready file; definitions
+table prepare-acceptance/prepare-diagnosis/route! changed,
+production-readiness unchanged.
