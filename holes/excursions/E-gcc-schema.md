@@ -274,3 +274,34 @@ referents. Their own kinds and relations (the 'clusion, the attestation,
 introduction, referent, port, …) then become entities too, so that the schema
 describes itself with the records it defines. To be dispatched soon after
 sessionista packet 2 and the Agency entities-and-ports packet.
+
+## 12. Links as witnesses; "eventually" as control (Joe, 11-09)
+
+> "maybe CTRL maps to what I was talking about with XTQL; so the query
+> language gets mapped to a simple control language … consider what it means
+> e.g. to 'link' something. If we view that trans-temporally, it means
+> [a ? c] resolves in the future."
+>
+> "the way I understand [a ? c] is as a query: is a linked to c. The 'link'
+> is a witness. If we think across time, this becomes a kind of 'control
+> problem', i.e., a links to c 'eventually'."
+
+- **Query and witness.** `[a ? c]` is the question "is a linked to c?". A
+  link record is a witness that answers yes. A path of links can also be a
+  witness. Asking is a read (XTQL). Supplying a witness is a write.
+- **Across time.** "a links to c eventually" is a want: a query whose
+  witness does not exist yet. Steering the work so that the witness comes to
+  exist is a control problem, and the CTRL verbs are the writes that pose
+  such wants and supply witnesses.
+- **Bounded, as everywhere else.** Unbounded "eventually" cannot be checked
+  (the same point as the eat-your-own-tail probe). Each want carries a
+  horizon or deadline, after which it is reported unresolved, not false.
+- **Instances already running:**
+  - a War Machine wanted token (the query is its locator; the witness is the
+    observation; the bound is the horizon T);
+  - `[[X]]` waiting for a referent;
+  - a park (wake me when job J has a result, or at the deadline);
+  - a workplan typed hole, and a Giraffe `needs` edge with `met` computed.
+- **Consequence for the GCC.** The GCC holds both the open queries (wants)
+  and the witnesses (links). The War Machine is a controller over them: it
+  chooses actions that are expected to produce witnesses for open wants.
