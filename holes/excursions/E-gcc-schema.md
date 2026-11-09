@@ -194,5 +194,7 @@ codex-21 stopping futon1b on 2026-11-08).
   Agency and futon1b do), or are constant background. Whether entity marks
   should carry such a role is not yet designed.
 
+Alignment with War Machine tokens: `holes/labs/M-jvm-arxana/TN-wm-tokens-and-sessionista-terms.md`.
+
 First step: sessionista-mode packet 1 (codex-21, 11-09): marks from the Arxana
 rules, with RET opening the entity's backlinks.
