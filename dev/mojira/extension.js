@@ -6,6 +6,7 @@
 const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
+const { execFile } = require('child_process');
 
 let panel = null;
 let model = null;
@@ -204,14 +205,29 @@ function trim(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n - 
 
 // ---------------------------------------------------------------- panel
 
+// Mojira is a HUD beside Emacs, so by default a file opens in Emacs
+// (mojira.openIn). If emacsclient fails, the file opens in the editor instead
+// and the bar says why.
+function openInEmacs(file, done) {
+  const args = (cfg('emacsclientArgs') || ['-n']).concat([file]);
+  execFile(cfg('emacsclient') || 'emacsclient', args, { timeout: 10000 }, (err, _out, stderr) =>
+    done(err ? (String(stderr || '').trim() || err.message) : null));
+}
+
+function note(text) { if (panel) panel.webview.postMessage({ type: 'note', text }); }
+
+function openFile(file) {
+  const inEditor = () => vscode.window.showTextDocument(vscode.Uri.file(file),
+    { viewColumn: vscode.ViewColumn.Two, preview: true, preserveFocus: true });
+  if (cfg('openIn') === 'editor') { inEditor(); return; }
+  openInEmacs(file, (err) => {
+    if (err) { note('emacsclient failed (' + err + '); opened here instead'); inEditor(); }
+    else note('opened in Emacs: ' + file.replace('/home/joe/code/', ''));
+  });
+}
+
 function go(href, push = true) {
-  if (href.startsWith('file:')) {
-    // Always the second column, reused: Mojira on the left, one target on the
-    // right, never a growing stack of panes.
-    vscode.window.showTextDocument(vscode.Uri.file(href.slice(5)),
-      { viewColumn: vscode.ViewColumn.Two, preview: true, preserveFocus: true });
-    return;
-  }
+  if (href.startsWith('file:')) { openFile(href.slice(5)); return; }
   if (push) history.push(href);
   let page;
   try { page = render(href); } catch (e) { page = { title: 'error', html: `<pre>${esc(e.stack)}</pre>` }; }
@@ -226,7 +242,8 @@ function peek(href) {
   if (!href) page = { html: '' };
   else if (href.startsWith('file:')) {
     const f = href.slice(5);
-    page = { html: `<h1>${esc(path.basename(f))}</h1><p class="dim">${esc(f)}</p><p class="dim">Enter opens it in the editor column on the right.</p>` };
+    const where = cfg('openIn') === 'editor' ? 'in the editor column on the right' : 'in Emacs';
+    page = { html: `<h1>${esc(path.basename(f))}</h1><p class="dim">${esc(f)}</p><p class="dim">Enter opens it ${where}.</p>` };
   } else {
     try { page = render(href); } catch (e) { page = { html: `<pre>${esc(e.message)}</pre>` }; }
   }
@@ -279,9 +296,10 @@ a.ln.sel { outline: 1px solid var(--vscode-focusBorder); background: var(--vscod
 a.st-exists { } a.st-partly { font-style: italic; } a.st-hypothesised { font-style: italic; opacity: .75; } a.st-retired { text-decoration: line-through; opacity: .6; }
 .hint { position: absolute; background: var(--vscode-editorWarning-foreground, #c90); color: #000; font-size: 11px; font-weight: bold; padding: 0 3px; border-radius: 2px; transform: translate(-100%, -2px); z-index: 9; }
 #bar { position: sticky; top: 0; background: var(--vscode-editor-background); padding: .4em 0; border-bottom: 1px solid var(--vscode-panel-border); color: var(--vscode-descriptionForeground); font-size: .85em; }
+#note { color: var(--vscode-editorInfo-foreground, inherit); margin-right: .5em; }
 #q { display: none; width: 30em; font: inherit; color: inherit; background: var(--vscode-input-background); border: 1px solid var(--vscode-focusBorder); }
 </style></head><body>
-<div id="bar"><span id="crumbs"></span> <input id="q" placeholder="search, then Enter"><span id="keys"> · j/k move · Enter follow · Tab other column · f hints · h back · / search · g home · v split · r reload</span></div>
+<div id="bar"><span id="crumbs"></span> <input id="q" placeholder="search, then Enter"><span id="note" class="note"></span><span id="keys"> · j/k move · Enter follow · Tab other column · f hints · h back · / search · g home · v split · r reload</span></div>
 <div id="cols"><div id="page">loading…</div><div id="peek"></div></div>
 <script>
 const vs = acquireVsCodeApi();
@@ -304,7 +322,7 @@ function select(i) {
   const href = ls[sel.page].dataset.href;
   peekTimer = setTimeout(() => vs.postMessage({ type: 'peek', href }), 60);
 }
-let peekTimer = null;
+let peekTimer = null, noteTimer = null;
 function enter() {
   const a = links()[sel[active]];
   if (!a) return;
@@ -341,6 +359,9 @@ window.addEventListener('message', ev => {
     sel.page = -1; sel.peek = -1; peekHref = null;
     $('#page').scrollTop = 0; $('#peek').innerHTML = '';
     setActive(shifting ? 'peek' : 'page'); shifting = false;
+  } else if (m.type === 'note') {
+    const n = $('#note'); n.textContent = m.text; clearTimeout(noteTimer);
+    noteTimer = setTimeout(() => { n.textContent = ''; }, 6000);
   } else if (m.type === 'peek') {
     $('#peek').innerHTML = m.html; $('#peek').scrollTop = 0;
     peekHref = m.href; sel.peek = -1;
@@ -395,4 +416,4 @@ function activate(context) {
 
 function deactivate() {}
 
-module.exports = { activate, deactivate, _test: { loadModel: () => (model = loadModel()), render, shell } };
+module.exports = { activate, deactivate, _test: { loadModel: () => (model = loadModel()), render, shell, openInEmacs } };
