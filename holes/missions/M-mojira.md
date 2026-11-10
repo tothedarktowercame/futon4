@@ -29,6 +29,62 @@ Joe, 2026-11-10, on the first working session: VS Code (code-server) becomes
 a heads-up display beside Emacs, where he keeps working. "To be an effective
 HUD it needs to be decluttered and focused."
 
+Joe, 2026-11-10, choosing the surface and the first interaction:
+
+> So, I think we should focus on the VS Code extension. As a first
+> approximation: this will be the place where the stack aggregates data
+> linked to the GCC, with M-repl-circus being one supplier. Relevant prior
+> art includes stack-hud-1 (pre-Circus) and *象 stepper* as well as the
+> Frames and Diagram parts of Voxterm. While we will keep *象 stepper* as it
+> is, we can deprecate the Frames and Diagram tabs in Voxterm b/c I don't use
+> them and I don't want to waste compute producing things I don't use. A
+> reasonable interaction to have here is to display the lexicon terms that
+> come up per frame and their interconnections, perhaps a bit inspired by
+> WebArxana or https://zone.hyperreal.enterprises/wip/formal-arxana/giraffe-local.html
+> but probably with more of a text-browser feel (prior art is my own nero.el
+> or Conkeror, surfingkeys, etc). Other relevant data comes from M-giraffe,
+> possibly via Plane. Another way to think about it is as a way to understand
+> where we are relative to Cascade Live: what is being worked on, what the
+> benefits are, and then to be able to browse around in the space of possible
+> tasks. After circa 1 month, it should considerably help me prepare a good
+> Mozilla LOI, because I can say "not only am I interested in the kinds of
+> things that you're interested in, but I have a real working prototype that
+> supports me in living in line with these values."
+
+## Decisions so far
+
+- **Surface: a VS Code extension** in code-server (Joe, 2026-11-10). marimo
+  is not the first surface.
+- **Role: aggregator.** Mojira is where the stack's data linked to the GCC
+  comes together. Suppliers named so far: M-repl-circus (frames/turns),
+  M-giraffe (possibly via Plane), the lexicon, Cascade Live.
+- **Horizon: about one month** (to ~2026-12-10), so that the prototype can be
+  cited in the Mozilla LOI as something Joe actually lives with.
+- **象 stepper stays as it is.** Voxterm's Frames and Diagram tabs are to be
+  deprecated (see below).
+
+## Prior art
+
+- `futon0/contrib/stack-hud-2.el`, `futon0/holes/missions/M-stack-hud-refactor.md`,
+  `futon0/analysis/excursions/E-stack-hud-cleanup.md` (stack HUD, pre-Circus).
+- 象 stepper: `futon3c/web/stepper/` (served at `/wip/stepper/?agent=…`).
+- Voxterm Frames tab (an iframe of the 象 stepper) and Diagram tab (dispatch,
+  turn and cascade views), `voxterm/index.html` and `voxterm/server.py`.
+- Lexicon graph: `wip/formal-arxana/lexicon-graph.html`,
+  `wip/formal-arxana/giraffe-local.html`; the lexicon and workplan live in the
+  durable :7094 Arxana stack.
+- Text-browser feel: nero.el, Conkeror, Surfingkeys (keyboard-first,
+  link-hinting, history as a first-class object).
+
+## Voxterm Frames and Diagram deprecation (finding, 2026-11-10)
+
+Both tabs fetch only while visible: Frames sets an iframe `src` when opened,
+and Diagram's poll timer skips its fetch when the view is hidden. Removing the
+tabs therefore saves little compute by itself. Whatever produces their data
+server-side (the 象 cascade sidecar files read by `/xiang/cascade/`, the
+`:7070` `diagram/dispatch` route, `wip-cascade-snapshot.timer`) may have other
+consumers and has to be checked one by one before anything is switched off.
+
 ## Gap
 
 Joe works in Emacs; the strategy layer (missions, Giraffe's ranked items, GCC
@@ -87,8 +143,7 @@ E-gcc-schema §15 on futon1 being rewritten twice).
 
 ## Open questions for Joe
 
-1. VS Code extension (tree view + webview) or marimo notebook as the first
-   surface? claude-cs leans to the extension, marimo later for analytics.
+1. (Answered 2026-11-10: VS Code extension.)
 2. Does "watch" cover only code-server, or also Emacs and REPL turns from the
    evidence store (read-only :7073)? Since Joe works in Emacs and uses
    code-server as the HUD, watching Emacs looks necessary.
