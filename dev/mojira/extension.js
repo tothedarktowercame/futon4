@@ -243,6 +243,9 @@ function open(context) {
     if (m.type === 'ready') go(history.length ? history[history.length - 1] : 'home', !history.length);
     else if (m.type === 'go') go(m.href);
     else if (m.type === 'peek') peek(m.href);
+    // Browsing from the right column (Miller columns): the right page moves
+    // left, and the link chosen there opens on the right.
+    else if (m.type === 'shift') { go(m.main); peek(m.peek); }
     else if (m.type === 'back') { if (history.length > 1) { history.pop(); go(history[history.length - 1], false); } }
     else if (m.type === 'home') go('home');
     else if (m.type === 'search' && m.q) go('search:' + m.q);
@@ -260,7 +263,9 @@ body { font-family: var(--vscode-editor-font-family, monospace); font-size: var(
 #cols { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.5em; min-height: 0; }
 body.one #cols { grid-template-columns: 1fr; } body.one #peek { display: none; }
 #page, #peek { overflow-y: auto; padding-bottom: 3em; min-width: 0; }
-#peek { border-left: 1px solid var(--vscode-panel-border); padding-left: 1.2em; opacity: .9; }
+#peek { border-left: 1px solid var(--vscode-panel-border); padding-left: 1.2em; }
+body:not(.act-peek) #peek, body.act-peek #page { opacity: .72; }
+body.act-peek #peek { border-left-color: var(--vscode-focusBorder); }
 #peek:empty::before { content: 'select a link (j/k) to see it here'; color: var(--vscode-descriptionForeground); display: block; margin-top: 1em; }
 @media (max-width: 760px) { #cols { grid-template-columns: 1fr; } #peek { display: none; } }
 h1 { font-size: 1.25em; margin: .8em 0 .4em; } h2 { font-size: 1em; margin: 1.2em 0 .3em; text-transform: lowercase; color: var(--vscode-textLink-foreground); }
@@ -276,23 +281,39 @@ a.st-exists { } a.st-partly { font-style: italic; } a.st-hypothesised { font-sty
 #bar { position: sticky; top: 0; background: var(--vscode-editor-background); padding: .4em 0; border-bottom: 1px solid var(--vscode-panel-border); color: var(--vscode-descriptionForeground); font-size: .85em; }
 #q { display: none; width: 30em; font: inherit; color: inherit; background: var(--vscode-input-background); border: 1px solid var(--vscode-focusBorder); }
 </style></head><body>
-<div id="bar"><span id="crumbs"></span> <input id="q" placeholder="search, then Enter"><span id="keys"> · j/k move · Enter follow · f hints · h back · / search · g home · v split · r reload</span></div>
+<div id="bar"><span id="crumbs"></span> <input id="q" placeholder="search, then Enter"><span id="keys"> · j/k move · Enter follow · Tab other column · f hints · h back · / search · g home · v split · r reload</span></div>
 <div id="cols"><div id="page">loading…</div><div id="peek"></div></div>
 <script>
 const vs = acquireVsCodeApi();
-let sel = -1, hints = null, hintBuf = '';
+let active = 'page', hints = null, hintBuf = '', peekHref = null, shifting = false;
+const sel = { page: -1, peek: -1 };
 const $ = s => document.querySelector(s);
-const links = () => [...document.querySelectorAll('#page a.ln')];
+const links = (col = active) => [...document.querySelectorAll('#' + col + ' a.ln')];
+const peekShown = () => getComputedStyle($('#peek')).display !== 'none';
+function setActive(col) {
+  active = col;
+  document.body.classList.toggle('act-peek', col === 'peek');
+}
 function select(i) {
   const ls = links(); if (!ls.length) return;
-  sel = Math.max(0, Math.min(ls.length - 1, i));
-  ls.forEach((a, j) => a.classList.toggle('sel', j === sel));
-  ls[sel].scrollIntoView({ block: 'nearest' });
+  sel[active] = Math.max(0, Math.min(ls.length - 1, i));
+  ls.forEach((a, j) => a.classList.toggle('sel', j === sel[active]));
+  ls[sel[active]].scrollIntoView({ block: 'nearest' });
+  if (active !== 'page') return;
   clearTimeout(peekTimer);
-  const href = ls[sel].dataset.href;
+  const href = ls[sel.page].dataset.href;
   peekTimer = setTimeout(() => vs.postMessage({ type: 'peek', href }), 60);
 }
 let peekTimer = null;
+function enter() {
+  const a = links()[sel[active]];
+  if (!a) return;
+  const href = a.dataset.href;
+  if (active === 'peek' && peekHref && !href.startsWith('file:') && !peekHref.startsWith('file:')) {
+    shifting = true;
+    vs.postMessage({ type: 'shift', main: peekHref, peek: href });
+  } else follow(a);
+}
 function follow(a) { if (a) vs.postMessage({ type: 'go', href: a.dataset.href }); }
 const HC = 'asdfghjklqwertyuiopzxcvbnm';
 function hintLabel(i, n) {
@@ -317,9 +338,12 @@ window.addEventListener('message', ev => {
     clearHints();
     $('#page').innerHTML = m.html;
     $('#crumbs').textContent = m.crumbs.map(c => c.replace(/^[a-z]+:/, '')).join(' › ');
-    sel = -1; $('#page').scrollTop = 0; $('#peek').innerHTML = '';
+    sel.page = -1; sel.peek = -1; peekHref = null;
+    $('#page').scrollTop = 0; $('#peek').innerHTML = '';
+    setActive(shifting ? 'peek' : 'page'); shifting = false;
   } else if (m.type === 'peek') {
     $('#peek').innerHTML = m.html; $('#peek').scrollTop = 0;
+    peekHref = m.href; sel.peek = -1;
   }
 });
 document.addEventListener('click', ev => { const a = ev.target.closest('a.ln'); if (a) follow(a); });
@@ -339,16 +363,20 @@ document.addEventListener('keydown', ev => {
     ev.preventDefault(); return;
   }
   const k = ev.key;
-  if (k === 'j' || k === 'ArrowDown') select(sel + 1);
-  else if (k === 'k' || k === 'ArrowUp') select(sel - 1);
-  else if (k === 'Enter' || k === 'l') follow(links()[sel]);
+  if (k === 'j' || k === 'ArrowDown') select(sel[active] + 1);
+  else if (k === 'k' || k === 'ArrowUp') select(sel[active] - 1);
+  else if (k === 'Enter' || k === 'l') enter();
+  else if (k === 'Tab') {
+    if (active === 'page' && peekShown() && links('peek').length) setActive('peek');
+    else setActive('page');
+  }
   else if (k === 'h' || k === 'Backspace') vs.postMessage({ type: 'back' });
   else if (k === 'g') vs.postMessage({ type: 'home' });
   else if (k === 'f') showHints();
   else if (k === 'r') vs.postMessage({ type: 'reload' });
-  else if (k === 'v') { document.body.classList.toggle('one'); try { vs.setState({ one: document.body.classList.contains('one') }); } catch (_) {} }
+  else if (k === 'v') { document.body.classList.toggle('one'); if (!peekShown()) setActive('page'); try { vs.setState({ one: document.body.classList.contains('one') }); } catch (_) {} }
   else if (k === '/') { const q = $('#q'); q.style.display = 'inline'; q.value = ''; q.focus(); }
-  else if (k === ' ') $('#page').scrollBy(0, $('#page').clientHeight * 0.8);
+  else if (k === ' ') $('#' + active).scrollBy(0, $('#' + active).clientHeight * 0.8);
   else return;
   ev.preventDefault();
 });
