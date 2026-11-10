@@ -262,7 +262,11 @@ ${links ? `<h2>Links</h2><ul>${links}</ul>` : ''}
 }
 
 function recordVerdict(item, verdict, noteText) {
-  if (!brief) { note('no brief loaded', true); return; }
+  if (!brief) {
+    if (briefErr) { note(briefErr, true); return; }
+    loadBrief(() => (brief ? recordVerdict(item, verdict, noteText) : note(briefErr || 'no brief loaded', true)));
+    return;
+  }
   let args;
   try { args = triage.verdictArgs(brief['brief/id'], item, verdict, noteText); }
   catch (e) { note(e.message, true); return; }
@@ -315,6 +319,9 @@ function go(href, push = true) {
 // 2-up: the right column follows the selected link on the left.
 function peek(href) {
   if (!panel) return;
+  // After a hot reload of core.js the brief is gone while the left column
+  // still shows its rows: load it before drawing an item.
+  if (href && href.startsWith('ti:') && !brief && !briefErr) { loadBrief(() => peek(href)); return; }
   lastPeek = href;
   let page;
   if (!href) page = { html: '' };
@@ -342,7 +349,7 @@ function attach(p, state) {
   // 'ready'), so redraw the current page directly. If the html did change,
   // the webview reloads and its 'ready' redraws again.
   if (history.length) go(history[history.length - 1], false);
-  return panel.webview.onDidReceiveMessage(m => {
+  return panel.webview.onDidReceiveMessage(function handle(m) {
     if (m.type === 'ready') go(history.length ? history[history.length - 1] : 'home', !history.length);
     else if (m.type === 'go') go(m.href);
     else if (m.type === 'peek') peek(m.href);
@@ -354,6 +361,7 @@ function attach(p, state) {
     else if (m.type === 'search' && m.q) go('search:' + m.q);
     else if (m.type === 'reload') reloadData();
     else if (m.type === 'verdict') recordVerdict(m.item, m.verdict, m.note);
+    else if (m.type === 'all-ask' && !brief && !briefErr) loadBrief(() => { if (brief) handle(m); else note(briefErr || 'no brief loaded', true); });
     else if (m.type === 'all-ask') {
       const n = brief ? triage.unruledCount(brief) : 0;
       if (!n) note('nothing to rule: every item of ' + (brief ? brief['brief/id'] : 'the brief') + ' has a verdict', true);
