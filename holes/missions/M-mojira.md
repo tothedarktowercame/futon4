@@ -117,6 +117,11 @@ E-gcc-schema §15 on futon1 being rewritten twice).
   "let's see how far we get with the 4GB." Heavy one-off jobs (headless
   Chromium screenshots) run in their own scope:
   `systemd-run --user --scope -p MemoryHigh=8G -p MemoryMax=10G …`.
+  Measured 2026-11-10: most of the 4 GB is code-server's per-window file
+  watcher over all of `~/code` (2.3–2.9 GB for Joe's window; about 1 GB more
+  for each headless screenshot window, kept for the 3 h reconnection grace).
+  `files.watcherExclude` now drops the heavy folders. Screenshots should open a
+  small folder (`?folder=/home/joe/code/futon4/dev/mojira`), not `~/code`.
 - **Not a distraction.** Joe is working through Giraffe's top twenty and does
   not want to "get distracted building a new web browser". Mojira slices stay
   small and useful the same week.
