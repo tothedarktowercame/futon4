@@ -276,3 +276,46 @@ Review (claude-13):
   about 1 s per named entity. Next step: the server keeps every entity's
   relations precomputed (built at startup, cleared on a ruling), and the
   stepper asks for all the frame's entities in one call.
+
+### Painting from a held table (claude-1, 2026-11-10; awaiting claude-13's review)
+
+Joe: "make it as efficient as possible". futon3c `20179c27a`, `fb0aba7ea`;
+futon4a `bc32af4`; warrant `futon4a/test/stepper-review-2-warrant.edn`.
+
+- **Service.** `lexicon_views.clj` keeps every lexicon entity and referent
+  in one in-memory table. It is built in the background when the demo starts
+  (63 s on :7094) and rebuilt every 10 minutes, one read at a time, while a
+  stale table is served. `:lexicon/review-table` returns the whole table
+  (224 KB, 16 ms), or `:unchanged` for a caller that names the version it
+  holds (1 ms), or `:building`. A ruling through `:workplan/assess-referent`
+  re-reads that one row's assessments from the store, so the store's
+  newest-first order still decides. `:lexicon/entity-index` and
+  `:lexicon/entity-relations` answer from the table once it is built (6–7 ms).
+- **Emacs.** The section is painted from a local copy of the table, with no
+  network call. The copy is fetched and checked asynchronously: on a paint at
+  least 5 s after the last check, and every 15 s while a stepper buffer is on
+  screen. Before the first table arrives the section is one "loading" line.
+  A newer table repaints the stepper and keeps point on its line. A ruling is
+  one POST, and the row shows its verdict from the local copy when it returns.
+- **Measured on :7094** (frame 0 of `stepper-frames.json`, read-only): first
+  visit paints in 7.5 ms with the loading line, and the table arrives 134 ms
+  later; later paints take 5–7 ms. Before: 14 s. **On a private stack
+  (:7296):** key to repainted verdict 137 ms and 139 ms; a ruling posted
+  elsewhere was in the stepper 45 ms after the next check.
+- **Bounds for a ruling made elsewhere.** Through this service (an entity
+  page): 15 s while the stepper is on screen. Written past the service:
+  the next rebuild, up to 10 min plus the rebuild time.
+- **Changed behaviour, for Joe to confirm.**
+  - A relation is now one row, shown in its own direction. Before, a relation
+    with both ends named in the frame appeared twice, and the second copy read
+    backwards ("agency extends kangaroo-pouch").
+  - Matching is case-sensitive, as the file always said. It had followed the
+    buffer's `case-fold-search`, so "whistle" named Whistle and "r1" named R1.
+    Frame 0 now names 11 entities, not 16.
+    `futon4a-stepper-review-fold-case` restores the old matching.
+- **Found and fixed on the way.** Each request's message id was the time in
+  whole seconds, so a second ruling within one second shared the first one's
+  id and was not recorded, though the reply said ok. Ids are now unique.
+- **Not done.** The 503 → `:unavailable` AssertionError in `store_http` is
+  still there; the table build retries around it instead. The table is not
+  kept on disk, so each restart rebuilds it. Not loaded into Joe's Emacs.
