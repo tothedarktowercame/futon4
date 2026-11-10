@@ -201,6 +201,15 @@ lexicon relations, the GCC's typed links); each reader's scale; whether Joe can
 pin something into focus from Mojira, and if so where that write goes (an
 input to 猴 through the authority, not Mojira's own store).
 
+**Joe's refinement (2026-11-10):** "in terms of a UI we might just have a
+'focus' block (similar to the 'entities by status', or even a sub-item thereof
+that pops up 'focus' in the righthand pane!). From there, maybe different
+views on why/how that focus exists, e.g., a strategic focus vs an immediate
+need being satisfied etc". So the focus view is not a separate screen: it is a
+block on the home page whose rows open in the right column, and each row can
+be read through more than one "why" (strategic, immediate need, ...), each a
+page of its own reached from the focus row.
+
 ## Design notes: lineup columns, scopes, code+docs (claude-cs, 2026-11-10)
 
 Joe, 2026-11-10: look at claude-21's lineup page
