@@ -413,7 +413,7 @@ a.st-exists { } a.st-partly { font-style: italic; } a.st-hypothesised { font-sty
 .v-worth { color: var(--vscode-testing-iconPassed, #3a3); } .v-invalid { color: var(--vscode-errorForeground, #c33); } .v-not-now { color: var(--vscode-editorWarning-foreground, #b80); }
 #q { display: none; width: 30em; font: inherit; color: inherit; background: var(--vscode-input-background); border: 1px solid var(--vscode-focusBorder); }
 </style></head><body>
-<div id="bar"><span id="crumbs"></span> <input id="q" placeholder="search, then Enter"><span id="note" class="note"></span><input id="vn"><span id="keys"> · j/k move · Enter follow · Tab other column · f hints · h back · / search · g home · v split · r reload</span></div>
+<div id="bar"><span id="crumbs"></span> <input id="q" placeholder="search, then Enter"><span id="note" class="note"></span><input id="vn"><span id="keys"></span></div>
 <div id="cols"><div id="page">loading…</div><div id="peek"></div></div>
 <script>
 const vs = acquireVsCodeApi();
@@ -437,6 +437,12 @@ function select(i) {
   peekTimer = setTimeout(() => vs.postMessage({ type: 'peek', href }), 60);
 }
 let peekTimer = null, noteTimer = null;
+// The key line names this page's own keys first, then the ones that work
+// everywhere.
+const KEYS = ' · j/k move · Enter follow · Tab/→ right column · Shift+Tab/← left · f hints · h back · / search · g home · v split · r reload';
+function showKeys() {
+  $('#keys').textContent = (onTriage() ? ' · w worth · n not now · x invalid · a rule all unruled' : '') + KEYS;
+}
 // Triage: w/n/x rule the selected item; a asks to rule the whole block.
 const VKEY = { w: 'worth', n: 'not-now', x: 'invalid' };
 let vmode = null, pending = null;   // vmode 'all' after the confirmation line
@@ -490,6 +496,7 @@ window.addEventListener('message', ev => {
     sel.page = -1; sel.peek = -1; peekHref = null;
     $('#page').scrollTop = 0; $('#peek').innerHTML = '';
     setActive(shifting ? 'peek' : 'page'); shifting = false;
+    showKeys();
   } else if (m.type === 'note') {
     const n = $('#note'); n.textContent = m.text; n.classList.toggle('err', Boolean(m.error)); clearTimeout(noteTimer);
     // Errors stay until the next action; other notes fade.
@@ -541,18 +548,18 @@ document.addEventListener('keydown', ev => {
   if (k === 'j' || k === 'ArrowDown') select(sel[active] + 1);
   else if (k === 'k' || k === 'ArrowUp') select(sel[active] - 1);
   else if (k === 'Enter' || k === 'l') enter();
-  else if (k === 'Tab' && ev.shiftKey) {
+  else if ((k === 'Tab' && ev.shiftKey) || k === 'ArrowLeft') {
     // Back to the left column, leaving nothing selected on the right.
     sel.peek = -1;
     links('peek').forEach(a => a.classList.remove('sel'));
     setActive('page');
   }
-  else if (k === 'Tab') {
+  else if (k === 'Tab' || k === 'ArrowRight') {
     if (active === 'page' && peekShown() && links('peek').length) {
       setActive('peek');
       select(sel.peek < 0 ? 0 : sel.peek);   // land on a link, not on nothing
     }
-    else setActive('page');
+    else if (k === 'Tab') setActive('page');   // → stops at the right column
   }
   else if (k === 'h' || k === 'Backspace') vs.postMessage({ type: 'back' });
   else if (k === 'g') vs.postMessage({ type: 'home' });
