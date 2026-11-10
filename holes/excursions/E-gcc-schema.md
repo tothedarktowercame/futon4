@@ -1009,3 +1009,24 @@ The loop, as proposed:
 4. **Gaps both ways:** a pending item naming no lexicon entity suggests a
    missing entity; a high-convergence feature with no pending item suggests a
    missing item.
+
+## 15. Speed: a datalog layer joined to futon1b, with care (Joe, 11-10)
+
+> "If we want the GCC to be fast, it could be done in datalog that joins to
+> futon1b, but we also want to be careful b/c futon1 became complex and had
+> to be rewritten twice!"
+
+The occasion: the stepper's REVIEW section took ~1 s per named entity because
+each relation row cost about five store reads (WORKPLAN-INSTANTIATE, "Stepper
+review section"). futon1's graph-memory had the two-layer form: a Datascript
+working set in memory over XTDB, with "docs mirror Datascript attributes
+verbatim so hydration is lossless" (futon1 `apps/graph-memory/doc/beta-schema.md`),
+and metadata scholia as derived caches.
+
+Recorded as something to think about, not a decision. What a second layer
+would add, concretely: a second copy that has to be rebuilt on start and
+updated on every write, and a way to tell when it has fallen behind
+futon1b. Kept small, it is the rule in B2 ("what is computed can be
+rebuilt"): the fast layer holds only what can be recomputed from futon1b,
+so it can be thrown away rather than repaired. First instance: claude-1's
+stepper packet (in-memory relations, 2026-11-10).
