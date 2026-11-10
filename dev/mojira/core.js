@@ -401,6 +401,12 @@ document.addEventListener('keydown', ev => {
   if (k === 'j' || k === 'ArrowDown') select(sel[active] + 1);
   else if (k === 'k' || k === 'ArrowUp') select(sel[active] - 1);
   else if (k === 'Enter' || k === 'l') enter();
+  else if (k === 'Tab' && ev.shiftKey) {
+    // Back to the left column, leaving nothing selected on the right.
+    sel.peek = -1;
+    links('peek').forEach(a => a.classList.remove('sel'));
+    setActive('page');
+  }
   else if (k === 'Tab') {
     if (active === 'page' && peekShown() && links('peek').length) {
       setActive('peek');
