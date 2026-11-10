@@ -109,6 +109,18 @@ M-jvm-arxana's invariant requires: editor-local view state is a disposable
 projection. Mojira does not grow its own store or datalog layer (see
 E-gcc-schema §15 on futon1 being rewritten twice).
 
+## Carried in from M-jvm-arxana (2026-11-10)
+
+Completion condition 3 of M-jvm-arxana, carried here by Joe ("3 should carry
+to M-mojira as the fastest route to demo something of that ilk"): **show Emacs
+and VS Code consuming the same entity and scope-resolution response for one
+live artifact revision.** State at handover: both clients have produced
+identical semantic digests (resolve `0397248a…`, correspondence `9c91f35e…`),
+but on the committed draft8 fixture with an in-memory store, on different days
+(futon6 `holes/M-jvm-arxana-codeserver-demo-report.md:72-75`). What is missing
+is one live revision, read by both clients from the JVM authority, side by
+side.
+
 ## Current constraints
 
 - **Memory: 4 GB.** code-server runs as `code-server.service` with

@@ -530,3 +530,15 @@ mixed load, batched rebuild) at C3 acceptance.
 
 - [ ] Publish the progressive demonstration path, conceptual glossary,
   authority boundaries, and a record of what remains intentionally unresolved.
+
+## Carried in from M-jvm-arxana (2026-11-10)
+
+Completion condition 1 of M-jvm-arxana, carried here when Joe closed it:
+**publish the core schema with schema-mirroring tests against representative
+existing XTDB records.** The schema registry and golden-record round trips for
+the new record types exist (futon3c `schema.clj`, `formal_c1_test`,
+`formal_c2_test`); no test yet reads real existing XTDB rows, and the JVM
+surface does not expose the legacy generic rows
+(`labs/M-jvm-arxana/SWITCHOVER-survey.md:31`). This sits with E-gcc-schema's
+closure checklist item 2 (no new record kind needed).
+

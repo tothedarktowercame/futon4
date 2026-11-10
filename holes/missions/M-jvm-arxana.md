@@ -1,7 +1,7 @@
 # M-jvm-arxana — one Arxana authority across Emacs and VS Code
 
 **Date:** 2026-11-06  
-**Status:** OPEN — DOCUMENT (INSTANTIATE completed 2026-11-06)
+**Status:** CLOSED 2026-11-10 (Joe ruled the completion conditions with claude-13: 2, 4, 5, 6, 7 met; 1 carried to M-formal-arxana; 3 carried to M-mojira). Earlier: DOCUMENT (INSTANTIATE completed 2026-11-06)
 **Owner:** Joe (operator); Codex-21 technical driver
 **Repos:** `futon4` (legacy Arxana model and Emacs donor), `futon4a` (isolated
 JVM-Arxana Emacs demo client), `futon1`/XTDB (durable graph), `futon3c`
@@ -177,22 +177,29 @@ CRDT.
 
 ## Completion conditions
 
-- [ ] Publish the core entity/hyperedge/manifestation/scope/action schema with
+- [~] **CARRIED to M-formal-arxana** (Joe, 2026-11-10). Publish the core entity/hyperedge/manifestation/scope/action schema with
   schema-mirroring tests against representative existing XTDB records.
-- [ ] Resolve a cascaded strategy in the JVM and prove that an unrelated edit
+  *(Schema registry built, futon3c `schema.clj`; golden-record round trips for the new record types in `formal_c1_test`/`formal_c2_test`. Not met: no test reads real existing XTDB rows — `labs/M-jvm-arxana/SWITCHOVER-survey.md:31`, the JVM surface "does not expose the legacy generic entity" rows; the D1 lossless-mirroring invariant (D1:178) is specified, not tested.)*
+- [x] Resolve a cascaded strategy in the JVM and prove that an unrelated edit
   before or after its enclosing anchor does not change the intended scope.
-- [ ] Show Emacs and VS Code consuming the same entity and scope-resolution
+  *(futon3c `a483b2e0f`, `edit_robustness_test.clj:100-108`; `resolve_test.clj:87,101` (prefix/suffix edits through hash/context cascade stages). Not built: the editor-preview transport ER9/ER10 of EDIT-ROBUSTNESS-SPEC; the test uses one anchor, not a nested one.)*
+- [~] **CARRIED to M-mojira** (Joe, 2026-11-10: "3 should carry to M-mojira as the fastest route to demo something of that ilk"). Show Emacs and VS Code consuming the same entity and scope-resolution
   response for one live artifact revision.
-- [ ] Navigate bidirectionally between a LaTeX scope and its Oxide-rendered HTML
+  *(Partly met: Emacs 2026-11-06 and VS Code 2026-11-07 produced identical semantic digests (resolve `0397248a…`, correspondence `9c91f35e…`; futon6 `holes/M-jvm-arxana-codeserver-demo-report.md:72-75`), but on the committed fixture with an in-memory store, a day apart, not one live revision.)*
+- [x] Navigate bidirectionally between a LaTeX scope and its Oxide-rendered HTML
   manifestation through JVM-owned correspondence.
-- [ ] Compile one client intent into a read-only candidate action whose target,
+  *(futon3c `c2317f0e5`, `correspond_test.clj:113` directionality; futon6 APM two-pane demo `7f98b37` (target→source in `extension.js:489`). On fixture bytes; the reverse direction has no unit test.)*
+- [x] Compile one client intent into a read-only candidate action whose target,
   provenance, warrants and unresolved fields are all queryable.
-- [ ] Record the transaction/concurrency contract independently of its
+  *(futon3c `e593bf9cb`, `11d52f9af`; `compile_service_test.clj:45` compile-is-public-deterministic-and-non-executable. The candidate is returned in the response, not persisted, so it cannot be looked up by id later.)*
+- [x] Record the transaction/concurrency contract independently of its
   implementation and identify the observed requirement that would trigger a
   CRDT decision.
-- [ ] Document concrete interfaces that `M-repl-circus`,
+  *(Contract `labs/M-jvm-arxana/D3-protocol-consistency.md` D3-DR3; trigger §"CRDT re-arm condition"; implemented by futon1b `b27cc63`; trigger tested in F2b-1 futon3c `d492ce558` — not met, `labs/M-formal-arxana/INSTANTIATE.md:794`.)*
+- [x] Document concrete interfaces that `M-repl-circus`,
   `M-ways-of-working`, Giraffe and War Machine can adopt without moving their
   domain logic into this mission.
+  *(`labs/M-jvm-arxana/D6-action-boundary.md:135-142`; P6 "no domain rules moved into Arxana"; `labs/M-formal-arxana/CLIENTS.md`. Documented; none of the four has adopted them yet.)*
 
 ## Dependencies and enabling relationships
 
@@ -865,3 +872,20 @@ state and store-boundary qualification are durable. The lucy processes were
 stopped and only the inspectable isolated release remains. Comprehensive
 legacy parity, VS Code and Lean/EmitPython demonstrations remain explicitly
 follow-on work, as Joe decided when selecting futon4a.
+
+## Closure (2026-11-10)
+
+Joe and claude-13 went through the seven completion conditions against the
+evidence (gathered read-only, citations spot-checked; Giraffe top-twenty #3,
+Questor's pick). Joe: "all OK, except one suggestion that 3 should carry to
+M-mojira as the fastest route to demo something of that ilk." Met: 2, 4, 5, 6,
+7, each with its limits noted in the checklist. Carried: 1 (schema mirroring
+against real XTDB rows) to M-formal-arxana; 3 (Emacs and VS Code consuming one
+live revision's response) to M-mojira.
+
+DOCUMENT receipts checked the same day: `futon4a/README.md`,
+`futon4a/lisp/futon4a-arxana.el`, `futon4a/examples/demo-transcript.json`,
+`futon4a/scripts/`, `labs/M-jvm-arxana/D1-emacs-jvm-demo-report.md`,
+`futon4a/test/futon4a-arxana-test.el` and every cited commit exist. The remote
+lucy release directory was not checked.
+
