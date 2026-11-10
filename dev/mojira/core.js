@@ -321,7 +321,9 @@ function peek(href) {
   if (!panel) return;
   // After a hot reload of core.js the brief is gone while the left column
   // still shows its rows: load it before drawing an item.
-  if (href && href.startsWith('ti:') && !brief && !briefErr) { loadBrief(() => peek(href)); return; }
+  // The same holds for the triage page itself when the home page's link is
+  // selected and drawn on the right.
+  if (href && (href === 'triage' || href.startsWith('ti:')) && !brief && !briefErr) { loadBrief(() => peek(href)); return; }
   lastPeek = href;
   let page;
   if (!href) page = { html: '' };
