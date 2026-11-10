@@ -528,6 +528,12 @@ GCC is meant to hold be said in the records the mission built?
   agrees with Joe's 11-09 decision (§6).
 - [ ] **7. M-repl-circus can cite this file.** For each of the six animals,
   B9 names the types it writes, or says which source is missing.
+  *Joe, 2026-11-10:* "狗 and 猴 can wait for repl-circus, I'd vote that we
+  explicitly *don't* close that in E-gcc-schema in order to prove that the
+  schema is extensible". So item 7 is met when B9 covers 驴, 象, 馬 and
+  Giraffe. 狗 and 猴 stay open on purpose: this file is schema 1.0, and
+  adding their record types in M-repl-circus (schema 1.1) is the test that
+  the schema extends without changing what 1.0 defined.
 
 Outside this excursion, and still needed before the mission's file can say
 CLOSED: its 14 completion criteria and its INSTANTIATE and DOCUMENT boxes
