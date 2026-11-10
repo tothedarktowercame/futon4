@@ -206,7 +206,10 @@ function trim(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n - 
 
 function go(href, push = true) {
   if (href.startsWith('file:')) {
-    vscode.window.showTextDocument(vscode.Uri.file(href.slice(5)), { viewColumn: vscode.ViewColumn.Beside, preview: true });
+    // Always the second column, reused: Mojira on the left, one target on the
+    // right, never a growing stack of panes.
+    vscode.window.showTextDocument(vscode.Uri.file(href.slice(5)),
+      { viewColumn: vscode.ViewColumn.Two, preview: true, preserveFocus: true });
     return;
   }
   if (push) history.push(href);
@@ -214,6 +217,20 @@ function go(href, push = true) {
   try { page = render(href); } catch (e) { page = { title: 'error', html: `<pre>${esc(e.stack)}</pre>` }; }
   panel.title = 'Mojira: ' + page.title;
   panel.webview.postMessage({ type: 'page', html: page.html, crumbs: history.slice(-6) });
+}
+
+// 2-up: the right column follows the selected link on the left.
+function peek(href) {
+  if (!panel) return;
+  let page;
+  if (!href) page = { html: '' };
+  else if (href.startsWith('file:')) {
+    const f = href.slice(5);
+    page = { html: `<h1>${esc(path.basename(f))}</h1><p class="dim">${esc(f)}</p><p class="dim">Enter opens it in the editor column on the right.</p>` };
+  } else {
+    try { page = render(href); } catch (e) { page = { html: `<pre>${esc(e.message)}</pre>` }; }
+  }
+  panel.webview.postMessage({ type: 'peek', href, html: page.html });
 }
 
 function open(context) {
@@ -225,6 +242,7 @@ function open(context) {
   panel.webview.onDidReceiveMessage(m => {
     if (m.type === 'ready') go(history.length ? history[history.length - 1] : 'home', !history.length);
     else if (m.type === 'go') go(m.href);
+    else if (m.type === 'peek') peek(m.href);
     else if (m.type === 'back') { if (history.length > 1) { history.pop(); go(history[history.length - 1], false); } }
     else if (m.type === 'home') go('home');
     else if (m.type === 'search' && m.q) go('search:' + m.q);
@@ -237,7 +255,14 @@ function shell() {
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
 <style>
 body { font-family: var(--vscode-editor-font-family, monospace); font-size: var(--vscode-editor-font-size, 14px);
-  color: var(--vscode-editor-foreground); background: var(--vscode-editor-background); padding: 0 1.2em 3em; line-height: 1.45; max-width: 62em; }
+  color: var(--vscode-editor-foreground); background: var(--vscode-editor-background); padding: 0 1.2em; margin: 0; line-height: 1.45;
+  height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+#cols { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.5em; min-height: 0; }
+body.one #cols { grid-template-columns: 1fr; } body.one #peek { display: none; }
+#page, #peek { overflow-y: auto; padding-bottom: 3em; min-width: 0; }
+#peek { border-left: 1px solid var(--vscode-panel-border); padding-left: 1.2em; opacity: .9; }
+#peek:empty::before { content: 'select a link (j/k) to see it here'; color: var(--vscode-descriptionForeground); display: block; margin-top: 1em; }
+@media (max-width: 760px) { #cols { grid-template-columns: 1fr; } #peek { display: none; } }
 h1 { font-size: 1.25em; margin: .8em 0 .4em; } h2 { font-size: 1em; margin: 1.2em 0 .3em; text-transform: lowercase; color: var(--vscode-textLink-foreground); }
 ul { list-style: none; padding-left: 1em; margin: 0; } li { margin: .1em 0; }
 table { border-collapse: collapse; } th { text-align: left; vertical-align: top; padding-right: 1em; font-weight: normal; color: var(--vscode-descriptionForeground); white-space: nowrap; }
@@ -251,8 +276,8 @@ a.st-exists { } a.st-partly { font-style: italic; } a.st-hypothesised { font-sty
 #bar { position: sticky; top: 0; background: var(--vscode-editor-background); padding: .4em 0; border-bottom: 1px solid var(--vscode-panel-border); color: var(--vscode-descriptionForeground); font-size: .85em; }
 #q { display: none; width: 30em; font: inherit; color: inherit; background: var(--vscode-input-background); border: 1px solid var(--vscode-focusBorder); }
 </style></head><body>
-<div id="bar"><span id="crumbs"></span> <input id="q" placeholder="search, then Enter"><span id="keys"> · j/k move · Enter follow · f hints · h back · / search · g home · r reload</span></div>
-<div id="page">loading…</div>
+<div id="bar"><span id="crumbs"></span> <input id="q" placeholder="search, then Enter"><span id="keys"> · j/k move · Enter follow · f hints · h back · / search · g home · v split · r reload</span></div>
+<div id="cols"><div id="page">loading…</div><div id="peek"></div></div>
 <script>
 const vs = acquireVsCodeApi();
 let sel = -1, hints = null, hintBuf = '';
@@ -263,7 +288,11 @@ function select(i) {
   sel = Math.max(0, Math.min(ls.length - 1, i));
   ls.forEach((a, j) => a.classList.toggle('sel', j === sel));
   ls[sel].scrollIntoView({ block: 'nearest' });
+  clearTimeout(peekTimer);
+  const href = ls[sel].dataset.href;
+  peekTimer = setTimeout(() => vs.postMessage({ type: 'peek', href }), 60);
 }
+let peekTimer = null;
 function follow(a) { if (a) vs.postMessage({ type: 'go', href: a.dataset.href }); }
 const HC = 'asdfghjklqwertyuiopzxcvbnm';
 function hintLabel(i, n) {
@@ -272,7 +301,7 @@ function hintLabel(i, n) {
 }
 function showHints() {
   const top = window.scrollY, bot = top + window.innerHeight;
-  const vis = links().filter(a => { const r = a.getBoundingClientRect(); return r.bottom > 0 && r.top < window.innerHeight; });
+  const vis = [...document.querySelectorAll('#page a.ln, #peek a.ln')].filter(a => { const r = a.getBoundingClientRect(); return r.bottom > 0 && r.top < window.innerHeight && r.width > 0; });
   hints = vis.map((a, i) => {
     const r = a.getBoundingClientRect(), h = document.createElement('span');
     h.className = 'hint'; h.textContent = hintLabel(i, vis.length);
@@ -288,7 +317,9 @@ window.addEventListener('message', ev => {
     clearHints();
     $('#page').innerHTML = m.html;
     $('#crumbs').textContent = m.crumbs.map(c => c.replace(/^[a-z]+:/, '')).join(' › ');
-    sel = -1; window.scrollTo(0, 0);
+    sel = -1; $('#page').scrollTop = 0; $('#peek').innerHTML = '';
+  } else if (m.type === 'peek') {
+    $('#peek').innerHTML = m.html; $('#peek').scrollTop = 0;
   }
 });
 document.addEventListener('click', ev => { const a = ev.target.closest('a.ln'); if (a) follow(a); });
@@ -315,11 +346,13 @@ document.addEventListener('keydown', ev => {
   else if (k === 'g') vs.postMessage({ type: 'home' });
   else if (k === 'f') showHints();
   else if (k === 'r') vs.postMessage({ type: 'reload' });
+  else if (k === 'v') { document.body.classList.toggle('one'); try { vs.setState({ one: document.body.classList.contains('one') }); } catch (_) {} }
   else if (k === '/') { const q = $('#q'); q.style.display = 'inline'; q.value = ''; q.focus(); }
-  else if (k === ' ') window.scrollBy(0, window.innerHeight * 0.8);
+  else if (k === ' ') $('#page').scrollBy(0, $('#page').clientHeight * 0.8);
   else return;
   ev.preventDefault();
 });
+try { if ((vs.getState() || {}).one) document.body.classList.add('one'); } catch (_) {}
 vs.postMessage({ type: 'ready' });
 </script></body></html>`;
 }
@@ -334,4 +367,4 @@ function activate(context) {
 
 function deactivate() {}
 
-module.exports = { activate, deactivate, _test: { loadModel: () => (model = loadModel()), render } };
+module.exports = { activate, deactivate, _test: { loadModel: () => (model = loadModel()), render, shell } };
