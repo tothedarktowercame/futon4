@@ -1,0 +1,38 @@
+{
+  "name": "mojira",
+  "displayName": "Mojira: a text browser for the GCC",
+  "description": "Keyboard-first text browser over the giant connected component: lexicon entities, their relations, and the pending work that names them (M-mojira, 2026-11-10).",
+  "version": "0.1.0",
+  "publisher": "futon4",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Other"],
+  "capabilities": { "untrustedWorkspaces": { "supported": true }, "virtualWorkspaces": true },
+  "activationEvents": ["onStartupFinished"],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "mojira.open", "title": "Mojira: Open" },
+      { "command": "mojira.reload", "title": "Mojira: Reload data" }
+    ],
+    "configuration": {
+      "title": "Mojira",
+      "properties": {
+        "mojira.lexiconPath": {
+          "type": "string",
+          "default": "/home/joe/notes/cascade-live-outline/lexicon/merge/all.json",
+          "description": "Lexicon entities (JSON array)."
+        },
+        "mojira.pendingPath": {
+          "type": "string",
+          "default": "/home/joe/notes/cascade-live-outline/pending/pending-index.tsv",
+          "description": "Pending work index (TSV)."
+        },
+        "mojira.openOnStartup": {
+          "type": "boolean",
+          "default": true,
+          "description": "Open the Mojira page when code-server starts."
+        }
+      }
+    }
+  }
+}
