@@ -365,6 +365,7 @@ window.addEventListener('message', ev => {
   } else if (m.type === 'peek') {
     $('#peek').innerHTML = m.html; $('#peek').scrollTop = 0;
     peekHref = m.href; sel.peek = -1;
+    if (active === 'peek') select(0);
   }
 });
 document.addEventListener('click', ev => { const a = ev.target.closest('a.ln'); if (a) follow(a); });
@@ -388,7 +389,10 @@ document.addEventListener('keydown', ev => {
   else if (k === 'k' || k === 'ArrowUp') select(sel[active] - 1);
   else if (k === 'Enter' || k === 'l') enter();
   else if (k === 'Tab') {
-    if (active === 'page' && peekShown() && links('peek').length) setActive('peek');
+    if (active === 'page' && peekShown() && links('peek').length) {
+      setActive('peek');
+      select(sel.peek < 0 ? 0 : sel.peek);   // land on a link, not on nothing
+    }
     else setActive('page');
   }
   else if (k === 'h' || k === 'Backspace') vs.postMessage({ type: 'back' });
