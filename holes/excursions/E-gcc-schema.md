@@ -419,3 +419,33 @@ such, with status developing.
     potential until a witness shows it in use.
 - A benefit whose grounding claims fail, or whose interval has closed (§13a),
   shows as such. Nothing is deleted.
+
+## 14. Ranking the lexicon, and Giraffe and the lexicon learning from each other (Joe, 11-10)
+
+Graph page: `wip/formal-arxana/lexicon-graph.html` (generator
+`~/notes/claude-13/lexicon-graph/`). Four measures were tried on the 84
+unfinished (partly or hypothesised) features. **Unfinished work within two
+hops** ranks Giraffe 27, GCC 21 and Cascade Live 19 first, the three Joe
+names as current priorities. The rest of its top ten: daily scan,
+M-the-futon-stack, outer selection, formal Arxana, the VSATARCS writer, A4a,
+ways of working, inbox zero. The measure was chosen after seeing it recover
+those three, so it is on trial: the test is whether it anticipates the next
+priority Joe names.
+
+> "if we worked through them and closed them, we'd surface some more … (or if
+> we worked through these one by one I might decide that they don't have that
+> high of a priority after all. In any case, we'd learn something. Also
+> particularly good if we can … get Giraffe and the Lexicon to keep learning
+> from each other somehow"
+
+The loop, as proposed:
+1. **Lexicon → Giraffe:** each pending item is weighted by the convergence
+   score of the features it names, as a prior beside Giraffe's readiness.
+2. **Giraffe → lexicon:** when an item closes, the features it names are
+   proposed for a status change (partly → exists) as model attestations, which
+   Joe corrects. The ranking is then recomputed, and new priorities surface.
+3. **Joe's verdicts on priority** ("not that high after all") are assessments.
+   They score the measure, and a measure that keeps missing is replaced.
+4. **Gaps both ways:** a pending item naming no lexicon entity suggests a
+   missing entity; a high-convergence feature with no pending item suggests a
+   missing item.
