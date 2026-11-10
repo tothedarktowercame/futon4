@@ -274,7 +274,7 @@ function recordVerdict(item, verdict, noteText) {
     const e = triage.cliError(out, errOut, code);
     note(e || String(out).trim(), Boolean(e));
     // Ruled marks come from the ledger: re-read and redraw both columns.
-    loadBrief(() => { go(history[history.length - 1] || 'triage', false); if (lastPeek) peek(lastPeek); });
+    loadBrief(() => { go(history[history.length - 1] || 'triage', false, true); if (lastPeek) peek(lastPeek, true); });
   });
 }
 
@@ -303,7 +303,9 @@ function openFile(file) {
   });
 }
 
-function go(href, push = true) {
+// keep: a redraw of the same page (new data), so the webview keeps the
+// selection, scroll position and active column.
+function go(href, push = true, keep = false) {
   if (href.startsWith('file:')) { openFile(href.slice(5)); return; }
   if (href.startsWith('ext:')) { vscode.env.openExternal(vscode.Uri.parse(href.slice(4))); return; }
   if ((href === 'triage' || href.startsWith('ti:')) && !brief && !briefErr) {
@@ -313,17 +315,17 @@ function go(href, push = true) {
   let page;
   try { page = render(href); } catch (e) { page = { title: 'error', html: `<pre>${esc(e.stack)}</pre>` }; }
   panel.title = 'Mojira: ' + page.title;
-  panel.webview.postMessage({ type: 'page', html: page.html, crumbs: history.slice(-6) });
+  panel.webview.postMessage({ type: 'page', html: page.html, crumbs: history.slice(-6), keep });
 }
 
 // 2-up: the right column follows the selected link on the left.
-function peek(href) {
+function peek(href, keep = false) {
   if (!panel) return;
   // After a hot reload of core.js the brief is gone while the left column
   // still shows its rows: load it before drawing an item.
   // The same holds for the triage page itself when the home page's link is
   // selected and drawn on the right.
-  if (href && (href === 'triage' || href.startsWith('ti:')) && !brief && !briefErr) { loadBrief(() => peek(href)); return; }
+  if (href && (href === 'triage' || href.startsWith('ti:')) && !brief && !briefErr) { loadBrief(() => peek(href, keep)); return; }
   lastPeek = href;
   let page;
   if (!href) page = { html: '' };
@@ -336,7 +338,7 @@ function peek(href) {
   } else {
     try { page = render(href); } catch (e) { page = { html: `<pre>${esc(e.message)}</pre>` }; }
   }
-  panel.webview.postMessage({ type: 'peek', href, html: page.html });
+  panel.webview.postMessage({ type: 'peek', href, html: page.html, keep });
 }
 
 // Take over the loader's panel: (re)write its page and handle its messages.
@@ -350,7 +352,7 @@ function attach(p, state) {
   // Identical html is a no-op (the webview does not reload and sends no
   // 'ready'), so redraw the current page directly. If the html did change,
   // the webview reloads and its 'ready' redraws again.
-  if (history.length) go(history[history.length - 1], false);
+  if (history.length) go(history[history.length - 1], false, true);
   return panel.webview.onDidReceiveMessage(function handle(m) {
     if (m.type === 'ready') go(history.length ? history[history.length - 1] : 'home', !history.length);
     else if (m.type === 'go') go(m.href);
@@ -376,8 +378,8 @@ function attach(p, state) {
 function reloadData() {
   model = loadModel();
   const cur = history[history.length - 1] || 'home';
-  if (cur === 'triage' || cur.startsWith('ti:')) loadBrief(() => { go(cur, false); if (lastPeek) peek(lastPeek); });
-  else if (panel) go(cur, false);
+  if (cur === 'triage' || cur.startsWith('ti:')) loadBrief(() => { go(cur, false, true); if (lastPeek) peek(lastPeek, true); });
+  else if (panel) go(cur, false, true);
 }
 
 function shell() {
@@ -493,9 +495,17 @@ window.addEventListener('message', ev => {
     clearHints();
     $('#page').innerHTML = m.html;
     $('#crumbs').textContent = m.crumbs.map(c => c.replace(/^[a-z]+:/, '')).join(' › ');
-    sel.page = -1; sel.peek = -1; peekHref = null;
-    $('#page').scrollTop = 0; $('#peek').innerHTML = '';
-    setActive(shifting ? 'peek' : 'page'); shifting = false;
+    if (m.keep) {
+      // Same page, new data (after a verdict or r): stay where we were. The
+      // host redraws the right column itself, so no peek is asked for.
+      const ls = links('page');
+      if (sel.page >= ls.length) sel.page = ls.length - 1;
+      ls.forEach((a, j) => a.classList.toggle('sel', j === sel.page));
+    } else {
+      sel.page = -1; sel.peek = -1; peekHref = null;
+      $('#page').scrollTop = 0; $('#peek').innerHTML = '';
+      setActive(shifting ? 'peek' : 'page'); shifting = false;
+    }
     showKeys();
   } else if (m.type === 'note') {
     const n = $('#note'); n.textContent = m.text; n.classList.toggle('err', Boolean(m.error)); clearTimeout(noteTimer);
@@ -504,9 +514,18 @@ window.addEventListener('message', ev => {
   } else if (m.type === 'mode') {
     vmode = m.mode; const n = $('#note'); n.textContent = m.text; n.classList.remove('err'); clearTimeout(noteTimer);
   } else if (m.type === 'peek') {
-    $('#peek').innerHTML = m.html; $('#peek').scrollTop = 0;
-    peekHref = m.href; sel.peek = -1;
-    if (active === 'peek') select(0);
+    const top = $('#peek').scrollTop;
+    $('#peek').innerHTML = m.html;
+    peekHref = m.href;
+    if (m.keep) {
+      $('#peek').scrollTop = top;
+      const ls = links('peek');
+      if (sel.peek >= ls.length) sel.peek = ls.length - 1;
+      ls.forEach((a, j) => a.classList.toggle('sel', j === sel.peek));
+    } else {
+      $('#peek').scrollTop = 0; sel.peek = -1;
+      if (active === 'peek') select(0);
+    }
   }
 });
 document.addEventListener('click', ev => { const a = ev.target.closest('a.ln'); if (a) follow(a); });
