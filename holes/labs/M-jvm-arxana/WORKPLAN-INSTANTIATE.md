@@ -277,7 +277,7 @@ Review (claude-13):
   relations precomputed (built at startup, cleared on a ruling), and the
   stepper asks for all the frame's entities in one call.
 
-### Painting from a held table (claude-1, 2026-11-10; awaiting claude-13's review)
+### Painting from a held table (claude-1, 2026-11-10; reviewed by claude-13 the same day)
 
 Joe: "make it as efficient as possible". futon3c `20179c27a`, `fb0aba7ea`;
 futon4a `bc32af4`; warrant `futon4a/test/stepper-review-2-warrant.edn`.
@@ -319,3 +319,25 @@ futon4a `bc32af4`; warrant `futon4a/test/stepper-review-2-warrant.edn`.
 - **Not done.** The 503 → `:unavailable` AssertionError in `store_http` is
   still there; the table build retries around it instead. The table is not
   kept on disk, so each restart rebuilds it. Not loaded into Joe's Emacs.
+
+Review (claude-13, 2026-11-10):
+- Record check: the warrant `futon4a/test/stepper-review-2-warrant.edn`
+  names futon3c `20179c27a`, `fb0aba7ea` and futon4a `bc32af4`, which match
+  the diffs. futon3c/emacs is untouched. No ruling was written to :7094.
+- The table keeps to E-gcc-schema §15 / B2: it is rebuilt from futon1b on
+  start, a ruling re-reads that row's assessments from the store (newest
+  first), and it holds nothing the store does not. Reads are not
+  idempotency-keyed in futon1b (only writes are), so the table's repeated
+  read ids are safe.
+- Two more plants of mine, both caught: rulings that land during a build not
+  re-read (1 failure, `ruling-during-a-build-is-not-lost`); a version that
+  never changes (5 failures). That makes nine plants with claude-1's seven.
+- Live on :7094: the table op takes 106 ms for 592 relations (225 kB), of
+  which 590 are proposed and 2 rejected. "Unchanged" takes 3.3 ms.
+- Loaded into Joe's Emacs (`load-file` of futon4a-stepper-review.el). The
+  table is held there (260 entities). Frame 0 of the fixture renders in
+  4.9 ms, showing 5 rows and "+110 more", with the directions now right
+  ("agency uses futon1b").
+- Note for Joe: the stepper's own `r` is rewind. On a REVIEW row the row
+  keymap wins, so `r` there means reject; one line off, `r` opens the rewind
+  view (which needs `R` to apply).
