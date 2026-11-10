@@ -121,6 +121,34 @@ but on the committed draft8 fixture with an in-memory store, on different days
 is one live revision, read by both clients from the JVM authority, side by
 side.
 
+## Checkpoint 1: basic working browser (2026-11-10)
+
+Joe, 2026-11-10: save "a checkpoint section in M-mojira (with a git
+reference) so that we could come back to this basic working version and build
+the cool extensions ... from a strictly 'Mojira' standpoint rather than a
+cool-features standpoint I think the priority is to understand the 'operator
+focus' questions".
+
+- **Code:** futon4 `17d775e`, tag `mojira-checkpoint-1`, `dev/mojira/`
+  (`extension.js` loader, `core.js` pages/keys/webview). Installed by symlink
+  `~/.local/share/code-server/extensions/futon4.mojira-0.1.0` and an entry in
+  that folder's `extensions.json`.
+- **Reads:** the lexicon (`~/notes/cascade-live-outline/lexicon/merge/all.json`,
+  251 entities) and the pending index (`.../pending/pending-index.tsv`, 322
+  items) from files; mission/excursion files under `~/code/*/holes/`.
+- **Does:** home (status, pending state, where the pending work is), entity,
+  pending-item, status, label and search pages; two-up with the right column
+  following the selection; Tab/Shift+Tab between columns, Enter in the right
+  column shifts the columns (Miller style); `f` hints; files open in Emacs via
+  `emacsclient -n` (`mojira.openIn`, fallback to the editor); `core.js`
+  hot-reloads on save.
+- **code-server around it:** decluttered user settings (backups
+  `settings.json.bak-2026-11-10`, `…bak-20261110-useterminal`), Chat AI
+  features off, claude-cs in a terminal via futon6
+  `tools/futon-relay-channel/claude-cs.sh`.
+- **Not done:** the lineup pager, scopes and code+docs below; Q2 under "Open
+  questions"; the operator-focus questions.
+
 ## Design notes: lineup columns, scopes, code+docs (claude-cs, 2026-11-10)
 
 Joe, 2026-11-10: look at claude-21's lineup page
