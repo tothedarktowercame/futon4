@@ -121,6 +121,14 @@ but on the committed draft8 fixture with an in-memory store, on different days
 is one live revision, read by both clients from the JVM authority, side by
 side.
 
+## Candidate view from M-daily-scan (Joe, 2026-11-10)
+
+A triage view for the reworked daily scan (futon7
+`holes/missions/M-daily-scan.md`, "Rework direction"): "a summary on the left
+for example, and details on the right and invalidate either item by item or
+the whole block in one go". Each invalidation is recorded against the scan's
+stated predictions, because the scan is to be a learning loop.
+
 ## Current constraints
 
 - **Memory: 4 GB.** code-server runs as `code-server.service` with
