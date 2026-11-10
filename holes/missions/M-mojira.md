@@ -121,6 +121,57 @@ but on the committed draft8 fixture with an in-memory store, on different days
 is one live revision, read by both clients from the JVM authority, side by
 side.
 
+## Design notes: lineup columns, scopes, code+docs (claude-cs, 2026-11-10)
+
+Joe, 2026-11-10: look at claude-21's lineup page
+(`wip/apm-reading-sample/lineup/`) "since we might use similar ideas to add
+further columns", note its "Arxana style scopes that are more complex than our
+'press RET to activate' highlighting", and think about "how we'd display
+code+docs in Mojira if we browse all the way to some code that has
+documentation".
+
+What the lineup page does (read from `a99J04.html`): five panes in a row
+(problem, Lean source, generated proof, hand-written proof, reference
+solution), 1–3 per screen, snap scrolling, Alt+←/→ by one pane, a chip per pane
+lit while it is visible. Every occurrence of a declared object is a
+`scope-token` carrying one `scope-<hash>` key; `scopeMeta` maps the key to its
+target, kind (`declared`, `defined term`) and, when declared, its introduction
+line and source. Hover lights the token (`scope-active`) and every peer in
+every pane (`scope-peer`); click pins it and scrolls the source pane to the
+introduction line (`source-focus`).
+
+What Mojira takes from it:
+
+1. **The trail becomes the lineup.** Each followed link adds a pane on the
+   right (Federated Wiki: following from pane k drops the panes after k).
+   1–3 panes per screen (`v` cycles); Tab/Shift+Tab move between panes;
+   `[`/`]` page by one. Today's two-up is the 2-per-screen case.
+2. **Links become scopes.** A link's key is what it names (entity id, item id,
+   file + declaration). Selecting one lights its peers in every visible pane,
+   so "where else does futon1b come up in this trail" is visible without
+   following anything. Pinning one shows its introduction: the entity's own
+   page, or in code the declaration line. Kind and introduction come from the
+   authority's scope record, not from Mojira.
+3. **Code+docs is a lineup of manifestations.** When the trail reaches a code
+   file that has a code↔docs revision, the panes are [code] [docs] [Lean
+   citations]. Moving through definitions in the code pane lights the doc
+   entry and the citing Lean declarations; a definition whose body changed
+   since its doc entry is marked (`:since`); RET opens the definition in Emacs
+   at its line. The data is the `:codedocs/view` already served by the JVM
+   authority (futon3c `codedocs_view.clj`: definitions in source order, doc
+   spans, citing Lean declarations, standing), which futon4a
+   `futon4a-codedocs.el` shows in Emacs as a two-pane client
+   (CODEDOCS-INSTANTIATE.md, packets 5–8).
+4. That also discharges the carried condition above: Emacs
+   (`futon4a-codedocs.el`) and Mojira read the same `:codedocs/view` response
+   for one live revision, side by side.
+
+Order, each a small slice: (1) lineup pager, core.js only; (2) peer
+highlighting on link keys; (3) the code+docs panes against a codedocs stack,
+reusing the `arxana.v1` client in futon6 `tools/arxana-vscode/lib/client.js`.
+Slice 3 needs a running codedocs stack to read; the demo one on :7091 is not
+claude-cs's to call, so it waits for an agreed stack.
+
 ## Candidate view from M-daily-scan (Joe, 2026-11-10)
 
 A triage view for the reworked daily scan (futon7
