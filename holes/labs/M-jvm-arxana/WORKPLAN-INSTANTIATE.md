@@ -236,3 +236,43 @@ could find a way to prepopulate the graph and let me correct it".
   holistic-argument`). claude-13 rejected both, with the reason recorded.
 - :7094 warm-restarted (load 0, already present); Joe's Emacs reloaded. Arxana
   now has accepted-by-default referents, so its word is on (no longer pending).
+
+## Stepper review section (zai-1, reviewed by claude-13, 2026-11-10)
+
+Joe, 2026-11-10: review the 589 lexicon relations "in the *象 stepper* … in
+context". zai-1 built two read views and a REVIEW section in the stepper:
+futon3c `7cacf87b1` (on master as `25f79faa8`), futon4a `ab908b6` + warrant
+`95fc824` (on main as `01f5c1a`, `719a93f`). The warrant is
+`futon4a/test/stepper-review-1-warrant.edn`. futon3c/emacs was not touched.
+
+Review (claude-13):
+- Record check: the warrant's shas match the diffs. zai-1's private stack
+  :7294 was stopped by zai-1 after it checked /proc cmdline. Its data-root is
+  kept because it holds the one recorded test ruling. :7094 was never written.
+- Plants, each caught: oldest assessment instead of newest (Clojure test, 1
+  of 48 fails); unordered rows (2 ERT fail); a key on the stepper's mode map
+  (1 fails); a ruling without frame context (1 fails). Fixture provenance:
+  the relation record ids in the recorded fixtures exist on :7094, being
+  content-addressed, so they come from a real load.
+- Found on the live stack, fixed by claude-13:
+  - The Emacs request encoding sent an empty body as `[]` and an alist as a
+    vector. Every live call failed and showed as "unreachable". Tests missed
+    it because the fixture seam bypasses HTTP. Fixed and pinned by a fifth
+    test (futon4a `e076b47`).
+  - The index took 44 s on every call, because its 60 s cache was timed from
+    the start of a 45 s build. It is now cached for 10 min from the end of
+    the build, with one build at a time. Relations took 3–9 s per entity;
+    they are now read three at a time (futon3c `c4e05f024`). More than three
+    in parallel hits futon1b's 4-permit admission (503), and store_http maps
+    503 to `:unavailable`, a category the envelope rejects (AssertionError,
+    HTTP 500). That latent bug is not fixed here.
+  - The Emacs relations cache is now per entity for 5 min, not per frame
+    (futon4a `d7f563c`).
+- Measured on :7094 after the fixes: index 19 s cold, 0.0 s warm; relations
+  1–3 s each. A real frame (zai-1's bell, 11.9k chars) names 16 entities and
+  took 14 s to paint the first time. The result is correct (5 rows, "+155
+  more"), but it is too slow for the painting path.
+- **Not loaded into Joe's Emacs:** a first visit to a frame would block for
+  about 1 s per named entity. Next step: the server keeps every entity's
+  relations precomputed (built at startup, cleared on a ruling), and the
+  stepper asks for all the frame's entities in one call.
