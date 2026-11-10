@@ -149,6 +149,58 @@ focus' questions".
 - **Not done:** the lineup pager, scopes and code+docs below; Q2 under "Open
   questions"; the operator-focus questions.
 
+## Design notes: the operator-focus view (claude-cs, 2026-11-10)
+
+Joe, 2026-11-10: "it's Monkey's job to compute it ... and yes it is open.
+Let's simply think about what it would look like in Mojira; the exact data may
+change. But some clues are: the War Machine prefers tasks which are in the
+focus or adjacent to it, Merlin (Gauntlet/Giraffe) prioritises tasks that
+assist with self-representation and a strategic view; minus40 may have a
+concept of recently activated memories and spreading activation; and so on".
+
+Mojira shows focus; 猴 computes it; each other reader gives a different
+ranking of the same tasks. So the view has a centre, rings around it, and the
+tasks with each reader's ranking in its own column:
+
+```
+FOCUS   clock: M-mojira (since 17:02)            猴 19:41 · m40 19:40 · WM 19:30
+in focus                     activation   last   from
+  Mojira                     ████████      2m    turn, file
+  code-server                ██████        6m    turn
+  Arxana Browser             ████         14m    turn
+  GCC                        ███          31m    memory
+adjacent (one relation away)
+  WebArxana   part-of Arxana Browser     ██
+  futon1b     feeds GCC                  █
+tasks near the focus                WM   Merlin  m40   ring
+  M-mojira Q2: watch Emacs turns?   ●●●   ●●○    ●○○   focus
+  M-jvm-arxana condition 3          ●●○   ●●●    ○○○   adjacent   ← readers disagree
+  E-gcc-schema 1.1 (猴's type)      ●●○   ●●●    ●●○   adjacent
+```
+
+- **Left column, the field:** what 猴 says is in focus, with activation and
+  decay (how long since it was last touched, and by what: a turn, a file, a
+  memory), then the ring one relation away, labelled with the relation.
+- **Tasks with one column per reader:** War Machine (in or next to the
+  focus), Merlin (self-representation, strategic view), minus40 (spreading
+  activation from recently activated memories). Readers are columns, not a
+  merged score, so a disagreement is visible ("Merlin rates this higher than
+  the WM does"); disagreements are the interesting rows.
+- **Right column (the existing two-up) follows the selection:** for an
+  entity, why it is in focus (the turns, files and memories that activated
+  it); for a task, each reader's reason for its rank.
+- **Time:** `[`/`]` step the focus back and forward through 猴's snapshots, so
+  a drift ("the morning was Giraffe, the afternoon Mojira") is visible as the
+  centre moving.
+- **Stale or missing readers** show as such in the header (each reader's last
+  update), never as an empty ranking.
+
+Open, for when the data exists: the unit of activation (entity, pending item,
+memory, or all three); the decay rule; what counts as one relation away (the
+lexicon relations, the GCC's typed links); each reader's scale; whether Joe can
+pin something into focus from Mojira, and if so where that write goes (an
+input to 猴 through the authority, not Mojira's own store).
+
 ## Design notes: lineup columns, scopes, code+docs (claude-cs, 2026-11-10)
 
 Joe, 2026-11-10: look at claude-21's lineup page
