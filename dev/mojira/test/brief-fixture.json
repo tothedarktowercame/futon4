@@ -1,0 +1,19 @@
+{"brief/id": "2026-01-01-main", "brief/date": "2026-01-01", "brief/axis": "main",
+ "brief/items": [
+  {"item/id": "example/alpha", "item/summary": "alpha: a synthetic item",
+   "item/detail": {"description": "Synthetic fixture, not scan data.", "probe-count": 2, "total-score": 3.5,
+                   "probes": ["probe one", "probe two"], "signal-types": ["stars"], "stars": 10,
+                   "changed": null, "url": null, "html-url": null},
+   "item/criteria": ["c1", "c2"], "item/prediction": {"p-worth": 0.4, "why": "two criteria"}},
+  {"item/id": "example/beta", "item/summary": "beta",
+   "item/detail": {"description": "", "probe-count": 0, "total-score": 0.0, "probes": [], "signal-types": [],
+                   "stars": 0, "changed": null, "url": "https://example.org/beta", "html-url": null},
+   "item/criteria": [], "item/prediction": {"p-worth": 0.1, "why": "base rate"}},
+  {"item/id": "example/gamma", "item/summary": "gamma",
+   "item/detail": {"description": "", "probe-count": 0, "total-score": 0.0, "probes": [], "signal-types": [],
+                   "stars": 0, "changed": null, "url": null, "html-url": null},
+   "item/criteria": ["c1"], "item/prediction": {"p-worth": 0.25, "why": "one criterion"}}],
+ "brief/scored-previous": {},
+ "brief/verdicts": [
+  {"item/id": "example/beta", "verdict": "invalid", "by": "joe", "at": "2026-01-01T10:00:00Z"},
+  {"item/id": "example/beta", "verdict": "not-now", "note": "changed my mind", "by": "joe", "at": "2026-01-01T11:00:00Z"}]}

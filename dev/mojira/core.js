@@ -7,6 +7,9 @@ const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
 const { execFile } = require('child_process');
+// triage.js is reloaded with core.js (the loader only re-requires core.js).
+delete require.cache[require.resolve('./triage')];
+const triage = require('./triage');
 
 // Hot-reloaded by extension.js whenever this file is saved: keep no state
 // here that must outlive a reload. The loader owns the panel and `state`.
@@ -103,6 +106,8 @@ function render(href) {
   if (kind === 'label') return pageLabel(arg);
   if (kind === 'search') return pageSearch(arg);
   if (kind === 'all') return pageAllPending();
+  if (kind === 'triage') return pageTriage();
+  if (kind === 'ti') return pageTriageItem(arg);
   return pageHome();
 }
 
@@ -118,6 +123,7 @@ function pageHome() {
     html: `<h1>Mojira <span class="dim">— the GCC, as text</span></h1>
 <p class="dim">${model.ents.size} lexicon entities · ${model.items.size} pending items · loaded ${esc(model.loadedAt.toISOString().slice(11, 19))} UTC</p>
 <h2>Entities by status</h2><ul>${statuses.map(([s, n]) => `<li>${link('status:' + s, s, 'st-' + s)} <span class="dim">${n}</span></li>`).join('')}</ul>
+<h2>Daily scan</h2><ul><li>${link('triage', 'triage the latest brief')}</li></ul>
 <h2>Pending work by state</h2><ul>${labels.map(([s, n]) => `<li>${link('label:' + s, s)} <span class="dim">${n}</span></li>`).join('')}
 <li>${link('all', 'all pending items')}</li></ul>
 <h2>Where the pending work is <span class="dim">(entities named by most pending items)</span></h2>
@@ -203,6 +209,71 @@ function pageSearch(q) {
 <h2>Pending items <span class="dim">${ps.length}</span></h2><ul>${ps.map(r => `<li>${link('p:' + r.id, r.id)} <span class="dim">${esc(trim(r.one_line, 80))}</span></li>`).join('') || '<li class="dim">none</li>'}</ul>` };
 }
 
+// ---------------------------------------------------------------- triage
+
+let brief = null, briefErr = null, lastPeek = null;
+
+function bb(args, cb) {
+  execFile(cfg('bb') || 'bb', args,
+    { cwd: cfg('dailyLoopDir') || '/home/joe/code/futon7', timeout: 60000, maxBuffer: 16 << 20 },
+    (err, out, errOut) => cb(err ? (typeof err.code === 'number' ? err.code : 1) : 0, out, errOut));
+}
+
+function loadBrief(cb) {
+  bb(triage.briefArgs(), (code, out, errOut) => {
+    const e = triage.cliError(out, errOut, code);
+    if (e) { briefErr = e; brief = null; }
+    else {
+      try { brief = JSON.parse(out); briefErr = null; }
+      catch (x) { brief = null; briefErr = 'brief --json did not parse: ' + x.message; }
+    }
+    cb();
+  });
+}
+
+const MARK = { worth: '✓ worth', 'not-now': '… not now', invalid: '✗ invalid' };
+const pct = (p) => (p == null ? '?' : Math.round(p * 100) + '%');
+
+function pageTriage() {
+  if (!brief) return { title: 'triage', html: `<h1>Daily scan triage</h1><p class="err">${esc(briefErr || 'no brief loaded')}</p>` };
+  const rows = triage.rowsFromBrief(brief);
+  const open = rows.filter((r) => !r.verdict).length;
+  return { title: 'triage ' + brief['brief/id'], html: `<div data-triage="1">
+<h1>Daily scan <span class="dim">${esc(brief['brief/id'])}</span></h1>
+<p class="dim">${rows.length} items · ${open} not yet ruled · keys: w worth · n not now · x invalid (on the selected item) · a the whole block · r re-read</p>
+<ul>${rows.map((r) => `<li><span class="verdict ${r.verdict ? 'v-' + r.verdict : ''}">${esc(r.verdict ? MARK[r.verdict] || r.verdict : '·')}</span> ${link('ti:' + r.id, r.id)} <span class="dim">${pct(r.pWorth)} · ${r.criteria.length} criteria · ${esc(trim(r.summary, 70))}</span></li>`).join('')}</ul></div>` };
+}
+
+function pageTriageItem(id) {
+  if (!brief) return { title: id, html: `<p class="err">${esc(briefErr || 'no brief loaded')}</p>` };
+  const it = (brief['brief/items'] || []).find((x) => x['item/id'] === id);
+  if (!it) return { title: id, html: `<h1>${esc(id)}</h1><p>Not in ${esc(brief['brief/id'])}.</p>` };
+  const r = triage.rowsFromBrief(brief).find((x) => x.id === id);
+  const d = it['item/detail'] || {};
+  const row = (k, v) => (v == null || v === '' || (Array.isArray(v) && !v.length)) ? '' : `<tr><th>${k}</th><td>${esc(Array.isArray(v) ? v.join(', ') : v)}</td></tr>`;
+  const links = ['url', 'html-url'].filter((k) => d[k]).map((k) => `<li>${link('ext:' + d[k], d[k])}</li>`).join('');
+  return { title: id, html: `<div data-triage="1" data-item="${esc(id)}">
+<h1>${esc(id)} <span class="verdict ${r.verdict ? 'v-' + r.verdict : ''}">${esc(r.verdict ? MARK[r.verdict] : 'not ruled')}</span></h1>
+<p>${esc(it['item/summary'])}</p>
+<table>${row('p-worth', pct(r.pWorth))}${row('why', r.why)}${row('criteria', r.criteria)}${row('note', r.note)}
+${row('description', d.description)}${row('signals', d['signal-types'])}${row('probes', d.probes)}${row('stars', d.stars)}${row('score', d['total-score'])}${row('changed', d.changed)}</table>
+${links ? `<h2>Links</h2><ul>${links}</ul>` : ''}
+<p class="dim">${esc(brief['brief/id'])} · w worth · n not now · x invalid · a the whole block</p></div>` };
+}
+
+function recordVerdict(item, verdict, noteText) {
+  if (!brief) { note('no brief loaded', true); return; }
+  let args;
+  try { args = triage.verdictArgs(brief['brief/id'], item, verdict, noteText); }
+  catch (e) { note(e.message, true); return; }
+  bb(args, (code, out, errOut) => {
+    const e = triage.cliError(out, errOut, code);
+    note(e || String(out).trim(), Boolean(e));
+    // Ruled marks come from the ledger: re-read and redraw both columns.
+    loadBrief(() => { go(history[history.length - 1] || 'triage', false); if (lastPeek) peek(lastPeek); });
+  });
+}
+
 function trim(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
 
 // ---------------------------------------------------------------- panel
@@ -216,7 +287,7 @@ function openInEmacs(file, done) {
     done(err ? (String(stderr || '').trim() || err.message) : null));
 }
 
-function note(text) { if (panel) panel.webview.postMessage({ type: 'note', text }); }
+function note(text, error) { if (panel) panel.webview.postMessage({ type: 'note', text, error: Boolean(error) }); }
 
 function openFile(file) {
   const inEditor = () => vscode.window.showTextDocument(vscode.Uri.file(file),
@@ -230,6 +301,10 @@ function openFile(file) {
 
 function go(href, push = true) {
   if (href.startsWith('file:')) { openFile(href.slice(5)); return; }
+  if (href.startsWith('ext:')) { vscode.env.openExternal(vscode.Uri.parse(href.slice(4))); return; }
+  if ((href === 'triage' || href.startsWith('ti:')) && !brief && !briefErr) {
+    loadBrief(() => go(href, push)); return;
+  }
   if (push) history.push(href);
   let page;
   try { page = render(href); } catch (e) { page = { title: 'error', html: `<pre>${esc(e.stack)}</pre>` }; }
@@ -240,12 +315,15 @@ function go(href, push = true) {
 // 2-up: the right column follows the selected link on the left.
 function peek(href) {
   if (!panel) return;
+  lastPeek = href;
   let page;
   if (!href) page = { html: '' };
   else if (href.startsWith('file:')) {
     const f = href.slice(5);
     const where = cfg('openIn') === 'editor' ? 'in the editor column on the right' : 'in Emacs';
     page = { html: `<h1>${esc(path.basename(f))}</h1><p class="dim">${esc(f)}</p><p class="dim">Enter opens it ${where}.</p>` };
+  } else if (href.startsWith('ext:')) {
+    page = { html: `<p class="dim">${esc(href.slice(4))}</p><p class="dim">Enter opens it in the browser.</p>` };
   } else {
     try { page = render(href); } catch (e) { page = { html: `<pre>${esc(e.message)}</pre>` }; }
   }
@@ -275,12 +353,21 @@ function attach(p, state) {
     else if (m.type === 'home') go('home');
     else if (m.type === 'search' && m.q) go('search:' + m.q);
     else if (m.type === 'reload') reloadData();
+    else if (m.type === 'verdict') recordVerdict(m.item, m.verdict, m.note);
+    else if (m.type === 'all-ask') {
+      const n = brief ? triage.unruledCount(brief) : 0;
+      if (!n) note('nothing to rule: every item of ' + (brief ? brief['brief/id'] : 'the brief') + ' has a verdict', true);
+      else panel.webview.postMessage({ type: 'mode', mode: 'all', text:
+        `rule all ${n} unruled items of ${brief['brief/id']}: w worth · n not now · x invalid · Esc cancels` });
+    }
   });
 }
 
 function reloadData() {
   model = loadModel();
-  if (panel) go(history[history.length - 1] || 'home', false);
+  const cur = history[history.length - 1] || 'home';
+  if (cur === 'triage' || cur.startsWith('ti:')) loadBrief(() => { go(cur, false); if (lastPeek) peek(lastPeek); });
+  else if (panel) go(cur, false);
 }
 
 function shell() {
@@ -310,9 +397,13 @@ a.st-exists { } a.st-partly { font-style: italic; } a.st-hypothesised { font-sty
 .hint { position: absolute; background: var(--vscode-editorWarning-foreground, #c90); color: #000; font-size: 11px; font-weight: bold; padding: 0 3px; border-radius: 2px; transform: translate(-100%, -2px); z-index: 9; }
 #bar { position: sticky; top: 0; background: var(--vscode-editor-background); padding: .4em 0; border-bottom: 1px solid var(--vscode-panel-border); color: var(--vscode-descriptionForeground); font-size: .85em; }
 #note { color: var(--vscode-editorInfo-foreground, inherit); margin-right: .5em; }
+#note.err, .err { color: var(--vscode-errorForeground, #c33); }
+#vn { display: none; width: 34em; font: inherit; color: inherit; background: var(--vscode-input-background); border: 1px solid var(--vscode-focusBorder); }
+.verdict { display: inline-block; min-width: 6.5em; color: var(--vscode-descriptionForeground); }
+.v-worth { color: var(--vscode-testing-iconPassed, #3a3); } .v-invalid { color: var(--vscode-errorForeground, #c33); } .v-not-now { color: var(--vscode-editorWarning-foreground, #b80); }
 #q { display: none; width: 30em; font: inherit; color: inherit; background: var(--vscode-input-background); border: 1px solid var(--vscode-focusBorder); }
 </style></head><body>
-<div id="bar"><span id="crumbs"></span> <input id="q" placeholder="search, then Enter"><span id="note" class="note"></span><span id="keys"> · j/k move · Enter follow · Tab other column · f hints · h back · / search · g home · v split · r reload</span></div>
+<div id="bar"><span id="crumbs"></span> <input id="q" placeholder="search, then Enter"><span id="note" class="note"></span><input id="vn"><span id="keys"> · j/k move · Enter follow · Tab other column · f hints · h back · / search · g home · v split · r reload</span></div>
 <div id="cols"><div id="page">loading…</div><div id="peek"></div></div>
 <script>
 const vs = acquireVsCodeApi();
@@ -336,6 +427,23 @@ function select(i) {
   peekTimer = setTimeout(() => vs.postMessage({ type: 'peek', href }), 60);
 }
 let peekTimer = null, noteTimer = null;
+// Triage: w/n/x rule the selected item; a asks to rule the whole block.
+const VKEY = { w: 'worth', n: 'not-now', x: 'invalid' };
+let vmode = null, pending = null;   // vmode 'all' after the confirmation line
+const onTriage = () => Boolean(document.querySelector('#page [data-triage]'));
+function triageTarget() {
+  const a = links()[sel[active]];
+  if (a && a.dataset.href.startsWith('ti:')) return a.dataset.href.slice(3);
+  if (active === 'peek' && peekHref && peekHref.startsWith('ti:')) return peekHref.slice(3);
+  const pg = document.querySelector('#page [data-item]');
+  return pg ? pg.dataset.item : null;
+}
+function askNote(item, verdict) {
+  pending = { item, verdict };
+  const vn = $('#vn');
+  vn.placeholder = (item === 'all' ? 'all unruled items' : item) + ' → ' + verdict + ': optional note, Enter records, Esc cancels';
+  vn.value = ''; vn.style.display = 'inline'; vn.focus();
+}
 function enter() {
   const a = links()[sel[active]];
   if (!a) return;
@@ -373,8 +481,11 @@ window.addEventListener('message', ev => {
     $('#page').scrollTop = 0; $('#peek').innerHTML = '';
     setActive(shifting ? 'peek' : 'page'); shifting = false;
   } else if (m.type === 'note') {
-    const n = $('#note'); n.textContent = m.text; clearTimeout(noteTimer);
-    noteTimer = setTimeout(() => { n.textContent = ''; }, 6000);
+    const n = $('#note'); n.textContent = m.text; n.classList.toggle('err', Boolean(m.error)); clearTimeout(noteTimer);
+    // Errors stay until the next action; other notes fade.
+    if (!m.error) noteTimer = setTimeout(() => { n.textContent = ''; }, 6000);
+  } else if (m.type === 'mode') {
+    vmode = m.mode; const n = $('#note'); n.textContent = m.text; n.classList.remove('err'); clearTimeout(noteTimer);
   } else if (m.type === 'peek') {
     $('#peek').innerHTML = m.html; $('#peek').scrollTop = 0;
     peekHref = m.href; sel.peek = -1;
@@ -382,6 +493,14 @@ window.addEventListener('message', ev => {
   }
 });
 document.addEventListener('click', ev => { const a = ev.target.closest('a.ln'); if (a) follow(a); });
+$('#vn').addEventListener('keydown', ev => {
+  if (ev.key === 'Enter' && pending) {
+    vs.postMessage({ type: 'verdict', item: pending.item, verdict: pending.verdict, note: ev.target.value });
+    $('#note').textContent = 'recording…'; $('#note').classList.remove('err');
+  }
+  if (ev.key === 'Enter' || ev.key === 'Escape') { pending = null; ev.target.style.display = 'none'; ev.target.blur(); }
+  ev.stopPropagation();
+});
 $('#q').addEventListener('keydown', ev => {
   if (ev.key === 'Enter') { vs.postMessage({ type: 'search', q: ev.target.value.trim() }); ev.target.style.display = 'none'; ev.target.blur(); }
   if (ev.key === 'Escape') { ev.target.style.display = 'none'; ev.target.blur(); }
@@ -398,6 +517,17 @@ document.addEventListener('keydown', ev => {
     ev.preventDefault(); return;
   }
   const k = ev.key;
+  if (vmode === 'all') {
+    vmode = null;
+    if (VKEY[k]) askNote('all', VKEY[k]); else $('#note').textContent = '';
+    ev.preventDefault(); return;
+  }
+  if (onTriage() && VKEY[k]) {
+    const item = triageTarget();
+    if (item) askNote(item, VKEY[k]); else { $('#note').textContent = 'select an item first'; }
+    ev.preventDefault(); return;
+  }
+  if (onTriage() && k === 'a') { vs.postMessage({ type: 'all-ask' }); ev.preventDefault(); return; }
   if (k === 'j' || k === 'ArrowDown') select(sel[active] + 1);
   else if (k === 'k' || k === 'ArrowUp') select(sel[active] - 1);
   else if (k === 'Enter' || k === 'l') enter();

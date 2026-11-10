@@ -76,6 +76,16 @@
             "-n"
           ],
           "description": "Arguments before the file, e.g. [\"-n\", \"-s\", \"server\"]."
+        },
+        "mojira.dailyLoopDir": {
+          "type": "string",
+          "default": "/home/joe/code/futon7",
+          "description": "Directory the daily-loop CLI runs in (bb daily-loop brief/verdict). Tests point a folder setting at a scratch copy."
+        },
+        "mojira.bb": {
+          "type": "string",
+          "default": "bb",
+          "description": "Babashka executable for the daily-loop CLI."
         }
       }
     }

@@ -260,6 +260,19 @@ for example, and details on the right and invalidate either item by item or
 the whole block in one go". Each invalidation is recorded against the scan's
 stated predictions, because the scan is to be a learning loop.
 
+**Built (2026-11-10, claude-cs, for claude-13's M-daily-scan step).** On
+Mojira's home page, "Daily scan → triage the latest brief". Left: one row per
+item (verdict mark, p-worth, criteria count, summary); right: the selected
+item's detail. Keys on the triage pages: `w` worth, `n` not now, `x` invalid
+on the selected item, each with an optional note; `a` rules the whole block
+(every unruled item) after a one-line confirmation giving the count; `r`
+re-reads the brief, which also picks up a new one. Reads and writes go only
+through `bb daily-loop brief --json` / `bb daily-loop verdict` in
+`mojira.dailyLoopDir` (default `~/code/futon7`); after each write the brief
+is re-read, so the marks come from the ledger. CLI refusals ("ERROR: ...")
+stay in the bar in red. Code: `dev/mojira/triage.js` (pure, tested with a
+synthetic fixture), triage pages in `core.js`.
+
 ## Current constraints
 
 - **Memory: 4 GB.** code-server runs as `code-server.service` with
