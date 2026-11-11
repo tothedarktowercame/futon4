@@ -1030,3 +1030,79 @@ futon1b. Kept small, it is the rule in B2 ("what is computed can be
 rebuilt"): the fast layer holds only what can be recomputed from futon1b,
 so it can be thrown away rather than repaired. First instance: claude-1's
 stepper packet (in-memory relations, 2026-11-10).
+
+## 16. Cascades in the GCC — schema 1.1 draft (claude-13, 11-11; for Joe's review)
+
+Joe, 11-11: "we need to have an agreed cascade schema that allows cascades to
+be drawn per turn, or developed per META task by the War Machine similarly,
+but also allow them to live inside the GCC and be displayed in Mojira", and
+to be read in Emacs as s-expressions, "with #n= markers ... for the joins".
+First real instance: futon3c `holes/labs/M-repl-circus/cascade-2026-11-11-turn/`
+(`e95aaa086`, review `f96afef0a`): two complete occurrences glued on one
+element, formally legal.
+
+**What exists.** The square, `:wm/three-halves-square-v1`, is shared by the
+象 emitter and the War Machine. The War Machine keeps its cascades as EDN by
+digest (`:wm/structural-cascade-v1`, `:wm/executable-cascade-v1`; 154 in
+futon2 `data/wm-executable-cascades/`, none with a gluing).
+`[:pattern/occurrence 1]` is declared (roles `:pattern`, `:turn`; content
+`window`, `proposal`) with no writer, and it has no place for the four parts.
+futon2's gluing witness check (`witness-conforming?`) checks shape only: any
+64-hex digest passes.
+
+**Proposal.**
+
+1. **Situation.** What a cascade reads: an operator turn (evidence id), a
+   chain of turns, or a War Machine task's reading record. An external
+   reference. It generalises v1's `:turn`.
+2. **`[:situation/element 1]`**, roles `:situation`; content
+   `element/name`. The id is the situation plus the name, so the same name
+   used twice in one situation is one record. Each quote is an attestation
+   (basis `model`, quote check `exact`).
+3. **`[:pattern/occurrence 2]`**, superseding v1. Roles `:pattern` (library
+   path, sha256 as revision), `:situation`, and `:if`, `:however`, `:then`,
+   `:because`, each an element. Only a complete occurrence is a record
+   (CASCADE-SPEC-v3 §2: a void part voids the occurrence). Whether each part's
+   element "is what the part describes, not merely something on the same
+   topic" is an assessment of the occurrence: `candidate` from the mapper,
+   accepted or rejected by a second reader or Joe (rule 9).
+4. **Gluing is computed, not stored** (rule 3). Two occurrences that hold
+   the same element record are glued there. The witness is the element's
+   identity, which replaces the hand-stated digest that only had to look
+   right. The judgement that is left is item 3's, one map at a time.
+5. **`[:cascade/reading 1]`**, a receipt: role `:situation`; content
+   `reader`, `method/version`; status `not-run`, `failed` or `complete`
+   (rule 7). The census (each candidate with N/4 and its void reasons) is an
+   attestation on it. A **null cascade** is a complete reading with no
+   occurrence. A reader that failed is never a null cascade (frame 179 drew
+   "no reader" as void).
+6. **The cascade is derived:** the occurrences of one situation, with
+   components through shared elements. One component is a legal cascade
+   (§3.1); more than one is a bag. Not stored.
+7. **War Machine cascades.** The futon2 record stays the authority
+   (DERIVE-core §14: indexed, never mirrored). Its occurrences and elements
+   are written as in 2–3, with the reading record as the situation;
+   `[:cascade/selected 1]` (role `:situation`; content `cascade/digest`)
+   points to the executable record. Reading-order edges become
+   `[:cascade/reading-order 1]` (`:from`, `:to`; content `relation`), which
+   are descriptive and are never a glue.
+8. **Across turns** (the session diagram). Elements of different situations
+   are different records. A later element continuing an earlier one is
+   `[:element/continues 1]` (`:later`, `:earlier`), basis `model`, counted
+   until Joe rejects it. With occurrences of one pattern in several turns
+   (computed), these draw the lines of the vertical, git-graph-like view.
+9. **Writers and readers** (B9). 猴 writes 2, 3, 5 and 8 (M-repl-circus,
+   11-11: occurrence reading moves from 馬 to 猴); the War Machine writes 7.
+   Readers: Mojira (the drawing), Emacs (the text view), 猴 (operator focus
+   as a region of the GCC), the War Machine (construction).
+10. **Text view.** futon3c `scripts/cascade_sexp.py` writes one turn's
+    cascade as `lisp-data`. An element used by more than one part is written
+    once as `#N=(element NAME "quote")` and then as `#N#`, and Emacs's
+    `read` returns one object for both: the `#N#` is item 4's shared
+    element record. Example:
+    `holes/labs/M-repl-circus/cascade-2026-11-11-turn/cascade.sexp`.
+
+**Open.** Whether partial occurrences are kept beyond the census (Mojira's
+hollow circles need only the census). A check on item 2 when two maps share
+a name but quote different spans. Whether `[:pattern/proposal 1]` (驴) also
+takes `:situation`.
