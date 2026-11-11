@@ -14,6 +14,10 @@ delete require.cache[require.resolve('./patterns')];
 delete require.cache[require.resolve('./pattern-pages')];
 const patterns = require('./patterns');
 const patternPages = require('./pattern-pages');
+delete require.cache[require.resolve('./cascade-reader')];
+delete require.cache[require.resolve('./cascade-view')];
+const cascadeReader = require('./cascade-reader');
+const cascadeView = require('./cascade-view');
 
 // Hot-reloaded by extension.js whenever this file is saved: keep no state
 // here that must outlive a reload. The loader owns the panel and `state`.
@@ -113,6 +117,7 @@ function render(href) {
   if (kind === 'triage') return pageTriage();
   if (kind === 'ti') return pageTriageItem(arg);
   if (PATTERN_KINDS.has(kind)) return pagePattern(kind, arg);
+  if (kind === 'cascade' || kind === 'cn' || kind === 'ce') return pageCascade(kind, arg);
   return pageHome();
 }
 
@@ -132,6 +137,8 @@ function pageHome() {
 <li>${link('pg', 'the pattern graph')}</li>
 <li>${link('pout', 'proposed in turns, outside the main component')}</li>
 <li>${link('pturns', 'recent turns and the patterns proposed to them')}</li></ul>
+<h2>Cascades <span class="dim">(M-repl-circus: a turn read as patterns)</span></h2><ul>
+<li>${link('cascade', 'the first turn cascade (2026-11-11)')}</li></ul>
 <h2>Daily scan</h2><ul><li>${link('triage', 'triage the latest brief')}</li></ul>
 <h2>Pending work by state</h2><ul>${labels.map(([s, n]) => `<li>${link('label:' + s, s)} <span class="dim">${n}</span></li>`).join('')}
 <li>${link('all', 'all pending items')}</li></ul>
@@ -264,6 +271,28 @@ function pagePattern(kind, arg) {
   if (kind === 'pturns') return P.turns();
   if (kind === 'pout') return P.outside();
   return P.missing();
+}
+
+// ---------------------------------------------------------------- cascades
+
+// One recorded cascade, read from its lab directory each time (small files).
+function partsOf(id) {
+  if (pgraph && pgraph.library.has(id)) return pgraph.library.get(id).parts;
+  try {
+    const f = path.join(cfg('patternLibrary') || '/home/joe/code/futon3/library', id + '.flexiarg');
+    return patterns.parts(fs.readFileSync(f, 'utf8'));
+  } catch (_) { return null; }
+}
+
+function pageCascade(kind, arg) {
+  const dir = cfg('cascadeDir') || '/home/joe/code/futon3c/holes/labs/M-repl-circus/cascade-2026-11-11-turn';
+  let c;
+  try { c = cascadeReader.read(dir); }
+  catch (e) { return { title: 'cascade', html: `<h1>Cascade</h1><p class="err">could not read ${esc(dir)}: ${esc(e.message)}</p>` }; }
+  const V = cascadeView(c, { esc, link, trim, partsOf });
+  if (kind === 'cn') return V.pattern(arg);
+  if (kind === 'ce') return V.element(arg);
+  return V.page(arg === 'partials');
 }
 
 // ---------------------------------------------------------------- triage
@@ -464,6 +493,27 @@ body.act-peek #peek { border-left-color: var(--vscode-focusBorder); }
 h1 { font-size: 1.25em; margin: .8em 0 .4em; } h2 { font-size: 1em; margin: 1.2em 0 .3em; text-transform: lowercase; color: var(--vscode-textLink-foreground); }
 ul { list-style: none; padding-left: 1em; margin: 0; } li { margin: .1em 0; }
 table { border-collapse: collapse; } th { text-align: left; vertical-align: top; padding-right: 1em; font-weight: normal; color: var(--vscode-descriptionForeground); white-space: nowrap; }
+svg.cascade { display: block; margin: .6em 0; overflow: visible; }
+svg.cascade .edge { fill: none; stroke: var(--vscode-descriptionForeground); stroke-width: 1.3; }
+svg.cascade .edge.dotted { stroke-dasharray: 3 4; opacity: .7; }
+svg.cascade .occ { fill: var(--vscode-textLink-foreground); stroke: var(--vscode-editor-background); stroke-width: 2; }
+svg.cascade .occ.partial { fill: var(--vscode-editor-background); stroke: var(--vscode-textLink-foreground); stroke-width: 1.5; }
+svg.cascade .el { fill: var(--vscode-descriptionForeground); }
+svg.cascade .el.partial { fill: none; stroke: var(--vscode-descriptionForeground); }
+svg.cascade .glue { fill: var(--vscode-editorWarning-foreground, #c90); }
+svg.cascade text { fill: var(--vscode-editor-foreground); font-size: 11px; }
+svg.cascade .olabel { font-size: 12px; font-weight: bold; }
+svg.cascade .nlabel { fill: var(--vscode-editor-background); font-size: 9px; }
+svg.cascade .occ.partial + text + .nlabel, svg.cascade a:has(.occ.partial) .nlabel { fill: var(--vscode-textLink-foreground); }
+svg.cascade .role { fill: var(--vscode-descriptionForeground); font-size: 9px; letter-spacing: .04em; }
+svg.cascade .elabel { fill: var(--vscode-descriptionForeground); }
+svg.cascade .gluetag, .gluetag { fill: var(--vscode-editorWarning-foreground, #c90); color: var(--vscode-editorWarning-foreground, #c90); font-size: 10px; font-weight: bold; }
+svg.cascade a.ln { cursor: pointer; }
+svg.cascade a.ln.sel circle, svg.cascade a.ln.sel rect { stroke: var(--vscode-focusBorder); stroke-width: 3; }
+svg.cascade a.ln.sel text { fill: var(--vscode-textLink-activeForeground, var(--vscode-textLink-foreground)); }
+h2.part { text-transform: none; }
+.status-line { border-left: 3px solid var(--vscode-editorWarning-foreground, #c90); padding-left: .6em; }
+blockquote { margin: .2em 0 .6em 1em; padding-left: .6em; border-left: 2px solid var(--vscode-panel-border); color: var(--vscode-descriptionForeground); }
 .pat-out { font-style: italic; } .pat-missing { text-decoration: line-through; }
 .dim { color: var(--vscode-descriptionForeground); font-weight: normal; }
 .verb { color: var(--vscode-descriptionForeground); display: inline-block; min-width: 7em; }
