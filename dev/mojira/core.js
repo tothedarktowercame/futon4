@@ -391,18 +391,18 @@ function openFile(file) {
 
 // keep: a redraw of the same page (new data), so the webview keeps the
 // selection, scroll position and active column.
-function go(href, push = true, keep = false) {
+function go(href, push = true, keep = false, selectHref = null) {
   if (href.startsWith('file:')) { openFile(href.slice(5)); return; }
   if (href.startsWith('ext:')) { vscode.env.openExternal(vscode.Uri.parse(href.slice(4))); return; }
   if ((href === 'triage' || href.startsWith('ti:')) && !brief && !briefErr) {
-    loadBrief(() => go(href, push)); return;
+    loadBrief(() => go(href, push, keep, selectHref)); return;
   }
-  if (needsPatterns(href)) { loadPatterns(() => go(href, push, keep)); return; }
+  if (needsPatterns(href)) { loadPatterns(() => go(href, push, keep, selectHref)); return; }
   if (push) history.push(href);
   let page;
   try { page = render(href); } catch (e) { page = { title: 'error', html: `<pre>${esc(e.stack)}</pre>` }; }
   panel.title = 'Mojira: ' + page.title;
-  panel.webview.postMessage({ type: 'page', html: page.html, crumbs: history.slice(-6), keep });
+  panel.webview.postMessage({ type: 'page', html: page.html, crumbs: history.slice(-6), keep, select: selectHref });
 }
 
 // 2-up: the right column follows the selected link on the left.
@@ -448,6 +448,9 @@ function attach(p, state) {
     // Browsing from the right column (Miller columns): the right page moves
     // left, and the link chosen there opens on the right.
     else if (m.type === 'shift') { go(m.main); peek(m.peek); }
+    else if (m.type === 'unshift') {
+      if (history.length > 1) { const cur = history.pop(); go(history[history.length - 1], false, false, cur); }
+    }
     else if (m.type === 'back') { if (history.length > 1) { history.pop(); go(history[history.length - 1], false); } }
     else if (m.type === 'home') go('home');
     else if (m.type === 'search' && m.q) go('search:' + m.q);
@@ -620,6 +623,10 @@ window.addEventListener('message', ev => {
       sel.page = -1; sel.peek = -1; peekHref = null;
       $('#page').scrollTop = 0; $('#peek').innerHTML = '';
       setActive(shifting ? 'peek' : 'page'); shifting = false;
+      if (m.select) {
+        const i = links('page').findIndex(a => a.dataset.href === m.select);
+        if (i >= 0) select(i);   // also shows it on the right
+      }
     }
     showKeys();
   } else if (m.type === 'note') {
@@ -682,6 +689,12 @@ document.addEventListener('keydown', ev => {
   if (k === 'j' || k === 'ArrowDown') select(sel[active] + 1);
   else if (k === 'k' || k === 'ArrowUp') select(sel[active] - 1);
   else if (k === 'Enter' || k === 'l') enter();
+  else if (((k === 'Tab' && ev.shiftKey) || k === 'ArrowLeft') && active === 'page') {
+    // Already in the left column: undo a Miller shift. The previous page
+    // comes back on the left with the page we were on selected (and so
+    // shown on the right).
+    vs.postMessage({ type: 'unshift' });
+  }
   else if ((k === 'Tab' && ev.shiftKey) || k === 'ArrowLeft') {
     // Back to the left column, leaving nothing selected on the right.
     sel.peek = -1;
