@@ -1102,6 +1102,38 @@ futon2's gluing witness check (`witness-conforming?`) checks shape only: any
     element record. Example:
     `holes/labs/M-repl-circus/cascade-2026-11-11-turn/cascade.sexp`.
 
+11. **Wants (B7), with a locator class.** A want is a query with a horizon
+    and a check that can observe it. Its classes are the War Machine's C3–C8
+    (git objects at a pinned sha, the test registry) and **T1**, conversation
+    text (B11): a later act quotes the want's words and answers them, which
+    is 馬's alignment check (a reply paragraph whose bracket quotes the
+    operator's words). Judgement (class J) stays refused as an observation.
+12. **`[:cascade/aims-at 1]`**, roles `:element` (an occurrence's THEN
+    element) and `:want`. A turn's cascade aims at what the turn asks for;
+    a War Machine cascade aims at its target's tokens through its patterns'
+    `:produces` (futon2 `cascade_want_projection.clj`). Joe, 11-11: "馬
+    notices when/where an operator intent matches the agent's reply and
+    similarly the War Machine notices when and where a patterns cascade
+    matches stated materials in a META item".
+13. **Observation.** After a run, the locator reports `observed`,
+    `not-observed` or `missing` (a missing observation is never false, as in
+    `:wm/token-outcome-comparison-v1`). An observed want's witness is a link
+    record (§12). "The resulting state matches the wants better after the
+    system has run" is then a count over one situation's wants, before and
+    after. With a prediction attached before the run, it is the War
+    Machine's token outcome comparison; without one, it is 馬's alignment.
+
+    Worked example (the 11-11 turn of item 10's file): its two THEN
+    elements are its wants. `moran-paper-reread-figure-1`: observed (the
+    Moran essay and figure were read and used for the drawing; class T1 on
+    the reply, and the drawing's commit). `wiring-diagram-session-cascades-hook-up`:
+    not observed yet; its horizon is M-repl-circus's close. McCarthy's
+    Elephant 2000 states the same conditions for programs: "Answers should
+    be truthful and responsive, and promises should be kept"; a promise
+    there is a commitment with a time (`if now = time flt ∧ exists
+    commitment admit(psgr, flt) then accept.request admit(psgr, flt)`),
+    which is a want with a horizon.
+
 **Open.** Whether partial occurrences are kept beyond the census (Mojira's
 hollow circles need only the census). A check on item 2 when two maps share
 a name but quote different spans. Whether `[:pattern/proposal 1]` (驴) also
