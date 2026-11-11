@@ -1134,6 +1134,22 @@ futon2's gluing witness check (`witness-conforming?`) checks shape only: any
     commitment admit(psgr, flt) then accept.request admit(psgr, flt)`),
     which is a want with a horizon.
 
+14. **Proposed patterns, and a status ladder.** 象 proposes a pattern when
+    no library pattern fits a turn (frame 187: two exposition patterns,
+    both observed in the next turn's work). Such a proposal gives the turn
+    a locator before the library could. Joe, 11-11: "the proposed patterns
+    are *creating* scopes that can recognise/assimilate tokens, even though
+    the library has no known contents that could do that". Status:
+    **proposed** (象's per-turn proposal) → **accepted** (it recurs: Joe,
+    "'proposal recurs' is enough for me to accept it") → **attested** (used
+    in a mission or a War Machine cascade). Accepted patterns go into the
+    futon3 library with `@status accepted`: 81 on 11-11 (futon3 `a59c721`,
+    by futon3c `scripts/onboard_proposed_patterns.py`; 象's own wording,
+    unedited). A local cascade may use a proposed pattern, so the turn
+    makes sense; the GCC keeps it as proposed. Mojira draws a proposed
+    pattern faintly (Joe: like the dashed edges of the old Diagram tab,
+    but patterns are nodes there).
+
 **Open.** Whether partial occurrences are kept beyond the census (Mojira's
 hollow circles need only the census). A check on item 2 when two maps share
 a name but quote different spans. Whether `[:pattern/proposal 1]` (驴) also
