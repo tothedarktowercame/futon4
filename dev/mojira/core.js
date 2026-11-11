@@ -10,6 +10,10 @@ const { execFile } = require('child_process');
 // triage.js is reloaded with core.js (the loader only re-requires core.js).
 delete require.cache[require.resolve('./triage')];
 const triage = require('./triage');
+delete require.cache[require.resolve('./patterns')];
+delete require.cache[require.resolve('./pattern-pages')];
+const patterns = require('./patterns');
+const patternPages = require('./pattern-pages');
 
 // Hot-reloaded by extension.js whenever this file is saved: keep no state
 // here that must outlive a reload. The loader owns the panel and `state`.
@@ -108,6 +112,7 @@ function render(href) {
   if (kind === 'all') return pageAllPending();
   if (kind === 'triage') return pageTriage();
   if (kind === 'ti') return pageTriageItem(arg);
+  if (PATTERN_KINDS.has(kind)) return pagePattern(kind, arg);
   return pageHome();
 }
 
@@ -123,6 +128,10 @@ function pageHome() {
     html: `<h1>Mojira <span class="dim">— the GCC, as text</span></h1>
 <p class="dim">${model.ents.size} lexicon entities · ${model.items.size} pending items · loaded ${esc(model.loadedAt.toISOString().slice(11, 19))} UTC</p>
 <h2>Entities by status</h2><ul>${statuses.map(([s, n]) => `<li>${link('status:' + s, s, 'st-' + s)} <span class="dim">${n}</span></li>`).join('')}</ul>
+<h2>Patterns <span class="dim">(the library's links and the turns that use them)</span></h2><ul>
+<li>${link('pg', 'the pattern graph')}</li>
+<li>${link('pout', 'proposed in turns, outside the main component')}</li>
+<li>${link('pturns', 'recent turns and the patterns proposed to them')}</li></ul>
 <h2>Daily scan</h2><ul><li>${link('triage', 'triage the latest brief')}</li></ul>
 <h2>Pending work by state</h2><ul>${labels.map(([s, n]) => `<li>${link('label:' + s, s)} <span class="dim">${n}</span></li>`).join('')}
 <li>${link('all', 'all pending items')}</li></ul>
@@ -207,6 +216,54 @@ function pageSearch(q) {
   return { title: '/' + q, html: `<h1>/${esc(q)}</h1>
 <h2>Entities <span class="dim">${es.length}</span></h2><ul>${es.map(e => `<li>${entLink(e.entity)} <span class="dim">${esc(trim(e.what, 80))}</span></li>`).join('') || '<li class="dim">none</li>'}</ul>
 <h2>Pending items <span class="dim">${ps.length}</span></h2><ul>${ps.map(r => `<li>${link('p:' + r.id, r.id)} <span class="dim">${esc(trim(r.one_line, 80))}</span></li>`).join('') || '<li class="dim">none</li>'}</ul>` };
+}
+
+// ---------------------------------------------------------------- patterns
+
+// The graph is built from the futon3 library and the 象 turn records by
+// pattern-index.js in a child process (the turn store is ~600 MB; the index
+// caches each record's summary by mtime, so a rebuild reads only new ones).
+const PATTERN_KINDS = new Set(['pg', 'pc', 'pf', 'pat', 'pt', 'pturns', 'pout', 'pmiss']);
+let pgraph = null, pgErr = null, pgLoading = [];
+const needsPatterns = (href) => PATTERN_KINDS.has(String(href).split(':')[0]) && !pgraph && !pgErr;
+
+function loadPatterns(cb) {
+  pgLoading.push(cb);
+  if (pgLoading.length > 1) return;   // one build at a time; everyone waits on it
+  note('reading the pattern library and the turn records…');
+  const home = process.env.HOME || '/home/joe';
+  const args = [path.join(__dirname, 'pattern-index.js'),
+    cfg('patternLibrary') || '/home/joe/code/futon3/library',
+    cfg('turnRecordsDir') || path.join(home, '.emacs-graph/session-turn-analysis'),
+    path.join(home, '.cache/mojira/pattern-turns.json')];
+  execFile(process.execPath, args, { timeout: 300000, maxBuffer: 128 << 20, env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' } },
+    (err, out, errOut) => {
+      if (err) { pgraph = null; pgErr = 'pattern index failed: ' + (String(errOut || '').trim().split('\n').pop() || err.message); }
+      else {
+        try {
+          const d = JSON.parse(out);
+          pgraph = patterns.build(new Map(d.library.map((p) => [p.id, p])), d.turns);
+          pgraph.stats = `${d.stats.records} records, ${d.stats.parsed} read anew, ${d.stats.ms} ms`;
+          pgErr = null;
+          note('pattern graph: ' + pgraph.library.size + ' patterns, ' + pgraph.turns.size + ' turns (' + pgraph.stats + ')');
+        } catch (e) { pgraph = null; pgErr = 'pattern index did not parse: ' + e.message; }
+      }
+      const cbs = pgLoading; pgLoading = [];
+      cbs.forEach((f) => f());
+    });
+}
+
+function pagePattern(kind, arg) {
+  if (!pgraph) return { title: 'patterns', html: `<h1>Patterns</h1><p class="err">${esc(pgErr || 'the pattern graph is not loaded')}</p>` };
+  const P = patternPages(pgraph, { esc, link, trim });
+  if (kind === 'pg') return P.overview();
+  if (kind === 'pc') return P.component(arg);
+  if (kind === 'pf') return P.family(arg);
+  if (kind === 'pat') return P.pattern(arg);
+  if (kind === 'pt') return P.turn(arg);
+  if (kind === 'pturns') return P.turns();
+  if (kind === 'pout') return P.outside();
+  return P.missing();
 }
 
 // ---------------------------------------------------------------- triage
@@ -311,6 +368,7 @@ function go(href, push = true, keep = false) {
   if ((href === 'triage' || href.startsWith('ti:')) && !brief && !briefErr) {
     loadBrief(() => go(href, push)); return;
   }
+  if (needsPatterns(href)) { loadPatterns(() => go(href, push, keep)); return; }
   if (push) history.push(href);
   let page;
   try { page = render(href); } catch (e) { page = { title: 'error', html: `<pre>${esc(e.stack)}</pre>` }; }
@@ -326,6 +384,7 @@ function peek(href, keep = false) {
   // The same holds for the triage page itself when the home page's link is
   // selected and drawn on the right.
   if (href && (href === 'triage' || href.startsWith('ti:')) && !brief && !briefErr) { loadBrief(() => peek(href, keep)); return; }
+  if (href && needsPatterns(href)) { loadPatterns(() => peek(href, keep)); return; }
   lastPeek = href;
   let page;
   if (!href) page = { html: '' };
@@ -378,6 +437,11 @@ function attach(p, state) {
 function reloadData() {
   model = loadModel();
   const cur = history[history.length - 1] || 'home';
+  if (PATTERN_KINDS.has(cur.split(':')[0])) {
+    pgraph = null; pgErr = null;
+    loadPatterns(() => { go(cur, false, true); if (lastPeek) peek(lastPeek, true); });
+    return;
+  }
   if (cur === 'triage' || cur.startsWith('ti:')) loadBrief(() => { go(cur, false, true); if (lastPeek) peek(lastPeek, true); });
   else if (panel) go(cur, false, true);
 }
@@ -400,6 +464,7 @@ body.act-peek #peek { border-left-color: var(--vscode-focusBorder); }
 h1 { font-size: 1.25em; margin: .8em 0 .4em; } h2 { font-size: 1em; margin: 1.2em 0 .3em; text-transform: lowercase; color: var(--vscode-textLink-foreground); }
 ul { list-style: none; padding-left: 1em; margin: 0; } li { margin: .1em 0; }
 table { border-collapse: collapse; } th { text-align: left; vertical-align: top; padding-right: 1em; font-weight: normal; color: var(--vscode-descriptionForeground); white-space: nowrap; }
+.pat-out { font-style: italic; } .pat-missing { text-decoration: line-through; }
 .dim { color: var(--vscode-descriptionForeground); font-weight: normal; }
 .verb { color: var(--vscode-descriptionForeground); display: inline-block; min-width: 7em; }
 a.ln { color: var(--vscode-textLink-foreground); text-decoration: none; cursor: pointer; border-bottom: 1px dotted transparent; }
@@ -596,4 +661,4 @@ vs.postMessage({ type: 'ready' });
 }
 
 module.exports = { attach, reloadData, note,
-  _test: { loadModel: () => (model = loadModel()), render, shell, openInEmacs } };
+  _test: { loadModel: () => (model = loadModel()), render, shell, openInEmacs, loadPatterns } };

@@ -261,6 +261,45 @@ reusing the `arxana.v1` client in futon6 `tools/arxana-vscode/lib/client.js`.
 Slice 3 needs a running codedocs stack to read; the demo one on :7091 is not
 claude-cs's to call, so it waits for an agreed stack.
 
+## Built: the Patterns block (claude-cs, 2026-11-11)
+
+Joe (2026-11-11), on a ranked list: "We want to set up a graph aggregator not
+a summation aggregator. The graph could be condensed further into counts, but
+counting alone is not very interesting." So each page is a node with its
+edges, and counts appear only as dim notes on edges.
+
+- **Nodes:** library patterns (futon3 `library/`, `.flexiarg` and `.multiarg`,
+  nested families included) and the 象 turn records that proposed them.
+- **Authored edges:** any library header whose value names an existing pattern
+  (`@references`, `@why`, `@see-also`, `@next`, ...), with the header as the
+  edge kind. Components are computed over these edges only.
+- **Observed edges:** turn proposes pattern (embedding, 驴, 驴/m40), carrying
+  馬's verdict and the reason for each void; and pattern proposed with
+  pattern, carrying the turns it happened in. These are not used for
+  components: a turn proposes about 4.5 patterns, so with these edges almost
+  every proposed pattern falls into one component.
+- **Where use and authoring disagree:** a pattern page splits its co-proposed
+  patterns into "linked in the library" and "not linked". A turn page lists the
+  library links among its proposed patterns. The overview lists the proposed
+  patterns that sit outside the main component.
+
+First reading (2026-11-11):
+- The library has 1,682 patterns and 3,261 authored links in 331 components.
+  The main one has 994 patterns and the next has 257 (iiching); 314 patterns
+  have no authored links.
+- 1,589 turns proposed 1,045 patterns. 376 of those are outside the main
+  component, and one is not in the library at all (`futon-stack/argument`).
+
+Code: `dev/mojira/patterns.js` (pure graph), `pattern-index.js` (reads the
+library and the turn store in a child process, caching a summary per record
+by mtime in `~/.cache/mojira/`), and `pattern-pages.js`.
+
+Not yet in the graph:
+- 馬's occurrences: almost all of them are void (see the 2026-11-11 reply to
+  Joe: 55% "no reader", 41% "map-missing").
+- GCC store writes (`pattern/proposal`, `pattern/occurrence`): these wait for
+  a decision on E-gcc-schema B10 and its writer.
+
 ## Candidate view from M-daily-scan (Joe, 2026-11-10)
 
 A triage view for the reworked daily scan (futon7

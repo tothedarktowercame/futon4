@@ -86,6 +86,16 @@
           "type": "string",
           "default": "bb",
           "description": "Babashka executable for the daily-loop CLI."
+        },
+        "mojira.patternLibrary": {
+          "type": "string",
+          "default": "/home/joe/code/futon3/library",
+          "description": "The futon3 pattern library (.flexiarg files, one directory per family)."
+        },
+        "mojira.turnRecordsDir": {
+          "type": "string",
+          "default": "/home/joe/.emacs-graph/session-turn-analysis",
+          "description": "The 象 turn records, read for the patterns proposed to each turn and 馬's verdicts. Read-only; Mojira caches a summary per record in ~/.cache/mojira."
         }
       }
     }
