@@ -292,7 +292,7 @@ function pageCascade(kind, arg) {
   const V = cascadeView(c, { esc, link, trim, partsOf });
   if (kind === 'cn') return V.pattern(arg);
   if (kind === 'ce') return V.element(arg);
-  return V.page(arg === 'partials');
+  return V.page(arg === 'partials' ? 'partials' : arg === 'detail' ? 'detail' : 'minimal');
 }
 
 // ---------------------------------------------------------------- triage
@@ -448,6 +448,11 @@ function attach(p, state) {
     // Browsing from the right column (Miller columns): the right page moves
     // left, and the link chosen there opens on the right.
     else if (m.type === 'shift') { go(m.main); peek(m.peek); }
+    else if (m.type === 'cycle' && m.href) {
+      // Another view of the same thing: replace the page, keep the history.
+      if (history.length) history[history.length - 1] = m.href; else history.push(m.href);
+      go(m.href, false);
+    }
     else if (m.type === 'unshift') {
       if (history.length > 1) { const cur = history.pop(); go(history[history.length - 1], false, false, cur); }
     }
@@ -503,6 +508,10 @@ svg.cascade .occ { fill: var(--vscode-textLink-foreground); stroke: var(--vscode
 svg.cascade .occ.partial { fill: var(--vscode-editor-background); stroke: var(--vscode-textLink-foreground); stroke-width: 1.5; }
 svg.cascade .el { fill: var(--vscode-descriptionForeground); }
 svg.cascade .el.partial { fill: none; stroke: var(--vscode-descriptionForeground); }
+svg.cascade .glue-edge { fill: none; stroke: var(--vscode-editorWarning-foreground, #c90); stroke-width: 2; }
+svg.cascade .gluelabel { fill: var(--vscode-editorWarning-foreground, #c90); font-size: 11px; }
+svg.cascade a.ln.sel .glue-edge { stroke-width: 4; }
+pre.sexp { font-family: inherit; color: var(--vscode-descriptionForeground); white-space: pre-wrap; }
 svg.cascade .glue { fill: var(--vscode-editorWarning-foreground, #c90); }
 svg.cascade text { fill: var(--vscode-editor-foreground); font-size: 11px; }
 svg.cascade .olabel { font-size: 12px; font-weight: bold; }
@@ -561,7 +570,8 @@ let peekTimer = null, noteTimer = null;
 // everywhere.
 const KEYS = ' · j/k move · Enter follow · Tab/→ right column · Shift+Tab/← left · f hints · h back · / search · g home · v split · r reload';
 function showKeys() {
-  $('#keys').textContent = (onTriage() ? ' · w worth · n not now · x invalid · a rule all unruled' : '') + KEYS;
+  $('#keys').textContent = (onTriage() ? ' · w worth · n not now · x invalid · a rule all unruled' : '')
+    + (document.querySelector('#page [data-cycle]') ? ' · c cycle view' : '') + KEYS;
 }
 // Triage: w/n/x rule the selected item; a asks to rule the whole block.
 const VKEY = { w: 'worth', n: 'not-now', x: 'invalid' };
@@ -685,6 +695,8 @@ document.addEventListener('keydown', ev => {
     if (item) askNote(item, VKEY[k]); else { $('#note').textContent = 'select an item first'; }
     ev.preventDefault(); return;
   }
+  const cyc = document.querySelector('#page [data-cycle]');
+  if (cyc && k === 'c') { vs.postMessage({ type: 'cycle', href: cyc.dataset.cycle }); ev.preventDefault(); return; }
   if (onTriage() && k === 'a') { vs.postMessage({ type: 'all-ask' }); ev.preventDefault(); return; }
   if (k === 'j' || k === 'ArrowDown') select(sel[active] + 1);
   else if (k === 'k' || k === 'ArrowUp') select(sel[active] - 1);

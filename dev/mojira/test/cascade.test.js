@@ -44,3 +44,33 @@ test('a void map is kept with its reason, not drawn', () => {
   assert.deepStrictEqual(o.maps.I2, { void: 'no match' });
   assert.deepStrictEqual(o.maps.G, { void: 'no map' });
 });
+
+test('minimal view: 2 occurrence nodes, 1 glue edge (BECAUSE, HOWEVER, voxterm...), nothing else', { skip: !have && 'lab files absent' }, () => {
+  const c = R.read(DIR);
+  const L = V.minimalLayout(c);
+  assert.deepStrictEqual(L.nodes.map((n) => n.id), ['cascade-construction/read-what-exists-first',
+    'forward-model/the-forward-model-is-a-pattern-cascade']);
+  assert.deepStrictEqual(L.edges.map((e) => [e.fromPart, e.toPart, e.element]),
+    [['BECAUSE', 'HOWEVER', 'voxterm-diagram-tab-start-incomplete']]);
+  assert.deepStrictEqual(Object.keys(L).sort(), ['edges', 'height', 'nodes', 'width']);   // no element or partial nodes
+  const html = V(c, { esc: (s) => String(s), link: (h, t) => t, trim: (s) => s, partsOf: () => ({}) }).page('minimal').html;
+  const svgPart = html.slice(html.indexOf('<svg'), html.indexOf('</svg>'));
+  assert.strictEqual((svgPart.match(/data-href="cn:/g) || []).length, 2);
+  assert.strictEqual((svgPart.match(/data-href="ce:/g) || []).length, 1);
+  assert.ok(!/class="el|occ partial/.test(svgPart));
+});
+
+test('minimal text is cascade_sexp.py minimal form (626fd8942)', { skip: !have && 'lab files absent' }, () => {
+  assert.strictEqual(V.minimalSexp(R.read(DIR)), [
+    '(cascade "emacs-d1ceee43f003a912322bce0c0f951169" "2026-11-11T16:15:24.046120661Z"',
+    '  (cascade-construction/read-what-exists-first BECAUSE #1=voxterm-diagram-tab-start-incomplete)',
+    '  (forward-model/the-forward-model-is-a-pattern-cascade HOWEVER #1#))'].join('\n'));
+});
+
+test('the cycle key visits minimal, detailed, partials, and returns', () => {
+  const seen = [];
+  let h = 'cascade';
+  for (let i = 0; i < 3; i++) { seen.push(h); h = V.nextView(h); }
+  assert.deepStrictEqual(seen, ['cascade', 'cascade:detail', 'cascade:partials']);
+  assert.strictEqual(h, 'cascade');
+});

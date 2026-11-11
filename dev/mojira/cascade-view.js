@@ -118,19 +118,97 @@ ${L.els.filter((e) => e.tier === 3).map(elNode).join('\n')}
 </svg>`;
 }
 
+// ------------------------------------------------------------ minimal view
+// Joe (2026-11-11): "something like a 2 or 3 line form showing the two
+// patterns and their glue". One circle per complete occurrence, and a line
+// between two occurrences for each glue, labelled with the parts it joins
+// and the element. Says what cascade_sexp.py's minimal form says, no more.
+
+// Pattern order of the parts (cascade_sexp.py PARTS).
+const SEXP_PARTS = [['IF', 'I1'], ['HOWEVER', 'I2'], ['THEN', 'B'], ['BECAUSE', 'G']];
+
+function minimalLayout(c) {
+  const occ = new Map(c.occurrences.map((o) => [o.pattern, o]));
+  const GAP = 300, X0 = 110, Y = 70;
+  const nodes = c.complete.map((p, i) => ({ id: p, x: X0 + i * GAP, y: Y, n: occ.get(p).n }));
+  const at = new Map(nodes.map((n) => [n.id, n]));
+  const edges = [];
+  for (const g of c.glue) for (let i = 0; i + 1 < g.ends.length; i++) {
+    const [[pa, ra], [pb, rb]] = [g.ends[i], g.ends[i + 1]];
+    edges.push({ element: g.element, from: at.get(pa), to: at.get(pb), fromPart: PART_OF[ra], toPart: PART_OF[rb] });
+  }
+  return { nodes, edges, width: X0 * 2 + (nodes.length - 1) * GAP, height: 150 };
+}
+
+// DOM order is the j/k order: each pattern, then the glue it leads into.
+function minimalSvg(c, esc) {
+  const L = minimalLayout(c);
+  const node = (n) => `<a class="ln" data-href="cn:${esc(n.id)}"><title>${esc(n.id)}</title>
+<circle class="occ" cx="${n.x}" cy="${n.y}" r="${R}"/>
+<text class="olabel" x="${n.x}" y="${n.y + R + 18}" text-anchor="middle">${wrap(short(n.id), 26, 2).map((l, i) => `<tspan x="${n.x}" dy="${i ? '1.15em' : 0}">${esc(l)}</tspan>`).join('')}</text></a>`;
+  const edge = (e, k) => {
+    const a = e.from, b = e.to, lift = 36 + 18 * k;
+    const mx = (a.x + b.x) / 2, my = a.y - lift;
+    return `<a class="ln" data-href="ce:${esc(e.element)}"><title>glue: ${esc(e.element)}</title>
+<path class="glue-edge" d="M${a.x + R},${a.y} Q${mx},${my - lift * 0.4} ${b.x - R},${b.y}"/>
+<circle class="glue" cx="${mx}" cy="${my + 4}" r="6"/>
+<text class="gluelabel" x="${mx}" y="${my - 8}" text-anchor="middle">${esc(e.element)}</text>
+<text class="role" x="${a.x + R + 6}" y="${a.y - 10}" text-anchor="start">${e.fromPart}</text>
+<text class="role" x="${b.x - R - 6}" y="${b.y - 10}" text-anchor="end">${e.toPart}</text></a>`;
+  };
+  return `<svg class="cascade" viewBox="0 0 ${L.width} ${L.height}" width="${L.width}" style="max-width:100%;height:auto">
+${L.nodes.map((n) => node(n) + L.edges.map((e, k) => (e.from === n ? edge(e, k) : '')).join('')).join('\n')}
+</svg>`;
+}
+
+// The minimal s-expression, as cascade_sexp.py writes it (without its
+// mode line).
+function minimalSexp(c) {
+  const occ = new Map(c.occurrences.map((o) => [o.pattern, o]));
+  const holders = new Map();
+  for (const p of c.complete) for (const [, r] of SEXP_PARTS) {
+    const e = occ.get(p).maps[r].element;
+    if (!holders.has(e)) holders.set(e, new Set());
+    holders.get(e).add(p);
+  }
+  const labels = new Map();
+  const q = (s) => '"' + String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
+  const lines = [`(cascade ${q(c.turn.evidence)} ${q(c.turn.at)}`];
+  for (const p of c.complete) {
+    const glued = [];
+    for (const [part, r] of SEXP_PARTS) {
+      const e = occ.get(p).maps[r].element;
+      if (holders.get(e).size < 2) continue;
+      if (labels.has(e)) glued.push(`${part} #${labels.get(e)}#`);
+      else { labels.set(e, labels.size + 1); glued.push(`${part} #${labels.get(e)}=${e}`); }
+    }
+    lines.push(`  (${p}${glued.length ? ' ' + glued.join(' ') : ''})`);
+  }
+  lines[lines.length - 1] += ')';
+  return lines.join('\n');
+}
+
+// The three views, in the order the cycle key visits them.
+const VIEWS = ['cascade', 'cascade:detail', 'cascade:partials'];
+function nextView(href) { return VIEWS[(VIEWS.indexOf(href) + 1) % VIEWS.length]; }
+
 module.exports = function views(c, { esc, link, trim, partsOf }) {
   const occ = new Map(c.occurrences.map((o) => [o.pattern, o]));
   const glueBy = new Map(c.glue.map((g) => [g.element, g]));
 
-  function page(withPartials) {
+  function page(view) {
+    const withPartials = view === 'partials';
+    const href = view === 'partials' ? 'cascade:partials' : view === 'detail' ? 'cascade:detail' : 'cascade';
     const n3 = c.partial.filter((p) => occ.get(p).n === 3).length, n2 = c.partial.length - n3;
     const status = [`formally legal: ${c.complete.length} occurrence${c.complete.length === 1 ? '' : 's'}, ${c.glue.length} glue`,
       c.notes.validator, c.notes.review].filter(Boolean).join('; ');
     return { title: 'cascade', html: `<h1>A turn as a pattern cascade <span class="dim">${esc((c.turn.at || '').slice(0, 16).replace('T', ' '))}</span></h1>
 <p class="status-line">${esc(status)}</p>
-${svg(c, withPartials, esc)}
-<p>${withPartials ? link('cascade', 'hide the partial occurrences') : link('cascade:partials', `show the partial occurrences (3/4: ${n3}, 2/4: ${n2})`)}
-<span class="dim"> · filled: complete (4/4) · hollow: partial · ● glue: an element two occurrences share · voids are not drawn</span></p>
+<div data-cycle="${esc(nextView(href))}"></div>
+${view === 'minimal' ? minimalSvg(c, esc) : svg(c, withPartials, esc)}
+<p class="dim">${view === 'minimal' ? 'minimal view' : withPartials ? `detailed view, with the partial occurrences (3/4: ${n3}, 2/4: ${n2})` : 'detailed view'} · <b>c</b> cycles minimal → detailed → with partials</p>
+${view === 'minimal' ? `<pre class="sexp">${esc(minimalSexp(c))}</pre>`
+    : `<p class="dim">filled: complete (4/4) · hollow: partial · ● glue: an element two occurrences share · voids are not drawn</p>`}
 <h2>The turn</h2><p class="dim">evidence ${esc(c.turn.evidence || '?')}</p><p>${esc(trim(c.turn.text, 900))}</p>
 <p class="dim">read from ${esc(c.source || '')}</p>` };
   }
@@ -164,4 +242,8 @@ ${g ? '<p class="dim">The witness for this glue is shape-checked only (claude-13
 };
 
 module.exports.layout = layout;
+module.exports.minimalLayout = minimalLayout;
+module.exports.minimalSexp = minimalSexp;
+module.exports.VIEWS = VIEWS;
+module.exports.nextView = nextView;
 module.exports.wrap = wrap;
