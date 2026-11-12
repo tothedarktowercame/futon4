@@ -106,6 +106,16 @@
           "type": "string",
           "default": "/home/joe/storage/gcc-preview",
           "description": "GCC preview written by the projector (index.json, items/<id>.json; ~/notes/claude-13/demo-01-contract.md). While it is absent, the item view shows the invented fixture in test/gcc-preview-fixture."
+        },
+        "mojira.loiDraft": {
+          "type": "string",
+          "default": "/home/joe/code/futon7/holes/mozilla/LOI-draft-1.md",
+          "description": "Letter of intent draft, read only (fields marked <!-- field: NAME limit=N --> ... <!-- end -->)."
+        },
+        "mojira.loiNotes": {
+          "type": "string",
+          "default": "",
+          "description": "File the b/p keys append benefit and beneficiary notes to. Empty: LOI-notes.md beside the draft."
         }
       }
     }

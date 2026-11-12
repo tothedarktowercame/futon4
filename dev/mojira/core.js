@@ -20,6 +20,8 @@ const cascadeReader = require('./cascade-reader');
 const cascadeView = require('./cascade-view');
 delete require.cache[require.resolve('./gcc-view')];
 const gccView = require('./gcc-view');
+delete require.cache[require.resolve('./loi')];
+const loi = require('./loi');
 
 // Hot-reloaded by extension.js whenever this file is saved: keep no state
 // here that must outlive a reload. The loader owns the panel and `state`.
@@ -121,6 +123,7 @@ function render(href) {
   if (PATTERN_KINDS.has(kind)) return pagePattern(kind, arg);
   if (kind === 'cascade' || kind === 'cn' || kind === 'ce') return pageCascade(kind, arg);
   if (kind === 'gcc' || kind === 'gi' || kind === 'gi-raw') return pageGcc(kind, arg);
+  if (kind === 'loi' || kind === 'lf') return pageLoi(kind, arg);
   return pageHome();
 }
 
@@ -144,6 +147,8 @@ function pageHome() {
 <li>${link('cascade', 'the first turn cascade (2026-11-11)')}</li></ul>
 <h2>GCC items <span class="dim">(M-repl-circus demo 1: one item and what the GCC holds about it)</span></h2><ul>
 <li>${link('gcc', 'the GCC preview: items, records, links, absences')}</li></ul>
+<h2>Letter of intent <span class="dim">(working draft: b notes a benefit, p a beneficiary)</span></h2><ul>
+<li>${link('loi', 'the Mozilla letter of intent, with your notes')}</li></ul>
 <h2>Daily scan</h2><ul><li>${link('triage', 'triage the latest brief')}</li></ul>
 <h2>Pending work by state</h2><ul>${labels.map(([s, n]) => `<li>${link('label:' + s, s)} <span class="dim">${n}</span></li>`).join('')}
 <li>${link('all', 'all pending items')}</li></ul>
@@ -314,6 +319,60 @@ function pageGcc(kind, arg) {
   } catch (e) { return { title: 'GCC', html: `<h1>GCC preview</h1><p class="err">${esc(e.message)}</p>` }; }
 }
 
+// ---------------------------------------------------------------- letter of intent
+
+// The draft is read, never written; notes are appended to their own file.
+const loiDraftPath = () => cfg('loiDraft') || '/home/joe/code/futon7/holes/mozilla/LOI-draft-1.md';
+const loiNotesPath = () => cfg('loiNotes') || path.join(path.dirname(loiDraftPath()), 'LOI-notes.md');
+function readLoi() {
+  const d = loi.parseDraft(fs.readFileSync(loiDraftPath(), 'utf8'));
+  let notes = [];
+  try { notes = loi.parseNotes(fs.readFileSync(loiNotesPath(), 'utf8')); } catch (_) { notes = []; }
+  return { ...d, notes };
+}
+
+function loiNotesHtml(ns) {
+  const by = (k) => ns.filter((n) => n.kind === k);
+  return Object.entries(loi.KINDS).map(([k, plural]) => `<h2>${plural} <span class="dim">${by(k).length}</span></h2>
+<ul>${by(k).map((n) => `<li>${esc(n.text)} <span class="dim">${esc(n.date)}${n.field === 'letter' ? '' : ' · ' + esc(n.field)}</span></li>`).join('') || '<li class="dim">none yet</li>'}</ul>`).join('');
+}
+
+function pageLoi(kind, arg) {
+  let L;
+  try { L = readLoi(); } catch (e) { return { title: 'letter of intent', html: `<h1>Letter of intent</h1><p class="err">could not read ${esc(loiDraftPath())}: ${esc(e.message)}</p>` }; }
+  if (kind === 'lf') {
+    const f = L.fields.find((x) => x.name === arg);
+    if (!f) return { title: arg, html: `<h1>${esc(arg)}</h1><p class="err">No field named ${esc(arg)} in the draft.</p>` };
+    return { title: 'LOI ' + f.name, html: `<div data-loi="${esc(f.name)}">
+<h1>${esc(f.name)} <span class="${f.words > f.limit ? 'err' : 'dim'}">${f.words}/${f.limit} words</span></h1>
+<p class="dim">${esc(f.section)} · b note a benefit · p note a beneficiary (on this field)</p>
+${f.body.split(/\n\s*\n/).map((para) => `<p>${esc(para)}</p>`).join('')}
+${loiNotesHtml(L.notes.filter((n) => n.field === f.name))}</div>` };
+  }
+  return { title: 'letter of intent', html: `<div data-loi="letter">
+<h1>${esc(L.title)}</h1>
+<p class="dim">${esc(loiDraftPath())} (read only) · notes: ${esc(loiNotesPath())}</p>
+<p class="dim">b notes a benefit, p a beneficiary: on the selected field, or on the whole letter when no field is selected.</p>
+${loiNotesHtml(L.notes)}
+<h2>Fields <span class="dim">words / limit</span></h2>
+<ul>${L.fields.map((f) => `<li>${link('lf:' + f.name, f.name)} <span class="${f.words > f.limit ? 'err' : 'dim'}">${f.words}/${f.limit}</span> <span class="dim">${esc(f.section)} · ${L.notes.filter((n) => n.field === f.name).length} notes · ${esc(trim(f.body, 70))}</span></li>`).join('')}</ul></div>` };
+}
+
+function addLoiNote(kind, field, text) {
+  let line;
+  try { line = loi.formatNote({ date: new Date().toISOString().slice(0, 10), kind, field, text }); }
+  catch (e) { note(e.message, true); return; }
+  const f = loiNotesPath();
+  try {
+    if (!fs.existsSync(f)) fs.writeFileSync(f, loi.NOTES_HEAD);
+    fs.appendFileSync(f, line);
+  } catch (e) { note('could not write ' + f + ': ' + e.message, true); return; }
+  note('noted ' + kind + (field === 'letter' ? '' : ' on ' + field));
+  const cur = history[history.length - 1] || 'home';
+  go(cur, false, true);
+  if (lastPeek) peek(lastPeek, true);
+}
+
 // ---------------------------------------------------------------- triage
 
 let brief = null, briefErr = null, lastPeek = null;
@@ -480,6 +539,7 @@ function attach(p, state) {
     else if (m.type === 'search' && m.q) go('search:' + m.q);
     else if (m.type === 'reload') reloadData();
     else if (m.type === 'verdict') recordVerdict(m.item, m.verdict, m.note);
+    else if (m.type === 'loi-note') addLoiNote(m.kind, m.field, m.note);
     else if (m.type === 'all-ask' && !brief && !briefErr) loadBrief(() => { if (brief) handle(m); else note(briefErr || 'no brief loaded', true); });
     else if (m.type === 'all-ask') {
       const n = brief ? triage.unruledCount(brief) : 0;
@@ -601,6 +661,7 @@ let peekTimer = null, noteTimer = null;
 const KEYS = ' · j/k move · Enter follow · Tab/→ right column · Shift+Tab/← left · f hints · h back · / search · g home · i GCC items · v split · r reload';
 function showKeys() {
   $('#keys').textContent = (onTriage() ? ' · w worth · n not now · x invalid · a rule all unruled' : '')
+    + (onLoi() ? ' · b note a benefit · p note a beneficiary' : '')
     + (document.querySelector('#page .fold') ? ' · e earlier readings · m mentions' : '')
     + (document.querySelector('#page [data-cycle]') ? ' · c cycle view' : '') + KEYS;
 }
@@ -614,6 +675,21 @@ function triageTarget() {
   if (active === 'peek' && peekHref && peekHref.startsWith('ti:')) return peekHref.slice(3);
   const pg = document.querySelector('#page [data-item]');
   return pg ? pg.dataset.item : null;
+}
+// Letter of intent: b and p note a benefit or a beneficiary on the selected
+// field (an lf: link, or the field page in either column), else the letter.
+const onLoi = () => Boolean(document.querySelector('[data-loi]'));
+function loiTarget() {
+  const a = links()[sel[active]];
+  if (a && a.dataset.href.startsWith('lf:')) return a.dataset.href.slice(3);
+  const pg = document.querySelector('#' + active + ' [data-loi]') || document.querySelector('#page [data-loi]');
+  return pg ? pg.dataset.loi : 'letter';
+}
+function askLoi(kind) {
+  pending = { loi: true, kind, field: loiTarget() };
+  const vn = $('#vn');
+  vn.placeholder = kind + (pending.field === 'letter' ? ' (whole letter)' : ' on ' + pending.field) + ': Enter records, Esc cancels';
+  vn.value = ''; vn.style.display = 'inline'; vn.focus();
 }
 function askNote(item, verdict) {
   pending = { item, verdict };
@@ -693,7 +769,9 @@ window.addEventListener('message', ev => {
 });
 document.addEventListener('click', ev => { const a = ev.target.closest('a.ln'); if (a) follow(a); });
 $('#vn').addEventListener('keydown', ev => {
-  if (ev.key === 'Enter' && pending) {
+  if (ev.key === 'Enter' && pending && pending.loi) {
+    if (ev.target.value.trim()) vs.postMessage({ type: 'loi-note', kind: pending.kind, field: pending.field, note: ev.target.value });
+  } else if (ev.key === 'Enter' && pending) {
     vs.postMessage({ type: 'verdict', item: pending.item, verdict: pending.verdict, note: ev.target.value });
     $('#note').textContent = 'recording…'; $('#note').classList.remove('err');
   }
@@ -726,6 +804,7 @@ document.addEventListener('keydown', ev => {
     if (item) askNote(item, VKEY[k]); else { $('#note').textContent = 'select an item first'; }
     ev.preventDefault(); return;
   }
+  if (onLoi() && (k === 'b' || k === 'p')) { askLoi(k === 'b' ? 'benefit' : 'beneficiary'); ev.preventDefault(); return; }
   // GCC item page: e and m unfold the earlier readings and the mentions.
   const fold = (k === 'e' || k === 'm') && (document.querySelector('#' + active + ' .fold[data-fold="' + k + '"]')
     || document.querySelector('.fold[data-fold="' + k + '"]'));
