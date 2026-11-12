@@ -889,3 +889,41 @@ DOCUMENT receipts checked the same day: `futon4a/README.md`,
 `futon4a/test/futon4a-arxana-test.el` and every cited commit exist. The remote
 lucy release directory was not checked.
 
+
+## After closure: one futon3c JVM and one futon1b JVM (2026-11-12)
+
+Joe, 2026-11-12: "13 JVMs is 11 more than are needed"; the Arxana demos were
+his "trial basis" systems; "I believe I already QA'ed and accepted the Arxana
+demos, really they should have been retired then. So, yes, please retire them
+and make sure the mission is up to date, probably M-jvm-arxana (jvm = ONE
+futon3c jvm and ONE futon1b JVM)."
+
+The isolation contract (INSTANTIATE: loopback Arxana HTTP, a throwaway futon1b,
+"never a live store"; the futon4a README) was written for a one-off lucy
+deployment. On Zone it had grown into nine Arxana processes, eight of them each
+starting a private embedded futon1b (about 9 GB together). Inventory: futon3c
+`holes/labs/M-repl-circus/JVM-inventory-2026-11-12.md` (claude-6, a976ee9c6).
+
+**Retired 2026-11-12 by claude-13** (scopes stopped; runtime directories and
+logs archived under `~/code/storage/retired-arxana-demos-2026-11-12/`): the
+formal demos F1–F6 (:7085–:7090) and the code↔docs demo (:7091). All had been
+idle since 11-09 and rebuilt their data from pinned inputs at start, so no data
+was lost. Ports 7085–7091 are free.
+
+**Still running, pending Joe's word:**
+- the Arxana demo on :7084 (a mock in-memory store; a child of the futon3c
+  JVM). The code-server demo extension (`arxana-code-server.service`, :8097)
+  points at it, so retiring :7084 retires that demo too;
+- the workplan demo on :7094: its own durable XTDB store (130 MB, under
+  `~/.local/share/futon4a/workplan-demo`) holds 24 commands made after loading
+  (lexicon and review records) that exist nowhere else, and it is in daily
+  use. It moves into the live futon1b before it stops.
+
+**The rule from now on.** Arxana is served by the futon3c JVM (one
+`/arxana/v1` mount on :7070) over the live futon1b, which already registers
+`/api/alpha/arxana/command` and `/query`. A demo is a loader into that store,
+not a process. DERIVE option 2 above ("a separate JVM service") is superseded
+on deployment, not on the module boundary: the Arxana service stays its own
+namespace and adapter, inside futon3c. The futon4a README's isolation contract
+and the per-demo `defcustom` URLs change when the mount lands. Plan and order:
+futon3c `holes/missions/M-repl-circus.md` §"Two JVMs".
