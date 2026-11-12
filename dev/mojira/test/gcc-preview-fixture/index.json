@@ -1,9 +1,28 @@
-{"generated_at": "2026-11-12T00:00:00Z",
- "fixture": "INVENTED CONTENT for the Mojira item view (demo 1), in the format of ~/notes/claude-13/demo-01-contract.md; replace with the projector's ~/storage/gcc-preview/",
+{
+ "generated_at": "2026-11-12T00:00:00Z",
+ "fixture": "INVENTED CONTENT for the Mojira item view (demo 1), in the format of ~/notes/claude-13/demo-01-contract.md; replace with the projector's ~/storage/gcc-preview/ (v2: M-fixture-alpha has a \"display\" block; T-fixture-beta has none, to show the fallback)",
  "shapes_file": "(fixture: no shapes file)",
  "items": [
-  {"id": "M-fixture-alpha", "title": "FIXTURE: an invented mission with every kind of record", "kind": "mission",
-   "counts": {"[:workplan/item 1]": 1, "[:giraffe/reading 1]": 3, "[:lexicon/names 1]": 2, "[:serves 1]": 1, "[:turn/mention 1]": 2, "[:pending/level 1]": 1}},
-  {"id": "T-fixture-beta", "title": "FIXTURE: an invented ticket with little known about it", "kind": "ticket",
-   "counts": {"[:workplan/item 1]": 1}}
- ]}
+  {
+   "id": "M-fixture-alpha",
+   "title": "FIXTURE: an invented mission with every kind of record",
+   "kind": "mission",
+   "counts": {
+    "[:workplan/item 1]": 1,
+    "[:giraffe/reading 1]": 3,
+    "[:lexicon/names 1]": 2,
+    "[:serves 1]": 1,
+    "[:turn/mention 1]": 2,
+    "[:pending/level 1]": 1
+   }
+  },
+  {
+   "id": "T-fixture-beta",
+   "title": "FIXTURE: an invented ticket with little known about it",
+   "kind": "ticket",
+   "counts": {
+    "[:workplan/item 1]": 1
+   }
+  }
+ ]
+}

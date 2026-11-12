@@ -1,42 +1,345 @@
-{"item": {"id": "M-fixture-alpha", "title": "FIXTURE: an invented mission with every kind of record",
-          "path": "holes/missions/M-fixture-alpha.md", "repo": "futon-fixture", "state_group": "started"},
+{
+ "item": {
+  "id": "M-fixture-alpha",
+  "title": "FIXTURE: an invented mission with every kind of record",
+  "path": "holes/missions/M-fixture-alpha.md",
+  "repo": "futon-fixture",
+  "state_group": "started"
+ },
  "records": [
-  {"type": "[:workplan/item 1]", "status": "built", "id": "item/M-fixture-alpha",
-   "fields": {"title": "FIXTURE: an invented mission with every kind of record", "kind": "mission"},
-   "provenance": {"source": "file", "ref": "holes/missions/M-fixture-alpha.md", "basis": "parser"}, "supersedes": null},
-  {"type": "[:giraffe/reading 1]", "status": "proposed", "id": "reading/alpha-1",
-   "fields": {"digest": "aaaa111", "summary": "FIXTURE: first reading, before the IDENTIFY section was written"},
-   "provenance": {"source": "agent", "ref": "giraffe/run-0001", "basis": "model"}, "supersedes": null},
-  {"type": "[:giraffe/reading 1]", "status": "proposed", "id": "reading/alpha-3",
-   "fields": {"digest": "cccc333", "summary": "FIXTURE: current reading, after the DERIVE section landed"},
-   "provenance": {"source": "agent", "ref": "giraffe/run-0003", "basis": "model"}, "supersedes": "reading/alpha-2"},
-  {"type": "[:giraffe/reading 1]", "status": "proposed", "id": "reading/alpha-2",
-   "fields": {"digest": "bbbb222", "summary": "FIXTURE: second reading"},
-   "provenance": {"source": "agent", "ref": "giraffe/run-0002", "basis": "model"}, "supersedes": "reading/alpha-1"},
-  {"type": "[:lexicon/names 1]", "status": "built", "id": "names/alpha-arxana",
-   "fields": {"entity": "arxana", "span": "Arxana"},
-   "provenance": {"source": "file", "ref": "holes/missions/M-fixture-alpha.md#L12", "basis": "parser"}, "supersedes": null},
-  {"type": "[:lexicon/names 1]", "status": "built", "id": "names/alpha-mojira",
-   "fields": {"entity": "mojira", "span": "Mojira"},
-   "provenance": {"source": "file", "ref": "holes/missions/M-fixture-alpha.md#L30", "basis": "parser"}, "supersedes": null},
-  {"type": "[:serves 1]", "status": "built", "id": "serves/alpha-benefit",
-   "fields": {"benefit": "FIXTURE: Joe reads the GCC as text", "level": 2},
-   "provenance": {"source": "agent", "ref": "kimi-1", "basis": "model"}, "supersedes": null},
-  {"type": "[:turn/mention 1]", "status": "proposed", "id": "mention/t1",
-   "fields": {"turn": "claude-13-turn-40", "role": "names", "quote": "FIXTURE: let's look at alpha next"},
-   "provenance": {"source": "turn", "ref": "claude-13-turn-40", "basis": "exact"}, "supersedes": null},
-  {"type": "[:turn/mention 1]", "status": "proposed", "id": "mention/t2",
-   "fields": {"turn": "codex-6-turn-2", "role": "works-on", "quote": "FIXTURE: alpha's DERIVE section"},
-   "provenance": {"source": "turn", "ref": "codex-6-turn-2", "basis": "exact"}, "supersedes": null},
-  {"type": "[:pending/level 1]", "status": "proposed", "id": "pending/alpha",
-   "fields": {"level": "ready", "why": "FIXTURE: Joe marked it ready on the pending index"},
-   "provenance": {"source": "joe", "ref": "~/notes/pending.tsv", "basis": "human"}, "supersedes": null}
+  {
+   "type": "[:workplan/item 1]",
+   "status": "built",
+   "id": "item/M-fixture-alpha",
+   "fields": {
+    "title": "FIXTURE: an invented mission with every kind of record",
+    "kind": "mission"
+   },
+   "provenance": {
+    "source": "file",
+    "ref": "holes/missions/M-fixture-alpha.md",
+    "basis": "parser"
+   },
+   "supersedes": null
+  },
+  {
+   "type": "[:giraffe/reading 1]",
+   "status": "proposed",
+   "id": "reading/alpha-1",
+   "fields": {
+    "digest": "9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f",
+    "summary": "FIXTURE: first reading, before the IDENTIFY section was written"
+   },
+   "provenance": {
+    "source": "agent",
+    "ref": "giraffe/run-0001",
+    "basis": "model"
+   },
+   "supersedes": null
+  },
+  {
+   "type": "[:giraffe/reading 1]",
+   "status": "proposed",
+   "id": "reading/alpha-3",
+   "fields": {
+    "digest": "cccc333",
+    "summary": "FIXTURE: current reading, after the DERIVE section landed"
+   },
+   "provenance": {
+    "source": "agent",
+    "ref": "giraffe/run-0003",
+    "basis": "model"
+   },
+   "supersedes": "reading/alpha-2"
+  },
+  {
+   "type": "[:giraffe/reading 1]",
+   "status": "proposed",
+   "id": "reading/alpha-2",
+   "fields": {
+    "digest": "bbbb222",
+    "summary": "FIXTURE: second reading"
+   },
+   "provenance": {
+    "source": "agent",
+    "ref": "giraffe/run-0002",
+    "basis": "model"
+   },
+   "supersedes": "reading/alpha-1"
+  },
+  {
+   "type": "[:lexicon/names 1]",
+   "status": "built",
+   "id": "names/alpha-arxana",
+   "fields": {
+    "entity": "arxana",
+    "span": "Arxana"
+   },
+   "provenance": {
+    "source": "file",
+    "ref": "holes/missions/M-fixture-alpha.md#L12",
+    "basis": "parser"
+   },
+   "supersedes": null
+  },
+  {
+   "type": "[:lexicon/names 1]",
+   "status": "built",
+   "id": "names/alpha-mojira",
+   "fields": {
+    "entity": "mojira",
+    "span": "Mojira"
+   },
+   "provenance": {
+    "source": "file",
+    "ref": "holes/missions/M-fixture-alpha.md#L30",
+    "basis": "parser"
+   },
+   "supersedes": null
+  },
+  {
+   "type": "[:serves 1]",
+   "status": "built",
+   "id": "serves/alpha-benefit",
+   "fields": {
+    "benefit": "FIXTURE: Joe reads the GCC as text",
+    "level": 2
+   },
+   "provenance": {
+    "source": "agent",
+    "ref": "kimi-1",
+    "basis": "model"
+   },
+   "supersedes": null
+  },
+  {
+   "type": "[:turn/mention 1]",
+   "status": "proposed",
+   "id": "mention/t1",
+   "fields": {
+    "turn": "claude-13-turn-40",
+    "role": "names",
+    "quote": "FIXTURE: let's look at alpha next"
+   },
+   "provenance": {
+    "source": "turn",
+    "ref": "claude-13-turn-40",
+    "basis": "exact"
+   },
+   "supersedes": null
+  },
+  {
+   "type": "[:turn/mention 1]",
+   "status": "proposed",
+   "id": "mention/t2",
+   "fields": {
+    "turn": "codex-6-turn-2",
+    "role": "works-on",
+    "quote": "FIXTURE: alpha's DERIVE section"
+   },
+   "provenance": {
+    "source": "turn",
+    "ref": "codex-6-turn-2",
+    "basis": "exact"
+   },
+   "supersedes": null
+  },
+  {
+   "type": "[:pending/level 1]",
+   "status": "proposed",
+   "id": "pending/alpha",
+   "fields": {
+    "level": "ready",
+    "why": "FIXTURE: Joe marked it ready on the pending index"
+   },
+   "provenance": {
+    "source": "joe",
+    "ref": "~/notes/pending.tsv",
+    "basis": "human"
+   },
+   "supersedes": null
+  }
  ],
  "links": [
-  {"type": "[:needs 1]", "status": "built", "from": "M-fixture-alpha", "to": "T-fixture-beta", "fields": {"reviewed": true}, "computed": {"met": false}},
-  {"type": "[:needs 1]", "status": "built", "from": "M-fixture-alpha", "to": "E-fixture-gamma", "fields": {}, "computed": {"met": true}},
-  {"type": "[:needs 1]", "status": "proposed", "from": "M-fixture-alpha", "to": "M-fixture-delta", "fields": {}, "computed": {"met": null}}
+  {
+   "type": "[:needs 1]",
+   "status": "built",
+   "from": "M-fixture-alpha",
+   "to": "T-fixture-beta",
+   "fields": {
+    "reviewed": true
+   },
+   "computed": {
+    "met": false
+   }
+  },
+  {
+   "type": "[:needs 1]",
+   "status": "built",
+   "from": "M-fixture-alpha",
+   "to": "E-fixture-gamma",
+   "fields": {},
+   "computed": {
+    "met": true
+   }
+  },
+  {
+   "type": "[:needs 1]",
+   "status": "proposed",
+   "from": "M-fixture-alpha",
+   "to": "M-fixture-delta",
+   "fields": {},
+   "computed": {
+    "met": null
+   }
+  }
  ],
  "absences": [
-  {"what": "question link", "reason": "no item->question record exists"}
- ]}
+  {
+   "what": "question link",
+   "reason": "no item->question record exists"
+  }
+ ],
+ "display": {
+  "header": {
+   "id": "M-fixture-alpha",
+   "title": "FIXTURE: an invented mission with every kind of record",
+   "state_group": "started",
+   "declared_status": "MAP",
+   "path": "futon-fixture/holes/missions/M-fixture-alpha.md"
+  },
+  "reading": {
+   "summary": "FIXTURE: state what the invented mission is for, so that the item view has a reading to show",
+   "status_as_read": "open",
+   "link_count": 3,
+   "of_current_version": true,
+   "read_at": "2026-11-12",
+   "reader": "giraffe-1",
+   "earlier_count": 2,
+   "earlier": [
+    {
+     "read_at": "2026-11-08",
+     "of_version": "bbbb222",
+     "summary": "FIXTURE: second reading"
+    },
+    {
+     "read_at": "2026-11-05",
+     "of_version": "aaaa111",
+     "summary": "FIXTURE: first reading, before the IDENTIFY section was written"
+    }
+   ],
+   "warnings": [
+    "self-check: FIXTURE: one reading's source does not match its pin"
+   ]
+  },
+  "waiting_on": [
+   {
+    "id": "T-fixture-beta",
+    "title": "FIXTURE: an invented ticket with little known about it",
+    "state_group": "unstarted",
+    "declared_status": "open, not yet triaged",
+    "met": false,
+    "quote": "Needs: T-fixture-beta; E-fixture-gamma",
+    "line": 4
+   },
+   {
+    "id": "E-fixture-gamma",
+    "title": "FIXTURE: an excursion with no item file",
+    "state_group": "completed",
+    "declared_status": "done (2026-11-01)",
+    "met": true,
+    "quote": "Needs: T-fixture-beta; E-fixture-gamma",
+    "line": 4
+   },
+   {
+    "id": "M-fixture-delta",
+    "title": null,
+    "state_group": {
+     "absent": "no item named M-fixture-delta"
+    },
+    "declared_status": null,
+    "met": null,
+    "quote": "also needs M-fixture-delta",
+    "line": 9
+   }
+  ],
+  "related": [
+   {
+    "id": "T-fixture-beta",
+    "title": "FIXTURE: an invented ticket",
+    "resolved": true,
+    "kind": "mentions"
+   },
+   {
+    "id": "E-fixture-question-log",
+    "title": null,
+    "resolved": false,
+    "kind": "mentions"
+   }
+  ],
+  "why": {
+   "benefit_lines": [
+    {
+     "code": "G8",
+     "text": "FIXTURE: Joe reads the GCC as text",
+     "producer": "claude-6",
+     "draft": true
+    },
+    {
+     "code": "G9",
+     "text": {
+      "absent": "G9's text is not in the data"
+     },
+     "producer": "kimi-1",
+     "draft": false
+    }
+   ],
+   "question": {
+    "absent": "no item->question record exists"
+   }
+  },
+  "names": [
+   {
+    "slug": "arxana",
+    "label": "Arxana"
+   },
+   {
+    "slug": "mojira",
+    "label": "Mojira"
+   }
+  ],
+  "mentions": {
+   "count": 3,
+   "first": {
+    "date": "2026-11-05",
+    "role": "filed",
+    "who": "joe"
+   },
+   "latest": {
+    "date": "2026-11-12",
+    "role": "works-on",
+    "who": "codex-6"
+   },
+   "list": [
+    {
+     "date": "2026-11-05",
+     "role": "filed",
+     "who": "joe",
+     "turn": "claude-13-turn-40"
+    },
+    {
+     "date": "2026-11-10",
+     "role": "names",
+     "who": "claude-13",
+     "turn": "claude-13-turn-52"
+    },
+    {
+     "date": "2026-11-12",
+     "role": "works-on",
+     "who": "codex-6",
+     "turn": "codex-6-turn-2"
+    }
+   ]
+  }
+ }
+}

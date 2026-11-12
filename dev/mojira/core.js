@@ -530,12 +530,13 @@ svg.cascade .el.partial { fill: none; stroke: var(--vscode-descriptionForeground
 svg.cascade .glue-edge { fill: none; stroke: var(--vscode-editorWarning-foreground, #c90); stroke-width: 2; }
 svg.cascade .gluelabel { fill: var(--vscode-editorWarning-foreground, #c90); font-size: 11px; }
 svg.cascade a.ln.sel .glue-edge { stroke-width: 4; }
-.gcc-rec { margin: .3em 0; padding: .2em .4em; border: 1px solid transparent; }
-.gcc-rec.proposed { opacity: .6; border: 1px dashed var(--vscode-descriptionForeground); }
-.gcc-rec.superseded { opacity: .5; }
-.gcc-rec.proposed.superseded { opacity: .35; }
-ol.gcc-chain { list-style: none; padding-left: .6em; border-left: 2px solid var(--vscode-descriptionForeground); }
-.gcc-status { font-size: .8em; color: var(--vscode-descriptionForeground); text-transform: uppercase; letter-spacing: .04em; }
+.gcc .gs-h { margin-top: 1.1em; font-weight: bold; letter-spacing: .04em; }
+.gcc .gs-r { margin-left: 2ch; }
+.gcc .gs-r.sub { margin-left: 4ch; }
+.gcc .gs-r.warn { color: var(--vscode-editorWarning-foreground, #c90); }
+.gcc .gs-tag { margin: 0; }
+.gcc .fold { display: none; }
+.gcc .fold.open { display: block; }
 .met-met { color: var(--vscode-testing-iconPassed, #3a3); }
 .met-not-met { color: var(--vscode-errorForeground); }
 .met-unknown { color: var(--vscode-descriptionForeground); }
@@ -600,6 +601,7 @@ let peekTimer = null, noteTimer = null;
 const KEYS = ' · j/k move · Enter follow · Tab/→ right column · Shift+Tab/← left · f hints · h back · / search · g home · i GCC items · v split · r reload';
 function showKeys() {
   $('#keys').textContent = (onTriage() ? ' · w worth · n not now · x invalid · a rule all unruled' : '')
+    + (document.querySelector('#page .fold') ? ' · e earlier readings · m mentions' : '')
     + (document.querySelector('#page [data-cycle]') ? ' · c cycle view' : '') + KEYS;
 }
 // Triage: w/n/x rule the selected item; a asks to rule the whole block.
@@ -724,6 +726,10 @@ document.addEventListener('keydown', ev => {
     if (item) askNote(item, VKEY[k]); else { $('#note').textContent = 'select an item first'; }
     ev.preventDefault(); return;
   }
+  // GCC item page: e and m unfold the earlier readings and the mentions.
+  const fold = (k === 'e' || k === 'm') && (document.querySelector('#' + active + ' .fold[data-fold="' + k + '"]')
+    || document.querySelector('.fold[data-fold="' + k + '"]'));
+  if (fold) { fold.classList.toggle('open'); ev.preventDefault(); return; }
   const cyc = document.querySelector('#page [data-cycle]');
   if (cyc && k === 'c') { vs.postMessage({ type: 'cycle', href: cyc.dataset.cycle }); ev.preventDefault(); return; }
   if (onTriage() && k === 'a') { vs.postMessage({ type: 'all-ask' }); ev.preventDefault(); return; }
