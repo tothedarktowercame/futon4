@@ -23,6 +23,13 @@ function source(dir) {
   return { dir: FIXTURE, fixture: true };
 }
 
+// The party file (party.json) from DIR when it is there, else the fixture's.
+function partySource(dir) {
+  if (dir && fs.existsSync(path.join(dir, 'party.json'))) return { dir, fixture: false };
+  return { dir: FIXTURE, fixture: true };
+}
+function readParty(dir) { return JSON.parse(fs.readFileSync(path.join(dir, 'party.json'), 'utf8')); }
+
 function readIndex(dir) { return JSON.parse(fs.readFileSync(path.join(dir, 'index.json'), 'utf8')); }
 function hasItem(dir, id) { return typeof id === 'string' && ITEM_ID.test(id) && fs.existsSync(path.join(dir, 'items', id + '.json')); }
 function readItem(dir, id) {
@@ -43,7 +50,7 @@ module.exports = function views({ esc, link, trim }) {
   function list(src) {
     const ix = readIndex(src.dir);
     return { title: 'GCC items', html: `<h1>GCC items <span class="dim">${ix.items.length}</span></h1>
-${banner(src)}<p class="dim">generated ${esc(ix.generated_at || '?')}</p>
+${banner(src)}<p class="dim">generated ${esc(ix.generated_at || '?')} · ${link('gparty', 'the Gauntlet party: each character\'s top ten, and the party vote')}</p>
 <ul>${ix.items.map((it) => `<li>${link('gi:' + it.id, it.id)} <span class="dim">${esc(it.kind || '')} · ${esc(trim(it.title || '', 70))}</span></li>`).join('')}</ul>` };
   }
 
@@ -133,8 +140,36 @@ ${banner(src)}<p class="dim">generated ${esc(ix.generated_at || '?')}</p>
 ${banner(src)}<pre class="sexp">${esc(JSON.stringify(d, null, 2))}</pre></div>` };
   }
 
-  return { list, item, raw };
+  // The Gauntlet party (M-giraffe "Orderings"): each character's top ten
+  // and the round-robin party vote. Item ids link only to items with a page.
+  function party(src) {
+    const P = readParty(src.dir);
+    const itemRef = (x) => (hasItem(src.dir, x) ? link('gi:' + x, x) : esc(x));
+    const names = new Map((P.characters || []).map((c) => [c.id, c.name || c.id]));
+    const line = (e, extra) => `<div class="gs-r">${esc(e.rank)} ${itemRef(e.item)} — ${e.title ? esc(trim(e.title, 70)) : '<span class="absent">no title</span>'} — <span class="dim">${e.reason ? esc(e.reason) : 'no reason given'}</span>${extra || ''}</div>`;
+    const col = (c) => `<div class="party-col"><div class="gs-h">${esc(c.name || c.id)} <span class="dim">${esc(c.role || '')}</span></div>
+<div class="gs-r dim">${c.rule ? esc(c.rule) : 'no rule given'}</div>
+${(c.top || []).length ? c.top.map((e) => line(e)).join('') : '<div class="gs-r absent">no items ranked</div>'}</div>`;
+    const pt = (P.party && P.party.top) || [];
+    const ab = P.absences || [];
+    return { title: 'party', html: `<div class="gcc" data-cycle="gparty-raw">
+<h1>The Gauntlet party <span class="dim">top ten each, and the party vote</span></h1>
+${banner(src)}<p class="dim">generated ${esc(P.generated_at || '?')} · Giraffe run ${esc((P.sources || {}).giraffe_run || '?')} · c raw JSON</p>
+<div class="party-cols">${(P.characters || []).map(col).join('')}</div>
+<div class="gs-h">PARTY VOTE <span class="dim">${esc((P.party || {}).rule || '')}</span></div>
+${pt.length ? pt.map((e) => line(e, ` <span class="chooser">← ${esc(names.get(e.chosen_by) || e.chosen_by || 'nobody recorded')}</span>`)).join('') : '<div class="gs-r absent">no party vote recorded</div>'}
+${ab.length ? `<div class="gs-h">ABSENT</div>${ab.map((a) => `<div class="gs-r absent">No ${esc(a.what)}: ${esc(a.reason)}</div>`).join('')}` : ''}</div>` };
+  }
+
+  function partyRaw(src) {
+    return { title: 'party (raw)', html: `<div data-cycle="gparty">
+<h1>party.json <span class="dim">raw · c back to the view</span></h1>
+${banner(src)}<pre class="sexp">${esc(JSON.stringify(readParty(src.dir), null, 2))}</pre></div>` };
+  }
+
+  return { list, item, raw, party, partyRaw };
 };
 module.exports.source = source;
+module.exports.partySource = partySource;
 module.exports.hasItem = hasItem;
 module.exports.FIXTURE = FIXTURE;

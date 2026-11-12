@@ -1,0 +1,418 @@
+{
+ "generated_at": "2026-11-12T00:00:00Z",
+ "fixture": "INVENTED CONTENT in the format of ~/notes/claude-13/party-contract.md",
+ "sources": {
+  "giraffe_run": "(fixture)",
+  "lexicon": "(fixture)",
+  "pending_index": "(fixture)"
+ },
+ "characters": [
+  {
+   "id": "thor",
+   "name": "Thor",
+   "role": "unblocking",
+   "rule": "FIXTURE: first the items that the most other items wait on.",
+   "top": [
+    {
+     "rank": 1,
+     "item": "M-fixture-alpha",
+     "title": "FIXTURE: title of M-fixture-alpha",
+     "reason": "FIXTURE: unblocks 10 items",
+     "score": 10
+    },
+    {
+     "rank": 2,
+     "item": "T-fixture-beta",
+     "title": "FIXTURE: title of T-fixture-beta",
+     "reason": "FIXTURE: unblocks 9 items",
+     "score": 9
+    },
+    {
+     "rank": 3,
+     "item": "M-fixture-c",
+     "title": "FIXTURE: title of M-fixture-c",
+     "reason": "FIXTURE: unblocks 8 items",
+     "score": 8
+    },
+    {
+     "rank": 4,
+     "item": "M-fixture-d",
+     "title": "FIXTURE: title of M-fixture-d",
+     "reason": "FIXTURE: unblocks 7 items",
+     "score": 7
+    },
+    {
+     "rank": 5,
+     "item": "M-fixture-e",
+     "title": "FIXTURE: title of M-fixture-e",
+     "reason": "FIXTURE: unblocks 6 items",
+     "score": 6
+    },
+    {
+     "rank": 6,
+     "item": "M-fixture-f",
+     "title": "FIXTURE: title of M-fixture-f",
+     "reason": "FIXTURE: unblocks 5 items",
+     "score": 5
+    },
+    {
+     "rank": 7,
+     "item": "M-fixture-g",
+     "title": "FIXTURE: title of M-fixture-g",
+     "reason": "FIXTURE: unblocks 4 items",
+     "score": 4
+    },
+    {
+     "rank": 8,
+     "item": "M-fixture-h",
+     "title": "FIXTURE: title of M-fixture-h",
+     "reason": "FIXTURE: unblocks 3 items",
+     "score": 3
+    },
+    {
+     "rank": 9,
+     "item": "M-fixture-i",
+     "title": "FIXTURE: title of M-fixture-i",
+     "reason": "FIXTURE: unblocks 2 items",
+     "score": 2
+    },
+    {
+     "rank": 10,
+     "item": "M-fixture-j",
+     "title": "FIXTURE: title of M-fixture-j",
+     "reason": "FIXTURE: unblocks 1 items",
+     "score": 1
+    }
+   ]
+  },
+  {
+   "id": "merlin",
+   "name": "Merlin",
+   "role": "strategy",
+   "rule": "FIXTURE: first the items whose names converge most with the lexicon.",
+   "top": [
+    {
+     "rank": 1,
+     "item": "T-fixture-beta",
+     "title": "FIXTURE: title of T-fixture-beta",
+     "reason": "FIXTURE: convergence 10",
+     "score": 10
+    },
+    {
+     "rank": 2,
+     "item": "M-fixture-c",
+     "title": "FIXTURE: title of M-fixture-c",
+     "reason": "FIXTURE: convergence 9",
+     "score": 9
+    },
+    {
+     "rank": 3,
+     "item": "M-fixture-d",
+     "title": "FIXTURE: title of M-fixture-d",
+     "reason": "FIXTURE: convergence 8",
+     "score": 8
+    },
+    {
+     "rank": 4,
+     "item": "M-fixture-e",
+     "title": "FIXTURE: title of M-fixture-e",
+     "reason": "FIXTURE: convergence 7",
+     "score": 7
+    },
+    {
+     "rank": 5,
+     "item": "M-fixture-f",
+     "title": "FIXTURE: title of M-fixture-f",
+     "reason": "FIXTURE: convergence 6",
+     "score": 6
+    },
+    {
+     "rank": 6,
+     "item": "M-fixture-g",
+     "title": "FIXTURE: title of M-fixture-g",
+     "reason": "FIXTURE: convergence 5",
+     "score": 5
+    },
+    {
+     "rank": 7,
+     "item": "M-fixture-h",
+     "title": "FIXTURE: title of M-fixture-h",
+     "reason": "FIXTURE: convergence 4",
+     "score": 4
+    },
+    {
+     "rank": 8,
+     "item": "M-fixture-i",
+     "title": "FIXTURE: title of M-fixture-i",
+     "reason": "FIXTURE: convergence 3",
+     "score": 3
+    },
+    {
+     "rank": 9,
+     "item": "M-fixture-j",
+     "title": "FIXTURE: title of M-fixture-j",
+     "reason": "FIXTURE: convergence 2",
+     "score": 2
+    },
+    {
+     "rank": 10,
+     "item": "M-fixture-k",
+     "title": "FIXTURE: title of M-fixture-k",
+     "reason": "FIXTURE: convergence 1",
+     "score": 1
+    }
+   ]
+  },
+  {
+   "id": "questor",
+   "name": "Questor",
+   "role": "quick",
+   "rule": "FIXTURE: first the items closest to done for the least work.",
+   "top": [
+    {
+     "rank": 1,
+     "item": "M-fixture-c",
+     "title": "FIXTURE: title of M-fixture-c",
+     "reason": "FIXTURE: 10 steps left",
+     "score": 10
+    },
+    {
+     "rank": 2,
+     "item": "M-fixture-d",
+     "title": "FIXTURE: title of M-fixture-d",
+     "reason": "FIXTURE: 9 steps left",
+     "score": 9
+    },
+    {
+     "rank": 3,
+     "item": "M-fixture-e",
+     "title": "FIXTURE: title of M-fixture-e",
+     "reason": "FIXTURE: 8 steps left",
+     "score": 8
+    },
+    {
+     "rank": 4,
+     "item": "M-fixture-f",
+     "title": "FIXTURE: title of M-fixture-f",
+     "reason": "FIXTURE: 7 steps left",
+     "score": 7
+    },
+    {
+     "rank": 5,
+     "item": "M-fixture-g",
+     "title": "FIXTURE: title of M-fixture-g",
+     "reason": "FIXTURE: 6 steps left",
+     "score": 6
+    },
+    {
+     "rank": 6,
+     "item": "M-fixture-h",
+     "title": "FIXTURE: title of M-fixture-h",
+     "reason": "FIXTURE: 5 steps left",
+     "score": 5
+    },
+    {
+     "rank": 7,
+     "item": "M-fixture-i",
+     "title": "FIXTURE: title of M-fixture-i",
+     "reason": "FIXTURE: 4 steps left",
+     "score": 4
+    },
+    {
+     "rank": 8,
+     "item": "M-fixture-j",
+     "title": "FIXTURE: title of M-fixture-j",
+     "reason": "FIXTURE: 3 steps left",
+     "score": 3
+    },
+    {
+     "rank": 9,
+     "item": "M-fixture-k",
+     "title": "FIXTURE: title of M-fixture-k",
+     "reason": "FIXTURE: 2 steps left",
+     "score": 2
+    },
+    {
+     "rank": 10,
+     "item": "M-fixture-l",
+     "title": "FIXTURE: title of M-fixture-l",
+     "reason": "FIXTURE: 1 steps left",
+     "score": 1
+    }
+   ]
+  },
+  {
+   "id": "thyra",
+   "name": "Thyra",
+   "role": "harm reduction",
+   "rule": "FIXTURE: first the items whose delay does the most harm.",
+   "top": [
+    {
+     "rank": 1,
+     "item": "M-fixture-d",
+     "title": "FIXTURE: title of M-fixture-d",
+     "reason": "FIXTURE: 10 open harms",
+     "score": 10
+    },
+    {
+     "rank": 2,
+     "item": "M-fixture-e",
+     "title": "FIXTURE: title of M-fixture-e",
+     "reason": "FIXTURE: 9 open harms",
+     "score": 9
+    },
+    {
+     "rank": 3,
+     "item": "M-fixture-f",
+     "title": "FIXTURE: title of M-fixture-f",
+     "reason": "FIXTURE: 8 open harms",
+     "score": 8
+    },
+    {
+     "rank": 4,
+     "item": "M-fixture-g",
+     "title": "FIXTURE: title of M-fixture-g",
+     "reason": "FIXTURE: 7 open harms",
+     "score": 7
+    },
+    {
+     "rank": 5,
+     "item": "M-fixture-h",
+     "title": "FIXTURE: title of M-fixture-h",
+     "reason": "FIXTURE: 6 open harms",
+     "score": 6
+    },
+    {
+     "rank": 6,
+     "item": "M-fixture-i",
+     "title": "FIXTURE: title of M-fixture-i",
+     "reason": "FIXTURE: 5 open harms",
+     "score": 5
+    },
+    {
+     "rank": 7,
+     "item": "M-fixture-j",
+     "title": "FIXTURE: title of M-fixture-j",
+     "reason": "FIXTURE: 4 open harms",
+     "score": 4
+    },
+    {
+     "rank": 8,
+     "item": "M-fixture-k",
+     "title": "FIXTURE: title of M-fixture-k",
+     "reason": "FIXTURE: 3 open harms",
+     "score": 3
+    },
+    {
+     "rank": 9,
+     "item": "M-fixture-l",
+     "title": "FIXTURE: title of M-fixture-l",
+     "reason": "FIXTURE: 2 open harms",
+     "score": 2
+    },
+    {
+     "rank": 10,
+     "item": "M-fixture-m",
+     "title": "FIXTURE: title of M-fixture-m",
+     "reason": "FIXTURE: 1 open harms",
+     "score": 1
+    }
+   ]
+  }
+ ],
+ "party": {
+  "rule": "round robin Thor, Merlin, Questor, Thyra; skip items already chosen",
+  "top": [
+   {
+    "rank": 1,
+    "item": "M-fixture-alpha",
+    "title": "FIXTURE: title of M-fixture-alpha",
+    "chosen_by": "thor",
+    "reason": "FIXTURE: unblocks 10 items"
+   },
+   {
+    "rank": 2,
+    "item": "T-fixture-beta",
+    "title": "FIXTURE: title of T-fixture-beta",
+    "chosen_by": "merlin",
+    "reason": "FIXTURE: convergence 10"
+   },
+   {
+    "rank": 3,
+    "item": "M-fixture-c",
+    "title": "FIXTURE: title of M-fixture-c",
+    "chosen_by": "questor",
+    "reason": "FIXTURE: 10 steps left"
+   },
+   {
+    "rank": 4,
+    "item": "M-fixture-d",
+    "title": "FIXTURE: title of M-fixture-d",
+    "chosen_by": "thyra",
+    "reason": "FIXTURE: 10 open harms"
+   },
+   {
+    "rank": 5,
+    "item": "M-fixture-e",
+    "title": "FIXTURE: title of M-fixture-e",
+    "chosen_by": "thor",
+    "reason": "FIXTURE: unblocks 6 items"
+   },
+   {
+    "rank": 6,
+    "item": "M-fixture-f",
+    "title": "FIXTURE: title of M-fixture-f",
+    "chosen_by": "merlin",
+    "reason": "FIXTURE: convergence 6"
+   },
+   {
+    "rank": 7,
+    "item": "M-fixture-g",
+    "title": "FIXTURE: title of M-fixture-g",
+    "chosen_by": "questor",
+    "reason": "FIXTURE: 6 steps left"
+   },
+   {
+    "rank": 8,
+    "item": "M-fixture-h",
+    "title": "FIXTURE: title of M-fixture-h",
+    "chosen_by": "thyra",
+    "reason": "FIXTURE: 6 open harms"
+   },
+   {
+    "rank": 9,
+    "item": "M-fixture-i",
+    "title": "FIXTURE: title of M-fixture-i",
+    "chosen_by": "thor",
+    "reason": "FIXTURE: unblocks 2 items"
+   },
+   {
+    "rank": 10,
+    "item": "M-fixture-j",
+    "title": "FIXTURE: title of M-fixture-j",
+    "chosen_by": "merlin",
+    "reason": "FIXTURE: convergence 2"
+   },
+   {
+    "rank": 11,
+    "item": "M-fixture-k",
+    "title": "FIXTURE: title of M-fixture-k",
+    "chosen_by": "questor",
+    "reason": "FIXTURE: 2 steps left"
+   },
+   {
+    "rank": 12,
+    "item": "preview/giraffe-reading-1/19e68b98e376b681",
+    "title": "FIXTURE: title of M-fixture-l",
+    "chosen_by": "thyra",
+    "reason": "FIXTURE: 2 open harms"
+   }
+  ]
+ },
+ "absences": [
+  {
+   "what": "Thyra's harm scores",
+   "reason": "FIXTURE: no harm record exists yet; Thyra ranks by declared risk only"
+  }
+ ]
+}

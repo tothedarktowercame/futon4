@@ -122,7 +122,7 @@ function render(href) {
   if (kind === 'ti') return pageTriageItem(arg);
   if (PATTERN_KINDS.has(kind)) return pagePattern(kind, arg);
   if (kind === 'cascade' || kind === 'cn' || kind === 'ce') return pageCascade(kind, arg);
-  if (kind === 'gcc' || kind === 'gi' || kind === 'gi-raw') return pageGcc(kind, arg);
+  if (kind === 'gcc' || kind === 'gi' || kind === 'gi-raw' || kind === 'gparty' || kind === 'gparty-raw') return pageGcc(kind, arg);
   if (kind === 'loi' || kind === 'lf') return pageLoi(kind, arg);
   return pageHome();
 }
@@ -146,7 +146,8 @@ function pageHome() {
 <h2>Cascades <span class="dim">(M-repl-circus: a turn read as patterns)</span></h2><ul>
 <li>${link('cascade', 'the first turn cascade (2026-11-11)')}</li></ul>
 <h2>GCC items <span class="dim">(M-repl-circus demo 1: one item and what the GCC holds about it)</span></h2><ul>
-<li>${link('gcc', 'the GCC preview: items, records, links, absences')}</li></ul>
+<li>${link('gcc', 'the GCC preview: items, records, links, absences')}</li>
+<li>${link('gparty', 'the Gauntlet party: Thor, Merlin, Questor, Thyra and the party vote')}</li></ul>
 <h2>Letter of intent <span class="dim">(working draft: b notes a benefit, p a beneficiary)</span></h2><ul>
 <li>${link('loi', 'the Mozilla letter of intent, with your notes')}</li></ul>
 <h2>Daily scan</h2><ul><li>${link('triage', 'triage the latest brief')}</li></ul>
@@ -310,9 +311,12 @@ function pageCascade(kind, arg) {
 // Read from the projector's preview each time (or the test fixture while
 // there is none), so r shows a regenerated preview.
 function pageGcc(kind, arg) {
-  const src = gccView.source(cfg('gccPreviewDir') || '/home/joe/storage/gcc-preview');
+  const dir = cfg('gccPreviewDir') || '/home/joe/storage/gcc-preview';
+  const src = gccView.source(dir);
   const V = gccView({ esc, link, trim });
   try {
+    if (kind === 'gparty') return V.party(gccView.partySource(dir));
+    if (kind === 'gparty-raw') return V.partyRaw(gccView.partySource(dir));
     if (kind === 'gi') return V.item(src, arg);
     if (kind === 'gi-raw') return V.raw(src, arg);
     return V.list(src);
@@ -595,6 +599,9 @@ svg.cascade a.ln.sel .glue-edge { stroke-width: 4; }
 .gcc .gs-r.sub { margin-left: 4ch; }
 .gcc .gs-r.warn { color: var(--vscode-editorWarning-foreground, #c90); }
 .gcc .gs-tag { margin: 0; }
+.gcc .party-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(26em, 1fr)); gap: 0 2ch; }
+.gcc .party-col .gs-r { margin-left: 0; padding-left: 3ch; text-indent: -3ch; }
+.gcc .chooser { color: var(--vscode-textLink-foreground); }
 .gcc .fold { display: none; }
 .gcc .fold.open { display: block; }
 .met-met { color: var(--vscode-testing-iconPassed, #3a3); }
