@@ -18,6 +18,8 @@ delete require.cache[require.resolve('./cascade-reader')];
 delete require.cache[require.resolve('./cascade-view')];
 const cascadeReader = require('./cascade-reader');
 const cascadeView = require('./cascade-view');
+delete require.cache[require.resolve('./gcc-view')];
+const gccView = require('./gcc-view');
 
 // Hot-reloaded by extension.js whenever this file is saved: keep no state
 // here that must outlive a reload. The loader owns the panel and `state`.
@@ -118,6 +120,7 @@ function render(href) {
   if (kind === 'ti') return pageTriageItem(arg);
   if (PATTERN_KINDS.has(kind)) return pagePattern(kind, arg);
   if (kind === 'cascade' || kind === 'cn' || kind === 'ce') return pageCascade(kind, arg);
+  if (kind === 'gcc' || kind === 'gi' || kind === 'gi-raw') return pageGcc(kind, arg);
   return pageHome();
 }
 
@@ -139,6 +142,8 @@ function pageHome() {
 <li>${link('pturns', 'recent turns and the patterns proposed to them')}</li></ul>
 <h2>Cascades <span class="dim">(M-repl-circus: a turn read as patterns)</span></h2><ul>
 <li>${link('cascade', 'the first turn cascade (2026-11-11)')}</li></ul>
+<h2>GCC items <span class="dim">(M-repl-circus demo 1: one item and what the GCC holds about it)</span></h2><ul>
+<li>${link('gcc', 'the GCC preview: items, records, links, absences')}</li></ul>
 <h2>Daily scan</h2><ul><li>${link('triage', 'triage the latest brief')}</li></ul>
 <h2>Pending work by state</h2><ul>${labels.map(([s, n]) => `<li>${link('label:' + s, s)} <span class="dim">${n}</span></li>`).join('')}
 <li>${link('all', 'all pending items')}</li></ul>
@@ -293,6 +298,20 @@ function pageCascade(kind, arg) {
   if (kind === 'cn') return V.pattern(arg);
   if (kind === 'ce') return V.element(arg);
   return V.page(arg === 'partials' ? 'partials' : arg === 'detail' ? 'detail' : 'minimal');
+}
+
+// ---------------------------------------------------------------- GCC items
+
+// Read from the projector's preview each time (or the test fixture while
+// there is none), so r shows a regenerated preview.
+function pageGcc(kind, arg) {
+  const src = gccView.source(cfg('gccPreviewDir') || '/home/joe/storage/gcc-preview');
+  const V = gccView({ esc, link, trim });
+  try {
+    if (kind === 'gi') return V.item(src, arg);
+    if (kind === 'gi-raw') return V.raw(src, arg);
+    return V.list(src);
+  } catch (e) { return { title: 'GCC', html: `<h1>GCC preview</h1><p class="err">${esc(e.message)}</p>` }; }
 }
 
 // ---------------------------------------------------------------- triage
@@ -480,7 +499,7 @@ function reloadData() {
     return;
   }
   if (cur === 'triage' || cur.startsWith('ti:')) loadBrief(() => { go(cur, false, true); if (lastPeek) peek(lastPeek, true); });
-  else if (panel) go(cur, false, true);
+  else if (panel) { go(cur, false, true); if (lastPeek) peek(lastPeek, true); }
 }
 
 function shell() {
@@ -511,6 +530,16 @@ svg.cascade .el.partial { fill: none; stroke: var(--vscode-descriptionForeground
 svg.cascade .glue-edge { fill: none; stroke: var(--vscode-editorWarning-foreground, #c90); stroke-width: 2; }
 svg.cascade .gluelabel { fill: var(--vscode-editorWarning-foreground, #c90); font-size: 11px; }
 svg.cascade a.ln.sel .glue-edge { stroke-width: 4; }
+.gcc-rec { margin: .3em 0; padding: .2em .4em; border: 1px solid transparent; }
+.gcc-rec.proposed { opacity: .6; border: 1px dashed var(--vscode-descriptionForeground); }
+.gcc-rec.superseded { opacity: .5; }
+.gcc-rec.proposed.superseded { opacity: .35; }
+ol.gcc-chain { list-style: none; padding-left: .6em; border-left: 2px solid var(--vscode-descriptionForeground); }
+.gcc-status { font-size: .8em; color: var(--vscode-descriptionForeground); text-transform: uppercase; letter-spacing: .04em; }
+.met-met { color: var(--vscode-testing-iconPassed, #3a3); }
+.met-not-met { color: var(--vscode-errorForeground); }
+.met-unknown { color: var(--vscode-descriptionForeground); }
+.absent { font-style: italic; color: var(--vscode-editorWarning-foreground, #c90); }
 pre.sexp { font-family: inherit; color: var(--vscode-descriptionForeground); white-space: pre-wrap; }
 svg.cascade .glue { fill: var(--vscode-editorWarning-foreground, #c90); }
 svg.cascade text { fill: var(--vscode-editor-foreground); font-size: 11px; }
@@ -568,7 +597,7 @@ function select(i) {
 let peekTimer = null, noteTimer = null;
 // The key line names this page's own keys first, then the ones that work
 // everywhere.
-const KEYS = ' · j/k move · Enter follow · Tab/→ right column · Shift+Tab/← left · f hints · h back · / search · g home · v split · r reload';
+const KEYS = ' · j/k move · Enter follow · Tab/→ right column · Shift+Tab/← left · f hints · h back · / search · g home · i GCC items · v split · r reload';
 function showKeys() {
   $('#keys').textContent = (onTriage() ? ' · w worth · n not now · x invalid · a rule all unruled' : '')
     + (document.querySelector('#page [data-cycle]') ? ' · c cycle view' : '') + KEYS;
@@ -722,6 +751,7 @@ document.addEventListener('keydown', ev => {
   }
   else if (k === 'h' || k === 'Backspace') vs.postMessage({ type: 'back' });
   else if (k === 'g') vs.postMessage({ type: 'home' });
+  else if (k === 'i') vs.postMessage({ type: 'go', href: 'gcc' });
   else if (k === 'f') showHints();
   else if (k === 'r') vs.postMessage({ type: 'reload' });
   else if (k === 'v') { document.body.classList.toggle('one'); if (!peekShown()) setActive('page'); try { vs.setState({ one: document.body.classList.contains('one') }); } catch (_) {} }

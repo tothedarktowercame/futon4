@@ -101,6 +101,11 @@
           "type": "string",
           "default": "/home/joe/code/futon3c/holes/labs/M-repl-circus/cascade-2026-11-11-turn",
           "description": "The recorded per-turn cascade to draw (occurrences.json, frame.json, verdict.md). Read directly until cascades have a GCC schema."
+        },
+        "mojira.gccPreviewDir": {
+          "type": "string",
+          "default": "/home/joe/storage/gcc-preview",
+          "description": "GCC preview written by the projector (index.json, items/<id>.json; ~/notes/claude-13/demo-01-contract.md). While it is absent, the item view shows the invented fixture in test/gcc-preview-fixture."
         }
       }
     }

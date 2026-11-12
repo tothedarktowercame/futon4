@@ -1,0 +1,14 @@
+{"item": {"id": "T-fixture-beta", "title": "FIXTURE: an invented ticket with little known about it",
+          "path": "holes/tickets/T-fixture-beta.md", "repo": "futon-fixture",
+          "state_group": {"absent": "no state-group record: the ticket has no Status line"}},
+ "records": [
+  {"type": "[:workplan/item 1]", "status": "built", "id": "item/T-fixture-beta",
+   "fields": {"title": "FIXTURE: an invented ticket with little known about it", "kind": "ticket"},
+   "provenance": {"source": "file", "ref": "holes/tickets/T-fixture-beta.md", "basis": "parser"}, "supersedes": null}
+ ],
+ "links": [],
+ "absences": [
+  {"what": "Giraffe reading", "reason": "Giraffe has not read this item"},
+  {"what": "question link", "reason": "no item->question record exists"},
+  {"what": "pending level", "reason": "not in ~/notes pending index"}
+ ]}

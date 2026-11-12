@@ -1,0 +1,42 @@
+{"item": {"id": "M-fixture-alpha", "title": "FIXTURE: an invented mission with every kind of record",
+          "path": "holes/missions/M-fixture-alpha.md", "repo": "futon-fixture", "state_group": "started"},
+ "records": [
+  {"type": "[:workplan/item 1]", "status": "built", "id": "item/M-fixture-alpha",
+   "fields": {"title": "FIXTURE: an invented mission with every kind of record", "kind": "mission"},
+   "provenance": {"source": "file", "ref": "holes/missions/M-fixture-alpha.md", "basis": "parser"}, "supersedes": null},
+  {"type": "[:giraffe/reading 1]", "status": "proposed", "id": "reading/alpha-1",
+   "fields": {"digest": "aaaa111", "summary": "FIXTURE: first reading, before the IDENTIFY section was written"},
+   "provenance": {"source": "agent", "ref": "giraffe/run-0001", "basis": "model"}, "supersedes": null},
+  {"type": "[:giraffe/reading 1]", "status": "proposed", "id": "reading/alpha-3",
+   "fields": {"digest": "cccc333", "summary": "FIXTURE: current reading, after the DERIVE section landed"},
+   "provenance": {"source": "agent", "ref": "giraffe/run-0003", "basis": "model"}, "supersedes": "reading/alpha-2"},
+  {"type": "[:giraffe/reading 1]", "status": "proposed", "id": "reading/alpha-2",
+   "fields": {"digest": "bbbb222", "summary": "FIXTURE: second reading"},
+   "provenance": {"source": "agent", "ref": "giraffe/run-0002", "basis": "model"}, "supersedes": "reading/alpha-1"},
+  {"type": "[:lexicon/names 1]", "status": "built", "id": "names/alpha-arxana",
+   "fields": {"entity": "arxana", "span": "Arxana"},
+   "provenance": {"source": "file", "ref": "holes/missions/M-fixture-alpha.md#L12", "basis": "parser"}, "supersedes": null},
+  {"type": "[:lexicon/names 1]", "status": "built", "id": "names/alpha-mojira",
+   "fields": {"entity": "mojira", "span": "Mojira"},
+   "provenance": {"source": "file", "ref": "holes/missions/M-fixture-alpha.md#L30", "basis": "parser"}, "supersedes": null},
+  {"type": "[:serves 1]", "status": "built", "id": "serves/alpha-benefit",
+   "fields": {"benefit": "FIXTURE: Joe reads the GCC as text", "level": 2},
+   "provenance": {"source": "agent", "ref": "kimi-1", "basis": "model"}, "supersedes": null},
+  {"type": "[:turn/mention 1]", "status": "proposed", "id": "mention/t1",
+   "fields": {"turn": "claude-13-turn-40", "role": "names", "quote": "FIXTURE: let's look at alpha next"},
+   "provenance": {"source": "turn", "ref": "claude-13-turn-40", "basis": "exact"}, "supersedes": null},
+  {"type": "[:turn/mention 1]", "status": "proposed", "id": "mention/t2",
+   "fields": {"turn": "codex-6-turn-2", "role": "works-on", "quote": "FIXTURE: alpha's DERIVE section"},
+   "provenance": {"source": "turn", "ref": "codex-6-turn-2", "basis": "exact"}, "supersedes": null},
+  {"type": "[:pending/level 1]", "status": "proposed", "id": "pending/alpha",
+   "fields": {"level": "ready", "why": "FIXTURE: Joe marked it ready on the pending index"},
+   "provenance": {"source": "joe", "ref": "~/notes/pending.tsv", "basis": "human"}, "supersedes": null}
+ ],
+ "links": [
+  {"type": "[:needs 1]", "status": "built", "from": "M-fixture-alpha", "to": "T-fixture-beta", "fields": {"reviewed": true}, "computed": {"met": false}},
+  {"type": "[:needs 1]", "status": "built", "from": "M-fixture-alpha", "to": "E-fixture-gamma", "fields": {}, "computed": {"met": true}},
+  {"type": "[:needs 1]", "status": "proposed", "from": "M-fixture-alpha", "to": "M-fixture-delta", "fields": {}, "computed": {"met": null}}
+ ],
+ "absences": [
+  {"what": "question link", "reason": "no item->question record exists"}
+ ]}
