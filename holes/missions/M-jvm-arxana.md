@@ -910,14 +910,20 @@ formal demos F1–F6 (:7085–:7090) and the code↔docs demo (:7091). All had b
 idle since 11-09 and rebuilt their data from pinned inputs at start, so no data
 was lost. Ports 7085–7091 are free.
 
-**Still running, pending Joe's word:**
-- the Arxana demo on :7084 (a mock in-memory store; a child of the futon3c
-  JVM). The code-server demo extension (`arxana-code-server.service`, :8097)
-  points at it, so retiring :7084 retires that demo too;
+**Also retired 2026-11-12, on Joe's word** ("the one I am using with Mojira
+and claude-cs is different. We don't need the demo separately, any features
+that are needed can be recovered from the code"): the Arxana demo on :7084 (a
+mock in-memory store, a child of the futon3c JVM) and the code-server demo
+that pointed at it (`arxana-code-server.service`, :8097, a transient unit).
+Its extension and settings, which lived in /tmp, are archived with the others.
+Joe's code-server (:8090) and the Euclid one (:8099) are untouched.
+
+**Still running:**
 - the workplan demo on :7094: its own durable XTDB store (130 MB, under
   `~/.local/share/futon4a/workplan-demo`) holds 24 commands made after loading
   (lexicon and review records) that exist nowhere else, and it is in daily
-  use. It moves into the live futon1b before it stops.
+  use. It moves into the live futon1b before it stops (Joe, 11-12: after
+  the memory migration).
 
 **The rule from now on.** Arxana is served by the futon3c JVM (one
 `/arxana/v1` mount on :7070) over the live futon1b, which already registers
