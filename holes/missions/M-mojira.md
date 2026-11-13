@@ -390,6 +390,20 @@ docs/, `3c m` futon3c's missions, `0` futon0), with repo keys derived from the a
 number, else name) and kinds `d h m t s`; `arxana://...` opens a URI; `?` lists the codes; an
 empty line is the old ※ (Arxana browser home). Tested in Joe's Emacs: `6 d`, `3c m`, `p`.
 
+**Status and next step (Joe, 2026-11-13).** "Certainly good enough for a demo; when we
+revisit M-gcc-schema we can also revisit this" (the schema work is
+`holes/excursions/E-gcc-schema.md`). Since the first demo the prompt also: acts on a complete,
+unambiguous code without RET; inserts spaces itself; shows what can come next
+(`[RET 1b | d h i m s t]`); opens agent REPLs (`c 9` claude, `x 9` codex, `z 1` zai,
+`k 2` kimi); reaches non-futon repos as `r <name>`.
+
+**A modal layer (Joe, 2026-11-13, idea for that revisit).** "It could also have a modal
+property, e.g. `: <local evaluation behaviour depending on where we are>`, so `: a` might mean
+'do all' in any setting." So `※ :` would hand the rest of the code to whatever the current buffer
+or view defines (the Arxana view, a REPL, dired, a mission file), with a few verbs that mean
+the same everywhere (`a` = do all). That makes the shortcode table two-level: global codes, and
+local codes registered by each mode or view.
+
 ## Candidate first views (not yet a schedule)
 
 1. **Top-twenty panel:** a tree of the frozen Giraffe list with each verdict;
