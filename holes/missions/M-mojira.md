@@ -383,6 +383,13 @@ a key map can be derived from it rather than maintained by hand. A sketch, not a
 - the ※ menu then offers code paths and XTDB access paths side by side, which is where the
   rationalising of ※'s mixed access paths would start.
 
+**Demo built (claude-9, 2026-11-13): `dev/mojira-dispatch.el`.** `<f9>` and `※` open a "※ "
+prompt (like `M-:`) that reads shortcodes: `p` opens arxana://view/patterns in the Arxana
+browser; `<repo> [<kind>]` opens a repo or a kind of thing in it (`6 d` futon6's READMEs and
+docs/, `3c m` futon3c's missions, `0` futon0), with repo keys derived from the allowlist (futon
+number, else name) and kinds `d h m t s`; `arxana://...` opens a URI; `?` lists the codes; an
+empty line is the old ※ (Arxana browser home). Tested in Joe's Emacs: `6 d`, `3c m`, `p`.
+
 ## Candidate first views (not yet a schedule)
 
 1. **Top-twenty panel:** a tree of the frozen Giraffe list with each verdict;
