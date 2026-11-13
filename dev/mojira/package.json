@@ -17,7 +17,8 @@
     "virtualWorkspaces": true
   },
   "activationEvents": [
-    "onStartupFinished"
+    "onStartupFinished",
+    "onWebviewPanel:mojira"
   ],
   "main": "./extension.js",
   "contributes": {

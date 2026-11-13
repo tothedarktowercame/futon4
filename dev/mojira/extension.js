@@ -21,12 +21,20 @@ function attach() {
   sub = core.attach(panel, state);
 }
 
-function open(context) {
-  if (panel) { panel.reveal(); return; }
-  panel = vscode.window.createWebviewPanel('mojira', 'Mojira', vscode.ViewColumn.One,
-    { enableScripts: true, retainContextWhenHidden: true });
+// Adopt P as the Mojira panel: a new one, or one VS Code restored after a
+// window reload. Without the serializer below, a restored tab came back
+// empty (Joe, 2026-11-13: "just showing a small 4-line hamburger icon").
+function adopt(p, context) {
+  panel = p;
+  panel.webview.options = { enableScripts: true };
   panel.onDidDispose(() => { panel = null; if (sub) { sub.dispose(); sub = null; } }, null, context.subscriptions);
   try { attach(); } catch (e) { vscode.window.showErrorMessage('Mojira: ' + e.message); }
+}
+
+function open(context) {
+  if (panel) { panel.reveal(); return; }
+  adopt(vscode.window.createWebviewPanel('mojira', 'Mojira', vscode.ViewColumn.One,
+    { enableScripts: true, retainContextWhenHidden: true }), context);
 }
 
 function watchCore(context) {
@@ -50,7 +58,13 @@ function activate(context) {
   try { load(); } catch (e) { vscode.window.showErrorMessage('Mojira: ' + e.message); return; }
   context.subscriptions.push(
     vscode.commands.registerCommand('mojira.open', () => open(context)),
-    vscode.commands.registerCommand('mojira.reload', () => { if (panel) core.reloadData(); }));
+    vscode.commands.registerCommand('mojira.reload', () => { if (panel) core.reloadData(); }),
+    vscode.window.registerWebviewPanelSerializer('mojira', {
+      async deserializeWebviewPanel(p) {
+        if (panel) { p.dispose(); panel.reveal(); return; }   // one Mojira panel
+        adopt(p, context);
+      },
+    }));
   watchCore(context);
   if (vscode.workspace.getConfiguration('mojira').get('openOnStartup')) open(context);
 }
