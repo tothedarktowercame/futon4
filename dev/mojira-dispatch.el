@@ -12,7 +12,7 @@
 ;;   r <name> [<kind>]  any other repo by name.  Repos come from the ~/code allowlist.
 ;;                      <kind>: d docs and READMEs, h holes, m missions, t technotes,
 ;;                      s scripts; none = the repo itself.   e.g. "6 d", "3c m", "0".
-;;   c 9 / C 9 / z 9 / k 9   the REPL buffer of claude-9 / codex-9 / zai-9 / kimi-9 (any number
+;;   c 9 / x 9 / z 9 / k 9   the REPL buffer of claude-9 / codex-9 / zai-9 / kimi-9 (any number
 ;;                      with an open buffer; c 1 waits for RET while claude-1x buffers exist)
 ;;   arxana://...       open an Arxana URI directly
 ;;   ?                  this list
@@ -82,7 +82,7 @@
                            (mapcar (lambda (p) (expand-file-name p root)) paths))))
         (if dir (dired dir) (user-error "%s has no %s" root (car spec)))))))
 
-(defvar mojira-agent-kinds '(("c" . "claude") ("C" . "codex") ("z" . "zai") ("k" . "kimi"))
+(defconst mojira-agent-kinds '(("c" . "claude") ("x" . "codex") ("z" . "zai") ("k" . "kimi"))
   "Agent shortcode letter -> agent kind; REPL buffers are named *KIND-repl:KIND-N*.")
 
 (defun mojira--agents ()
@@ -106,12 +106,18 @@
 (defvar mojira--codes nil)
 
 (defun mojira--maybe-exit ()
-  "Exit the ※ prompt as soon as its contents are a complete code that starts no longer one."
-  (let ((s (minibuffer-contents)))
-    (when (and (member s mojira--codes)
-               (not (seq-some (lambda (c) (and (not (equal c s)) (string-prefix-p s c)))
-                              mojira--codes)))
-      (exit-minibuffer))))
+  "After a typed character: exit the ※ prompt if its contents are a complete code that starts
+no longer one; otherwise insert a space if every code continuing the contents continues with
+a space (so \"c\" becomes \"c \", \"6\" becomes \"6 \", but \"1\" stays, since \"1b\" exists)."
+  (when (eq this-command 'self-insert-command)
+    (let* ((s (minibuffer-contents))
+           (longer (seq-filter (lambda (c) (and (not (equal c s)) (string-prefix-p s c)))
+                               mojira--codes)))
+      (cond
+       ((and (member s mojira--codes) (null longer)) (exit-minibuffer))
+       ((and longer (not (string-suffix-p " " s))
+             (seq-every-p (lambda (c) (string-prefix-p (concat s " ") c)) longer))
+        (insert " "))))))
 
 (defun mojira--read ()
   (setq mojira--codes (mojira--all-codes))
@@ -126,7 +132,7 @@
     (princ "※ shortcodes\n\n  p        Arxana Patterns view\n  RET      Arxana browser home\n")
     (princ "  arxana://...  open an Arxana URI\n\n  <n> [<kind>]       e.g. 6 d, 3c m, 0 RET\n  r <name> [<kind>]  other repos, e.g. r p4ng RET\n\n  kinds:\n")
     (dolist (k mojira-kinds) (princ (format "    %s  %s\n" (car k) (cadr k))))
-    (princ "\n  agents: c N claude, C N codex, z N zai, k N kimi (open REPL buffers)\n")
+    (princ "\n  agents: c N claude, x N codex, z N zai, k N kimi (open REPL buffers)\n")
     (princ "\n  repos:\n")
     (dolist (r (sort (mojira--repos) (lambda (a b) (string< (car a) (car b)))))
       (unless (string-prefix-p "r " (car r)) (princ (format "    %-4s %s\n" (car r) (cdr r)))))))
@@ -146,7 +152,7 @@
       (if (fboundp 'arxana-browser-home) (arxana-browser-home) (mojira--open-uri "arxana://view/home")))
      ((equal code "?") (mojira-help))
      ((assoc code (mojira--agents)) (pop-to-buffer (cdr (assoc code (mojira--agents)))))
-     ((string-match "\\`[cCzk] [0-9]+\\'" code)
+     ((string-match "\\`[cxzk] [0-9]+\\'" code)
       (user-error "※ %s: no open REPL buffer for that agent" code))
      (fixed (funcall fixed))
      ((string-prefix-p "arxana://" code) (mojira--open-uri code))
