@@ -14,6 +14,8 @@
 ;;                      s scripts; none = the repo itself.   e.g. "6 d", "3c m", "0".
 ;;   c 9 / x 9 / z 9 / k 9   the REPL buffer of claude-9 / codex-9 / zai-9 / kimi-9 (any number
 ;;                      with an open buffer; c 1 waits for RET while claude-1x buffers exist)
+;;   c l / x l / ...    the last REPL of that kind: the one used most recently, other than
+;;                      the buffer you are in
 ;;   arxana://...       open an Arxana URI directly
 ;;   ?                  this list
 ;;
@@ -24,6 +26,20 @@
 ;; which is now "※ RET".)
 
 (require 'subr-x)
+(require 'json)
+
+;; The fixed codes, kinds and agent letters are shared with code-server Mojira (its : prompt):
+;; one table, futon4/dev/mojira-codes.json, so a code added there applies in both places.
+(defvar mojira-codes-file
+  (expand-file-name "mojira-codes.json"
+                    (file-name-directory (or load-file-name buffer-file-name default-directory)))
+  "The shared shortcode table (futon4/dev/mojira-codes.json).")
+
+(defun mojira--table ()
+  "The shared table as an alist, or nil if it cannot be read."
+  (ignore-errors
+    (let ((json-object-type 'alist) (json-array-type 'list) (json-key-type 'symbol))
+      (json-read-file mojira-codes-file))))
 
 (defvar mojira-allowlist-file
   (expand-file-name "~/code/futon0/system/zone/code-allowlist/allowlist.tsv")
@@ -31,9 +47,9 @@
 
 (defvar mojira-code-dir (expand-file-name "~/code/"))
 
-(defvar mojira-shortcodes
-  '(("p" . (lambda () (mojira--open-uri "arxana://view/patterns"))))
-  "Fixed shortcodes: (CODE . FUNCTION).  Repo shortcodes are derived from the allowlist.")
+(defvar mojira-shortcodes nil
+  "Fixed shortcodes: (CODE . FUNCTION), from the shared table (`mojira--load-table').
+Repo shortcodes are derived from the allowlist.")
 
 (defvar mojira-kinds
   '(("d" "docs and READMEs" docs)
@@ -41,7 +57,36 @@
     ("m" "missions" "holes/missions")
     ("t" "technotes" "holes/technotes" "technotes" "docs/technotes")
     ("s" "scripts" "scripts"))
-  "KEY, label, then the paths tried in order (or the symbol `docs' for README* + docs/).")
+  "KEY, label, then the paths tried in order (or the symbol `docs' for README* + docs/).
+Replaced from the shared table when it can be read.")
+
+(defvar mojira-agent-modals '(("l" . "last"))
+  "Agent modals: \"c l\" is the last claude REPL.  From the shared table when readable.")
+
+(defun mojira--load-table ()
+  "Set the fixed codes, kinds, agent letters and modals from the shared table."
+  (let ((tb (mojira--table)))
+    (when tb
+      (setq mojira-shortcodes
+            (mapcar (lambda (c)
+                      (let ((code (alist-get 'code c))
+                            (label (alist-get 'label c))
+                            (uri (alist-get 'uri (alist-get 'emacs c))))
+                        (cons code
+                              (if uri
+                                  (lambda () (mojira--open-uri uri))
+                                (lambda ()
+                                  (user-error "※ %s (%s) works in code-server Mojira only" code label))))))
+                    (alist-get 'codes tb)))
+      (setq mojira-kinds
+            (mapcar (lambda (k)
+                      (append (list (alist-get 'key k) (alist-get 'label k))
+                              (if (eq (alist-get 'docs k) t) '(docs) (alist-get 'paths k))))
+                    (alist-get 'kinds tb)))
+      (setq mojira-agent-kinds
+            (mapcar (lambda (a) (cons (alist-get 'key a) (alist-get 'kind a))) (alist-get 'agents tb)))
+      (setq mojira-agent-modals
+            (mapcar (lambda (m) (cons (alist-get 'key m) (alist-get 'label m))) (alist-get 'agent_modals tb))))))
 
 (defvar mojira-history nil)
 
@@ -82,17 +127,24 @@
                            (mapcar (lambda (p) (expand-file-name p root)) paths))))
         (if dir (dired dir) (user-error "%s has no %s" root (car spec)))))))
 
-(defconst mojira-agent-kinds '(("c" . "claude") ("x" . "codex") ("z" . "zai") ("k" . "kimi"))
-  "Agent shortcode letter -> agent kind; REPL buffers are named *KIND-repl:KIND-N*.")
+(defvar mojira-agent-kinds '(("c" . "claude") ("x" . "codex") ("z" . "zai") ("k" . "kimi"))
+  "Agent shortcode letter -> agent kind; REPL buffers are named *KIND-repl:KIND-N*.
+Replaced from the shared table when it can be read.")
 
 (defun mojira--agents ()
-  "Alist of (CODE . BUFFER-NAME) for every open agent REPL buffer, e.g. (\"c 9\" . ...)."
-  (let (out)
+  "Alist of (CODE . BUFFER-NAME) for every open agent REPL buffer, e.g. (\"c 9\" . ...).
+Also \"c l\" (and so on): the most recently used REPL of that kind other than the current
+buffer, as `buffer-list' orders them."
+  (let (out last)
     (dolist (b (buffer-list))
       (let ((n (buffer-name b)))
         (dolist (k mojira-agent-kinds)
           (when (string-match (format "\\`\\*%s-repl:%s-\\([0-9]+\\)\\*\\'" (cdr k) (cdr k)) n)
-            (push (cons (concat (car k) " " (match-string 1 n)) n) out)))))
+            (push (cons (concat (car k) " " (match-string 1 n)) n) out)
+            (when (and (not (eq b (current-buffer))) (not (assoc (car k) last)))
+              (push (cons (car k) n) last))))))
+    (when (assoc "l" mojira-agent-modals)
+      (dolist (l last) (push (cons (concat (car l) " l") (cdr l)) out)))
     out))
 
 (defun mojira--all-codes ()
@@ -146,6 +198,7 @@ possible next characters."
       (minibuffer-message "  [%s]" (string-join parts " | ")))))
 
 (defun mojira--read ()
+  (mojira--load-table)
   (setq mojira--codes (mojira--all-codes))
   (minibuffer-with-setup-hook
       (lambda () (add-hook 'post-command-hook #'mojira--maybe-exit nil t))
@@ -159,6 +212,8 @@ possible next characters."
     (princ "  arxana://...  open an Arxana URI\n\n  <n> [<kind>]       e.g. 6 d, 3c m, 0 RET\n  r <name> [<kind>]  other repos, e.g. r p4ng RET\n\n  kinds:\n")
     (dolist (k mojira-kinds) (princ (format "    %s  %s\n" (car k) (cadr k))))
     (princ "\n  agents: c N claude, x N codex, z N zai, k N kimi (open REPL buffers)\n")
+    (princ "          c l, x l, ... the last REPL of that kind (other than this buffer)\n")
+    (princ (format "\n  shared with code-server Mojira (its : prompt): %s\n" mojira-codes-file))
     (princ "\n  repos:\n")
     (dolist (r (sort (mojira--repos) (lambda (a b) (string< (car a) (car b)))))
       (unless (string-prefix-p "r " (car r)) (princ (format "    %-4s %s\n" (car r) (cdr r)))))))
@@ -178,7 +233,7 @@ possible next characters."
       (if (fboundp 'arxana-browser-home) (arxana-browser-home) (mojira--open-uri "arxana://view/home")))
      ((equal code "?") (mojira-help))
      ((assoc code (mojira--agents)) (pop-to-buffer (cdr (assoc code (mojira--agents)))))
-     ((string-match "\\`[cxzk] [0-9]+\\'" code)
+     ((string-match "\\`[cxzk] \\([0-9]+\\|l\\)\\'" code)
       (user-error "※ %s: no open REPL buffer for that agent" code))
      (fixed (funcall fixed))
      ((string-prefix-p "arxana://" code) (mojira--open-uri code))
@@ -186,6 +241,8 @@ possible next characters."
       (let ((root (expand-file-name repo mojira-code-dir)))
         (if kind (mojira--open-kind root kind) (dired root))))
      (t (user-error "※ %s: unknown shortcode (try ?)" code)))))
+
+(mojira--load-table)
 
 (global-set-key (kbd "<f9>") #'mojira-dispatch)
 (global-set-key (kbd "※") #'mojira-dispatch)

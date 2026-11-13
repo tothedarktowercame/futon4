@@ -22,6 +22,8 @@ delete require.cache[require.resolve('./gcc-view')];
 const gccView = require('./gcc-view');
 delete require.cache[require.resolve('./loi')];
 const loi = require('./loi');
+delete require.cache[require.resolve('./shortcodes')];
+const shortcodes = require('./shortcodes');
 
 // Hot-reloaded by extension.js whenever this file is saved: keep no state
 // here that must outlive a reload. The loader owns the panel and `state`.
@@ -124,6 +126,7 @@ function render(href) {
   if (kind === 'cascade' || kind === 'cn' || kind === 'ce') return pageCascade(kind, arg);
   if (kind === 'gcc' || kind === 'gi' || kind === 'gi-raw' || kind === 'gparty' || kind === 'gparty-raw') return pageGcc(kind, arg);
   if (kind === 'loi' || kind === 'lf') return pageLoi(kind, arg);
+  if (kind === 'codes') return { title: 'shortcodes', html: shortcodes.helpHtml(shortcodes.readTable(), shortcodes.readRepos(), esc) };
   return pageHome();
 }
 
@@ -377,6 +380,23 @@ function addLoiNote(kind, field, text) {
   if (lastPeek) peek(lastPeek, true);
 }
 
+// ---------------------------------------------------------------- shortcodes
+
+// The : prompt (※ in Emacs): the shared table futon4/dev/mojira-codes.json.
+function shortcodeList() {
+  try { return shortcodes.allCodes(shortcodes.readTable(), shortcodes.readRepos()); } catch (_) { return ['?']; }
+}
+
+function runCode(code) {
+  let r;
+  try { r = shortcodes.resolve(code, shortcodes.readTable(), shortcodes.readRepos()); }
+  catch (e) { note('shortcodes: ' + e.message, true); return; }
+  if (r.page) go(r.page);
+  else if (r.help) go('codes');
+  else if (r.dir) openInEmacs(r.dir, (err) => note(err ? 'emacsclient failed: ' + err : 'opened in Emacs: ' + r.label, Boolean(err)));
+  else note(r.error, true);
+}
+
 // ---------------------------------------------------------------- triage
 
 let brief = null, briefErr = null, lastPeek = null;
@@ -544,6 +564,7 @@ function attach(p, state) {
     else if (m.type === 'reload') reloadData();
     else if (m.type === 'verdict') recordVerdict(m.item, m.verdict, m.note);
     else if (m.type === 'loi-note') addLoiNote(m.kind, m.field, m.note);
+    else if (m.type === 'code') runCode(m.code);
     else if (m.type === 'all-ask' && !brief && !briefErr) loadBrief(() => { if (brief) handle(m); else note(briefErr || 'no brief loaded', true); });
     else if (m.type === 'all-ask') {
       const n = brief ? triage.unruledCount(brief) : 0;
@@ -637,9 +658,10 @@ a.st-exists { } a.st-partly { font-style: italic; } a.st-hypothesised { font-sty
 #vn { display: none; width: 34em; font: inherit; color: inherit; background: var(--vscode-input-background); border: 1px solid var(--vscode-focusBorder); }
 .verdict { display: inline-block; min-width: 6.5em; color: var(--vscode-descriptionForeground); }
 .v-worth { color: var(--vscode-testing-iconPassed, #3a3); } .v-invalid { color: var(--vscode-errorForeground, #c33); } .v-not-now { color: var(--vscode-editorWarning-foreground, #b80); }
+#sc { display: none; width: 12em; font: inherit; color: inherit; background: var(--vscode-input-background); border: 1px solid var(--vscode-focusBorder); }
 #q { display: none; width: 30em; font: inherit; color: inherit; background: var(--vscode-input-background); border: 1px solid var(--vscode-focusBorder); }
 </style></head><body>
-<div id="bar"><span id="crumbs"></span> <input id="q" placeholder="search, then Enter"><span id="note" class="note"></span><input id="vn"><span id="keys"></span></div>
+<div id="bar"><span id="crumbs"></span> <input id="q" placeholder="search, then Enter"><input id="sc" placeholder=": shortcode (? lists them)"><span id="note" class="note"></span><input id="vn"><span id="keys"></span></div>
 <div id="cols"><div id="page">loading…</div><div id="peek"></div></div>
 <script>
 const vs = acquireVsCodeApi();
@@ -665,7 +687,7 @@ function select(i) {
 let peekTimer = null, noteTimer = null;
 // The key line names this page's own keys first, then the ones that work
 // everywhere.
-const KEYS = ' · j/k move · Enter follow · Tab/→ right column · Shift+Tab/← left · f hints · h back · / search · g home · i GCC items · v split · r reload';
+const KEYS = ' · j/k move · Enter follow · Tab/→ right column · Shift+Tab/← left · f hints · h back · / search · g home · i GCC items · : shortcode · v split · r reload';
 function showKeys() {
   $('#keys').textContent = (onTriage() ? ' · w worth · n not now · x invalid · a rule all unruled' : '')
     + (onLoi() ? ' · b note a benefit · p note a beneficiary' : '')
@@ -785,6 +807,24 @@ $('#vn').addEventListener('keydown', ev => {
   if (ev.key === 'Enter' || ev.key === 'Escape') { pending = null; ev.target.style.display = 'none'; ev.target.blur(); }
   ev.stopPropagation();
 });
+// The : prompt: the same codes and the same typing as Emacs's ※ (a complete
+// code acts at once; a space is added when every continuation needs one).
+const CODES = ${JSON.stringify(shortcodeList()).replace(/</g, '\\u003c')};
+const scStep = ${shortcodes.step.toString()};
+function closeSc() { const sc = $('#sc'); sc.style.display = 'none'; sc.blur(); }
+function runSc(code) { closeSc(); vs.postMessage({ type: 'code', code }); }
+$('#sc').addEventListener('input', ev => {
+  const r = scStep(ev.target.value, CODES);
+  ev.target.value = r.value;
+  if (r.exit) { runSc(r.value); return; }
+  $('#note').classList.remove('err');
+  $('#note').textContent = [r.ret ? 'RET ' + r.value.trim() : '', (r.next || []).join(' ')].filter(Boolean).join(' | ');
+});
+$('#sc').addEventListener('keydown', ev => {
+  if (ev.key === 'Enter') runSc(ev.target.value.trim());
+  if (ev.key === 'Escape') { closeSc(); $('#note').textContent = ''; }
+  ev.stopPropagation();
+});
 $('#q').addEventListener('keydown', ev => {
   if (ev.key === 'Enter') { vs.postMessage({ type: 'search', q: ev.target.value.trim() }); ev.target.style.display = 'none'; ev.target.blur(); }
   if (ev.key === 'Escape') { ev.target.style.display = 'none'; ev.target.blur(); }
@@ -847,6 +887,7 @@ document.addEventListener('keydown', ev => {
   else if (k === 'f') showHints();
   else if (k === 'r') vs.postMessage({ type: 'reload' });
   else if (k === 'v') { document.body.classList.toggle('one'); if (!peekShown()) setActive('page'); try { vs.setState({ one: document.body.classList.contains('one') }); } catch (_) {} }
+  else if (k === ':' || k === '※') { const sc = $('#sc'); sc.style.display = 'inline'; sc.value = ''; sc.focus(); }
   else if (k === '/') { const q = $('#q'); q.style.display = 'inline'; q.value = ''; q.focus(); }
   else if (k === ' ') $('#' + active).scrollBy(0, $('#' + active).clientHeight * 0.8);
   else return;

@@ -1,0 +1,26 @@
+{
+  "about": "Mojira shortcodes, shared by Emacs (mojira-dispatch.el, the ※ prompt) and code-server Mojira (the : prompt). A code acts in each place that names an action for it; elsewhere it says where it works. Repo codes (<n>, r <name>) come from the ~/code allowlist; kinds and agents are below. Joe, 2026-11-13: add requests here so they apply in both places.",
+  "codes": [
+    {"code": "p", "label": "Patterns", "emacs": {"uri": "arxana://view/patterns"}, "mojira": {"page": "pg"}},
+    {"code": "i", "label": "GCC items", "mojira": {"page": "gcc"}},
+    {"code": "y", "label": "Gauntlet party", "mojira": {"page": "gparty"}},
+    {"code": "o", "label": "letter of intent (working draft)", "mojira": {"page": "loi"}},
+    {"code": "g", "label": "Mojira home", "mojira": {"page": "home"}}
+  ],
+  "kinds": [
+    {"key": "d", "label": "docs and READMEs", "paths": ["docs"], "docs": true},
+    {"key": "h", "label": "holes", "paths": ["holes"]},
+    {"key": "m", "label": "missions", "paths": ["holes/missions"]},
+    {"key": "t", "label": "technotes", "paths": ["holes/technotes", "technotes", "docs/technotes"]},
+    {"key": "s", "label": "scripts", "paths": ["scripts"]}
+  ],
+  "agents": [
+    {"key": "c", "kind": "claude"},
+    {"key": "x", "kind": "codex"},
+    {"key": "z", "kind": "zai"},
+    {"key": "k", "kind": "kimi"}
+  ],
+  "agent_modals": [
+    {"key": "l", "label": "last: the REPL of that kind used most recently"}
+  ]
+}
