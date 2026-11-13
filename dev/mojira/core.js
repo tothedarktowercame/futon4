@@ -393,6 +393,13 @@ function runCode(code) {
   catch (e) { note('shortcodes: ' + e.message, true); return; }
   if (r.page) go(r.page);
   else if (r.help) go('codes');
+  else if (r.back) { if (history.length > 1) { history.pop(); go(history[history.length - 1], false); } }
+  else if (r.emacs) {
+    // A code only Emacs can answer: run it there, at its ※ prompt's command.
+    const form = '(mojira-dispatch ' + JSON.stringify(r.emacs) + ')';
+    execFile(cfg('emacsclient') || 'emacsclient', ['-e', form], { timeout: 10000 }, (err, _o, stderr) =>
+      note(err ? 'Emacs: ' + (String(stderr || '').trim() || err.message) : 'opened in Emacs: ' + r.label, Boolean(err)));
+  }
   else if (r.dir) openInEmacs(r.dir, (err) => note(err ? 'emacsclient failed: ' + err : 'opened in Emacs: ' + r.label, Boolean(err)));
   else note(r.error, true);
 }

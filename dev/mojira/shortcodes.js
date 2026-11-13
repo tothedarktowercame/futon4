@@ -40,7 +40,12 @@ function allCodes(table, repos) {
     codes.push(k);
     for (const kd of table.kinds) codes.push(k + ' ' + kd.key);
   }
+  const last = (table.agent_modals || []).some((m) => m.key === 'l');
   for (const a of table.agents) for (const m of table.agent_modals || []) codes.push(a.key + ' ' + m.key);
+  if (last) {
+    codes.push('l');
+    for (const [k] of repos) codes.push(k + ' l');
+  }
   return codes;
 }
 
@@ -49,6 +54,7 @@ function resolve(code, table, repos, codeDir = '/home/joe/code') {
   const s = String(code || '').trim().replace(/\s+/g, ' ');
   if (s === '' || s === 'g') return { page: 'home' };
   if (s === '?') return { help: true };
+  if (s === 'l') return { back: true };
   const fixed = table.codes.find((c) => c.code === s);
   if (fixed) {
     if (fixed.mojira && fixed.mojira.page) return { page: fixed.mojira.page };
@@ -66,6 +72,9 @@ function resolve(code, table, repos, codeDir = '/home/joe/code') {
   if (!repo) return { error: `${s}: unknown shortcode (try ?)` };
   const root = path.join(codeDir, repo);
   if (!kindKey) return { dir: root, label: repo };
+  // "l": the last file visited in that repo, by any route. Only Emacs knows
+  // (its buffers and recent files), so the code is run there.
+  if (kindKey === 'l') return { emacs: s, label: 'the last file in ' + repo };
   const kind = table.kinds.find((k) => k.key === kindKey);
   if (!kind) return { error: `${s}: unknown kind ${kindKey} (try ?)` };
   const dir = kind.paths.map((p) => path.join(root, p)).find((d) => { try { return fs.statSync(d).isDirectory(); } catch (_) { return false; } });
@@ -101,7 +110,8 @@ function helpHtml(table, repos, esc) {
 <h2>Repos</h2><p><b>&lt;n&gt; [kind]</b> a futon repo, <b>r &lt;name&gt; [kind]</b> any other: opened in Emacs (dired)</p><p class="dim">${futons}</p>
 <h2>Kinds</h2><ul>${table.kinds.map((k) => `<li><b>${esc(k.key)}</b> ${esc(k.label)}</li>`).join('')}</ul>
 <h2>Agents <span class="dim">(Emacs only, for now)</span></h2><ul>${table.agents.map((a) => `<li><b>${esc(a.key)} N</b> ${esc(a.kind)}-N</li>`).join('')}
-${(table.agent_modals || []).map((m) => `<li><b>${table.agents.map((a) => a.key).join('/')} ${esc(m.key)}</b> ${esc(m.label)}</li>`).join('')}</ul>`;
+${(table.agent_modals || []).map((m) => `<li><b>${table.agents.map((a) => a.key).join('/')} ${esc(m.key)}</b> ${esc(m.label)}</li>`).join('')}</ul>
+<h2>l, last</h2><ul><li><b>6 l</b>, <b>r &lt;name&gt; l</b> the last file you visited in that repo, by any route (opened in Emacs)</li><li><b>l</b> alone: the previous page</li></ul>`;
 }
 
 module.exports = { TABLE, readTable, readRepos, allCodes, resolve, step, helpHtml };

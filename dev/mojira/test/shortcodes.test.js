@@ -41,6 +41,16 @@ test('typing behaves like the Emacs prompt', { skip: !haveAllowlist && 'no allow
   assert.ok(['d', 'm'].every((k) => r.next.includes(k)));
 });
 
+test('l is a modal: "last" in the context before it, typed without a space and acting at once', { skip: !haveAllowlist && 'no allowlist' }, () => {
+  assert.deepStrictEqual(S.step('xl', codes), { value: 'x l', exit: true });
+  assert.deepStrictEqual(S.step('cl', codes), { value: 'c l', exit: true });
+  assert.deepStrictEqual(S.step('6l', codes), { value: '6 l', exit: true });
+  assert.deepStrictEqual(S.step('l', codes), { value: 'l', exit: true });
+  assert.strictEqual(S.step('6d', codes).exit, true, 'adding l leaves the instant kind codes instant');
+  assert.deepStrictEqual(S.resolve('l', table, repos), { back: true });
+  assert.deepStrictEqual(S.resolve('6 l', table, repos), { emacs: '6 l', label: 'the last file in futon6' });
+});
+
 test('Emacs and Mojira read the same codes from the one table', { skip: !haveAllowlist && 'no allowlist' }, () => {
   let out;
   try {

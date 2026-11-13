@@ -15,7 +15,10 @@
 ;;   c 9 / x 9 / z 9 / k 9   the REPL buffer of claude-9 / codex-9 / zai-9 / kimi-9 (any number
 ;;                      with an open buffer; c 1 waits for RET while claude-1x buffers exist)
 ;;   c l / x l / ...    the last REPL of that kind: the one used most recently, other than
-;;                      the buffer you are in
+;;                      the buffer you are in ("xl" types as "x l" and acts at once)
+;;   <n> l, r <name> l  the last file you visited in that repo, by any route
+;;   l                  the last buffer (the one before this)
+;;   "l" is a modal: it means "last" in whatever context the code before it names.
 ;;   arxana://...       open an Arxana URI directly
 ;;   ?                  this list
 ;;
@@ -148,12 +151,25 @@ buffer, as `buffer-list' orders them."
     out))
 
 (defun mojira--all-codes ()
-  "Every complete shortcode: fixed codes, ?, repo keys, and repo keys with a kind."
+  "Every complete shortcode: fixed codes, ?, l, repo keys, repo keys with a kind or l."
   (let ((codes (append (list "?") (mapcar #'car mojira-shortcodes) (mapcar #'car (mojira--agents)))))
+    (when (assoc "l" mojira-agent-modals) (push "l" codes))
     (dolist (r (mojira--repos))
       (push (car r) codes)
+      (when (assoc "l" mojira-agent-modals) (push (concat (car r) " l") codes))
       (dolist (k mojira-kinds) (push (concat (car r) " " (car k)) codes)))
     codes))
+
+(defun mojira--last-file-in (root)
+  "The file under ROOT visited most recently, by any route: a file buffer other than the
+current one, in `buffer-list' (most recently used) order, else the newest `recentf' entry."
+  (let ((root (file-name-as-directory (expand-file-name root))))
+    (or (seq-some (lambda (b)
+                    (let ((f (buffer-file-name b)))
+                      (and f (not (eq b (current-buffer))) (string-prefix-p root (expand-file-name f)) f)))
+                  (buffer-list))
+        (and (boundp 'recentf-list)
+             (seq-find (lambda (f) (string-prefix-p root (expand-file-name f))) recentf-list)))))
 
 (defvar mojira--codes nil)
 
@@ -213,6 +229,8 @@ possible next characters."
     (dolist (k mojira-kinds) (princ (format "    %s  %s\n" (car k) (cadr k))))
     (princ "\n  agents: c N claude, x N codex, z N zai, k N kimi (open REPL buffers)\n")
     (princ "          c l, x l, ... the last REPL of that kind (other than this buffer)\n")
+    (princ "\n  l: last, in the context before it.  6 l  the last file you visited in futon6;\n")
+    (princ "     l alone  the last buffer\n")
     (princ (format "\n  shared with code-server Mojira (its : prompt): %s\n" mojira-codes-file))
     (princ "\n  repos:\n")
     (dolist (r (sort (mojira--repos) (lambda (a b) (string< (car a) (car b)))))
@@ -232,11 +250,15 @@ possible next characters."
      ((string-empty-p code)
       (if (fboundp 'arxana-browser-home) (arxana-browser-home) (mojira--open-uri "arxana://view/home")))
      ((equal code "?") (mojira-help))
+     ((equal code "l") (switch-to-buffer (other-buffer (current-buffer) t)))
      ((assoc code (mojira--agents)) (pop-to-buffer (cdr (assoc code (mojira--agents)))))
      ((string-match "\\`[cxzk] \\([0-9]+\\|l\\)\\'" code)
       (user-error "※ %s: no open REPL buffer for that agent" code))
      (fixed (funcall fixed))
      ((string-prefix-p "arxana://" code) (mojira--open-uri code))
+     ((and repo (equal kind "l"))
+      (let ((f (mojira--last-file-in (expand-file-name repo mojira-code-dir))))
+        (if f (find-file f) (user-error "※ %s: no file visited in %s yet" code repo))))
      (repo
       (let ((root (expand-file-name repo mojira-code-dir)))
         (if kind (mojira--open-kind root kind) (dired root))))
