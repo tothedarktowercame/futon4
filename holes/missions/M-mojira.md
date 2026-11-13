@@ -349,6 +349,40 @@ synthetic fixture), triage pages in `core.js`.
   PNG for comparison with Joe's own screenshots. It shows settings, not Joe's
   per-browser layout.
 
+## A governed ~/code makes keyed access possible (Joe, 2026-11-13)
+
+Joe: "what can happen eventually is ~/code can eventually be driven in a fast way. … In the old
+days I used to type ※ as a synonym for arxana-browse which opens a list of access paths
+generally into XTDB but sometimes into other storage (this will need rationalising too at some
+point). But if we get ~/code under control I should be able to do something like ※ 6 d to
+browse documentation for futon6 etc."
+
+What changed on 2026-11-13 (claude-9 with Joe), which this rests on:
+
+- `~/code` holds only Joe's repos: 43 git repositories, 5 symlinks into `~/storage` (storage,
+  data, apm-frames, LeanEuclid, planetmath) and the agent configuration (CLAUDE.md, AGENTS.md,
+  reply-proforma.md, .claude). 169 other entries went to `~/storage` (data, backups,
+  third-party clones in `~/storage/src`), `~/worktrees`, futon7 `business/`, futon0
+  `holes/from-code-root/` and `system/setup/`, or `/tmp`. Record:
+  `~/notes/claude-9/cleanup/CODE-DESTINATIONS.md`.
+- The directory is locked (`chmod a-w`); `futon0/system/zone/code-allowlist/` holds the
+  allowlist (`allowlist.tsv`, one row per entry: name, kind, remote), the `code-admit` script
+  (`clone`, `add`, `move`, `check`, and a bare name to clone tothedarktowercame/<name>) and
+  `code-admit.el` (`M-x code-admit`; agents file `code-admit-request`, Joe approves in
+  `M-x code-admit-requests`).
+- Three homes with backup classes: `~/code` continuous (GitHub), `~/storage` periodic, `/tmp`
+  throwaway (RAM, 3-day age-out). Workspace CLAUDE.md, "Three homes".
+
+Why it matters here: the allowlist is a small, stable, machine-readable index of what exists, so
+a key map can be derived from it rather than maintained by hand. A sketch, not a design:
+
+- first key after ※: the repo, by its futon number where it has one (`6` futon6, `1b` futon1b,
+  `3c` futon3c, `0` futon0), otherwise a short name;
+- second key: the kind of thing in it (`d` docs and READMEs, `h` holes, `m` missions, `s`
+  scripts, `t` technotes), resolved by convention inside each repo;
+- the ※ menu then offers code paths and XTDB access paths side by side, which is where the
+  rationalising of ※'s mixed access paths would start.
+
 ## Candidate first views (not yet a schedule)
 
 1. **Top-twenty panel:** a tree of the frozen Giraffe list with each verdict;
