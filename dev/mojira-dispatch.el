@@ -110,6 +110,15 @@
 no longer one; otherwise insert a space if every code continuing the contents continues with
 a space (so \"c\" becomes \"c \", \"6\" becomes \"6 \", but \"1\" stays, since \"1b\" exists)."
   (when (eq this-command 'self-insert-command)
+    ;; A character that fits no code as typed, but would after a space ("1b" + "d"): add the space.
+    (let* ((s (minibuffer-contents))
+           (spaced (and (> (length s) 1) (not (string-match-p " \\'" (substring s 0 -1)))
+                        (concat (substring s 0 -1) " " (substring s -1)))))
+      (when (and spaced
+                 (not (seq-some (lambda (c) (string-prefix-p s c)) mojira--codes))
+                 (seq-some (lambda (c) (string-prefix-p spaced c)) mojira--codes))
+        (delete-char -1)
+        (insert " " (substring s -1))))
     (let* ((s (minibuffer-contents))
            (longer (seq-filter (lambda (c) (and (not (equal c s)) (string-prefix-p s c)))
                                mojira--codes)))
@@ -117,7 +126,24 @@ a space (so \"c\" becomes \"c \", \"6\" becomes \"6 \", but \"1\" stays, since \
        ((and (member s mojira--codes) (null longer)) (exit-minibuffer))
        ((and longer (not (string-suffix-p " " s))
              (seq-every-p (lambda (c) (string-prefix-p (concat s " ") c)) longer))
-        (insert " "))))))
+        (insert " ")
+        (mojira--hint (concat s " ")))
+       (t (mojira--hint s))))))
+
+(defun mojira--hint (s)
+  "Show, after the ※ prompt's input S, what can come next: RET if S is a code, then the
+possible next characters."
+  (let* ((next (delete-dups
+                (delq nil (mapcar (lambda (c)
+                                    (and (string-prefix-p s c) (> (length c) (length s))
+                                         (let ((ch (substring c (length s) (1+ (length s)))))
+                                           (if (equal ch " ") nil ch))))
+                                  mojira--codes))))
+         (parts (append (and (member (string-trim-right s) mojira--codes)
+                             (list (format "RET %s" (string-trim-right s))))
+                        (and next (list (string-join (sort next #'string<) " "))))))
+    (when parts
+      (minibuffer-message "  [%s]" (string-join parts " | ")))))
 
 (defun mojira--read ()
   (setq mojira--codes (mojira--all-codes))
