@@ -1,5 +1,7 @@
 # E-lean-code-docs-alignment — Lean, code and docs as one Arxana hypergraph
 
+**Status:** OPEN (set 2026-11-14 by claude-13 from Giraffe's latest reading, which read it as open; this document had no status line. Correct it if wrong.)
+
 Opened 2026-10-19 by claude-2, from a conversation with Joe.
 
 ## Why
