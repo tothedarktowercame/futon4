@@ -409,6 +409,55 @@ each animal: which GCC node and edge types it writes").
 Rule 6 has not been run over B3 and B4 as a check: for each kind, a writer
 and a reader, or "not stored". Part C item 5.
 
+#### B9a. Writer/reader closure check (2026-11-16)
+
+This table runs rule 6 over every B3 and B4 row.  "Not stored" means the
+thing remains in its named outside authority or is only a proposed schema
+extension; it is not a silent writer with no consumer.
+
+| B3/B4 kind | Writer | Reader, or disposition |
+|---|---|---|
+| Feature entity | lexicon loader; Joe/sessionista rulings | entity pages, sessionista backlinks |
+| Pending item | workplan loader | workplan/entity pages and Giraffe |
+| Benefit line | benefit/workplan loader | workplan projections |
+| User story | workplan loader (attestation on item) | workplan projections |
+| Turn | evidence store; loaders write only an external reference | F1/GCC projections and mentions |
+| Session | evidence store | **not stored** in the GCC; referenced authority only |
+| Commit | git; loader writes an external reference | item/mention projections |
+| Pattern | pattern library | **not stored yet**; proposal/occurrence consumers belong to M-repl-circus |
+| Memory | minus40 | **not stored**; referenced authority only |
+| Code scope, doc scope, Lean declaration | code↔docs and F3 materialisers | F3 correspondence/manifestation projections |
+| Intent reading | F1 fixture materialiser / future 象 writer | F1 linear, outline and GCC projections |
+| Candidate action, admission decision, receipt | F4 compile passes | F4 composite view and attempt history |
+| Agent seat, invocation, bell, promise | Agency | **not stored** in Arxana |
+| Institution statement | none | **not stored**; planned schema use |
+| Port | none | **not stored**; worked model record only |
+| Want | none | **not stored**; worked model record only |
+| Benefit/property/alternative claim | none | **not stored**; worked dated-benefit model record only |
+| Specification and record-kind entities | none | **not stored yet**; reflective introduction decision is Part C item 4 |
+| Item names entity | workplan loader | entity and item projections |
+| Turn names entity | backlinks builder from stored rules | sessionista and entity backlinks |
+| Item serves benefit | model producers through workplan loader | workplan projections |
+| Item mentioned in turn/commit | workplan loader | item and evidence projections |
+| Entity introduced in turn | Joe through sessionista | entity page and word-rule builder |
+| Entity refers to target | Joe/sessionista; lexicon loader candidates | entity page and word-rule builder |
+| Turn reads as intent | 象 / F1 fixture materialiser | F1 projections |
+| Code scope corresponds to doc scope | code↔docs materialiser | F3 projections |
+| Turn proposes pattern | none | **not stored yet**; 驴 writer and retrieval reader belong to M-repl-circus |
+| Pattern occurs in turn window | none | **not stored yet**; 馬 writer and its retrieval reader belong to M-repl-circus |
+| Item needs supplier | Giraffe run files | **not stored yet**; Giraffe is the current reader |
+| Record supersedes record | relation writers in F2/F6 | current-record projections |
+| Intent compiles to candidate/decision | F4 compile passes | F4 composite view |
+| Reduced entity relations | lexicon loader writes original-role referents | entity pages; reduced vocabulary itself is **not stored** |
+| Reply, memory and occurrence links owned elsewhere | evidence store, general route, minus40 | **not stored**; indexed external authorities |
+
+The executable worked records for port, want, dated benefit claim,
+institution statement and construction are in futon3c
+`test/resources/arxana/formal_arxana/c1/gcc-closure-worked-records.edn`.
+They show that the existing 'clusion plus attestation model can hold each
+without declaring a speculative new record kind; they do not claim a live
+writer or reader where this table says none exists.
+
 ### B10. Store and route
 
 - **[decided]** (Joe, 11-09, §6) The private demo stores are for now. When
@@ -503,12 +552,15 @@ GCC is meant to hold be said in the records the mission built?
 
 - [ ] **1. Joe has read and corrected the Part A paragraph.** His corrections
   are recorded here in his words.
-- [ ] **2. No new record kind is needed.** Every node and link kind in B3 and
+- [x] **2. No new record kind is needed.** Every node and link kind in B3 and
   B4 is stated in the built model ('clusion types, attestations, assessments,
   external references, attempt receipts). For each of the five kinds with no
   type yet (port, want, dated benefit claim, institution statement,
   construction) there is either one worked record in the model, or a finding
-  recorded against the mission that the model cannot hold it.
+  recorded against the mission that the model cannot hold it. The five
+  executable worked records are in futon3c
+  `gcc-closure-worked-records.edn`; `formal_c1_test.clj` constructs and
+  attests every one through the C1 contracts.
 - [ ] **3. The marks survive a record check.** Every [built] cites a commit
   or file that exists. Every [decided] names its source. Every row of B14
   has an owner, or Joe has accepted it as left open on purpose. The mission's
@@ -521,12 +573,15 @@ GCC is meant to hold be said in the records the mission built?
   entity too, with this file or the mission as its referent. That set of
   entities can also serve as the "conceptual glossary" the DOCUMENT step asks
   for (my suggestion).
-- [ ] **5. Every kind has a writer and a reader, or is marked not stored.** A
+- [x] **5. Every kind has a writer and a reader, or is marked not stored.** A
   table in this file is enough for closure. A machine check in the style of
-  `type_registry.clj` is work for M-repl-circus or M-jvm-arxana.
-- [ ] **6. One route.** M-repl-circus's "Decided: where derived output goes"
-  agrees with Joe's 11-09 decision (§6).
-- [ ] **7. M-repl-circus can cite this file.** For each of the six animals,
+  `type_registry.clj` is work for M-repl-circus or M-jvm-arxana. B9a is the
+  closure table.
+- [x] **6. One route.** M-repl-circus's "Decided: where derived output goes"
+  agrees with Joe's 11-09 decision (§6). Reconciled 2026-11-16: it names the
+  reserved Arxana command route and treats general-route hyperedges as an
+  outside authority.
+- [x] **7. M-repl-circus can cite this file.** For each of the six animals,
   B9 names the types it writes, or says which source is missing.
   *Joe, 2026-11-10:* "狗 and 猴 can wait for repl-circus, I'd vote that we
   explicitly *don't* close that in E-gcc-schema in order to prove that the
