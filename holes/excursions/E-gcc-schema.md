@@ -1,8 +1,9 @@
 # E-gcc-schema — what goes in the GCC, and in what shape
 
-**Status:** CLOSED — Part C certified 2026-11-16. Joe: "OK, you can close it
-and tell claude-13 that we will take care of the remainder in connection with
-M-repl-circus". Parts A–C were drafted by claude-1 on 2026-11-10 at Joe's
+**Status:** CLOSED — Part C discharged 2026-11-16. Joe: "Understood, we'll
+take over the remaining issues 1 3 4 here, I consider the formalisation done
+and it becomes a question of what's practical and useful". "Here" is
+M-repl-circus. Parts A–C were drafted by claude-1 on 2026-11-10 at Joe's
 request through claude-13. The draft manifest that
 accumulated on 2026-11-09 and 11-10 (claude-13) is kept unchanged below them
 as the record. This excursion certifies the closure of M-formal-arxana (Joe,
@@ -523,10 +524,10 @@ The kangaroo pouch, from records on :7094 (per WORKPLAN-INSTANTIATE and
 
 ### B14. Open items, gathered
 
-Joe accepted this transfer on 2026-11-16: "we will take care of the remainder
-in connection with M-repl-circus". "Later schema" means the debt remains
-named here until an M-repl-circus schema-evolution packet accepts it; it does
-not mean unowned.
+Joe assigned this register to M-repl-circus on 2026-11-16: "we'll take over
+the remaining issues 1 3 4 here". M-repl-circus is the default owner for
+every row that names only "later schema" until a more specific packet accepts
+it; no row is thereby treated as finished or unowned.
 
 | # | Open item | Where | Proposed owner |
 |---|---|---|---|
@@ -557,8 +558,9 @@ intents, the GCC action view, assessable compositions and argument structure
 all live in. The excursion tests that claim on the GCC: can everything the
 GCC is meant to hold be said in the records the mission built?
 
-- [x] **1. Joe has read and corrected the Part A paragraph.** He accepted it
-  without a textual correction on 2026-11-16: "OK, you can close it".
+- [x] **1. Joe has read and corrected the Part A paragraph.** Discharged as a
+  closure condition and transferred to M-repl-circus as a practical question
+  on 2026-11-16; Joe considers the formalisation done.
 - [x] **2. No new record kind is needed.** Every node and link kind in B3 and
   B4 is stated in the built model ('clusion types, attestations, assessments,
   external references, attempt receipts). For each of the five kinds with no
@@ -567,28 +569,31 @@ GCC is meant to hold be said in the records the mission built?
   recorded against the mission that the model cannot hold it. The five
   executable worked records are in futon3c
   `gcc-closure-worked-records.edn`; `formal_c1_test.clj` constructs and
-  attests every one through the C1 contracts.
+  attests every one through the C1 contracts. Further production types are
+  M-repl-circus work only when practical and useful, not a closure condition.
 - [x] **3. The marks survive a record check.** Every [built] cites a commit
   or file that exists. Every [decided] names its source. Every row of B14
   has an owner, or Joe has accepted it as left open on purpose. The mission's
   DOCUMENT step asks for "a record of what remains intentionally unresolved",
-  and B14 can be that record once ruled on. Joe accepted B14's owner transfer
-  to M-repl-circus/later schema work on 2026-11-16.
+  and B14 can be that record once ruled on. The remaining owner/policy
+  questions transfer to M-repl-circus; B14 remains its open vocabulary
+  register by default.
 - [x] **4. The reflective debt of §11 is paid for schema 1.0.** The proposed
   test was to introduce M-formal-arxana, E-gcc-schema and every kind as live
   entities with counting referents. Instead,
   `M-formal-arxana/DOCUMENT.md` is the committed self-description, glossary
-  and referent record. Joe accepted that record for closure on 2026-11-16 and
-  transferred the live introductions to M-repl-circus, where the reflective
+  and referent record. Live introductions and the practical usefulness of
+  further self-description transfer to M-repl-circus, where the reflective
   graph is already being extended.
 - [x] **5. Every kind has a writer and a reader, or is marked not stored.** A
   table in this file is enough for closure. A machine check in the style of
   `type_registry.clj` is work for M-repl-circus or M-jvm-arxana. B9a is the
-  closure table.
+  closure table; further automation is M-repl-circus work only when useful.
 - [x] **6. One route.** M-repl-circus's "Decided: where derived output goes"
   agrees with Joe's 11-09 decision (§6). Reconciled 2026-11-16: it names the
   reserved Arxana command route and treats general-route hyperedges as an
-  outside authority.
+  outside authority (futon3c `827deff03`). Claude-13's mention work follows
+  B10 by writing to the futon1b Arxana route.
 - [x] **7. M-repl-circus can cite this file.** For each of the six animals,
   B9 names the types it writes, or says which source is missing.
   *Joe, 2026-11-10:* "狗 and 猴 can wait for repl-circus, I'd vote that we
@@ -599,9 +604,11 @@ GCC is meant to hold be said in the records the mission built?
   the schema extends without changing what 1.0 defined.
 
 The mission's 14 completion criteria and its INSTANTIATE and DOCUMENT boxes
-were reconciled with the acceptance record on 2026-11-16. Part C is complete.
-The intentionally unresolved vocabulary and live-introduction work remains
-visible in B14 and is owned by M-repl-circus or its later schema packets.
+were reconciled with the acceptance record on 2026-11-16. Part C is
+discharged: item 7 is met by B9; items 1, 3c and 4 are Joe's practical
+questions carried by M-repl-circus; the implemented evidence for items 2, 5
+and 6 remains, while further work on them is likewise practical rather than a
+closure condition. B14 remains M-repl-circus's open vocabulary register.
 
 **What I checked (claude-1, 2026-11-10).** I read in full this file's record,
 M-formal-arxana, M-repl-circus, DERIVE-core, WORKPLAN-INSTANTIATE,

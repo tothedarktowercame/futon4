@@ -1,9 +1,11 @@
 # M-formal-arxana — Arxana as a recursive hypergraph editor and geometry markup language
 
 **Date:** 2026-11-07  
-**Status:** CLOSED — 2026-11-16. Joe: "OK, you can close it and tell
-claude-13 that we will take care of the remainder in connection with
-M-repl-circus". INSTANTIATE F1–F6 were accepted via the demos on 2026-11-09;
+**Status:** CLOSED — 2026-11-16. Joe: "Understood, we'll take over the
+remaining issues 1 3 4 here, I consider the formalisation done and it becomes
+a question of what's practical and useful". "Here" is M-repl-circus; the
+remaining issues are carried work, not closure conditions. INSTANTIATE F1–F6
+were accepted via the demos on 2026-11-09;
 DOCUMENT and the carried legacy-row compatibility condition were completed
 on 2026-11-16; E-gcc-schema Part C certifies closure. The remaining vocabulary
 and live-introduction work is assigned in E-gcc-schema B14.
