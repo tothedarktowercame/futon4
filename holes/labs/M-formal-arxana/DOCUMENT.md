@@ -51,6 +51,21 @@ path when no interactive reading is needed.
   A prediction is not a receipt.
 - **external reference** — a typed pointer to an authority that Formal Arxana
   indexes but does not copy or silently reinterpret.
+- **introduction** — an attributable assertion that a named entity has entered
+  the working vocabulary, with the source turn as its referent.
+- **referent / witness** — a typed link to what an entity denotes; as an answer
+  to a link query, the link record is the witness rather than a copy of its
+  target.
+- **port** — a proposed entity for a system's named read, write or delivery
+  interface.  The worked record refers to E-gcc-schema B5; no live writer is
+  claimed.
+- **want** — a proposed open link query with a horizon.  Its worked record
+  refers to E-gcc-schema B7; expiry means unresolved, not false.
+- **construction** — evidence of the transformation that establishes a link,
+  such as the existing `[:kernel-builds 1]` relation; not every witness is a
+  construction.
+- **institution statement** — a proposed entity/attestation describing a
+  rule-in-use; M-ways-of-working and E-gcc-schema B12 remain its authorities.
 
 ## Authority boundaries
 
