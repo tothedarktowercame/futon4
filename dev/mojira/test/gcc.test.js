@@ -82,3 +82,26 @@ test('the fixture is marked as invented; a missing preview falls back to it; rec
   assert.throws(() => V.item(src, 'preview/giraffe-reading-1/19e68b98e376b681'), /not an item id/);
   assert.ok(!G.hasItem(src.dir, '../index'));
 });
+
+test('conformance is fresh, visible on every page and escaped', () => {
+  const dir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'mojira-conformance-'));
+  try {
+    fs.cpSync(G.FIXTURE, dir, { recursive: true });
+    const s = { dir, fixture: false };
+    const renders = [() => V.list(s), () => V.item(s, 'M-fixture-alpha'),
+      () => V.item(s, 'T-fixture-beta'), () => V.party(s),
+      () => V.raw(s, 'M-fixture-alpha'), () => V.partyRaw(s)];
+    const file = path.join(dir, 'conformance.json');
+    for (const render of renders) assert.ok(!render().html.includes('Conformance:'));
+    fs.writeFileSync(file, JSON.stringify({ failing: ['<bad>'], run: '<toy>', checked_at_ms: 0 }));
+    for (const render of renders) {
+      const html = render().html;
+      assert.ok(html.includes('<p class="err">Conformance: FAIL — &lt;bad&gt; (run &lt;toy&gt;, checked 1970-01-01T00:00:00.000Z)</p>'));
+      assert.equal((html.match(/Conformance:/g) || []).length, 1);
+    }
+    fs.writeFileSync(file, JSON.stringify({ failing: [] }));
+    for (const render of renders) assert.ok(!render().html.includes('Conformance:'));
+    fs.writeFileSync(file, '{');
+    for (const render of renders) assert.ok(render().html.includes('Conformance: result unreadable'));
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});

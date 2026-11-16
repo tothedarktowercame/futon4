@@ -40,7 +40,21 @@ function readItem(dir, id) {
 const MARK = { true: '✓', false: '✗', null: '?' };
 
 module.exports = function views({ esc, link, trim }) {
-  const banner = (src) => (src.fixture
+  const conformanceBanner = (src) => {
+    let report;
+    try {
+      report = JSON.parse(fs.readFileSync(path.join(src.dir, 'conformance.json'), 'utf8'));
+      if (!report || !Array.isArray(report.failing) || !report.failing.every(x => typeof x === 'string')) throw new Error('invalid report');
+      if (!report.failing.length) return '';
+      if (typeof report.run !== 'string' || !Number.isFinite(report.checked_at_ms)) throw new Error('invalid basis');
+      const checked = new Date(report.checked_at_ms).toISOString();
+      return `<p class="err">Conformance: FAIL — ${esc(report.failing.join(', '))} (run ${esc(report.run)}, checked ${esc(checked)})</p>`;
+    } catch (e) {
+      if (e.code === 'ENOENT') return '';
+      return '<p class="err">Conformance: result unreadable</p>';
+    }
+  };
+  const banner = (src) => conformanceBanner(src) + (src.fixture
     ? `<p class="err">FIXTURE: invented content from ${esc(path.relative(path.dirname(__dirname), src.dir))}; the projector's preview is not there yet.</p>` : '');
   const absent = (x) => x && typeof x === 'object' && 'absent' in x;
   const word = (x, none) => (absent(x) ? `<span class="absent">${esc(x.absent || none)}</span>` : x == null || x === '' ? `<span class="dim">${esc(none)}</span>` : esc(x));
