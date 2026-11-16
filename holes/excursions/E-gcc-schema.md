@@ -558,9 +558,9 @@ intents, the GCC action view, assessable compositions and argument structure
 all live in. The excursion tests that claim on the GCC: can everything the
 GCC is meant to hold be said in the records the mission built?
 
-- [x] **1. Joe has read and corrected the Part A paragraph.** Discharged as a
-  closure condition and transferred to M-repl-circus as a practical question
-  on 2026-11-16; Joe considers the formalisation done.
+- [x] **1. Joe has read and corrected the Part A paragraph.** Transferred to
+  M-repl-circus as Joe's own (Joe to claude-13, 2026-11-16: "we'll take over
+  the remaining issues 1 3 4 here"). It was not satisfied for this closure.
 - [x] **2. No new record kind is needed.** Every node and link kind in B3 and
   B4 is stated in the built model ('clusion types, attestations, assessments,
   external references, attempt receipts). For each of the five kinds with no
@@ -578,13 +578,12 @@ GCC is meant to hold be said in the records the mission built?
   and B14 can be that record once ruled on. The remaining owner/policy
   questions transfer to M-repl-circus; B14 remains its open vocabulary
   register by default.
-- [x] **4. The reflective debt of §11 is paid for schema 1.0.** The proposed
-  test was to introduce M-formal-arxana, E-gcc-schema and every kind as live
-  entities with counting referents. Instead,
-  `M-formal-arxana/DOCUMENT.md` is the committed self-description, glossary
-  and referent record. Live introductions and the practical usefulness of
-  further self-description transfer to M-repl-circus, where the reflective
-  graph is already being extended.
+- [x] **4. The reflective debt of §11.** Transferred to
+  M-repl-circus as Joe's own (Joe to claude-13, 2026-11-16: "we'll take over
+  the remaining issues 1 3 4 here"). It was not satisfied for this closure.
+  `M-formal-arxana/DOCUMENT.md` remains the committed glossary; whether it
+  suffices, or live introductions are written, is Joe's open item in
+  M-repl-circus.
 - [x] **5. Every kind has a writer and a reader, or is marked not stored.** A
   table in this file is enough for closure. A machine check in the style of
   `type_registry.clj` is work for M-repl-circus or M-jvm-arxana. B9a is the
