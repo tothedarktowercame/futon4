@@ -89,8 +89,8 @@ Where each sentence comes from:
    choice 3 keeps Arxana records off that route, because it is
    last-writer-wins and does no Arxana validation. Joe settled it on 11-09
    (§6): the GCC uses the Arxana route, and edges already on the general route
-   are read as an outside source. M-repl-circus's text still names the old
-   route.
+   are read as an outside source. M-repl-circus was reconciled to that
+   decision on 2026-11-16 (futon3c `827deff03`).
 3. **Is the GCC the compiler?** Joe's sentence has the GCC itself "compile
    intents into inference-ready actions". M-formal-arxana's dependency chain
    (item 3) and codex-21's compiler types (§1) have a graph, and compile passes
@@ -521,27 +521,31 @@ The kangaroo pouch, from records on :7094 (per WORKPLAN-INSTANTIATE and
 
 ### B14. Open items, gathered
 
-| # | Open item | Where |
-|---|---|---|
-| 1 | Are Joe's rulings inputs to a rebuild? | Part A (1), rule 4 |
-| 2 | A named policy for choosing among assessments | B1 |
-| 3 | Stored corrections of single occurrences | rule 3 |
-| 4 | The check that every kind has a writer and a reader | rule 6, B9 |
-| 5 | Typed "missing" in sessionista | rule 7 |
-| 6 | The 14 verbs: Joe's correction, the name clashes, the two doubtful reductions, applying them in the store | B4(b) |
-| 7 | `part-of` sorted beyond Agency; `co-resident` as a link or not | B4(b) |
-| 8 | Port: shape, and one meaning for the word | B5 |
-| 9 | Want: how stored; existing wants referenced or copied | B7 |
-| 10 | Which links need a construction | B7 |
-| 11 | Feature benefit, scale, alternatives and property claims as record types | B8 |
-| 12 | 狗 and 猴 outputs as records | B9 |
-| 13 | The compiler contract; codex-21's relations against `:d6/*`; a feed from live turns into candidates and on to the War Machine | Part A (3), B3, B4(a) |
-| 14 | Agency's seats, jobs, bells and promises as nodes | B3 |
-| 15 | Institutions | B12 |
-| 16 | Text class T1; concepts found without their word | B11 |
-| 17 | Turn granularity when one entry joins streamed pieces | §6 |
-| 18 | Roles of concepts around a turn (melody, chords, drone) | §8 |
-| 19 | M-repl-circus's route text | Part A (2) |
+The owner column is a proposed transfer, awaiting Joe's acceptance as Part C
+item 3 requires.  "Later schema" means the debt remains here until a named
+schema-evolution packet accepts it; it does not mean unowned.
+
+| # | Open item | Where | Proposed owner |
+|---|---|---|---|
+| 1 | Are Joe's rulings inputs to a rebuild? | Part A (1), rule 4 | later schema / governance |
+| 2 | A named policy for choosing among assessments | B1 | later schema / readers |
+| 3 | Stored corrections of single occurrences | rule 3 | later schema / sessionista |
+| 4 | The check that every kind has a writer and a reader | rule 6, B9 | **completed in B9a** |
+| 5 | Typed "missing" in sessionista | rule 7 | later schema / sessionista |
+| 6 | The 14 verbs: Joe's correction, the name clashes, the two doubtful reductions, applying them in the store | B4(b) | later schema / lexicon |
+| 7 | `part-of` sorted beyond Agency; `co-resident` as a link or not | B4(b) | later schema / lexicon |
+| 8 | Port: shape, and one meaning for the word | B5 | later schema |
+| 9 | Want: how stored; existing wants referenced or copied | B7 | later schema |
+| 10 | Which links need a construction | B7 | later schema |
+| 11 | Feature benefit, scale, alternatives and property claims as record types | B8 | later schema |
+| 12 | 狗 and 猴 outputs as records | B9 | M-repl-circus |
+| 13 | The compiler contract; codex-21's relations against `:d6/*`; a feed from live turns into candidates and on to the War Machine | Part A (3), B3, B4(a) | M-repl-circus |
+| 14 | Agency's seats, jobs, bells and promises as nodes | B3 | later schema / Agency projection |
+| 15 | Institutions | B12 | later schema / M-ways-of-working |
+| 16 | Text class T1; concepts found without their word | B11 | later schema / War Machine |
+| 17 | Turn granularity when one entry joins streamed pieces | §6 | M-repl-circus |
+| 18 | Roles of concepts around a turn (melody, chords, drone) | §8 | M-repl-circus |
+| 19 | M-repl-circus's route text | Part A (2) | **completed** (futon3c `827deff03`) |
 
 ## Part C — What this excursion must certify for M-formal-arxana to close
 
