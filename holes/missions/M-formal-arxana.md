@@ -1,7 +1,12 @@
 # M-formal-arxana — Arxana as a recursive hypergraph editor and geometry markup language
 
 **Date:** 2026-11-07  
-**Status:** OPEN — ready to close (Joe, 2026-11-10: "for all intents and purposes 'ready to close' in my view, though the E-gcc-schema is left, probably as a closure certifying excursion"); closure certified by `holes/excursions/E-gcc-schema.md` (with claude-1). Earlier: DOCUMENT (INSTANTIATE F1–F6 accepted by Joe via the demos, 2026-11-09)  
+**Status:** OPEN — bounded completion items complete; closure awaits the
+E-gcc-schema Part C certification review. Joe, 2026-11-10: "for all intents
+and purposes 'ready to close' in my view, though the E-gcc-schema is left,
+probably as a closure certifying excursion". INSTANTIATE F1–F6 were accepted
+via the demos on 2026-11-09; DOCUMENT and the carried legacy-row compatibility
+condition were completed on 2026-11-16.
 **Owner:** Joe (operator); next technical driver to be assigned  
 **Repos:** `futon4` (mission, legacy Arxana, design sources), `futon3c`
 (JVM authority, 象 and REPL Circus), `futon1`/XTDB (durable hypergraph),
@@ -304,31 +309,31 @@ change what it supports and require an attributable semantic relation edit.
 
 ### Completion criteria
 
-- [ ] MAP answers Q1–Q10 below with cited files, schemas, probes, and fixtures.
-- [ ] DERIVE specifies the minimal 'clusion and projection-edit contracts well
+- [x] MAP answers Q1–Q10 below with cited files, schemas, probes, and fixtures.
+- [x] DERIVE specifies the minimal 'clusion and projection-edit contracts well
   enough to implement without inventing authority decisions during coding.
-- [ ] F1 passes end to end on retained real conversation fixtures and produces
+- [x] F1 passes end to end on retained real conversation fixtures and produces
   the same record identities in linear, graph, and GCC projections.
-- [ ] Editing an F1 manifestation exercises relocation and interpretation
+- [x] Editing an F1 manifestation exercises relocation and interpretation
   history instead of refusing solely because bytes changed.
-- [ ] Operational convergence is demonstrably distinct from semantic
+- [x] Operational convergence is demonstrably distinct from semantic
   agreement; a converged store retains a contradiction fixture.
-- [ ] F2 either passes with a declared collaborative substrate or records a
+- [x] F2 either passes with a declared collaborative substrate or records a
   falsifying observation showing why the single-sequencer model suffices.
-- [ ] F3 preserves distinct provenance and typed conflict across at least
+- [x] F3 preserves distinct provenance and typed conflict across at least
   authored informal, Lean, and generated informal manifestations.
-- [ ] A 'clusion is recursively addressable and assessable in F4.
-- [ ] F5 answers queries for the square map, its invariants, and the two-point
+- [x] A 'clusion is recursively addressable and assessable in F4.
+- [x] F5 answers queries for the square map, its invariants, and the two-point
   fibre over `-1` independently of rendering.
-- [ ] Two F5 projections preserve graph identity, and semantic versus
+- [x] Two F5 projections preserve graph identity, and semantic versus
   coordinate-only edits have observably different consequences.
-- [ ] F6 demonstrates layout as a projection of argument structure rather than
+- [x] F6 demonstrates layout as a projection of argument structure rather than
   pixel position as identity.
-- [ ] ARGUE explains why this is more than RDF-style annotation and why
+- [x] ARGUE explains why this is more than RDF-style annotation and why
   non-resolution is a legitimate result.
-- [ ] VERIFY supplies a specification BOM, falsifiers, and retained traces for
+- [x] VERIFY supplies a specification BOM, falsifiers, and retained traces for
   each formal layer used.
-- [ ] DOCUMENT gives a new contributor one command/path for each progressive
+- [x] DOCUMENT gives a new contributor one command/path for each progressive
   demonstration and states what each proves and does not prove.
 
 ### Relationships and dependencies
@@ -523,12 +528,12 @@ mixed load, batched rebuild) at C3 acceptance.
 
 ### 6. INSTANTIATE
 
-- [ ] Implement only contracts that survived VERIFY, in F1–F6 dependency
+- [x] Implement only contracts that survived VERIFY, in F1–F6 dependency
   order, retaining one runnable fixture and trace per increment.
 
 ### 7. DOCUMENT
 
-- [ ] Publish the progressive demonstration path, conceptual glossary,
+- [x] Publish the progressive demonstration path, conceptual glossary,
   authority boundaries, and a record of what remains intentionally unresolved.
 
 ## Carried in from M-jvm-arxana (2026-11-10)
@@ -539,6 +544,8 @@ existing XTDB records.** The schema registry and golden-record round trips for
 the new record types exist (futon3c `schema.clj`, `formal_c1_test`,
 `formal_c2_test`); no test yet reads real existing XTDB rows, and the JVM
 surface does not expose the legacy generic rows
-(`labs/M-jvm-arxana/SWITCHOVER-survey.md:31`). This sits with E-gcc-schema's
-closure checklist item 2 (no new record kind needed).
-
+(`labs/M-jvm-arxana/SWITCHOVER-survey.md:31`). **Completed 2026-11-16:**
+futon3c `futon3c.arxana.legacy-records` normalizes retained real entity and
+mission-scope hyperedge captures without making them writable, and
+`formal_c1_test.clj` proves exact normalize/denormalize equality.  This sits
+with E-gcc-schema's closure checklist item 2 (no new record kind needed).
