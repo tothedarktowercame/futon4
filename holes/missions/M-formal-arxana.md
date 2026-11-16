@@ -1,12 +1,12 @@
 # M-formal-arxana — Arxana as a recursive hypergraph editor and geometry markup language
 
 **Date:** 2026-11-07  
-**Status:** OPEN — bounded completion items complete; closure awaits the
-E-gcc-schema Part C certification review. Joe, 2026-11-10: "for all intents
-and purposes 'ready to close' in my view, though the E-gcc-schema is left,
-probably as a closure certifying excursion". INSTANTIATE F1–F6 were accepted
-via the demos on 2026-11-09; DOCUMENT and the carried legacy-row compatibility
-condition were completed on 2026-11-16.
+**Status:** CLOSED — 2026-11-16. Joe: "OK, you can close it and tell
+claude-13 that we will take care of the remainder in connection with
+M-repl-circus". INSTANTIATE F1–F6 were accepted via the demos on 2026-11-09;
+DOCUMENT and the carried legacy-row compatibility condition were completed
+on 2026-11-16; E-gcc-schema Part C certifies closure. The remaining vocabulary
+and live-introduction work is assigned in E-gcc-schema B14.
 **Owner:** Joe (operator); next technical driver to be assigned  
 **Repos:** `futon4` (mission, legacy Arxana, design sources), `futon3c`
 (JVM authority, 象 and REPL Circus), `futon1`/XTDB (durable hypergraph),

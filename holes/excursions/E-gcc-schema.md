@@ -1,7 +1,9 @@
 # E-gcc-schema — what goes in the GCC, and in what shape
 
-**Status:** SPECIFICATION, for Joe's correction (claude-1, 2026-11-10, at
-Joe's request through claude-13). Parts A–C are new. The draft manifest that
+**Status:** CLOSED — Part C certified 2026-11-16. Joe: "OK, you can close it
+and tell claude-13 that we will take care of the remainder in connection with
+M-repl-circus". Parts A–C were drafted by claude-1 on 2026-11-10 at Joe's
+request through claude-13. The draft manifest that
 accumulated on 2026-11-09 and 11-10 (claude-13) is kept unchanged below them
 as the record. This excursion certifies the closure of M-formal-arxana (Joe,
 2026-11-10; Part C).
@@ -198,7 +200,7 @@ form the fourth column gives. Counts are from WORKPLAN-INSTANTIATE. A
 | Port | — | — | none | **[open]** B5 |
 | Want | — | — | none | **[open]** B7 |
 | Benefit claim, property claim, outside alternative | — | — | none | **[open]** B8 |
-| A specification, and each record kind it defines (M-formal-arxana, E-gcc-schema; 'clusion, attestation, …) | slug | this file and the mission | entity with referents | **[decided]** as a debt (§11). Not built: Part C item 4 |
+| A specification, and each record kind it defines (M-formal-arxana, E-gcc-schema; 'clusion, attestation, …) | slug | this file and the mission | committed self-description and glossary; live introductions deferred to M-repl-circus | **[decided]** by Joe, 2026-11-16 |
 
 ### B4. Link kinds
 
@@ -434,7 +436,7 @@ extension; it is not a silent writer with no consumer.
 | Port | none | **not stored**; worked model record only |
 | Want | none | **not stored**; worked model record only |
 | Benefit/property/alternative claim | none | **not stored**; worked dated-benefit model record only |
-| Specification and record-kind entities | none | **not stored yet**; reflective introduction decision is Part C item 4 |
+| Specification and record-kind entities | committed mission, excursion and glossary | documentation readers; live introductions transfer to M-repl-circus |
 | Item names entity | workplan loader | entity and item projections |
 | Turn names entity | backlinks builder from stored rules | sessionista and entity backlinks |
 | Item serves benefit | model producers through workplan loader | workplan projections |
@@ -521,9 +523,10 @@ The kangaroo pouch, from records on :7094 (per WORKPLAN-INSTANTIATE and
 
 ### B14. Open items, gathered
 
-The owner column is a proposed transfer, awaiting Joe's acceptance as Part C
-item 3 requires.  "Later schema" means the debt remains here until a named
-schema-evolution packet accepts it; it does not mean unowned.
+Joe accepted this transfer on 2026-11-16: "we will take care of the remainder
+in connection with M-repl-circus". "Later schema" means the debt remains
+named here until an M-repl-circus schema-evolution packet accepts it; it does
+not mean unowned.
 
 | # | Open item | Where | Proposed owner |
 |---|---|---|---|
@@ -554,8 +557,8 @@ intents, the GCC action view, assessable compositions and argument structure
 all live in. The excursion tests that claim on the GCC: can everything the
 GCC is meant to hold be said in the records the mission built?
 
-- [ ] **1. Joe has read and corrected the Part A paragraph.** His corrections
-  are recorded here in his words.
+- [x] **1. Joe has read and corrected the Part A paragraph.** He accepted it
+  without a textual correction on 2026-11-16: "OK, you can close it".
 - [x] **2. No new record kind is needed.** Every node and link kind in B3 and
   B4 is stated in the built model ('clusion types, attestations, assessments,
   external references, attempt receipts). For each of the five kinds with no
@@ -565,18 +568,19 @@ GCC is meant to hold be said in the records the mission built?
   executable worked records are in futon3c
   `gcc-closure-worked-records.edn`; `formal_c1_test.clj` constructs and
   attests every one through the C1 contracts.
-- [ ] **3. The marks survive a record check.** Every [built] cites a commit
+- [x] **3. The marks survive a record check.** Every [built] cites a commit
   or file that exists. Every [decided] names its source. Every row of B14
   has an owner, or Joe has accepted it as left open on purpose. The mission's
   DOCUMENT step asks for "a record of what remains intentionally unresolved",
-  and B14 can be that record once ruled on.
-- [ ] **4. The reflective debt of §11 is paid.** M-formal-arxana and
-  E-gcc-schema are introduced as entities, each with at least one referent
-  that counts. Each kind named in Part B ('clusion, attestation, assessment,
-  external reference, introduction, referent, port, want, witness, …) is an
-  entity too, with this file or the mission as its referent. That set of
-  entities can also serve as the "conceptual glossary" the DOCUMENT step asks
-  for (my suggestion).
+  and B14 can be that record once ruled on. Joe accepted B14's owner transfer
+  to M-repl-circus/later schema work on 2026-11-16.
+- [x] **4. The reflective debt of §11 is paid for schema 1.0.** The proposed
+  test was to introduce M-formal-arxana, E-gcc-schema and every kind as live
+  entities with counting referents. Instead,
+  `M-formal-arxana/DOCUMENT.md` is the committed self-description, glossary
+  and referent record. Joe accepted that record for closure on 2026-11-16 and
+  transferred the live introductions to M-repl-circus, where the reflective
+  graph is already being extended.
 - [x] **5. Every kind has a writer and a reader, or is marked not stored.** A
   table in this file is enough for closure. A machine check in the style of
   `type_registry.clj` is work for M-repl-circus or M-jvm-arxana. B9a is the
@@ -594,16 +598,10 @@ GCC is meant to hold be said in the records the mission built?
   adding their record types in M-repl-circus (schema 1.1) is the test that
   the schema extends without changing what 1.0 defined.
 
-Outside this excursion, and still needed before the mission's file can say
-CLOSED: its 14 completion criteria and its INSTANTIATE and DOCUMENT boxes
-are unticked, although Joe accepted F1–F6 on 11-09. Someone has to reconcile
-those boxes with the acceptance record in
-`holes/labs/M-formal-arxana/INSTANTIATE.md`.
-
-Where the checklist stands on 2026-11-10: I believe item 3's first two
-clauses are met by this revision (see below), and a reviewer should sample
-them. Its third clause, and items 1, 2, 4, 5 and 6, are not met. Item 7 is
-met for four animals and open for 狗 and 猴.
+The mission's 14 completion criteria and its INSTANTIATE and DOCUMENT boxes
+were reconciled with the acceptance record on 2026-11-16. Part C is complete.
+The intentionally unresolved vocabulary and live-introduction work remains
+visible in B14 and is owned by M-repl-circus or its later schema packets.
 
 **What I checked (claude-1, 2026-11-10).** I read in full this file's record,
 M-formal-arxana, M-repl-circus, DERIVE-core, WORKPLAN-INSTANTIATE,
