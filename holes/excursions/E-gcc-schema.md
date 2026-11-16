@@ -393,7 +393,7 @@ each animal: which GCC node and edge types it writes").
 | 象 (reading of an operator turn) | `[:interpretation 1]`; a reply mark is an occurrence entity (`:mark-occurrence`), used as evidence by the interpretation, not a link (DERIVE-wiring §3 choice 1) | **[built]** on fixtures; no production caller |
 | 馬 (tension resolved, re-raised or dropped) | `[:pattern/occurrence 1]`; "shown" as appended events (DERIVE-core §16) | **[decided]** not written |
 | Giraffe | `[:needs 1]`; a reviewer's verdict as an assessment | **[decided]** not written; the needs are in Giraffe's run files |
-| 狗 (memories for an agent turn) | no source I read maps its output to a record type | **[open]** |
+| 狗 (memories for an agent turn) | schema 1.1: `[:memory/recall 1]`, `[:memory/use 1]`, `[:memory/burial 1]`, `[:memory/repetition 1]`; turn and memory external-reference endpoints; recall identity includes `:arm`, the other three have no identity content | **[built]** declarations and recall writer/reader in futon3c `53f8dfe54`; use/burial/repetition writers remain M-repl-circus work |
 | 猴 (operator focus) | the same | **[open]** |
 | Workplan and lexicon loaders | items, entities, benefit lines, names, serves, mentions, candidate referents | **[built]** |
 | Joe, through sessionista and entity pages | introductions, referents, word-rule switches, assessments | **[built]** |
@@ -598,9 +598,10 @@ GCC is meant to hold be said in the records the mission built?
   *Joe, 2026-11-10:* "狗 and 猴 can wait for repl-circus, I'd vote that we
   explicitly *don't* close that in E-gcc-schema in order to prove that the
   schema is extensible". So item 7 is met when B9 covers 驴, 象, 馬 and
-  Giraffe. 狗 and 猴 stay open on purpose: this file is schema 1.0, and
-  adding their record types in M-repl-circus (schema 1.1) is the test that
-  the schema extends without changing what 1.0 defined.
+  Giraffe. 狗 and 猴 stayed open on purpose in schema 1.0. Schema 1.1 now
+  adds 狗's four record types without changing what 1.0 defined
+  (futon3c `53f8dfe54`); only the recall writer/reader is built in that
+  packet, while use/burial/repetition writers remain M-repl-circus work.
 
 The mission's 14 completion criteria and its INSTANTIATE and DOCUMENT boxes
 were reconciled with the acceptance record on 2026-11-16. Part C is
