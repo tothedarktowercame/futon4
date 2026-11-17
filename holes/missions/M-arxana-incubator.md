@@ -69,6 +69,17 @@ is the projection, requirement and nip that join them.)
 > and the relationship to the Mozilla thing is that the Mozilla thing effectively
 > documents that complexity in a simple way." (Joe, 2026-11-17)
 
+> 🗣 "what we did in the War Machine work about building the Aligned Lean and Clojure with
+> a runtime certificate is effectively a good example of the kind of link that we want
+> [Arxana] to help Keep Track of and I even did a little workup as a kind of prototype of
+> trying to align the informal specification in the paper with the formal specification
+> with the code and I think that that sense of aligning informal, formal, and code, and
+> documentation ... is a good example of the kind of thing that we're going to want to be
+> able to do and the kind of deliverable that would make this actually impactful for
+> people because ... people don't have a great time achieving any of those aligned
+> links, I would say, when they use agents and if we can achieve all of them, That's a
+> big win." (Joe, 2026-11-17)
+
 ### What is already felt to be true
 
 - A Xanadu-like demo works (2026-11-17): a draft paragraph over the spoken turns it came
@@ -155,6 +166,17 @@ In: the twelve work packages in `WORKPACKAGES.md` (incubator requirements and fi
 projection, 'clusion-update and requirement records; F2 head → projection; Nipper nips
 and proposals; editing by hand; links in the demo; two projections side by side; the
 Fellowship LOI as a second projection).
+
+Existing prototype of that link (found 2026-11-17): `p4ng/plop-2026-alignment.json`
+(schema `p4ng/plop-alignment-v1`, 71 notes: 24 alignment, 38 upgrade, 9 question). Each
+note anchors to a paper passage (`heading_contains` + verbatim `quote`), names the WM
+pattern (R1, ...), and lists Lean declarations (module, decl, 40-hex revision, status
+PROVED / STATED / ABSENT) and Clojure definitions (status VALIDATED /
+EXISTS-UNVALIDATED / ABSENT-OR-LOST / REFUTED), with author and date;
+`p4ng/inject-plop-alignment.py` validates each at its pinned revision and injects margin
+notes into the paper's HTML. It is an informal ↔ formal ↔ code link with a per-endpoint
+status, kept outside Arxana. The WM runtime certificate (futon2 `M-G-wm-wiring.md`,
+Lean-validated) is the same idea at run time.
 
 Later test case, named now (Joe, 2026-11-17): keeping Clojure, Lean and documentation
 aligned for the PLoP 2026 paper on the War Machine (`p4ng/plop-2026*`, `sec-*-plop.tex`),
