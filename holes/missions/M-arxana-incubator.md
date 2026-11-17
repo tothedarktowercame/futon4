@@ -38,6 +38,14 @@
 > Landscape*. ... we could sort of think of the Evidence Landscape as my "model" and the
 > hand-edit 'clusions as little LoRA-like style customisations"
 
+> "the parts exist separately but nothing joins them"
+
+(Joe, 2026-11-17, adopting claude-5's summary of the MAP findings as his own statement
+of the gap: "Nicely put, can you put that in the HEAD (supposed to be operator voice but
+I couldn't have put it better myself!)". The parts are jvm-arxana's attributed patches,
+pinned F1 manifests, F6 placements, relocation and span-addressed turns; what is missing
+is the projection, requirement and nip that join them.)
+
 ### What is already felt to be true
 
 - A Xanadu-like demo works (2026-11-17): a draft paragraph over the spoken turns it came
