@@ -9,6 +9,11 @@ F4 ('clusion composition) · E-essay-versioning-ux (essay variant lineage) ·
 Nipper (zai-13 design, 2026-11-14; not built) · 狗 (buried verbatim quotes).
 **Pressure test:** the Mozilla Fellowship LOI (deadline 2026-12-17), rearranged
 from the incubator draft.
+**Basis:** the jvm-arxana backend (futon3c `src/futon3c/arxana/`) and the
+futon4a demos (`futon4a/lisp/futon4a-formal-f*.el`, launchers in
+`futon4a/scripts/`). Classic Arxana (futon4 `dev/arxana-*.el`) is a reference
+for what include/transclude/identification meant, not a basis (Joe,
+2026-11-17: "The classic edition could be a reference but likely not a basis").
 
 ## HEAD
 
@@ -103,7 +108,7 @@ times from February onward. Questions this answers:
 Status column is a first reading from the code names and docstrings, NOT a
 check; MAP must confirm each.
 
-| # | Case | Instance | Classic Arxana | jvm-arxana |
+| # | Case | Instance | Classic Arxana (reference) | jvm-arxana (basis) |
 |---|---|---|---|---|
 | 1 | Divergent variants | one passage edited differently for incubator and LOI | include/transclude are single-source; no sibling versions | unknown; F0 resolver handles copy as typed outcome |
 | 2 | Edits as attributable acts | draft-2's edits have no record at all | no | text_rebase patches carry author/operation id |
@@ -127,22 +132,31 @@ The incubator closes 2026-11-20: write it by hand from draft 2, off this
 excursion's critical path. The Fellowship LOI (2026-12-17) is the first real
 use.
 
-## 2. MAP — questions
+## 2. MAP — questions (against jvm-arxana; classic is reference only)
 
-1. Do classic include/transclude/identification (`futon4/dev/arxana-inclusion.el`,
-   `arxana-derivation.el`) still work end to end against futon1b? Which
-   survives a store round trip?
-2. Do jvm-arxana records carry valid time, or only system time?
-3. Does the F0 resolver's "copying" outcome give sibling versions (case 1), or
-   only relocation of one?
-4. Can `correspond.clj` assertions and `text_rebase.clj` patches be the
-   `act/clip` and `act/edit` records, or are new types needed?
-5. Arxana Essays (`futon4/README-essays.md`) already keep annotations off the
-   body with verbatim `:passage` anchors in `annotations.edn`. Is that the
-   same anchoring problem one level up, and does it break the same way when
-   the essay body is edited?
-6. What is a passage? Candidate: one claim (the cell-line story; the plumbers;
-   the $300k split). Joe to judge from the first pass.
+1. **Sources.** F1 (`formal_f1.clj`) materialises settled 象 turns as Formal
+   Arxana records. Can a turn from `~/storage/operator-turns/` be materialised
+   the same way? Which identity and time fields does the record carry: is
+   there a valid time distinct from the store's system time?
+2. **Divergent variants.** F2 (`formal_f2.clj`, futon1b CAS as sole
+   sequencer) sequences patches against an artifact revision. Can two patch
+   lines branch from one base revision and both remain addressable (siblings),
+   or is the sequence strictly linear per artifact?
+3. **Copy.** F0/F1b2 relocation (`formal_f1_relocation.clj`) types copying as
+   an outcome. Does a copied scope become a second scope with lineage to the
+   first, or only an ambiguous candidate set?
+4. **Clips and edits as records.** Can a `correspond.clj` assertion (turn
+   manifestation → passage revision, `:quote`/`:exact-range`) be the clip
+   record, and an F2 patch the edit record? `correspond.clj` ships only an
+   in-memory repository: what persists today?
+5. **Essays anchors.** Arxana Essays (`futon4/README-essays.md`) keep
+   verbatim `:passage` anchors in `annotations.edn`. Same anchoring problem
+   one level up?
+6. **What is a passage?** Candidate: one claim (the cell-line story; the
+   plumbers; the $300k split). Joe to judge from the first pass.
 
-First bounded packet (discovery, not build): answer 1–5 against the code, with
-the draft-2 material as test data, and re-anchor the 9 recoverable sentences.
+Packets (discovery, not build, 2026-11-17):
+- **A (data):** re-anchor draft 2's sentences to source turns, as a file a
+  demo can load.
+- **B (code survey):** answer 1–4 from the jvm-arxana code and the futon4a
+  demos, each answer citing file:line.
