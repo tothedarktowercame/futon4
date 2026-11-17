@@ -1,6 +1,6 @@
 # M-arxana-incubator — Arxana as an innovation hub, proved on the Mozilla applications
 
-**Status:** ARGUE (2026-11-17; DERIVE exit met, Joe)
+**Status:** VERIFY (2026-11-17; ARGUE exit met, Joe)
 **Owner:** Joe (operator); claude-5 drafting. Seats to be matched to work packages after MAP.
 **Repos:** `futon4` (this mission; Mojira; classic Arxana as reference), `futon3c`
 (jvm-arxana: `src/futon3c/arxana/`), `futon1b` (store: `futon1b_arxana.clj`),
@@ -851,9 +851,18 @@ Practical applications, by 'clusion and direction:
 So the requirement list, the stale set and "regions of interest" are three readings of one
 operation, a fibre over part of the outcome surface, rather than three features.
 
-**ARGUE exit: Not met.**
+**ARGUE exit: Met.** Joe, 2026-11-17: "OK that argument is good enough to proceed to
+VERIFY." (The earlier "not met" was for the plain-language argument, revised that day
+after the wider survey and completed with the PaperPrinter paragraph, a467a2e.)
 
-## 5. VERIFY (planning, not started)
+## 5. VERIFY (current, from 2026-11-17)
+
+Why this witness comes first (Joe, 2026-11-17): "if we can't help with *this* specific
+endgame analysis, it is going to be nigh impossible to do resolve the complex
+interlinkings and overridings that go into assembling a complex Arxana document." The
+PaperPrinter rule set is a small, checkable case of what any assembled document has:
+'clusions that override one another in chains, where a later override can undo an earlier
+one, and a stable preference underneath that should still hold at the end.
 
 Joe, 2026-11-17: "what I'd say about the claude-7 use case is that this is a good
 candidate for VERIFY. I.e. if we can help resolve this use case then we know that what we
