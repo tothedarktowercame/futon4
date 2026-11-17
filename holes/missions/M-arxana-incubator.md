@@ -475,7 +475,19 @@ missing; under (c) a gap seed can query before any evaluation exists. **Joe chos
 reasoning"; the edge is now a gap seed, and the nip record carries `:nip/seed`
 (DERIVE-2 §2). Joe added: "I also think this is one way to form a 3/2 pushout square,
 rather than starting with LEFT and RIGHT we could start with NEXT and PREV" (taken to
-claude-1).
+claude-1). claude-1's §6 of `~/notes/claude-1/tetrahedron-and-metaca-2026-11-17.md`:
+PREV = memory seed, NEXT = gap seed, generic space = points both needed and already said,
+arbiter = the passage as it stands with Joe's acceptance, blend = the written passage
+with its nips; the requirement stands in for the turn that does not yet exist, which
+gives a turn its missing RIGHT. Holds as a reading; fails on five points (agreement is a
+check that can go stale; inputs are of different kinds; a word limit couples the
+points; with no limit the union trivially wins; the point set is not fixed). Three kinds
+of disagreement where the CA blend has one (differ → arbiter; needed but unsaid → work,
+a new turn; said but unneeded → competes only under a limit). Squares paste along time:
+each passage joins the next PREV. IF = PREV, HOWEVER = NEXT, BECAUSE = their meet, THEN =
+the passage. Selector-swap analogue (always-PREV / always-NEXT / random / majority vs
+arbiter): cheapest trial is how the 16 REFUTED statuses in the PLoP alignment file were
+resolved; the exotype selector swap itself is planned (NEXT.md item 3), not yet run.
 
 Review page for Joe (wiring, what was checked, questions):
 https://zone.hyperreal.enterprises/wip/arxana-incubator-wiring.html, rendered with
