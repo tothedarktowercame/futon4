@@ -301,3 +301,35 @@ interested in." → `holes/labs/E-arxana-variant-documents/DERIVE-1-nelson-requi
 each against the current demo, and five acceptance tests T1–T5 with their bad cases.
 36 quotations checked verbatim against the cited lines. Literary Machines and the
 17 rules are not yet read from a primary copy.
+
+## Joe's model: one text, many projections (2026-11-17)
+
+> "I work on "one" text but get both the Incubator and the Fellowship drafts as
+> projections of it. A possible bonus is that that "one" text *is the Evidence
+> Landscape*. So all texts are have throughlines to my turns, though as we've seen, I
+> may also want to hand-edit the text considerably. (But we should maintain
+> traceability, the fact that the Draft 2 looks mostly hand edited is somewhat an
+> artifact of the fact that I wasn't editing it in an Arxana-aware frontend, per
+> Nelson's T2.) Indeed we could sort of think of the Evidence Landscape as my "model"
+> and the hand-edit 'clusions as little LoRA-like style customisations"
+
+Consequences for the records (claude-5's reading, for Joe to correct):
+- **Base:** the Evidence Landscape (every turn, permanent; N1 holds already).
+- **Edit 'clusion:** a hand edit is an attributed, dated 'clusion on landscape spans
+  (replace / insert / delete), not text owned by a document. It is addressable and can
+  be switched on or off: the t/T views already show base-with and base-without.
+- **Projection:** a target form (incubator, Fellowship LOI) = a selection and order of
+  landscape spans + the set of edit 'clusions applied + the form's limits. Documents
+  become thin; neither draft owns its text.
+- **Divergence by scope:** an edit 'clusion attaches to its spans; whether it applies
+  in every projection that selects those spans or only in one is the edit's scope.
+  Shared edits flow to both drafts by construction (case 3, "suggested propagation",
+  becomes the default question "this projection only, or everywhere?").
+- **The LoRA analogy, where it holds:** small deltas over a large base, composable and
+  removable. Where it differs: these deltas are explicit and attributable, not learned
+  weights. It becomes literal if recurring edits ("bogus" → "nogood", "a harness" →
+  "the kind of system you're talking about") are later generalised into style rules
+  learned from the accumulated 'clusions.
+- **Effect on zai-13's Nipper design** (`~/notes/zai-13/nipper-design-2026-11-17.md`):
+  `:typed` entries owned by a document become edit 'clusions on the landscape; the
+  per-document EDL becomes the projection's selection. Nips stay as designed.
