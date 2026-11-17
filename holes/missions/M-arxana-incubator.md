@@ -464,4 +464,9 @@ edits target spans; the incubator path file-backed first; locality first).
       "not yet used", reading as an entity, precedence, relocation beyond F1): DERIVE-2 §4.
 - [x] Coverage check against Nelson's T0–T6 and the gap analysis's 13 type gaps (DERIVE-1 §7: 9 of 13 gaps covered, 3 partly, 1 deferred; 5 of 7 tests covered, 2 partly).
 
+Review page for Joe (wiring, what was checked, questions):
+https://zone.hyperreal.enterprises/wip/arxana-incubator-wiring.html, rendered with
+Graphviz from the validated EDN by `holes/labs/M-arxana-incubator/wiring-to-dot.bb`.
+Joe's corrections to DERIVE-1/2 wait for that review (Joe, 2026-11-17).
+
 **DERIVE exit: Not met.**
