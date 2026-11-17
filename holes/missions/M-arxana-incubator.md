@@ -647,6 +647,12 @@ now carries both directions (bringing the outside in, and the inside out), work 
 spans prose, proofs and code, and change over time; it supersedes the earlier version
 here and §8 of `ARGUE-revised.md`.
 
+Completed the same day with the PaperPrinter connection (Joe: "The connection to the
+PaperPrinter use case is not obvious ... An endgame analysis is needed b/c different
+formal systems have competing requirements"). The second paragraph adapts claude-1's
+two sentences in `~/notes/claude-1/tetrahedron-and-metaca-2026-11-17.md` §7.5; the
+analysis behind them is §7 of that note, summarised under VERIFY, Witness 1.
+
 When people work with AI agents, what gets written drifts away from what was actually
 said, decided and checked, and afterwards nobody can tell who contributed what or whether a
 claim still holds. This design keeps everything said, decided and checked as a permanent
@@ -654,8 +660,18 @@ shared record, and builds every document from pieces of it, whether that documen
 funding application, a paper, or the code and proofs a paper describes, so that any
 sentence can be followed back to where it came from and to what it depends on. When
 something changes, the record shows which sentences and claims are now out of date and
-what work that creates, instead of leaving people to find out later by accident. It works
-in the other direction too: every edit and new piece of writing goes back into the shared
+what work that creates, instead of leaving people to find out later by accident.
+
+The record holds rules as well as sentences: for example, the rules that turn a checked
+proof into readable mathematics. There the proof checker, the human reader and the tests
+each ask for something different, and a fix that satisfies one can break another. Because
+every rule and every change to it is kept, two rules that keep undoing each other, or a
+test that insists on wording the proof contradicts, show up as a pattern in the history
+rather than as one more fix. The aim is then not a text with no flaws, which may not
+exist, but a short, signed list of the flaws we accept, and rules that still read the
+next proof well.
+
+It works in the other direction too: every edit and new piece of writing goes back into the shared
 record, free to be reused elsewhere, and whatever is published can be read and answered
 without our tools. That is how a group gets credit for its work, catches its mistakes
 early, and lets the work grow in other people's hands.
@@ -869,6 +885,47 @@ VERIFY earlier (Bergsonian problematics: a real problem, well stated) and as
       (mfuton-share efdeba34, the Q72b merge), joinable with it. DiagramProver
       (futon3c `diagramprover/`: matcher, rewrite, rule) has matching and rewriting but no
       critical-pair check yet.
+      **Endgame analysis (claude-1, 2026-11-17, §7 of
+      `~/notes/claude-1/tetrahedron-and-metaca-2026-11-17.md`; readings from MetaCA and
+      AIF, none yet checked against PaperPrinter's records).**
+      - *Stasis:* a pin that keeps a wrong state (the m96A05 "second alternative" pin,
+        re-pinned at Q88), or a residual list so broad it selects nothing (exotype D16).
+        *Chaos:* packets that move failures between sentences without reducing them,
+        helped by pins copied from the renderer's own output (Q79b). Kind 1 above is
+        mostly descent, not a cycle.
+      - *Frustration* is kind 2: R1/R2 admit no order that satisfies both, so writes to
+        sentences only move the defect and a rule change (the guard) removes it.
+        *Meta-frustration* (the four systems admit no rendering at all) has no confirmed
+        case; the nested-∨ case resolves because one pin is wrong.
+      - *AIF:* F = failing evaluations weighted by the precision of their system, plus
+        rule-set complexity (rules, guards, exemptions). Lean is a constraint; the
+        reader a graded preference; a pin a prior whose precision should match the
+        standing of its acceptance (claude-7's "approved vs incidental wording" is that
+        missing precision); a residual a recorded, scoped lowering of precision. A
+        cycle is a run of packets along which F does not fall.
+      - *Cycling vs "the stabilisation of an ongoing ability to learn":* D16 — with
+        counts that never decay, exploration stops after at most λ_x/m − 3 trials; with
+        forgetting at rate ω it recurs at about ω(λ_x/m − 2). The wanted state: F flat
+        on the old corpus, small positive turnover (new declarations, pins lapsing when
+        their rule is superseded), no overlap recurring, low cost per new declaration.
+      - *What the analysis computes from the records:* sentence histories classed as
+        descent, displacement or reversal; a conflict graph over rules (critical pairs,
+        plus regressions observed across rules); a frustration measure (proxy:
+        unguarded non-joining pairs plus overlaps met more than once); each tension
+        classed as resolvable by guard/order, resolvable by superseding a requirement,
+        or irreducible (an accepted residual with scope and release); rates of
+        regression, latency to finding, displacement.
+      - *Stopping criterion (not "100% clean"):* every failing evaluation classed and
+        every irreducible one recorded as a residual; no non-joining pair without a
+        guard or recorded order; over the last k packets displacement near zero and no
+        overlap recurring; the best available packet expected to open more than it
+        closes; declarations held out from rule-writing render as cleanly as the rest
+        (the test of an ongoing ability to learn).
+      - *Not decidable from the records:* whether a rendering meeting every right
+        requirement exists (a per-case judgment), and what turnover ω to aim for.
+      - Citations checked by claude-5: D16 formulas (`DESIGN-aif.md` 1883–1896), blend
+        cooling 0.26 vs 0.45 (`NEXT.md` 22–23), "if they have a refuge, it is not a
+        lava" (`PROGRAMME.md` 63, Joe's), all in worktree `exotype-c1-causal`.
 - [ ] **Witness 2, the incubator application:** submitted by 2026-11-20 with each field
       traceable (WP1, WP2).
 - [ ] **Witness 3, PLoP 2026 alignment** (end-of-mission test): `plop-alignment-v1`
