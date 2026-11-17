@@ -333,3 +333,50 @@ Consequences for the records (claude-5's reading, for Joe to correct):
 - **Effect on zai-13's Nipper design** (`~/notes/zai-13/nipper-design-2026-11-17.md`):
   `:typed` entries owned by a document become edit 'clusions on the landscape; the
   per-document EDL becomes the projection's selection. Nips stay as designed.
+
+## 'Clusions as editable beams; updates over immutable objects (Joe, 2026-11-17)
+
+> "even though the 2-up system with highlighting works as a replacement for "beams"
+> what we don't yet have is a way to edit the 'clusions, even though those are also,
+> effectively, beams. In fact, maybe if we can define the beams as "requirements" then
+> something like Nipper can know to be on the look out for texts that match or edits
+> that transform the document into the required form. So, rewriting rules like "bogus"
+> → "nogood" or chainable collections thereof, viz., add "nogood" → "no good", are
+> great to have around, but 'clusions can be more than that, e.g., in a high level view
+> they could be the Mozilla questions and some "known failing tests" that break down
+> those questions into deliverables that I want to articulate. On the rewriting system
+> stuff itself, I think that DiagramProver would have some ideas for us, and maybe the
+> associated "small causal models" would help with the more complex extensions."
+
+> On "this projection only, or everywhere?": "the historical Evidence Landscape cannot
+> change, it is immutable, so that rules out "everywhere" by definition. But a key
+> aspect of Arxana is to be able to *save changes back to the database*. So we need to
+> have a (versioned) system that can be "updated" even if the updates are themselves
+> written on top of immutable objects. Here's where your concept of Pijul as a model to
+> study could be helpful. Anyway, if we imagine the Evidence Landscape as the "one text"
+> we could have lots of derived versions, some of which are mutually updating (like in
+> Pluto or Marimo) and some of which are static projections, possibly via 'clusions.
+> But of course 'clusions themselves can be updated (eventually)."
+
+Layers this implies (claude-5's reading, to correct):
+1. **Landscape:** immutable turns. Never "everywhere"; nothing is edited in place.
+2. **'Clusions:** immutable, attributed, dated records over landscape spans and over
+   other 'clusions. Kinds so far: *edit* (replace / insert / delete), *rewrite rule*
+   (pattern → replacement, chainable: "bogus" → "nogood" → "no good"), *link*,
+   *requirement* (a Mozilla question, its limit, and the deliverables it breaks into,
+   each a known-failing test until some text satisfies it). Updating a 'clusion writes
+   a new one that supersedes it (the Pijul question: how patches depend on, commute
+   with and conflict with each other, as stored records rather than as file states).
+3. **Derived versions:** *static* projections pin a set of 'clusion versions; *live*
+   ones re-derive when a 'clusion they depend on changes (the Pluto/Marimo reactive
+   DAG). "Saving back to the database" = appending 'clusions, never rewriting.
+4. **Requirements drive Nipper:** a failing requirement is a query; Nipper proposes
+   spans that match it or edits that would transform the text into the required form.
+   The 2-up view is where a requirement's beam is shown failing or met.
+
+Existing machinery to look at, not yet checked in detail: DiagramProver's rewriting
+engine (futon3c, M-diagramprover WS-A: hypergraphs, DPO rewriting modulo symmetric
+monoidal structure, ported from chyp, "rule application returns all legal rewrites as
+a lazy relation"), and its causal-model line (Fong's causal theories, dagitty / y0
+references in `~/storage/src/diagramprover-refs/`); jvm-arxana F2 (patches, rebase,
+alternatives) and F4 ('clusion composition).
