@@ -641,14 +641,24 @@ alignment history is a logic-model test available to VERIFY before implementatio
 
 ### Plain-language argument
 
-When people write with AI agents, the words drift away from where they came from: a
-proposal ends up saying things nobody can trace back to who said them or why. This design
-keeps everything people actually said as a permanent record, and treats every document as
-an arrangement of pieces of that record plus clearly marked new writing and edits. Because
-each piece knows its source, anyone can see who said what, when, and whether a claim still
-holds after the code, proof or paper it depends on has changed. The same arrangement can be
-re-cut for different purposes — a funding application, a paper, a status report — without
-losing the trail. That is what lets a group get credit for its work and catch its mistakes.
+Revised 2026-11-17 after the wider survey (Joe: "ARGUE exit is not met for the simple
+reason that the plain text argument was never revised following our wider survey"). It
+now carries both directions (bringing the outside in, and the inside out), work that
+spans prose, proofs and code, and change over time; it supersedes the earlier version
+here and §8 of `ARGUE-revised.md`.
+
+When people work with AI agents, what gets written drifts away from what was actually
+said, decided and checked, and afterwards nobody can tell who contributed what or whether a
+claim still holds. This design keeps everything said, decided and checked as a permanent
+shared record, and builds every document from pieces of it, whether that document is a
+funding application, a paper, or the code and proofs a paper describes, so that any
+sentence can be followed back to where it came from and to what it depends on. When
+something changes, the record shows which sentences and claims are now out of date and
+what work that creates, instead of leaving people to find out later by accident. It works
+in the other direction too: every edit and new piece of writing goes back into the shared
+record, free to be reused elsewhere, and whatever is published can be read and answered
+without our tools. That is how a group gets credit for its work, catches its mistakes
+early, and lets the work grow in other people's hands.
 
 ### Pattern cross-reference
 
