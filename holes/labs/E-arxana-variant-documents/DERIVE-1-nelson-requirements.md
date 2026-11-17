@@ -25,6 +25,30 @@ and Mojira `vd` (futon4 `dev/mojira/variants.js`), over
 `~/storage/arxana-variants/draft2-variants.json`; jvm-arxana as surveyed in the
 excursion's MAP findings (packet B).
 
+## Above all: traceability (Joe, 2026-11-17)
+
+> "I think the *above-all* requirement is traceability, so e.g. a version 3 that
+> remains grounded in the original source texts but adds new content, or an editor
+> that we could get Murch and Rob onto that retains attribution to them while allowing
+> cut-and-paste with attribution to me as well as links &c"
+
+So the rows below are read through one question: can every character of a document
+be traced to who produced it, when, and from where, across versions, documents and
+authors? N1, N2, N6, N7, N12 and N16 are the rows this question rests on most
+directly; T0 and T6 are the tests for it.
+
+**Corrections from Joe on the first draft (2026-11-17):**
+- *Reconstruction after the fact* (N6, N7) is an artefact of this demo, whose draft
+  was written outside Arxana. Documents written through Nipper will be born native,
+  with their pointers from the start.
+- *Free-standing links* (N10–N12): classic Arxana has them, and jvm-arxana and Mojira
+  do too; this demo just did not use any. The rows' "Demo now" column says what the
+  demo shows, not what the stack lacks; MAP should name where links live in jvm-arxana
+  before T3 is built.
+- *Beams* (N13): cursor-over highlighting already earns partial credit; drawn beams
+  in Mojira are optional polish.
+- *Literary Machines*: Joe read a library copy about 20 years ago; no copy on hand.
+
 Format per row: **N-n** — Nelson (source:line) → in the stack → demo now → gap.
 
 ## A. Content and documents
@@ -50,7 +74,7 @@ Format per row: **N-n** — Nelson (source:line) → in the stack → demo now �
 
 | N | Nelson | In the stack | Demo now | Gap |
 |---|---|---|---|---|
-| N10 | "XANALINK: unit representing what connects to what ... A xanalink is free-standing and permanently addressable. It contains no content and has a type." (X:52); "ODL (Overlay Decision List): A list of stable xanalinks to be applied to the concatenated content" (X:54) | Comments, annotations, benefit/beneficiary notes as typed, addressable records applied over content | None | No content links at all; only transclusion. Mojira's LOI notes are a natural first link type (comment, benefit, beneficiary) |
+| N10 | "XANALINK: unit representing what connects to what ... A xanalink is free-standing and permanently addressable. It contains no content and has a type." (X:52); "ODL (Overlay Decision List): A list of stable xanalinks to be applied to the concatenated content" (X:54) | Comments, annotations, benefit/beneficiary notes as typed, addressable records applied over content | Not used in this demo; classic Arxana, jvm-arxana and Mojira have them (Joe) | Put some in the demo. Mojira's LOI notes are a natural first link type (comment, benefit, beneficiary) |
 | N11 | "2-way links, n-way links"; "links with types" (X:19–20); "profuse, overlapping, bidirectional, or diversely created" (S:191) | Links are found from either end; many per span | None | — |
 | N12 | Links survive versions: "a xanalink remains on any part of the content it connects which survives in a new version" (X:46); the Adam/Barker walkthrough, v1 → v2 insert → v3 delete, link 2053 "remains attached to all of these surviving characters" (S:249–265) | A comment on a draft passage stays on the surviving characters through Joe's edits | None; worse, the edition refuses to open when the draft file changes ("rebuild anchors") | This is the failure the excursion started from (draft 2 lost its links). Acceptance test T3 |
 
@@ -58,7 +82,7 @@ Format per row: **N-n** — Nelson (source:line) → in the stack → demo now �
 
 | N | Nelson | In the stack | Demo now | Gap |
 |---|---|---|---|---|
-| N13 | "Side-by-side connected comparison of parallel documents on the computer screen has always been Xanadu's fundamental visualization" (S:71); "these connections must remain connected to the contents no matter how the windows scroll or move around" (S:85); beams recalculated on scroll (X:108–110) | Two panes, connected, staying connected while scrolling | Partly: the side pane follows cursor and scroll and marks the matching span; no visible beams; the left pane is the document, the right only fragments | Beams. Emacs in a terminal cannot draw them; Mojira's webview can (SVG over two columns) |
+| N13 | "Side-by-side connected comparison of parallel documents on the computer screen has always been Xanadu's fundamental visualization" (S:71); "these connections must remain connected to the contents no matter how the windows scroll or move around" (S:85); beams recalculated on scroll (X:108–110) | Two panes, connected, staying connected while scrolling | Partial credit (Joe, 2026-11-17): cursor-over highlighting activates the connection in both panes and follows scrolling | Drawn beams are optional; Mojira's webview could add them |
 | N14 | Parallel documents: "commentaries, ... long and short versions of reports, ... translations" (S:67); versions compared side by side (S:107, 125) | Incubator long form vs Fellowship 150-word field; draft 1 vs draft 2 | None | — |
 | N15 | Pullacross editing: "pull screen contents from old versions into new, seeing all points of origin and also seeing what contents have not yet been used" (S:119); "origin beams ... what's been left out" (S:121) | While writing the Fellowship LOI, the turns and incubator passages are on the left; what has been used and **what has not yet been used** are both visible | Partly: the used region of each turn is shaded and the nipped words marked; unused parts of a turn are visible but not called out | "Not yet used" across all of Joe's relevant turns is the useful part for writing |
 
@@ -80,6 +104,17 @@ Format per row: **N-n** — Nelson (source:line) → in the stack → demo now �
 ## Acceptance tests for a demo Nelson would recognise
 
 Each test names its rows and the bad case it must catch.
+
+- **T0 Version 3, grounded and extended (traceability; N1, N2, N6, N16).** A v3 of the
+  draft that keeps its v2 passages tied to the original turns and adds new content.
+  Every character of v3 answers: who wrote or said it, when, and from which source or
+  earlier version. Bad case: a character whose provenance cannot be named, or is
+  named wrongly after an edit, fails.
+- **T6 Several authors, one document (traceability; N10, N11, N20).** Joe, Murch and Rob
+  edit one document. Text each of them types stays attributed to them; text cut and
+  pasted from Joe's material carries attribution to Joe; links can be added by anyone
+  and are attributed to whoever made them. Bad case: pasting someone else's words must
+  not make them yours.
 
 - **T1 Transpointing windows with beams (N13, N9, N8).** Mojira shows two documents side
   by side with beams joining shared content, recomputed on scroll. Bad case: scroll
