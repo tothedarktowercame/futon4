@@ -153,6 +153,13 @@ taking their seats (see `WORKPACKAGES.md`, "Hub").
   measure. Experiment: replay the four committed versions of
   `p4ng/plop-2026-alignment.json` against their pinned revisions with three predictions
   registered first; four versions is thin history.
+  Joe's follow-up, "the "locality requirement" in MetaCA maps onto "what we can do using
+  classical code in connection with a turn"" (驴 狗 猴 as local operations): claude-1's
+  §5 holds it for what the animals write and the turn data they read, not for retrieval
+  over shared stores; design consequence: span hashes, endpoint checks, limits, nip
+  acceptance and stale-marking are turn-time (local), retrieval and a first
+  whole-projection check are global; refuting check: recompute ~200 猴 focus records
+  from the turn record and the previous focus header (<80% agreement refutes).
 - Rewrite rules ("bogus" → "nogood" → "no good") may belong on DiagramProver's DPO
   engine rather than in patch theory.
 - Where free-standing links live today in jvm-arxana and Mojira (Joe: they exist; the
