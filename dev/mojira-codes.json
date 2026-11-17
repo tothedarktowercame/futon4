@@ -5,6 +5,7 @@
     {"code": "i", "label": "GCC items", "mojira": {"page": "gcc"}},
     {"code": "y", "label": "Gauntlet party", "mojira": {"page": "gparty"}},
     {"code": "o", "label": "letter of intent (working draft)", "mojira": {"page": "loi"}},
+    {"code": "v", "label": "draft variants (what you said, what you changed)", "emacs": {"command": "futon4a-variants-diff-open", "load": "~/code/futon4a/lisp/futon4a-variants-diff.el"}, "mojira": {"page": "vd"}},
     {"code": "g", "label": "Mojira home", "mojira": {"page": "home"}}
   ],
   "kinds": [

@@ -74,12 +74,17 @@ Replaced from the shared table when it can be read.")
             (mapcar (lambda (c)
                       (let ((code (alist-get 'code c))
                             (label (alist-get 'label c))
-                            (uri (alist-get 'uri (alist-get 'emacs c))))
+                            (uri (alist-get 'uri (alist-get 'emacs c)))
+                            (command (alist-get 'command (alist-get 'emacs c)))
+                            (file (alist-get 'load (alist-get 'emacs c))))
                         (cons code
-                              (if uri
-                                  (lambda () (mojira--open-uri uri))
-                                (lambda ()
-                                  (user-error "※ %s (%s) works in code-server Mojira only" code label))))))
+                              (cond
+                               (uri (lambda () (mojira--open-uri uri)))
+                               ;; An Emacs command, loaded from its file on first use
+                               ;; (2026-11-17, for "v": the draft-variants view).
+                               (command (lambda () (mojira--call-command command file)))
+                               (t (lambda ()
+                                    (user-error "※ %s (%s) works in code-server Mojira only" code label)))))))
                     (alist-get 'codes tb)))
       (setq mojira-kinds
             (mapcar (lambda (k)
@@ -107,6 +112,15 @@ Replaced from the shared table when it can be read.")
               (when (string-match "\\`futon\\([0-9][0-9a-z]*\\)\\'" name)
                 (push (cons (match-string 1 name) name) out)))))
         out))))
+
+(defun mojira--call-command (command file)
+  "Call COMMAND (a name from the shared table), loading FILE first if needed."
+  (let ((sym (intern command)))
+    (unless (fboundp sym)
+      (when file (load (expand-file-name file) nil t)))
+    (if (fboundp sym)
+        (call-interactively sym)
+      (user-error "※ %s is not defined (looked in %s)" command (or file "nowhere")))))
 
 (defun mojira--open-uri (uri)
   (unless (fboundp 'arxana-docbook-open-uri)
