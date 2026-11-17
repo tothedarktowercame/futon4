@@ -1037,6 +1037,19 @@ VERIFY earlier (Bergsonian problematics: a real problem, well stated) and as
       real a02J03 finding goes stale when beta is superseded. Live writes wait on futon1b
       valid time (Joe's restart). Items 2 (Q84) and 3 (Steps): claude-7's notes in,
       claude-1 designing.
+      **Item 2 (Q84) done (2026-11-17).** Design `~/notes/claude-1/q84-alias-pair-design-2026-11-17.md`.
+      Probe at the alias branch (codex-6, mfuton-share local `bccaee1d`, not pushed): the real
+      m93J06 witness is one binder and two arguments (31 hits; none with two binders), not the
+      design's two and two. With one binder the inner application is already saturated, so a
+      domain guard `:maximal-spine` (pattern arity = the recorded argument count) keeps the
+      model to the spines the printer actually visits. Model (codex-13 2a02d95de, on futon3c
+      master): with exemptions removed, alias-apply and family-reindex form one non-joining
+      root pair on every captured hit (31/31 two-argument, 8/8 one-argument); with the full
+      rules `settled-by` is `#{:guard}`, the binder-suffix test on family-reindex; dropping it
+      gives the pre-Q84 re-indexed γ (defect count 1); the provenance variant differs from the
+      printer only on a planted host. Item 3: Step probe accepted (codex-12 `b90ed3f9`, local);
+      the replay table is in progress: raw Q56's successor on a97J08 is not well nested, so
+      states are now a tree or a flat sequence, and well-nestedness is an observation.
 - [ ] **Witness 2, the incubator application:** submitted by 2026-11-20 with each field
       traceable (WP1, WP2).
 - [ ] **Witness 3, PLoP 2026 alignment** (end-of-mission test): `plop-alignment-v1`
