@@ -434,3 +434,28 @@ run record and "before" (simulation); reading correction and typed absence
 
 **MAP exit: Met.** Joe, 2026-11-17: "OK, at this point I think we can close MAP and move
 to DERIVE". claude-7's interview and gap-analysis pass 2 feed VERIFY (Joe, above).
+
+## 3. DERIVE
+
+### DERIVE-1 — types, invariants, data flow (2026-11-17, claude-5, first cut)
+
+`holes/labs/M-arxana-incubator/DERIVE-1-types.md`: six entity types (source turn with
+`:evidence/id` identity and a time basis; manifestation revision; content; projection;
+evaluation; typed absence), seven relation types (span ref; edit with scope; supersede v2;
+link; requirement with evaluator kinds word-limit / predicate / deadline /
+correspondence; nip; alignment after `plop-alignment-v1`), eight checkable invariants
+(immutability, traceability T0, scope, pinned evaluation, locality, time, no silent
+copy, typed absence), the data flow from landscape to renderers, and eight decisions in
+IF/HOWEVER/THEN/BECAUSE form (records in jvm-arxana; no privileged head; status evaluated
+not stored; one requirement family with several evaluators; turn identity and time;
+edits target spans; the incubator path file-backed first; locality first).
+
+- [ ] Joe's corrections to DERIVE-1.
+- [ ] Wiring diagram (futon5 exotype) for the landscape → Nipper → projection →
+      evaluators → requirement list loop.
+- [ ] Fidelity contract against donors (`plop-alignment-v1`, F2 patches, F6 placements,
+      variants JSON).
+- [ ] Exact type-registry entries for the new types.
+- [ ] Coverage check against Nelson's T0–T6 and the gap analysis's 13 type gaps.
+
+**DERIVE exit: Not met.**
