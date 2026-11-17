@@ -997,6 +997,19 @@ VERIFY earlier (Bergsonian problematics: a real problem, well stated) and as
       stopped each time with an executable counterexample (T3, T4b twice). Settling is
       whole-host sensitivity to one change at a time, not a proof of necessity. Not yet
       tested: a pair settled by `:nothing` (the candidate accepted residual).
+      Packet 4, conflict findings as EDN records (codex-13 f1faa2f51, on futon3c master):
+      one finding per (rule pair, overlap, status) with occurrences, kinds, witness path,
+      caller-supplied pins (checker sha, schema-set digest, mode, bound, event time) and an
+      evaluation of "these two rules join": `:met`, `:settled` (guard, priority or
+      traversal), `:failing` (settled by nothing), `:failing-accepted` (with a residual
+      id; never `:met`), `:unknown` (bound hit); cross-host merge counts recurrences.
+      Q87 with R1 and R2 at equal priority is `:failing` (settled by nothing: the Q72b
+      state, where no recorded order decided between them); with R2 given priority it is
+      `:settled`. The `:nothing` class has its own test (two rules of equal priority on
+      one term). This completes claude-1's four packets. Remaining before Witness 1 can
+      be called on real data: an importer from the typed Lean corpus (hosts are still
+      transcriptions), spine patterns for the Q84 alias pair, and storing findings as
+      Arxana records next to the rule 'clusions.
 - [ ] **Witness 2, the incubator application:** submitted by 2026-11-20 with each field
       traceable (WP1, WP2).
 - [ ] **Witness 3, PLoP 2026 alignment** (end-of-mission test): `plop-alignment-v1`
