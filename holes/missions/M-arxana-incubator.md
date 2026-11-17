@@ -593,6 +593,22 @@ losing the trail. That is what lets a group get credit for its work and catch it
 
 ### Pattern cross-reference
 
-Pending: a survey of `futon3/library/` against DERIVE-1/2 (running 2026-11-17).
+Survey of `futon3/library/` against DERIVE-1/2 (claude-5's Explore surveyor, 2026-11-17;
+`~/notes/claude-5/argue-pattern-survey-2026-11-17.md`, three conclusions spot-checked).
+About 40 patterns bear on the design, from `translation/`, `contracts/`,
+`test-registry/`, `象/`, `apparatus/`, `hygiene/`, `measurement/`, `memory/`, `aif/`,
+`writing-coherence/`, `cascades/`, `war-machine/`, `war-room/`. Most support it: 象/翻译契约
+(the unit is a fragment, dropped material recoverable by offset) and 象/收回亦是行
+(withdrawal is an act; unwire ends valid time) match it closely. Six cut against it, and
+ARGUE revises DERIVE accordingly (DERIVE-2 §5, eleven revisions): act ids minted at the
+act, not derived from content (象/行有定名); a failing requirement stays failing until
+discharged (apparatus/open-conditions-live-in-a-ledger); attestations carry independence
+(aif/no-self-certification); closed vocabularies for absences and evaluator kinds,
+fixing a DERIVE-1/2 mismatch (measurement/ghost-as-typed-sorry,
+memory/surface-the-closed-set); absences carry their search (process/spec-silence-pair);
+Nipper's two seed lanes are not merged into one score (aif/currency-before-merge). Further
+revisions from supporting patterns: alignments state their claim and a falsifier;
+imported statuses name their donor; memory seeds resolve to turn spans; renderers declare
+loss and refuse typed; views rebuildable from records.
 
 **ARGUE exit: Not met.**

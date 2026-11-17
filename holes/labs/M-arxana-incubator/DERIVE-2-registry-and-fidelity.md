@@ -58,7 +58,8 @@ time (futon1b 5147aa8).
                {:role :to   :endpoint/kinds #{:clusion :entity :manifestation-scope :external-ref}}]
               [:link/kind :link/from-span :link/to-span :actor :event-time])
 
-;; R5 requirement (evaluator kinds: :word-limit :predicate :deadline :correspondence).
+;; R5 requirement (evaluator kinds, one published enum: :word-limit :predicate :deadline
+;; :correspondence :attestation).
 (clusion-type :arxana/requirement 1
               [{:role :subject :endpoint/kinds #{:clusion :entity}}]
               [:requirement/criterion :requirement/evaluator :requirement/params
@@ -187,3 +188,57 @@ only if a new op is needed. Tripwire: the current views render the emitted JSON 
   (A-eval-global) over any span ref whose source revision moved, writing E5 results,
   BECAUSE the existing relocator already records its candidates as attestations and only
   its artifact filter (`formal_f1_relocation.clj:181`) is F1-specific.
+
+## 5. Revisions from ARGUE's pattern survey (2026-11-17)
+
+Survey: `~/notes/claude-5/argue-pattern-survey-2026-11-17.md` (library patterns that bear
+on DERIVE-1/2; six cut against it). Applied here; they supersede the parts of §2–§4 they
+name.
+
+1. **Act identity is minted, not derived** (象/行有定名). Every act record (E3, R2–R7,
+   unwire, E5, E6) gets an opaque id minted at write time; content digests stay as fields;
+   resending uses an explicit idempotency key. Two identical acts are two acts. Replaces
+   §2's "content fields are identity fields; attribution and time are included in
+   identity for acts". To check against futon1b's id derivation before WP4.
+2. **A failing requirement stays failing until discharged**
+   (apparatus/open-conditions-live-in-a-ledger, test-registry/bind-the-subject). The
+   requirement list shows an R5 as failing until an E5 `:met` with current pins (and
+   pinned to the R5 version, 象/制度有时) follows the last `:failing`; a later `:unknown`
+   or `:stale` does not discharge it. View test: no sequence of appends reduces the
+   open count without a discharge.
+3. **Attestations carry independence** (aif/no-self-certification, 象/同构方为同). An
+   `:attestation` E5 records `:independent?` (false when the attester authored what is
+   attested); the list shows self-attested and independent results apart. An edit to
+   attested material marks the attestation stale and puts it on the attester's list
+   (apparatus/pin-moves-with-the-population).
+4. **Closed vocabularies** (measurement/ghost-as-typed-sorry, memory/surface-the-closed-set).
+   E6 `:absence/kind` is the fixed set `#{:session-start :prev-absent :prev-pending
+   :no-source :interrupted :unresolved-relocation :not-yet-evaluated}`; an untyped absence
+   is a validation error. Evaluator kinds are the five-member enum above. E5 `:unknown`
+   splits into `:not-yet-evaluated` and `:cannot-evaluate-here`.
+5. **Absences carry their search** (process/spec-silence-pair). E6 gains
+   `:absence/search` (the query, candidates, repo/commit searched). "No source" without a
+   search is not recorded as a finding.
+6. **Alignments state the claim and a falsifier** (contracts/holder-states-the-claim,
+   every-entry-has-a-falsifier, declare-the-reductions; 象/引非读). R7 gains
+   `:alignment/claim` (`:states :implements :proves`), optional `:alignment/falsifier` and
+   `:alignment/reductions`; R7 evaluations record the grade `:named :read :witnessed`.
+7. **Imported statuses name their donor** (hygiene/observe-the-authority). E5s created from
+   `plop-alignment-v1` have evaluator `{:kind :imported :from "p4ng/plop-2026-alignment.json"
+   :at <commit>}`, distinct from a fresh Lean build or Clojure validation.
+8. **Memory seeds resolve to turn spans** (memory/name-a-reusable-artifact,
+   象/翻译契约). A minus40 memory can seed a query, but a nip's result spans are landscape
+   spans; a memory citing no turn cannot be accepted as a span.
+9. **The two seed lanes are not merged into one score** (aif/currency-before-merge,
+   declare-the-conditioning). Memory-seed and gap-seed candidates are offered as two
+   lists; Joe's acceptance arbitrates (the 3/2 reading). `:nip/query` records what each
+   candidate was scored against.
+10. **Renderers declare loss and refuse typed** (translation/declare-what-is-lost,
+    route-the-untranslatable, writing-coherence/name-what-you-drop). Each renderer lists
+    what it drops (the form-text renderer drops links, margin notes, provenance); a field
+    over its limit is refused with a typed reason, never truncated; rendering re-runs
+    local checks (hygiene/receipt-then-gate); "rendered for the form" and "submitted" are
+    separate records (象/两种规格, 象/提交非生效).
+11. **Views are rebuildable from records** (象/视图出于史). Emitted variants JSON is
+    periodically rebuilt and compared; evaluator runs are recorded as acts; D7's
+    file-backed store is append-only, not a mutable current state.
