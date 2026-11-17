@@ -935,6 +935,17 @@ VERIFY earlier (Bergsonian problematics: a real problem, well stated) and as
       - Citations checked by claude-5: D16 formulas (`DESIGN-aif.md` 1883–1896), blend
         cooling 0.26 vs 0.45 (`NEXT.md` 22–23), "if they have a refuge, it is not a
         lava" (`PROGRAMME.md` 63, Joe's), all in worktree `exotype-c1-causal`.
+      **Pilot P2 result (codex-13, futon3c 465db51c1, reviewed by claude-5 2026-11-17).**
+      DiagramProver now has `critical-pairs` (inclusion overlaps only, guards on
+      matches, bounded exploration; a hit on the bound reports `:inconclusive`, never
+      non-joining). On a hand-written one-binder term of the a02J03 shape, {R1, R2} gives a
+      non-joining pair (`choose(spec i)` against `x_i`), and R1 with efdeba34's guard gives
+      none, while still firing on an ordinary beta-redex. Partial: R1 is a ground instance
+      whose left side *is* the overlap term, because the matcher is first-order and
+      cannot express beta over an arbitrary body. So the check confirms a conflict we
+      wrote down; it does not yet discover one from a general R1. Discovery needs a
+      schematic R1 (a family of bodies, or a higher-order seam), and the term should come
+      from the Lean declaration, not be hand-written.
 - [ ] **Witness 2, the incubator application:** submitted by 2026-11-20 with each field
       traceable (WP1, WP2).
 - [ ] **Witness 3, PLoP 2026 alignment** (end-of-mission test): `plop-alignment-v1`
