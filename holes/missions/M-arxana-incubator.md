@@ -285,6 +285,41 @@ insertion (`futon1b_evidence.clj:847–849`); 狗 drops its recall query when sa
 - F2's application time is the server clock at submission, not the edit time;
   `[:supersedes 1]`, patches and choices get no valid time at all.
 
+### Interviews (2026-11-17)
+
+Joe, 2026-11-17: interview the agents on the tetrahedron's three facets, then pass the
+whole set to Codex for a gap analysis, "iteratively" so that claude-7's answer can be
+added when it arrives. Answers (full text in each agent's notes):
+
+- **Organisation: claude-13** (`~/notes/claude-13/arxana-incubator-interview-2026-11-17.md`).
+  Records: 象 turn records, the animals' GCC records (驴 馬 狗 象 猴), items, supersession,
+  needs, Giraffe runs, Lean chain certificates, clock decisions. Gaps: `[:supersedes 1]`
+  has no actor/time/reason while CL-45 moves clocks on it (`clock_decision.clj:385`
+  `:superseded-from`); corrections of an animal's reading have no record kind; typed
+  absences are fields, not records. Missing types: "continues in", reading correction,
+  typed absence. Next month: `[:supersedes 2]` (actor, time, reason, scope) with readers
+  that honour it; test: Joe corrects one 象 reading and Mojira shows who/when/why.
+  Corrections to MAP: the 象 record id `turn-XXXXXX` is stable (the dumps' `turn_id` is
+  the counter); 象 records carry `created_at`, close to speech time, so speech time
+  exists for turns since 2026-09-28 and is missing before.
+- **Simulation: claude-1** (`~/notes/claude-1/arxana-incubator-interview-2026-11-17.md`).
+  Records: exotype registrations, scripts, run dumps identified by sha256 lists, result
+  files, the causal model JSON, Joe's rulings quoted into `PROGRAMME.md` (e.g. line 63 in
+  the exotype-c1-causal worktree), review bells. Gaps: a claim's evidence is free text
+  with no sha or span; rulings have no turn id; "predicted before the run" is shown only
+  by commit order. Missing types: run record (code sha, parameters, seeds, dump
+  hashes), prediction attested as earlier than its observation, "computed by this
+  script from these inputs". Next month: nips over `results/*.txt` for ~30 figures in
+  `WRITEUP-aif-controller.md`; test: a planted wrong figure is flagged, and changing a
+  results file marks dependent figures stale. Challenges to MAP: the landscape is not
+  only turns and text; a requirement can be a script-decided predicate (closer to a
+  warrant) rather than a question with a word limit; no "before" relation.
+- **Automation and proof: claude-7** — pending (deep in PaperPrinter).
+
+Common to both answers: supersession with actor and reason; nips. Facet-specific:
+run record and "before" (simulation); reading correction and typed absence
+(organisation).
+
 **Open facts, resolved (2026-11-17):**
 - Incubator limits: Joe, 2026-11-17: "I think all the short text fields are 150 words
   long." WP1 uses 150 words for every free-text field.
