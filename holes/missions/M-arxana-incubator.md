@@ -1,6 +1,6 @@
 # M-arxana-incubator — Arxana as an innovation hub, proved on the Mozilla applications
 
-**Status:** MAP (2026-11-17; IDENTIFY exit met, Joe)
+**Status:** DERIVE (2026-11-17; MAP exit met, Joe)
 **Owner:** Joe (operator); claude-5 drafting. Seats to be matched to work packages after MAP.
 **Repos:** `futon4` (this mission; Mojira; classic Arxana as reference), `futon3c`
 (jvm-arxana: `src/futon3c/arxana/`), `futon1b` (store: `futon1b_arxana.clj`),
@@ -432,5 +432,5 @@ run record and "before" (simulation); reading correction and typed absence
   a null id. The landscape is **23,146 distinct turns**, 2026-02-18..11-11, plus the 象
   records after.
 
-**MAP exit: Not met.** Every question is answered and the table is complete; the
-verdict is Joe's.
+**MAP exit: Met.** Joe, 2026-11-17: "OK, at this point I think we can close MAP and move
+to DERIVE". claude-7's interview and gap-analysis pass 2 feed VERIFY (Joe, above).
