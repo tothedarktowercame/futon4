@@ -278,3 +278,29 @@ here; supersedes I2's wording in DERIVE-1 for generated material.
   applications) is exactly the set of dependent sentences; they become stale (I4).
   claude-7's planted check is this: change one rule in a scratch merge; the old rule is
   superseded, every dependent sentence is stale, and no unrelated sentence is.
+
+## 7. Conflict findings as Arxana records (2026-11-17, claude-5; VERIFY Witness 1, item 4)
+
+DiagramProver now writes conflict findings as pinned EDN (futon3c
+`diagramprover/findings.clj`). This section says how they become Arxana records beside the
+rule 'clusions, using the jvm-arxana registry (`futon3c/src/futon3c/arxana/type_registry.clj`)
+and record constructors (`records.clj`). New types are marked *new*; the rest exist.
+
+| Thing | Record | Identity / notes |
+|---|---|---|
+| Rule content | *new* clusion `:rule/content` 1, no roles | content: system (`:apm-printer`, …), name, pattern (EDN), guard names, domain-guard names, rewrite (EDN or source locator), priority. Content-addressed: same rule, same id. |
+| Rule acceptance (G14) | `:evidence-attestation` on the rule clusion | producer = reviewer; basis `:human`; standing `:verified`; method {packet, merge sha, repo}. Who accepted stays here, not in the content. |
+| New rule version | `:supersedes` 1 (successor, predecessor) | existing, acyclic. |
+| Conflict finding | *new* clusion `:conflict/finding` 1, roles `:rule-a`, `:rule-b` (clusions, ordered by clusion id) | content: overlap term, status, kinds, settled-by, evaluation, checker sha, schema digest, mode, max-states, host locator (capture file sha + hit, or "transcribed"). A rerun at other pins is a new record; event time is the valid time. |
+| Run evidence | `:evidence-attestation` on the finding | producer = checker; basis `:exact`; standing `:verified`; coverage `:complete`, or `:partial` when the bound was hit; content: occurrences, positions, witness path, observations, host ids; source-refs: capture files with sha256. |
+| Accepted residual (G17) | *new* clusion `:residual/accepted` 1, role `:finding` | content: scope, release, reason; who accepted it in an attestation with basis `:human`. It never changes the finding's evaluation; a reader shows "failing, accepted for <release>". |
+| Staleness | computed, not stored | a finding is stale at time t iff a `:supersedes` record valid at t has its rule-a or rule-b as predecessor. Same rule as sentences (§6, "Staleness for generated text"). |
+
+Not covered here: rule applications (G15) and regression findings (G18), which come from
+render history rather than from the checker; they share the rule nodes, and are kept as a
+separate edge type so the two can confirm or contradict each other (claude-1 design §5).
+Live writes need futon1b valid time (`:event-time` → valid-from), which awaits Joe's restart;
+until then the packets build and test the records in memory.
+
+Packets: 4a registry declarations and `findings->records` (pure); 4b staleness over a record
+set, with the planted check (supersede one rule: its findings go stale, no others do).
