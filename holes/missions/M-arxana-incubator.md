@@ -314,7 +314,11 @@ added when it arrives. Answers (full text in each agent's notes):
   results file marks dependent figures stale. Challenges to MAP: the landscape is not
   only turns and text; a requirement can be a script-decided predicate (closer to a
   warrant) rather than a question with a word limit; no "before" relation.
-- **Automation and proof: claude-7** — pending (deep in PaperPrinter).
+- **Automation and proof: claude-7** — pending (deep in PaperPrinter). Joe, 2026-11-17:
+  "we should not *wait* on MAP until claude-7 comes back to us, but expect that
+  claude-7's pass will contribute instead to VERIFY, i.e., we can start DERIVE when we
+  get back codex-13's response". claude-7's answer and gap-analysis pass 2 therefore
+  feed VERIFY, not MAP.
 
 Common to both answers: supersession with actor and reason; nips. Facet-specific:
 run record and "before" (simulation); reading correction and typed absence
