@@ -949,6 +949,22 @@ VERIFY earlier (Bergsonian problematics: a real problem, well stated) and as
       Next: claude-7 checks the encoding against paper_walk.py (job
       invoke-1794942240695-23271-847a8196). Once the framework is agreed, claude-1
       (MetaCA paused) is to be recruited for the DiagramProver work (Joe, 2026-11-17).
+      **claude-7's fidelity check** (`~/notes/claude-7/r1r2-fidelity-2026-11-17.md`;
+      the guard description checked by claude-5 against `git show efdeba34`): the overlap
+      term and R1 are right, but the stages differ. efdeba34 only blocked beta, so the
+      family printed as `(n ↦ x_n)(i)`; R2 (`x_i`) arrives with Q84, merged in claude-7's
+      tree and not yet committed. So: R1 alone, the defect (one extra "Choose" sentence per
+      index, because the choice registry keys instances, not families); guarded R1, no
+      conflict because nothing fires; guarded R1 plus R2, `x_i`. The real guard strips all
+      leading lambdas and blocks on a `Classical.choose` spine head; saturation, proof
+      terms and the Q37/Q84 alias rule are separate conditions, the alias tried first.
+      Q87 (a02J03) is the same pair on a proper sub-term (`Icc` head, so guarded R1 fires
+      and exposes the family inside): the case the check should find unaided. Q84 is a
+      different pair (R2 against Q37's alias, m93J06 `(γ(t))(t)` for `γ(t,t)`), plus a
+      name-capture bug in R2 that is not a rule pair. Second witness proposed: Q83's
+      right-nested-Or merge against Q78's nested headings on `Or.elim h (λa.P) (λbc.
+      Or.elim bc (λb.Q) (λc.R))`, inner `Or.elim` a proper sub-term; real instance a97J08
+      `boundary_sum_aux_disjoint`; Q83's review plants already produce the divergence.
 - [ ] **Witness 2, the incubator application:** submitted by 2026-11-20 with each field
       traceable (WP1, WP2).
 - [ ] **Witness 3, PLoP 2026 alignment** (end-of-mission test): `plop-alignment-v1`
