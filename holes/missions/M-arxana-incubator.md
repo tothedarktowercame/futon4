@@ -488,6 +488,20 @@ each passage joins the next PREV. IF = PREV, HOWEVER = NEXT, BECAUSE = their mee
 the passage. Selector-swap analogue (always-PREV / always-NEXT / random / majority vs
 arbiter): cheapest trial is how the 16 REFUTED statuses in the PLoP alignment file were
 resolved; the exotype selector swap itself is planned (NEXT.md item 3), not yet run.
+Joe, 2026-11-17: "I see this as related to the way in which patterns are linked with
+"want tokens" by the War Machine". claude-5's reading, checked against
+`futon3c/scripts/wiring_check.py` and `futon3c/holes/labs/M-象-2000/cascade-象2000.edn`:
+a cascade has `:initial` tokens (fed in by a have-port), `:want` tokens (a want-port),
+patterns with `:guard {:needs :forbids}` and `:produces`, and a list of open gaps
+(`:status :open :token :wanted :nearest :consequence`); the derived wiring reports
+**unfed wants** and **dangling outputs**. Correspondence: PREV / memory seed ≈ `:initial`
+(have); NEXT / gap seed ≈ `:want`; the blend ≈ a path of licensed patterns from haves to
+wants; claude-1's three disagreements ≈ conflict (`:forbids` / inhibits edges), unfed want
+(needed, not said → work, and the cascade's open-gap record with its `:nearest` pattern
+is what a gap seed hands Nipper), dangling output (said, not needed). Consequence to test
+in DERIVE: a projection's requirements could be expressed as a cascade's want tokens,
+so that the existing wiring derivation reports a projection's unfed wants and dangling
+material with no new checker.
 
 Review page for Joe (wiring, what was checked, questions):
 https://zone.hyperreal.enterprises/wip/arxana-incubator-wiring.html, rendered with
