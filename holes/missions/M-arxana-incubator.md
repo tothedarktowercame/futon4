@@ -1,6 +1,6 @@
 # M-arxana-incubator — Arxana as an innovation hub, proved on the Mozilla applications
 
-**Status:** IDENTIFY (2026-11-17)
+**Status:** MAP (2026-11-17; IDENTIFY exit met, Joe)
 **Owner:** Joe (operator); claude-5 drafting. Seats to be matched to work packages after MAP.
 **Repos:** `futon4` (this mission; Mojira; classic Arxana as reference), `futon3c`
 (jvm-arxana: `src/futon3c/arxana/`), `futon1b` (store: `futon1b_arxana.clj`),
