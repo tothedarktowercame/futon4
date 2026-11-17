@@ -80,6 +80,19 @@ is the projection, requirement and nip that join them.)
 > links, I would say, when they use agents and if we can achieve all of them, That's a
 > big win." (Joe, 2026-11-17)
 
+> 🗣 "informal specification in the paper[,] formal specification in [Lean,] aligned Code
+> with a Runtime Certificate and Documentation those are effectively an instantiation of
+> the tetrahedral facets and the difficulty is in holding them all together, which is
+> kind of like I said, the good summary of what [Arxana] needs to do but the key issue
+> here is that it's not holding them together in a static arrangement it's holding them
+> together in a workflow and so that's where some of our stuff about modeling the way a
+> document evolves has to get instantiated in another way in thinking about the way a
+> workflow evolves so simply writing up a document, that's something you can do on
+> Google Docs or Etherpad multiple people can contribute even Etherpad 15 years ago could
+> track people's contributions according to what color the highlighting is and I think we
+> need to articulate how it is that when you look at a workflow, We're doing something
+> similar but different." (Joe, 2026-11-17)
+
 ### What is already felt to be true
 
 - A Xanadu-like demo works (2026-11-17): a draft paragraph over the spoken turns it came
@@ -113,6 +126,17 @@ taking their seats (see `WORKPACKAGES.md`, "Hub").
 - How "updates" sit on immutable objects: 'clusions superseded by later 'clusions, live
   vs static projections (Pijul study, `~/notes/zai-6/pijul-for-arxana-2026-11-17.md`).
 - Requirements are not patches: they need a satisfaction relation Pijul lacks.
+- **Document evolution vs workflow evolution** (Joe, 2026-11-17, above): articulate what
+  Arxana tracks that collaborative editors (Etherpad's per-author colours, Google Docs)
+  do not. claude-5's first attempt, for DERIVE to test: an editor tracks who typed which
+  characters of one text; a workflow tracks which *relations between several texts*
+  hold now (paper ↔ Lean ↔ code ↔ docs), since when, who or what established each
+  (a person, an agent, a Lean build, a runtime certificate), and what work a broken
+  relation creates. Differences that follow: the four manifestations change at
+  different rates and by different actors; an alignment's status is evaluated by a
+  check, not typed by an author, and goes stale when either side moves; a change on one
+  facet reopens obligations on the others (the War Machine's queue); order matters
+  ("before"); machines are authors too.
 - Rewrite rules ("bogus" → "nogood" → "no good") may belong on DiagramProver's DPO
   engine rather than in patch theory.
 - Where free-standing links live today in jvm-arxana and Mojira (Joe: they exist; the
