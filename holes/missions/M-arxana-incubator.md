@@ -965,6 +965,12 @@ VERIFY earlier (Bergsonian problematics: a real problem, well stated) and as
       right-nested-Or merge against Q78's nested headings on `Or.elim h (λa.P) (λbc.
       Or.elim bc (λb.Q) (λc.R))`, inner `Or.elim` a proper sub-term; real instance a97J08
       `boundary_sum_aux_disjoint`; Q83's review plants already produce the divergence.
+      **Passed to claude-1** (Joe, 2026-11-17: "this may warrant an extension to
+      DiagramProver (which was possibly part of our long-term plans anyway)"): design
+      of rule schemas so the check finds Q87 unaided, overlaps beyond inclusion, guards
+      and rule order, the Q83/Q78 second witness, and results as conflict-graph records.
+      Relates to futon3c `M-diagramprover` item S3 ("rule schemas with type variables").
+      Job invoke-1794942396633-23277-227b9fda.
 - [ ] **Witness 2, the incubator application:** submitted by 2026-11-20 with each field
       traceable (WP1, WP2).
 - [ ] **Witness 3, PLoP 2026 alignment** (end-of-mission test): `plop-alignment-v1`
