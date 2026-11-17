@@ -61,3 +61,17 @@ test('why not: the ladder highlights where the item stopped, with reason and a s
   assert.match(ok, /Lean-checked/);
   assert.match(V.whyNot({ status: 'error', reason: 'run-not-found', item: 'M-q' }).html, /run-not-found/);
 });
+
+test('mission-tag focus: shown as "via mission tag", not an open question; tag turns listed', () => {
+  const d = F('top-items-tags.json');
+  const h = V.top(d).html;
+  const line = (item) => h.split('\n').find((l) => l.includes('wn:' + item));
+  assert.doesNotMatch(line('M-formal-patterns-redux'), /open question/);
+  assert.match(line('M-formal-patterns-redux'), /via mission tag M-formal-patterns → M-formal-patterns-redux/);
+  assert.match(h, /data-href="step:turn-XDPmIJ">象<\/a> <span class="dim">2026-11-16 22:48 lon-claude-4<\/span> via mission tag M-formal-patterns → M-formal-patterns-redux/);
+  assert.match(h, /no turn behind it: no pinned focus evidence/);
+  // a focus item with neither a 猴 relation nor a tag is still an open question
+  const bare = { items: [{ rank: 1, item: 'M-x', 'priority-band': 'focus', 'focus-relations': [], 'focus-tags': [] }] };
+  assert.match(V.top(bare).html, /open question/);
+});
+

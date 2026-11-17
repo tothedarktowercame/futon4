@@ -36,13 +36,27 @@ module.exports = function views({ esc, link, trim, hasItem }) {
     return `<div class="gs-r sub">${t.id ? link('pt:' + t.id, t.id) + ' ' + link('step:' + t.id, '象') : '<span class="absent">no turn</span>'} <span class="dim">${esc(String(t.created_at || '').slice(0, 16).replace('T', ' '))}</span> ${counts(r['gcc-counts'])}${cert(r.certificate)}</div>`;
   }
 
+  // A turn whose 猴 header named nothing, so focus went to its REPL's
+  // mission tag (resolved through GCC supersedes).
+  function tagLine(t) {
+    const p = t['supersession-path'] || [t.tag];
+    return `<div class="gs-r sub">${t['turn-id'] ? link('pt:' + t['turn-id'], t['turn-id']) + ' ' + link('step:' + t['turn-id'], '象') : '<span class="absent">no turn</span>'} <span class="dim">${esc(String(t.created_at || '').slice(0, 16).replace('T', ' '))} ${esc(t.seat || '')}</span> via mission tag ${p.map(esc).join(' → ')}</div>`;
+  }
+  const viaTag = (it) => {
+    const t = (it['focus-tags'] || [])[0];
+    return t ? ' <span class="dim">via mission tag ' + (t['supersession-path'] || [t.tag]).map(esc).join(' → ') + '</span>' : '';
+  };
+
   function top(d) {
     const items = d.items || [];
     const rows = items.map((it) => {
       const rel = it['focus-relations'] || [];
-      const open = it['priority-band'] === 'focus' && !rel.some((r) => (r['gcc-counts'] || {})['猴']);
-      return `<div class="gs-r">${esc(it.rank)} ${itemRef(it.item)} — ${word(it['priority-band'] || 'no band')} · ${word(it['cutoff-status'] || '?')} <span class="dim">(pass rank ${esc(it['pass-rank'] == null ? '?' : it['pass-rank'])})</span> ${link('wn:' + it.item, 'why')}${open ? ' <span class="absent">open question: in focus, no 猴 link</span>' : ''}</div>
-${rel.slice(0, 3).map(turnLine).join('')}${rel.length > 3 ? `<div class="gs-r sub dim">and ${rel.length - 3} more turns</div>` : ''}${!rel.length && it['focus-reason'] ? `<div class="gs-r sub dim">no turn behind it: ${word(it['focus-reason'])}</div>` : ''}`;
+      const tags = it['focus-tags'] || [];
+      const hou = rel.some((r) => (r['gcc-counts'] || {})['猴']);
+      const open = it['priority-band'] === 'focus' && !hou && !tags.length;
+      const tagOnly = it['priority-band'] === 'focus' && !hou && tags.length;
+      return `<div class="gs-r">${esc(it.rank)} ${itemRef(it.item)} — ${word(it['priority-band'] || 'no band')} · ${word(it['cutoff-status'] || '?')} <span class="dim">(pass rank ${esc(it['pass-rank'] == null ? '?' : it['pass-rank'])})</span> ${link('wn:' + it.item, 'why')}${open ? ' <span class="absent">open question: in focus, no 猴 link</span>' : ''}${tagOnly ? viaTag(it) : ''}</div>
+${rel.slice(0, 3).map(turnLine).join('')}${tags.slice(0, Math.max(0, 3 - Math.min(rel.length, 3))).map(tagLine).join('')}${rel.length + tags.length > 3 ? `<div class="gs-r sub dim">and ${rel.length + tags.length - 3} more turns</div>` : ''}${!rel.length && !tags.length && it['focus-reason'] ? `<div class="gs-r sub dim">no turn behind it: ${word(it['focus-reason'])}</div>` : ''}`;
     }).join('\n');
     return { title: 'top items', html: `<div class="gcc" data-cycle="top-raw">
 <h1>Giraffe's top items <span class="dim">run ${esc(d.run || d['run-id'] || '?')}</span></h1>
@@ -68,8 +82,8 @@ ${rows || '<div class="gs-r absent">no ranked items in this run</div>'}</div>` }
 <div class="gs-h">LADDER</div><div class="gs-r">${ladder}</div>
 <div class="gs-h">${reached === 'focus' ? 'REACHED FOCUS' : 'STOPPED AT ' + esc(String(stop || '?').toUpperCase())}</div><div class="gs-r">${word(d.reason || 'no reason given')}</div>
 ${Object.entries(ev).map(([k, v]) => evLine(k, v)).join('')}
-<div class="gs-h">FOCUS</div><div class="gs-r">${d['focus-status'] === 'present' ? 'present' : `<span class="absent">absent${d['focus-reason'] ? ': ' + word(d['focus-reason']) : ''}</span>`}</div>
-${rel.map(turnLine).join('')}
+<div class="gs-h">FOCUS</div><div class="gs-r">${d['focus-status'] === 'present' ? 'present' + (d['focus-route'] ? ` <span class="dim">by ${esc(d['focus-route'] === 'both' ? 'relation and mission tag' : d['focus-route'].replace('-', ' '))}</span>` : '') : `<span class="absent">absent${d['focus-reason'] ? ': ' + word(d['focus-reason']) : ''}</span>`}</div>
+${rel.map(turnLine).join('')}${(d['focus-tags'] || []).map(tagLine).join('')}
 <p class="dim">c raw JSON</p></div>` };
   }
 
