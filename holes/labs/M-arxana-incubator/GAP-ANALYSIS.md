@@ -269,3 +269,168 @@ and explicitly record any revised status. In particular, do not assume that a
 proof hole is a word-limit requirement or that a proof/checker receipt is a
 simulation run until the interview supplies its contract (M HEAD tetrahedron;
 M §2 Interviews: claude-7 pending).
+
+### Pass-2 evidence and assessment boundary (codex-13, 2026-11-17)
+
+The **Pending** paragraph above records the pass-1 handoff; this append fulfils it.
+Pass 1 remains unchanged. This pass feeds VERIFY, not a reopening of MAP or DERIVE
+(M §2 Interviews, claude-7 entry, lines 416–436; mission status ARGUE). The design
+baseline read here is futon4 `7452df9bc197f58640093fdff5b03c0ec19709b8`.
+
+Additional source keys:
+
+| Key | Source and evidence level |
+|---|---|
+| I7 | `/home/joe/notes/claude-7/arxana-incubator-interview-2026-11-17.md`, §§1–5; interview testimony, not an independently exercised renderer |
+| D1 | [DERIVE-1-types.md](DERIVE-1-types.md), especially §§1–3, decisions D3/D4/D6, §7 coverage; design text inspected in this pass |
+| D2 | [DERIVE-2-registry-and-fidelity.md](DERIVE-2-registry-and-fidelity.md), §§2–5; proposed registry and fidelity contract inspected in this pass; §5 revisions take precedence over earlier forms |
+| MX | `/home/joe/notes/claude-7/raw-names-480/census/matrix-r8.tsv`; header and a97J08 rows inspected directly in this pass |
+
+Direct file verification: MX's header has module, declaration, word, kind, class,
+packet, rule and reading. Rows 2358–2361 name q55 contradiction readings for
+`apm_a97j08_boundary_sum_aux_disjoint`; row 3389 names q78's nested-case restriction;
+row 3457 names q83's `paper_walk._merge_right_or_splits` and “In all n cases”.
+These rows support the existence of a reading history, **not** the complete
+sentence-to-rule provenance requested below. There are no actor, event-time,
+renderer/corpus digest or supersession columns in that header. The exact Q66
+ownership, Q83 merge, Main.lean:2628–2631 correspondence and Q56 regression remain
+**per I7 §§2/4**, not freshly verified in code. No renderer, Lean build, live store
+or demo was run; no claim below is a new implementation acceptance.
+
+### 1. Additional requirements register
+
+The status column uses pass 1's met / partly / missing against the MAP/interview
+baseline. A proposed design mechanism is identified separately; “covered in design”
+does not mean implemented. IDs A01–A16 are new requirements, not survey A citations.
+
+| ID | Requirement and source | Facet | Types needed | Status against MAP / missing part |
+|---|---|---|---|---|
+| A01 | Address formal declarations and generated proofs at reproducible versions (I7 §1). | Automation/proof | E2 revisions; generated-output record; renderer/corpus pins | **Partly:** module/declaration identities and dumps exist; per I7 no corpus sha and renderer commit only in notes. D1 E2 supports immutable inputs, but does not supply those missing pins. |
+| A02 | Answer which packet/rule generated a sentence and which merge changed it, without manual rerender/bisect (I7 §2). | Automation/proof | Rule, rule application, generated-by, packet/merge references | **Missing:** joins are log lines per I7 §1. D1 R4 computed-from is a relation kind, not a recorded per-sentence application. |
+| A03 | Keep earlier wordings and attributed, dated, reasoned reading supersession (I7 §§2/4). | Automation/proof | Reading-rule revision; R3; output revision | **Partly:** packet prose/MX preserve fragments. D1 R3 and D2 §5.1 act identity cover attribution/history in shape; a rule record and wording-history consumer are absent from the proposed entries. Shares O02/O04, G06/G09. |
+| A04 | Distinguish decided wording from incidental text in an executable test pin (I7 §2, m96A05 wrong alternative example). | Automation/proof | Decision/acceptance attached to a rule or output span; E5 evaluation | **Missing:** a passing pin alone does not establish an approved reading. D2 §5.3 independence helps attribute review, but does not classify what wording the review approved. |
+| A05 | Static proof projection pinned by renderer sha, corpus sha and declaration list; live means rerender (I7 §3). | Automation/proof | E4 plus render recipe/input manifest | **Partly:** dumps and commits exist per I7 §1. D1 E4 / D2 §2 live queries select applied clusions; they do not define rerender execution or pin completeness. |
+| A06 | Store a reading's Lean head/pattern, typed guard and phrase, with packet, reviewer and merge attribution (I7 §3). | Automation/proof | Rewrite-rule clusion; E2 source references; R3 | **Partly:** MX and packet prose hold readings; MX rule field is free text (I7 §1; header checked). No rewrite-rule entry in D2 §2. |
+| A07 | Requirements can be executable rendered-text pins or census families reaching zero (I7 §§1/3). | Automation/proof | R5 predicate + E5, subject and census version pins | **Partly:** tests/censuses already exist per I7; not joined to Arxana. **Covered in design semantics** by D1 D4 and D2 §5.2; WP6 still has text-only acceptance. Shares S08/G11/C01. |
+| A08 | Link formal span, generated sentence and informal exam statement (I7 §3). | Automation/proof | R4/R7, E2, structural generated locator | **Partly:** alignment and links are available per survey A Q4/Q7; D1 R4 permits multiple endpoints, but D2 §2 R4 has only from/to. No sentence structural locator contract. Shares G13. |
+| A09 | Preserve census query and accepted defect/acceptable sets (I7 §§1/3). | Automation/proof | R6 query/results; acceptance disposition | **Partly:** family/round and records exist per I7. D1 R6 can reference E2 spans; D2 §5.8 says nip results are landscape spans and rejects memory without a turn, leaving non-turn census acceptance insufficiently explicit. Shares O08/S07/G10. |
+| A10 | Correct generated text by changing its rules, never by hand-editing the generated output (I7 §§3/5). | Automation/proof | Rule revision; R3; generated-by | **Missing** as an Arxana workflow: D1 R2/D6 and WP9 target projection spans/E3 writing, not rules. This does not invalidate WP9 for authored prose. |
+| A11 | Record an accepted residual: not clean, deliberately shipped with an attributed note (I7 §3). | Automation/proof | Exception/acceptance with subject/version/scope; E5 | **Missing:** E5 failing and human attestation are nearby mechanisms, but no residual disposition or its release scope is specified. D2 §5.2 correctly forbids silently discharging failure. |
+| A12 | Expose unintended regression separately from deliberate reading replacement (I7 §§2/3). | Automation/proof | Regression finding; causal/suspected merge reference; evaluations | **Missing:** R3 records supersession, not the discovery that an accepted behaviour was unintentionally lost. Q56 found by Q61 is interview evidence, not a verified causal diagnosis here. |
+| A13 | Anchor generated links on declaration, step and typed term across wording changes (I7 §5). | Automation/proof | Structural locator plus revision; rendered-span mapping | **Missing:** D1 R1 and D2 §2 define codepoint ranges; D2 §4 relocation searches moved spans, not stable typed referents. |
+| A14 | Changing a reading supersedes the old rule and marks every dependent sentence stale (I7 §4 planted check). | Automation/proof | R3; complete generated-by dependency set; E5/output freshness | **Partly:** D1 I4 / D2 §5.3 define stale evaluations/attestations. They do not enumerate sentence dependencies or require a generated-sentence stale indicator. |
+| A15 | Link Joe's work rules to their originating turns (I7 §1). | Cross-facet/automation | E1/R1; rule provenance link | **Partly:** memories exist without turn links per I7. D2 §5.8 requires resolution rather than inventing a source; this specifies honest absence, not recovered history. Shares O08/J01. |
+| A16 | Demonstrate the a97J08 sentence query, wording history and scratch-change staleness end to end (I7 §4). | Automation/proof | A01–A06/A13–A14 together | **Missing:** neither D1 §7's coverage table nor D2 §3's donor tripwires includes this proof-rendering test. MX rows checked above are insufficient witnesses. |
+
+Hole/sorry tracking is **not** a seventeenth requirement inferred from the facet's
+name: I7 §5 explicitly disclaims knowledge of the solve campaign's records. This
+keeps the pass-1 placeholder's warning in force (I7 §5; M HEAD tetrahedron).
+
+### 2. Type gaps against the revised design
+
+These extend G01–G13; they do not relabel design promises as deployed types.
+
+| Gap | Closest design type / section | Coverage and missing contract | Affected work |
+|---|---|---|---|
+| G14 Rewrite-rule / reading decision | D1 E2, R3; D2 §4 reading-as-E2, §5.1 minted acts | **Partly:** an immutable output revision is not a typed head/pattern + guard + phrase + reviewer/packet/merge decision (I7 §3). Define the distinction between rule content and the act accepting it. | Extend WP4; new rule import/acceptance packet. |
+| G15 Generated-by / rule application | D1 R4 computed-from; §7 G04 says its evaluator is unspecified; D2 §2 link | **Partly:** generic links can connect records, but no application records sentence, declaration/step, renderer/corpus pins and all R1…Rn rules (I7 §3(a)). No complete-dependency check. | New instrumented renderer packet; WP4/WP10. |
+| G16 Structural generated locator | D1 E2 locator and R1; D2 §2 codepoint span, §4 relocation | **Partly:** declaration revisions fit E2, but step/typed-term identity and mapping to output spans across rerenders are unspecified (I7 §5). Text-search relocation is not that guarantee. | Generated-source branch of WP10, independent of WP9 hand edits. |
+| G17 Accepted residual | D1 R5/E5; D2 §5.2 failing ledger and §5.3 attestation | **Missing as a disposition:** neither a failure nor an attestation says which defect is knowingly shipped, by whom, for which version/release (I7 §3(b)). Acceptance must not turn a failing predicate into met. | WP6 plus residual view/acceptance packet. |
+| G18 Regression finding | D1 R3; D2 §5.2/3 evaluations and independence | **Missing as a finding:** need prior accepted subject, later failing subject, discovering evaluation and attribution of the finding; do not equate every R3 with an accident (I7 §§2/3(c)). | WP6 and rule-history view; new regression comparison packet. |
+| G19 Reproducible computed projection | D1 E4, I2/I4; D2 §5.10/11 renderer loss/rebuild | **Partly:** rebuildability and loss declarations help, but no render recipe or sentence derivation schema. I2's exact-one-source-span-or-E3 character map cannot alone explain rule-generated words with several inputs (I7 §§3/5). | WP4/WP11; generated-character traceability acceptance alongside T0. |
+
+Pass-1 assessment updates: C01/G11 are addressed **in design** by D1 D4's evaluator
+families and D2 §5.2 (also meets I7's predicate requirement); WP6 still needs aligned
+acceptance. C02's landscape restriction is addressed **in design for non-turn
+sources** by E2, but not generated dependencies (G15/G19). G05 has an explicit
+reading-as-E2 decision in D2 §4; that does not yet define I7's guarded rewrite rules.
+G06/G09 attribution and G07 absence have design shapes, with §5 identity, search and
+closed-vocabulary revisions; no implementation upgrade is inferred (D1 §7; D2 §§4–5).
+
+### 3. Conflicts and boundaries for VERIFY
+
+- **C12 Rule correction versus text correction.** I7 §§3/5 forbids hand editing
+  generated proofs; D1 D6/R2 and W WP9 explicitly implement hand edits over spans.
+  These are different authoring contracts, not a reason to remove prose editing.
+  The design does not yet say which projection permits which operation.
+- **C13 One-character source versus generated derivation.** D1 I2 requires exactly
+  one E1/E2 span or E3 per rendered character. I7 §3(a) requires a sentence produced
+  under several rules from a declaration/step. Storing a rendered dump as E2 can
+  satisfy the immediate byte-origin mapping but does not answer what generated it;
+  claiming that alone meets A02 would lose the requested provenance.
+- **C14 Live selection versus live computation.** D2 §2 models a live applied-set
+  query; I7 §3 calls live proof projection rerendering. D2 §5.11's periodic rebuild
+  does not specify when a changed rule invalidates a sentence or which executable
+  and inputs recreate it. S09's live causal-model projection similarly was not just
+  reselection (pass-1 C09).
+- **C15 Accepted failure versus discharge.** I7 §3(b) needs shipped residuals;
+  D2 §5.2 requires failure remain open until current met evidence. Both requirements
+  must remain visible: permission to ship is not predicate satisfaction. No policy
+  connecting that disposition to the requirement list is yet specified.
+- **C16 Non-turn nips versus turn-resolving seeds.** D1 R6 permits E2 results;
+  I7 §3 needs census records, and S07 needs result spans. D2 §5.8 requires landscape
+  spans and says a memory citing no turn cannot be accepted as a span. That rule
+  makes sense for claiming turn provenance; whether it also bars a memory pointing
+  to a Lean/result revision is not stated. Preserve this ambiguity for review.
+- **C17 Link arity and the informal endpoint.** I7 §3 requests a three-way link;
+  D1 R4 says two or more endpoints, while D2 §2 R4 has two roles. R7 could group an
+  informal endpoint with Lean fields, but has no generated-sentence structural end.
+  VERIFY needs a declared multi-link composition or a matching schema, not an
+  assumption that the binary registry already expresses the whole claim.
+
+These are specification comparisons, not newly reproduced implementation defects
+(D1/D2 sections and I7 cited above). I7 agrees with S on executable predicates and
+a landscape wider than turns, and with O on attributed reading correction; the
+interviews do not require identical payloads for runs, animal readings and rewrite
+rules (I7 §§3/5; S §§3–5; O §§3–4; pass-1 G01/G05/C01/C02).
+
+### 4. Proposed design and work-package changes (not applied)
+
+1. **D1 E2/E4, R4, I2 and D2 registry/fidelity:** add a generated-output contract,
+   pinned render recipe and per-sentence rule-application provenance; retain byte
+   origin separately from derivation. Pin corpus, renderer, rules and structural
+   source address. Add a fidelity table for MX, packets, dumps and merges, explicitly
+   recording unrecoverable historical attribution rather than inventing it
+   (A01–A06; I7 §§1–4; D2 §3 donor precedent).
+2. **D1 R1/R4 and D2 §4:** specify structural anchors and their version-change
+   policy, with codepoint spans as rendering coordinates. Add a WP10 proof branch
+   testing changed wording with unchanged referent, and refused/typed unresolved
+   structural relocation when the referent changes. It depends on the generated
+   mapping, not on WP9's prose editor (A08/A13; I7 §5).
+3. **D1 R3/E5 and D2 §5:** define rule acceptance, attributed supersession,
+   accepted residual and regression discovery as distinguishable acts. Preserve
+   the §5.2 failing ledger and §5.3 independent-review distinction. Extend WP6's
+   acceptance beyond projection text to versioned predicates and census counts;
+   test that an accepted residual stays failing (A03/A04/A07/A11/A12).
+4. **D1 I4 and D2 §5.11:** specify sentence dependency completeness and stale
+   display on rule change, including an unaffected-sentence control. A new proof
+   renderer integration packet must precede the a97J08 VERIFY packet; a generic
+   computed-from link without recorded dependencies is not sufficient (A14/A16).
+5. **D2 §5.8 and W WP7/8:** clarify non-turn census result acceptance and defect
+   versus acceptable dispositions, keeping memory-seed provenance requirements
+   explicit. Do not force a Lean result to invent a turn source (A09/A15; C16).
+6. **W sequencing:** keep the dated WP1→WP2 submission path and prose WP9 tests;
+   add rule/matrix import → generated mapping/structural anchors → history and
+   staleness consumer → a97J08 acceptance as a separate proof track. Resolve C12–C17
+   in a recorded design decision before claiming that track verified. No proposal
+   here changes the closed DERIVE stage or authorises implementation (M Interviews;
+   I7 §4; W Order).
+
+### 5. Verdict on claude-7's proposed test
+
+**Not yet: the design supplies useful record families, but does not specify enough
+to pass the whole test, and no run here establishes a pass.** R3 can represent
+who superseded what and when; E2 can pin Main.lean; R4/R7 can relate manifestations;
+E5/I4 can expose stale evaluations. Missing are guarded rule identities and accepted
+wording, a complete sentence-to-application mapping, structural step/term anchors,
+renderer/corpus/rule pins, retained wording history, and the consumer that propagates
+rule supersession to every dependent sentence (D1 §§1–3/7; D2 §§2–5; I7 §4).
+
+The concrete VERIFY witness should resolve a97J08's “In all four cases, we obtain a
+contradiction” to the rule versions (including the interview's Q66 ownership/Q83
+merge claim), pinned Main.lean:2628–2631, and earlier wording records with actors and
+times. Then a scratch rule change must leave the old rule queryable but superseded,
+mark all dependent sentences stale, and leave unrelated sentences current. MX
+3457 verifies a q83 rule/reading row exists; it does **not** witness those joins or
+the planted test. Historical gaps should be reported as unresolved evidence, not
+filled from the expected answer (I7 §4; MX rows cited above; D1 I4/I8; D2 §5.5).
