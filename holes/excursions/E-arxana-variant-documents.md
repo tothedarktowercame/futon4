@@ -380,3 +380,8 @@ monoidal structure, ported from chyp, "rule application returns all legal rewrit
 a lazy relation"), and its causal-model line (Fong's causal theories, dagitty / y0
 references in `~/storage/src/diagramprover-refs/`); jvm-arxana F2 (patches, rebase,
 alternatives) and F4 ('clusion composition).
+
+## Continued as a mission (2026-11-17)
+
+Joe started `holes/missions/M-arxana-incubator.md` (IDENTIFY) from this excursion and
+its `WORKPACKAGES.md`; MAP there surveys the types behind each work package.
