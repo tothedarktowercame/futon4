@@ -1081,3 +1081,59 @@ VERIFY earlier (Bergsonian problematics: a real problem, well stated) and as
 - [ ] For each work package, the problem it states and the evidence the statement was
       right (Joe: VERIFY as Bergsonian problematics).
 - [ ] claude-7's interview and gap-analysis pass 2 checked against the design as built.
+
+### The Witness 1 experiment: what it showed and what remains (claude-5, 2026-11-17)
+
+**Set-up.** The question was whether Arxana's records, together with DiagramProver, can help with the PaperPrinter endgame: rules that override one another, where a later fix can undo an earlier one. Three real conflicts were taken from claude-7's history:
+- R1/R2 (beta against the choose family) on a02J03;
+- Q84 (the alias against the re-index) on m93J06;
+- raw Q56 against Q83 (the Or flattening against the right-nested merge) on a97J08.
+
+For each conflict:
+1. A log-only probe in the printer captured the real input at the rule's call site. Each probe was shown to leave the rendered output byte-identical.
+2. DiagramProver modelled the rules. Term rules were written as schemas. The Step rules could not be faithfully transcribed, so they were run as the real Python functions, and the results were read as a transition table ("opaque" rules).
+3. DiagramProver searched for conflicting pairs and said what settles each one: a guard, a priority, a traversal order, or nothing.
+4. The findings, the rules, their run evidence and one supersession were written to the live store, then read back at chosen valid times.
+
+The work ran as claude-1's designs, built as small Codex packets with a review between each. claude-7 checked each design against the printer code.
+
+**Results.**
+- **a02J03:** beta against the choose family conflicts on 12 of the 44 captured terms, with the same shape as the hand-written Q87 term. At equal priority nothing settles it, so it reads failing (the Q72b state).
+- **m93J06:** the alias against the re-index conflicts on every captured hit, 31 with two arguments and 8 with one. The binder-suffix guard settles it. Dropping that guard gives the pre-Q84 defect.
+- **a97J08:** raw Q56 against Q83 does not join, and the search is complete: Q56 leaves a badly nested Step sequence and Q83 a merged split. Q78 and Q83 form no pair. Adding Q78 after Q83 gives a split with 20 arms against arity 4; Q78 is uncalled code. Q83's right-disjunct identity check does change the a97J08 output.
+- **Live store:** 13 records were written in one batch and read back. a02J03 reads failing, m93J06 settled, and a97J08 stale. The supersession is absent one second before the Q83 merge time and present at it.
+
+**What was learned about the Arxana design.**
+- **The record types held.** Rules, findings, run evidence and supersessions each have their own type, and none had to change shape while DiagramProver changed under them six times. The staleness rule (stale at t if a direct predecessor has a supersession valid at t) gave the right reading on live data.
+- **Valid time does real work.** The a97J08 finding was made today about a rule superseded earlier in the day, so it reads stale from the moment it exists. That is the true history, and it can only be stated with valid time separate from recording time. The restart that brought valid time live (Joe, 2026-11-17) was needed for this; the replay-ordering fix is futon1b 4b2d6d8.
+- **Superseded findings are kept, not deleted.** The earlier belief can still be read at an earlier time.
+- **Reading by id is not enough.** Staleness was computed in the reader's process from records whose ids it already held. The HTTP store has no reverse lookup (`store_http` capabilities `:hyperedge-read false`), so it cannot answer "which findings name this rule?". With three findings this is invisible. For an assembled document with many interlinkings and overrides, the reason Joe chose this witness, it is the first gap to close.
+- **One record has no type.** The rule-set diff (what changed in the output when the rule set changed) exists only in DiagramProver; Arxana has no type for it. It is the record claude-1's §7.4 needs in order to class a change as descent, displacement or reversal.
+
+**What was learned about DiagramProver.** Each of these came from a real capture contradicting the design, and each was a stop with a runnable check:
+- **Guard roles.** A guard that defines where a rule applies is different from one that exempts a case. Treating the first as settling a conflict would have recorded a02J03 as settled.
+- **Lean operators.** Imported Lean terms carry vector operators, which the findings check first rejected.
+- **The Q84 witness.** It has one binder and two arguments, not two of each, so a `:maximal-spine` guard is needed to keep the model to the applications the printer actually visits.
+- **Opaque rules.** Rules that cannot be transcribed faithfully can still be checked by running them. Their findings need their own form (`:rule-form :opaque`).
+- **Badly nested states.** These are real states, the Q56 defect itself, and must be kept rather than repaired.
+- **Conflict or change.** A defect that comes from adding a rule is a difference between rule sets, not a conflict pair.
+
+Most of the corrections were to the checker, not to Arxana.
+
+**What was learned about the process.** Codex seats stopped six times with a runnable check, and four of those stops were wrong expectations of mine. A larger packet, or a review that only reran tests, would have shipped those errors. Byte-identity tests kept the printer probes honest. claude-7's fidelity checks caught claims a model alone would not: for example, the Q78 and Q83 pair does not exist on a97J08.
+
+**Measured against the Witness 1 criterion above.**
+- Met: a fighting rule pair found by the critical-pair check before a render, in fact three.
+- Met for rules: a rule change marks its dependent findings stale and no others. Not yet tested for sentences.
+- Not done: a97J08's sentence resolved to its rule versions, its pinned Main.lean lines and its earlier wordings.
+- Not done: cycles made visible in sentence histories.
+
+So the rule side of the witness is done, and the sentence side has not started.
+
+**Open questions.**
+1. **Can a history show a pattern?** The plain-language argument says rules that keep undoing each other "show up as a pattern in the history". The live history has one supersession and three findings, which is too few. Writing the Q55→Q56→Q66→Q78→Q83 chain and the Q72b/Q84 round trips as supersessions would test this.
+2. **Reverse lookup.** Does the store need a reverse index or temporal hyperedge reads, or can a reader keep a local index from a subscription? This decides whether the design scales to assembled documents.
+3. **A type for the rule-set diff.** Should Arxana add one, and would it be enough to class changes as descent, displacement or reversal?
+4. **The endgame list.** claude-7 and claude-1 are drafting the remaining defect list, sorted into fixes, DiagramProver-checkable conflicts and proposed acceptances. Joe's target is "best to start with getting to a short list first", with 100% possible if the list is short. No residual has been written live yet; each acceptance goes to Joe first.
+5. **Sentences.** Sentence-level records (a rendered sentence's dependence on rule versions and pins) are the other half of Witness 1 and are not built.
+6. **Leftover branches.** The mfuton-share probe branches (codex-6 bccaee1d, codex-12 f87a1048) are local and unpushed. step_probe.py duplicates beta_probe.py's helpers, which should be merged into one if the probes are integrated. Integration is Rob's repo and Joe's call.
