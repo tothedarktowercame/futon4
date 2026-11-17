@@ -611,4 +611,85 @@ revisions from supporting patterns: alignments state their claim and a falsifier
 imported statuses name their donor; memory seeds resolve to turn spans; renderers declare
 loss and refuse typed; views rebuildable from records.
 
+### The war-machine side: bringing the inside out (2026-11-17)
+
+Joe: "while we've dealt here with the "war room" side (bringing the outside in) we haven't
+dealt with the nomadology / "war machine" side, (bringing the inside out). First of all,
+I'd say that Arxana does both information synthesis (to bring a projection of the graph
+onto the screen) and information dissemination (to bring edits back to the graph)."
+
+Sources examined (claude-5): `futon3/library/nomad/` (8 patterns), `futon3/library/
+war-machine/` (13), the close reading in `~/notes/nomadology/` (README argument skeleton;
+claude-16's `CROSSWALK-DG-WM.md`, with Joe's 2026-10-29 Mozilla framing and 2026-11-08
+Prop IX answer); quotations below checked against `src/atp.txt`.
+
+**What the design already has on this side.** Synthesis is A-register → A-project →
+A-render (graph → screen). Dissemination back to the graph is A-edit: new content,
+scoped edits, nips and unwires are appended to the store, and become material for every
+other projection. In D&G's terms this is the borderline the crosswalk found closest to
+the War Machine: "royal science continually appropriates the contents of vague or nomad
+science while nomad science continually cuts the contents of royal science loose" (Prop
+III). A projection striates (fields, word limits, a form's grid); dissemination cuts its
+contents loose again, so a passage written for the incubator is free material for the
+LOI and the PLoP paper.
+
+**What it lacks.**
+1. **Following the material** (Prop VIII: "One is obliged to follow when one is in search
+   of the "singularities" of a matter, or rather of a material, and not out to discover a
+   form"; Prop III: "following is not at all the same thing as reproducing"). The
+   crosswalk named this as the War Machine catalogue's missing pattern. In Arxana it is
+   Nipper's memory seed read as following Joe's turns where they lead, not filling a
+   form; the gap seed is the form. The design gives both, but nothing yet lets the
+   landscape propose a projection no requirement asked for. Candidate: a third seed kind,
+   or a view of "material that recurs and is in no projection".
+2. **Dissemination outward, and the return.** The data flow ends at renderers (views,
+   form text, margin notes). Bringing the inside out also means the material leaving
+   the stack (a submitted application, a published paper, a page others read and annotate)
+   and coming back as others' edits, reviews and attestations (Murch, Rob, PLoP
+   reviewers, Mozilla). The diagram has no port for that return.
+3. **Exteriority** (Axiom I, and Joe's 2026-10-29 condition: the harness "must not depend
+   on any one provider"). Outward forms must be open (plain text, HTML, EDN) and readable
+   without Arxana; nothing should require the stack to read what it disseminated.
+4. **The object is the nomos, not the count** (Prop IX: "Make the desert, the steppe,
+   grow; do not depopulate it"; Joe's answer, "benefit should lead to viability"). The
+   requirement list counts what is met; it should not become the object. The object is
+   that material gets reused and contributors gain (traceable credit, skills).
+
+**Patterns that apply** (conclusions verbatim, abbreviated):
+- `nomad/letter-from-the-future`: "write the letter you want to be able to send in two
+  months; every clause that is not yet true is a work item" — this is the requirement
+  list applied to the Fellowship LOI (due in a month): draft the LOI as if sent, each
+  untrue clause a known-failing requirement; write it to three addressees and build the
+  sentences that survive all three first. A method for WP12.
+- `nomad/self-certifying-artifact`: produce "artifacts whose validity is machine- or
+  institution-checked". A projection whose every sentence carries its source is such an
+  artifact for the incubator: its traceability is checkable by a reader, not asserted.
+- `nomad/owner-of-the-problem`: "the instrument is a proposal, not an application".
+- `nomad/author-the-yardstick`: when a field's bottleneck "has no accepted measure, build
+  the measure". Traceability of agent-assisted writing has no accepted measure; I2's
+  per-character check is a candidate yardstick.
+- `nomad/skip-the-flood`: occupy the layers the flood vacates, "(orchestration, digestion,
+  evaluation)". Arxana is digestion and evaluation.
+- `war-machine/state-capture`: "A nomadic practice is captured when it begins reproducing
+  itself rather than following external flows; the test is whether today's work closes
+  an external sorry or only improves the infrastructure for closing sorrys." A guard for
+  this push: each work package should close something outside (the incubator submitted,
+  a PLoP alignment kept true), not only build Arxana.
+- `war-machine/operational-not-decorative`: "The test is whether the artifact changes
+  behaviour when it fails." Requirement evaluations must change what Joe or Nipper does
+  next, or they are decoration.
+- `war-machine/inhabitation-threshold`, `half-blind-observation`, `spatial-over-tabular`,
+  `dynamic-over-static`, `ideal-actual-gap`: for the views (inhabited, whole, shaped, over
+  time) and for the requirement list as an ideal/actual gap.
+
+**Proposed additions, for Joe's decision:**
+- A return port in the wiring: outward publications (O-published, in open formats) and
+  an input for others' edits, reviews and attestations (I-returns), entering A-edit and
+  A-requirements with their authors (T6).
+- A third seed kind, or a view, for material that recurs in the landscape and is in no
+  projection (following, Prop VIII).
+- `war-machine/state-capture` as a VERIFY check on this mission: for each work package,
+  the external thing it closes.
+- `nomad/letter-from-the-future` as the method for the Fellowship LOI (WP12).
+
 **ARGUE exit: Not met.**
