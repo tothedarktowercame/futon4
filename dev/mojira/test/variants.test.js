@@ -68,6 +68,12 @@ test('a paragraph opens with all its quoted sources; a written word keeps them v
   const all = v.renderSource(d, '15').html;
   assert.equal((all.match(/spoken /g) || []).length, p15.sources.length);
   assert.ok(p15.sources.length >= 1 && all.includes('class="vd-used"'));
+  // The nipped words themselves are marked, and are exactly the kept text.
+  const kept = p15.ops.filter((o) => o.op === 'kept').map((o) => o.text).join(' ');
+  const marked = [...all.matchAll(/<span class="vd-nipped">([^<]*)<\/span>/g)].map((m) => m[1]).join(' ');
+  assert.ok(marked.length > 0);
+  assert.equal(marked.replace(/\s+/g, ' ').trim().toLowerCase().replace(/[^a-z ]/g, ''),
+               kept.replace(/\s+/g, ' ').trim().toLowerCase().replace(/[^a-z ]/g, ''));
   const written = p15.ops.findIndex((o) => o.op === 'new' || o.op === 'added');
   if (written >= 0) assert.ok(v.renderSource(d, `15:${written}:text:0`).html.includes('vd-used'));
   const none = d.paragraphs.find((p) => !p.sources.length);

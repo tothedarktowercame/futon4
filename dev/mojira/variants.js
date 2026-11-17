@@ -58,8 +58,23 @@ function sourcesHtml(p) {
   return p.sources.map((s, k) => {
     const chars = Array.from(s.text || ''), u0 = s.used_start, u1 = s.used_end;
     const ok = Number.isInteger(u0) && Number.isInteger(u1) && 0 <= u0 && u0 < u1 && u1 <= chars.length;
-    const text = ok ? esc(chars.slice(0, u0).join('')) + `<span class="vd-used">${esc(chars.slice(u0, u1).join(''))}</span>` + esc(chars.slice(u1).join(''))
-      : `<span class="err">quoted span does not fit the source</span> ${esc(s.text)}`;
+    // The nipped words (kept ops with a verified anchor) are marked strongly;
+    // the rest of the region the paragraph draws on is shaded lightly.
+    const nipped = p.ops.filter((o) => o.op === 'kept' && o.source === s.id)
+      .map((o) => anchor(p, o)).filter((a) => a.valid).map((a) => [a.a, a.b]);
+    const inNip = (j) => nipped.some(([a, b]) => j >= a && j < b);
+    let text = '';
+    if (ok) {
+      const cls = (j) => inNip(j) ? 'vd-nipped' : (j >= u0 && j < u1 ? 'vd-used' : '');
+      let j = 0;
+      while (j < chars.length) {
+        const c = cls(j); let k = j + 1;
+        while (k < chars.length && cls(k) === c) k++;
+        const t = esc(chars.slice(j, k).join(''));
+        text += c ? `<span class="${c}">${t}</span>` : t;
+        j = k;
+      }
+    } else text = `<span class="err">quoted span does not fit the source</span> ${esc(s.text)}`;
     const date = new Date(s.at), time = Number.isNaN(date.getTime()) ? 'time unavailable' : date.toISOString().replace('T',' ').replace('.000Z',' UTC');
     return `<h2 class="vd-s${k % 3}">[${k+1}] spoken ${esc(time)}</h2><p class="dim">${esc(s.id)}</p><div class="vd-source-text">${text}</div>`;
   }).join('');
@@ -96,6 +111,7 @@ const css = `.vd-text a.vd-word { color: inherit; text-decoration: none; cursor:
 .vd-text a.vd-s1 { border-bottom-style: double; border-bottom-width: 3px; }
 .vd-text a.vd-s2 { border-bottom-style: dotted; }
 .vd-source-text { white-space: pre-wrap; }
-.vd-used { background: var(--vscode-editor-selectionHighlightBackground, #7774); }
+.vd-used { background: rgba(128, 128, 128, 0.18); }
+.vd-nipped { background: rgba(230, 180, 60, 0.45); color: var(--vscode-editor-foreground, inherit); border-radius: 2px; }
 [data-vd-here] { background: var(--vscode-editor-findMatchHighlightBackground, #e9b84a); color: inherit; outline: 2px solid var(--vscode-focusBorder); }`;
 module.exports = {parse, anchor, render, renderSource, sourcesHtml, css};
