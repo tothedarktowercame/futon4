@@ -1062,6 +1062,15 @@ VERIFY earlier (Bergsonian problematics: a real problem, well stated) and as
       outer arity 7). Superseding Q56 by Q83 marks the R3 finding stale without deleting it.
       All four VERIFY items are done in memory; live Arxana writes are next (valid time live
       since Joe's restart, 2026-11-17).
+      **First live write (2026-11-17, Joe's go).** One batch of 13 records to futon1b
+      (codex-13 012ff9dbd, on futon3c master; log
+      `~/storage/arxana/diagramprover/first-write-2026-11-17.edn`): six `:rule/content`
+      records, three `:conflict/finding` records with run-evidence attestations (a02J03
+      beta/choose family, m93J06 Q84, a97J08 raw Q56 against Q83), and Q83 supersedes raw Q56 at
+      its real merge time, 16:16:12Z. Read back from the store, in a separate process, by
+      claude-5: 13 of 13 present; a02J03 reads failing, m93J06 settled, a97J08 stale (failing);
+      the supersession is absent at 16:16:11Z and present at 16:16:12Z. This is the first
+      staleness reading taken from the live store rather than from memory.
 - [ ] **Witness 2, the incubator application:** submitted by 2026-11-20 with each field
       traceable (WP1, WP2).
 - [ ] **Witness 3, PLoP 2026 alignment** (end-of-mission test): `plop-alignment-v1`
