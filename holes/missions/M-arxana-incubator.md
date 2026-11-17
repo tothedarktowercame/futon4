@@ -456,6 +456,6 @@ edits target spans; the incubator path file-backed first; locality first).
 - [ ] Fidelity contract against donors (`plop-alignment-v1`, F2 patches, F6 placements,
       variants JSON).
 - [ ] Exact type-registry entries for the new types.
-- [ ] Coverage check against Nelson's T0–T6 and the gap analysis's 13 type gaps.
+- [x] Coverage check against Nelson's T0–T6 and the gap analysis's 13 type gaps (DERIVE-1 §7: 9 of 13 gaps covered, 3 partly, 1 deferred; 5 of 7 tests covered, 2 partly).
 
 **DERIVE exit: Not met.**

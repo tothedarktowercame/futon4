@@ -148,12 +148,47 @@ and confines the expensive checks to when they are asked for.
   instead of a file (WP9); an alignment view for R7 links with their evaluations (the PLoP
   margin notes, read from records).
 
-## 7. Not yet done in DERIVE
+## 7. Coverage check (2026-11-17)
+
+**Against the gap analysis's 13 type gaps** (`GAP-ANALYSIS.md` §2):
+
+| Gap | Covered by | Status |
+|---|---|---|
+| G01 run and output manifest | E2 (result files as manifestation revisions); a run record itself is not defined | **Deferred**: simulation evidence is out of scope (IDENTIFY); E2 + R4 `:computed-from` are the hooks |
+| G02 prediction / registration | R5 with `:predicate` evaluator, created before its E5 evaluation | **Partly**: the "fixed before the run" order needs G03 |
+| G03 "before" with evidence | E1/E2 times and `:time-basis`; N/N-1 `:prev` links (R4) for turns | **Partly**: turn order yes (circus item 8); epistemic precedence between a prediction and an observation is not defined |
+| G04 computed-from | R4 `:kind :computed-from` with E2 endpoints pinned to revisions | **Covered** as a link kind; the evaluator that checks it is not specified |
+| G05 native reading identity | E1 identity (`:evidence/id`, 象 alias) + R1 span refs | **Partly**: a reading (an animal's output) as its own entity is not defined |
+| G06 reading correction | R3 supersede v2 with actor, time, reason, scope | **Covered** in shape; which readers must honour it is WP4's acceptance |
+| G07 typed absence | E6 | **Covered** |
+| G08 continues-in | R4 `:kind :continues-in`, distinct from R3 | **Covered** |
+| G09 attributed supersession | R3 | **Covered** |
+| G10 general nip | R6 over R1 span refs of E1 *or* E2 (so result files too) | **Covered** |
+| G11 requirement/evaluation | R5 with four evaluator kinds (D4) + E5 (D3) | **Covered** |
+| G12 projection and authored content | E4 + E3 + R2 with scope | **Covered** |
+| G13 general span link | R4 over R1 span refs | **Covered** in shape; relocation beyond F1 is not specified |
+
+**Against Nelson's tests** (`E-arxana-variant-documents/DERIVE-1-nelson-requirements.md`):
+
+| Test | Covered by | Status |
+|---|---|---|
+| T0 version 3 grounded and extended | I2 over E4 + E3 + R1 + R2 | **Covered** (invariant + check) |
+| T1 transpointing windows | views over two E4 projections; beams optional (Joe) | **Covered** for highlighting |
+| T2 edited by hand | R2 + E3, I1 | **Covered**; the editor is WP9 |
+| T3 links survive edits | R4 + R1; I2 for what survives | **Partly**: what a link does when part of its span is deleted is not yet a rule |
+| T4 pullacross | E4 + R6 + "not yet used" as a query over sources | **Partly**: the "not yet used" query is not specified |
+| T5 quote to context | R1 span refs | **Covered** (met today) |
+| T6 several authors | E3 author + I7 | **Covered** in shape; the multi-author editor is out of scope |
+
+**Gaps this check opens for DERIVE-2:** a rule for partial deletion of a linked span
+(T3); the "not yet used" query (T4); a reading as an entity (G05); epistemic precedence
+(G03); relocation beyond the F1 artifact (G13).
+
+## 8. Not yet done in DERIVE
 
 - [ ] Wiring diagram (futon5 exotype): the loop Landscape → Nipper → projection →
       evaluators → requirement list → Joe, with its timescales.
 - [ ] Fidelity contract against donors: `plop-alignment-v1` (every field preserved or
       mapped), F2 patches, F6 placements, the variants JSON.
 - [ ] Exact jvm-arxana type-registry entries (type ids, revisions, roles) for R2-R7, E3-E6.
-- [ ] Review against Nelson's tests T0-T6 and the gap analysis's 13 type gaps (which are
-      covered here, which are deferred).
+- [x] Review against Nelson's tests T0-T6 and the gap analysis's 13 type gaps (§7).
