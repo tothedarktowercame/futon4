@@ -946,6 +946,9 @@ VERIFY earlier (Bergsonian problematics: a real problem, well stated) and as
       wrote down; it does not yet discover one from a general R1. Discovery needs a
       schematic R1 (a family of bodies, or a higher-order seam), and the term should come
       from the Lean declaration, not be hand-written.
+      Next: claude-7 checks the encoding against paper_walk.py (job
+      invoke-1794942240695-23271-847a8196). Once the framework is agreed, claude-1
+      (MetaCA paused) is to be recruited for the DiagramProver work (Joe, 2026-11-17).
 - [ ] **Witness 2, the incubator application:** submitted by 2026-11-20 with each field
       traceable (WP1, WP2).
 - [ ] **Witness 3, PLoP 2026 alignment** (end-of-mission test): `plop-alignment-v1`
