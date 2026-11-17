@@ -73,6 +73,15 @@ time (futon1b 5147aa8).
               [{:role :informal :endpoint/kinds #{:manifestation-scope :external-ref}}]
               [:alignment/kind :alignment/pattern :alignment/lean :alignment/clojure
                :alignment/docs :alignment/text :actor :event-time])
+
+;; Unwire: withdraw a 'clusion from where it is wired (a projection's applied set, the
+;; requirement list) without editing or superseding it (Joe, 2026-11-17: "perhaps by
+;; unwiring a 'clusion rather than editing it"). Re-wiring is a later unwire of the unwire,
+;; or the 'clusion named again in a new projection version.
+(clusion-type :arxana/unwire 1
+              [{:role :clusion :endpoint/kinds #{:clusion}}
+               {:role :from :endpoint/kinds #{:clusion}}]       ; projection or requirement list
+              [:actor :event-time :reason])
 ```
 
 Record (non-clusion) types, alongside the existing `:evidence-attestation`,
@@ -84,6 +93,7 @@ Record (non-clusion) types, alongside the existing `:evidence-attestation`,
  :fields [:evaluation/subject :evaluation/pins :evaluation/result
           :evaluation/evaluator :evaluation/locality :event-time]}
 ;;   :evaluation/result  :met | :failing | :stale | :unknown
+;;   :evaluation/evaluator {:kind :attestation :by "joe"} for informal requirements
 ;;   :evaluation/pins    {<input id> <revision or digest>}
 ;;   :evaluation/locality :local | :global
 

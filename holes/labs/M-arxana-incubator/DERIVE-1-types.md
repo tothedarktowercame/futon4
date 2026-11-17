@@ -108,8 +108,11 @@ be computed later without changing the links.
 **D4 One requirement family, several evaluators.** IF Mozilla needs word limits,
 HOWEVER simulation needs script-decided predicates, organisation needs timed obligations,
 and PLoP needs correspondence across manifestations (gap analysis C01), THEN R5 carries an
-evaluator kind `:word-limit | :predicate | :deadline | :correspondence`, each with its
-own parameters, BECAUSE one name for four semantics is the conflict C01 warned about, and
+evaluator kind `:word-limit | :predicate | :deadline | :correspondence | :attestation`,
+each with its own parameters (`:attestation` added after Joe's review, 2026-11-17: a
+requirement may be formal, "all mozilla answers are addressed", or informal, "all are
+addressed well", which "can be attested to informally"; an attestation is an E5 whose
+evaluator is a named person), BECAUSE one name for four semantics is the conflict C01 warned about, and
 separate types would split the "known-failing tests" Joe wants in one list.
 
 **D5 Turn identity and time.** IF `turn_id` looks like an identity, HOWEVER it is a
@@ -192,3 +195,16 @@ and confines the expensive checks to when they are asked for.
       mapped), F2 patches, F6 placements, the variants JSON.
 - [ ] Exact jvm-arxana type-registry entries (type ids, revisions, roles) for R2-R7, E3-E6.
 - [x] Review against Nelson's tests T0-T6 and the gap analysis's 13 type gaps (§7).
+
+## Review by Joe (2026-11-17), applied
+
+- Requirements are formal (checked) or informal (attested by a person): evaluator kind
+  `:attestation` added (D4).
+- Withdrawal is by **unwiring** a 'clusion rather than editing it ("perhaps by unwiring a
+  'clusion rather than editing it"): see DERIVE-2 §2, `:arxana/unwire`.
+- Nipper reads minus40 memories as well as the Evidence Landscape; how it relates to
+  requirements is TBD, to be discussed with zai-13. The diagram's requirement → Nipper
+  edge is provisional.
+- Requirement sources are not only forms: "that's just circumstantial to Mozilla, but
+  e.g. PLoP 2026 is an equally valid use case". The constraint input is "requirement
+  sources" (Mozilla forms, the PLoP paper and its alignment schema, other targets).
