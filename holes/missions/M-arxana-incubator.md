@@ -1027,6 +1027,16 @@ VERIFY earlier (Bergsonian problematics: a real problem, well stated) and as
       (`:domain-guards`); before the fix the real finding read `#{:guard}` and would
       have been evaluated `:settled`. Still open: flags dropped by `subst`; the Q84
       spine pair; Step encoding for a97J08; storing findings as Arxana records.
+      **Items 1 and 4 done (2026-11-17).** Metadata survives substitution (codex-13
+      302023cc7). Findings as Arxana records, in memory (design DERIVE-2 §7; codex-13
+      07a55ef04, 44a8dfcb7): registry types `:rule/content`, `:conflict/finding`,
+      `:residual/accepted`; run evidence on attestations; a finding is stale at t iff one
+      of its rules has a `:supersedes` record valid at t (direct predecessor only); the
+      reader shows `:failing-accepted` only with a residual valid at t, never `:met`.
+      Planted check passes: superseding R1 stales the R1/R2 finding and not R2/R3; the
+      real a02J03 finding goes stale when beta is superseded. Live writes wait on futon1b
+      valid time (Joe's restart). Items 2 (Q84) and 3 (Steps): claude-7's notes in,
+      claude-1 designing.
 - [ ] **Witness 2, the incubator application:** submitted by 2026-11-20 with each field
       traceable (WP1, WP2).
 - [ ] **Witness 3, PLoP 2026 alignment** (end-of-mission test): `plop-alignment-v1`
