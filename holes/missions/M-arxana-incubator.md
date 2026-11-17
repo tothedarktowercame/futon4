@@ -207,4 +207,76 @@ whether each is ready, partly there, or missing. Facts, not designs.
 Required MAP output: a table, one row per work package, of its types: ready / partly
 there (with what is missing) / missing; and surprises.
 
-**MAP exit: Not started.**
+### MAP findings (2026-11-17)
+
+Two read-only surveys (claude-5's Explore surveyors), saved with full file:line
+evidence: `~/notes/claude-5/map-arxana-incubator-A.md` (Q2, Q3, Q4, Q7: jvm-arxana and
+futon1b at futon3c 45ebc6894, futon1b e4aa6e1) and
+`~/notes/claude-5/map-arxana-incubator-B.md` (Q1, Q5, Q6, Q8). claude-5 spot-checked five
+citations, all correct: `[:supersedes 1]` has no content fields (`type_registry.clj:163–166`);
+automatic relocation is hardcoded to the F1 artifact (`formal_f1_relocation.clj:181`);
+`:entity/get` allows only `:entity/id` (`schema.clj:19–23`); evidence validity starts at
+insertion (`futon1b_evidence.clj:847–849`); 狗 drops its recall query when saving
+(`dog_provider.clj:1381`).
+
+**Answers in one line each**
+- **Q1 Landscape:** four shapes of a turn (dumps, futon1b evidence, 象 records, F1's four
+  fixtures). `:evidence/id` is the only id that joins them; `turn_id` is a per-session
+  counter, not an identity. No store records *when Joe spoke* as valid time.
+- **Q2 'Clusions:** 63 registered types, all append-only. Only `[:text/patch 1]` carries an
+  edit, and only against an artifact's single head, not over turn spans.
+- **Q3 Supersession:** four shapes, none general: `[:supersedes 1]` (no fields),
+  `[:f6/re-supports 1]` (actor, time, reason, but readers ignore it), `[:d6/composite 2]`,
+  F2 application/choice.
+- **Q4 Projection:** the parts exist apart: F1's export manifest (ordered selection,
+  pinned), F6 (attributed, dated order), F2 (edits). No record joins them.
+- **Q5 Requirement:** only the Fellowship LOI's `<!-- field: x limit=N -->` markup
+  combines question, limit and pass/fail, as markup checked by a script. The incubator
+  form lists its questions but no limits on disk; Joe's "about 150 words or less" (turn of
+  2026-11-14) is the only source. WM wants, GCC `waiting_on.met`, warrants have status
+  without limits.
+- **Q6 Nip:** nothing stores query + turn span + a person's acceptance. 狗 burials have
+  spans without query or acceptance; 狗 recall has a query but drops it when saving;
+  draft-2 anchors have verified spans from a matcher.
+- **Q7 Links:** typed links are clusions in `arxana_clusions`; the relocator exists but
+  runs only for the F1 artifact; no general span-anchored link type; futon1b's generic
+  hyperedges are not written by jvm-arxana.
+- **Q8 Views:** the futon4a variants views and Mojira `vd` share one static JSON with five
+  op kinds (Mojira rejects any other); F1/F2/F6 clients speak arxana.v1 to demo ports. No
+  view reads requirement or nip records.
+
+**Types per work package**
+
+| WP | Types it needs | Ready | Partly there (what is missing) | Missing |
+|---|---|---|---|---|
+| WP1 Incubator requirements | requirement (question, limit, status) | LOI field markup + `check_limits.py` + `loi.js` (Fellowship) | incubator: questions exist (`~/mozilla-incubator.txt`), limits only from Joe's "about 150 words" | requirement record type |
+| WP2 Fields as projections | landscape turn; projection; export | variants JSON + views; `evidence_id` join key | projection = draft2 paragraph list (static, embedded sources, no pins) | projection record over turn spans |
+| WP3 Valid time | record valid time; turn speech time | Arxana record `:event-time` → valid-from; as-of read (store adapter) | as-of not exposed by `:entity/get`; heads/revisions not covered | speech-time valid time for turns (evidence `:at` is ingestion time) |
+| WP4 Projection + 'clusion update | projection; supersede-with-attribution; scope | F1 manifest (ordered, pinned); F6 placements (attributed order) | `[:supersedes 1]` has no actor/time/reason; F6 re-supports ignored by readers | one projection record; scope; static vs live |
+| WP5 Head → projection | per-projection heads | F2 patches, alternatives, choices | one CAS head per artifact | sibling heads / projection-as-head |
+| WP6 Requirement records | requirement + satisfaction relation | warrants pin status to shas; GCC `met` computed | WM wants (stated + boolean) | requirement type tied to a projection |
+| WP7 Nips | nip = query + span + acceptance | span addressing (codepoints, sha256, `evidence_id`) | 狗 burials (span, no query/acceptance); recall (query, dropped) | nip record |
+| WP8 Nipper proposes | requirement → candidate spans | 象 sentences/acts with offsets; text search | search returns whole entries | proposal records |
+| WP9 Edited by hand | edit 'clusion over spans | `[:text/patch 1]` hunk form | edits only against an artifact head | edit over turn spans without rewriting an artifact |
+| WP10 Links survive edits | span-anchored link; relocation | clusion substrate; relocator (exact/context/fuzzy, ambiguity kept) | relocation only for the F1 artifact | general span-locator link type; insert + partial-delete test |
+| WP11 Side by side | two projections, shared spans | 2-up views with cursor-over highlighting | views read one static JSON; closed op set | a second projection; a view over records |
+| WP12 LOI as projection | all of the above | LOI fields + limits as markup | — | depends on WP4/6/7/11 |
+
+**Surprises**
+- Codex-13's packet B is already out of date on valid time: Arxana records now take
+  `:event-time` as valid-from (futon1b 5147aa8) with as-of reads (e4aa6e1).
+- Turns have no speech-time valid time anywhere; this matters for the landscape as
+  "the one text" (WP3 covers records, not turns).
+- `turn_id` is not an identity (thousands of nulls and duplicates); `evidence_id` is, and
+  670 operator 象 records lack one.
+- The incubator's limits have no source on disk: the web form's real limits need
+  checking before WP1 is built.
+- 狗 already computes the query a nip would need, then drops it when saving.
+- Mojira's `vd` rejects any op kind outside its five, so new record kinds need a
+  deliberate extension, not just new data.
+- F2's application time is the server clock at submission, not the edit time;
+  `[:supersedes 1]`, patches and choices get no valid time at all.
+
+**MAP exit: Not met.** Findings and the per-WP table are in; two facts remain open: the
+incubator form's actual limits (from the live form), and the dump count (23,147 distinct
+ids by survey B vs 23,158 cited earlier). For Joe to judge.
