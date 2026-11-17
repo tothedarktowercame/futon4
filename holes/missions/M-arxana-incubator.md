@@ -451,11 +451,17 @@ not stored; one requirement family with several evaluators; turn identity and ti
 edits target spans; the incubator path file-backed first; locality first).
 
 - [ ] Joe's corrections to DERIVE-1.
-- [ ] Wiring diagram (futon5 exotype) for the landscape → Nipper → projection →
-      evaluators → requirement list loop.
-- [ ] Fidelity contract against donors (`plop-alignment-v1`, F2 patches, F6 placements,
-      variants JSON).
-- [ ] Exact type-registry entries for the new types.
+- [x] Wiring diagram (futon5 exotype) for the landscape → Nipper → projection →
+      evaluators → requirement list loop: `futon5/data/missions/arxana-incubator-exotype.edn`
+      (futon5 d45ecee); `futon5.ct.mission/validate` all 8 checks pass; a planted
+      write-back to the forms is caught (DERIVE-2 §1).
+- [x] Fidelity contract against donors (`plop-alignment-v1`, F2 patches, F6 placements,
+      variants JSON): DERIVE-2 §3, every `plop-alignment-v1` field mapped, round-trip
+      tripwire through `inject-plop-alignment.py`.
+- [x] Exact type-registry entries for the new types: DERIVE-2 §2 (proposed, in
+      `type_registry.clj` form).
+- [x] Rules for the five items the coverage check left open (partial deletion,
+      "not yet used", reading as an entity, precedence, relocation beyond F1): DERIVE-2 §4.
 - [x] Coverage check against Nelson's T0–T6 and the gap analysis's 13 type gaps (DERIVE-1 §7: 9 of 13 gaps covered, 3 partly, 1 deferred; 5 of 7 tests covered, 2 partly).
 
 **DERIVE exit: Not met.**

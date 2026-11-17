@@ -1,0 +1,175 @@
+# DERIVE-2 — registry entries, fidelity contract, open rules (M-arxana-incubator)
+
+claude-5, 2026-11-17. Continues `DERIVE-1-types.md`. Joe asked for the items on
+claude-5's side to be pushed through before his corrections, which wait for the wiring
+diagram (`futon5/data/missions/arxana-incubator-exotype.edn`, futon5 d45ecee).
+
+## 1. Wiring diagram
+
+`futon5/data/missions/arxana-incubator-exotype.edn`, in futon5's mission-diagram format:
+4 inputs (landscape, manifestations at commits, Joe's input, forms as the only
+constraint), 8 components (register, requirements, Nipper, edit, project, local
+evaluation, global evaluation, render), 5 outputs (views, form text, alignment margin
+notes, requirement list, typed absences), 25 typed edges.
+`futon5.ct.mission/validate` passes all eight checks (completeness, coverage, no orphan
+inputs, type safety, spec coverage, I3 timescale ordering, I4 exogeneity, I6 closure).
+Planted bad case: an edge from A-eval-local writing to I-forms is refused by the I3 check
+(":A-eval-local (social) writing to constraint :I-forms (glacial)"), i.e. the loop
+cannot satisfy a requirement by rewriting where it came from.
+
+## 2. Type-registry entries (proposed)
+
+In the form of `futon3c/src/futon3c/arxana/type_registry.clj` (`clusion-type id revision
+roles content-fields`). Content fields are identity fields; attribution and time are
+included in identity for acts (an edit made twice is two acts, survey A Q2 / correspond
+D4 note). Every act record also carries `:event-time`, so its valid time is the act's
+time (futon1b 5147aa8).
+
+```clojure
+;; E3 content: new writing; identity = text digest + author + time.
+(clusion-type :arxana/content 1 []
+              [:content/sha256 :content/text :actor :event-time])
+
+;; E4 projection: ordered entries; static (pinned clusion ids) or live (query).
+(clusion-type :arxana/projection 1 []
+              [:projection/name :projection/entries :projection/applied
+               :projection/mode :projection/as-of :actor :event-time])
+;;   :projection/entries  [{:span {...R1...}} | {:content <clusion id>}]
+;;   :projection/applied  [<edit clusion id> ...]   (static), or
+;;                        {:query {...}}            (live)
+;;   :projection/mode     :static | :live
+
+;; R2 edit over spans in projections, with scope.
+(clusion-type :arxana/edit 1
+              [{:role :replacement :endpoint/kinds #{:clusion}}]   ; content, or none for delete
+              [:edit/targets :edit/op :edit/scope :edit/reason :actor :event-time])
+;;   :edit/targets  [R1 span refs]   :edit/op  :replace | :insert | :delete
+;;   :edit/scope    #{projection names} | :every-derived
+
+;; R3 supersede v2.
+(clusion-type :supersedes 2
+              [{:role :successor :endpoint/kinds #{:clusion :entity}}
+               {:role :predecessor :endpoint/kinds #{:clusion :entity}}]
+              [:actor :event-time :reason :scope] :cycle :acyclic)
+
+;; R4 link (kinds: :comment :benefit :beneficiary :continues-in :computed-from :prev).
+(clusion-type :arxana/link 1
+              [{:role :from :endpoint/kinds #{:clusion :entity :manifestation-scope :external-ref}}
+               {:role :to   :endpoint/kinds #{:clusion :entity :manifestation-scope :external-ref}}]
+              [:link/kind :link/from-span :link/to-span :actor :event-time])
+
+;; R5 requirement (evaluator kinds: :word-limit :predicate :deadline :correspondence).
+(clusion-type :arxana/requirement 1
+              [{:role :subject :endpoint/kinds #{:clusion :entity}}]
+              [:requirement/criterion :requirement/evaluator :requirement/params
+               :actor :event-time])
+
+;; R6 nip.
+(clusion-type :arxana/nip 1 []
+              [:nip/query :nip/result-spans :nip/accepted-by :nip/accepted-at :event-time])
+
+;; R7 alignment (after plop-alignment-v1); statuses live in evaluations (D3).
+(clusion-type :arxana/alignment 1
+              [{:role :informal :endpoint/kinds #{:manifestation-scope :external-ref}}]
+              [:alignment/kind :alignment/pattern :alignment/lean :alignment/clojure
+               :alignment/docs :alignment/text :actor :event-time])
+```
+
+Record (non-clusion) types, alongside the existing `:evidence-attestation`,
+`:assessment`, `:external-reference`:
+
+```clojure
+;; E5 evaluation: subject + pinned inputs + result + evaluator.
+{:type/id :arxana/evaluation :type/revision 1 :record/kind :evaluation
+ :fields [:evaluation/subject :evaluation/pins :evaluation/result
+          :evaluation/evaluator :evaluation/locality :event-time]}
+;;   :evaluation/result  :met | :failing | :stale | :unknown
+;;   :evaluation/pins    {<input id> <revision or digest>}
+;;   :evaluation/locality :local | :global
+
+;; E6 typed absence.
+{:type/id :arxana/absence :type/revision 1 :record/kind :absence
+ :fields [:absence/subject :absence/kind :absence/producer :absence/reason :event-time]}
+;;   :absence/kind :session-start :prev-absent :prev-pending :no-source :interrupted ...
+
+;; R1 span ref is a value inside other records, not a record:
+;;   {:source <:evidence/id or arxana revision id> :source/digest <sha256>
+;;    :range [start end] :unit :codepoint :span/sha256 <sha256>}
+```
+
+E1 sources are not a new type: they are futon1b evidence entries referenced by
+`:evidence/id` (plus an `:external-reference` for the 象 alias and time basis), and E2
+manifestations are existing `arxana_revisions` artifact revisions.
+
+## 3. Fidelity contract (donors)
+
+### `p4ng/plop-alignment-v1` → R7 alignment + E5 evaluations + R3
+
+| Donor field (71 notes) | Count | Becomes |
+|---|---|---|
+| `id` | 71 | alignment record id alias (kept) |
+| `heading_contains` + `quote` | 71 | `:informal` endpoint: a span ref into the paper revision (quote-located, then pinned as a range) |
+| `kind` (alignment 24, upgrade 38, question 9) | 71 | `:alignment/kind` |
+| `pattern` | 71 | `:alignment/pattern` |
+| `date`, `by` | 71 | `:event-time`, `:actor` |
+| `text` | 71 | `:alignment/text` |
+| `lean[{module decl revision status}]` | all | `:alignment/lean [{module decl}]` + one E5 per entry: subject = the decl at `revision`, result from status (PROVED → met, STATED → failing, ABSENT → failing with absence) |
+| `clojure[{repo path symbol revision status}]` (VALIDATED 35, EXISTS-UNVALIDATED 83, REFUTED 16, ABSENT-OR-LOST 10) | all | `:alignment/clojure [{repo path symbol}]` + one E5 per entry (VALIDATED → met, EXISTS-UNVALIDATED → unknown, REFUTED → failing, ABSENT-OR-LOST → failing + E6) |
+| `revision_text` | 38 | the upgrade's proposed paper text: an E3 content record + an R2 edit on the quoted span, scope `#{"plop-2026"}` |
+| `supersedes` | 5 | R3 `[:supersedes 2]` from this alignment to the named one |
+| `for`, `blocking` | 9 | `:requirement` on Joe (`:for "joe"`), `:blocking` as a requirement parameter |
+
+Preserve: every field. Adapt: statuses move from the note into evaluations (D3), with the
+original status string kept in the evaluation. Drop: nothing. Tripwire test: import all
+71 notes, export them back to `plop-alignment-v1`, and `inject-plop-alignment.py`
+validates the round-tripped file exactly as the original.
+
+### F2 `[:text/patch 1]` → R2 edit
+
+Preserve the hunk form `{:start :end :replacement}` in codepoints, `:author`, operation
+id. Adapt: the base is span refs in a projection, not an artifact head; replacement text
+becomes a content record. Drop: CAS on a head (D2). Tripwire: F2's own tests stay green
+(nothing in F2 changes).
+
+### F6 placements → projection entries
+
+Preserve order and attributed, dated placement. Adapt: placement is per projection +
+entry (survey A found F6's history keyed per item only). Tripwire: one item placed in two
+projections keeps two histories.
+
+### Variants JSON (`para_diff.py` / Mojira `vd`) → renderer output
+
+Preserve the shape the views read (paragraphs, ops, sources). Adapt: emitted from
+projections rather than reconstructed by diff; ops come from R2/R6; sources by reference
+with text fetched by digest. Extend Mojira's closed op set deliberately (survey B Q8)
+only if a new op is needed. Tripwire: the current views render the emitted JSON for draft
+2 without change.
+
+## 4. Open rules from the coverage check
+
+- **Partial deletion of a linked span (T3).** IF an edit deletes part of a span a link
+  attaches to, HOWEVER Nelson keeps the link on "any part of the content it connects which
+  survives" (X:46) and relocation with empty context reports the whole span missing
+  (survey A Q7), THEN a link resolves to the surviving characters of its span in the
+  projection, and an E6 absence records the deleted part, BECAUSE that is Nelson's rule
+  and keeps the deletion visible rather than silently shrinking the link.
+- **"Not yet used" for pullacross (T4).** IF a writer wants material not yet used,
+  HOWEVER "unused" is relative to a projection and to a set of sources, THEN it is a query:
+  spans of the sources named by the projection's nips (or by a requirement) minus the
+  spans the projection's entries cover, BECAUSE both sides are already records, so the
+  query needs no new type.
+- **A reading as an entity (G05).** IF an animal's reading (象, 馬) is evidence other
+  records rely on, HOWEVER today it is fields on a turn record, THEN a reading is an E2
+  manifestation revision (the animal's output at a digest) so corrections can supersede it
+  (R3), BECAUSE claude-13 needs reading corrections and that requires an addressable
+  reading.
+- **Precedence of prediction over observation (G03).** IF simulation needs "predicted
+  before run", HOWEVER a date field is not evidence of order (gap analysis C08), THEN
+  precedence is an E5 evaluation over two records whose pins include their commit ids,
+  evaluated by commit ancestry, BECAUSE ancestry is checkable where a timestamp is not;
+  out of scope to build here (simulation is deferred), specified so the type is ready.
+- **Relocation beyond F1 (G13).** IF the relocator only runs for the F1 artifact, HOWEVER
+  projections and links need it for any source, THEN relocation is a global evaluator
+  (A-eval-global) over any span ref whose source revision moved, writing E5 results,
+  BECAUSE the existing relocator already records its candidates as attestations and only
+  its artifact filter (`formal_f1_relocation.clj:181`) is F1-specific.
