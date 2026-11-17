@@ -519,6 +519,9 @@ function go(href, push = true, keep = false, selectHref = null) {
   try { page = render(href); } catch (e) { page = { title: 'error', html: `<pre>${esc(e.stack)}</pre>` }; }
   panel.title = 'Mojira: ' + page.title;
   panel.webview.postMessage({ type: 'page', html: page.html, crumbs: history.slice(-6), keep, select: selectHref });
+  // A draft-variants paragraph opens with its quoted sources in the right column.
+  const vdm = href.match(/^vd:(\d+)/);
+  if (vdm) peek('vds:' + vdm[1], true);
 }
 
 // 2-up: the right column follows the selected link on the left.

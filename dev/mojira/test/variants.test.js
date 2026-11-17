@@ -60,3 +60,16 @@ test('keyboard word links identify each word inside a multiword kept operation',
   assert.match(html, /<mark data-vd-here>beta<\/mark>/);
   assert.doesNotMatch(html, /<mark data-vd-here>alpha/);
 });
+
+test('a paragraph opens with all its quoted sources; a written word keeps them visible', () => {
+  const v = require('../variants');
+  const d = v.parse(require('fs').readFileSync('/home/joe/storage/arxana-variants/draft2-variants.json', 'utf8'));
+  const p15 = d.paragraphs.find((p) => p.n === 15);
+  const all = v.renderSource(d, '15').html;
+  assert.equal((all.match(/spoken /g) || []).length, p15.sources.length);
+  assert.ok(p15.sources.length >= 1 && all.includes('class="vd-used"'));
+  const written = p15.ops.findIndex((o) => o.op === 'new' || o.op === 'added');
+  if (written >= 0) assert.ok(v.renderSource(d, `15:${written}:text:0`).html.includes('vd-used'));
+  const none = d.paragraphs.find((p) => !p.sources.length);
+  assert.match(v.renderSource(d, String(none.n)).html, /No sentence of this paragraph is linked/);
+});

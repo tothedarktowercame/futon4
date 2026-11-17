@@ -51,11 +51,27 @@ function render(d, arg = '') {
   }).join(' ');
   return {title: `Draft 2 · ${p.n}`, html: `<section data-vd="${p.n}" data-vd-mode="${mode}" data-vd-prev="${d.paragraphs[idx - 1]?.n || ''}" data-vd-next="${d.paragraphs[idx + 1]?.n || ''}"><h1>${esc(p.n)}. ${esc(p.title)}</h1><p>${p.linked} of ${p.segments.length} linked · ${esc(mode)} · ${link('vd', 'paragraphs')}</p><p>${esc(d.draft.note)}</p><p>t: full/clean · T: additions/full · n/p: next/previous · j/k: select word</p><p class="vd-text">${body}</p></section>`};
 }
+// Every source the paragraph quotes, with the quoted span highlighted: what the
+// right column shows when no spoken word is selected (Joe, 2026-11-17).
+function sourcesHtml(p) {
+  if (!p.sources.length) return '<p class="dim">No sentence of this paragraph is linked to a spoken turn.</p>';
+  return p.sources.map((s, k) => {
+    const chars = Array.from(s.text || ''), u0 = s.used_start, u1 = s.used_end;
+    const ok = Number.isInteger(u0) && Number.isInteger(u1) && 0 <= u0 && u0 < u1 && u1 <= chars.length;
+    const text = ok ? esc(chars.slice(0, u0).join('')) + `<span class="vd-used">${esc(chars.slice(u0, u1).join(''))}</span>` + esc(chars.slice(u1).join(''))
+      : `<span class="err">quoted span does not fit the source</span> ${esc(s.text)}`;
+    const date = new Date(s.at), time = Number.isNaN(date.getTime()) ? 'time unavailable' : date.toISOString().replace('T',' ').replace('.000Z',' UTC');
+    return `<h2 class="vd-s${k % 3}">[${k+1}] spoken ${esc(time)}</h2><p class="dim">${esc(s.id)}</p><div class="vd-source-text">${text}</div>`;
+  }).join('');
+}
 function renderSource(d, arg) {
-  const [n, i, part, wi] = arg.split(':'), p = d.paragraphs.find(p => String(p.n) === n), o = p?.ops[Number(i)];
+  const [n, i, part, wi] = arg.split(':'), p = d.paragraphs.find(p => String(p.n) === n);
+  if (!p) throw new Error('paragraph not found');
+  if (i === undefined) return {html: `<h2>Sources quoted in paragraph ${esc(p.n)}</h2>${sourcesHtml(p)}`};
+  const o = p.ops[Number(i)];
   if (!o) throw new Error('word not found');
   const a = anchor(p, o);
-  if (a.written) return {html: '<p>Written in the draft; no spoken source</p>'};
+  if (a.written) return {html: `<p><b>Written in the draft; no spoken source.</b></p>${sourcesHtml(p)}`};
   if (!a.valid) return {html: '<p class="err">anchor does not match source</p>'};
   let start = a.a, end = a.b;
   if (part !== 'new') {
@@ -82,4 +98,4 @@ const css = `.vd-text a.vd-word { color: inherit; text-decoration: none; cursor:
 .vd-source-text { white-space: pre-wrap; }
 .vd-used { background: var(--vscode-editor-selectionHighlightBackground, #7774); }
 [data-vd-here] { background: var(--vscode-editor-findMatchHighlightBackground, #e9b84a); color: inherit; outline: 2px solid var(--vscode-focusBorder); }`;
-module.exports = {parse, anchor, render, renderSource, css};
+module.exports = {parse, anchor, render, renderSource, sourcesHtml, css};
