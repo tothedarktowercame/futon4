@@ -46,6 +46,29 @@ I couldn't have put it better myself!)". The parts are jvm-arxana's attributed p
 pinned F1 manifests, F6 placements, relocation and span-addressed turns; what is missing
 is the projection, requirement and nip that join them.)
 
+> 🗣 (dictated; "Arcana" = Arxana, "closure" = Clojure, "plop" = PLoP) "So maybe I should
+> just throw in a little bit of my own experience trying to use [Arxana], the classic
+> Emacs edition, and some possibly additional requirements and use cases that come from
+> that ... this goes all the way back to 2005, and we could dig in those historical
+> documents, but it's probably better to work backwards from recent use cases like
+> trying to keep [Clojure], lean and documentation all aligned, and that actually is still
+> an active use case for the [PLoP] 2026 paper ... none of my agents are currently
+> working on that workflow directly, but that is kind of the workflow center, I would
+> say, that all of the different dimensions of the tetrahedron touch Upon and
+> specifically, that paper is about the war machine and the way it relates to workflow
+> is the war machine is an automation tool for working through work following patterns
+> and priorities that I've put in place ... the giraffe is a tangent for presenting that
+> work in some kind of priority order the meta CA is about how the AIF material works in
+> a reduced case and I suppose even the proving stuff is about understanding how a formal
+> formal Problem-solving process can relate to an informal process of learning, and I
+> would describe all of those as matters of priority for the war machine so even though
+> this particular mission is not about plop 2026 that could be seen as a live use case for
+> this material and probably when we get to the end of this, Should become a test case
+> that we're able to deal with but that's, again, different from the Mozilla textual
+> work ... in the full generality, we have to deal with all of this stuff along the way
+> and the relationship to the Mozilla thing is that the Mozilla thing effectively
+> documents that complexity in a simple way." (Joe, 2026-11-17)
+
 ### What is already felt to be true
 
 - A Xanadu-like demo works (2026-11-17): a draft paragraph over the spoken turns it came
@@ -132,6 +155,13 @@ In: the twelve work packages in `WORKPACKAGES.md` (incubator requirements and fi
 projection, 'clusion-update and requirement records; F2 head → projection; Nipper nips
 and proposals; editing by hand; links in the demo; two projections side by side; the
 Fellowship LOI as a second projection).
+
+Later test case, named now (Joe, 2026-11-17): keeping Clojure, Lean and documentation
+aligned for the PLoP 2026 paper on the War Machine (`p4ng/plop-2026*`, `sec-*-plop.tex`),
+the "workflow centre" every facet of the tetrahedron touches. Not this mission's work,
+but its end-of-mission test: the same projection, 'clusion and requirement types should
+hold code, formal and informal manifestations of one argument in step. Classic Arxana's
+use since 2005 is source material, read backwards from this recent use case.
 
 Out, for now: DiagramProver rewrite rules; transcopyright and payment; MetaCA run
 records as a second landscape; a multi-author editor beyond the record design (T6 is
