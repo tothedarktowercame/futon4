@@ -1071,6 +1071,9 @@ VERIFY earlier (Bergsonian problematics: a real problem, well stated) and as
       claude-5: 13 of 13 present; a02J03 reads failing, m93J06 settled, a97J08 stale (failing);
       the supersession is absent at 16:16:11Z and present at 16:16:12Z. This is the first
       staleness reading taken from the live store rather than from memory.
+      **Endgame target (Joe, 2026-11-17):** "if the list is not too long we may be able to get
+      it to 100%, but best to start with getting to a short list first." Next: claude-7's first
+      cut of the remaining defect list, then findings and residual records for it.
 - [ ] **Witness 2, the incubator application:** submitted by 2026-11-20 with each field
       traceable (WP1, WP2).
 - [ ] **Witness 3, PLoP 2026 alignment** (end-of-mission test): `plop-alignment-v1`
