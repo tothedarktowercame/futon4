@@ -20,6 +20,9 @@ const cascadeReader = require('./cascade-reader');
 const cascadeView = require('./cascade-view');
 delete require.cache[require.resolve('./gcc-view')];
 const gccView = require('./gcc-view');
+delete require.cache[require.resolve('./circus-view')];
+const circusView = require('./circus-view');
+const http = require('http');
 delete require.cache[require.resolve('./loi')];
 const loi = require('./loi');
 delete require.cache[require.resolve('./variants')];
@@ -126,6 +129,7 @@ function render(href) {
   if (kind === 'ti') return pageTriageItem(arg);
   if (PATTERN_KINDS.has(kind)) return pagePattern(kind, arg);
   if (kind === 'cascade' || kind === 'cn' || kind === 'ce') return pageCascade(kind, arg);
+  if (CIRCUS_KINDS.has(kind)) return pageCircus(kind, arg);
   if (kind === 'gcc' || kind === 'gi' || kind === 'gi-raw' || kind === 'gparty' || kind === 'gparty-raw') return pageGcc(kind, arg);
   if (kind === 'vd' || kind === 'vds') {
     const d = variants.parse(fs.readFileSync(cfg('variantsFile') || '/home/joe/storage/arxana-variants/draft2-variants.json', 'utf8'));
@@ -156,7 +160,8 @@ function pageHome() {
 <li>${link('cascade', 'the first turn cascade (2026-11-11)')}</li></ul>
 <h2>GCC items <span class="dim">(M-repl-circus demo 1: one item and what the GCC holds about it)</span></h2><ul>
 <li>${link('gcc', 'the GCC preview: items, records, links, absences')}</li>
-<li>${link('gparty', 'the Gauntlet party: Thor, Merlin, Questor, Thyra and the party vote')}</li></ul>
+<li>${link('gparty', 'the Gauntlet party: Thor, Merlin, Questor, Thyra and the party vote')}</li>
+<li>${link('top', "Giraffe's top items: the turns behind them, and why each stands where it does")}</li></ul>
 <h2>Letter of intent <span class="dim">(working draft: b notes a benefit, p a beneficiary)</span></h2><ul>
 <li>${link('vd', 'Draft 2 over its source turns')}</li>
 <li>${link('loi', 'the Mozilla letter of intent, with your notes')}</li></ul>
@@ -333,6 +338,47 @@ function pageGcc(kind, arg) {
   } catch (e) { return { title: 'GCC', html: `<h1>GCC preview</h1><p class="err">${esc(e.message)}</p>` }; }
 }
 
+// ---------------------------------------------------------------- circus: top items, why not
+
+// Read-only routes on Agency (claude-13, futon3c 56efba156 + 7b6b28c95),
+// fetched before drawing and kept a few seconds so moving the cursor does
+// not refetch; r clears them.
+const CIRCUS_KINDS = new Set(['top', 'top-raw', 'wn', 'wn-raw']);
+const circusCache = new Map();   // key -> {at, data | err}
+const circusKey = (href) => (href.startsWith('wn') ? 'wn:' + href.split(':').slice(1).join(':') : 'top');
+function needsCircus(href) {
+  if (!href || !CIRCUS_KINDS.has(href.split(':')[0])) return false;
+  const c = circusCache.get(circusKey(href));
+  return !c || Date.now() - c.at > 5000;
+}
+function loadCircus(href, cb) {
+  const key = circusKey(href);
+  const base = cfg('agencyUrl') || 'http://127.0.0.1:7070';
+  const url = key === 'top' ? `${base}/api/alpha/circus/top-items?run=latest&n=${cfg('circusTopN') || 10}`
+    : `${base}/api/alpha/circus/why-not?run=latest&item=${encodeURIComponent(key.slice(3))}`;
+  const done = (v) => { circusCache.set(key, { at: Date.now(), ...v }); cb(); };
+  const req = http.get(url, { timeout: 15000 }, (res) => {
+    let body = '';
+    res.setEncoding('utf8');
+    res.on('data', (ch) => { body += ch; });
+    res.on('end', () => {
+      try { done({ data: JSON.parse(body) }); } catch (e) { done({ err: `${url}: HTTP ${res.statusCode}, not JSON` }); }
+    });
+  });
+  req.on('timeout', () => req.destroy(new Error('timed out')));
+  req.on('error', (e) => done({ err: `${url}: ${e.message}` }));
+}
+function pageCircus(kind, arg) {
+  const c = circusCache.get(circusKey(kind + ':' + arg)) || { err: 'not loaded' };
+  if (c.err) return { title: 'circus', html: `<h1>${kind.startsWith('wn') ? 'Why not ' + esc(arg) + '?' : "Giraffe's top items"}</h1><p class="err">${esc(c.err)}</p>` };
+  const dir = cfg('gccPreviewDir') || '/home/joe/storage/gcc-preview';
+  const V = circusView({ esc, link, trim, hasItem: (x) => gccView.hasItem(dir, x) });
+  if (kind === 'top') return V.top(c.data);
+  if (kind === 'top-raw') return V.raw('top items', 'top', c.data);
+  if (kind === 'wn') return V.whyNot(c.data);
+  return V.raw('why ' + arg, 'wn:' + arg, c.data);
+}
+
 // ---------------------------------------------------------------- letter of intent
 
 // The draft is read, never written; notes are appended to their own file.
@@ -495,6 +541,14 @@ function openInEmacs(file, done) {
 
 function note(text, error) { if (panel) panel.webview.postMessage({ type: 'note', text, error: Boolean(error) }); }
 
+// The 象 stepper at one turn, in Emacs (turn-stepper-open-turn returns at
+// once and fetches frames in the background; -n so Mojira never waits).
+function openStepper(turn) {
+  if (!/^turn-[\w-]+$/.test(turn)) { note('not a turn id: ' + turn, true); return; }
+  execFile(cfg('emacsclient') || 'emacsclient', ['-n', '--eval', `(turn-stepper-open-turn ${JSON.stringify(turn)})`], { timeout: 10000 },
+    (err, _o, stderr) => note(err ? 'Emacs: ' + (String(stderr || '').trim() || err.message) : '象 stepper: ' + turn + ' (Emacs)', Boolean(err)));
+}
+
 function openFile(file) {
   const inEditor = () => vscode.window.showTextDocument(vscode.Uri.file(file),
     { viewColumn: vscode.ViewColumn.Two, preview: true, preserveFocus: true });
@@ -510,10 +564,12 @@ function openFile(file) {
 function go(href, push = true, keep = false, selectHref = null) {
   if (href.startsWith('file:')) { openFile(href.slice(5)); return; }
   if (href.startsWith('ext:')) { vscode.env.openExternal(vscode.Uri.parse(href.slice(4))); return; }
+  if (href.startsWith('step:')) { openStepper(href.slice(5)); return; }
   if ((href === 'triage' || href.startsWith('ti:')) && !brief && !briefErr) {
     loadBrief(() => go(href, push, keep, selectHref)); return;
   }
   if (needsPatterns(href)) { loadPatterns(() => go(href, push, keep, selectHref)); return; }
+  if (needsCircus(href)) { note('asking Agency (the circus routes take a few seconds)…'); loadCircus(href, () => go(href, push, keep, selectHref)); return; }
   if (push) history.push(href);
   let page;
   try { page = render(href); } catch (e) { page = { title: 'error', html: `<pre>${esc(e.stack)}</pre>` }; }
@@ -533,6 +589,7 @@ function peek(href, keep = false) {
   // selected and drawn on the right.
   if (href && (href === 'triage' || href.startsWith('ti:')) && !brief && !briefErr) { loadBrief(() => peek(href, keep)); return; }
   if (href && needsPatterns(href)) { loadPatterns(() => peek(href, keep)); return; }
+  if (needsCircus(href)) { loadCircus(href, () => peek(href, keep)); return; }
   lastPeek = href;
   let page;
   if (!href) page = { html: '' };
@@ -542,6 +599,8 @@ function peek(href, keep = false) {
     page = { html: `<h1>${esc(path.basename(f))}</h1><p class="dim">${esc(f)}</p><p class="dim">Enter opens it ${where}.</p>` };
   } else if (href.startsWith('ext:')) {
     page = { html: `<p class="dim">${esc(href.slice(4))}</p><p class="dim">Enter opens it in the browser.</p>` };
+  } else if (href.startsWith('step:')) {
+    page = { html: `<h1>${esc(href.slice(5))}</h1><p class="dim">Enter opens this turn in the 象 stepper in Emacs, beside its session's REPL.</p>` };
   } else {
     try { page = render(href); } catch (e) { page = { html: `<pre>${esc(e.message)}</pre>` }; }
   }
@@ -594,6 +653,7 @@ function attach(p, state) {
 
 function reloadData() {
   model = loadModel();
+  circusCache.clear();
   const cur = history[history.length - 1] || 'home';
   if (PATTERN_KINDS.has(cur.split(':')[0])) {
     pgraph = null; pgErr = null;
@@ -641,6 +701,7 @@ svg.cascade a.ln.sel .glue-edge { stroke-width: 4; }
 .gcc .party-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(26em, 1fr)); gap: 0 2ch; }
 .gcc .party-col .gs-r { margin-left: 0; padding-left: 3ch; text-indent: -3ch; }
 .gcc .chooser { color: var(--vscode-textLink-foreground); }
+.gcc .stop { color: var(--vscode-editorWarning-foreground, #c90); }
 .gcc .fold { display: none; }
 .gcc .fold.open { display: block; }
 .met-met { color: var(--vscode-testing-iconPassed, #3a3); }
@@ -749,7 +810,7 @@ function enter() {
   const a = links()[sel[active]];
   if (!a) return;
   const href = a.dataset.href;
-  if (active === 'peek' && peekHref && !href.startsWith('file:') && !peekHref.startsWith('file:')) {
+  if (active === 'peek' && peekHref && !/^(file|step):/.test(href) && !peekHref.startsWith('file:')) {
     shifting = true;
     vs.postMessage({ type: 'shift', main: peekHref, peek: href });
   } else follow(a);
