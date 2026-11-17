@@ -137,6 +137,22 @@ taking their seats (see `WORKPACKAGES.md`, "Hub").
   check, not typed by an author, and goes stale when either side moves; a change on one
   facet reopens obligations on the others (the War Machine's queue); order matters
   ("before"); machines are authors too.
+- **The MetaCA reduced model as a model of this workflow** (claude-1, 2026-11-17, at
+  Joe's request: `~/notes/claude-1/tetrahedron-and-metaca-2026-11-17.md`). Holds: the
+  reduced model's one relation is a check-evaluated alignment; a defect is where work
+  happens; a cell's own writes add no defects, a neighbour's change does; "what gets
+  selected is a history, not a condition" (exotype D21, `DESIGN-aif.md:924`;
+  `WRITEUP-aif-controller.md:33`) matches "not a static arrangement but a workflow".
+  Fails: one kind of cell vs four manifestations; a ring has no diagonals (six relations
+  among four facets); two statuses vs seven; rest is dull there, the aim here; no
+  authorship, free checks, unchosen writes. Proposed re-expansion (speculation): cell =
+  one alignment note, rule = its manifestations at pinned revisions, defect = a failing
+  or stale relation, neighbours = notes sharing a declaration; prediction before
+  observation = STATED before PROVED. Would give Arxana a defect count as a projection's
+  distance from holding, a ranking of the next repair, and a spread-of-staleness
+  measure. Experiment: replay the four committed versions of
+  `p4ng/plop-2026-alignment.json` against their pinned revisions with three predictions
+  registered first; four versions is thin history.
 - Rewrite rules ("bogus" → "nogood" → "no good") may belong on DiagramProver's DPO
   engine rather than in patch theory.
 - Where free-standing links live today in jvm-arxana and Mojira (Joe: they exist; the
