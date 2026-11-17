@@ -1050,6 +1050,18 @@ VERIFY earlier (Bergsonian problematics: a real problem, well stated) and as
       printer only on a planted host. Item 3: Step probe accepted (codex-12 `b90ed3f9`, local);
       the replay table is in progress: raw Q56's successor on a97J08 is not well nested, so
       states are now a tree or a flat sequence, and well-nestedness is an observation.
+      **Item 3 (Steps) done (2026-11-17).** Replay (codex-12, mfuton-share local `f87a1048`)
+      runs the real Python rules on copies of the captured Steps and writes a transition
+      table (`~/storage/arxana/importer/a97J08-step-table-*.json`). Read in DiagramProver as
+      opaque rules (codex-13 4b0bdf1d3; findings validator extended with `:rule-form :opaque`,
+      8683730a8; both on futon3c master). Results on a97J08: raw Q56 against Q83 is
+      non-joining, complete, ends B (not well nested) and D; Q78 and Q83 form no pair; the
+      rule-set diff {Q83} against {Q78, Q83} is different, arity-consistent true against
+      false (Q78 run after Q83 gives a split of 20 arms against arity 4; Q78 is uncalled code);
+      the right-disjunct identity check matters on a97J08 (bypassed: 62 Steps become 60,
+      outer arity 7). Superseding Q56 by Q83 marks the R3 finding stale without deleting it.
+      All four VERIFY items are done in memory; live Arxana writes are next (valid time live
+      since Joe's restart, 2026-11-17).
 - [ ] **Witness 2, the incubator application:** submitted by 2026-11-20 with each field
       traceable (WP1, WP2).
 - [ ] **Witness 3, PLoP 2026 alignment** (end-of-mission test): `plop-alignment-v1`
