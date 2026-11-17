@@ -512,3 +512,87 @@ Joe's corrections to DERIVE-1/2 wait for that review (Joe, 2026-11-17).
 sketch that we could move to ARGUE and see what we come up with". Open in DERIVE and
 carried into ARGUE: whether a projection's requirements can be expressed as cascade want
 tokens checked by the existing wiring derivation.
+
+## 4. ARGUE
+
+### Rationale citation
+
+`@why war-room/wr-8-typed-files-are-sources-of-truth` — "Make the typed argument files the
+canonical self-model and generate prose from them, so drift becomes detectable instead of
+perennial." This design applies that ruling to documents in general: the typed records
+(projections, spans, edits, requirements, evaluations) are canonical, and every draft
+(incubator answers, Fellowship LOI, PLoP paper margin notes) is regenerated from them.
+Draft 2's failure (0 of 51 sentences verbatim, 42 untraceable) is WR-8's "drift
+undetectable because there was no machine-readable intent" in a new place.
+
+Also: `war-room/wr-4-inhabit-before-building` — the design was reached by inhabiting
+working demos (the variants views, the annotated edition, Mojira `vd`) before any
+record type was proposed; `war-room/wr-22-logic-model-before-code-is-a-sanctioned-verify-method`
+— the wiring diagram is checked by futon5's validator, and claude-1's replay of the PLoP
+alignment history is a logic-model test available to VERIFY before implementation.
+
+### Theoretical coherence
+
+- **Nelson (IDENTIFY anchor):** content stabilised with permanent addresses (E1/E2, I1),
+  documents as lists of pointers (E4), transclusion not copy (R1, I7), links that survive
+  versions (R4 + DERIVE-2 §4 partial-deletion rule), side-by-side comparison (views). The
+  design departs from Nelson where Joe directed: beams are optional (cursor-over
+  highlighting), and statuses are evaluated rather than authored (not in Nelson at all).
+- **Patch theory (Darcs, Pijul):** 'clusions as first-class patches, projections as
+  channels with no privileged head (D2), conflicts kept as records. Departure: requirements
+  need a satisfaction relation patch theory lacks (D4).
+- **Bitemporal storage:** event time as valid time for every act (futon1b 5147aa8), with
+  the time basis of each turn stated (D5).
+- **Joe's model:** one text (the landscape) with drafts as projections and edits as
+  removable 'clusions (E4, R2, unwire). Held throughout.
+- **New since IDENTIFY, and coherent with it:** the tetrahedron (four manifestations of one
+  argument held together in a workflow, not a static arrangement); locality (most checks
+  turn-local, I5/D8); the NEXT/PREV 3/2 square for Nipper's two seeds; the possible
+  identity of requirements with War Machine want tokens. None of these contradicts the
+  IDENTIFY anchors; each specialises "traceability above all" to relations, time and
+  work rather than to characters alone.
+
+### Trade-off summary
+
+- **No real-time co-editing.** No CRDT/OT; one author sequences edits (M-formal-arxana F2's
+  condition). Several authors (T6) are supported by attribution, not by concurrent
+  editing. Given up: Etherpad-style simultaneous typing.
+- **Statuses are not stored on links (D3).** More records and evaluator runs; gained:
+  "stale" is a query, and a defect count is possible later.
+- **Lazy registration of the landscape.** No bulk import of 23,146 turns; Nipper's
+  retrieval stays global and costlier, in exchange for a store holding only what documents
+  use.
+- **File-backed first for the incubator (D7).** Two storage paths for a few weeks; gained:
+  the 2026-11-20 deadline does not depend on a build.
+- **Deferred:** simulation run records, transcopyright and payment, DiagramProver rewrite
+  rules, a full multi-author editor. Each has a hook in the types (E2, R4 `:computed-from`,
+  R5 `:predicate`), so deferring costs no redesign.
+
+### Generalisation notes
+
+- **Within the stack:** the same types serve the four facets: organisation (readings and
+  their corrections, N/N-1 strands), simulation (result files as manifestations,
+  predictions as requirements), automation and proof (Lean/Clojure endpoints in
+  alignments), and documentation (drafts as projections). The PLoP 2026 paper is the named
+  end-of-mission test.
+- **Beyond it:** nothing in the types is specific to Joe's turns. Any group whose working
+  record is a stream of utterances (a lab's chat, a co-op's meeting notes, the plumbers of
+  the incubator draft) can register it as a landscape and write traceable documents over
+  it. What would change: identity and time sources (D5) and who may attest (D4).
+
+### Plain-language argument
+
+When people write with AI agents, the words drift away from where they came from: a
+proposal ends up saying things nobody can trace back to who said them or why. This design
+keeps everything people actually said as a permanent record, and treats every document as
+an arrangement of pieces of that record plus clearly marked new writing and edits. Because
+each piece knows its source, anyone can see who said what, when, and whether a claim still
+holds after the code, proof or paper it depends on has changed. The same arrangement can be
+re-cut for different purposes — a funding application, a paper, a status report — without
+losing the trail. That is what lets a group get credit for its work and catch its mistakes.
+
+### Pattern cross-reference
+
+Pending: a survey of `futon3/library/` against DERIVE-1/2 (running 2026-11-17).
+
+**ARGUE exit: Not met.**
