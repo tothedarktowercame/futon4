@@ -532,6 +532,25 @@ tokens checked by the existing wiring derivation.
 
 ## 4. ARGUE
 
+**Current argument: `holes/labs/M-arxana-incubator/ARGUE-revised.md`** (claude-1 with
+claude-5, futon4 7452df9, at Joe's request 2026-11-17: "I'd like to see more of a balance
+between war room and nomadology patterns"). It argues from both sides at once: the war
+room (bringing the outside in; tested by whether drift is detectable) and the war machine
+(bringing the inside out; tested by whether anything outside the stack is better for it),
+meeting at D&G's "constantly shifting borderline" (Prop III), which the design builds as
+two operations on one store: projection appropriates, dissemination cuts loose. Its
+`@why` lines: `war-room/wr-8`, `war-machine/state-capture`, and `war-room/wr-0` as the
+hinge ("an open model, an available exit, and a verdict it cannot issue to itself"). Each
+design element cites both sides and where they cut (sharpest: the requirement list read
+as one score against Prop XII, "comparison always presupposes the appropriation").
+Quotations checked by claude-1 (21 D&G against `atp.txt`; pattern conclusions) and
+spot-checked by claude-5. Four proposals in it await Joe: no aggregate score across
+projections or people; the return port instrumented from the start (`wr-27`); a view
+that cannot open a fibre is refused; a contributor's exit in an open form.
+
+The subsections below are the working record that led to it, kept with Joe's dated
+statements.
+
 ### Rationale citation
 
 `@why war-room/wr-8-typed-files-are-sources-of-truth` — "Make the typed argument files the
@@ -651,9 +670,12 @@ contents loose again, so a passage written for the incubator is free material fo
 LOI and the PLoP paper.
 
 **What it lacks.**
-1. **Following the material** (Prop VIII: "One is obliged to follow when one is in search
-   of the "singularities" of a matter, or rather of a material, and not out to discover a
-   form"; Prop III: "following is not at all the same thing as reproducing"). The
+1. **Following the material** (Prop III, `atp.txt` l.14899: "One is obliged to follow when
+   one is in search of the "singularities" of a matter, or rather of a material, and not
+   out to discover a form"; also Prop III: "following is not at all the same thing as
+   reproducing"; Prop VIII develops the theme, l.16360, "artisans are obliged to follow in
+   another way as well". Attribution corrected 2026-11-17 after claude-1's check; first
+   written here as Prop VIII). The
    crosswalk named this as the War Machine catalogue's missing pattern. In Arxana it is
    Nipper's memory seed read as following Joe's turns where they lead, not filling a
    form; the gap seed is the form. The design gives both, but nothing yet lets the
