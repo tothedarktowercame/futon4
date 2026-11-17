@@ -844,7 +844,21 @@ VERIFY earlier (Bergsonian problematics: a real problem, well stated) and as
       cases claude-7 reports are visible as cycles in sentence histories, and at least one
       fighting rule pair is found by DiagramProver's critical-pair check before a render.
       Design: DERIVE-2 §6; gaps: `GAP-ANALYSIS.md` pass 2 (G14–G19); data: claude-7's
-      reply (`~/notes/claude-7/endgame-cycling-for-arxana-2026-11-17.md`, pending).
+      reply (`~/notes/claude-7/endgame-cycling-for-arxana-2026-11-17.md`, in):
+      three kinds of cycling, to keep apart: (1) a chain of packets each fixing the last
+      (a97J08 Q55→Q56→Q66→Q78→Q83, Q88 re-pin; one real undo, Q56 found at Q61); (2) two
+      rules undoing each other (Q72b beta reduction vs the Q59/Q84 choose families,
+      round three times; Q79→Q79b→Q79c rewrite direction); (3) words with several
+      readings where a supersession was never retired (e.g. `Fin.cases`: S2, q68, q74,
+      checked in matrix-r8; claude-5 counts 72 of 777 words with more than one distinct
+      reading, claude-7 79). Word readings fit pattern + guard + replacement; proof-step
+      rules live in `paper_walk.py`/`render.py` over typed terms and need hand
+      extraction. Candidate pair for DiagramProver: R1 beta-reduce `app(lam x. body, a)`
+      vs R2 read `app(lam n. choose(spec n), i)` as `x_i`, on a02J03
+      `borel_pi_eq_generateFrom_Icc`; non-joinable without R1's family exemption
+      (mfuton-share efdeba34, the Q72b merge), joinable with it. DiagramProver
+      (futon3c `diagramprover/`: matcher, rewrite, rule) has matching and rewriting but no
+      critical-pair check yet.
 - [ ] **Witness 2, the incubator application:** submitted by 2026-11-20 with each field
       traceable (WP1, WP2).
 - [ ] **Witness 3, PLoP 2026 alignment** (end-of-mission test): `plop-alignment-v1`
