@@ -988,6 +988,15 @@ VERIFY earlier (Bergsonian problematics: a real problem, well stated) and as
       redexes join); codex-13 stopped and showed it. Reports are not yet merged (the same
       pair is reported once per explored state): packet 4. Next: packet 3, priority and
       `settled-by`, on the Q83/Q78 Or pair.
+      Packet 3, strategy and `settled-by` (codex-13 7e7ec98cf, on futon3c master): the
+      Q83/Q78 Or pair is non-joining unordered and settled by `#{:priority :traversal}`
+      (outer-first with the merge above the nested headings gives the 3-way split;
+      inner-first lets the nested rule destroy the merge's pattern); the right-disjunct
+      guard's effect is shown on the host where it fails. Q87's unguarded pair is
+      settled by priority. Three of claude-5's expectations were wrong and codex-13
+      stopped each time with an executable counterexample (T3, T4b twice). Settling is
+      whole-host sensitivity to one change at a time, not a proof of necessity. Not yet
+      tested: a pair settled by `:nothing` (the candidate accepted residual).
 - [ ] **Witness 2, the incubator application:** submitted by 2026-11-20 with each field
       traceable (WP1, WP2).
 - [ ] **Witness 3, PLoP 2026 alignment** (end-of-mission test): `plop-alignment-v1`
