@@ -56,6 +56,8 @@ test('why not: the ladder highlights where the item stopped, with reason and a s
   assert.ok(hrefs(ex).includes('file:/home/joe/code/futon0/holes/M-capability-levels.md'));
   const ok = V.whyNot(F('why-not-M-giraffe.json')).html;
   assert.match(ok, /ranked → <b class="stop">focus<\/b>/, 'ranked with a focus relation reaches focus');
+  assert.match(ok, /<div class="gs-h">REACHED FOCUS<\/div>/);
+  assert.doesNotMatch(ok, /STOPPED AT/);
   assert.match(ok, /Lean-checked/);
   assert.match(V.whyNot({ status: 'error', reason: 'run-not-found', item: 'M-q' }).html, /run-not-found/);
 });
