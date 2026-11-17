@@ -826,3 +826,29 @@ So the requirement list, the stale set and "regions of interest" are three readi
 operation, a fibre over part of the outcome surface, rather than three features.
 
 **ARGUE exit: Not met.**
+
+## 5. VERIFY (planning, not started)
+
+Joe, 2026-11-17: "what I'd say about the claude-7 use case is that this is a good
+candidate for VERIFY. I.e. if we can help resolve this use case then we know that what we
+are doing is real and useful."
+
+This makes the PaperPrinter endgame VERIFY's principal witness, in the sense Joe gave
+VERIFY earlier (Bergsonian problematics: a real problem, well stated) and as
+`war-machine/state-capture` asks (it closes something outside Arxana).
+
+- [ ] **Witness 1, PaperPrinter (claude-7):** a97J08's "In all four cases, we obtain a
+      contradiction" resolves to its rule versions, pinned Main.lean lines and earlier
+      wordings with actors and times; a scratch rule change leaves the old rule
+      superseded, marks every dependent sentence stale and no unrelated one; the cycling
+      cases claude-7 reports are visible as cycles in sentence histories, and at least one
+      fighting rule pair is found by DiagramProver's critical-pair check before a render.
+      Design: DERIVE-2 §6; gaps: `GAP-ANALYSIS.md` pass 2 (G14–G19); data: claude-7's
+      reply (`~/notes/claude-7/endgame-cycling-for-arxana-2026-11-17.md`, pending).
+- [ ] **Witness 2, the incubator application:** submitted by 2026-11-20 with each field
+      traceable (WP1, WP2).
+- [ ] **Witness 3, PLoP 2026 alignment** (end-of-mission test): `plop-alignment-v1`
+      round-trips through the records and `inject-plop-alignment.py` validates it.
+- [ ] For each work package, the problem it states and the evidence the statement was
+      right (Joe: VERIFY as Bergsonian problematics).
+- [ ] claude-7's interview and gap-analysis pass 2 checked against the design as built.
