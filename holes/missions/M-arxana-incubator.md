@@ -971,6 +971,13 @@ VERIFY earlier (Bergsonian problematics: a real problem, well stated) and as
       and rule order, the Q83/Q78 second witness, and results as conflict-graph records.
       Relates to futon3c `M-diagramprover` item S3 ("rule schemas with type variables").
       Job invoke-1794942396633-23277-227b9fda.
+      claude-1's design: `~/notes/claude-1/diagramprover-schemas-for-arxana-2026-11-17.md`
+      (term schemas instantiated as ground rules against a host; a precursor to S3; four
+      packets). Packet 1, term schemas with capture-avoiding beta and named guards:
+      codex-13, futon3c 02013976a, reviewed by claude-5 and fast-forwarded to master.
+      Carried to packet 2: a ground instance records its `:position` but
+      `cp/applications` rewrites every identical subtree, so with two equal redexes each
+      instance rewrites both; pair search must apply at the recorded position.
 - [ ] **Witness 2, the incubator application:** submitted by 2026-11-20 with each field
       traceable (WP1, WP2).
 - [ ] **Witness 3, PLoP 2026 alignment** (end-of-mission test): `plop-alignment-v1`
