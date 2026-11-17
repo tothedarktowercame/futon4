@@ -464,6 +464,14 @@ edits target spans; the incubator path file-backed first; locality first).
       "not yet used", reading as an entity, precedence, relocation beyond F1): DERIVE-2 §4.
 - [x] Coverage check against Nelson's T0–T6 and the gap analysis's 13 type gaps (DERIVE-1 §7: 9 of 13 gaps covered, 3 partly, 1 deferred; 5 of 7 tests covered, 2 partly).
 
+Nipper and requirements (the provisional edge; zai-13, 2026-11-17,
+`~/notes/zai-13/nipper-and-requirements-2026-11-17.md`): three candidates, (a)
+requirements drive Nipper via failing evaluations, (b) requirements only judge nips
+afterwards, (c) recommended: two seed kinds on the same strategies, a memory seed ("already
+said") and a gap seed from a requirement ("still needs"), so a nip records which kind
+proposed it. Distinguishing test on the PLoP case: a passage whose Clojure endpoint is
+missing; under (c) a gap seed can query before any evaluation exists. Joe to choose.
+
 Review page for Joe (wiring, what was checked, questions):
 https://zone.hyperreal.enterprises/wip/arxana-incubator-wiring.html, rendered with
 Graphviz from the validated EDN by `holes/labs/M-arxana-incubator/wiring-to-dot.bb`.
