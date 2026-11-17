@@ -1010,6 +1010,23 @@ VERIFY earlier (Bergsonian problematics: a real problem, well stated) and as
       be called on real data: an importer from the typed Lean corpus (hosts are still
       transcriptions), spine patterns for the Q84 alias pair, and storing findings as
       Arxana records next to the rule 'clusions.
+      **On real data (2026-11-17).** claude-7 described the typed corpus
+      (`~/notes/claude-7/importer-source-2026-11-17.md`): the family redex exists only in
+      the printer's intermediate terms. claude-1 designed the import
+      (`~/notes/claude-1/importer-design-2026-11-17.md`). Packet A (codex-6, mfuton-share
+      local branch `codex-6/beta-probe`, c66eb3289 + 40d06435f, not pushed): a log-only
+      probe at the beta decision, output byte-identical on and off; 44 hits captured for
+      a02J03 `borel_pi_eq_generateFrom_Icc`, 0 for m02J01, in
+      `~/storage/arxana/importer/`. Packet B (codex-13 18a338615, review fix d678bd0bd, on
+      futon3c master): the hits load as DiagramProver hosts (binary applications,
+      constants as operators, proof flags as metadata, typed refusals), and with plain
+      beta and the printer's family test at equal priority, 12 of 44 a02J03 hits give
+      the beta/family conflict, settled by nothing; the transcribed Q87 host gives the
+      same finding shape. Review fix: the family rule's `:choose-family` guard defines
+      where the rule applies, so it no longer counts as settling a conflict
+      (`:domain-guards`); before the fix the real finding read `#{:guard}` and would
+      have been evaluated `:settled`. Still open: flags dropped by `subst`; the Q84
+      spine pair; Step encoding for a97J08; storing findings as Arxana records.
 - [ ] **Witness 2, the incubator application:** submitted by 2026-11-20 with each field
       traceable (WP1, WP2).
 - [ ] **Witness 3, PLoP 2026 alignment** (end-of-mission test): `plop-alignment-v1`
