@@ -721,4 +721,46 @@ LOI and the PLoP paper.
   of defining a projection (E4): the material whose actions land in that region. To be
   added to DERIVE §6 Views when VERIFY plans the views.
 
+### Directed 'clusions: down to the outcome surface and back up (2026-11-17)
+
+Joe: "'clusions are definitely "directed" edges; I think M-jvm-arxana or M-formal-arxana
+talks about the relationship to RDF. Here we'd want to look at the practical applications
+for 'clusions. Their directed nature is roughly what should give the ability to move
+between a "one dimension down" projection and "the graph itself"."
+
+On RDF, M-formal-arxana's ARGUE settled it (`holes/labs/M-formal-arxana/argue/`, P14):
+RDF-star, named graphs, PROV and SHACL can encode the pieces; Arxana differs by enforcing
+them in one registry and one write path. Not reopened here.
+
+claude-5's reading of what direction gives, for Joe to correct:
+- **Down.** Following directed 'clusions forward ends at sinks: records nothing points
+  out of. Those sinks are the outcome layer (passages written, requirements met or
+  failing, code realised). Pushing every record forward to its sinks is the "one
+  dimension down" projection: the outcome surface Joe described for Cascade Live,
+  spanned by the actions (the edges into it).
+- **Up.** From a region of that surface, following the same 'clusions backward gives
+  its fibre: everything upstream that produced it. The fibre *is* "the graph itself" over
+  that region, and a natural definition of a projection (E4): the material whose
+  actions land in the region. M-formal-arxana already used this word for F5: the fibre of
+  `z ↦ z²` over `-1` is `{i, -i}`, kept as two points rather than collapsed. Fibres here
+  keep alternatives the same way (two sources for one passage stay two).
+- **Needs a declared grading.** Down/up is well defined only along 'clusion types read
+  acyclically (`[:supersedes …]` is declared `:acyclic`; many types are
+  `:bounded-cyclic`). A view names which types it follows; that choice is the "height".
+
+Practical applications, by 'clusion and direction:
+
+| 'Clusion (direction) | Down: forward to outcomes | Up: back to the graph |
+|---|---|---|
+| Span ref (source → passage) | the passage as read | its sources (T0, I2) |
+| Edit (old span → replacement) | the rendered text | what it replaced (track changes) |
+| Nip (seed → accepted span) | what was accepted | why it was proposed: memory, gap or following seed |
+| Supersede (old → new) | the current version | its history |
+| Alignment (paper claim → Lean/Clojure) | what realises a claim | which claims rest on a declaration; the fibre of a changed declaration is exactly what goes stale (claude-1's spread measure) |
+| Requirement (requirement → subject) | met / failing on the surface | the work a failing region implies |
+| N/N-1 link (prev → next) | the latest turn | the strand behind it |
+
+So the requirement list, the stale set and "regions of interest" are three readings of one
+operation, a fibre over part of the outcome surface, rather than three features.
+
 **ARGUE exit: Not met.**
