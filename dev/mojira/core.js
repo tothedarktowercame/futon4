@@ -22,6 +22,8 @@ delete require.cache[require.resolve('./gcc-view')];
 const gccView = require('./gcc-view');
 delete require.cache[require.resolve('./loi')];
 const loi = require('./loi');
+delete require.cache[require.resolve('./variants')];
+const variants = require('./variants');
 delete require.cache[require.resolve('./shortcodes')];
 const shortcodes = require('./shortcodes');
 
@@ -125,6 +127,10 @@ function render(href) {
   if (PATTERN_KINDS.has(kind)) return pagePattern(kind, arg);
   if (kind === 'cascade' || kind === 'cn' || kind === 'ce') return pageCascade(kind, arg);
   if (kind === 'gcc' || kind === 'gi' || kind === 'gi-raw' || kind === 'gparty' || kind === 'gparty-raw') return pageGcc(kind, arg);
+  if (kind === 'vd' || kind === 'vds') {
+    const d = variants.parse(fs.readFileSync(cfg('variantsFile') || '/home/joe/storage/arxana-variants/draft2-variants.json', 'utf8'));
+    return kind === 'vd' ? variants.render(d, arg) : variants.renderSource(d, arg);
+  }
   if (kind === 'loi' || kind === 'lf') return pageLoi(kind, arg);
   if (kind === 'codes') return { title: 'shortcodes', html: shortcodes.helpHtml(shortcodes.readTable(), shortcodes.readRepos(), esc) };
   return pageHome();
@@ -152,6 +158,7 @@ function pageHome() {
 <li>${link('gcc', 'the GCC preview: items, records, links, absences')}</li>
 <li>${link('gparty', 'the Gauntlet party: Thor, Merlin, Questor, Thyra and the party vote')}</li></ul>
 <h2>Letter of intent <span class="dim">(working draft: b notes a benefit, p a beneficiary)</span></h2><ul>
+<li>${link('vd', 'Draft 2 over its source turns')}</li>
 <li>${link('loi', 'the Mozilla letter of intent, with your notes')}</li></ul>
 <h2>Daily scan</h2><ul><li>${link('triage', 'triage the latest brief')}</li></ul>
 <h2>Pending work by state</h2><ul>${labels.map(([s, n]) => `<li>${link('label:' + s, s)} <span class="dim">${n}</span></li>`).join('')}
@@ -598,6 +605,7 @@ function shell() {
   return `<!doctype html><html><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
 <style>
+${variants.css}
 body { font-family: var(--vscode-editor-font-family, monospace); font-size: var(--vscode-editor-font-size, 14px);
   color: var(--vscode-editor-foreground); background: var(--vscode-editor-background); padding: 0 1.2em; margin: 0; line-height: 1.45;
   height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
@@ -697,6 +705,7 @@ let peekTimer = null, noteTimer = null;
 const KEYS = ' · j/k move · Enter follow · Tab/→ right column · Shift+Tab/← left · f hints · h back · / search · g home · i GCC items · : shortcode · v split · r reload';
 function showKeys() {
   $('#keys').textContent = (onTriage() ? ' · w worth · n not now · x invalid · a rule all unruled' : '')
+    + (document.querySelector('#page [data-vd]') ? ' · t full/clean · T additions/full · n/p paragraphs' : '')
     + (onLoi() ? ' · b note a benefit · p note a beneficiary' : '')
     + (document.querySelector('#page .fold') ? ' · e earlier readings · m mentions' : '')
     + (document.querySelector('#page [data-cycle]') ? ' · c cycle view' : '') + KEYS;
@@ -742,7 +751,7 @@ function enter() {
     vs.postMessage({ type: 'shift', main: peekHref, peek: href });
   } else follow(a);
 }
-function follow(a) { if (a) vs.postMessage({ type: 'go', href: a.dataset.href }); }
+function follow(a) { if (a) vs.postMessage({ type: a.dataset.href.startsWith('vds:') ? 'peek' : 'go', href: a.dataset.href }); }
 const HC = 'asdfghjklqwertyuiopzxcvbnm';
 function hintLabel(i, n) {
   if (n <= HC.length) return HC[i];
@@ -792,6 +801,7 @@ window.addEventListener('message', ev => {
     const top = $('#peek').scrollTop;
     $('#peek').innerHTML = m.html;
     peekHref = m.href;
+
     if (m.keep) {
       $('#peek').scrollTop = top;
       const ls = links('peek');
@@ -800,8 +810,13 @@ window.addEventListener('message', ev => {
     } else {
       $('#peek').scrollTop = 0; sel.peek = -1;
       if (active === 'peek') select(0);
+      if (m.href && m.href.startsWith('vds:')) $('#peek [data-vd-here]')?.scrollIntoView({ block: 'center' });
     }
   }
+});
+for (const event of ['mouseover', 'focusin']) document.addEventListener(event, ev => {
+  const a = ev.target.closest('a.vd-word');
+  if (a && a.closest('#page')) { clearTimeout(peekTimer); peekTimer = setTimeout(() => vs.postMessage({type: 'peek', href: a.dataset.href}), 60); }
 });
 document.addEventListener('click', ev => { const a = ev.target.closest('a.ln'); if (a) follow(a); });
 $('#vn').addEventListener('keydown', ev => {
@@ -848,6 +863,16 @@ document.addEventListener('keydown', ev => {
     ev.preventDefault(); return;
   }
   const k = ev.key;
+  const vd = document.querySelector('#page [data-vd]');
+  if (vd && ['t', 'T', 'n', 'p'].includes(k)) {
+    let n = vd.dataset.vd, mode = vd.dataset.vdMode;
+    if (k === 't') mode = mode === 'full' ? 'clean' : 'full';
+    if (k === 'T') mode = mode === 'additions' ? 'full' : 'additions';
+    if (k === 'n') n = vd.dataset.vdNext;
+    if (k === 'p') n = vd.dataset.vdPrev;
+    if (n) vs.postMessage({type: 'go', href: 'vd:' + n + ':' + mode});
+    ev.preventDefault(); return;
+  }
   if (vmode === 'all') {
     vmode = null;
     if (VKEY[k]) askNote('all', VKEY[k]); else $('#note').textContent = '';
