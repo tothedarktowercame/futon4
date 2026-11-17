@@ -285,6 +285,14 @@ insertion (`futon1b_evidence.clj:847–849`); 狗 drops its recall query when sa
 - F2's application time is the server clock at submission, not the edit time;
   `[:supersedes 1]`, patches and choices get no valid time at all.
 
-**MAP exit: Not met.** Findings and the per-WP table are in; two facts remain open: the
-incubator form's actual limits (from the live form), and the dump count (23,147 distinct
-ids by survey B vs 23,158 cited earlier). For Joe to judge.
+**Open facts, resolved (2026-11-17):**
+- Incubator limits: Joe, 2026-11-17: "I think all the short text fields are 150 words
+  long." WP1 uses 150 words for every free-text field.
+- Landscape size: the three dump files hold 23,160 rows; 23,146 distinct evidence ids
+  (2 rows have no id; the rest of the difference is rows repeated where the files'
+  date ranges meet). Earlier figures (23,158; survey B's 23,147) counted rows or included
+  a null id. The landscape is **23,146 distinct turns**, 2026-02-18..11-11, plus the 象
+  records after.
+
+**MAP exit: Not met.** Every question is answered and the table is complete; the
+verdict is Joe's.
