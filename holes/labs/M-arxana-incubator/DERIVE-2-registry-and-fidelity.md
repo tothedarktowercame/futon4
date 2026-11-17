@@ -64,9 +64,13 @@ time (futon1b 5147aa8).
               [:requirement/criterion :requirement/evaluator :requirement/params
                :actor :event-time])
 
-;; R6 nip.
+;; R6 nip. Two seed kinds (zai-13's candidate (c), accepted by Joe 2026-11-17: "the "two
+;; kinds of seed" are good b/c they can support forward and backward reasoning"):
+;;   :nip/seed {:kind :memory :from <m40 memory / turn span>}      ; backward: "already said"
+;;           | {:kind :gap :requirement <R5 id> :evaluation <E5 id or nil>}  ; forward: "still needs"
 (clusion-type :arxana/nip 1 []
-              [:nip/query :nip/result-spans :nip/accepted-by :nip/accepted-at :event-time])
+              [:nip/seed :nip/query :nip/result-spans :nip/accepted-by :nip/accepted-at
+               :event-time])
 
 ;; R7 alignment (after plop-alignment-v1); statuses live in evaluations (D3).
 (clusion-type :arxana/alignment 1

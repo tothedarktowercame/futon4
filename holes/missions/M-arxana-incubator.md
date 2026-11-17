@@ -470,7 +470,12 @@ requirements drive Nipper via failing evaluations, (b) requirements only judge n
 afterwards, (c) recommended: two seed kinds on the same strategies, a memory seed ("already
 said") and a gap seed from a requirement ("still needs"), so a nip records which kind
 proposed it. Distinguishing test on the PLoP case: a passage whose Clojure endpoint is
-missing; under (c) a gap seed can query before any evaluation exists. Joe to choose.
+missing; under (c) a gap seed can query before any evaluation exists. **Joe chose (c)**
+(2026-11-17): "the "two kinds of seed" are good b/c they can support forward and backward
+reasoning"; the edge is now a gap seed, and the nip record carries `:nip/seed`
+(DERIVE-2 §2). Joe added: "I also think this is one way to form a 3/2 pushout square,
+rather than starting with LEFT and RIGHT we could start with NEXT and PREV" (taken to
+claude-1).
 
 Review page for Joe (wiring, what was checked, questions):
 https://zone.hyperreal.enterprises/wip/arxana-incubator-wiring.html, rendered with
