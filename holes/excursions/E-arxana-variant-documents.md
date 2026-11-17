@@ -289,3 +289,15 @@ attributed, dated placement with argument/item endpoints, zone and order;
 arrangements, not evidence that copy/transclude mode, form questions or word
 limits already exist. The case-table statuses above separate these primitives
 from the missing variant-document workflow.
+
+## DERIVE-1 — Xanadu requirements from Nelson's texts (2026-11-17)
+
+Joe, 2026-11-17: "Just like we did for Elephant-2000 I think we should build some
+acceptance criteria that relate to what the original author (Nelson or McCarthy
+respectively) was talking about ... I'd love to actually show him a demo that he'd be
+interested in." → `holes/labs/E-arxana-variant-documents/DERIVE-1-nelson-requirements.md`:
+20 rows (N1–N20) quoting Nelson by line from local copies in
+`~/storage/references/nelson-xanadu/` (xanasimp 2012; ACM Computing Surveys 1999),
+each against the current demo, and five acceptance tests T1–T5 with their bad cases.
+36 quotations checked verbatim against the cited lines. Literary Machines and the
+17 rules are not yet read from a primary copy.
