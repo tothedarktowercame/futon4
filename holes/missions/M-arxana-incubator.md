@@ -978,6 +978,16 @@ VERIFY earlier (Bergsonian problematics: a real problem, well stated) and as
       Carried to packet 2: a ground instance records its `:position` but
       `cp/applications` rewrites every identical subtree, so with two equal redexes each
       instance rewrites both; pair search must apply at the recorded position.
+      Packet 2, `host-pairs` (codex-13 4a0d38f38, review fix 16fdf2bd7, on futon3c master):
+      with R1 = plain beta (no `choose` in it) and R2, the check finds the R1/R2 conflict
+      on the Q87-shaped host unaided: non-joining at the inner family, both as the family
+      applied to the outer binder (in the host, before any step) and as the family
+      applied at `i` (after the outer beta step). The three stages are told apart by
+      observation (instantiated choice keys 2 / 0 / 0; unreduced 0 / 2 / 0) with no
+      non-joining pair in any stage. The T3 "no pair" expectation was wrong (nested
+      redexes join); codex-13 stopped and showed it. Reports are not yet merged (the same
+      pair is reported once per explored state): packet 4. Next: packet 3, priority and
+      `settled-by`, on the Q83/Q78 Or pair.
 - [ ] **Witness 2, the incubator application:** submitted by 2026-11-20 with each field
       traceable (WP1, WP2).
 - [ ] **Witness 3, PLoP 2026 alignment** (end-of-mission test): `plop-alignment-v1`
