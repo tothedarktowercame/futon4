@@ -692,4 +692,33 @@ LOI and the PLoP paper.
   the external thing it closes.
 - `nomad/letter-from-the-future` as the method for the Fellowship LOI (WP12).
 
+**Joe's decision and two further points (2026-11-17):**
+
+> "🈸: The additions sound very useful. VERIFY in this sense relates to Bergsonian
+> problematics rather than abstractions. Something related that occurred to me is that the
+> Cascade Live looks like a graph projected into 2D space (a web page) but actually it's
+> easier to think about it embedded in 3D (all graphs do), with the *outcome* layer a 2D
+> surface that is spanned by the actions. Then we could think about "regions" of
+> interest. Arxana spatialises things in higher dimensions but should also admit this
+> projection."
+
+- **Accepted and applied:** the return port (O-published in open formats; I-returns for
+  others' edits, reviews, attestations) and the following seed are in the wiring
+  (futon5 `arxana-incubator-exotype.edn`, re-validated: all eight checks pass).
+  `war-machine/state-capture` as a VERIFY check and `nomad/letter-from-the-future` as the
+  LOI method are adopted.
+- **VERIFY as Bergsonian problematics:** VERIFY here asks whether the problems were stated
+  well (Bergson: the true problem is posed, not given; a badly stated problem has no good
+  answer), not only whether abstractions check. It meets D&G's nomad science,
+  "problematic, rather than theorematic" (Prop III), and `state-capture`'s test of whether
+  work closes an external problem. To be written into VERIFY's plan: for each work
+  package, the problem it states and the evidence the statement was right.
+- **Projection to an outcome surface:** a graph is embedded in 3D; the outcome layer is a
+  2D surface spanned by the actions; "regions" of interest are areas of that surface.
+  For the design: Arxana's records live in a higher-dimensional space (spans, links,
+  evaluations, time), and a view must admit the projection Joe describes: actions as the
+  coordinates of an outcome surface, regions on it as selections. A region is then a way
+  of defining a projection (E4): the material whose actions land in that region. To be
+  added to DERIVE §6 Views when VERIFY plans the views.
+
 **ARGUE exit: Not met.**
