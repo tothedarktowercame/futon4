@@ -105,18 +105,19 @@ times from February onward. Questions this answers:
 
 ### Cases the pressure test produces
 
-Status column is a first reading from the code names and docstrings, NOT a
-check; MAP must confirm each.
+The jvm-arxana column is the packet B source audit below (2026-11-17);
+Classic remains the initial reference reading. Short source names resolve to
+the repository paths specified in that audit.
 
 | # | Case | Instance | Classic Arxana (reference) | jvm-arxana (basis) |
 |---|---|---|---|---|
-| 1 | Divergent variants | one passage edited differently for incubator and LOI | include/transclude are single-source; no sibling versions | unknown; F0 resolver handles copy as typed outcome |
-| 2 | Edits as attributable acts | draft-2's edits have no record at all | no | text_rebase patches carry author/operation id |
-| 3 | Suggested propagation | an LOI edit raises "also apply to incubator?" | no | no |
-| 4 | Three granularities | clip (sub-sentence), passage (one claim), slot (~150 words) | scholia anchor on passages | codepoint locators at any size |
-| 5 | Word limits as pressure | slot limit recorded as the reason for an edit | no | no |
-| 6 | Round trip from outside | text pasted into Mozilla's web form and edited there | no | F1b2 relocation re-anchors across an edited projection |
-| 7 | Cross-time queries | the T/T1/T2 example above | no | futon1b is XTDB 2; whether Arxana records use valid time is unchecked |
+| 1 | Divergent variants | one passage edited differently for incubator and LOI | include/transclude are single-source; no sibling versions | partial — stored patches/alternatives, but one accepted head per artifact (`formal_f2.clj:146–204`). |
+| 2 | Edits as attributable acts | draft-2's edits have no record at all | no | present — patch author/op-id plus dated application record (`formal_f2.clj:16–22,51–60`); historical edit-time import remains missing. |
+| 3 | Suggested propagation | an LOI edit raises "also apply to incubator?" | no | missing — F2 submits to one artifact and reloads its head; no sibling propagation proposal (`futon4a-formal-f2.el:315–335`). |
+| 4 | Three granularities | clip (sub-sentence), passage (one claim), slot (~150 words) | scholia anchor on passages | partial — arbitrary codepoint spans (`correspond.clj:198–220`); claim/slot semantics are not supplied. |
+| 5 | Word limits as pressure | slot limit recorded as the reason for an edit | no | missing — patch/application schemas have no slot/word-limit reason; choice has a reason only (`formal_f2.clj:16–22,51–60,251–256`). |
+| 6 | Round trip from outside | text pasted into Mozilla's web form and edited there | no | partial — shifted spans resolve, duplicated spans remain ambiguous (`formal_f1_relocation.clj:94–155`); no external-form placement/import workflow. |
+| 7 | Cross-time queries | the T/T1/T2 example above | no | partial — dated records exist, but append uses default XTDB times and no adapter as-of (`futon1b_arxana.clj:821`; `store_http.clj:18–22`). |
 
 ### Nipper's place
 
@@ -160,3 +161,131 @@ Packets (discovery, not build, 2026-11-17):
   demo can load.
 - **B (code survey):** answer 1–4 from the jvm-arxana code and the futon4a
   demos, each answer citing file:line.
+
+
+## MAP findings (packet B, codex-13, 2026-11-17)
+
+Source audit: futon3c HEAD `fa56bec2a`, futon4a `05e0e6a`, futon1b
+`5be8ce8`; excursion read at futon4 `180a1f9`. Unless qualified below,
+`.clj` paths are under `futon3c/src/futon3c/arxana/`; `.el` paths under
+`futon4a/lisp/`. This is a code survey, not a claim that the demos or live
+stores were exercised. No JVM, launcher, importer or store write was run.
+Existing tests were read as executable specifications, not reported as passing
+this turn. The answers below follow directly from the implementation branches.
+
+### 1. Sources — partly
+
+**Yes to reusable materialisation machinery; no to an existing arbitrary dump
+importer or the proposed bitemporal contract.** `formal_f1.clj:101–130`
+accepts a settled-turn-shaped map plus sentence/fragment analysis, and the
+fixture wrapper reads a fixed list of turn JSON and analysis JSON files. It
+is not a loader for `~/storage/operator-turns/`. A dump turn can be adapted,
+but missing analysis must not be invented to satisfy that fixture format.
+`formal_f1.clj:169–200` ingests UTF-8 bytes and appends claims, evidence,
+assessments, marks and external references through the public service.
+
+Identity is explicit: artifact `xiang:<turn-id>`, logical revision
+`<turn-id>@settled`, and a separate content-derived byte revision
+(`formal_f1.clj:111–120,175–182`). External-reference identity includes store,
+record, schema, valid-time and digest (`records.clj:105–114`). However F1's
+helper hardcodes valid-time `2026-11-08` (`formal_f1.clj:76–82`). That must
+not be used as the historical utterance time for a dump import. The newer
+production reference builder already names Evidence Landscape `body/text`,
+pins its bytes and uses `created_at` (`turn_mention_writer.clj:71–94`); it
+requires an evidence id and is not a dump importer either.
+
+**The `:valid-time` field is record data, not proof of XTDB valid-time
+publication.** `futon1b/futon1b_arxana.clj:821–832` submits `[:put-docs table
+doc]` without a supplied valid interval; revision/head writes likewise use
+plain put-docs at `:729–748`. Its newest-evidence documentation explicitly
+calls valid time the append's system time (`:420–423`).
+`store_http.clj:15–24` advertises `:entity-as-of false` and
+`:hyperedge-valid-time false`. Missing: a lazy historical-turn registration
+contract with authentic T0, distinct clip/edit/place act times, temporal
+publication and as-of queries. A corrected source needs explicit revision
+lineage; neither an external-reference date nor a new digest alone implements
+the proposed valid-time/system-time correction history.
+
+### 2. Divergent variants — partly
+
+**Two submitted patches based on one revision remain addressable; two
+independently accepted sibling heads of the same artifact do not.**
+`formal_f2.clj:16–22,146–164` persists a content-addressed patch with base,
+artifact id, author, operation id and hunks before examining the current head.
+For an old base it traverses stored applications, composes and rebases onto
+that head; it does not preserve the old base as an independently advancing
+branch. Successful ingestion CASes the observed head and appends a from/to
+application (`:165–181`). A CAS race refuses rather than choosing another head.
+
+Conflicting patches produce stored conflict/alternative records with result
+text and digests (`:113–129,182–202`). These are real addressable alternatives,
+not two editable document branches. Choosing an alternative requires the
+conflict's original head still be current, then advances that one head
+(`:221–273`). The editor submits its artifact id and reloads that head
+(`futon4a-formal-f2.el:315–335,337–352`). The existing two-instance test
+expects the second disjoint patch to be **rebased**, preserving both edits in
+one head (`test/futon3c/arxana/formal_f2_test.clj:88–108`).
+
+Missing: a deliberate fork act linking separately named variant artifacts to
+a common passage revision, independent heads/arrangements, and a policy/UI
+for suggesting propagation. Separate artifact ids are a possible substrate,
+not an already implemented sibling-version workflow. Conflict alternatives
+must not be sold as intentional variants.
+
+### 3. Copy — no to a new lineage-bearing scope; partial relocation support
+
+`formal_f1_relocation.clj:60–79` constructs a fixture that duplicates a scope's
+text. `:94–120` evaluates registered strategies in the successor revision;
+`:122–155` appends candidates and source/target revision ids as evidence about
+the **unchanged interpretation claim**. Ambiguous means disputed/partial,
+not a chosen new scope. `:157–166` stores those attestations; it does not mint
+an act/place or derives-from record for the copied occurrence.
+
+The existing test explicitly requires two candidates for the duplicated
+text and unchanged original claims
+(`test/futon3c/arxana/formal_f1_relocation_test.clj:67–95`). The F1 editor
+exposes relocation records at point (`futon4a-formal-f1.el:306`); presentation
+of candidates is not copy lineage. Missing: an explicit copy/placement act,
+second scope identity, and the pinned-copy versus follow-version distinction.
+For importing edited web-form text, relocation can help find surviving spans,
+but cannot infer which copy act happened or its T2.
+
+### 4. Clips and edits as records — partly
+
+**A correspondence assertion can describe the clip's revision-pinned
+relationship, but is not yet a durable attributable clip act.**
+`correspond.clj:198–241` validates both registered manifestation endpoints,
+revision ids, locators, direction, cardinality, methods (`:quote` and
+`:exact-range` included) and verification. Its semantic identity explicitly
+excludes timestamps (`:243–254`); validation requires neither clip actor nor
+clip time. Repeating the same semantic assertion is a duplicate in the
+in-memory repository (`:109–118`). Therefore repeated clipping acts at T and
+T1 need their own act identity rather than pretending to be two different
+correspondences. Attributable assessments are separate from the relationship;
+stale correspondence is not diminished authorship.
+
+The generic `CorrespondenceRepository` is a persistence seam, but its supplied
+implementation is an atom (`correspond.clj:51–146`). The service **does** wire
+queries when a repository is supplied (`service.clj:732–746`); the namespace
+header's broad “service/store wiring later” wording is outdated for queries.
+It does not supply a durable implementation of this protocol. Do not confuse
+this with F3's persisted **different schema**: `[:correspondence 1]` links a
+manifestation scope to an entity (`type_registry.clj:202–205`), and
+`formal_f3_correspond.clj:44–54,159–179` publishes those claims and evidence/
+assessments through the store. That is working step-to-declaration persistence,
+not a persisted two-manifestation D4 correspondence repository.
+
+**An F2 patch is already a useful edit record.** It records author, op-id,
+base and codepoint hunks (`formal_f2.clj:16–22`; `text_rebase.clj:78–97`), and
+an accepted application records from/to revisions and a clock-supplied event
+time (`formal_f2.clj:51–60,175–177`). Missing for this use: original offline
+edit time, edit rationale such as a slot limit, explicit passage/variant
+lineage and the clip-to-edit-to-placement query. Conflict choice has actor,
+chosen-at and reason (`:221–256`), but that is not a general edit rationale.
+
+F6 is also relevant existing work: `formal_f6.clj:32–40` makes an immutable,
+attributed, dated placement with argument/item endpoints, zone and order;
+`:114–118` exposes placement history ids. It is a useful predecessor for
+arrangements, not evidence that copy/transclude mode, form questions or word
+limits already exist. The case-table statuses above separate these primitives
+from the missing variant-document workflow.
