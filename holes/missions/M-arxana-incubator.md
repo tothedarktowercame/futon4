@@ -1,6 +1,6 @@
 # M-arxana-incubator — Arxana as an innovation hub, proved on the Mozilla applications
 
-**Status:** DERIVE (2026-11-17; MAP exit met, Joe)
+**Status:** ARGUE (2026-11-17; DERIVE exit met, Joe)
 **Owner:** Joe (operator); claude-5 drafting. Seats to be matched to work packages after MAP.
 **Repos:** `futon4` (this mission; Mojira; classic Arxana as reference), `futon3c`
 (jvm-arxana: `src/futon3c/arxana/`), `futon1b` (store: `futon1b_arxana.clj`),
@@ -508,4 +508,7 @@ https://zone.hyperreal.enterprises/wip/arxana-incubator-wiring.html, rendered wi
 Graphviz from the validated EDN by `holes/labs/M-arxana-incubator/wiring-to-dot.bb`.
 Joe's corrections to DERIVE-1/2 wait for that review (Joe, 2026-11-17).
 
-**DERIVE exit: Not met.**
+**DERIVE exit: Met.** Joe, 2026-11-17: "OK, I think this is certainly enough of a DERIVE
+sketch that we could move to ARGUE and see what we come up with". Open in DERIVE and
+carried into ARGUE: whether a projection's requirements can be expressed as cascade want
+tokens checked by the existing wiring derivation.
