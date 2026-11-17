@@ -75,8 +75,18 @@ taking their seats (see `WORKPACKAGES.md`, "Hub").
   engine rather than in patch theory.
 - Where free-standing links live today in jvm-arxana and Mojira (Joe: they exist; the
   demo did not use them).
-- The Sierpinski framing of the three strands (interactive agents, simulation,
-  automation) with Arxana as the fourth: Joe's to draw.
+- The Sierpiński tetrahedron framing of the three strands in other ongoing work:
+
+  simulation = variables = verbs : the MetaCA research which explores AIF in a minimal model
+  automation = holes = nouns : the proof-theoretic work from apm-lean, mfuton
+  interactive agents = organisation : M-repl-circus and the semantics of intent per McCarthy
+
+  with Arxana as the fourth facet (evidence): TBD as a "cone" over the above
+
+  all leading to a framing of a recursive "workflow" centre which touches on all of the above.
+  
+  See Figure 3 in https://zone.hyperreal.enterprises/wip/futon-2026.html for earlier work
+  on this
 
 ### Provenance
 
@@ -117,7 +127,8 @@ Fellowship LOI as a second projection).
 
 Out, for now: DiagramProver rewrite rules; transcopyright and payment; MetaCA run
 records as a second landscape; a multi-author editor beyond the record design (T6 is
-specified, not built, in this mission).
+specified, not built, in this mission).  Not because they are unimportant but because
+we need these foundations to make them work.
 
 ### Completion criteria
 
@@ -156,7 +167,10 @@ DiagramProver (rewrite rules) without depending on them.
 Joe owns; claude-5 drafts and reviews. Seats per work package after MAP. Joe's restart
 of futon1b and futon3c (WP3) is needed for valid time.
 
-**IDENTIFY exit: Not met.** Awaiting Joe's reading of gap and scope.
+**IDENTIFY exit: Met.** Joe has read and agreed to the gap and scope, and
+has clarified the Sierpiński framing.  Further evidence: Rob has been
+working on a browser for neo4j, and attests that related problems show
+up in his mfuton workflow.
 
 ## 2. MAP — survey questions
 
