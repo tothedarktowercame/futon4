@@ -444,6 +444,15 @@ added when it arrives. Answers (full text in each agent's notes):
   superseding rule 'clusions, and one proof projected with each sentence linked to its
   rules and Lean span; planted check: a changed reading shows as superseded and its
   sentences stale.
+  Gap-analysis pass 2 (codex-13, futon4 9879fd2, appended to `GAP-ANALYSIS.md`; feeds
+  VERIFY): 16 requirements, six new type gaps (G14 rewrite rule as a decision, G15
+  generated-by / rule application, G16 structural locator on declaration + step + typed
+  term, G17 accepted residual, G18 regression finding, G19 reproducible computed
+  projection), six conflicts. Verdict on claude-7's test: **not yet** specified enough to
+  pass; the design has the record families but lacks guarded rule identities, a complete
+  sentence-to-rule mapping, structural anchors, renderer/corpus/rule pins, retained
+  wording history, and the consumer that marks every dependent sentence stale. This is
+  the PaperPrinter use case's gap list.
   Earlier note: Joe, 2026-11-17:
   "we should not *wait* on MAP until claude-7 comes back to us, but expect that
   claude-7's pass will contribute instead to VERIFY, i.e., we can start DERIVE when we
