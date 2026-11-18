@@ -58,3 +58,63 @@ test('merge preserves distinct 馬 quote parts between the same turns', () => {
   const merged = S.merge(initial, delta, null);
   assert.strictEqual(merged.edges.filter((e) => e.kind === 'quotes').length, 2);
 });
+
+// Joe 2026-11-18: the monitor's old message named a setting key and borrowed
+// a session from top items; "I don't see why we should even have 11s
+// lookups". With no session set, it follows Joe's most recent conversation
+// from 象's turn record and lists the others to switch to.
+test('monitor with no session set follows the newest conversation in 象\'s turn record', async () => {
+  const fs = require('fs'), os = require('os'), path = require('path'), Module = require('module'), http = require('http');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mojira-recent-'));
+  fs.writeFileSync(path.join(dir, 'lex.json'), '[]'); fs.writeFileSync(path.join(dir, 'pending.tsv'), 'id\n');
+  const initial = fs.readFileSync(path.join(__dirname, 'strand-fixture', 'initial.json'), 'utf8');
+  const turns = [
+    { 'turn-id': 'agent-a-session-end-20261118T050000Z', 'session-id': 'session-ended', 'agent-id': 'agent-a', 'created-at': '2026-11-18T05:00:00Z' },
+    { 'turn-id': 'agent-b-turn-9', 'session-id': 'session-invented', 'agent-id': 'agent-b', 'created-at': '2026-11-18T04:30:00Z' },
+    { 'turn-id': 'agent-c-turn-1', 'session-id': 'pending', 'agent-id': 'agent-c', 'created-at': '2026-11-18T04:20:00Z' },
+    { 'turn-id': 'agent-b-turn-8', 'session-id': 'session-invented', 'agent-id': 'agent-b', 'created-at': '2026-11-18T04:10:00Z' },
+    { 'turn-id': 'agent-d-turn-3', 'session-id': 'session-other', 'agent-id': 'agent-d', 'created-at': '2026-11-18T03:50:00Z' }];
+  const asked = [];
+  let turnsUp = true;
+  const server = http.createServer((req, res) => {
+    asked.push(req.url);
+    if (req.url.startsWith('/api/alpha/xiang/turns')) {
+      if (!turnsUp) { res.statusCode = 503; res.end(JSON.stringify({ reason: 'down' })); return; }
+      res.end(JSON.stringify({ ok: true, turns }));
+    } else if (req.url.startsWith('/api/alpha/circus/strand')) res.end(initial);
+    else { res.statusCode = 404; res.end('{}'); }
+  });
+  await new Promise(r => server.listen(0, '127.0.0.1', r));
+  const config = { lexiconPath: path.join(dir, 'lex.json'), pendingPath: path.join(dir, 'pending.tsv'), agencyUrl: `http://127.0.0.1:${server.address().port}` };
+  const original = Module._load;
+  Module._load = function(req, ...rest) { return req === 'vscode' ? { workspace: { getConfiguration: () => ({ get: k => config[k] }) } } : original.call(this, req, ...rest); };
+  let listener; const messages = [];
+  const panel = { webview: { postMessage: m => messages.push(m), onDidReceiveMessage: f => { listener = f; return { dispose() {} }; } } };
+  const lastPage = () => messages.filter(m => m.type === 'page').at(-1);
+  const states = [{ history: [] }, { history: [] }];
+  try {
+    delete require.cache[require.resolve('../core')];
+    const core = require('../core'); core.attach(panel, states[0]);
+    listener({ type: 'go', href: 'strand:' });
+    for (let i = 0; i < 100 && !(lastPage() && /turn-003/.test(lastPage().html)); i++) await new Promise(r => setTimeout(r, 10));
+    const html = lastPage().html;
+    assert.ok(asked.some(u => u.includes('session=session-invented')), 'opened the newest conversation: ' + asked);
+    // switch line: the newest bold, the other a link; session-end and "pending" dropped
+    assert.match(html, /your recent conversations: <b>agent-b<\/b>/);
+    assert.match(html, /data-href="strand:session-other"/);
+    assert.doesNotMatch(html, /session-ended|agent-c/);
+    assert.doesNotMatch(html, /monitorSession|top items/, 'no setting keys or borrowed routes in what Joe reads');
+    // 象's record down: a plain message, not a setting name
+    delete require.cache[require.resolve('../core')];
+    turnsUp = false; messages.length = 0;
+    if (states[0].strandTimer) clearInterval(states[0].strandTimer);
+    const core2 = require('../core'); core2.attach(panel, states[1]);
+    listener({ type: 'go', href: 'strand:' });
+    for (let i = 0; i < 100 && !(lastPage() && /did not answer/.test(lastPage().html)); i++) await new Promise(r => setTimeout(r, 10));
+    assert.match(lastPage().html, /象's turn record did not answer/);
+    assert.doesNotMatch(lastPage().html, /monitorSession/);
+  } finally {
+    for (const st of states) if (st.strandTimer) clearInterval(st.strandTimer);
+    Module._load = original; server.closeAllConnections(); await new Promise(r => server.close(r)); fs.rmSync(dir, { recursive: true });
+  }
+});

@@ -120,7 +120,7 @@
         "mojira.monitorSession": {
           "type": "string",
           "default": "",
-          "description": "Session shown by the Circus monitor. Empty uses the session of the newest turn already named by loaded Circus data."
+          "description": "Session shown by the Circus monitor. Empty follows the conversation you wrote in most recently, from 象's turn record."
         },
         "mojira.monitorPollSeconds": {
           "type": "number",

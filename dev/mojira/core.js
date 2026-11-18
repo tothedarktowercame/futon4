@@ -476,18 +476,49 @@ function pageCircus(kind, arg) {
 
 const strandCache = new Map(); // session -> {at, data | err, loading?}
 
-// The explicit setting wins. Otherwise use the session carried by the newest
-// turn in already-loaded Circus top-item data (when that route supplies one).
+// The explicit setting wins. Otherwise the conversation Joe wrote in most
+// recently, read from 象's turn record (GET /api/alpha/xiang/turns, newest
+// first, under a second). Joe 2026-11-18, on the old fallback (borrow a
+// session from loaded top items) and an 11 s evidence scan: "I don't see why
+// we should even have 11s lookups".
+let recent = null;   // {at, list: [{session, agent, at}] | err}
+const RECENT_MAX = 5;
+function recentSessions(turns) {
+  const out = [];
+  for (const t of turns || []) {
+    const sid = t['session-id'];
+    if (!sid || sid === 'pending' || /session-end/.test(t['turn-id'] || '')) continue;
+    if (out.some((r) => r.session === sid)) continue;
+    out.push({ session: sid, agent: t['agent-id'] || '?', at: t['created-at'] || '' });
+    if (out.length === RECENT_MAX) break;
+  }
+  return out;
+}
+function needsRecent() { return !cfg('monitorSession') && (!recent || Date.now() - recent.at > 30000); }
+function loadRecent(cb) {
+  const base = cfg('agencyUrl') || 'http://127.0.0.1:7070';
+  getJson(`${base}/api/alpha/xiang/turns?limit=60`, (err, data) => {
+    recent = { at: Date.now(), ...(err ? { err: err.message, list: [] } : { list: recentSessions(data.turns) }) };
+    cb();
+  });
+}
 function monitorSession() {
   const configured = cfg('monitorSession');
   if (configured) return configured;
-  const top = circusCache.get('top');
-  const turns = ((top && top.data && top.data.items) || [])
-    .flatMap((it) => it['focus-relations'] || [])
-    .map((r) => r.turn || {})
-    .filter((t) => t.session_id || t.session);
-  turns.sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
-  return turns.length ? (turns[0].session_id || turns[0].session) : '';
+  return recent && recent.list.length ? recent.list[0].session : '';
+}
+function noSessionHtml(title) {
+  const why = recent && recent.err ? `象's turn record did not answer (${esc(recent.err)}).` : "象's turn record has no recent conversation of yours.";
+  return `<h1>${esc(title)}</h1><p class="err">${why} The monitor follows one conversation; with none found there is nothing to show.</p>`;
+}
+// The other recent conversations, as links, under the monitor's heading.
+function recentLine(session, kind) {
+  const list = (recent && recent.list) || [];
+  if (list.length < 2) return '';
+  const when = (iso) => String(iso).slice(11, 16);
+  return `<p class="dim">your recent conversations: ${list.map((r) => (r.session === session
+    ? `<b>${esc(r.agent)}</b> ${when(r.at)}`
+    : `${link(kind + ':' + r.session, r.agent)} ${when(r.at)}`)).join(' · ')}</p>`;
 }
 
 function strandSession(href) {
@@ -497,6 +528,7 @@ function strandSession(href) {
 
 function needsStrand(href) {
   if (!href || !['strand', 'mamap'].includes(href.split(':')[0])) return false;
+  if (needsRecent()) return true;
   const session = strandSession(href);
   return Boolean(session && !strandCache.has(session));
 }
@@ -524,8 +556,9 @@ function strandUrl(session, params = '') {
 }
 
 function loadStrand(href, cb) {
+  if (needsRecent()) { loadRecent(() => (strandSession(href) && !strandCache.has(strandSession(href)) ? loadStrand(href, cb) : cb())); return; }
   const session = strandSession(href);
-  if (!session) { strandCache.set('', { at: Date.now(), err: 'Set mojira.monitorSession, or first open Circus top items containing a session.' }); cb(); return; }
+  if (!session) { cb(); return; }
   getJson(strandUrl(session, '&n=20'), (err, data) => {
     strandCache.set(session, { at: Date.now(), ...(err ? { err: err.message } : { data }) });
     cb();
@@ -568,20 +601,22 @@ function pollStrand(href) {
 
 function pageStrand(arg) {
   const session = arg || monitorSession();
-  if (!session) return { title: 'Circus monitor', html: '<h1>Circus monitor</h1><p class="err">Set mojira.monitorSession, or first open Circus top items containing a session.</p>' };
+  if (!session) return { title: 'Circus monitor', html: noSessionHtml('Circus monitor') };
   const c = strandCache.get(session || '') || { err: 'not loaded' };
-  if (c.err) return { title: 'Circus monitor', html: `<h1>Circus monitor</h1><p class="err">${esc(c.err)}</p>` };
+  if (c.err) return { title: 'Circus monitor', html: `<h1>Circus monitor</h1>${recentLine(session, 'strand')}<p class="err">${esc(c.err)}</p>` };
   const dir = cfg('gccPreviewDir') || '/home/joe/storage/gcc-preview';
   const C = circusView({ esc, link, trim, hasItem: (x) => gccView.hasItem(dir, x) });
-  return strandView({ esc, link, counts: C.counts }).render(c.data);
+  const page = strandView({ esc, link, counts: C.counts }).render(c.data);
+  return { ...page, html: page.html.replace('</h1>', '</h1>' + recentLine(session, 'strand')) };
 }
 
 function pageMaMap(arg) {
   const session = arg || monitorSession();
-  if (!session) return { title: '馬 map', html: '<h1>馬 map</h1><p class="err">Set mojira.monitorSession, or first open Circus top items containing a session.</p>' };
+  if (!session) return { title: '馬 map', html: noSessionHtml('馬 map') };
   const c = strandCache.get(session || '') || { err: 'not loaded' };
-  if (c.err) return { title: '馬 map', html: `<h1>馬 map</h1><p class="err">${esc(c.err)}</p>` };
-  return maMapView({ esc, link }).render(c.data);
+  if (c.err) return { title: '馬 map', html: `<h1>馬 map</h1>${recentLine(session, 'mamap')}<p class="err">${esc(c.err)}</p>` };
+  const page = maMapView({ esc, link }).render(c.data);
+  return { ...page, html: page.html.replace('</h1>', '</h1>' + recentLine(session, 'mamap')) };
 }
 
 function scheduleStrandPoll(href) {
