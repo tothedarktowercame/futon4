@@ -488,7 +488,7 @@ Benefit splits the same way: a preference met, a question settled (epistemic), a
 (clusion-type :outcome/line 1 []
   [:line/id         ; namespaced, e.g. :disbenefit/H5 (never the WM guardrail ids :harm-rule/H1..H6)
    :line/sign       ; #{:harm :benefit}
-   :line/term       ; #{:preference :channel :cost :option :chooser}
+   :line/term       ; #{:risk :model-error :ambiguity :information :cost :margin} (see alignment below)
    :line/label])
 ;; A stated preference of a party over a line.
 (clusion-type :preference/stated 1
@@ -514,11 +514,11 @@ Benefit splits the same way: a preference met, a question settled (epistemic), a
 Every `:effect/observation` and every `:effect/claim` with mode `:observed` carries an evidence attestation (§9 R1): method, what was ranged over, coverage, standing; `:contradicted` is the surprise. A claim citing a preference is a separate edge (`:effect/cites` claim→preference), since endpoints are fixed-arity. No aggregate type.
 
 **Worked examples.**
-- **Live, channel harm (H1/H5).** The a97J08 conflict finding `c47f8076…` is stale because of supersession `8ca7b206…` (Q83 over raw Q56), read from the store by `store-finding-view`. Party: the dependence class "readers of finding c47f8076"; line `:disbenefit/H1` (the record says something that is no longer so), term `:channel`; observation from the supersession's event time, open until a repair (a finding recomputed under the successor rule set; the rule-set diff `540e3a7f…` is its evidence); size 1. No preference needed.
+- **Live, channel harm (H1/H5).** The a97J08 conflict finding `c47f8076…` is stale because of supersession `8ca7b206…` (Q83 over raw Q56), read from the store by `store-finding-view`. Party: the dependence class "readers of finding c47f8076"; line `:disbenefit/H1` (the record says something that is no longer so), term `:model-error` for a reader who trusts it and `:ambiguity` once `store-finding-view` flags it stale; observation from the supersession's event time, open until a repair (a finding recomputed under the successor rule set; the rule-set diff `540e3a7f…` is its evidence); size 1. No preference needed.
 - **Planted, size.** Superseding Q83 would stale all five a97J08 case-conclusion roles (the 8C planted check): the same harm with size 5, party the readers of those roles.
-- **Benefit of the same work.** Q83 settled a97J08's split into one four-way case split: an epistemic benefit (term `:channel`: a settled question is a channel that now tracks the state) to a different party. Recorded separately, never netted against the harm.
+- **Benefit of the same work.** Q83 settled a97J08's split into one four-way case split: an epistemic benefit (term `:information`, sub-kind `:state`) to a different party. Recorded separately, never netted against the harm.
 - **Preference harm (H3).** Joe re-sending a request: party Joe (`:person`), preference stated `:self` (his turns asking not to have to nudge), observation from the dated turns.
-- **Kind changes over time.** The a97J08 wording reversal (Q66 → Q78) is channel/ambiguity until Joe rules on the wording; from the ruling it is a preference harm. Two claims, the second citing the ruling.
+- **Kind changes over time.** The a97J08 wording reversal (Q66 → Q78) is ambiguity until Joe rules on the wording; from the ruling it is a preference harm (`:risk`). Two claims, the second citing the ruling.
 
 **Thyra, revised** (mission §6 extension 4 with claude-1's correction): harm becomes (line, party, term, stated-by, observed?); Thyra ranks only on observed harms whose preference is self-stated, or on channel harms; the theorem is per (line, party): closing an item never adds an open observed harm on that line for that party. Extension 5 is narrowed: the wait for a stated preference applies to preference harms only.
 
