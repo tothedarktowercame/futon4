@@ -1109,14 +1109,6 @@ svg.intents .lane { fill: none; stroke-width: 2; } svg.intents .lane.realised { 
 svg.intents .lane.open { stroke: var(--vscode-descriptionForeground); stroke-dasharray: 4 3; } svg.intents .lane.ended { stroke: var(--vscode-errorForeground, #e44); }
 svg.intents .turn { fill: var(--vscode-editor-foreground); } svg.intents .intent { fill: var(--vscode-editor-background); stroke: var(--vscode-textLink-foreground); stroke-width: 2; }
 svg.intents .kind { font-weight: bold; } svg.intents .realisedlabel { fill: var(--vscode-textLink-foreground); } svg.intents .endedlabel { fill: var(--vscode-errorForeground, #e44); }
-svg.herd .herd-turn circle { stroke: var(--vscode-editor-background); stroke-width: 1.5; }
-svg.herd .herd-turn.read circle { fill: var(--vscode-testing-iconPassed, #3a3); }
-svg.herd .herd-turn.no-proposed-patterns circle { fill: var(--vscode-descriptionForeground); }
-svg.herd .herd-turn.pending circle { fill: var(--vscode-editorWarning-foreground, #c90); }
-svg.herd .herd-turn.unavailable circle { fill: var(--vscode-errorForeground, #e44); }
-svg.herd .herd-bell path { fill: none; stroke: var(--vscode-editorInfo-foreground, #49c); stroke-width: 1.2; }
-svg.herd .endpoint text, svg.herd .strand-link { fill: var(--vscode-descriptionForeground); font-size: 9px; }
-svg.herd .dimmed { opacity: .18; }
 svg.cascade .elabel { fill: var(--vscode-descriptionForeground); }
 svg.cascade .gluetag, .gluetag { fill: var(--vscode-editorWarning-foreground, #c90); color: var(--vscode-editorWarning-foreground, #c90); font-size: 10px; font-weight: bold; }
 svg.cascade a.ln { cursor: pointer; }

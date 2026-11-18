@@ -1,10 +1,17 @@
-// Parallel operator-session timelines and the bells crossing between them.
+// Parallel operator sessions and the bells crossing between them, as a
+// vertical timeline in git-merge style (Joe 2026-11-18, after the intent
+// graph: "can you get the herd to do a similar vertical timeline with git
+// merge styling?"). One narrow coloured column per session (and per agent
+// seen only at a bell's end), one row per event, oldest at the top: a turn
+// is a dot in its session's column; a bell branches from the sender's
+// column into the receiver's. Every row has a label at the panel's text
+// size; no viewBox, so nothing is scaled. Common ground (patterns and
+// missions shared across sessions) is listed under the graph as text.
 // Pure: the already-merged /api/alpha/circus/herd response -> {title, html}.
 'use strict';
 
-const { wrap, spread } = require('./cascade-view');
-
-const X0 = 152, X1 = 1050, Y0 = 62, SESSION_GAP = 46, AGENT_GAP = 27;
+const FONT = 14, ROW = 24, LANE = 18, X0 = 14, R = 5;
+const COLOURS = ['blue', 'orange', 'green', 'purple', 'red', 'yellow'];
 
 function short(id) { return String(id || '?').slice(-8); }
 function timeMs(s) { const n = Date.parse(s || ''); return Number.isFinite(n) ? n : 0; }
@@ -42,7 +49,9 @@ function merge(current, delta) {
 }
 
 function layout(data, highlighted = []) {
-  const sessions = (data.lanes || []).map((l) => ({ key: `session:${l.session}`, kind: 'session', session: l.session, agent: l.agent, data: l }));
+  const firstAt = (l) => Math.min(...(l.turns || []).map((t) => timeMs(t.created_at)).filter(Boolean), Infinity);
+  const sessions = [...(data.lanes || [])].sort((a, b) => firstAt(a) - firstAt(b))
+    .map((l) => ({ key: `session:${l.session}`, kind: 'session', session: l.session, agent: l.agent, data: l }));
   const sessionKeys = new Set(sessions.map((l) => l.session));
   // A bell names its sender's agent but usually not its session. Attach it
   // to that agent's session lane when exactly one of its lanes spans the
@@ -61,71 +70,45 @@ function layout(data, highlighted = []) {
     const s = b[`${side}_session`];
     return s && sessionKeys.has(s) ? s : sessionFor(b[`${side}_agent`], b.at);
   };
-  const endpointAgents = [];
-  for (const b of data.bells || []) {
-    if (!sideSession(b, 'from')) endpointAgents.push(b.from_agent);
-    if (!sideSession(b, 'to')) endpointAgents.push(b.to_agent);
-  }
+  const bellsSorted = [...(data.bells || [])].sort((a, b) => timeMs(a.at) - timeMs(b.at));
   const known = new Set();
-  const agents = endpointAgents.filter((a) => a && !known.has(a) && known.add(a))
-    .map((agent) => ({ key: `agent:${agent}`, kind: 'agent', agent }));
-  let wish = Y0;
-  const rows = spread([...sessions, ...agents].map((r) => {
-    const gap = r.kind === 'session' ? SESSION_GAP : AGENT_GAP;
-    const out = { ...r, x: wish, gap }; wish += gap; return out;
-  }), AGENT_GAP).map((r) => ({ ...r, y: r.x }));
-  const rowByKey = new Map(rows.map((r) => [r.key, r]));
-  const times = [...sessions.flatMap((l) => (l.data.turns || []).map((t) => timeMs(t.created_at))), ...(data.bells || []).map((b) => timeMs(b.at))].filter(Boolean);
-  const min = times.length ? Math.min(...times) : 0, rawMax = times.length ? Math.max(...times) : min + 1;
-  const max = rawMax === min ? min + 1 : rawMax;
-  const x = (at) => X0 + (timeMs(at) - min) * (X1 - X0) / (max - min);
-  const turns = sessions.flatMap((r) => (r.data.turns || []).map((turn) => ({ turn, row: r, x: x(turn.created_at), y: rowByKey.get(r.key).y })));
-  const endpoint = (b, side) => {
-    const session = sideSession(b, side);
-    return rowByKey.get(session ? `session:${session}` : `agent:${b[`${side}_agent`]}`);
+  const agents = [];
+  for (const b of bellsSorted) for (const side of ['from', 'to']) {
+    const a = b[`${side}_agent`];
+    if (a && !sideSession(b, side) && !known.has(a)) { known.add(a); agents.push({ key: `agent:${a}`, kind: 'agent', agent: a }); }
+  }
+  const lanes = [...sessions, ...agents].map((l, i) => ({ ...l, index: i, x: X0 + i * LANE, colour: COLOURS[i % COLOURS.length] }));
+  const laneByKey = new Map(lanes.map((l) => [l.key, l]));
+  const laneOf = (b, side) => {
+    const s = sideSession(b, side);
+    return laneByKey.get(s ? `session:${s}` : `agent:${b[`${side}_agent`]}`);
   };
-  const bells = (data.bells || []).map((bell) => ({ bell, from: endpoint(bell, 'from'), to: endpoint(bell, 'to'), x: x(bell.at) })).filter((b) => b.from && b.to);
+  const events = [
+    ...sessions.flatMap((l) => (l.data.turns || []).map((turn) => ({ type: 'turn', at: timeMs(turn.created_at), turn, lane: laneByKey.get(l.key) }))),
+    ...bellsSorted.map((bell) => ({ type: 'bell', at: timeMs(bell.at), bell, from: laneOf(bell, 'from'), to: laneOf(bell, 'to') }))
+      .filter((e) => e.from && e.to),
+  ].sort((a, b) => a.at - b.at || (a.type === b.type ? 0 : a.type === 'turn' ? -1 : 1));
+  events.forEach((e, i) => { e.y = (i + 1) * ROW; });
+  // each lane's line runs from its first event to its last
+  const span = new Map();
+  const touch = (lane, y) => { if (!lane) return; const s = span.get(lane.key) || { top: y, bottom: y }; span.set(lane.key, { top: Math.min(s.top, y), bottom: Math.max(s.bottom, y) }); };
+  for (const e of events) { if (e.type === 'turn') touch(e.lane, e.y); else { touch(e.from, e.y); touch(e.to, e.y); } }
   const hi = new Set(highlighted);
   const active = (agent) => !hi.size || hi.has(agent);
-  return { rows, turns, bells, active, min, max, width: X1 + 30,
-    height: Math.max(180, (rows.at(-1) || { y: Y0 }).y + 55) };
+  return { lanes, events, span, active, textX: X0 + lanes.length * LANE + 8,
+    // kept for callers that read them: the turn and bell events
+    turns: events.filter((e) => e.type === 'turn'), bells: events.filter((e) => e.type === 'bell'),
+    height: (events.length + 1) * ROW };
 }
 
-// Geometry is based only on supporting marks present in this rendered view.
-function commonGround(data, L = layout(data)) {
-  const marks = new Map();
-  for (const point of L.turns) {
-    if (!Number.isFinite(point.x) || point.x < X0 || point.x > X1) continue;
-    if (!marks.has(point.row.session)) marks.set(point.row.session, new Map());
-    marks.get(point.row.session).set(point.turn.id, point);
-  }
-  const bands = [], links = [];
-  const x = (at) => Math.max(X0, Math.min(X1, X0 + (timeMs(at) - L.min) * (X1 - X0) / (L.max - L.min)));
-  for (const entry of data.common_ground || []) {
+// Patterns and missions that more than one session took up, as text.
+function commonGround(data) {
+  return (data.common_ground || []).map((entry) => {
     const seen = new Set();
-    const members = (entry.lanes || []).flatMap((lane) => {
-      if (seen.has(lane.session)) return [];
-      seen.add(lane.session);
-      const points = [...new Set(lane.turns || [])].map((id) => marks.get(lane.session)?.get(id)).filter(Boolean)
-        .sort((a, b) => timeMs(a.turn.created_at) - timeMs(b.turn.created_at));
-      return points.length ? [{ lane, points, first: points[0], at: timeMs(lane.first_at) || timeMs(points[0].turn.created_at) }] : [];
-    }).sort((a, b) => a.at - b.at);
-    if (members.length < 2) continue;
-    if (entry.kind === 'mission') {
-      const start = x(new Date(Math.min(...members.map((m) => m.at))).toISOString());
-      const end = Math.max(...members.flatMap((m) => m.points.map((point) => point.x)));
-      bands.push({ entry, members, x: start, width: Math.max(2, end - start) });
-    } else if (entry.kind === 'pattern') {
-      for (let i = 1; i < members.length; i += 1) {
-        links.push({ entry, from: members[i - 1].first, to: members[i].first, dash: patternDash(entry.via) });
-      }
-    }
-  }
-  return { bands, links };
-}
-
-function patternDash(via = []) {
-  return via.length && via.every((kind) => kind === 'proposed') ? '2 5' : 'none';
+    const lanes = (entry.lanes || []).filter((l) => !seen.has(l.session) && seen.add(l.session))
+      .sort((a, b) => timeMs(a.first_at) - timeMs(b.first_at));
+    return { kind: entry.kind, key: entry.key, via: entry.via || [], lanes };
+  }).filter((e) => e.lanes.length >= 2);
 }
 
 function statusClass(turn) {
@@ -135,50 +118,55 @@ function statusClass(turn) {
   return 'read';
 }
 
+function hhmm(at) { return String(at || '').slice(11, 16); }
+
 module.exports = function herdView({ esc, link }) {
   function render(data, href = 'herd:') {
-    const selected = agentsArg(href), L = layout(data, selected), ground = commonGround(data, L);
-    const row = (r) => {
-      const dim = L.active(r.agent) ? '' : ' dimmed';
-      if (r.kind === 'agent') return `<a class="ln herd-lane endpoint${dim}" data-href="herd:${esc(r.agent)}"><title>bell endpoint only</title><text x="4" y="${r.y + 4}">${esc(r.agent)}</text></a>`;
-      return `<g class="herd-lane session${dim}"><a class="ln" data-href="mamap:${esc(r.session)}"><text x="4" y="${r.y}">${esc(wrap(r.agent, 16, 1).join(' '))} · ${esc(short(r.session))}</text></a><a class="ln" data-href="strand:${esc(r.session)}"><text class="strand-link" x="4" y="${r.y + 14}">strand</text></a></g>`;
-    };
-    const turn = (p) => {
-      const t = p.turn, cls = statusClass(t), dim = L.active(p.row.agent) ? '' : ' dimmed';
-      const radius = 3 + Math.min(8, Math.sqrt(Number(t.threads_n || 0)) * 2);
-      return `<g class="herd-turn ${cls}${dim}"><a class="ln" data-href="pt:${esc(t.id)}"><title>${esc(t.id)} · ${esc(cls)} · ${esc(t.threads_n || 0)} threads</title><circle cx="${p.x}" cy="${p.y}" r="${radius}"/></a><a class="ln step-dot" data-href="step:${esc(t.id)}"><text x="${p.x}" y="${p.y - radius - 3}" text-anchor="middle">象</text></a></g>`;
-    };
-    const bell = (p, i) => {
-      const b = p.bell, touch = !selected.length || selected.includes(b.from_agent) || selected.includes(b.to_agent);
-      const bend = 22 + (i % 5) * 7, href = b.turn_id ? `pt:${b.turn_id}` : `herd:${b.to_agent || ''}`;
-      return `<a class="ln herd-bell${touch ? '' : ' dimmed'}" data-href="${esc(href)}"><title>${esc(b.kind || 'bell')} · ${esc(b.from_agent)} → ${esc(b.to_agent)}${b.turn_id ? ' · ' + esc(b.turn_id) : ''}</title><path d="M${p.x},${p.from.y} C${p.x + bend},${p.from.y} ${p.x + bend},${p.to.y} ${p.x},${p.to.y}"/></a>`;
-    };
-    const band = (b) => {
-      const ys = b.members.map((m) => m.first.y), top = Math.min(...ys), bottom = Math.max(...ys);
-      const dim = b.members.some((m) => L.active(m.lane.agent)) ? '' : ' dimmed';
-      return `<g class="herd-mission${dim}"><title>${esc(b.entry.key)}</title>
-${ys.map((y) => `<rect x="${b.x}" y="${y - 13}" width="${b.width}" height="26" rx="4"/>`).join('')}
-<path d="M${b.x},${top} V${bottom}"/><text x="${b.x + 4}" y="${top - 17}">${esc(b.entry.key)}</text></g>`;
-    };
-    const pattern = (p) => {
-      const dim = L.active(p.from.row.agent) || L.active(p.to.row.agent) ? '' : ' dimmed';
-      return `<path class="herd-pattern${dim}" stroke-dasharray="${p.dash}" d="M${p.from.x},${p.from.y} L${p.to.x},${p.to.y}"><title>${esc(p.entry.key)} · ${esc((p.entry.via || []).join(', '))}</title></path>`;
-    };
-    const svg = `<svg class="cascade herd" viewBox="0 0 ${L.width} ${L.height}" width="${L.width}" style="max-width:100%;height:auto">
-<g class="herd-common-ground herd-missions">${ground.bands.map(band).join('\n')}</g>
-<g class="herd-common-ground herd-patterns">${ground.links.map(pattern).join('\n')}</g>
-${L.rows.map(row).join('\n')}
-${L.bells.map(bell).join('\n')}
-${L.turns.map(turn).join('\n')}
+    const selected = agentsArg(href), L = layout(data, selected), ground = commonGround(data);
+    const col = (lane) => `herd-c-${lane.colour}`;
+    const who = (lane, agent) => `<tspan class="${lane ? col(lane) : ''}">${esc(agent || '?')}</tspan>`;
+    const out = [];
+    for (const lane of L.lanes) {
+      const s = L.span.get(lane.key);
+      if (!s) continue;
+      const dim = L.active(lane.agent) ? '' : ' dimmed';
+      out.push(`<path class="herd-lane ${lane.kind} ${col(lane)}${dim}" d="M${lane.x},${s.top} V${s.bottom}"/>`);
+    }
+    for (const e of L.events) {
+      const y = e.y;
+      if (e.type === 'turn') {
+        const t = e.turn, dim = L.active(e.lane.agent) ? '' : ' dimmed';
+        out.push(`<g class="herd-turn${dim}"><a class="ln" data-href="pt:${esc(t.id)}"><title>${esc(t.id)} · ${esc(statusClass(t))}</title><circle class="${col(e.lane)}" cx="${e.lane.x}" cy="${y}" r="${R}"/></a>`
+          + `<a class="ln" data-href="step:${esc(t.id)}"><text x="${L.textX}" y="${y + 5}"><tspan class="dim">${esc(hhmm(t.created_at))}</tspan> ${who(e.lane, e.lane.agent)} <tspan class="dim">turn ${esc(String(t.id || '?').replace(/^turn-/, ''))}${t.mission_id ? ' · ' + esc(t.mission_id) : ''}${t.threads_n ? ` · ${esc(t.threads_n)} 馬` : ''}</tspan></text></a></g>`);
+      } else {
+        const b = e.bell, fx = e.from.x, tx = e.to.x;
+        const touched = !selected.length || selected.includes(b.from_agent) || selected.includes(b.to_agent);
+        const href2 = b.turn_id ? `pt:${b.turn_id}` : `herd:${b.to_agent || ''}`;
+        const d = fx === tx ? `M${fx},${y - ROW / 2} V${y}` : `M${fx},${y - ROW / 2} C${fx},${y} ${tx},${y - ROW / 2} ${tx},${y}`;
+        out.push(`<a class="ln herd-bell${touched ? '' : ' dimmed'}" data-href="${esc(href2)}"><title>${esc(b.kind || 'bell')} · ${esc(b.from_agent)} → ${esc(b.to_agent)}${b.turn_id ? ' · ' + esc(b.turn_id) : ''}</title>`
+          + `<path class="${col(e.from)}" d="${d}"/><circle class="bell-end ${col(e.to)}" cx="${tx}" cy="${y}" r="${R - 2}"/>`
+          + `<text x="${L.textX}" y="${y + 5}"><tspan class="dim">${esc(hhmm(b.at))}</tspan> ${who(e.from, b.from_agent)} → ${who(e.to, b.to_agent)} <tspan class="dim">${esc(b.kind || 'bell')}</tspan></text></a>`);
+      }
+    }
+    const longest = Math.max(0, ...out.filter((o) => o.includes('<text')).map((o) => o.replace(/<title>.*?<\/title>/g, '').replace(/<[^>]+>/g, '').replace(/&[a-z]+;/g, 'x').length));
+    const width = Math.ceil(L.textX + longest * FONT * 0.62 + 20);
+    const svg = `<svg class="herd-v" width="${width}" height="${L.height + 4}" style="font-size:${FONT}px;max-width:none">
+${out.join('\n')}
 </svg>`;
+    const legend = L.lanes.map((lane) => (lane.kind === 'session'
+      ? `<li><span class="herd-key ${col(lane)}">●</span> ${esc(lane.agent)} <span class="dim">${esc(short(lane.session))}</span> · ${link('mamap:' + lane.session, 'intent graph')} · ${link('strand:' + lane.session, 'strand')}</li>`
+      : `<li><span class="herd-key ${col(lane)}">○</span> ${link('herd:' + lane.agent, lane.agent)} <span class="dim">seen only at a bell's end</span></li>`)).join('');
+    const groundList = ground.length ? `<div class="gs-h">COMMON GROUND</div><ul>${ground.map((g) => `<li>${esc(g.kind)} ${g.kind === 'pattern' ? link('pat:' + g.key, g.key) : esc(g.key)} <span class="dim">${g.lanes.map((l) => esc(l.agent)).join(' → ')}${g.via.length ? ' · ' + esc(g.via.join(', ')) : ''}</span></li>`).join('')}</ul>` : '';
     const focus = selected.length ? ` · highlighting ${selected.join(', ')}` : '';
     return { title: '馬 herd', html: `<div data-herd><style>
-[data-herd] > .herd-common-toggle:not(:checked) ~ svg .herd-common-ground { display: none; }
-svg.herd .herd-mission rect { fill: var(--vscode-editorInfo-foreground, #49c); fill-opacity: .09; }
-svg.herd .herd-mission path { fill: none; stroke: var(--vscode-editorInfo-foreground, #49c); stroke-opacity: .25; }
-svg.herd .herd-mission text { fill: var(--vscode-descriptionForeground, #888); font-size: 10px; }
-svg.herd .herd-pattern { fill: none; stroke: var(--vscode-charts-purple, #a78bd4); stroke-width: 1.4; stroke-opacity: .65; stroke-linecap: round; }
-</style><h1>馬 herd <span class="dim">parallel sessions${esc(focus)}</span></h1><p>${link('home', 'Mojira home')}</p><input class="herd-common-toggle" id="herd-common-toggle" type="checkbox" checked><label for="herd-common-toggle">common ground</label>${svg}<p class="dim">shared time axis · dot size = mapped threads · arcs = bells · thin lanes = bell-only agents</p></div>` };
+svg.herd-v text { fill: var(--vscode-editor-foreground); font-size: 14px; } svg.herd-v .dim { fill: var(--vscode-descriptionForeground); }
+svg.herd-v path { fill: none; stroke-width: 2; } svg.herd-v .herd-lane.agent { stroke-dasharray: 3 3; }
+svg.herd-v .dimmed { opacity: .3; } svg.herd-v .bell-end { fill: var(--vscode-editor-background); stroke-width: 2; }
+${COLOURS.map((c) => `svg.herd-v path.herd-c-${c}, svg.herd-v .bell-end.herd-c-${c} { stroke: var(--vscode-charts-${c}); } svg.herd-v circle.herd-c-${c}:not(.bell-end) { fill: var(--vscode-charts-${c}); } svg.herd-v tspan.herd-c-${c}, .herd-key.herd-c-${c} { fill: var(--vscode-charts-${c}); color: var(--vscode-charts-${c}); }`).join('\n')}
+</style><h1>馬 herd <span class="dim">parallel sessions${esc(focus)}</span></h1><p>${link('home', 'Mojira home')}</p>
+<ul>${legend}</ul>
+<p class="dim">oldest at the top · a dot is a turn · a branch is a bell, from the sender's column into the receiver's</p>
+<div style="overflow-x:auto">${svg}</div>${groundList}</div>` };
   }
   return { render };
 };
@@ -186,6 +174,4 @@ svg.herd .herd-pattern { fill: none; stroke: var(--vscode-charts-purple, #a78bd4
 module.exports.merge = merge;
 module.exports.layout = layout;
 module.exports.agentsArg = agentsArg;
-
 module.exports.commonGround = commonGround;
-module.exports.patternDash = patternDash;
