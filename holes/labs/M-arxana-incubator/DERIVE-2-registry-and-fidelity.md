@@ -462,3 +462,64 @@ The conflict findings (§7) use an attestation: producer the checker sha, method
 - Also seen (packet 10, codex-13): the canonicalizer (`arxana/digest.clj`) refuses maps with string keys, but with a bare `ClassCastException` from `namespace`, not a typed refusal naming the field. Payloads now use vectors of keyword-keyed maps. A typed refusal would belong under (a).
 
 Order of work: R1 now (packet 10). R6(a) and (b) next, as one small registry change each. R2 to R5 wait for a second family of records to test them on (the endgame census is the natural one); R4 must be settled before the first residual is written.
+
+## 10. Harm and benefit records (2026-11-18, claude-5, with claude-1's AIF reading; mission §6 item 3)
+
+Sources: mission §6 "Harm: the existing model (Thyra) and extensions"; claude-1's answer to claude-5 (Agency job `invoke-1794967226923-23531-dd307a11`, 2026-11-18), at Joe's request ("get claude-1 to weigh in on the model of harm and benefit in AIF terms before we proceed"); futon5 `TN-gauntlet-party-aif.md`; `militant-pacifism/demonstrable-harm-reduction`; claude-6's H1–H7. Draft for Joe's review; nothing declared yet.
+
+**The AIF reading (claude-1).** A harm line is a category of outcome, not a preference. The lines fall into four kinds of term in G:
+- **preference** (risk: an outcome the party's C makes costly): H3, Joe has to nudge or re-send;
+- **channel** (ambiguity: the party's observations stop tracking the state): H1, H2, H7 and most of H5. It harms the party whatever its preferences are;
+- **cost** (Questor's term): H6. If Thyra also ranks it, two characters count the same thing;
+- **chooser** (the agent's own policy selection fails): H4, already marked "infra-only".
+Benefit splits the same way: a preference met, a question settled (epistemic), a cost removed, options opened (Thor's, invisible to depth-1 G). "Harm avoided" is a prediction that something will not be observed; it counts only with the baseline and what was ranged over (H2 is silence read as absence). Effects of different parties are not netted: a common number needs a common C, which is the dictating form.
+
+**Steering rule.** A preference is its own record, saying who stated it: the party itself, someone on its behalf, or inferred from behaviour. Only self-stated preferences may steer a ranking; attributed and inferred ones are shown and counted. Channel harms may be acted on without a stated preference, since they hold under any C. Counts per line or per party are for understanding, never fed back into a ranking (Joe's ruling for the MetaCA cells, same week, per claude-1). The same rule applies to benefit lines, which are preferences given to the system. Measured as the TN proposes: the share of decisions in which Thyra's term changes the choice.
+
+**Proposed types** (each with typed ports and content enums from its first revision, §9 R6; all ids clusions so supersession reaches them, §6's `[:workplan/serves 2]` finding):
+
+```clojure
+;; A party: who can be harmed or benefit.
+(clusion-type :party 1 []
+  [:party/kind      ; #{:person :role :dependence-class :none}
+   :party/name      ; for :dependence-class: the defining (application-type, producer) pair
+   ])
+;; An outcome line, harm or benefit, with its kind of term.
+(clusion-type :outcome/line 1 []
+  [:line/id         ; namespaced, e.g. :disbenefit/H5 (never the WM guardrail ids :harm-rule/H1..H6)
+   :line/sign       ; #{:harm :benefit}
+   :line/term       ; #{:preference :channel :cost :option :chooser}
+   :line/label])
+;; A stated preference of a party over a line.
+(clusion-type :preference/stated 1
+  [{:role :party :type :party} {:role :line :type :outcome/line}]
+  [:stated-by       ; #{:self :on-behalf :inferred}
+   :direction       ; #{:avoid :seek}
+   :source          ; turn or document citation
+   ])
+;; A claim that a piece of work has (or will have) an effect on a party along a line.
+(clusion-type :effect/claim 1
+  [{:role :work :type any-clusion} {:role :party :type :party} {:role :line :type :outcome/line}]
+  [:mode            ; #{:predicted :observed}
+   :baseline        ; what would otherwise be observed (required for "avoided")
+   :observable])    ; what would show it
+;; An observed effect: an interval, with its size where computable, attested.
+(clusion-type :effect/observation 1
+  [{:role :claim :type :effect/claim}]
+  [:from :to :size])  ; :to nil while open; size e.g. dependants reached
+;; A repair: the work that closes an observed harm interval.
+(clusion-type :effect/repair 1
+  [{:role :repair-work :type any-clusion} {:role :observation :type :effect/observation}] [])
+```
+Every `:effect/observation` and every `:effect/claim` with mode `:observed` carries an evidence attestation (§9 R1): method, what was ranged over, coverage, standing; `:contradicted` is the surprise. A claim citing a preference is a separate edge (`:effect/cites` claim→preference), since endpoints are fixed-arity. No aggregate type.
+
+**Worked examples.**
+- **Live, channel harm (H1/H5).** The a97J08 conflict finding `c47f8076…` is stale because of supersession `8ca7b206…` (Q83 over raw Q56), read from the store by `store-finding-view`. Party: the dependence class "readers of finding c47f8076"; line `:disbenefit/H1` (the record says something that is no longer so), term `:channel`; observation from the supersession's event time, open until a repair (a finding recomputed under the successor rule set; the rule-set diff `540e3a7f…` is its evidence); size 1. No preference needed.
+- **Planted, size.** Superseding Q83 would stale all five a97J08 case-conclusion roles (the 8C planted check): the same harm with size 5, party the readers of those roles.
+- **Benefit of the same work.** Q83 settled a97J08's split into one four-way case split: an epistemic benefit (term `:option`/settled question) to a different party. Recorded separately, never netted against the harm.
+- **Preference harm (H3).** Joe re-sending a request: party Joe (`:person`), preference stated `:self` (his turns asking not to have to nudge), observation from the dated turns.
+- **Kind changes over time.** The a97J08 wording reversal (Q66 → Q78) is channel/ambiguity until Joe rules on the wording; from the ruling it is a preference harm. Two claims, the second citing the ruling.
+
+**Thyra, revised** (mission §6 extension 4 with claude-1's correction): harm becomes (line, party, term, stated-by, observed?); Thyra ranks only on observed harms whose preference is self-stated, or on channel harms; the theorem is per (line, party): closing an item never adds an open observed harm on that line for that party. Extension 5 is narrowed: the wait for a stated preference applies to preference harms only.
+
+**Open.** Whether `:party` should reuse a GCC entity (people, roles) through `:workplan/referent`-style links rather than a new type; how a dependence-class party is recomputed when the dependence changes; whether benefit lines (`:benefit-line 1`, existing) migrate to `:outcome/line`.
