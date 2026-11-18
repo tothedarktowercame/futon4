@@ -112,6 +112,16 @@
           "default": "/home/joe/storage/gcc-preview",
           "description": "GCC preview written by the projector (index.json, items/<id>.json; ~/notes/claude-13/demo-01-contract.md). While it is absent, the item view shows the invented fixture in test/gcc-preview-fixture."
         },
+        "mojira.bugAgent": {
+          "type": "string",
+          "default": "claude-cs",
+          "description": "Agent that ! (report a bug) bells the report to. Empty writes the report under ~/notes/futon-bugs without sending it."
+        },
+        "mojira.futon3cScripts": {
+          "type": "string",
+          "default": "/home/joe/code/futon3c/scripts",
+          "description": "Directory holding futon_bug_report.py and agency_send.py."
+        },
         "mojira.agencyUrl": {
           "type": "string",
           "default": "http://127.0.0.1:7070",

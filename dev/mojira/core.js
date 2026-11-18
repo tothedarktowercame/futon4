@@ -831,7 +831,76 @@ function copyHref(href) {
   const text = shortcodes.toUri(href);
   vscode.env.clipboard.writeText(text).then(() => note('copied ' + text), (e) => note('copy failed: ' + e.message, true));
 }
-function note(text, error) { if (panel) panel.webview.postMessage({ type: 'note', text, error: Boolean(error) }); }
+let lastNote = null;   // for bug reports: the last thing the panel told Joe
+function note(text, error) {
+  lastNote = { text, error: Boolean(error), at: new Date().toISOString() };
+  if (panel) panel.webview.postMessage({ type: 'note', text, error: Boolean(error) });
+}
+
+// ---------------------------------------------------------------- bug reports
+// Joe 2026-11-18: "Could we look at the codex-7 'bugs attached' feature so
+// that you get 'mojira bugs attached' routing to your REPL". Like Emacs's
+// report-futon-bug (futon3c emacs/report-futon-bug.el): one line from Joe,
+// the context gathered for him, the same collector
+// (futon3c scripts/futon_bug_report.py, which adds health, journals and
+// repo HEADs and scrubs secrets), then a bell to mojira.bugAgent (claude-cs
+// by default: a pull-only seat whose inbox is pushed into its session).
+let lastPage = null;
+function textOf(html) {
+  return String(html || '').replace(/<(script|style)[\s\S]*?<\/\1>/g, '').replace(/<title>[\s\S]*?<\/title>/g, '')
+    .replace(/<br\s*\/?>|<\/(p|li|h\d|div|tr)>/g, '\n').replace(/<[^>]+>/g, ' ')
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&')
+    .split('\n').map((l) => l.replace(/\s+/g, ' ').trim()).filter(Boolean);
+}
+function bugContext() {
+  const settings = vscode.workspace.getConfiguration('mojira');
+  const keys = Object.keys(require('./package.json').contributes.configuration.properties).map((k) => k.replace('mojira.', ''));
+  const lines = textOf(lastPage && lastPage.html);
+  return [
+    '- surface: Mojira panel in code-server (futon4 dev/mojira)',
+    `- page: ${history[history.length - 1] || '(none)'}${lastPage ? ` ("${lastPage.title}")` : ''}`,
+    `- right column: ${lastPeek || '(empty)'}`,
+    `- history (newest last): ${history.slice(-10).join(' → ') || '(none)'}`,
+    `- last panel message: ${lastNote ? `${lastNote.error ? 'ERROR ' : ''}${lastNote.text} (${lastNote.at})` : '(none)'}`,
+    `- settings: ${keys.map((k) => `${k}=${JSON.stringify(settings.get(k))}`).join(', ')}`,
+    '',
+    `### Page text (${lines.length > 80 ? `first 80 of ${lines.length}` : lines.length} lines)`,
+    '',
+    '```text',
+    ...lines.slice(0, 80),
+    '```',
+  ].join('\n');
+}
+function reportBug() {
+  vscode.window.showInputBox({ prompt: 'Bug, in one line', placeHolder: 'what went wrong' }).then((summary) => {
+    if (!summary || !summary.trim()) return;
+    const fs = require('fs'), os = require('os'), path = require('path');
+    const ctx = path.join(os.tmpdir(), `mojira-bug-${Date.now()}.md`);
+    fs.writeFileSync(ctx, bugContext());
+    const scripts = cfg('futon3cScripts') || '/home/joe/code/futon3c/scripts';
+    const agent = cfg('bugAgent');
+    note('bug report: collecting context…');
+    execFile('python3', [path.join(scripts, 'futon_bug_report.py'), '--summary', summary,
+      '--emacs-context', ctx, '--context-label', 'Mojira'], { timeout: 120000 }, (err, out, stderr) => {
+      fs.rm(ctx, { force: true }, () => {});
+      const file = String(out || '').trim();
+      if (err || !file || !fs.existsSync(file)) { note('bug report failed: ' + (stderr || (err && err.message) || 'no report written').trim().slice(0, 300), true); return; }
+      if (!agent) { note('bug report written (not sent): ' + file); return; }
+      const send = require('child_process').spawn('python3', [path.join(scripts, 'agency_send.py'),
+        '--to', agent, '--from', 'mojira-bug', '--kind', 'bell', '--mode', 'work']);
+      let said = '';
+      send.stdout.on('data', (d) => { said += d; });
+      send.stderr.on('data', (d) => { said += d; });
+      send.on('error', (e) => note('bug report written, bell failed: ' + e.message + ' (' + file + ')', true));
+      send.on('close', (code) => (code === 0
+        ? note(`bug report belled to ${agent}: ${file}`)
+        : note(`bug report written, bell to ${agent} failed: ${said.trim().slice(0, 200)} (${file})`, true)));
+      send.stdin.end('A Mojira bug report follows. Read it in full; it is self-contained. '
+        + 'Do what its "What the reader is asked to do" section says, then reply with what you checked and what you found.\n\n'
+        + fs.readFileSync(file, 'utf8'));
+    });
+  });
+}
 
 // The 象 stepper at one turn, in Emacs (turn-stepper-open-turn returns at
 // once and fetches frames in the background; -n so Mojira never waits).
@@ -871,6 +940,7 @@ function go(href, push = true, keep = false, selectHref = null) {
   let page;
   try { page = render(href); } catch (e) { page = { title: 'error', html: `<pre>${esc(e.stack)}</pre>` }; }
   panel.title = 'Mojira: ' + page.title;
+  lastPage = page;
   panel.webview.postMessage({ type: 'page', html: page.html, crumbs: history.slice(-6), keep, select: selectHref });
   scheduleStrandPoll(href);
   // A draft-variants paragraph opens with its quoted sources in the right column.
@@ -941,6 +1011,7 @@ function attach(p, state) {
     else if (m.type === 'home') go('home');
     else if (m.type === 'search' && m.q) go('search:' + m.q);
     else if (m.type === 'reload') reloadData();
+    else if (m.type === 'bug') reportBug();
     else if (m.type === 'verdict') recordVerdict(m.item, m.verdict, m.note);
     else if (m.type === 'loi-note') addLoiNote(m.kind, m.field, m.note);
     else if (m.type === 'code') runCode(m.code);
@@ -1103,7 +1174,7 @@ function select(i) {
 let peekTimer = null, noteTimer = null;
 // The key line names this page's own keys first, then the ones that work
 // everywhere.
-const KEYS = ' · j/k move · Enter follow · Tab/→ right column · Shift+Tab/← left · f hints · h back · / search · g home · i GCC items · y/Y copy link/page · v split · r reload';
+const KEYS = ' · j/k move · Enter follow · Tab/→ right column · Shift+Tab/← left · f hints · h back · / search · g home · i GCC items · y/Y copy link/page · v split · r reload · ! report a bug';
 function showKeys() {
   $('#keys').textContent = (onTriage() ? ' · w worth · n not now · x invalid · a rule all unruled' : '')
     + (document.querySelector('#page [data-vd]') ? ' · t full/clean · T additions/full · n/p paragraphs' : '')
@@ -1349,6 +1420,7 @@ document.addEventListener('keydown', ev => {
   else if (k === 'i') vs.postMessage({ type: 'go', href: 'gcc' });
   else if (k === 'f') showHints();
   else if (k === 'r') vs.postMessage({ type: 'reload' });
+  else if (k === '!') vs.postMessage({ type: 'bug' });
   else if (k === 'y') { const a = links()[sel[active]]; if (a) vs.postMessage({ type: 'copy', href: a.dataset.href }); else $('#note').textContent = 'y copies the selected link: select one first (j/k), or Y for this page'; }
   else if (k === 'Y') vs.postMessage({ type: 'copy', href: active === 'peek' && peekHref ? peekHref : null });
   else if (k === 'v') { document.body.classList.toggle('one'); if (!peekShown()) setActive('page'); try { vs.setState({ one: document.body.classList.contains('one') }); } catch (_) {} }
