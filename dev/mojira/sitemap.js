@@ -95,6 +95,58 @@ function crawl(render, { start = 'home', loaded = () => true, maxPerKind = 300, 
   return { kinds, edges, external, broken, waiting, truncated, ms: now() - t0 };
 }
 
+// Directed kind-level distances, not a guarantee about every individual page.
+// via='home' allows all crawled edges; via='direct' forbids entering home.
+// hops includes self-distance 0; summaries count only distinct ordered pairs.
+// Unreachable distances are null. Unreached drawable kinds are reported separately.
+function distances(map, { via = 'home' } = {}) {
+  if (!['home', 'direct'].includes(via)) throw new Error('unknown distance mode: ' + via);
+  const kinds = [...map.kinds].filter(([, k]) => k.depth !== Infinity).map(([id]) => id).sort();
+  const adj = new Map(kinds.map((k) => [k, new Set()]));
+  for (const [edge] of map.edges) {
+    const [from, to] = edge.split('\t');
+    if (adj.has(from) && adj.has(to) && !(via === 'direct' && to === 'home')) adj.get(from).add(to);
+  }
+  const hops = new Map(), worst = [];
+  let diameter = 0, over5 = 0, unreachable = 0;
+  for (const from of kinds) {
+    const found = new Map([[from, 0]]), queue = [from];
+    for (let i = 0; i < queue.length; i++) {
+      const at = queue[i];
+      for (const to of adj.get(at)) if (!found.has(to)) {
+        found.set(to, found.get(at) + 1);
+        queue.push(to);
+      }
+    }
+    const row = new Map();
+    for (const to of kinds) {
+      const distance = found.has(to) ? found.get(to) : null;
+      row.set(to, distance);
+      if (from === to) continue;
+      if (distance === null) unreachable++;
+      else { diameter = Math.max(diameter, distance); if (distance > 5) over5++; }
+      if (distance === null || distance > 5) worst.push({ from, to, distance: distance === null ? 'none' : distance });
+    }
+    hops.set(from, row);
+  }
+  worst.sort((a, b) => (a.distance === 'none' ? b.distance === 'none' ? 0 : -1
+    : b.distance === 'none' ? 1 : b.distance - a.distance)
+    || a.from.localeCompare(b.from) || a.to.localeCompare(b.to));
+  return { via, kinds, hops, diameter, over5, unreachable, worst: worst.slice(0, 20),
+    unreached: Object.keys(KINDS).filter((k) => !adj.has(k)) };
+}
+
+function distanceView(map, { esc, link }) {
+  const modes = ['home', 'direct'].map((via) => distances(map, { via }));
+  const kl = (k) => link('map:' + k, k);
+  return `<section><h2>Hops between kinds</h2>
+<p class="dim">Distinct ordered pairs of reached kinds, using this crawl's links. These are kind-level paths, not a guarantee for every page. Loading or capped crawls can miss paths. Direct excludes edges into home; home can still be a starting point.</p>
+${modes.map((m) => `<h3>${m.via === 'home' ? 'Via home (allowed)' : 'Direct (without returning home)'}</h3>
+<p>Diameter (finite): ${m.diameter} · pairs over 5: ${m.over5} · unreachable pairs: ${m.unreachable}</p>
+${m.worst.length ? `<ul>${m.worst.map((p) => `<li>${kl(p.from)} → ${kl(p.to)}: ${esc(p.distance)}</li>`).join('')}</ul>` : '<p>No unreachable or over-5 pairs.</p>'}`).join('')}
+<p>Drawable but not reached (excluded from pairs): ${modes[0].unreached.map(kl).join(', ') || 'none'}.</p></section>`;
+}
+
 // ------------------------------------------------------------------ folders
 // The main view (Joe 2026-11-18: "all text must be easy to read"). Each kind
 // of page sits in the folder of the kind where the crawl first found it;
@@ -152,7 +204,7 @@ function folderView(map, { esc, link }) {
 ${map.waiting.length ? `<p class="absent">still loading: ${esc([...new Set(map.waiting.map((h) => KINDS[kindOf(h)]))].join(', '))}. The map redraws when they arrive.</p>` : ''}
 ${map.broken.length ? `<p class="err">${link('map:broken', map.broken.length + ' broken links')}</p>` : ''}
 ${ul([tree].map((n) => ({ ...n, children: n.children })))}
-${block('OUTSIDE MOJIRA', outside)}${block('BY KEY', keyed)}${block('NOT REACHED', missing)}</div>` };
+${block('OUTSIDE MOJIRA', outside)}${block('BY KEY', keyed)}${block('NOT REACHED', missing)}${distanceView(map, { esc, link })}</div>` };
 }
 
 // ------------------------------------------------------------------ picture
@@ -168,7 +220,7 @@ ${block('OUTSIDE MOJIRA', outside)}${block('BY KEY', keyed)}${block('NOT REACHED
 // own size with no viewBox, so the text is never scaled down.
 const FONT = 14, NOTE = 13, ROW = 28, INDENT = 30, R = 6, CHAR = 0.62;
 
-function picture(map, _p, { esc }) {
+function picture(map, _p, { esc, link }) {
   const tree = capTree(folders(map));
   const nodes = [];
   const textW = (n) => (n.label.length + (n.folder ? 1 : 0)) * FONT * CHAR + (n.note ? 8 + n.note.length * NOTE * CHAR : 0);
@@ -199,7 +251,7 @@ function picture(map, _p, { esc }) {
 <p class="dim">squares are folders, circles are kinds of page · a kind's name lists its pages · y copies a mojira:// id</p>
 <svg class="cascade mapg" width="${width}" height="${height}" style="font-size:${FONT}px">
 ${out.join('\n')}
-</svg></div>` };
+</svg>${distanceView(map, { esc, link })}</div>` };
 }
 
 // The pages of one kind, as links, and which kinds link to it.
@@ -222,4 +274,4 @@ ${from.length ? `<p>linked from: ${from.map(kl).join(' · ')}</p>` : ''}${to.len
 <ul>${body}</ul></div>` };
 }
 
-module.exports = { KINDS, KEYED, EXTERNAL, MAX_CHOICES, hrefsIn, linksIn, crawl, folders, capTree, folderView, picture, kindPage };
+module.exports = { KINDS, KEYED, EXTERNAL, MAX_CHOICES, hrefsIn, linksIn, crawl, distances, folders, capTree, folderView, picture, kindPage };

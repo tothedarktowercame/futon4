@@ -156,3 +156,87 @@ test('folders: a page\'s headings become folders, the dim aside is dropped, a on
   const top = tree.children.map((c) => c.label);
   assert.ok(!top.some((l) => /\(x\)/.test(l)), 'the dim aside leaked into a folder name: ' + top);
 });
+
+// CL-80: invented directed kind graphs, independent of the live services.
+function graph(kinds, edges) {
+  return { kinds: new Map(kinds.map((kind) => [kind, { kind, depth: 0 }])),
+    edges: new Map(edges.map(([a, b]) => [a + '\t' + b, 1])) };
+}
+
+test('hop distances: one-way chain has six unreachable distinct ordered pairs', () => {
+  const m = graph(['home', 'a', 'b', 'c'], [['home', 'a'], ['a', 'b'], ['b', 'c']]);
+  const d = M.distances(m, { via: 'direct' });
+  assert.strictEqual(d.diameter, 3);
+  assert.strictEqual(d.unreachable, 6);
+  assert.strictEqual(d.over5, 0);
+  assert.strictEqual(d.hops.get('home').get('c'), 3);
+  assert.strictEqual(d.hops.get('c').get('home'), null);
+  assert.strictEqual(d.hops.get('c').get('c'), 0);
+  assert.strictEqual(d.worst.length, 6);
+  assert.ok(d.worst.every((p) => p.distance === 'none'));
+});
+
+test('hop distances: home hub connects leaves, direct forbids returning through it', () => {
+  const m = graph(['home', 'a', 'b', 'c'], ['a', 'b', 'c'].flatMap((k) => [['home', k], [k, 'home']]));
+  const home = M.distances(m, { via: 'home' }), direct = M.distances(m, { via: 'direct' });
+  assert.strictEqual(home.diameter, 2);
+  assert.strictEqual(home.unreachable, 0);
+  assert.strictEqual(home.hops.get('a').get('b'), 2);
+  assert.strictEqual(direct.unreachable, 9);
+  assert.strictEqual(direct.hops.get('a').get('b'), null);
+  assert.strictEqual(direct.hops.get('home').get('b'), 1);
+  assert.strictEqual(m.edges.size, 6, 'pure: input edges unchanged');
+});
+
+test('hop distances: seven-kind cycle has exactly seven ordered pairs over five', () => {
+  const kinds = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
+  const m = graph(kinds, kinds.map((k, i) => [k, kinds[(i + 1) % kinds.length]]));
+  for (const via of ['home', 'direct']) {
+    const d = M.distances(m, { via });
+    assert.strictEqual(d.diameter, 6);
+    assert.strictEqual(d.over5, 7);
+    assert.strictEqual(d.unreachable, 0);
+    assert.strictEqual(d.worst.length, 7);
+    assert.ok(d.worst.every((p) => p.distance === 6));
+  }
+});
+
+test('hop distances: unreached drawable kinds and external/broken edges are not pairs', () => {
+  const m = graph(['home', 'gcc'], [['home', 'gcc'], ['gcc', 'file'], ['gcc', 'nope'], ['gcc', 'pt']]);
+  m.kinds.set('pt', { kind: 'pt', depth: Infinity });
+  const d = M.distances(m);
+  assert.deepStrictEqual(d.kinds, ['gcc', 'home']);
+  assert.strictEqual(d.unreachable, 1);
+  assert.ok(d.unreached.includes('pt'));
+  assert.ok(d.unreached.includes('herd'));
+  assert.ok(!d.unreached.includes('gcc'));
+  assert.ok(!d.hops.has('pt'));
+  assert.deepStrictEqual(M.distances(graph([], [])).worst, []);
+});
+
+test('hop distances: worst list puts unreachable first and caps at twenty', () => {
+  const kinds = Array.from({ length: 8 }, (_, i) => 'k' + i);
+  const d = M.distances(graph(kinds, kinds.slice(1).map((k, i) => [kinds[i], k])));
+  assert.strictEqual(d.over5, 3);
+  assert.strictEqual(d.unreachable, 28);
+  assert.strictEqual(d.worst.length, 20);
+  assert.ok(d.worst.every((p) => p.distance === 'none'));
+});
+
+test('offline fixture crawl: both map views show summaries and linked pairs without rerendering', () => {
+  let calls = 0;
+  const m = M.crawl((h) => { calls++; return render(h); }, { loaded: (h) => h !== 'top' });
+  const before = calls;
+  for (const via of ['home', 'direct']) {
+    const d = M.distances(m, { via });
+    assert.deepStrictEqual([d.kinds.length, d.diameter, d.over5, d.unreachable], [6, 3, 0, 21]);
+  }
+  for (const html of [M.folderView(m, { esc, link }).html, M.picture(m, '', { esc, link }).html]) {
+    assert.match(html, /Via home \(allowed\)/);
+    assert.match(html, /Direct \(without returning home\)/);
+    assert.strictEqual((html.match(/unreachable pairs: 21/g) || []).length, 2);
+    assert.match(html, /data-href="map:gcc"/);
+    assert.match(html, /Drawable but not reached \(excluded from pairs\)/);
+  }
+  assert.strictEqual(calls, before, 'distance display uses only the completed crawl');
+});
