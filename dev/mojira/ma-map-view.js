@@ -82,7 +82,7 @@ ${L.dropped.map(drop).join('\n')}
 ${L.columns.map(col).join('\n')}
 ${L.acts.map(act).join('\n')}
 </svg>`;
-    return { title: '馬 map', html: `<div data-ma-map><h1>馬 map <span class="dim">${esc(data.session || '?')}</span></h1><p>${link('strand:' + (data.session || ''), 'Circus monitor')}</p>${svg}<p class="dim">oldest left · filled occurrence · hollow partial · × dropped · ticks acts opened here · number carried open backlog</p></div>` };
+    return { title: '馬 map', html: `<div data-ma-map><h1>馬 map <span class="dim">${esc(data.session || '?')}</span></h1><p>${link('strand:' + (data.session || ''), 'Circus monitor')} · ${link('herd:', '馬 herd')}</p>${svg}<p class="dim">oldest left · filled occurrence · hollow partial · × dropped · ticks acts opened here · number carried open backlog</p></div>` };
   }
   return { render };
 };

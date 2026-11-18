@@ -125,6 +125,12 @@
           "minimum": 2,
           "description": "Polling interval for the visible Circus monitor. Hidden views do not poll."
         },
+        "mojira.herdPollSeconds": {
+          "type": "number",
+          "default": 30,
+          "minimum": 2,
+          "description": "Polling interval for the visible 馬 herd. Hidden views do not poll."
+        },
         "mojira.variantsFile": {
           "type": "string",
           "default": "/home/joe/storage/arxana-variants/draft2-variants.json",

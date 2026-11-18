@@ -89,7 +89,7 @@ module.exports = function strandView({ esc, link, counts, now = () => Date.now()
     const rows = (data.turns || []).map(row).join('\n');
     return { title: 'Circus monitor', html: `<div class="gcc circus-strand">
 <h1>Circus monitor <span class="dim">${esc(data.session || '?')}</span></h1>
-<p>${link('mamap:' + (data.session || ''), '馬 map')}</p>
+<p>${link('mamap:' + (data.session || ''), '馬 map')} · ${link('herd:', '馬 herd')}</p>
 <p class="dim" data-strand-summary>${summary(data)}</p>
 <div data-strand-turns>${rows || '<div class="gs-r absent">no operator turns in this session</div>'}</div></div>` };
   }
