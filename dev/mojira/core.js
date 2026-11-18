@@ -1363,5 +1363,5 @@ vs.postMessage({ type: 'ready' });
 </script></body></html>`;
 }
 
-module.exports = { attach, reloadData, note,
+module.exports = { attach, reloadData, note, runCode,
   _test: { loadModel: () => (model = loadModel()), render, shell, openInEmacs, loadPatterns } };

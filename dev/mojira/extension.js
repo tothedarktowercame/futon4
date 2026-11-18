@@ -55,6 +55,27 @@ function watchCore(context) {
   context.subscriptions.push({ dispose: () => w.close() });
 }
 
+// Open requests from other surfaces (the Emacs Demo B tracker, 2026-11-18):
+// a JSON file {"code": "mojira://bf", "at": "..."} in ~/.cache/mojira/ is read
+// once and removed; Mojira opens (or reveals) its panel and runs the code as if
+// it had been pasted. Only mojira:// codes are accepted.
+const REQUEST_DIR = path.join(require('os').homedir(), '.cache', 'mojira');
+const REQUEST = path.join(REQUEST_DIR, 'open-request.json');
+function takeRequest(context) {
+  let req;
+  try { req = JSON.parse(fs.readFileSync(REQUEST, 'utf8')); fs.unlinkSync(REQUEST); }
+  catch (_) { return; }
+  if (!req || typeof req.code !== 'string' || !req.code.startsWith('mojira://')) return;
+  open(context);
+  setTimeout(() => { try { core.runCode(req.code); } catch (e) { vscode.window.showErrorMessage('Mojira: ' + e.message); } }, 300);
+}
+function watchRequests(context) {
+  fs.mkdirSync(REQUEST_DIR, { recursive: true });
+  const w = fs.watch(REQUEST_DIR, (_ev, file) => { if (file === 'open-request.json') takeRequest(context); });
+  context.subscriptions.push({ dispose: () => w.close() });
+  takeRequest(context);
+}
+
 function activate(context) {
   try { load(); } catch (e) { vscode.window.showErrorMessage('Mojira: ' + e.message); return; }
   context.subscriptions.push(
@@ -67,6 +88,7 @@ function activate(context) {
       },
     }));
   watchCore(context);
+  watchRequests(context);
   if (vscode.workspace.getConfiguration('mojira').get('openOnStartup')) open(context);
 }
 
