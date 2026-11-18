@@ -42,8 +42,19 @@ test('tally reports the accumulating connected component', () => {
   const merged = S.merge(F('initial.json'), F('delta.json'), F('refresh.json'));
   assert.deepStrictEqual(S.tally(merged), {
     turns: 4,
-    edges: { strand: 3, mention: 2, focus: 1, proposed: 1, occurs: 1 },
+    edges: { strand: 3, mention: 2, focus: 1, proposed: 1, occurs: 1,
+      partial: 0, occurrence: 0, quotes: 0 },
     items: 3,
     sessionLinks: 3,
   });
+});
+
+test('merge preserves distinct 馬 quote parts between the same turns', () => {
+  const initial = F('initial.json');
+  const delta = { turns: [], edges: [
+    { from: 'turn-003', to: 'turn-001', kind: 'quotes', pattern: 'p-one', part: 'I1' },
+    { from: 'turn-003', to: 'turn-001', kind: 'quotes', pattern: 'p-one', part: 'G' },
+  ] };
+  const merged = S.merge(initial, delta, null);
+  assert.strictEqual(merged.edges.filter((e) => e.kind === 'quotes').length, 2);
 });

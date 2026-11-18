@@ -247,3 +247,4 @@ module.exports.minimalSexp = minimalSexp;
 module.exports.VIEWS = VIEWS;
 module.exports.nextView = nextView;
 module.exports.wrap = wrap;
+module.exports.spread = spread;

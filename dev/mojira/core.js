@@ -24,6 +24,8 @@ delete require.cache[require.resolve('./circus-view')];
 const circusView = require('./circus-view');
 delete require.cache[require.resolve('./strand-view')];
 const strandView = require('./strand-view');
+delete require.cache[require.resolve('./ma-map-view')];
+const maMapView = require('./ma-map-view');
 const http = require('http');
 delete require.cache[require.resolve('./loi')];
 const loi = require('./loi');
@@ -135,6 +137,7 @@ function render(href) {
   if (kind === 'cascade' || kind === 'cn' || kind === 'ce') return pageCascade(kind, arg);
   if (CIRCUS_KINDS.has(kind)) return pageCircus(kind, arg);
   if (kind === 'strand') return pageStrand(arg);
+  if (kind === 'mamap') return pageMaMap(arg);
   if (kind === 'gcc' || kind === 'gi' || kind === 'gi-raw' || kind === 'gparty' || kind === 'gparty-raw') return pageGcc(kind, arg);
   if (kind === 'vd' || kind === 'vds') {
     const d = variants.parse(fs.readFileSync(cfg('variantsFile') || '/home/joe/storage/arxana-variants/draft2-variants.json', 'utf8'));
@@ -160,7 +163,7 @@ function fetchForMap(map) {
   const started = new Set();
   for (const h of map.waiting) {
     const k = h.split(':')[0];
-    const what = PATTERN_KINDS.has(k) ? 'patterns' : CIRCUS_KINDS.has(k) ? 'circus:' + circusKey(h) : k === 'strand' ? 'strand' : 'brief';
+    const what = PATTERN_KINDS.has(k) ? 'patterns' : CIRCUS_KINDS.has(k) ? 'circus:' + circusKey(h) : (k === 'strand' || k === 'mamap') ? 'strand' : 'brief';
     if (started.has(what) || (what.startsWith('circus:wn') && [...started].filter((x) => x.startsWith('circus:wn')).length >= 3)) continue;
     started.add(what);
     if (what === 'patterns') loadPatterns(redraw);
@@ -202,7 +205,8 @@ function pageHome() {
 <li>${link('gcc', 'the GCC preview: items, records, links, absences')}</li>
 <li>${link('gparty', 'the Gauntlet party: Thor, Merlin, Questor, Thyra and the party vote')}</li>
 <li>${link('top', "Giraffe's top items: the turns behind them, and why each stands where it does")}</li>
-<li>${link('strand:' + (monitorSession() || ''), 'Circus monitor: one session accumulating turn by turn')}</li></ul>
+<li>${link('strand:' + (monitorSession() || ''), 'Circus monitor: one session accumulating turn by turn')}</li>
+<li>${link('mamap:' + (monitorSession() || ''), '馬 map: pattern threads across one live session')}</li></ul>
 <h2>Letter of intent <span class="dim">(working draft: b notes a benefit, p a beneficiary)</span></h2><ul>
 <li>${link('vd', 'Draft 2 over its source turns')}</li>
 <li>${link('loi', 'the Mozilla letter of intent, with your notes')}</li></ul>
@@ -444,7 +448,7 @@ function strandSession(href) {
 }
 
 function needsStrand(href) {
-  if (!href || href.split(':')[0] !== 'strand') return false;
+  if (!href || !['strand', 'mamap'].includes(href.split(':')[0])) return false;
   const session = strandSession(href);
   return Boolean(session && !strandCache.has(session));
 }
@@ -496,6 +500,11 @@ function pollStrand(href) {
       cached.data = strandView.merge(cached.data, delta, refresh);
       cached.at = Date.now();
       if (panel && panel.visible && history[history.length - 1] === href) {
+        if (href.startsWith('mamap:')) {
+          const V = maMapView({ esc, link });
+          panel.webview.postMessage({ type: 'mamap-update', html: V.render(cached.data).html });
+          return;
+        }
         const dir = cfg('gccPreviewDir') || '/home/joe/storage/gcc-preview';
         const C = circusView({ esc, link, trim, hasItem: (x) => gccView.hasItem(dir, x) });
         const V = strandView({ esc, link, counts: C.counts });
@@ -519,10 +528,18 @@ function pageStrand(arg) {
   return strandView({ esc, link, counts: C.counts }).render(c.data);
 }
 
+function pageMaMap(arg) {
+  const session = arg || monitorSession();
+  if (!session) return { title: '馬 map', html: '<h1>馬 map</h1><p class="err">Set mojira.monitorSession, or first open Circus top items containing a session.</p>' };
+  const c = strandCache.get(session || '') || { err: 'not loaded' };
+  if (c.err) return { title: '馬 map', html: `<h1>馬 map</h1><p class="err">${esc(c.err)}</p>` };
+  return maMapView({ esc, link }).render(c.data);
+}
+
 function scheduleStrandPoll(href) {
   if (!loaderState) return;
   if (loaderState.strandTimer) { clearInterval(loaderState.strandTimer); loaderState.strandTimer = null; }
-  if (!href.startsWith('strand:')) return;
+  if (!(href.startsWith('strand:') || href.startsWith('mamap:'))) return;
   const seconds = Math.max(2, Number(cfg('monitorPollSeconds') || 15));
   loaderState.strandTimer = setInterval(() => {
     if (panel && panel.visible && history[history.length - 1] === href) pollStrand(href);
@@ -886,6 +903,13 @@ svg.cascade .olabel { font-size: 12px; font-weight: bold; }
 svg.cascade .nlabel { fill: var(--vscode-editor-background); font-size: 9px; }
 svg.cascade .occ.partial + text + .nlabel, svg.cascade a:has(.occ.partial) .nlabel { fill: var(--vscode-textLink-foreground); }
 svg.cascade .role { fill: var(--vscode-descriptionForeground); font-size: 9px; letter-spacing: .04em; }
+svg.ma-map .thread.occurrence { fill: var(--vscode-textLink-foreground); stroke: var(--vscode-textLink-foreground); }
+svg.ma-map .thread.partial { fill: var(--vscode-editor-background); stroke: var(--vscode-textLink-foreground); stroke-width: 1.5; }
+svg.ma-map .quote { fill: none; stroke: var(--vscode-descriptionForeground); stroke-width: 1; opacity: .7; }
+svg.ma-map .dropped { fill: none; stroke: var(--vscode-errorForeground, #e44); stroke-width: 2; }
+svg.ma-map .lane, svg.ma-map .connection { fill: var(--vscode-descriptionForeground); font-size: 9px; }
+svg.ma-map .opened { fill: var(--vscode-editorInfo-foreground, #49c); }
+svg.ma-map .act-ask-action { fill: var(--vscode-editorWarning-foreground, #c90); }
 svg.cascade .elabel { fill: var(--vscode-descriptionForeground); }
 svg.cascade .gluetag, .gluetag { fill: var(--vscode-editorWarning-foreground, #c90); color: var(--vscode-editorWarning-foreground, #c90); font-size: 10px; font-weight: bold; }
 svg.cascade a.ln { cursor: pointer; }
@@ -1047,6 +1071,9 @@ window.addEventListener('message', ev => {
       const summary = $('#page [data-strand-summary]');
       if (summary) summary.textContent = m.summary;
     }
+  } else if (m.type === 'mamap-update') {
+    const box = $('#page [data-ma-map]');
+    if (box) box.outerHTML = m.html;
   } else if (m.type === 'mode') {
     vmode = m.mode; const n = $('#note'); n.textContent = m.text; n.classList.remove('err'); clearTimeout(noteTimer);
   } else if (m.type === 'peek') {

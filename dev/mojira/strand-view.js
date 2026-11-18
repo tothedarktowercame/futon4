@@ -2,7 +2,7 @@
 // Pure: route JSON + shared circus count formatter -> {title, html}.
 'use strict';
 
-const KINDS = ['strand', 'mention', 'focus', 'proposed', 'occurs'];
+const KINDS = ['strand', 'mention', 'focus', 'proposed', 'occurs', 'partial', 'occurrence', 'quotes'];
 
 function merge(current, delta, refresh) {
   const base = current || { turns: [], edges: [] };
@@ -19,7 +19,7 @@ function merge(current, delta, refresh) {
   const replacedSources = new Set(incoming.map((t) => t.id));
   const oldEdges = (base.edges || []).filter((e) => !replacedSources.has(e.from));
   for (const e of [...oldEdges, ...((delta && delta.edges) || []), ...((refresh && refresh.edges) || [])]) {
-    edgeMap.set([e.from, e.to, e.kind].join('\0'), e);
+    edgeMap.set([e.from, e.to, e.kind, e.pattern || '', e.part || ''].join('\0'), e);
   }
   return {
     ...base, ...(delta || {}),
@@ -54,6 +54,15 @@ function pendingAge(createdAt, now) {
   return Math.floor(seconds / 3600) + 'h';
 }
 
+function connectionLabel(t, now = Date.now()) {
+  const c = t.ma_connection || {};
+  if (c.status === 'linked') return `linked ← ${c['turn/id'] || t.prev_operator_turn_id || '?'}`;
+  if (c.status === 'session-start') return 'session start';
+  if (c.status === 'prev-absent') return `previous absent: ${c.reason || 'unknown'}`;
+  if (c.status === 'prev-pending') return `previous pending · ${pendingAge(t.created_at, now)} old`;
+  return `${c.status || 'connection missing'} · ${pendingAge(t.created_at, now)} old`;
+}
+
 module.exports = function strandView({ esc, link, counts, now = () => Date.now() }) {
   function connection(t) {
     const c = t.ma_connection || {};
@@ -61,10 +70,9 @@ module.exports = function strandView({ esc, link, counts, now = () => Date.now()
       const prev = c['turn/id'] || t.prev_operator_turn_id || '?';
       return `<span class="dim">馬 ← ${link('pt:' + prev, String(prev).slice(-8))}</span>`;
     }
-    if (c.status === 'session-start') return '<span class="dim">馬 session start</span>';
-    if (c.status === 'prev-absent') return `<span class="absent">馬 previous absent: ${esc(c.reason || 'unknown')}</span>`;
-    if (c.status === 'prev-pending') return `<span class="absent pending">馬 previous pending · ${esc(pendingAge(t.created_at, now()))} old</span>`;
-    return `<span class="absent pending">馬 ${esc(c.status || 'connection missing')} · ${esc(pendingAge(t.created_at, now()))} old</span>`;
+    const label = connectionLabel(t, now());
+    if (c.status === 'session-start') return `<span class="dim">馬 ${esc(label)}</span>`;
+    return `<span class="absent pending">馬 ${esc(label)}</span>`;
   }
 
   function row(t) {
@@ -81,6 +89,7 @@ module.exports = function strandView({ esc, link, counts, now = () => Date.now()
     const rows = (data.turns || []).map(row).join('\n');
     return { title: 'Circus monitor', html: `<div class="gcc circus-strand">
 <h1>Circus monitor <span class="dim">${esc(data.session || '?')}</span></h1>
+<p>${link('mamap:' + (data.session || ''), '馬 map')}</p>
 <p class="dim" data-strand-summary>${summary(data)}</p>
 <div data-strand-turns>${rows || '<div class="gs-r absent">no operator turns in this session</div>'}</div></div>` };
   }
@@ -91,3 +100,4 @@ module.exports = function strandView({ esc, link, counts, now = () => Date.now()
 module.exports.merge = merge;
 module.exports.tally = tally;
 module.exports.countInput = countInput;
+module.exports.connectionLabel = connectionLabel;
