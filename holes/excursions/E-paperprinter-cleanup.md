@@ -39,6 +39,20 @@ claude7/integrate (mfuton-share, local): Q84 1970149b, Q87 acfa8fed, Q85 c62a8ba
    - Class 13 is a Lean notation change (STYLE.md S1–S3, apm-lean 6f4499099d). The corpus build branch was fast-forwarded with codex-25 and codex-4 sign-off, and the t96J02 corpus entry was swapped; its provenance is in PROVENANCE.md beside it.
    - Open, Joe's call: the corpus is pinned to the codex25 build, 38 commits behind apm-lean master.
 
+11. **Item 9 checked, 2026-11-18: a97J08 is unchanged by Q88.**
+   - apm_a97j08_boundary_sum_aux_disjoint was rendered at 1970149b (the commit the live records pin) and at head 9756e848, from the same corpus file (sha 95da7b18…, the one the manifestations record).
+   - The two proofs are byte-identical: all five "In all four cases, we obtain a contradiction." are still there.
+   - So staleness would flag five roles whose wording has not changed.
+   - Proposed records, which need Joe's go:
+     - a rule-content record for `_merge_right_or_splits` at 9f3836f6 that supersedes 777d1f59;
+     - five new manifestations at 9756e848 with the same wordings, so the reader can tell "the rule changed" from "the sentence changed".
+12. **Item 5 aligned, 2026-11-18: finding fccc8a8c was pre-empted by Q84, not Q87.**
+   - The hits were matched by the structure of the term they occur in (binder names ignored, de Bruijn indices kept), not by position. The captures are in `~/storage/arxana/importer/`.
+   - The host term of hit 18 (key 5458712d2fd2) still occurs 3 times at 1970149b, acfa8fed and 9f3836f6. At every one of them the decision is `alias_hit: true` (`_apm_choose_family_alias` returns before the beta decision), against `alias_hit: false` in the stored 40d06435 capture.
+   - So the Q84 alias rule (merged 1970149b) pre-empts beta at this host, and Q87 does not touch it.
+   - Q87 removes 4 other hits, all with `choose_family: false`, which are the Set.pi `(i ↦ [x_i, x'_i])(i)` redexes, one of them reduced. Those are beta on its own, not the pair.
+   - Proposed record, which needs Joe's go: fccc8a8c is pre-empted by the Q84 rule `_apm_choose_family_alias` at 1970149b, with this alignment as the evidence. No Q87 supersession of the pair.
+
 ## Tools and records already built (futon3c master)
 
 - DiagramProver: `diagramprover/` (term schemas, findings, opaque rules, lean_alias, publish_findings, arxana_records, sentence_records).
