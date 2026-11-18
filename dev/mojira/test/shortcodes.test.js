@@ -62,3 +62,10 @@ test('Emacs and Mojira read the same codes from the one table', { skip: !haveAll
   const notAgent = (c) => !/^[cxzk] (l|[0-9]+)$/.test(c);
   assert.deepStrictEqual([...emacs].filter(notAgent).sort(), codes.filter(notAgent).sort());
 });
+
+test('y/Y copy the Emacs URI when the table has one for the page, else the Mojira href', () => {
+  const t = S.readTable();
+  assert.strictEqual(S.copyText('pg', t), 'arxana://view/patterns');
+  assert.strictEqual(S.copyText('gi:M-formal-patterns-redux', t), 'gi:M-formal-patterns-redux');
+  assert.strictEqual(S.copyText('gcc', t), 'gcc');   // i has a page but no Emacs URI
+});

@@ -653,6 +653,13 @@ function openInEmacs(file, done) {
     done(err ? (String(stderr || '').trim() || err.message) : null));
 }
 
+// y / Y: the selected link's target, or the page's own address, to the
+// system clipboard (Arxana's y and Y in Emacs).
+function copyHref(href) {
+  let text = href;
+  try { text = shortcodes.copyText(href, shortcodes.readTable()); } catch (_) {}
+  vscode.env.clipboard.writeText(text).then(() => note('copied ' + text), (e) => note('copy failed: ' + e.message, true));
+}
 function note(text, error) { if (panel) panel.webview.postMessage({ type: 'note', text, error: Boolean(error) }); }
 
 // The 象 stepper at one turn, in Emacs (turn-stepper-open-turn returns at
@@ -760,6 +767,7 @@ function attach(p, state) {
     else if (m.type === 'verdict') recordVerdict(m.item, m.verdict, m.note);
     else if (m.type === 'loi-note') addLoiNote(m.kind, m.field, m.note);
     else if (m.type === 'code') runCode(m.code);
+    else if (m.type === 'copy') copyHref(m.href || history[history.length - 1] || 'home');
     else if (m.type === 'all-ask' && !brief && !briefErr) loadBrief(() => { if (brief) handle(m); else note(briefErr || 'no brief loaded', true); });
     else if (m.type === 'all-ask') {
       const n = brief ? triage.unruledCount(brief) : 0;
@@ -893,7 +901,7 @@ function select(i) {
 let peekTimer = null, noteTimer = null;
 // The key line names this page's own keys first, then the ones that work
 // everywhere.
-const KEYS = ' · j/k move · Enter follow · Tab/→ right column · Shift+Tab/← left · f hints · h back · / search · g home · i GCC items · : shortcode · v split · r reload';
+const KEYS = ' · j/k move · Enter follow · Tab/→ right column · Shift+Tab/← left · f hints · h back · / search · g home · i GCC items · : shortcode · y/Y copy link/page · v split · r reload';
 function showKeys() {
   $('#keys').textContent = (onTriage() ? ' · w worth · n not now · x invalid · a rule all unruled' : '')
     + (document.querySelector('#page [data-vd]') ? ' · t full/clean · T additions/full · n/p paragraphs' : '')
@@ -1125,6 +1133,8 @@ document.addEventListener('keydown', ev => {
   else if (k === 'i') vs.postMessage({ type: 'go', href: 'gcc' });
   else if (k === 'f') showHints();
   else if (k === 'r') vs.postMessage({ type: 'reload' });
+  else if (k === 'y') { const a = links()[sel[active]]; if (a) vs.postMessage({ type: 'copy', href: a.dataset.href }); else $('#note').textContent = 'y copies the selected link: select one first (j/k), or Y for this page'; }
+  else if (k === 'Y') vs.postMessage({ type: 'copy', href: active === 'peek' && peekHref ? peekHref : null });
   else if (k === 'v') { document.body.classList.toggle('one'); if (!peekShown()) setActive('page'); try { vs.setState({ one: document.body.classList.contains('one') }); } catch (_) {} }
   else if (k === ':' || k === '※') { const sc = $('#sc'); sc.style.display = 'inline'; sc.value = ''; sc.focus(); }
   else if (k === '/') { const q = $('#q'); q.style.display = 'inline'; q.value = ''; q.focus(); }

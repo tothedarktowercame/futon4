@@ -102,6 +102,14 @@ function step(s, codes) {
   return { value: v, exit: false, ret: codes.includes(v.trim()), next };
 }
 
+// What y/Y put on the clipboard for a Mojira href: the Emacs URI when the
+// table names one for that page (p: pg -> arxana://view/patterns), so the
+// copy opens in both places; otherwise Mojira's own href (gi:M-..., pt:...).
+function copyText(href, table) {
+  const c = (table.codes || []).find((x) => x.mojira && x.mojira.page === href && x.emacs && x.emacs.uri);
+  return c ? c.emacs.uri : href;
+}
+
 function helpHtml(table, repos, esc) {
   const fixed = table.codes.map((c) => `<li><b>${esc(c.code)}</b> ${esc(c.label)}${c.mojira ? '' : ' <span class="dim">(Emacs only)</span>'}</li>`).join('');
   const futons = repos.filter(([k]) => !k.startsWith('r ')).sort().map(([k, n]) => `${esc(k)} ${esc(n)}`).join(' · ');
@@ -114,4 +122,4 @@ ${(table.agent_modals || []).map((m) => `<li><b>${table.agents.map((a) => a.key)
 <h2>l, last</h2><ul><li><b>6 l</b>, <b>r &lt;name&gt; l</b> the last file you visited in that repo, by any route (opened in Emacs)</li><li><b>l</b> alone: the previous page</li></ul>`;
 }
 
-module.exports = { TABLE, readTable, readRepos, allCodes, resolve, step, helpHtml };
+module.exports = { TABLE, readTable, readRepos, allCodes, resolve, step, copyText, helpHtml };
