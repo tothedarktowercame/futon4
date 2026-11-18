@@ -168,6 +168,21 @@ files and the GCC stays readable?
     Relations from it (`built-on`, ...) are claims shown as yes / not yet /
     unknown by the queries M1a describes; a verb with no query reads
     "intended".
+  - **Where the reader goes (claude-13, 2026-11-18):** parse in
+    `file_ingest.clj` (it already re-reads a mission file when it changes,
+    so no second watcher and no rescans); write through the workplan writer
+    `sessionista_introductions` uses, so introductions and links sit in the
+    same store. If M5 later picks a single entity store, only the write
+    target moves. Details:
+    1. Read Status with futon2's `mission-registry` classifier, as Giraffe
+       does, so the two never disagree about whether a mission is complete.
+    2. Attribute per new or changed `[[X]]` line on the change event (one
+       blame each); a commit with no `Agent-Id` trailer is Joe, unsigned,
+       not dropped.
+    3. A target that matches nothing and no mission introduces is a typed
+       **unresolved**, not a new entity, so a typo does not become an entity.
+    4. A relation written beside a link is stored as written, verb and all;
+       its query (e.g. CL-76's `built-on?`) runs when the link is read.
 - **M3. The existing lexicon.** For the 254 `@entity` blocks: which name real
   code in `@where`/`@path` that substrate-2 can confirm, and which are ideas
   with no code yet (Nipper's case)?
