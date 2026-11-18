@@ -1145,6 +1145,27 @@ Joe, 2026-11-18: "I don't want our mission to be blocked just because we decided
 
 VERIFY stays open on Witness 1's last items (the Q87 supersession and the census, waiting on claude-7's Q88 run); finalising work on DERIVE-2 §9 continues alongside (packet 11, R6(a)). This section abstracts what the experiment showed and proposes the instantiation.
 
+### Frame (proposed 2026-11-18, for agreement before any dispatch)
+
+Joe, 2026-11-18: "I think for INSTANTIATE, a good first demo of whatever system we are building would be useful would be to develop a browsable version of Cascade Live. Cascade Live has a lot of features and we've seen that we can deal with many of them in hypergraphical terms. The details of models, harm, etc., are really mainly to do with data (whether inside a MetaCA or inside of Cascade Live etc) and Arxana's primary jobs are to make these things visible and inference-ready. ... I'd say we should hold dispatches of this nature until we have agreed the frame; specific details like this need to be viewable and inferable within Arxana, but at this point I would consider them "invariants" rather than "packets to build"."
+
+**The demo.** Cascade Live, browsable from Arxana records: every node and every edge of the cascade is a record on the live store, and the pages are views computed from those records, not regenerated HTML.
+
+**What Cascade Live is today** (sources dated; READER-RULES apply):
+- the cascade skeleton (futon3c `holes/excursions/CASCADE-live-skeleton-2026-11-08.md`, claude-6): apex (1) → wings (5) → ways of working (13) → packets (37) → items (368 live + 202 repair records), with Mozilla's 11 questions as tests on the whole (futon7 `holes/argument-graph/`);
+- the data research (`~/notes/cascade-live-outline/HANDOFF-arxana-2026-11-09.md`): the lexicon (247 entities, 472 relation edges), the pending index (322 items with pending level, benefit line, harm line H1–H7, named entities, 115 user stories), Joe's closures and rulings;
+- the current page: futon3c `holes/excursions/pipeline-pattern-cascade-live.html` (last commit 2026-11-08), served by WebArxana at `/live/cascade.html`; regenerated, not record-backed;
+- record-side pieces: the GCC workplan types and `futon3c.arxana.workplan` loader (slice `~/notes/cascade-live-outline/arxana/all-items.edn`), mostly written to demo stacks (E-gcc-schema B10).
+The skeleton's own hole H5 is what the demo answers: "No edge is declared in a pattern file ... so none carries a because and none can be refused in review."
+
+**Arxana's two jobs, as Joe states them.**
+- *Visible:* any node can be opened to show what it is, where it lives, what links to it and why (each edge with its because, who said so, whether accepted, and when).
+- *Inference-ready:* the questions Cascade Live is asked can be answered by queries over records, with their limits stated: which items serve this benefit line, what a closure or a supersession reaches (the dependence reader), what an item needs and who decided it, which of Mozilla's questions an item bears on.
+
+**Invariants, not packets.** DERIVE-2 §9 (R1–R6) and §10 (harm and benefit, with claude-1's AIF reading) are kept as invariants the demo must respect wherever its data touches them: an observation states what it ranged over; a judgement says who, why, how far, what reopens it; a preference says who stated it, and only self-stated ones steer; effects on different parties are never netted; a harm names its quantity (risk, model error, ambiguity, information, cost, margin) when it is computed, and is a count with its method when not. Types are declared only when a view or query in the demo needs them, and then from the invariant.
+
+**How it is judged.** The demo is done when (proposed): (1) every level of the skeleton is browsable from records, with each displayed edge's because and source; (2) three named questions are answered by store queries and shown in the page with their limits, one per job (a benefit line's items; a change's reach; a Mozilla question's supporting items); (3) the page and the existing `/live/cascade.html` can be compared side by side, and every difference is either a record or a stated gap.
+
 ### What the PaperPrinter experiment showed, stated without PaperPrinter
 
 1. **Change flows along recorded dependence, and the store can answer "what does this change reach?"** A producer (there, a renderer rule) is linked to what it acted on (a sentence) by an application record; a supersession of the producer makes everything in its fibre stale, read from the store alone at any valid time (`sentence-view`, `rule-fibre`, `store-finding-view`). Nothing in that is specific to rules and sentences: a feature and the turns it serves, a decision and the work it set going, a fix and the proofs it renders, have the same shape.
