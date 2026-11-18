@@ -385,11 +385,11 @@ This is the first evidence for open question 1, that rules undoing each other sh
 
 **8B result (codex-12, 2026-11-18; data `~/storage/arxana/sentences/a97J08-switch-off.json`, report `~/notes/codex-12/sentence-counterfactual/REPORT-r2.md`).**
 - **Reverting whole merges at head failed.** Every unit except the Q67 repins conflicts with later work. Q67, which only touched tests, reverts cleanly and leaves the proof byte-identical.
-- **Switching off single functions worked.** Codex inventoried 35 functions that the chain changed. 23 were switched off successfully at runtime, in one of three forms:
+- **Switching off single functions worked.** Codex inventoried 35 (function, unit) entries that the chain changed, covering 24 distinct functions (corrected 2026-11-18 by codex-13's capture check; this line first said 35 functions). 23 interventions, on 17 functions, were switched off successfully at runtime, in one of three forms:
   - (a) a pass replaced by identity;
   - (b) a function the merge added, with its call site falling back to the earlier path;
   - (c) a function the merge changed, replaced by its parent-commit body.
-- **The rest were not tested,** each with its reason recorded: 2 were incompatible with head (Q55 parent bodies), 4 are inactive on a97J08, and 6 had no defensible switch-off.
+- **The rest were not tested,** each with its reason recorded: the capture groups the 12 as 8 "not switchable" and 4 "not called in this head render". Within the 8, the reasons say 2 are Q55 parent bodies incompatible with head and 6 have no defensible switch-off; that split is a reading of the reason text, not a count in the capture.
 - **The Q83 cross-check agrees.** Its source-only revert and identity for `_merge_right_or_splits` give byte-identical proofs.
 
 **Dependence.**
@@ -429,7 +429,7 @@ Typed ports (`:endpoint/type-revisions`) restrict what an endpoint may point at;
 The conflict findings (§7) use an attestation: producer the checker sha, method the mode and state bound, coverage partial or complete. That is why they state their own bounds. The sentence records (§8) use none.
 
 **R1. Every observation is attested, and its method names what it ranged over.** An observation is a record whose content was produced by running something (a checker, a render, a switch-off, a census). Its attestation's method states the procedure, its pins, and its denominator: the set it was run over and what was left out, with counts.
-- Instances: single-function switch-off at head on a97J08, 23 of 35 functions tested, 12 untested with reasons (§8); claude-7's census over the 1,381 records that had a tracked family; guard escape probed on one beta path.
+- Instances: single-function switch-off at head on a97J08, 23 of 35 inventory entries tested (17 of 24 functions), 12 untested with reasons (§8); claude-7's census over the 1,381 records that had a tracked family; guard escape probed on one beta path.
 - Status: being applied to the live sentence records (packet 10, codex-13).
 - Check: a sentence application with no attestation, or with an attestation whose method lacks the denominator, is reported by a store-side audit (to build).
 
