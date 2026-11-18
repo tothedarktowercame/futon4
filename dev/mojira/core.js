@@ -126,7 +126,7 @@ function findHoleFiles() {
   return files;
 }
 
-// Requests start in go(), never in render()/peek()/sitemap crawling.
+// Opening either column starts a read; pure render/sitemap crawling never does.
 const benefitCache = new Map();
 function benefitRoute(href) { return /^(bf|bf-raw)(:|$)/.test(href || ''); }
 function benefitId(href) { return href.includes(':') ? href.slice(href.indexOf(':') + 1) : ''; }
@@ -881,6 +881,7 @@ function go(href, push = true, keep = false, selectHref = null) {
 // 2-up: the right column follows the selected link on the left.
 function peek(href, keep = false) {
   if (!panel) return;
+  if (benefitRoute(href)) loadBenefit(href);
   // After a hot reload of core.js the brief is gone while the left column
   // still shows its rows: load it before drawing an item.
   // The same holds for the triage page itself when the home page's link is

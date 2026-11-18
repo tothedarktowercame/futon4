@@ -2,7 +2,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('http');
-const { render } = require('../benefit-view');
+const { render, reading: renderReading, clusters } = require('../benefit-view');
 const { check, readings } = require('../benefit-check');
 const data = require('../benefit-data');
 const reading = id => ({ record: { id, 'asserted-content': { 'item/id': id } }, evidence: [], 'evidence-completeness': ':complete' });
@@ -68,7 +68,7 @@ test('each reading has a keyboard evidence link and the evidence page returns th
   assert.match(evidence, /M-named/);
   assert.doesNotMatch(evidence, /M-unnamed/);
 });
-test('core opens on demand, shows reading, and never requests a hovered detail', async () => {
+test('opening either column reads immediately, shows progress and reuses the page', async () => {
   const fs = require('fs'), os = require('os'), path = require('path'), Module = require('module');
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mojira-benefit-'));
   fs.writeFileSync(path.join(dir, 'lex.json'), '[]'); fs.writeFileSync(path.join(dir, 'pending.tsv'), 'id\n');
@@ -84,7 +84,7 @@ test('core opens on demand, shows reading, and never requests a hovered detail',
     delete require.cache[require.resolve('../core')];
     const core = require('../core'); core.attach(panel, { history: [] });
     listener({ type: 'peek', href: 'bf:benefit-one' });
-    await new Promise(r => setImmediate(r)); assert.equal(requests, 0);
+    assert.match(messages.filter(m => m.type === 'peek').at(-1).html, /Reading…/);
     listener({ type: 'go', href: 'bf:benefit-one' });
     assert.match(messages.filter(m => m.type === 'page').at(-1).html, /Reading…/);
     for (let i = 0; i < 50 && !messages.some(m => m.html?.includes('M-unnamed')); i++) await new Promise(r => setTimeout(r, 10));
@@ -94,4 +94,30 @@ test('core opens on demand, shows reading, and never requests a hovered detail',
     assert.equal(messages.at(-1).type, 'peek'); assert.match(messages.at(-1).html, /M-named/);
     assert.equal(requests, 1);
   } finally { Module._load = original; await new Promise(r => server.close(r)); fs.rmSync(dir, { recursive: true }); }
+});
+test('overview groups named trunks by filings and keeps unknown codes explicit', () => {
+  const row = (code, trunk, count) => ({ benefit: { id: code, 'asserted-content': { 'benefit/line': code } },
+    label: trunk ? { trunk, 'trunk-name': trunk + ' group', name: 'A named line', gloss: 'A useful gloss' } : null,
+    'serves-v1': count, 'serves-v2': 0 });
+  const benefits = [row('L2', 'L', 1), row('G1', 'G', 5), row('L1', 'L', 1), row('Z9', null, 100)];
+  assert.deepEqual(clusters(benefits).map(g => g.key), ['G', 'L', 'unnamed']);
+  assert.deepEqual(clusters(benefits)[1].rows.map(b => b.benefit.id), ['L1', 'L2']);
+  const html = render({ status: 'ok', mode: 'list', benefits }).html;
+  assert.match(html, /G group/); assert.match(html, /Unnamed codes/);
+  assert.match(html, /A useful gloss/); assert.match(html, /not yet records/);
+  assert.match(html, /data-href="bf:Z9"/);
+});
+test('reading has readable names and one provenance line; raw remains behind c', () => {
+  const r = reading('M-invented');
+  r.evidence = [{ basis: ':parser', standing: ':unverified', coverage: ':complete',
+    'event-time': '2026-11-01T00:00:00.000Z', 'source-refs': [{ path: 'invented.md', line: 7 }],
+    content: { 'sheet/one-line': 'An invented item summary', secretShape: { arbitrary: 1 } } }];
+  const html = renderReading(r);
+  assert.match(html, /M-invented/); assert.match(html, /An invented item summary/);
+  assert.match(html, /invented.md:7 · parser · 2026-11-01/);
+  assert.equal((html.match(/class="dim provenance"/g) || []).length, 1);
+  assert.doesNotMatch(html, /<pre>|secretShape|arbitrary/);
+  const f = fixture(); f.items[0].item = r;
+  assert.doesNotMatch(render(f, { evidence: 1 }).html, /<pre>/);
+  assert.match(render(f, { raw: true }).html, /secretShape/);
 });
