@@ -59,28 +59,39 @@ test('the crawl stops at its per-kind cap and says so', () => {
   assert.strictEqual(m.truncated, true);
 });
 
-test('the picture: one choice point at a time, never more than five dots below, text not shrunk', () => {
+test('the picture: the whole map on one page, never more than five lines out of a dot, text not shrunk', () => {
+  // Joe 2026-11-18: "the site map on one page please"; "no more than five
+  // nodes from any choice point"; "all text must be easy to read".
   const m = M.crawl(r2);
   const tree = M.capTree(M.folders(m));
-  // every folder in the tree, drawn: at most 5 children, plus the node and its parent
-  const paths = [];
-  const visit = (n, p) => { paths.push(p); (n.children || []).forEach((c, i) => { if ((c.children || []).length) visit(c, p ? p + '/' + i : String(i)); }); };
-  visit(tree, '');
-  assert.ok(paths.length >= 3, 'the fixture should have nested folders: ' + paths);
-  for (const p of paths) {
-    const html = M.picture(m, p, { esc, link }).html;
-    const dots = (html.match(/<circle|<rect/g) || []).length;
-    assert.ok(dots <= 5 + 1, `${p || 'home'} draws ${dots} dots`);   // Joe's five, plus the chosen node
-    assert.doesNotMatch(html, /viewBox/, 'a viewBox lets the SVG shrink its text');
-    assert.match(html, /<svg class="cascade mapg"[^>]* style="font-size:14px"/);
-    assert.match(html, /data-cycle="map"/);
-    if (p) assert.ok(M.hrefsIn(html).includes('mapg' + (p.includes('/') ? ':' + p.split('/').slice(0, -1).join('/') : '')), 'no way up from ' + p);
+  let count = 0, nested = 0;
+  const kinds = [];
+  const walk = (n, d) => { count++; if (d >= 2 && (n.children || []).length) nested++; if (n.href) kinds.push(n.href); (n.children || []).forEach((c) => walk(c, d + 1)); };
+  walk(tree, 0);
+  assert.ok(nested >= 1, 'the fixture should have folders below the first level');
+  const html = M.picture(m, '', { esc, link }).html;
+  // every node of the tree is drawn, on this one page
+  assert.strictEqual((html.match(/<circle|<rect/g) || []).length, count);
+  const hrefs = M.hrefsIn(html);
+  for (const h of kinds) assert.ok(hrefs.includes(h), 'missing ' + h);
+  assert.ok(!hrefs.some((h) => /^mapg:/.test(h)), 'no drilling into fragments');
+  // Joe's five, as a literal: lines out of any one dot
+  const out = {};
+  for (const x of html.matchAll(/data-from="(\d+)"/g)) out[x[1]] = (out[x[1]] || 0) + 1;
+  for (const [id, k] of Object.entries(out)) assert.ok(k <= 5, `dot ${id} has ${k} lines out`);
+  // readable: no viewBox, panel-size text, and no two labels on the same row and column
+  assert.doesNotMatch(html, /viewBox/, 'a viewBox lets the SVG shrink its text');
+  assert.match(html, /<svg class="cascade mapg"[^>]* style="font-size:14px"/);
+  const spots = [...html.matchAll(/<text x="([\d.]+)" y="([\d.]+)"/g)].map((x) => x[1] + ',' + x[2]);
+  assert.strictEqual(new Set(spots).size, spots.length, 'two labels drawn on top of each other');
+  // within one column, labels are at least a line of text apart
+  const cols = {};
+  for (const x of html.matchAll(/<text x="([\d.]+)" y="([\d.]+)"/g)) (cols[x[1]] = cols[x[1]] || []).push(+x[2]);
+  for (const ys of Object.values(cols)) {
+    ys.sort((a, b) => a - b);
+    for (let i = 1; i < ys.length; i++) assert.ok(ys[i] - ys[i - 1] >= 14, `rows ${ys[i - 1]} and ${ys[i]} are closer than a line of text`);
   }
-  // home: its children open a level down when they have children, else list their pages
-  const home = M.hrefsIn(M.picture(m, '', { esc, link }).html);
-  assert.ok(home.some((h) => /^mapg:\d+$/.test(h)) && home.some((h) => /^map:/.test(h)));
-  // a path that is not there falls back to home rather than failing
-  assert.match(M.picture(m, '9/9/9', { esc, link }).html, /, from home/);
+  assert.match(html, /data-cycle="map"/);
 });
 
 test('on the GCC fixture: every item the list links to is on the map', () => {

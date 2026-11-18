@@ -155,69 +155,47 @@ ${block('OUTSIDE MOJIRA', outside)}${block('BY KEY', keyed)}${block('NOT REACHED
 }
 
 // ------------------------------------------------------------------ picture
-// The same capped tree as the folders, drawn one choice point at a time
-// (Joe 2026-11-18: "no more than five nodes from any choice point", after a
-// picture of every kind at once put 16 dots in a row): the parent above,
-// the chosen node, and its children (at most MAX_CHOICES) below. mapg:<path>,
-// path = child indices from home ("2/0"). Text at the panel's size: the SVG
-// is drawn at its own width and never scaled down.
-const FONT = 14, COL = 170, W_MIN = 3 * COL;
+// The whole capped tree on one page (Joe 2026-11-18: "the site map on one
+// page please"; opening one choice point at a time is for another day).
+// Drawn as an indented tree: every node on its own row, indented by its
+// depth, so every label sits on its own line at the panel's text size,
+// nothing overlaps, and the width is the deepest indent plus the longest
+// label (a left-to-right layout was 1421px wide for 35 nodes). It is
+// the folders' capped tree, so no dot has more than MAX_CHOICES lines out
+// ("no more than five nodes from any choice point"). Squares are folders,
+// circles are kinds; a kind's label opens its pages. The SVG is drawn at its
+// own size with no viewBox, so the text is never scaled down.
+const FONT = 14, NOTE = 13, ROW = 28, INDENT = 30, R = 6, CHAR = 0.62;
 
-function wrap(s, width = 18) {
-  const out = [];
-  let cur = '';
-  for (const w of String(s).split(' ')) {
-    if (cur && (cur + ' ' + w).length > width) { out.push(cur); cur = w; } else cur = cur ? cur + ' ' + w : w;
-  }
-  if (cur) out.push(cur);
-  return out.slice(0, 3);
-}
-
-function nodeAt(tree, p) {
-  let n = tree;
-  const idx = String(p || '').split('/').filter((x) => x !== '').map(Number);
-  for (const i of idx) {
-    if (!n.children || !n.children[i]) return null;
-    n = n.children[i];
-  }
-  return { n, idx };
-}
-
-function picture(map, p, { esc }) {
+function picture(map, _p, { esc }) {
   const tree = capTree(folders(map));
-  const at = nodeAt(tree, p) || nodeAt(tree, '');
-  const { n, idx } = at;
-  const here = idx.join('/');
-  const parentPath = idx.slice(0, -1).join('/');
-  const kids = n.children || [];
-  const width = Math.max(W_MIN, kids.length * COL);
-  const cx = width / 2;
-  const Y = { up: 30, focus: 120, kids: 250 };
-  const label = (x, y, lines, cls) => `<text class="${cls}" x="${x}" y="${y}" text-anchor="middle">${lines.map((l, i) => `<tspan x="${x}" dy="${i ? FONT + 3 : 0}">${esc(l)}</tspan>`).join('')}</text>`;
-  const shape = (m, x, y, r) => (m.folder
-    ? `<rect class="el" x="${x - r}" y="${y - r}" width="${2 * r}" height="${2 * r}"/>`
-    : `<circle class="occ" cx="${x}" cy="${y}" r="${r}"/>`);
-  const inside = (m) => ((m.children || []).length ? `${m.children.length} inside` : '');
-  const sub = (m) => [m.note, inside(m)].filter(Boolean).join(' · ');
+  const nodes = [];
+  const textW = (n) => (n.label.length + (n.folder ? 1 : 0)) * FONT * CHAR + (n.note ? 8 + n.note.length * NOTE * CHAR : 0);
+  const place = (n, depth, parent) => {
+    const me = { n, depth, parent, id: nodes.length, y: (nodes.length + 1) * ROW, x: R + 4 + depth * INDENT };
+    nodes.push(me);
+    (n.children || []).forEach((c) => place(c, depth + 1, me.id));
+  };
+  place(tree, 0, null);
+  const width = Math.ceil(Math.max(...nodes.map((m) => m.x + R + 6 + textW(m.n))) + 8);
+  const height = (nodes.length + 1) * ROW;
   const out = [];
-  if (idx.length) {
-    const parent = nodeAt(tree, parentPath).n;
-    out.push(`<path class="edge" d="M${cx},${Y.up + 8} L${cx},${Y.focus - 12}"/>`);
-    out.push(`<a class="ln" data-href="mapg${parentPath ? ':' + esc(parentPath) : ''}"><title>up to ${esc(parent.label)}</title>${label(cx, Y.up, ['↑ ' + parent.label], 'olabel')}</a>`);
+  for (const m of nodes) {
+    if (m.parent === null) continue;
+    const p = nodes[m.parent];
+    out.push(`<path class="edge" data-from="${p.id}" d="M${p.x},${p.y + R} V${m.y - 8} Q${p.x},${m.y} ${p.x + 8},${m.y} H${m.x - R - 2}"/>`);
   }
-  kids.forEach((m, i) => {
-    const x = (width - kids.length * COL) / 2 + COL * (i + 0.5);
-    out.push(`<path class="edge" d="M${cx},${Y.focus + 12} C${cx},${(Y.focus + Y.kids) / 2} ${x},${(Y.focus + Y.kids) / 2} ${x},${Y.kids - 12}"/>`);
-    const href = (m.children || []).length ? 'mapg:' + (here ? here + '/' : '') + i : m.href;
-    const body = `${shape(m, x, Y.kids, 10)}${label(x, Y.kids + 30, wrap(m.label + (m.folder ? '/' : '')), 'olabel')}${label(x, Y.kids + 30 + (FONT + 3) * wrap(m.label).length, [sub(m)], 'elabel')}`;
-    out.push(href ? `<a class="ln" data-href="${esc(href)}"><title>${esc(m.label)}</title>${body}</a>` : body);
-  });
-  const focusBody = `${shape(n, cx, Y.focus, 12)}${label(cx + 0, Y.focus + 34, [n.label + (n.folder ? '/' : '')], 'olabel')}${label(cx, Y.focus + 34 + FONT + 3, [n.note || ''], 'elabel')}`;
-  out.push(n.href ? `<a class="ln" data-href="${esc(n.href)}"><title>${esc(n.label)}: its pages</title>${focusBody}</a>` : focusBody);
-  const height = Y.kids + 30 + (FONT + 3) * 4 + 10;
-  return { title: 'map: ' + n.label, html: `<div class="gcc" data-cycle="map">
-<h1>Mojira's map <span class="dim">— ${esc(n.label)}${here ? '' : ', from home'} · c folders</span></h1>
-<p class="dim">a dot with things inside opens one level down · the middle dot lists its pages · ↑ goes up · y copies a mojira:// id</p>
+  for (const m of nodes) {
+    const { n, x, y } = m;
+    const shape = n.folder
+      ? `<rect class="el" x="${x - R}" y="${y - R}" width="${2 * R}" height="${2 * R}"/>`
+      : `<circle class="occ" cx="${x}" cy="${y}" r="${R}"/>`;
+    const text = `<text x="${x + R + 6}" y="${y}" dominant-baseline="middle"><tspan class="olabel">${esc(n.label + (n.folder ? '/' : ''))}</tspan>${n.note ? `<tspan class="elabel" dx="8">${esc(n.note)}</tspan>` : ''}</text>`;
+    out.push(n.href ? `<a class="ln" data-href="${esc(n.href)}"><title>${esc(n.label)}: its pages</title>${shape}${text}</a>` : shape + text);
+  }
+  return { title: 'map: picture', html: `<div class="gcc" data-cycle="map">
+<h1>Mojira's map <span class="dim">— the whole of it, from home · c folders</span></h1>
+<p class="dim">squares are folders, circles are kinds of page · a kind's name lists its pages · y copies a mojira:// id</p>
 <svg class="cascade mapg" width="${width}" height="${height}" style="font-size:${FONT}px">
 ${out.join('\n')}
 </svg></div>` };
