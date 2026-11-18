@@ -99,7 +99,7 @@ module.exports = function intentGraphView({ esc, link }) {
         // the mission only where it changes, not on every row
         const m = t.mission_id && t.mission_id !== mission ? ' · ' + esc(t.mission_id) : '';
         mission = t.mission_id || mission;
-        out.push(`<a class="ln" data-href="pt:${esc(t.id)}"><title>${esc(t.id)}</title><circle class="turn" cx="${TRUNK}" cy="${r.y}" r="${R}"/>${text(r.y, `<tspan class="dim">${esc(hhmm(t.created_at))} turn ${esc(short(t.id))}</tspan>${m}`, 'turnlabel')}</a>`);
+        out.push(`<a class="ln" data-href="turn:${esc(t.id)}"><title>${esc(t.id)}</title><circle class="turn" cx="${TRUNK}" cy="${r.y}" r="${R}"/>${text(r.y, `<tspan class="dim">${esc(hhmm(t.created_at))} turn ${esc(short(t.id))}</tspan>${m}`, 'turnlabel')}</a>`);
       } else if (r.type === 'open') {
         const a = r.act;
         out.push(`<circle class="intent" cx="${laneX(r.lane)}" cy="${r.y}" r="${R - 1}"><title>${esc(a.id)}</title></circle>`);

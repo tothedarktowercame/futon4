@@ -62,10 +62,11 @@ test('every bell branch starts and ends on a drawn lane line', () => {
 
 test('render: every dot and bell navigable, labels at panel size, one agent highlighted', () => {
   const html = H({ esc, link }).render(fixture, 'herd:claude-13').html;
-  assert.match(html, /<a class="ln" data-href="pt:turn-a1">/);
-  assert.match(html, /<a class="ln" data-href="step:turn-a1">/);
-  assert.match(html, /<a class="ln herd-bell" data-href="pt:turn-a1">/);
-  assert.match(html, /<a class="ln herd-bell dimmed" data-href="pt:turn-b1">/);
+  // Joe: turns open in Mojira's own turn page, not only the Emacs stepper
+  assert.match(html, /<a class="ln" data-href="turn:turn-a1">/);
+  assert.doesNotMatch(html, /data-href="step:/);
+  assert.match(html, /<a class="ln herd-bell" data-href="turn:turn-a1">/);
+  assert.match(html, /<a class="ln herd-bell dimmed" data-href="turn:turn-b1">/);
   assert.match(html, /herd-lane session herd-c-orange dimmed/);
   assert.match(html, /data-href="mamap:session-a"/);
   assert.match(html, /data-href="strand:session-a"/);

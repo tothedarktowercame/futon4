@@ -140,12 +140,12 @@ module.exports = function herdView({ esc, link }) {
       const y = e.y;
       if (e.type === 'turn') {
         const t = e.turn, dim = L.active(e.lane.agent) ? '' : ' dimmed';
-        out.push(`<g class="herd-turn${dim}"><a class="ln" data-href="pt:${esc(t.id)}"><title>${esc(t.id)} · ${esc(statusClass(t))}</title><circle class="${col(e.lane)}" cx="${e.lane.x}" cy="${y}" r="${R}"/></a>`
-          + `<a class="ln" data-href="step:${esc(t.id)}"><text x="${L.textX}" y="${y + 5}"><tspan class="dim">${esc(hhmm(t.created_at))}</tspan> ${who(e.lane, e.lane.agent)} <tspan class="dim">turn ${esc(String(t.id || '?').replace(/^turn-/, ''))}${t.mission_id ? ' · ' + esc(t.mission_id) : ''}${t.threads_n ? ` · ${esc(t.threads_n)} 馬` : ''}</tspan></text></a></g>`);
+        out.push(`<g class="herd-turn${dim}"><a class="ln" data-href="turn:${esc(t.id)}"><title>${esc(t.id)} · ${esc(statusClass(t))}</title><circle class="${col(e.lane)}" cx="${e.lane.x}" cy="${y}" r="${R}"/></a>`
+          + `<a class="ln" data-href="turn:${esc(t.id)}"><text x="${L.textX}" y="${y + 5}"><tspan class="dim">${esc(hhmm(t.created_at))}</tspan> ${who(e.lane, e.lane.agent)} <tspan class="dim">turn ${esc(String(t.id || '?').replace(/^turn-/, ''))}${t.mission_id ? ' · ' + esc(t.mission_id) : ''}${t.threads_n ? ` · ${esc(t.threads_n)} 馬` : ''}</tspan></text></a></g>`);
       } else {
         const b = e.bell, fx = e.from.x, tx = e.to.x;
         const touched = !selected.length || selected.includes(b.from_agent) || selected.includes(b.to_agent);
-        const href2 = b.turn_id ? `pt:${b.turn_id}` : `herd:${b.to_agent || ''}`;
+        const href2 = b.turn_id ? `turn:${b.turn_id}` : `herd:${b.to_agent || ''}`;
         const d = fx === tx ? `M${fx},${y - ROW / 2} V${y}` : `M${fx},${y - ROW / 2} C${fx},${y} ${tx},${y - ROW / 2} ${tx},${y}`;
         out.push(`<a class="ln herd-bell${touched ? '' : ' dimmed'}" data-href="${esc(href2)}"><title>${esc(b.kind || 'bell')} · ${esc(b.from_agent)} → ${esc(b.to_agent)}${b.turn_id ? ' · ' + esc(b.turn_id) : ''}</title>`
           + `<path class="${col(e.from)}" d="${d}"/><circle class="bell-end ${col(e.to)}" cx="${tx}" cy="${y}" r="${R - 2}"/>`

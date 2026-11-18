@@ -31,6 +31,8 @@ delete require.cache[require.resolve('./circus-view')];
 const circusView = require('./circus-view');
 delete require.cache[require.resolve('./strand-view')];
 const strandView = require('./strand-view');
+delete require.cache[require.resolve('./turn-view')];
+const turnView = require('./turn-view');
 delete require.cache[require.resolve('./intent-graph-view')];
 const intentGraphView = require('./intent-graph-view');
 delete require.cache[require.resolve('./herd-view')];
@@ -181,6 +183,7 @@ function render(href) {
   if (CIRCUS_KINDS.has(kind)) return pageCircus(kind, arg);
   if (kind === 'strand') return pageStrand(arg);
   if (kind === 'mamap') return pageMaMap(arg);
+  if (kind === 'turn') return pageTurn(arg);
   if (kind === 'herd') return pageHerd(href);
   if (kind === 'gcc' || kind === 'gi' || kind === 'gi-raw' || kind === 'gparty' || kind === 'gparty-raw') return pageGcc(kind, arg);
   if (kind === 'vd' || kind === 'vds') {
@@ -610,6 +613,18 @@ function pageStrand(arg) {
   return { ...page, html: page.html.replace('</h1>', '</h1>' + recentLine(session, 'strand')) };
 }
 
+// One turn from its record files, read directly (they are small and local).
+function readTurn(id) {
+  if (!/^turn-[A-Za-z0-9_-]+$/.test(id || '')) return { record: null, analysis: null };
+  const dir = cfg('turnRecordsDir') || path.join(require('os').homedir(), '.emacs-graph', 'session-turn-analysis');
+  const read = (f) => { try { return JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')); } catch (_) { return null; } };
+  return { record: read(id + '.json'), analysis: read(id + '.json.analysis.json') };
+}
+function pageTurn(id) {
+  const { record, analysis } = readTurn(id);
+  return turnView({ esc, link }).render(id, record, analysis);
+}
+
 function pageMaMap(arg) {
   const session = arg || monitorSession();
   if (!session) return { title: 'intent graph', html: noSessionHtml('Intent graph') };
@@ -973,7 +988,10 @@ function peek(href, keep = false) {
   } else if (href.startsWith('ext:')) {
     page = { html: `<p class="dim">${esc(href.slice(4))}</p><p class="dim">Enter opens it in the browser.</p>` };
   } else if (href.startsWith('step:')) {
-    page = { html: `<h1>${esc(href.slice(5))}</h1><p class="dim">Enter opens this turn in the 象 stepper in Emacs, beside its session's REPL.</p>` };
+    // the turn itself, as Mojira shows it; Enter still opens the stepper
+    const id = href.slice(5);
+    const t = pageTurn(id);
+    page = { html: `<p class="dim">Enter opens this turn in the 象 stepper in Emacs; ${link('turn:' + id, 'open it here')} instead.</p>${t.html}` };
   } else {
     try { page = render(href); } catch (e) { page = { html: `<pre>${esc(e.message)}</pre>` }; }
   }
