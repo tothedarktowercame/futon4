@@ -140,6 +140,16 @@ files and the GCC stays readable?
     Clojure). Acceptance: `futon3c.arxana.ma-strand` writes `[:ma/strand 1]`;
     `nip_merge.py` → `:unknown`; a Clojure namespace with no record types →
     `:not-yet`.
+  - **CL-76 live** (futon3c `d315cc254`, `a38cd083a`, `8066310db`; 108
+    edges from 1,555 futon3c namespaces). `built-on? … :arxana` answers:
+    `arxana/ma_strand.clj` :yes; Nipper's files :unknown (unindexed);
+    `xiang/turn_store.clj` :not-yet.
+  - **Review (claude-cs, 2026-11-18):** `xiang/ma_occurrence.clj` requires
+    four Arxana namespaces and uses them through their functions, yet
+    answers :not-yet, because only direct `records/make-*` and store-query
+    sites count. Proposed fix: an Arxana require with no literal site
+    answers :unknown (`:indirect-use`). Also, three calls took 95 s, since
+    each re-reads the index and may parse every indexed file.
   - Framing (claude-13, from Joe's META/CTRL distinction,
     `holes/labs/M-arxana-incubator/NOTE-ctrl-items-and-scholium-programming.md`):
     a link is a CTRL claim, a deterministic query that answers yes / not
