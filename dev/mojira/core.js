@@ -43,6 +43,9 @@ const variants = require('./variants');
 delete require.cache[require.resolve('./shortcodes')];
 const shortcodes = require('./shortcodes');
 const sitemap = require('./sitemap');
+const benefitView = require('./benefit-view');
+const benefitData = require('./benefit-data');
+const benefitCheck = require('./benefit-check');
 
 // Hot-reloaded by extension.js whenever this file is saved: keep no state
 // here that must outlive a reload. The loader owns the panel and `state`.
@@ -123,6 +126,30 @@ function findHoleFiles() {
   return files;
 }
 
+// Requests start in go(), never in render()/peek()/sitemap crawling.
+const benefitCache = new Map();
+function benefitRoute(href) { return /^(bf|bf-raw)(:|$)/.test(href || ''); }
+function benefitId(href) { return href.includes(':') ? href.slice(href.indexOf(':') + 1) : ''; }
+function pageBenefit(kind, id) {
+  const row = benefitCache.get(id);
+  return benefitView.render(row && row.data, { id, raw: kind === 'bf-raw', check: row && row.check });
+}
+function loadBenefit(href) {
+  const id = benefitId(href);
+  if (benefitCache.has(id)) return;
+  const row = { data: { status: 'reading' } };
+  benefitCache.set(id, row);
+  Promise.resolve().then(() => benefitData.read(benefitData.endpoint(cfg('catalogueUrl')), id))
+    .then(data => { row.data = data; row.check = benefitCheck.check(data); })
+    .catch(e => { row.data = { status: 'refused', reason: e.message }; })
+    .finally(() => {
+      if (!panel || benefitCache.get(id) !== row) return;
+      const current = history[history.length - 1];
+      if (benefitRoute(current) && benefitId(current) === id) go(current, false, true);
+      if (benefitRoute(lastPeek) && benefitId(lastPeek) === id) peek(lastPeek, true);
+    });
+}
+
 // ---------------------------------------------------------------- pages
 
 const link = (href, text, cls) => `<a class="ln${cls ? ' ' + cls : ''}" data-href="${esc(href)}">${esc(text)}</a>`;
@@ -134,6 +161,13 @@ const entLink = id => {
 function render(href) {
   const [kind, ...rest] = href.split(':');
   const arg = rest.join(':');
+  if (kind === 'bf-evidence') {
+    const cut = arg.lastIndexOf(':');
+    const id = decodeURIComponent(arg.slice(0, cut));
+    const row = benefitCache.get(id);
+    return benefitView.render(row && row.data, { id, evidence: Number(arg.slice(cut + 1)), check: row && row.check });
+  }
+  if (kind === 'bf' || kind === 'bf-raw') return pageBenefit(kind, arg);
   if (kind === 'e') return pageEntity(arg);
   if (kind === 'p') return pagePending(arg);
   if (kind === 'status') return pageStatus(arg);
@@ -214,6 +248,7 @@ function pageHome() {
 <h2>Cascades <span class="dim">(M-repl-circus: a turn read as patterns)</span></h2><ul>
 <li>${link('cascade', 'the first turn cascade (2026-11-11)')}</li></ul>
 <h2>GCC items <span class="dim">(M-repl-circus demo 1: one item and what the GCC holds about it)</span></h2><ul>
+<li>${link('bf', 'Demo B: benefit filings (live, read-only)')}</li>
 <li>${link('gcc', 'the GCC preview: items, records, links, absences')}</li>
 <li>${link('gparty', 'the Gauntlet party: Thor, Merlin, Questor, Thyra and the party vote')}</li>
 <li>${link('top', "Giraffe's top items: the turns behind them, and why each stands where it does")}</li>
@@ -784,6 +819,8 @@ function openFile(file) {
 // keep: a redraw of the same page (new data), so the webview keeps the
 // selection, scroll position and active column.
 function go(href, push = true, keep = false, selectHref = null) {
+  if (href.startsWith('bf-evidence:')) { peek(href); return; }
+  if (benefitRoute(href)) loadBenefit(href);
   if (href.startsWith('file:')) { openFile(href.slice(5)); return; }
   if (href.startsWith('ext:')) { vscode.env.openExternal(vscode.Uri.parse(href.slice(4))); return; }
   if (href.startsWith('step:')) { openStepper(href.slice(5)); return; }
@@ -890,6 +927,7 @@ function attach(p, state) {
 }
 
 function reloadData() {
+  benefitCache.clear();
   model = loadModel();
   circusCache.clear();
   strandCache.clear();
