@@ -1128,7 +1128,7 @@ Most of the corrections were to the checker, not to Arxana.
 - Not done: a97J08's sentence resolved to its rule versions, its pinned Main.lean lines and its earlier wordings.
 - Not done: cycles made visible in sentence histories.
 
-So the rule side of the witness is done, and the sentence side has not started.
+So the rule side of the witness is done. The sentence side was not started when this was written; it is now built in memory (open question 5).
 
 **Open questions.**
 1. **Can a history show a pattern?** The plain-language argument says rules that keep undoing each other "show up as a pattern in the history". The live history has one supersession and three findings, which is too few. Writing the Q55→Q56→Q66→Q78→Q83 chain and the Q72b/Q84 round trips as supersessions would test this.
