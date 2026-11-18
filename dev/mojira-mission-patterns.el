@@ -67,6 +67,10 @@
         (if file (find-file-other-window file) (message "No local pattern file for %s" id)))
     (error (message "Pattern: %s" (error-message-string err)))))
 
+(defun mojira-mission-patterns--scope-pattern (scope)
+  "The pattern id a document SCOPE cites (pattern_id), not its scope id."
+  (or (alist-get 'pattern_id scope) (alist-get 'id scope)))
+
 (defun mojira-mission-patterns--line (id text face)
   "Insert clickable TEXT for ID with FACE."
   (insert-text-button text 'face face 'follow-link t
@@ -78,7 +82,7 @@
   (let* ((inhibit-read-only t)
          (scopes (alist-get 'scopes mojira-mission-patterns--scopes))
          (patterns (alist-get 'patterns mojira-mission-patterns--sessions))
-         (ids (mapcar (lambda (s) (alist-get 'id s)) scopes))
+         (ids (mapcar #'mojira-mission-patterns--scope-pattern scopes))
          (both (lambda (p) (member (alist-get 'id p) ids))))
     (erase-buffer)
     (insert (format "%s · %s\n\ng refresh · q quit · RET open local pattern\n★ both sections · document-only dim · session-only used bold\n\n"
@@ -90,7 +94,7 @@
            (insert (format "Error: %s\n" (alist-get 'error mojira-mission-patterns--scopes))))
           ((null scopes) (insert "No document patterns.\n")))
     (dolist (s scopes)
-      (let* ((id (alist-get 'id s))
+      (let* ((id (mojira-mission-patterns--scope-pattern s))
              (shared (cl-find id patterns :key (lambda (p) (alist-get 'id p)) :test #'equal))
              (used (and shared (> (or (alist-get 'occurs shared) 0) 0))))
         (mojira-mission-patterns--line

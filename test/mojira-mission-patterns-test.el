@@ -8,7 +8,7 @@
     (setq mojira-mission-patterns--agent "invented-1"
           mojira-mission-patterns--mission "M-invented"
           mojira-mission-patterns--scopes
-          '((scopes . (((id . "p-shared") (title . "Shared") (type . "pattern") (passage . "Example passage"))
+          '((scopes . (((id . "m/pattern/p-shared") (pattern_id . "p-shared") (title . "Shared") (type . "pattern") (passage . "Example passage"))
                        ((id . "p-doc") (title . "Document") (type . "psr")))))
           mojira-mission-patterns--sessions
           '((turns_read . 3) (patterns . (((id . "p-only") (occurs . 8) (proposed . 9) (sessions . ("s1")))
