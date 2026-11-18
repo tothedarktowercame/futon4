@@ -84,6 +84,35 @@ files and the GCC stays readable?
   describes futon1a :7071, which is retired. Which store holds the code graph
   today (futon1b :7073?), with what kinds of record (namespace, file, def,
   commit), and how current is it?
+
+  Joe, 2026-11-18, on M1: "this is why we need an entity map, we can't just
+  go by historical records that applied at creation time." The question
+  above had to be asked because a mission file still describes substrate-2
+  as it was when written. So the entity map's links must be answerable from
+  the live system at the time of reading, not copied from a document's
+  creation date; a link that can no longer be confirmed shows as such.
+
+  **Answer (claude-cs, 2026-11-18, live queries, not documents).**
+  Nothing listens on :7071. substrate-2 is the `code/v05/*` hyperedges in
+  futon1b :7073 (`GET /api/alpha/census?type=…`):
+
+  | type | count |
+  |---|---|
+  | `code/v05/namespace` | 5,033 |
+  | `code/v05/var` | 59,639 |
+  | `code/v05/test` | 16,204 |
+  | `code/v05/contains` | 39,328 |
+  | `code/v05/commit` | 31,406 |
+  | `code/v05/edits` | 915,651 |
+
+  A var's id is `<repo>-d/<ns>/<name>`, e.g.
+  `futon3c-d/futon3c.arxana.sessionista-introductions/resolve-slug`
+  (written 11-09; present). Currency, sampled by the last commit before a
+  date in four repos: all four commits from the morning of 11-18 are present;
+  futon3c's last before 11-10 (`19ca073f3`) and futon1b's last before 11-10
+  and 10-15 are absent. So it is live but has holes; why is not yet known.
+  The type registry (`/api/alpha/types`) lists 170 entity and 95 relation
+  types but none of the `code/v05/*` hyperedge types.
 - **M2. Mission-file links.** What syntax agents already use for links in
   mission files (`[[...]]` occurs, e.g. M-repl-circus `[[Nipper]]`), and what
   would read them: a loader over `holes/missions/*.md`, as the lexicon loader
