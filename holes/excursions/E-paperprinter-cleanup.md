@@ -55,6 +55,8 @@ claude7/integrate (mfuton-share, local): Q84 1970149b, Q87 acfa8fed, Q85 c62a8ba
    - So the Q84 alias rule (merged 1970149b) pre-empts beta at this host, and Q87 does not touch it.
    - Q87 removes 4 other hits, all with `choose_family: false`, which are the Set.pi `(i ↦ [x_i, x'_i])(i)` redexes, one of them reduced. Those are beta on its own, not the pair.
    - Proposed record, which needs Joe's go: fccc8a8c is pre-empted by the Q84 rule `_apm_choose_family_alias` at 1970149b, with this alignment as the evidence. No Q87 supersession of the pair.
+   - **Written live 2026-11-18 (Joe's go), claude-7:** `[:residual/accepted 1]` `ca7c7a11…` on fccc8a8c (scope a02J03 borel_pi_eq_generateFrom_Icc, host key 5458712d2fd2; release 1970149b; reason: pre-empted by Q84 `_apm_choose_family_alias`), with evidence attestation `1b91451f…` citing the alignment and its four captures. The finding view now shows the residual; the rule pair itself still does not join.
+   - The alignment is now saved and reruns: `~/storage/arxana/importer/a02J03-hit18-alignment-2026-11-18.{py,json}`. Write script and log: `~/storage/arxana/diagramprover/write-fccc8a8c-residual-2026-11-18.clj`, `fccc8a8c-residual-2026-11-18.edn`.
 
 ## Tools and records already built (futon3c master)
 
