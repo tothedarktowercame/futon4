@@ -382,3 +382,17 @@ Two patterns are visible as data:
 This is the first evidence for open question 1, that rules undoing each other show in a history. The history is of one sentence role across merges, not of supersession records.
 
 **Correction to this brief.** The packet asked for "the Q56 undo found at Q61". That was my misreading of claude-7's note, which says the defect was found during Q61's run.
+
+**8B result (codex-12, 2026-11-18; data `~/storage/arxana/sentences/a97J08-switch-off.json`, report `~/notes/codex-12/sentence-counterfactual/REPORT-r2.md`).**
+- **Reverting whole merges at head failed.** Every unit except the Q67 repins conflicts with later work. Q67, which only touched tests, reverts cleanly and leaves the proof byte-identical.
+- **Switching off single functions worked.** Codex inventoried 35 functions that the chain changed. 23 were switched off successfully at runtime, in one of three forms:
+  - (a) a pass replaced by identity;
+  - (b) a function the merge added, with its call site falling back to the earlier path;
+  - (c) a function the merge changed, replaced by its parent-commit body.
+- **The rest were not tested,** each with its reason recorded: 2 were incompatible with head (Q55 parent bodies), 4 are inactive on a97J08, and 6 had no defensible switch-off.
+- **The Q83 cross-check agrees.** Its source-only revert and identity for `_merge_right_or_splits` give byte-identical proofs.
+
+**Dependence.**
+- All five case-conclusion roles depend on the same 14 of the 23 tested functions, and none depends on the other 9. Some functions change other sentences and leave the roles alone: `_is_false_tex`, `_sentence`, `_sentence_core`.
+- **Limit of form (c).** A parent body also removes the later edits made inside that function, so a dependence found that way belongs to the function's current body, not to the merge that first changed it.
+- **What the application records can claim.** Each sentence role depends on these functions, out of this tested set, under single-function intervention. They make no claim that the list is complete.
