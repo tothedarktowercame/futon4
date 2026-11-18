@@ -516,7 +516,7 @@ Every `:effect/observation` and every `:effect/claim` with mode `:observed` carr
 **Worked examples.**
 - **Live, channel harm (H1/H5).** The a97J08 conflict finding `c47f8076…` is stale because of supersession `8ca7b206…` (Q83 over raw Q56), read from the store by `store-finding-view`. Party: the dependence class "readers of finding c47f8076"; line `:disbenefit/H1` (the record says something that is no longer so), term `:channel`; observation from the supersession's event time, open until a repair (a finding recomputed under the successor rule set; the rule-set diff `540e3a7f…` is its evidence); size 1. No preference needed.
 - **Planted, size.** Superseding Q83 would stale all five a97J08 case-conclusion roles (the 8C planted check): the same harm with size 5, party the readers of those roles.
-- **Benefit of the same work.** Q83 settled a97J08's split into one four-way case split: an epistemic benefit (term `:option`/settled question) to a different party. Recorded separately, never netted against the harm.
+- **Benefit of the same work.** Q83 settled a97J08's split into one four-way case split: an epistemic benefit (term `:channel`: a settled question is a channel that now tracks the state) to a different party. Recorded separately, never netted against the harm.
 - **Preference harm (H3).** Joe re-sending a request: party Joe (`:person`), preference stated `:self` (his turns asking not to have to nudge), observation from the dated turns.
 - **Kind changes over time.** The a97J08 wording reversal (Q66 → Q78) is channel/ambiguity until Joe rules on the wording; from the ruling it is a preference harm. Two claims, the second citing the ruling.
 
