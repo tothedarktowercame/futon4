@@ -145,6 +145,7 @@ function render(href) {
   }
   if (kind === 'loi' || kind === 'lf') return pageLoi(kind, arg);
   if (kind === 'map') return pageMap(arg);
+  if (kind === 'mapg') return sitemap.view(crawlMap(), { esc, link });
   if (kind === 'codes') return { title: 'shortcodes', html: shortcodes.helpHtml(shortcodes.readTable(), shortcodes.readRepos(), esc) };
   return pageHome();
 }
@@ -178,7 +179,7 @@ function crawlMap() {
   return lastMap.map;
 }
 function pageMap(kind) {
-  if (!kind) return sitemap.view(crawlMap(), { esc, link });
+  if (!kind) return sitemap.folderView(crawlMap(), { esc, link });
   const m = lastMap && Date.now() - lastMap.at < 60000 ? lastMap.map : crawlMap();
   return sitemap.kindPage(m, kind, { esc, link });
 }

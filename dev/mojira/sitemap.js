@@ -27,22 +27,28 @@ const KINDS = {
   strand: 'Circus strand', mamap: '馬 thread map',
   gcc: 'GCC item list', gi: 'GCC items', 'gi-raw': 'GCC items raw', gparty: 'Gauntlet party', 'gparty-raw': 'party raw',
   vd: 'draft variants', vds: 'variant sources', loi: 'letter of intent', lf: 'letter fields',
-  codes: 'shortcodes', map: 'this map',
+  codes: 'shortcodes', map: 'this map', mapg: 'this map as a picture',
 };
 // Reached by a key or a shortcode rather than a link.
-const KEYED = { search: '/', codes: ': ?', map: ': M' };
+const KEYED = { search: '/', codes: ': ?', map: ': M', mapg: 'c on the map' };
 // Links that leave Mojira: opened in Emacs, the browser, or the 象 stepper.
 const EXTERNAL = { file: 'files (Emacs)', ext: 'web pages', step: 'turns in the 象 stepper' };
 
 const kindOf = (href) => String(href).split(':')[0];
 const unesc = (s) => s.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
 
-// The hrefs a page's html links to, links first, then its c view.
-function hrefsIn(html) {
+// The hrefs a page's html links to (links and its c view), each with the
+// <h2> heading it sits under, if any: the page's own grouping of its links.
+function linksIn(html) {
   const out = [];
-  for (const m of String(html).matchAll(/data-(href|cycle)="([^"]*)"/g)) if (m[2]) out.push(unesc(m[2]));
+  let section = null;
+  for (const m of String(html).matchAll(/<h2[^>]*>(.*?)<\/h2>|data-(href|cycle)="([^"]*)"/g)) {
+    if (m[1] !== undefined) section = unesc(m[1].replace(/<span class="dim">.*?<\/span>/g, '').replace(/<[^>]+>/g, '')).trim();
+    else if (m[3]) out.push({ href: unesc(m[3]), section });
+  }
   return out;
 }
+const hrefsIn = (html) => linksIn(html).map((l) => l.href);
 
 // RENDER(href) -> {html}; LOADED(href) -> false when the page's data is not
 // in memory yet (the crawl never waits on Agency or a pattern build).
@@ -66,9 +72,9 @@ function crawl(render, { start = 'home', loaded = () => true, maxPerKind = 300, 
     let html;
     try { html = render(href).html; } catch (e) { broken.push({ from: href, href, why: e.message }); continue; }
     k.rendered++;
-    for (const to of hrefsIn(html)) {
+    for (const { href: to, section } of linksIn(html)) {
       const tk = kindOf(to);
-      if (tk === 'map') continue;
+      if (tk === 'map' || tk === 'mapg') continue;
       const ek = k.kind + '\t' + tk;
       edges.set(ek, (edges.get(ek) || 0) + 1);
       if (EXTERNAL[tk]) {
@@ -79,11 +85,73 @@ function crawl(render, { start = 'home', loaded = () => true, maxPerKind = 300, 
       if (!KINDS[tk]) { broken.push({ from: href, href: to, why: 'no such kind of page' }); continue; }
       const target = K(tk);
       target.pages.add(to);
+      // the folder it sits in: where the crawl first found it
+      if (depth + 1 < target.depth && tk !== k.kind) { target.parent = k.kind; target.section = section; }
       target.depth = Math.min(target.depth, depth + 1);
       if (!seen.has(to)) { seen.add(to); queue.push([to, depth + 1]); }
     }
   }
   return { kinds, edges, external, broken, waiting, truncated, ms: now() - t0 };
+}
+
+// ------------------------------------------------------------------ folders
+// The main view (Joe 2026-11-18: "all text must be easy to read"). Each kind
+// of page sits in the folder of the kind where the crawl first found it;
+// a page that groups its links under headings (home does) gives each
+// heading its own folder. Ordinary text, so j/k, Enter, f and y work.
+// MAX_CHOICES: no folder offers more than this many lines at once ("no more
+// than five nodes from any choice point"); the rest go under "more".
+const MAX_CHOICES = 5;
+
+function folders(map) {
+  const kids = new Map();
+  for (const k of map.kinds.values()) {
+    if (!KINDS[k.kind] || !k.parent) continue;
+    if (!kids.has(k.parent)) kids.set(k.parent, []);
+    kids.get(k.parent).push(k);
+  }
+  // node: {label, href?, note?, children[]}
+  const node = (k) => {
+    const children = kids.get(k.kind) || [];
+    const sections = [...new Set(children.map((c) => c.section || ''))];
+    const leaf = (c) => node(c);
+    let ch;
+    if (sections.length > 1) {
+      ch = sections.map((sec) => {
+        const inSec = children.filter((c) => (c.section || '') === sec).map(leaf);
+        return inSec.length === 1 ? inSec[0] : { label: sec || 'other', folder: true, children: inSec };
+      });
+    } else ch = children.map(leaf);
+    const more = k.notLoaded || k.unexplored ? '+' : '';
+    return { label: KINDS[k.kind], href: 'map:' + k.kind, note: k.pages.size + more + (k.pages.size === 1 && !more ? ' page' : ' pages'), children: ch };
+  };
+  return node(map.kinds.get('home'));
+}
+
+// Split any list longer than MAX_CHOICES into the first MAX_CHOICES - 1 and
+// a "more" folder holding the rest (itself split the same way).
+function cap(list) {
+  if (list.length <= MAX_CHOICES) return list;
+  return list.slice(0, MAX_CHOICES - 1).concat([{ label: 'more', folder: true, children: cap(list.slice(MAX_CHOICES - 1)) }]);
+}
+function capTree(n) { return { ...n, children: cap((n.children || []).map(capTree)) }; }
+
+function folderView(map, { esc, link }) {
+  const tree = capTree(folders(map));
+  const line = (n) => (n.href ? link(n.href, n.label) : n.folder ? `<span class="gs-tag">${esc(n.label)}/</span>` : esc(n.label)) + (n.note ? ` <span class="dim">${esc(n.note)}</span>` : '');
+  const ul = (list) => (list.length ? `<ul class="tree">${list.map((n) => `<li>${line(n)}${ul(n.children || [])}</li>`).join('')}</ul>` : '');
+  const outside = [...map.external].map(([k, v]) => ({ label: EXTERNAL[k], href: 'map:' + k, note: v.size + (v.size === 1 ? ' item' : ' items'), children: [] }));
+  const unreached = Object.keys(KINDS).filter((id) => !map.kinds.has(id) || map.kinds.get(id).depth === Infinity);
+  const keyed = unreached.filter((id) => KEYED[id]).map((id) => ({ label: KINDS[id], note: 'key ' + KEYED[id], children: [] }));
+  const missing = unreached.filter((id) => !KEYED[id]).map((id) => ({ label: KINDS[id], href: 'map:' + id, note: map.waiting.length ? 'not reached yet' : 'no link reaches it', children: [] }));
+  const block = (title, list) => (list.length ? `<div class="gs-h">${esc(title)}</div>${ul(cap(list))}` : '');
+  return { title: 'map', html: `<div class="gcc" data-cycle="mapg">
+<h1>Mojira's map <span class="dim">— what can be reached from home, now</span></h1>
+<p class="dim">Enter opens a kind's pages · c the picture · y copies a mojira:// id</p>
+${map.waiting.length ? `<p class="absent">still loading: ${esc([...new Set(map.waiting.map((h) => KINDS[kindOf(h)]))].join(', '))}. The map redraws when they arrive.</p>` : ''}
+${map.broken.length ? `<p class="err">${link('map:broken', map.broken.length + ' broken links')}</p>` : ''}
+${ul([tree].map((n) => ({ ...n, children: n.children })))}
+${block('OUTSIDE MOJIRA', outside)}${block('BY KEY', keyed)}${block('NOT REACHED', missing)}</div>` };
 }
 
 // ------------------------------------------------------------------ picture
@@ -155,8 +223,8 @@ function view(map, { esc, link }) {
   const pages = [...map.kinds.values()].reduce((s, k) => s + k.pages.size, 0);
   const outsideN = [...map.external.values()].reduce((s, v) => s + v.size, 0);
   const hollow = [...N.values()].filter((n) => n.hollow).length;
-  return { title: 'map', html: `<div class="gcc">
-<h1>Mojira's map <span class="dim">— what can be reached from home, now</span></h1>
+  return { title: 'map (picture)', html: `<div class="gcc" data-cycle="map">
+<h1>Mojira's map <span class="dim">— as a picture · c back to folders</span></h1>
 <p class="dim">${pages} pages of ${[...N.values()].filter((n) => !n.hollow && !n.outside).length} kinds · ${outsideN} things outside Mojira · ${hollow} kinds not reached${map.broken.length ? ` · <span class="err">${map.broken.length} broken links</span>` : ''}${map.waiting.length ? ` · <span class="absent">loading ${map.waiting.length} more (${esc([...new Set(map.waiting.map((h) => KINDS[kindOf(h)]))].join(', '))}); the map redraws when they arrive</span>` : ''}${map.truncated ? ' · + means more pages than the crawl followed' : ''} · crawled in ${esc(map.ms)} ms</p>
 <p class="dim">rows: distance from home in links · then files, URLs and turns outside Mojira (squares) · then hollow: kinds reached only by a key · select a circle for its pages · y copies a mojira:// id</p>
 <svg class="cascade sitemap" viewBox="0 0 ${L.width} ${L.height}" width="${L.width}" style="max-width:100%;height:auto">
@@ -185,4 +253,4 @@ ${from.length ? `<p>linked from: ${from.map(kl).join(' · ')}</p>` : ''}${to.len
 <ul>${body}</ul></div>` };
 }
 
-module.exports = { KINDS, KEYED, EXTERNAL, hrefsIn, crawl, view, kindPage };
+module.exports = { KINDS, KEYED, EXTERNAL, MAX_CHOICES, hrefsIn, linksIn, crawl, folders, capTree, folderView, view, kindPage };

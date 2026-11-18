@@ -92,3 +92,47 @@ test('on the GCC fixture: every item the list links to is on the map', () => {
   assert.ok(m.kinds.get('gi-raw').pages.size >= 2, 'the c views of the items');
   assert.deepStrictEqual(m.broken, []);
 });
+
+// Folders (Joe 2026-11-18: "all text must be easy to read"; "no more than
+// five nodes from any choice point").
+const walk = (n, f) => { f(n); (n.children || []).forEach((c) => walk(c, f)); };
+const SECTIONED = {
+  home: ['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((h, i) => `<h2>${h} <span class="dim">(x)</span></h2>` + link(['status:s', 'gcc', 'top', 'loi', 'triage', 'all', 'pg'][i], h)).join('')
+    + link('label:l', 'l'),
+  'status:s': ['e:1', 'e:2'].map((h) => link(h, h)).join(''),
+  gcc: '<h2>Items</h2>' + link('gi:a', 'a') + '<h2>Raw</h2>' + link('gi-raw:a', 'a') + link('gparty', 'p'),
+  'gi:a': link('e:3', 'a later way to entities'),
+};
+const r2 = (h) => ({ html: SECTIONED[h] || '' });
+
+test('folders: every reached kind once, no choice point over five, plain text', () => {
+  const m = M.crawl(r2);
+  const tree = M.capTree(M.folders(m));
+  const seen = [];
+  walk(tree, (n) => {
+    assert.ok((n.children || []).length <= 5, `${n.label} offers ${n.children.length}`);   // Joe's five, not the module's constant
+    if (n.href) seen.push(n.href);
+  });
+  const reached = [...m.kinds.values()].filter((k) => k.depth < Infinity).map((k) => 'map:' + k.kind);
+  assert.deepStrictEqual(seen.sort(), reached.sort());
+  const html = M.folderView(m, { esc, link }).html;
+  assert.doesNotMatch(html, /<svg/);
+  assert.match(html, /<span class="gs-tag">more\/<\/span>/, 'seven sections and a loose link need a "more" folder');
+  assert.match(html, /data-cycle="mapg"/, 'c goes to the picture');
+});
+
+test('folders: a page\'s headings become folders, the dim aside is dropped, a one-kind heading is not a folder', () => {
+  const m = M.crawl(r2);
+  const tree = M.folders(m);
+  const gcc = [];
+  walk(tree, (n) => { if (n.href === 'map:gcc') gcc.push(n); });
+  const labels = gcc[0].children.map((c) => c.label);
+  // Items holds one kind, so it shows the kind itself; Raw holds two, so it is a folder
+  assert.deepStrictEqual(labels.sort(), ['GCC items', 'Raw']);
+  assert.deepStrictEqual(gcc[0].children.find((c) => c.label === 'Raw').children.map((c) => c.label).sort(), ['GCC items raw', 'Gauntlet party']);
+  const eUnder = [];
+  walk(tree, (n) => (n.children || []).forEach((c) => { if (c.href === 'map:e') eUnder.push(n.label); }));
+  assert.deepStrictEqual(eUnder, ['entities by status'], 'a kind sits where the crawl first found it');
+  const top = tree.children.map((c) => c.label);
+  assert.ok(!top.some((l) => /\(x\)/.test(l)), 'the dim aside leaked into a folder name: ' + top);
+});
