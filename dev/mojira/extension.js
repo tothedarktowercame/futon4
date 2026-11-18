@@ -40,12 +40,13 @@ function open(context) {
 function watchCore(context) {
   let timer = null;
   const w = fs.watch(__dirname, (_ev, file) => {
-    if (file !== 'core.js') return;
+    // core.js or any helper it requires (core.js re-requires them fresh)
+    if (!file || !file.endsWith('.js') || file === 'extension.js') return;
     clearTimeout(timer);
     timer = setTimeout(() => {
       try {
         load();
-        if (panel) { attach(); core.note('reloaded core.js ' + new Date().toTimeString().slice(0, 8)); }
+        if (panel) { attach(); core.note('reloaded ' + file + ' ' + new Date().toTimeString().slice(0, 8)); }
       } catch (e) {
         vscode.window.showErrorMessage('Mojira: core.js did not load, still running the previous one: ' + e.message);
       }

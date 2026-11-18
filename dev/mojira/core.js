@@ -7,6 +7,13 @@ const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
 const { execFile } = require('child_process');
+// Hot reload: every module of ours (not core.js, not the loader) is required
+// fresh, so a saved helper is never run stale against a new core.js. A
+// module missing from a hand list did exactly that (sitemap.folderView, 2026-11-18).
+for (const k of Object.keys(require.cache)) {
+  if (k.startsWith(__dirname + path.sep) && !k.includes(path.sep + 'node_modules' + path.sep)
+    && k !== __filename && path.basename(k) !== 'extension.js') delete require.cache[k];
+}
 // triage.js is reloaded with core.js (the loader only re-requires core.js).
 delete require.cache[require.resolve('./triage')];
 const triage = require('./triage');
@@ -928,16 +935,22 @@ a.ln:hover { border-bottom-color: currentColor; }
 a.ln.sel { outline: 1px solid var(--vscode-focusBorder); background: var(--vscode-editor-selectionBackground); }
 a.st-exists { } a.st-partly { font-style: italic; } a.st-hypothesised { font-style: italic; opacity: .75; } a.st-retired { text-decoration: line-through; opacity: .6; }
 .hint { position: absolute; background: var(--vscode-editorWarning-foreground, #c90); color: #000; font-size: 11px; font-weight: bold; padding: 0 3px; border-radius: 2px; transform: translate(-100%, -2px); z-index: 9; }
-#bar { position: sticky; top: 0; background: var(--vscode-editor-background); padding: .4em 0; border-bottom: 1px solid var(--vscode-panel-border); color: var(--vscode-descriptionForeground); font-size: .85em; }
+#bar { position: sticky; top: 0; z-index: 5; display: flex; align-items: baseline; gap: .3em; background: var(--vscode-editor-background); padding: .4em 0; border-bottom: 1px solid var(--vscode-panel-border); color: var(--vscode-descriptionForeground); font-size: .85em; }
+#keys { flex: 1 1 0; min-width: 0; }
+#scw { margin-left: auto; flex: none; white-space: nowrap; }
 #note { color: var(--vscode-editorInfo-foreground, inherit); margin-right: .5em; }
 #note.err, .err { color: var(--vscode-errorForeground, #c33); }
 #vn { display: none; width: 34em; font: inherit; color: inherit; background: var(--vscode-input-background); border: 1px solid var(--vscode-focusBorder); }
 .verdict { display: inline-block; min-width: 6.5em; color: var(--vscode-descriptionForeground); }
 .v-worth { color: var(--vscode-testing-iconPassed, #3a3); } .v-invalid { color: var(--vscode-errorForeground, #c33); } .v-not-now { color: var(--vscode-editorWarning-foreground, #b80); }
-#sc { display: none; width: 12em; font: inherit; color: inherit; background: var(--vscode-input-background); border: 1px solid var(--vscode-focusBorder); }
+/* the shortcode prompt sits at the right of the bar as ": shortcode"; : focuses it and typing replaces the word */
+#sc { width: 9em; font: inherit; color: var(--vscode-editor-foreground); background: transparent; border: 1px solid transparent; padding: 0 .2em; }
+#sc::placeholder { color: var(--vscode-descriptionForeground); opacity: 1; }
+#sc:focus { outline: none; background: var(--vscode-input-background); border-color: var(--vscode-focusBorder); }
+#sc:focus::placeholder { opacity: .5; }
 #q { display: none; width: 30em; font: inherit; color: inherit; background: var(--vscode-input-background); border: 1px solid var(--vscode-focusBorder); }
 </style></head><body>
-<div id="bar"><span id="crumbs"></span> <input id="q" placeholder="search, then Enter"><input id="sc" placeholder=": shortcode (? lists them)"><span id="note" class="note"></span><input id="vn"><span id="keys"></span></div>
+<div id="bar"><span id="crumbs"></span> <input id="q" placeholder="search, then Enter"><span id="note" class="note"></span><input id="vn"><span id="keys"></span><span id="scw">:<input id="sc" placeholder="shortcode" title="shortcode (? lists them)"></span></div>
 <div id="cols"><div id="page">loading…</div><div id="peek"></div></div>
 <script>
 const vs = acquireVsCodeApi();
@@ -963,7 +976,7 @@ function select(i) {
 let peekTimer = null, noteTimer = null;
 // The key line names this page's own keys first, then the ones that work
 // everywhere.
-const KEYS = ' · j/k move · Enter follow · Tab/→ right column · Shift+Tab/← left · f hints · h back · / search · g home · i GCC items · : shortcode · y/Y copy link/page · v split · r reload';
+const KEYS = ' · j/k move · Enter follow · Tab/→ right column · Shift+Tab/← left · f hints · h back · / search · g home · i GCC items · y/Y copy link/page · v split · r reload';
 function showKeys() {
   $('#keys').textContent = (onTriage() ? ' · w worth · n not now · x invalid · a rule all unruled' : '')
     + (document.querySelector('#page [data-vd]') ? ' · t full/clean · T additions/full · n/p paragraphs' : '')
@@ -1113,7 +1126,8 @@ $('#vn').addEventListener('keydown', ev => {
 // code acts at once; a space is added when every continuation needs one).
 const CODES = ${JSON.stringify(shortcodeList()).replace(/</g, '\\u003c')};
 const scStep = ${shortcodes.step.toString()};
-function closeSc() { const sc = $('#sc'); sc.style.display = 'none'; sc.blur(); }
+function closeSc() { const sc = $('#sc'); sc.value = ''; sc.blur(); }
+$('#sc').addEventListener('blur', ev => { ev.target.value = ''; });
 function runSc(code) { closeSc(); vs.postMessage({ type: 'code', code }); }
 $('#sc').addEventListener('input', ev => {
   if (/^mojira:/.test(ev.target.value)) { $('#note').textContent = 'RET opens it'; return; }
@@ -1208,7 +1222,7 @@ document.addEventListener('keydown', ev => {
   else if (k === 'y') { const a = links()[sel[active]]; if (a) vs.postMessage({ type: 'copy', href: a.dataset.href }); else $('#note').textContent = 'y copies the selected link: select one first (j/k), or Y for this page'; }
   else if (k === 'Y') vs.postMessage({ type: 'copy', href: active === 'peek' && peekHref ? peekHref : null });
   else if (k === 'v') { document.body.classList.toggle('one'); if (!peekShown()) setActive('page'); try { vs.setState({ one: document.body.classList.contains('one') }); } catch (_) {} }
-  else if (k === ':' || k === '※') { const sc = $('#sc'); sc.style.display = 'inline'; sc.value = ''; sc.focus(); }
+  else if (k === ':' || k === '※') { const sc = $('#sc'); sc.value = ''; sc.focus(); }
   else if (k === '/') { const q = $('#q'); q.style.display = 'inline'; q.value = ''; q.focus(); }
   else if (k === ' ') $('#' + active).scrollBy(0, $('#' + active).clientHeight * 0.8);
   else return;

@@ -21,6 +21,7 @@
     "onWebviewPanel:mojira"
   ],
   "main": "./extension.js",
+  "scripts": { "test": "node --test test/", "lint": "node --test test/lint.test.js" },
   "contributes": {
     "commands": [
       {
