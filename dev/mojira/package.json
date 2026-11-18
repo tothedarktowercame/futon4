@@ -100,7 +100,7 @@
         "mojira.turnRecordsDir": {
           "type": "string",
           "default": "/home/joe/.emacs-graph/session-turn-analysis",
-          "description": "The \u8c61 turn records, read for the patterns proposed to each turn and \u99ac's verdicts. Read-only; Mojira caches a summary per record in ~/.cache/mojira."
+          "description": "The 象 turn records, read for the patterns proposed to each turn and 馬's verdicts. Read-only; Mojira caches a summary per record in ~/.cache/mojira."
         },
         "mojira.cascadeDir": {
           "type": "string",
@@ -132,7 +132,7 @@
           "type": "number",
           "default": 30,
           "minimum": 2,
-          "description": "Polling interval for the visible \u99ac herd. Hidden views do not poll."
+          "description": "Polling interval for the visible 馬 herd. Hidden views do not poll."
         },
         "mojira.variantsFile": {
           "type": "string",
