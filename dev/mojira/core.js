@@ -967,6 +967,7 @@ function reloadData() {
   circusCache.clear();
   strandCache.clear();
   herdCache.clear();
+  recent = null;   // the monitor's conversation list: r must re-ask 象's record too
   const cur = history[history.length - 1] || 'home';
   if (PATTERN_KINDS.has(cur.split(':')[0])) {
     pgraph = null; pgErr = null;

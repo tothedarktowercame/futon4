@@ -113,6 +113,11 @@ test('monitor with no session set follows the newest conversation in 象\'s turn
     for (let i = 0; i < 100 && !(lastPage() && /did not answer/.test(lastPage().html)); i++) await new Promise(r => setTimeout(r, 10));
     assert.match(lastPage().html, /象's turn record did not answer/);
     assert.doesNotMatch(lastPage().html, /monitorSession/);
+    // Joe: "r is supposed to 'reload'" -- once 象's record answers again, r clears the error
+    turnsUp = true;
+    listener({ type: 'reload' });
+    for (let i = 0; i < 100 && !(lastPage() && /turn-003/.test(lastPage().html)); i++) await new Promise(r => setTimeout(r, 10));
+    assert.match(lastPage().html, /your recent conversations/, 'r recovered from the error');
   } finally {
     for (const st of states) if (st.strandTimer) clearInterval(st.strandTimer);
     Module._load = original; server.closeAllConnections(); await new Promise(r => server.close(r)); fs.rmSync(dir, { recursive: true });
