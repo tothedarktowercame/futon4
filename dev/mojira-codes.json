@@ -1,6 +1,7 @@
 {
   "about": "Mojira shortcodes, shared by Emacs (mojira-dispatch.el, the ※ prompt) and code-server Mojira (the : prompt). A code acts in each place that names an action for it; elsewhere it says where it works. Repo codes (<n>, r <name>) come from the ~/code allowlist; kinds and agents are below. Joe, 2026-11-13: add requests here so they apply in both places.",
   "codes": [
+    {"code": "m p", "label": "Mission patterns", "emacs": {"command": "mojira-mission-patterns", "load": "~/code/futon4/dev/mojira-mission-patterns.el"}},
     {"code": "p", "label": "Patterns", "emacs": {"uri": "arxana://view/patterns"}, "mojira": {"page": "pg"}},
     {"code": "i", "label": "GCC items", "mojira": {"page": "gcc"}},
     {"code": "y", "label": "Gauntlet party", "mojira": {"page": "gparty"}},
