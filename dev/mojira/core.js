@@ -31,8 +31,8 @@ delete require.cache[require.resolve('./circus-view')];
 const circusView = require('./circus-view');
 delete require.cache[require.resolve('./strand-view')];
 const strandView = require('./strand-view');
-delete require.cache[require.resolve('./ma-map-view')];
-const maMapView = require('./ma-map-view');
+delete require.cache[require.resolve('./intent-graph-view')];
+const intentGraphView = require('./intent-graph-view');
 delete require.cache[require.resolve('./herd-view')];
 const herdView = require('./herd-view');
 const http = require('http');
@@ -253,7 +253,7 @@ function pageHome() {
 <li>${link('gparty', 'the Gauntlet party: Thor, Merlin, Questor, Thyra and the party vote')}</li>
 <li>${link('top', "Giraffe's top items: the turns behind them, and why each stands where it does")}</li>
 <li>${link('strand:' + (monitorSession() || ''), 'Circus monitor: one session accumulating turn by turn')}</li>
-<li>${link('mamap:' + (monitorSession() || ''), '馬 map: pattern threads across one live session')}</li>
+<li>${link('mamap:' + (monitorSession() || ''), 'intent graph: what one session set out to do, and what was realised')}</li>
 <li>${link('herd:', '馬 herd: parallel sessions and their bells')}</li></ul>
 <h2>Letter of intent <span class="dim">(working draft: b notes a benefit, p a beneficiary)</span></h2><ul>
 <li>${link('vd', 'Draft 2 over its source turns')}</li>
@@ -582,7 +582,7 @@ function pollStrand(href) {
       cached.at = Date.now();
       if (panel && panel.visible && history[history.length - 1] === href) {
         if (href.startsWith('mamap:')) {
-          const V = maMapView({ esc, link });
+          const V = intentGraphView({ esc, link });
           panel.webview.postMessage({ type: 'mamap-update', html: V.render(cached.data).html });
           return;
         }
@@ -612,10 +612,10 @@ function pageStrand(arg) {
 
 function pageMaMap(arg) {
   const session = arg || monitorSession();
-  if (!session) return { title: '馬 map', html: noSessionHtml('馬 map') };
+  if (!session) return { title: 'intent graph', html: noSessionHtml('Intent graph') };
   const c = strandCache.get(session || '') || { err: 'not loaded' };
-  if (c.err) return { title: '馬 map', html: `<h1>馬 map</h1>${recentLine(session, 'mamap')}<p class="err">${esc(c.err)}</p>` };
-  const page = maMapView({ esc, link }).render(c.data);
+  if (c.err) return { title: 'intent graph', html: `<h1>Intent graph</h1>${recentLine(session, 'mamap')}<p class="err">${esc(c.err)}</p>` };
+  const page = intentGraphView({ esc, link }).render(c.data);
   return { ...page, html: page.html.replace('</h1>', '</h1>' + recentLine(session, 'mamap')) };
 }
 
@@ -1029,13 +1029,12 @@ svg.cascade .olabel { font-size: 12px; font-weight: bold; }
 svg.cascade .nlabel { fill: var(--vscode-editor-background); font-size: 9px; }
 svg.cascade .occ.partial + text + .nlabel, svg.cascade a:has(.occ.partial) .nlabel { fill: var(--vscode-textLink-foreground); }
 svg.cascade .role { fill: var(--vscode-descriptionForeground); font-size: 9px; letter-spacing: .04em; }
-svg.ma-map .thread.occurrence { fill: var(--vscode-textLink-foreground); stroke: var(--vscode-textLink-foreground); }
-svg.ma-map .thread.partial { fill: var(--vscode-editor-background); stroke: var(--vscode-textLink-foreground); stroke-width: 1.5; }
-svg.ma-map .quote { fill: none; stroke: var(--vscode-descriptionForeground); stroke-width: 1; opacity: .7; }
-svg.ma-map .dropped { fill: none; stroke: var(--vscode-errorForeground, #e44); stroke-width: 2; }
-svg.cascade.ma-map text { font-size: 14px; } svg.cascade.ma-map .lane, svg.cascade.ma-map .connection { fill: var(--vscode-descriptionForeground); font-size: 13px; }
-svg.ma-map .opened { fill: var(--vscode-editorInfo-foreground, #49c); }
-svg.ma-map .act-ask-action { fill: var(--vscode-editorWarning-foreground, #c90); }
+svg.intents text { fill: var(--vscode-editor-foreground); font-size: 14px; } svg.intents .dim { fill: var(--vscode-descriptionForeground); }
+svg.intents .trunk { stroke: var(--vscode-editor-foreground); stroke-width: 2; fill: none; }
+svg.intents .lane { fill: none; stroke-width: 2; } svg.intents .lane.realised { stroke: var(--vscode-textLink-foreground); }
+svg.intents .lane.open { stroke: var(--vscode-descriptionForeground); stroke-dasharray: 4 3; } svg.intents .lane.ended { stroke: var(--vscode-errorForeground, #e44); }
+svg.intents .turn { fill: var(--vscode-editor-foreground); } svg.intents .intent { fill: var(--vscode-editor-background); stroke: var(--vscode-textLink-foreground); stroke-width: 2; }
+svg.intents .kind { font-weight: bold; } svg.intents .realisedlabel { fill: var(--vscode-textLink-foreground); } svg.intents .endedlabel { fill: var(--vscode-errorForeground, #e44); }
 svg.herd .herd-turn circle { stroke: var(--vscode-editor-background); stroke-width: 1.5; }
 svg.herd .herd-turn.read circle { fill: var(--vscode-testing-iconPassed, #3a3); }
 svg.herd .herd-turn.no-proposed-patterns circle { fill: var(--vscode-descriptionForeground); }

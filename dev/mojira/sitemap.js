@@ -24,7 +24,7 @@ const KINDS = {
   pt: 'turns', pturns: 'recent turns', pout: 'outside the main component', pmiss: 'missing patterns',
   cascade: 'turn cascade', cn: 'cascade occurrences', ce: 'cascade elements',
   top: 'top items', 'top-raw': 'top items raw', wn: 'why-not', 'wn-raw': 'why-not raw',
-  strand: 'Circus strand', mamap: '馬 thread map', herd: '馬 herd',
+  strand: 'Circus strand', mamap: 'intent graph', herd: '馬 herd',
   bf: 'Benefit filings', 'bf-raw': 'Benefit filings raw', 'bf-evidence': 'Benefit reading evidence',
   gcc: 'GCC item list', gi: 'GCC items', 'gi-raw': 'GCC items raw', gparty: 'Gauntlet party', 'gparty-raw': 'party raw',
   vd: 'draft variants', vds: 'variant sources', loi: 'letter of intent', lf: 'letter fields',
