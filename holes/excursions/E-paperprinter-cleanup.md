@@ -27,6 +27,13 @@ claude7/integrate (mfuton-share, local): Q84 1970149b, Q87 acfa8fed, Q85 c62a8ba
 7. **Probe branches** (mission open question 6): codex-6 `codex-6-q84-alias-probe` bccaee1d and codex-12 `codex-12/step-probe` f87a1048 are local and unpushed; integration is Rob's repo and Joe's call.
 8. **History patterns** (mission open question 1): the a97J08 wording history (reversal at 50444f21 → Q66 → Q78) and further supersessions (Q87 if recorded) are its data; the question itself stays with the mission.
 
+9. **Q88 and the live a97J08 sentence records** (claude-5, 2026-11-18).
+   - Q88 (9f3836f6) removes the first-split special case of `_merge_right_or_splits`. The live rule record for that function is Q83's `777d1f59…`, pinned at 1970149b.
+   - All five a97J08 case-conclusion roles name that rule. Recording Q88 as a supersession would mark all five stale, which would be the first live run of the staleness reader.
+   - **Before any record:** re-render a97J08 at 9f3836f6 and compare the five wordings. Staleness means "depends on a changed rule", not "changed".
+   - If the wordings changed, propose new manifestations at head.
+   - This goes to Joe for his go *first*, ahead of the a02J03 record (item 5).
+
 ## Tools and records already built (futon3c master)
 
 - DiagramProver: `diagramprover/` (term schemas, findings, opaque rules, lean_alias, publish_findings, arxana_records, sentence_records).
