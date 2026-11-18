@@ -304,3 +304,49 @@ until then the packets build and test the records in memory.
 
 Packets: 4a registry declarations and `findings->records` (pure); 4b staleness over a record
 set, with the planted check (supersede one rule: its findings go stale, no others do).
+
+## 8. Sentence records: design brief (2026-11-18, claude-5; VERIFY Witness 1, open question 5)
+
+§6 says what sentence records must do. This section says how to build the first of them, on one declaration: a97J08 `apm_a97j08_boundary_sum_aux_disjoint`, whose closing sentence "In all four cases, we obtain a contradiction" is Witness 1's named sentence.
+
+**What exists to build on.**
+- Arxana already has `:manifestation-scope` as an endpoint kind, a span of an artifact revision. A rendered page is an artifact revision, and a sentence is a scope in it.
+- The Step probe (mfuton-share codex-12 `b90ed3f9`) gives each Step a structural key: digests of its case expression and right disjunct. That is the locator §6 (G16) asks for, independent of the output text.
+- The replay runner (`f87a1048`) runs named Step rules as they are, so a rule can be switched off for one render without editing the printer.
+- The rule records, supersessions, findings and rule-set diffs are in the store (§7, and mission §5).
+
+**Two ways to learn which rules a sentence depends on.** We use both, because each is honest about a different thing.
+1. **History.** Render the declaration at each merge in the chain that touched it, on claude7/integrate. The merges are:
+   - Q55 7b16766b;
+   - Q56 2d809ff1 and its review fix 50444f21;
+   - Q61 20985f78;
+   - Q66 715a3f90;
+   - the Q67 repins 23050857;
+   - Q78 db16b1ff;
+   - Q83 e73a6b2e;
+   - then Q88 once it is merged.
+
+   A sentence's wording at each merge, with the merge's agent (commit trailers) and time, is its history. This is the "earlier wordings with actors and times" of Witness 1, and the data that question 1 (patterns in the history) needs.
+2. **Counterfactual.** At one commit, render with one Step rule switched off, for each rule in turn. The sentences whose text changes depend on that rule. This gives the rule-application record (§6, G15) its rule list. It is complete only for the rules that can be switched off, and the record must say so: a field naming the rules tested, not a claim that the list is all the rules.
+
+**Records.**
+- **Artifact revisions:** each render is one, with pins for the renderer commit, the corpus sha and the declaration.
+- **Sentences:** a sentence is a `:manifestation-scope` in a render. Its locator is the Step's structural key plus the Step kind, and the text span is derived per render.
+- **`:rule/application` 1 (new):** source role `:sentence`, a manifestation scope. The content holds:
+  - the rule ids found to change it;
+  - the rules tested;
+  - the method (`:counterfactual` or `:history`);
+  - the renderer sha.
+
+  The completeness check from §6 applies to the tested rules only: re-rendering with exactly these pins reproduces the span.
+- **Staleness:** a sentence is stale at t when a rule in one of its applications has a supersession valid at t. This is the same direct-predecessor rule as for findings, read through `:role-reverse` as `store-finding-view` does.
+- **The planted check (Witness 1):** in a scratch branch, supersede one rule. Every sentence whose application names it is stale, and no other sentence is.
+
+**Order of work.**
+- **8A, discovery (codex-12, mfuton-share, read-only):** render a97J08 at each chain commit and report, per commit, the closer sentences with their Steps. Find out whether the 2A structural keys stay stable across commits for the "same" sentence. The probe module does not exist at old commits, so the report must say how the keys were obtained there. If they are not stable, report what is.
+- **8B (Python):** the counterfactual runner, one render per switched-off rule, at the current head.
+- **8C (Clojure, futon3c):** the `:rule/application` type, sentence and render records, a store-backed sentence view, and the planted check, first in memory and then, with Joe's go, live.
+
+**Not decided yet.**
+- Word-level readings: the 72 to 79 words with several readings (mission §5, kind 3) are rules too. Whether they get the same treatment depends on 8A.
+- Whether a sentence should be one Step or a smaller span: one Step for now.
