@@ -878,7 +878,9 @@ function reportBug() {
     const ctx = path.join(os.tmpdir(), `mojira-bug-${Date.now()}.md`);
     fs.writeFileSync(ctx, bugContext());
     const scripts = cfg('futon3cScripts') || '/home/joe/code/futon3c/scripts';
-    const agent = cfg('bugAgent');
+    // unset (a window not yet reloaded since the setting was added) means the
+    // default; only an explicit empty string means "write, don't send"
+    const agent = cfg('bugAgent') === undefined ? 'claude-cs' : cfg('bugAgent');
     note('bug report: collecting context…');
     execFile('python3', [path.join(scripts, 'futon_bug_report.py'), '--summary', summary,
       '--emacs-context', ctx, '--context-label', 'Mojira'], { timeout: 120000 }, (err, out, stderr) => {
