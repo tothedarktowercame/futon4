@@ -34,6 +34,11 @@ claude7/integrate (mfuton-share, local): Q84 1970149b, Q87 acfa8fed, Q85 c62a8ba
    - If the wordings changed, propose new manifestations at head.
    - This goes to Joe for his go *first*, ahead of the a02J03 record (item 5).
 
+10. **Class 13 and class 16: done (2026-11-18).**
+   - Class 16 is a printer fix, a415b01f with test re-pins in 9756e848: an equality calc displays its steps as one chain, not "by transitivity". Over the 757 r11 records, 18 changed, 0 errors, and the count went 42 → 31.
+   - Class 13 is a Lean notation change (STYLE.md S1–S3, apm-lean 6f4499099d). The corpus build branch was fast-forwarded with codex-25 and codex-4 sign-off, and the t96J02 corpus entry was swapped; its provenance is in PROVENANCE.md beside it.
+   - Open, Joe's call: the corpus is pinned to the codex25 build, 38 commits behind apm-lean master.
+
 ## Tools and records already built (futon3c master)
 
 - DiagramProver: `diagramprover/` (term schemas, findings, opaque rules, lean_alias, publish_findings, arxana_records, sentence_records).
