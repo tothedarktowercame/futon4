@@ -152,7 +152,7 @@ function render(href) {
   }
   if (kind === 'loi' || kind === 'lf') return pageLoi(kind, arg);
   if (kind === 'map') return pageMap(arg);
-  if (kind === 'mapg') return sitemap.view(crawlMap(), { esc, link });
+  if (kind === 'mapg') return sitemap.picture(lastMap && Date.now() - lastMap.at < 60000 ? lastMap.map : crawlMap(), arg, { esc, link });
   if (kind === 'codes') return { title: 'shortcodes', html: shortcodes.helpHtml(shortcodes.readTable(), shortcodes.readRepos(), esc) };
   return pageHome();
 }
@@ -922,6 +922,7 @@ svg.cascade .elabel { fill: var(--vscode-descriptionForeground); }
 svg.cascade .gluetag, .gluetag { fill: var(--vscode-editorWarning-foreground, #c90); color: var(--vscode-editorWarning-foreground, #c90); font-size: 10px; font-weight: bold; }
 svg.cascade a.ln { cursor: pointer; }
 svg.cascade .occ.bad { fill: var(--vscode-errorForeground, #e44); }
+svg.cascade.mapg text, svg.cascade.mapg .olabel { font-size: 14px; } svg.cascade.mapg .elabel { font-size: 13px; font-weight: normal; } svg.cascade.mapg { overflow: visible; max-width: none; }
 svg.cascade a.ln.sel circle, svg.cascade a.ln.sel rect { stroke: var(--vscode-focusBorder); stroke-width: 3; }
 svg.cascade a.ln.sel text { fill: var(--vscode-textLink-activeForeground, var(--vscode-textLink-foreground)); }
 h2.part { text-transform: none; }

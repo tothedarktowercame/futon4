@@ -59,19 +59,28 @@ test('the crawl stops at its per-kind cap and says so', () => {
   assert.strictEqual(m.truncated, true);
 });
 
-test('the picture: a link per kind, hollow kinds no link reaches, broken links in red', () => {
-  const m = M.crawl(render);
-  const html = M.view(m, { esc, link }).html;
-  const hrefs = M.hrefsIn(html);
-  for (const k of ['home', 'status', 'e', 'gcc', 'gi', 'top', 'file', 'ext', 'broken']) assert.ok(hrefs.includes('map:' + k), 'no node for ' + k);
-  // reached by nothing in SITE: drawn hollow
-  assert.match(html, /<title>letter of intent: Mojira can draw it, no link reaches it<\/title><circle class="occ partial"/);
-  assert.match(html, /<title>searches: Mojira can draw it, no link reaches it \(key \/\)<\/title>/);
-  assert.match(html, /<circle class="occ bad"/);
-  assert.doesNotMatch(html, /<title>lexicon entities: [^<]*no link reaches/);
-  const page = M.kindPage(m, 'e', { esc, link }).html;
-  assert.ok(M.hrefsIn(page).includes('e:a') && M.hrefsIn(page).includes('e:b'));
-  assert.match(page, /linked from: .*entities by status/);
+test('the picture: one choice point at a time, never more than five dots below, text not shrunk', () => {
+  const m = M.crawl(r2);
+  const tree = M.capTree(M.folders(m));
+  // every folder in the tree, drawn: at most 5 children, plus the node and its parent
+  const paths = [];
+  const visit = (n, p) => { paths.push(p); (n.children || []).forEach((c, i) => { if ((c.children || []).length) visit(c, p ? p + '/' + i : String(i)); }); };
+  visit(tree, '');
+  assert.ok(paths.length >= 3, 'the fixture should have nested folders: ' + paths);
+  for (const p of paths) {
+    const html = M.picture(m, p, { esc, link }).html;
+    const dots = (html.match(/<circle|<rect/g) || []).length;
+    assert.ok(dots <= 5 + 1, `${p || 'home'} draws ${dots} dots`);   // Joe's five, plus the chosen node
+    assert.doesNotMatch(html, /viewBox/, 'a viewBox lets the SVG shrink its text');
+    assert.match(html, /<svg class="cascade mapg"[^>]* style="font-size:14px"/);
+    assert.match(html, /data-cycle="map"/);
+    if (p) assert.ok(M.hrefsIn(html).includes('mapg' + (p.includes('/') ? ':' + p.split('/').slice(0, -1).join('/') : '')), 'no way up from ' + p);
+  }
+  // home: its children open a level down when they have children, else list their pages
+  const home = M.hrefsIn(M.picture(m, '', { esc, link }).html);
+  assert.ok(home.some((h) => /^mapg:\d+$/.test(h)) && home.some((h) => /^map:/.test(h)));
+  // a path that is not there falls back to home rather than failing
+  assert.match(M.picture(m, '9/9/9', { esc, link }).html, /, from home/);
 });
 
 test('on the GCC fixture: every item the list links to is on the map', () => {

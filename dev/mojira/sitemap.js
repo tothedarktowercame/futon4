@@ -155,11 +155,15 @@ ${block('OUTSIDE MOJIRA', outside)}${block('BY KEY', keyed)}${block('NOT REACHED
 }
 
 // ------------------------------------------------------------------ picture
+// The same capped tree as the folders, drawn one choice point at a time
+// (Joe 2026-11-18: "no more than five nodes from any choice point", after a
+// picture of every kind at once put 16 dots in a row): the parent above,
+// the chosen node, and its children (at most MAX_CHOICES) below. mapg:<path>,
+// path = child indices from home ("2/0"). Text at the panel's size: the SVG
+// is drawn at its own width and never scaled down.
+const FONT = 14, COL = 170, W_MIN = 3 * COL;
 
-const STEP = 118, ROW = 165, TOP = 40;
-const radius = (n) => 7 + 4 * Math.log10(1 + n);
-
-function wrap(s, width = 16) {
+function wrap(s, width = 18) {
   const out = [];
   let cur = '';
   for (const w of String(s).split(' ')) {
@@ -169,67 +173,53 @@ function wrap(s, width = 16) {
   return out.slice(0, 3);
 }
 
-function layout(map) {
-  const rows = [];
-  for (const k of map.kinds.values()) {
-    if (!KINDS[k.kind] || k.depth === Infinity) continue;
-    (rows[k.depth] = rows[k.depth] || []).push({ id: k.kind, label: KINDS[k.kind], n: k.pages.size, k });
+function nodeAt(tree, p) {
+  let n = tree;
+  const idx = String(p || '').split('/').filter((x) => x !== '').map(Number);
+  for (const i of idx) {
+    if (!n.children || !n.children[i]) return null;
+    n = n.children[i];
   }
-  const reached = rows.filter(Boolean);
-  const unreached = Object.keys(KINDS).filter((id) => !map.kinds.has(id) || map.kinds.get(id).depth === Infinity)
-    .map((id) => ({ id, label: KINDS[id], n: 0, hollow: true, key: KEYED[id] }));
-  const outside = [...map.external].map(([id, s]) => ({ id, label: EXTERNAL[id], n: s.size, outside: true }));
-  if (map.broken.length) outside.push({ id: 'broken', label: 'broken links', n: map.broken.length, bad: true });
-  const all = [...reached, outside, unreached].filter((r) => r.length);
-  const width = Math.max(...all.map((r) => r.length)) * STEP + STEP;
-  const nodes = new Map();
-  all.forEach((row, i) => row.forEach((n, j) => {
-    n.x = Math.round((width - row.length * STEP) / 2 + STEP * (j + 0.5));
-    n.y = TOP + i * ROW;
-    n.r = radius(n.n);
-    nodes.set(n.id, n);
-  }));
-  return { nodes, width, height: TOP + all.length * ROW, rows: all.length };
+  return { n, idx };
 }
 
-function view(map, { esc, link }) {
-  const L = layout(map);
-  const N = L.nodes;
-  const curves = [];
-  for (const [ek, count] of map.edges) {
-    const [a, b] = ek.split('\t').map((id) => N.get(id));
-    if (!a || !b || a === b) continue;
-    const w = (1 + Math.log2(count) / 2).toFixed(1);
-    const y0 = a.y + (b.y >= a.y ? a.r : -a.r), y1 = b.y + (b.y > a.y ? -b.r : b.r);
-    const my = a.y === b.y ? a.y - 46 : (y0 + y1) / 2;
-    curves.push(`<path class="edge" style="stroke-width:${w};opacity:.55" d="M${a.x},${a.y === b.y ? a.y - a.r : y0} C${a.x},${my} ${b.x},${my} ${b.x},${a.y === b.y ? b.y - b.r : y1}"><title>${esc(a.label)} → ${esc(b.label)}: ${count} link${count === 1 ? '' : 's'}</title></path>`);
+function picture(map, p, { esc }) {
+  const tree = capTree(folders(map));
+  const at = nodeAt(tree, p) || nodeAt(tree, '');
+  const { n, idx } = at;
+  const here = idx.join('/');
+  const parentPath = idx.slice(0, -1).join('/');
+  const kids = n.children || [];
+  const width = Math.max(W_MIN, kids.length * COL);
+  const cx = width / 2;
+  const Y = { up: 30, focus: 120, kids: 250 };
+  const label = (x, y, lines, cls) => `<text class="${cls}" x="${x}" y="${y}" text-anchor="middle">${lines.map((l, i) => `<tspan x="${x}" dy="${i ? FONT + 3 : 0}">${esc(l)}</tspan>`).join('')}</text>`;
+  const shape = (m, x, y, r) => (m.folder
+    ? `<rect class="el" x="${x - r}" y="${y - r}" width="${2 * r}" height="${2 * r}"/>`
+    : `<circle class="occ" cx="${x}" cy="${y}" r="${r}"/>`);
+  const inside = (m) => ((m.children || []).length ? `${m.children.length} inside` : '');
+  const sub = (m) => [m.note, inside(m)].filter(Boolean).join(' · ');
+  const out = [];
+  if (idx.length) {
+    const parent = nodeAt(tree, parentPath).n;
+    out.push(`<path class="edge" d="M${cx},${Y.up + 8} L${cx},${Y.focus - 12}"/>`);
+    out.push(`<a class="ln" data-href="mapg${parentPath ? ':' + esc(parentPath) : ''}"><title>up to ${esc(parent.label)}</title>${label(cx, Y.up, ['↑ ' + parent.label], 'olabel')}</a>`);
   }
-  const node = (n) => {
-    const k = n.k;
-    const cls = n.bad ? 'occ bad' : n.hollow ? 'occ partial' : n.outside ? 'el' : 'occ';
-    const shape = n.outside && !n.bad
-      ? `<rect class="${cls}" x="${n.x - n.r}" y="${n.y - n.r}" width="${2 * n.r}" height="${2 * n.r}"/>`
-      : `<circle class="${cls}" cx="${n.x}" cy="${n.y}" r="${n.r}"/>`;
-    const more = k && (k.notLoaded || k.unexplored) ? '+' : '';
-    const count = n.hollow ? (n.key ? 'key ' + n.key : map.waiting.length ? 'not reached yet' : 'no link') : n.n + more;
-    const lines = wrap(n.label).map((l, i) => `<tspan x="${n.x}" dy="${i ? 13 : 0}">${esc(l)}</tspan>`).join('');
-    const tip = n.hollow ? `${n.label}: Mojira can draw it, no link reaches it${n.key ? ' (key ' + n.key + ')' : ''}${map.waiting.length && !n.key ? '; ' + map.waiting.length + ' pages are still loading and may link to it' : ''}`
-      : n.bad ? `${n.n} links to pages Mojira cannot draw`
-      : `${n.label}: ${n.n} page${n.n === 1 ? '' : 's'}${k && k.notLoaded ? ', some not loaded yet' : ''}${k && k.unexplored ? ', more not followed' : ''}`;
-    return `<a class="ln" data-href="map:${esc(n.id)}"><title>${esc(tip)}</title>${shape}
-<text class="olabel" x="${n.x}" y="${n.y + n.r + 14}" text-anchor="middle">${lines}</text>
-<text class="elabel" x="${n.x}" y="${n.y + n.r + 14 + 13 * wrap(n.label).length}" text-anchor="middle">${esc(count)}</text></a>`;
-  };
-  const pages = [...map.kinds.values()].reduce((s, k) => s + k.pages.size, 0);
-  const outsideN = [...map.external.values()].reduce((s, v) => s + v.size, 0);
-  const hollow = [...N.values()].filter((n) => n.hollow).length;
-  return { title: 'map (picture)', html: `<div class="gcc" data-cycle="map">
-<h1>Mojira's map <span class="dim">— as a picture · c back to folders</span></h1>
-<p class="dim">${pages} pages of ${[...N.values()].filter((n) => !n.hollow && !n.outside).length} kinds · ${outsideN} things outside Mojira · ${hollow} kinds not reached${map.broken.length ? ` · <span class="err">${map.broken.length} broken links</span>` : ''}${map.waiting.length ? ` · <span class="absent">loading ${map.waiting.length} more (${esc([...new Set(map.waiting.map((h) => KINDS[kindOf(h)]))].join(', '))}); the map redraws when they arrive</span>` : ''}${map.truncated ? ' · + means more pages than the crawl followed' : ''} · crawled in ${esc(map.ms)} ms</p>
-<p class="dim">rows: distance from home in links · then files, URLs and turns outside Mojira (squares) · then hollow: kinds reached only by a key · select a circle for its pages · y copies a mojira:// id</p>
-<svg class="cascade sitemap" viewBox="0 0 ${L.width} ${L.height}" width="${L.width}" style="max-width:100%;height:auto">
-${curves.join('\n')}
-${[...N.values()].map(node).join('\n')}
+  kids.forEach((m, i) => {
+    const x = (width - kids.length * COL) / 2 + COL * (i + 0.5);
+    out.push(`<path class="edge" d="M${cx},${Y.focus + 12} C${cx},${(Y.focus + Y.kids) / 2} ${x},${(Y.focus + Y.kids) / 2} ${x},${Y.kids - 12}"/>`);
+    const href = (m.children || []).length ? 'mapg:' + (here ? here + '/' : '') + i : m.href;
+    const body = `${shape(m, x, Y.kids, 10)}${label(x, Y.kids + 30, wrap(m.label + (m.folder ? '/' : '')), 'olabel')}${label(x, Y.kids + 30 + (FONT + 3) * wrap(m.label).length, [sub(m)], 'elabel')}`;
+    out.push(href ? `<a class="ln" data-href="${esc(href)}"><title>${esc(m.label)}</title>${body}</a>` : body);
+  });
+  const focusBody = `${shape(n, cx, Y.focus, 12)}${label(cx + 0, Y.focus + 34, [n.label + (n.folder ? '/' : '')], 'olabel')}${label(cx, Y.focus + 34 + FONT + 3, [n.note || ''], 'elabel')}`;
+  out.push(n.href ? `<a class="ln" data-href="${esc(n.href)}"><title>${esc(n.label)}: its pages</title>${focusBody}</a>` : focusBody);
+  const height = Y.kids + 30 + (FONT + 3) * 4 + 10;
+  return { title: 'map: ' + n.label, html: `<div class="gcc" data-cycle="map">
+<h1>Mojira's map <span class="dim">— ${esc(n.label)}${here ? '' : ', from home'} · c folders</span></h1>
+<p class="dim">a dot with things inside opens one level down · the middle dot lists its pages · ↑ goes up · y copies a mojira:// id</p>
+<svg class="cascade mapg" width="${width}" height="${height}" style="font-size:${FONT}px">
+${out.join('\n')}
 </svg></div>` };
 }
 
@@ -253,4 +243,4 @@ ${from.length ? `<p>linked from: ${from.map(kl).join(' · ')}</p>` : ''}${to.len
 <ul>${body}</ul></div>` };
 }
 
-module.exports = { KINDS, KEYED, EXTERNAL, MAX_CHOICES, hrefsIn, linksIn, crawl, folders, capTree, folderView, view, kindPage };
+module.exports = { KINDS, KEYED, EXTERNAL, MAX_CHOICES, hrefsIn, linksIn, crawl, folders, capTree, folderView, picture, kindPage };
