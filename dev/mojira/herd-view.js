@@ -92,7 +92,11 @@ function layout(data, highlighted = []) {
   // each lane's line runs from its first event to its last
   const span = new Map();
   const touch = (lane, y) => { if (!lane) return; const s = span.get(lane.key) || { top: y, bottom: y }; span.set(lane.key, { top: Math.min(s.top, y), bottom: Math.max(s.bottom, y) }); };
-  for (const e of events) { if (e.type === 'turn') touch(e.lane, e.y); else { touch(e.from, e.y); touch(e.to, e.y); } }
+  // A bell's branch leaves its sender's column half a row above the bell's
+  // row and enters the receiver's at the row, so those are the points the
+  // lines must reach (Joe 2026-11-18: a lane whose first event was a bell it
+  // sent showed the branch starting in empty space above the lane).
+  for (const e of events) { if (e.type === 'turn') touch(e.lane, e.y); else { touch(e.from, e.from === e.to ? e.y : e.y - ROW / 2); touch(e.to, e.y); } }
   const hi = new Set(highlighted);
   const active = (agent) => !hi.size || hi.has(agent);
   return { lanes, events, span, active, textX: X0 + lanes.length * LANE + 8,

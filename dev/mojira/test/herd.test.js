@@ -37,7 +37,27 @@ test('vertical layout: one column per session, then bell-only agents; one row pe
   assert.strictEqual(l.bells[1].to.key, 'session:session-b');
   // a lane's line runs from its first event to its last
   assert.deepStrictEqual(l.span.get('session:session-a'), { top: ys[0], bottom: ys[4] });
-  assert.deepStrictEqual(l.span.get('agent:codex-15'), { top: ys[1], bottom: ys[3] });
+  // codex-15 receives at row 1 and sends from half a row above row 3
+  assert.deepStrictEqual(l.span.get('agent:codex-15'), { top: ys[1], bottom: ys[3] - 12 });
+});
+
+test('every bell branch starts and ends on a drawn lane line', () => {
+  // Joe 2026-11-18: "The first dispatch from claude-7 is somehow
+  // disconnected". The lane's first event is a bell it sends.
+  const data = { ...fixture, lanes: [...fixture.lanes,
+    { session: 'session-c', agent: 'agent-c', turns: [{ id: 'turn-c1', created_at: '2026-11-18T06:03:30Z', ma_status: 'read', threads_n: 0 }] }],
+  bells: [...fixture.bells, { at: '2026-11-18T06:02:30Z', from_agent: 'agent-c', from_session: 'session-c', to_agent: 'claude-5', to_session: 'session-b', kind: 'request' }] };
+  const l = H.layout(data);
+  const html = H({ esc, link }).render(data).html;
+  for (const e of l.bells) {
+    const from = l.span.get(e.from.key), to = l.span.get(e.to.key);
+    const start = e.from === e.to ? e.y : e.y - 12;
+    assert.ok(from.top <= start && start <= from.bottom, `${e.bell.from_agent}'s line (${from.top}-${from.bottom}) misses the branch start ${start}`);
+    assert.ok(to.top <= e.y && e.y <= to.bottom, `${e.bell.to_agent}'s line misses the branch end ${e.y}`);
+  }
+  // and the drawn path for session-c's lane starts where its first branch leaves
+  const c = l.lanes.find((x) => x.key === 'session:session-c');
+  assert.match(html, new RegExp(`herd-lane session herd-c-\\w+" d="M${c.x},${l.bells.find((b) => b.bell.from_agent === 'agent-c').y - 12} `));
 });
 
 test('render: every dot and bell navigable, labels at panel size, one agent highlighted', () => {
