@@ -102,12 +102,34 @@ function step(s, codes) {
   return { value: v, exit: false, ret: codes.includes(v.trim()), next };
 }
 
-// What y/Y put on the clipboard for a Mojira href: the Emacs URI when the
-// table names one for that page (p: pg -> arxana://view/patterns), so the
-// copy opens in both places; otherwise Mojira's own href (gi:M-..., pt:...).
-function copyText(href, table) {
-  const c = (table.codes || []).find((x) => x.mojira && x.mojira.page === href && x.emacs && x.emacs.uri);
-  return c ? c.emacs.uri : href;
+// What y/Y put on the clipboard: the link's text and the thing behind it,
+// something that opens outside Mojira (a file, a turn id, an item file, a
+// URL, the Emacs URI the table names for the page). Mojira's own href
+// ("cascade") means nothing elsewhere, so it is the fallback, as mojira:<href>.
+// DIRS: where the pages read from {cascade, gcc, agency, loi, variants, patterns}.
+function sourceOf(href, table, dirs = {}) {
+  const [kind, ...rest] = String(href).split(':');
+  const arg = rest.join(':');
+  const code = (table.codes || []).find((x) => x.mojira && x.mojira.page === href && x.emacs && x.emacs.uri);
+  if (code) return code.emacs.uri;
+  if (kind === 'file') return arg;
+  if (kind === 'ext') return arg;
+  if (kind === 'pt' || kind === 'step') return arg;                 // a turn id
+  if (kind === 'cascade' || kind === 'cn' || kind === 'ce') return dirs.cascade || null;
+  if ((kind === 'gi' || kind === 'gi-raw') && arg && dirs.gcc) return path.join(dirs.gcc, 'items', arg + '.json');
+  if (kind === 'gcc' && dirs.gcc) return path.join(dirs.gcc, 'index.json');
+  if ((kind === 'gparty' || kind === 'gparty-raw') && dirs.gcc) return path.join(dirs.gcc, 'party.json');
+  if ((kind === 'top' || kind === 'top-raw') && dirs.agency) return dirs.agency + '/api/alpha/circus/top-items?run=latest';
+  if ((kind === 'wn' || kind === 'wn-raw') && dirs.agency) return dirs.agency + '/api/alpha/circus/why-not?run=latest&item=' + encodeURIComponent(arg);
+  if ((kind === 'loi' || kind === 'lf') && dirs.loi) return dirs.loi + (arg ? ' (field ' + arg + ')' : '');
+  if ((kind === 'vd' || kind === 'vds') && dirs.variants) return dirs.variants + (arg ? ' (variant ' + arg + ')' : '');
+  if ((kind === 'pat' || kind === 'pc') && arg && dirs.patterns) return path.join(dirs.patterns, arg + '.flexiarg');
+  return null;
+}
+function copyText(href, label, table, dirs) {
+  const src = sourceOf(href, table, dirs) || 'mojira:' + href;
+  const l = String(label || '').replace(/\s+/g, ' ').trim();
+  return l && l !== src ? l + ' ' + src : src;
 }
 
 function helpHtml(table, repos, esc) {
@@ -122,4 +144,4 @@ ${(table.agent_modals || []).map((m) => `<li><b>${table.agents.map((a) => a.key)
 <h2>l, last</h2><ul><li><b>6 l</b>, <b>r &lt;name&gt; l</b> the last file you visited in that repo, by any route (opened in Emacs)</li><li><b>l</b> alone: the previous page</li></ul>`;
 }
 
-module.exports = { TABLE, readTable, readRepos, allCodes, resolve, step, copyText, helpHtml };
+module.exports = { TABLE, readTable, readRepos, allCodes, resolve, step, sourceOf, copyText, helpHtml };

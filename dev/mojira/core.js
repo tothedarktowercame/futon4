@@ -653,12 +653,20 @@ function openInEmacs(file, done) {
     done(err ? (String(stderr || '').trim() || err.message) : null));
 }
 
-// y / Y: the selected link's target, or the page's own address, to the
-// system clipboard (Arxana's y and Y in Emacs).
-function copyHref(href) {
+// y / Y: the selected link, or the page itself, to the system clipboard
+// (Arxana's y and Y in Emacs): its text and what is behind it.
+function copyHref(href, label) {
+  const dirs = {
+    cascade: cfg('cascadeDir') || '/home/joe/code/futon3c/holes/labs/M-repl-circus/cascade-2026-11-11-turn',
+    gcc: cfg('gccPreviewDir') || '/home/joe/storage/gcc-preview',
+    agency: cfg('agencyUrl') || 'http://127.0.0.1:7070',
+    loi: loiDraftPath(),
+    variants: cfg('variantsFile') || '/home/joe/storage/arxana-variants/draft2-variants.json',
+    patterns: cfg('patternLibrary') || '/home/joe/code/futon3/library',
+  };
   let text = href;
-  try { text = shortcodes.copyText(href, shortcodes.readTable()); } catch (_) {}
-  vscode.env.clipboard.writeText(text).then(() => note('copied ' + text), (e) => note('copy failed: ' + e.message, true));
+  try { text = shortcodes.copyText(href, label, shortcodes.readTable(), dirs); } catch (_) {}
+  vscode.env.clipboard.writeText(text).then(() => note('copied: ' + text), (e) => note('copy failed: ' + e.message, true));
 }
 function note(text, error) { if (panel) panel.webview.postMessage({ type: 'note', text, error: Boolean(error) }); }
 
@@ -767,7 +775,7 @@ function attach(p, state) {
     else if (m.type === 'verdict') recordVerdict(m.item, m.verdict, m.note);
     else if (m.type === 'loi-note') addLoiNote(m.kind, m.field, m.note);
     else if (m.type === 'code') runCode(m.code);
-    else if (m.type === 'copy') copyHref(m.href || history[history.length - 1] || 'home');
+    else if (m.type === 'copy') copyHref(m.href || history[history.length - 1] || 'home', m.href ? m.label : (m.label || (panel && panel.title.replace(/^Mojira: /, ''))));
     else if (m.type === 'all-ask' && !brief && !briefErr) loadBrief(() => { if (brief) handle(m); else note(briefErr || 'no brief loaded', true); });
     else if (m.type === 'all-ask') {
       const n = brief ? triage.unruledCount(brief) : 0;
@@ -1133,8 +1141,8 @@ document.addEventListener('keydown', ev => {
   else if (k === 'i') vs.postMessage({ type: 'go', href: 'gcc' });
   else if (k === 'f') showHints();
   else if (k === 'r') vs.postMessage({ type: 'reload' });
-  else if (k === 'y') { const a = links()[sel[active]]; if (a) vs.postMessage({ type: 'copy', href: a.dataset.href }); else $('#note').textContent = 'y copies the selected link: select one first (j/k), or Y for this page'; }
-  else if (k === 'Y') vs.postMessage({ type: 'copy', href: active === 'peek' && peekHref ? peekHref : null });
+  else if (k === 'y') { const a = links()[sel[active]]; if (a) vs.postMessage({ type: 'copy', href: a.dataset.href, label: a.textContent }); else $('#note').textContent = 'y copies the selected link: select one first (j/k), or Y for this page'; }
+  else if (k === 'Y') { const pk = active === 'peek' && peekHref; const h = document.querySelector('#' + (pk ? 'peek' : 'page') + ' h1'); vs.postMessage({ type: 'copy', href: pk ? peekHref : null, label: h ? h.textContent : '' }); }
   else if (k === 'v') { document.body.classList.toggle('one'); if (!peekShown()) setActive('page'); try { vs.setState({ one: document.body.classList.contains('one') }); } catch (_) {} }
   else if (k === ':' || k === '※') { const sc = $('#sc'); sc.style.display = 'inline'; sc.value = ''; sc.focus(); }
   else if (k === '/') { const q = $('#q'); q.style.display = 'inline'; q.value = ''; q.focus(); }

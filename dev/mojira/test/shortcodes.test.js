@@ -63,9 +63,15 @@ test('Emacs and Mojira read the same codes from the one table', { skip: !haveAll
   assert.deepStrictEqual([...emacs].filter(notAgent).sort(), codes.filter(notAgent).sort());
 });
 
-test('y/Y copy the Emacs URI when the table has one for the page, else the Mojira href', () => {
+test('y/Y copy the link text and what is behind it, never a bare Mojira page name', () => {
   const t = S.readTable();
-  assert.strictEqual(S.copyText('pg', t), 'arxana://view/patterns');
-  assert.strictEqual(S.copyText('gi:M-formal-patterns-redux', t), 'gi:M-formal-patterns-redux');
-  assert.strictEqual(S.copyText('gcc', t), 'gcc');   // i has a page but no Emacs URI
+  const dirs = { cascade: '/c/cascade-dir', gcc: '/g', agency: 'http://a:1' };
+  assert.strictEqual(S.copyText('cascade', 'the first turn cascade (2026-11-11)', t, dirs),
+    'the first turn cascade (2026-11-11) /c/cascade-dir');
+  assert.strictEqual(S.copyText('pg', 'Patterns', t, dirs), 'Patterns arxana://view/patterns');
+  assert.strictEqual(S.copyText('gi:M-x', 'M-x', t, dirs), 'M-x /g/items/M-x.json');
+  assert.strictEqual(S.copyText('pt:turn-1', 'turn-1', t, dirs), 'turn-1');
+  assert.strictEqual(S.copyText('wn:M-x', 'why', t, dirs), 'why http://a:1/api/alpha/circus/why-not?run=latest&item=M-x');
+  // nothing known behind it: say it is a Mojira page, not a bare word
+  assert.strictEqual(S.copyText('triage', 'triage', t, dirs), 'triage mojira:triage');
 });
