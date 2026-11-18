@@ -9,7 +9,8 @@ stack, sessionista introductions), `futon4a` (sessionista-mode),
 **Related:** `M-mojira.md`, `holes/excursions/E-gcc-schema.md` (§10, B4, B6),
 `futon3c/holes/excursions/E-ne-autocomplete.md` ("Later: the exact rules for
 referents"), `futon3c/holes/missions/M-populate-substrate-2.md`
-**On completion:** mint `[[lexicon]]`, with its links written in this file.
+**Mints:** `[[lexicon]]`, with its links written in this file (a separate
+act from completing the mission).
 
 ## Operator anchor
 
@@ -69,8 +70,11 @@ files and the GCC stays readable?
 ### Joe's direction (this turn), as constraints on the answer
 
 - **Links are written by agents, in mission files**, not by Joe in REPL turns.
-- **An entity is minted when its mission completes** (`[[lexicon]]` at the
-  end of this one). Being an entity is not an ontological claim to argue.
+- **An entity is pending until it is minted.** Minting is its own act, not
+  a side effect of a mission's Status: Joe, 2026-11-18, "I think it stay
+  pending until it is MINTED which is different from the mission itself
+  being complete". (`[[lexicon]]` is to be minted around the end of this
+  one.) Being an entity is not an ontological claim to argue.
 - **No forced verbs.** The reduced 14-verb list (E-gcc-schema B4b) is not
   adopted by default: "part-of arxana" misdescribes something that may be
   "built on" Arxana. Relations are written as what they are, or not at all.
@@ -164,7 +168,11 @@ files and the GCC stays readable?
     resolves each `[[X]]` in order: a mission/excursion id → a mission link;
     a memory slug → a memory link; otherwise an entity introduced by that
     mission, attributed to the commit's `Agent-Id` trailer. Such an entity
-    is shown as pending until its mission's Status is COMPLETE, then minted.
+    is shown as pending until it is minted. *Amended by Joe, 2026-11-18:*
+    minting is a separate act, not the mission reaching COMPLETE; so
+    claude-13's detail 1 (reading Status with the `mission-registry`
+    classifier) no longer decides minting. How a mint is written and who
+    may do it: open.
     Relations from it (`built-on`, ...) are claims shown as yes / not yet /
     unknown by the queries M1a describes; a verb with no query reads
     "intended".
