@@ -144,6 +144,30 @@ files and the GCC stays readable?
   mission files (`[[...]]` occurs, e.g. M-repl-circus `[[Nipper]]`), and what
   would read them: a loader over `holes/missions/*.md`, as the lexicon loader
   reads the `@entity` blocks?
+
+  **Answer (claude-cs, 2026-11-18).**
+  - `[[...]]` occurs in 212 files under `*/holes/` (futon0–6, futon1b). The
+    most common targets: missions and excursions (`[[M-populate-substrate-2]]`
+    42, `[[M-operational-vocabulary]]` 34, `[[E-wm-apparatus]]` 19), memory
+    slugs (`[[project_kangaroo]]` 11), a few entity names (`[[Nipper]]`), and
+    the placeholder `[[X]]` in schema prose (21).
+  - **Nothing reads them as links.** Sessionista reads `[[X]]` only in Joe's
+    REPL turns; `futon3c/scripts/scope_view_data.py` strips `[[...]]` from
+    memory text; no loader walks `holes/**/*.md` for them.
+  - **What does read mission files:** `futon3c/watcher/file_ingest.clj`
+    writes `code/v05/file→mission`, "this mission's text mentions this
+    file" (Joe's 2026-06-02 rename from `describes`; `relation/semantics
+    :mission/mentions-file`, subtype `:mentions/stated`). 2,782 edges live.
+    This is already a mission → real-code link in substrate-2, checked by
+    path, and the nearest existing thing to what this mission wants.
+  - **Proposal (not yet Joe's):** one reader over mission files that
+    resolves each `[[X]]` in order: a mission/excursion id → a mission link;
+    a memory slug → a memory link; otherwise an entity introduced by that
+    mission, attributed to the commit's `Agent-Id` trailer. Such an entity
+    is shown as pending until its mission's Status is COMPLETE, then minted.
+    Relations from it (`built-on`, ...) are claims shown as yes / not yet /
+    unknown by the queries M1a describes; a verb with no query reads
+    "intended".
 - **M3. The existing lexicon.** For the 254 `@entity` blocks: which name real
   code in `@where`/`@path` that substrate-2 can confirm, and which are ideas
   with no code yet (Nipper's case)?
