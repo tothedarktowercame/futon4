@@ -1033,7 +1033,7 @@ svg.ma-map .thread.occurrence { fill: var(--vscode-textLink-foreground); stroke:
 svg.ma-map .thread.partial { fill: var(--vscode-editor-background); stroke: var(--vscode-textLink-foreground); stroke-width: 1.5; }
 svg.ma-map .quote { fill: none; stroke: var(--vscode-descriptionForeground); stroke-width: 1; opacity: .7; }
 svg.ma-map .dropped { fill: none; stroke: var(--vscode-errorForeground, #e44); stroke-width: 2; }
-svg.ma-map .lane, svg.ma-map .connection { fill: var(--vscode-descriptionForeground); font-size: 9px; }
+svg.cascade.ma-map text { font-size: 14px; } svg.cascade.ma-map .lane, svg.cascade.ma-map .connection { fill: var(--vscode-descriptionForeground); font-size: 13px; }
 svg.ma-map .opened { fill: var(--vscode-editorInfo-foreground, #49c); }
 svg.ma-map .act-ask-action { fill: var(--vscode-editorWarning-foreground, #c90); }
 svg.herd .herd-turn circle { stroke: var(--vscode-editor-background); stroke-width: 1.5; }
