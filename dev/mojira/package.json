@@ -108,6 +108,22 @@
           "default": "/home/joe/storage/gcc-preview",
           "description": "GCC preview written by the projector (index.json, items/<id>.json; ~/notes/claude-13/demo-01-contract.md). While it is absent, the item view shows the invented fixture in test/gcc-preview-fixture."
         },
+        "mojira.agencyUrl": {
+          "type": "string",
+          "default": "http://127.0.0.1:7070",
+          "description": "Agency base URL used by the read-only Circus views."
+        },
+        "mojira.monitorSession": {
+          "type": "string",
+          "default": "",
+          "description": "Session shown by the Circus monitor. Empty uses the session of the newest turn already named by loaded Circus data."
+        },
+        "mojira.monitorPollSeconds": {
+          "type": "number",
+          "default": 15,
+          "minimum": 2,
+          "description": "Polling interval for the visible Circus monitor. Hidden views do not poll."
+        },
         "mojira.variantsFile": {
           "type": "string",
           "default": "/home/joe/storage/arxana-variants/draft2-variants.json",

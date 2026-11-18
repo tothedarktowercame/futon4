@@ -22,6 +22,8 @@ delete require.cache[require.resolve('./gcc-view')];
 const gccView = require('./gcc-view');
 delete require.cache[require.resolve('./circus-view')];
 const circusView = require('./circus-view');
+delete require.cache[require.resolve('./strand-view')];
+const strandView = require('./strand-view');
 const http = require('http');
 delete require.cache[require.resolve('./loi')];
 const loi = require('./loi');
@@ -35,6 +37,7 @@ const shortcodes = require('./shortcodes');
 let panel = null;
 let model = null;
 let history = [];   // hrefs; last is current (the loader's state.history)
+let loaderState = null;
 
 function cfg(k) { return vscode.workspace.getConfiguration('mojira').get(k); }
 
@@ -130,6 +133,7 @@ function render(href) {
   if (PATTERN_KINDS.has(kind)) return pagePattern(kind, arg);
   if (kind === 'cascade' || kind === 'cn' || kind === 'ce') return pageCascade(kind, arg);
   if (CIRCUS_KINDS.has(kind)) return pageCircus(kind, arg);
+  if (kind === 'strand') return pageStrand(arg);
   if (kind === 'gcc' || kind === 'gi' || kind === 'gi-raw' || kind === 'gparty' || kind === 'gparty-raw') return pageGcc(kind, arg);
   if (kind === 'vd' || kind === 'vds') {
     const d = variants.parse(fs.readFileSync(cfg('variantsFile') || '/home/joe/storage/arxana-variants/draft2-variants.json', 'utf8'));
@@ -161,7 +165,8 @@ function pageHome() {
 <h2>GCC items <span class="dim">(M-repl-circus demo 1: one item and what the GCC holds about it)</span></h2><ul>
 <li>${link('gcc', 'the GCC preview: items, records, links, absences')}</li>
 <li>${link('gparty', 'the Gauntlet party: Thor, Merlin, Questor, Thyra and the party vote')}</li>
-<li>${link('top', "Giraffe's top items: the turns behind them, and why each stands where it does")}</li></ul>
+<li>${link('top', "Giraffe's top items: the turns behind them, and why each stands where it does")}</li>
+<li>${link('strand:' + (monitorSession() || ''), 'Circus monitor: one session accumulating turn by turn')}</li></ul>
 <h2>Letter of intent <span class="dim">(working draft: b notes a benefit, p a beneficiary)</span></h2><ul>
 <li>${link('vd', 'Draft 2 over its source turns')}</li>
 <li>${link('loi', 'the Mozilla letter of intent, with your notes')}</li></ul>
@@ -379,6 +384,115 @@ function pageCircus(kind, arg) {
   return V.raw('why ' + arg, 'wn:' + arg, c.data);
 }
 
+// ---------------------------------------------------------------- circus: growing session monitor
+
+const strandCache = new Map(); // session -> {at, data | err, loading?}
+
+// The explicit setting wins. Otherwise use the session carried by the newest
+// turn in already-loaded Circus top-item data (when that route supplies one).
+function monitorSession() {
+  const configured = cfg('monitorSession');
+  if (configured) return configured;
+  const top = circusCache.get('top');
+  const turns = ((top && top.data && top.data.items) || [])
+    .flatMap((it) => it['focus-relations'] || [])
+    .map((r) => r.turn || {})
+    .filter((t) => t.session_id || t.session);
+  turns.sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+  return turns.length ? (turns[0].session_id || turns[0].session) : '';
+}
+
+function strandSession(href) {
+  const explicit = String(href || '').split(':').slice(1).join(':');
+  return explicit || monitorSession();
+}
+
+function needsStrand(href) {
+  if (!href || href.split(':')[0] !== 'strand') return false;
+  const session = strandSession(href);
+  return Boolean(session && !strandCache.has(session));
+}
+
+function getJson(url, done) {
+  const req = http.get(url, { timeout: 15000 }, (res) => {
+    let body = '';
+    res.setEncoding('utf8');
+    res.on('data', (ch) => { body += ch; });
+    res.on('end', () => {
+      try {
+        const data = JSON.parse(body);
+        if (res.statusCode >= 400) done(new Error(data.reason || `HTTP ${res.statusCode}`));
+        else done(null, data);
+      } catch (_) { done(new Error(`HTTP ${res.statusCode}, not JSON`)); }
+    });
+  });
+  req.on('timeout', () => req.destroy(new Error('timed out')));
+  req.on('error', (e) => done(e));
+}
+
+function strandUrl(session, params = '') {
+  const base = cfg('agencyUrl') || 'http://127.0.0.1:7070';
+  return `${base}/api/alpha/circus/strand?session=${encodeURIComponent(session)}${params}`;
+}
+
+function loadStrand(href, cb) {
+  const session = strandSession(href);
+  if (!session) { strandCache.set('', { at: Date.now(), err: 'Set mojira.monitorSession, or first open Circus top items containing a session.' }); cb(); return; }
+  getJson(strandUrl(session, '&n=20'), (err, data) => {
+    strandCache.set(session, { at: Date.now(), ...(err ? { err: err.message } : { data }) });
+    cb();
+  });
+}
+
+function pollStrand(href) {
+  const session = strandSession(href);
+  const cached = strandCache.get(session);
+  if (!cached || !cached.data || cached.loading) return;
+  cached.loading = true;
+  const since = cached.data.cursor;
+  getJson(strandUrl(session, `&n=20&since=${encodeURIComponent(since || '')}`), (deltaErr, delta) => {
+    if (deltaErr) { cached.loading = false; cached.err = deltaErr.message; return; }
+    getJson(strandUrl(session, '&n=2'), (refreshErr, refresh) => {
+      cached.loading = false;
+      if (refreshErr) { cached.err = refreshErr.message; return; }
+      cached.err = null;
+      const oldIds = new Set(cached.data.turns.map((t) => t.id));
+      cached.data = strandView.merge(cached.data, delta, refresh);
+      cached.at = Date.now();
+      if (panel && panel.visible && history[history.length - 1] === href) {
+        const dir = cfg('gccPreviewDir') || '/home/joe/storage/gcc-preview';
+        const C = circusView({ esc, link, trim, hasItem: (x) => gccView.hasItem(dir, x) });
+        const V = strandView({ esc, link, counts: C.counts });
+        const changed = new Set([...(delta.turns || []), ...(refresh.turns || [])].map((t) => t.id));
+        const byId = new Map(cached.data.turns.map((t) => [t.id, t]));
+        panel.webview.postMessage({ type: 'strand-update',
+          rows: [...changed].map((id) => ({ id, html: V.row(byId.get(id)), prepend: !oldIds.has(id) })),
+          summary: V.summary(cached.data) });
+      }
+    });
+  });
+}
+
+function pageStrand(arg) {
+  const session = arg || monitorSession();
+  if (!session) return { title: 'Circus monitor', html: '<h1>Circus monitor</h1><p class="err">Set mojira.monitorSession, or first open Circus top items containing a session.</p>' };
+  const c = strandCache.get(session || '') || { err: 'not loaded' };
+  if (c.err) return { title: 'Circus monitor', html: `<h1>Circus monitor</h1><p class="err">${esc(c.err)}</p>` };
+  const dir = cfg('gccPreviewDir') || '/home/joe/storage/gcc-preview';
+  const C = circusView({ esc, link, trim, hasItem: (x) => gccView.hasItem(dir, x) });
+  return strandView({ esc, link, counts: C.counts }).render(c.data);
+}
+
+function scheduleStrandPoll(href) {
+  if (!loaderState) return;
+  if (loaderState.strandTimer) { clearInterval(loaderState.strandTimer); loaderState.strandTimer = null; }
+  if (!href.startsWith('strand:')) return;
+  const seconds = Math.max(2, Number(cfg('monitorPollSeconds') || 15));
+  loaderState.strandTimer = setInterval(() => {
+    if (panel && panel.visible && history[history.length - 1] === href) pollStrand(href);
+  }, seconds * 1000);
+}
+
 // ---------------------------------------------------------------- letter of intent
 
 // The draft is read, never written; notes are appended to their own file.
@@ -570,11 +684,13 @@ function go(href, push = true, keep = false, selectHref = null) {
   }
   if (needsPatterns(href)) { loadPatterns(() => go(href, push, keep, selectHref)); return; }
   if (needsCircus(href)) { note('asking Agency (the circus routes take a few seconds)…'); loadCircus(href, () => go(href, push, keep, selectHref)); return; }
+  if (needsStrand(href)) { note('reading the Circus strand…'); loadStrand(href, () => go(href, push, keep, selectHref)); return; }
   if (push) history.push(href);
   let page;
   try { page = render(href); } catch (e) { page = { title: 'error', html: `<pre>${esc(e.stack)}</pre>` }; }
   panel.title = 'Mojira: ' + page.title;
   panel.webview.postMessage({ type: 'page', html: page.html, crumbs: history.slice(-6), keep, select: selectHref });
+  scheduleStrandPoll(href);
   // A draft-variants paragraph opens with its quoted sources in the right column.
   const vdm = href.match(/^vd:(\d+)/);
   if (vdm) peek('vds:' + vdm[1], true);
@@ -590,6 +706,7 @@ function peek(href, keep = false) {
   if (href && (href === 'triage' || href.startsWith('ti:')) && !brief && !briefErr) { loadBrief(() => peek(href, keep)); return; }
   if (href && needsPatterns(href)) { loadPatterns(() => peek(href, keep)); return; }
   if (needsCircus(href)) { loadCircus(href, () => peek(href, keep)); return; }
+  if (href && needsStrand(href)) { loadStrand(href, () => peek(href, keep)); return; }
   lastPeek = href;
   let page;
   if (!href) page = { html: '' };
@@ -613,13 +730,15 @@ function peek(href, keep = false) {
 function attach(p, state) {
   panel = p;
   history = state.history;
+  loaderState = state;
+  if (loaderState.strandTimer) { clearInterval(loaderState.strandTimer); loaderState.strandTimer = null; }
   model = loadModel();
   panel.webview.html = shell();
   // Identical html is a no-op (the webview does not reload and sends no
   // 'ready'), so redraw the current page directly. If the html did change,
   // the webview reloads and its 'ready' redraws again.
   if (history.length) go(history[history.length - 1], false, true);
-  return panel.webview.onDidReceiveMessage(function handle(m) {
+  const messages = panel.webview.onDidReceiveMessage(function handle(m) {
     if (m.type === 'ready') go(history.length ? history[history.length - 1] : 'home', !history.length);
     else if (m.type === 'go') go(m.href);
     else if (m.type === 'peek') peek(m.href);
@@ -649,11 +768,19 @@ function attach(p, state) {
         `rule all ${n} unruled items of ${brief['brief/id']}: w worth · n not now · x invalid · Esc cancels` });
     }
   });
+  return { dispose() {
+    messages.dispose();
+    if (loaderState && loaderState.strandTimer) {
+      clearInterval(loaderState.strandTimer);
+      loaderState.strandTimer = null;
+    }
+  } };
 }
 
 function reloadData() {
   model = loadModel();
   circusCache.clear();
+  strandCache.clear();
   const cur = history[history.length - 1] || 'home';
   if (PATTERN_KINDS.has(cur.split(':')[0])) {
     pgraph = null; pgErr = null;
@@ -859,6 +986,22 @@ window.addEventListener('message', ev => {
     const n = $('#note'); n.textContent = m.text; n.classList.toggle('err', Boolean(m.error)); clearTimeout(noteTimer);
     // Errors stay until the next action; other notes fade.
     if (!m.error) noteTimer = setTimeout(() => { n.textContent = ''; }, 6000);
+  } else if (m.type === 'strand-update') {
+    const box = $('#page [data-strand-turns]');
+    if (box) {
+      const additions = [];
+      for (const row of m.rows || []) {
+        const old = [...box.querySelectorAll('[data-turn]')].find((x) => x.dataset.turn === row.id);
+        if (old) old.outerHTML = row.html;
+        else if (row.prepend) additions.push(row.html);
+      }
+      if (additions.length) {
+        box.querySelector('.absent')?.remove();
+        box.insertAdjacentHTML('afterbegin', additions.join(''));
+      }
+      const summary = $('#page [data-strand-summary]');
+      if (summary) summary.textContent = m.summary;
+    }
   } else if (m.type === 'mode') {
     vmode = m.mode; const n = $('#note'); n.textContent = m.text; n.classList.remove('err'); clearTimeout(noteTimer);
   } else if (m.type === 'peek') {
