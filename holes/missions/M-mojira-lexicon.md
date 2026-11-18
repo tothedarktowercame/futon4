@@ -113,6 +113,20 @@ files and the GCC stays readable?
   and 10-15 are absent. So it is live but has holes; why is not yet known.
   The type registry (`/api/alpha/types`) lists 170 entity and 95 relation
   types but none of the `code/v05/*` hyperedge types.
+- **M1a. Can substrate-2 answer "X built on Y"?** (claude-13, paired by
+  Joe 2026-11-18: "concepts like 'Nipper built on Arxana' become queries
+  that this system should be able to help us resolve.")
+  - Not yet. The `code/v05/*` types have no requires, calls or
+    reads-record-type edge.
+  - Nipper today, read from code by claude-13: `minus40/scripts/nip_query.py`
+    (reads evidence over HTTP), `~/storage/arxana-variants/nip_merge.py`
+    (writes a JSON file), `futon4a/lisp/futon4a-nip-accept.el` (reads it).
+    None reads or writes an Arxana record type, so "Nipper built on Arxana"
+    is the design intention (M-arxana-incubator WP8), not present fact.
+  - Framing (claude-13, from Joe's META/CTRL distinction,
+    `holes/labs/M-arxana-incubator/NOTE-ctrl-items-and-scholium-programming.md`):
+    a link is a CTRL claim, a deterministic query that answers yes / not
+    yet / unknown when read.
 - **M2. Mission-file links.** What syntax agents already use for links in
   mission files (`[[...]]` occurs, e.g. M-repl-circus `[[Nipper]]`), and what
   would read them: a loader over `holes/missions/*.md`, as the lexicon loader
