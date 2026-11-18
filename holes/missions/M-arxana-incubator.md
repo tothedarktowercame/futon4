@@ -1171,6 +1171,29 @@ So the hypergraph model is: producers, applications, benefit and harm observatio
   4. A worked example in the LOI's own terms, all from live records: one piece of work (the Q83 merge), the benefit it brought (a97J08's finding settled, five case conclusions merged), the harm it carried or repaired (the reversal at Q66/Q78; the sentences stale under a supersession), each sentence of the example backed by a store query. This is what a reviewer of the LOI could be shown.
 - **Links to the open registers:** E-gcc-schema B14 row 1 (are Joe's rulings inputs to a rebuild) is R5; row 2 (a policy for choosing among assessments) is R4; row 11 (benefit and property claims as types) is item 3 above. M-repl-circus owns B14; this mission would supply the record shapes, tested on PaperPrinter.
 
+### Harm: the existing model (Thyra) and extensions (2026-11-18)
+
+Joe, 2026-11-18: "Your proposed order sounds fine, with the requirement that we study the formal model of harm reduction (Thyra) and look at extensions." PaperPrinter follow-up moved to `holes/excursions/E-paperprinter-cleanup.md` (owner claude-7), same day.
+
+**What exists** (survey by a claude-5 reader, sources spot-checked by claude-5):
+- **The pattern.** `futon3/library/militant-pacifism/demonstrable-harm-reduction.flexiarg` (approved by Joe 2026-11-08): "Ask each deliverable for an optional, specific claim: whose stress or which tension it reduces, and what observation would show it ... Record the claim with the deliverable; review it later against what was observed. An absent claim is not a failure; a claim that observation contradicts is worth surfacing." And: "Do not score or rank on this field until there are observations to score against." `precept-of-non-harm.flexiarg` is the floor.
+- **Harm lines H1–H7** (`~/notes/cascade-live-outline/disbenefits-avoided-2026-11-08.md`, claude-6; 128 items without a benefit word, sorted by that question): H1 the stack's records say something that is not so (32); H2 failures and losses nobody is told about (16); H3 Joe has to notice, nudge, re-send or wait (9); H4 the War Machine chooses wrongly, ties, or cannot choose (17); H5 state goes stale, drifts or piles up (9); H6 slow paths and wasted effort (6); H7 the model cannot be read or checked (11); none stated (28). "Of the 100 items that do state a trouble, 30 give no observation" that would show it reduced. Per-item TSV columns include `whose_trouble` and `observable`, both free text; `whose_trouble` is "nobody named" for 45 items.
+- **Thyra.** futon3c `scripts/giraffe_party.py` reads the pending index's `harm` field; futon5 `lean-arxana/Circus/Characters.lean` specifies `thyraOrder` (items on a harm line, most ready first) with `thyra_only_harm_items` and the readiness monotonicity; `Circus/Basic.lean` carries harm as `Option String`. M-giraffe: Thyra's success is "an item on a harm line closed, or its harm observation went away", needing "repair records".
+- **AIF reading** (futon5 `TN-gauntlet-party-aif.md`): Thyra is the risk term of G, "KL to preferences ('harm' = a violated preference)", silent under flat C.
+- **A name clash.** futon2 `resources/wm/harm-rules.edn` has guardrail rules also labelled H1–H6 (destroy data, force-push, shared JVM restart, post as Joe, spend money, edit existing Lean): a different list.
+- **Not found:** a harm record in the Arxana registry (only `:benefit-line`); any harm observation record; any link from repair records to harm lines; harm in the Mozilla drafts.
+
+**Reading against VERIFY.** The pattern's THEN is the record structure VERIFY arrived at: a claim (whose stress, which tension), the observation that would show it, and a later review that can contradict it, which is an attestation with method and denominator (§9 R1) and the existing standing `:contradicted`. Its "do not score until there are observations" is R2/R3 (no grade without a denominator). Two harm lines are what the sentence records already compute: H1 (records that say what is not so) and H5 (state that goes stale) are the stale dependants that `futon3c.arxana.dependence/staleness` finds after a supersession.
+
+**Proposed extensions** (for the harm/benefit design, §6 item 3):
+1. A harm claim record: subject (the work item or deliverable), party (whose stress; a typed "nobody named" rather than blank), line (namespaced, e.g. `:disbenefit/H5`, so it cannot be confused with the guardrail rules), observable (what would show it reduced). Optional, per the pattern: an absent claim is not a failure.
+2. A harm observation: an attestation on the claim (method, what was ranged over, standing `:verified` or `:contradicted`), so "its harm observation went away" is a dated record, not a status flip. For H1/H5 harms the observation can be computed by the dependence reader.
+3. Repair records linked to the harm claims they address, which gives Thyra's success condition a query.
+4. In Thyra's Lean model: harm from `Option String` to (line, party, observed?), and a theorem that closing an item never adds an open observed harm on its own line; ranking observed harms ahead of claimed ones would follow the pattern's "do not score until there are observations".
+5. Per-party harm as per-party preferences (the TN's reading), recorded but not used to steer until a party's preference is stated by that party (the TN's dictating risk).
+6. Typed ports (§9 R6(b)) on the new types from their first revision: the mechanism exists (`:endpoint/type-revisions`, used by the d6 types), so no separate packet is needed; a revision cannot gain them later.
+Each harm or benefit claim's subject must be able to be superseded: the dependence test found that `[:workplan/serves 2]`'s entity endpoint cannot take part in `[:supersedes 1]`.
+
 ### Open
 
 - Cascade Live: which of its records (packets, theses, the argument's steps) should be the second family for R2–R5, after the endgame census.
