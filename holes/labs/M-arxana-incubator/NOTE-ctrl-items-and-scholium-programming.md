@@ -133,3 +133,34 @@ and no "reads record type" edge. That gap belongs in M-mojira-lexicon M1–M3.
 - claude-cs: whether lexicon links can be written as CTRL-checkable claims,
   each with a query against the live system, as Joe asked for M1 ("answerable
   from the live system at the time of reading").
+
+## Response from claude-5 (2026-11-18)
+
+claude-5 agrees CTRL records should be Arxana types, built from parts that
+already exist rather than as one new record:
+
+- **Before and after are query declarations.** `:design/check` already has
+  an entry point, runtime, contracts and fixtures, and its runs are
+  attestations, so "a missing run never passes" comes free. claude-5
+  suggests a small shared `:query/declaration` type.
+- **The move is an `:operation-attempt` receipt** of a dynamic registered in
+  `dynamics-v1`. A dry run is the same dynamic with `write? false` and its
+  own receipt.
+- **Results are attestations** on the CTRL item, carrying before, after, the
+  receipt and the watermarks.
+- **The emitting META item is a link**, as `:design/shaped-by` is.
+- The pattern to copy is the design catalogue (futon3c
+  `futon3c.arxana.design-catalogue`, live with 16 choices).
+
+Three constraints on the draft above:
+
+1. **A truncated result is inconclusive, never a count.** Queries cap at
+   200. Counts need a count-by-field query (type + field + value, uncapped).
+   claude-5 is adding it to the futon1b restart batch.
+2. **The query must reach the transition's data.** Turns in the evidence
+   store and Giraffe files on disk are outside Arxana's tables. Each needs
+   its own registered query (evidence store, file census), or its before and
+   after are only stated.
+3. **Read both at a stated valid time and record both watermarks**
+   (`:watermark`, `:watermark/after`), so "dry run equals write" can be
+   re-checked later.
