@@ -49,6 +49,7 @@ claude7/integrate (mfuton-share, local): Q84 1970149b, Q87 acfa8fed, Q85 c62a8ba
    - **Written live 2026-11-18 (Joe's go), claude-7:** rule `:q88` `607dc448…` (`_merge_right_or_splits` at 9f3836f6); `:supersedes` `5da29da1…` (successor q88, predecessor 777d1f59); five role-scoped `[:sentence/manifestation 3]` at 9756e848 with the unchanged wording. Read back equal. Script and log: `~/storage/arxana/diagramprover/write-q88-supersession-2026-11-18.clj`, `q88-supersession-2026-11-18.edn`.
    - The staleness reader now marks all five roles stale because of `5da29da1…`, as intended: the rule they depend on changed.
    - Reader gap found: `sentence-records/role-manifestations` reads revisions 1 and 2 only, so it does not return the new revision-3 records (counts after the write: 10, 1, 1, 1, 1). The fix is to add 3 to its revision list.
+   - Fixed in futon3c 84e9a2d8e: the reader now reads revision 3; live counts are 11, 2, 2, 2, 2.
 12. **Item 5 aligned, 2026-11-18: finding fccc8a8c was pre-empted by Q84, not Q87.**
    - The hits were matched by the structure of the term they occur in (binder names ignored, de Bruijn indices kept), not by position. The captures are in `~/storage/arxana/importer/`.
    - The host term of hit 18 (key 5458712d2fd2) still occurs 3 times at 1970149b, acfa8fed and 9f3836f6. At every one of them the decision is `alias_hit: true` (`_apm_choose_family_alias` returns before the beta decision), against `alias_hit: false` in the stored 40d06435 capture.
