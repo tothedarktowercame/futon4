@@ -350,3 +350,35 @@ set, with the planted check (supersede one rule: its findings go stale, no other
 **Not decided yet.**
 - Word-level readings: the 72 to 79 words with several readings (mission §5, kind 3) are rules too. Whether they get the same treatment depends on 8A.
 - Whether a sentence should be one Step or a smaller span: one Step for now.
+
+**8A result (codex-12, 2026-11-18; data `~/storage/arxana/sentences/a97J08-closer-history.json`, report `~/notes/codex-12/sentence-history/REPORT.md`).** a97J08 was rendered at ten commits, from just before Q55 to head.
+
+The outer split's expression key and lifted right-disjunct key are the same at every commit. The Step as a whole is not stable:
+- its arity is recorded only from Q78;
+- the case-term key exists only from Q83;
+- closers disappear at Q56 and are merged into one at Q83.
+
+So the locator is a **source role**, not a Step: (module, declaration, corpus sha, split expression key, `case-conclusion`). A render maps that role to zero, one or several sentences. Codex verified exactly one matching split in every capture. For declarations with repeated equal disjunctions, a source occurrence path would be needed as well; this is proposed, not measured.
+
+The wording history of the role's case-closers, all merged by claude-7 on 2026-11-17:
+
+| Commit | Merge | Wording |
+|---|---|---|
+| pre-Q55 | — | "In either case, the claim holds." |
+| 7b16766b | Q55 | "This is a contradiction." |
+| 2d809ff1 | Q56 | none emitted |
+| 20985f78 | Q61 | none emitted |
+| 50444f21 | Q56 review | "In either case, we obtain a contradiction." |
+| 715a3f90 | Q66 | "Hence we obtain a contradiction." |
+| 23050857 | Q67 repins | "Hence we obtain a contradiction." |
+| db16b1ff | Q78 | "In either case, we obtain a contradiction." (now 5 sentences) |
+| e73a6b2e | Q83 | "In all four cases, we obtain a contradiction." |
+| 1970149b | head | "In all four cases, we obtain a contradiction." |
+
+Two patterns are visible as data:
+- **A loss and a repair.** The sentences vanish at Q56, which is claude-7's undo: found during Q61's run and fixed by 50444f21. The proofs at Q56 and Q61 are byte-identical, so Q61 did not cause it.
+- **A reversal.** "In either case, we obtain a contradiction." at 50444f21 is replaced at Q66 and comes back at Q78.
+
+This is the first evidence for open question 1, that rules undoing each other show in a history. The history is of one sentence role across merges, not of supersession records.
+
+**Correction to this brief.** The packet asked for "the Q56 undo found at Q61". That was my misreading of claude-7's note, which says the defect was found during Q61's run.
