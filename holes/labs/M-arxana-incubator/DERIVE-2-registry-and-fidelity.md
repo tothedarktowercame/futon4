@@ -396,3 +396,20 @@ This is the first evidence for open question 1, that rules undoing each other sh
 - All five case-conclusion roles depend on the same 14 of the 23 tested functions, and none depends on the other 9. Some functions change other sentences and leave the roles alone: `_is_false_tex`, `_sentence`, `_sentence_core`.
 - **Limit of form (c).** A parent body also removes the later edits made inside that function, so a dependence found that way belongs to the function's current body, not to the merge that first changed it.
 - **What the application records can claim.** Each sentence role depends on these functions, out of this tested set, under single-function intervention. They make no claim that the list is complete.
+
+**8C result (codex-13, 2026-11-18; futon3c 3e95d08ca, fast-forwarded to master; report `~/notes/codex-13/sentence-records/REPORT.md`).** Three types, in memory only, nothing written live:
+- `:sentence/role 1`: no endpoints; content is the locator (module, declaration, corpus sha, split expression key, role).
+- `:sentence/manifestation 1`: endpoint `:role`; content is the renderer commit, corpus sha and the wordings.
+- `:rule/application 1`: endpoints `:sentence` and `:rule`; content is the method (`:switch-off`), head commit, corpus sha, `:tested-rules` and `:interventions`.
+
+Two decisions came from Codex stopping on real conflicts:
+- **Rule identity.** A rule is one record per function: qualname and head commit. `_merge_right_or_splits` reuses the live Q83 record `777d1f59…` unchanged, so the first write and the sentence records name the same rule. Which unit introduced a change is kept in the application, not in the rule's identity.
+- **Several interventions per pair.** The 23 tested switch-offs touch only 17 functions; six were changed by two units. For the outer role, `proof_body` at Q55's parent body gives "In either case, the claim holds." and at Q66's gives "In either case, we obtain a contradiction.". So each application carries a vector of interventions (unit, form, head wordings, switched wordings) in chain order, and a scalar field would have lost one of them.
+
+Counts: 17 rules, 5 roles, 5 head manifestations, 45 applications (9 functions × 5 roles; the 14 interventions that changed the roles fall on 9 functions), 72 records, all accepted by the real write path in memory. The 10 history manifestations validate too.
+
+Readers: `sentence-view` (store-backed through `:role-reverse`, as `store-finding-view`) and `rule-fibre` (the roles whose applications name a rule). The planted check passes: superseding Q83 makes all five roles stale with that supersession as the reason, and its fibre is exactly those five; superseding `_sentence_core` makes none stale and its fibre is empty. A future-dated supersession is invisible; an application whose rule endpoint is moved into content drops out of the fibre; a stale or truncated index gives `:inconclusive`.
+
+Limits:
+- Other sentences changed by the switch-offs are not recorded: the capture gives their expression keys, not a source-role locator, and no identity is made up from wording.
+- Before Q83 the history has only declaration-wide closer wordings, so the 8 earlier manifestations attach those to the outer role (two copies of each wording, for example). The records do not say this. They should not be written live until the content says the wordings are declaration-wide.
