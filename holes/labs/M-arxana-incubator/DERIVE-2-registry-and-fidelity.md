@@ -415,3 +415,42 @@ Limits:
 - Before Q83 the history has only declaration-wide closer wordings, so the 8 earlier manifestations attach those to the outer role (two copies of each wording, for example). The records do not say this. They should not be written live until the content says the wordings are declaration-wide.
 
 **Scope revision (codex-13, 2026-11-18; futon3c 3af38e409, on master).** `:sentence/manifestation 2` adds `:scope` (`:role` or `:declaration`) and `:renderer-commit-time`. The 8 pre-Q83 history records are now revision 2 with `:scope :declaration`; Q83's (`d0934293…`) and head's (`dd87f2eb…`) stay revision 1, the 6 live revision-1 records all being role-scoped. `role-manifestations` reads both revisions: 10 for the outer role (8 declaration-scoped, 2 role-scoped), 1 for each inner role; a stale or truncated index on either gives `:inconclusive`. Limit: the registry does not validate content values, so a bad scope is refused by the builder only; a hand-made record with another value would pass the write path. The first round stopped on two errors in my packet (the Q83 and head ids swapped, and 14 manifestations expected for the outer role, which has 10), caught by a check against committed data.
+
+## 9. What a record carries besides its content: requirements (2026-11-18, claude-5; mission open question 7)
+
+Source: claude-1's reading of the endgame list (most rows carry limits stated only in prose), the sentence records (§8; "the five roles depend on Q83" holds only for single switch-off at head), Joe's point after packet 9 that submissions should be validated before they are final, and a reading of `type_registry.clj` and `records.clj` at futon3c 3af38e409. Joe (2026-11-18): proceed with the writes; the design discussion is this section.
+
+What exists. Beside clusion content, Arxana has three layers whose values are checked on write:
+- `:evidence-attestation`: subject, producer, basis (`:exact :parser :model :human :kernel :composite`), standing (`:unverified :verified :contradicted :disputed`), coverage (`:none :partial :complete`), method (a free map), content, source-refs.
+- `:assessment`: subject, verdict (`:candidate :accepted :rejected`), actor, policy, reason, time, all required.
+- `:operation-attempt` receipts, against the registered method versions in `dynamics-v1`.
+Typed ports (`:endpoint/type-revisions`) restrict what an endpoint may point at; only the d6 types declare them.
+
+The conflict findings (§7) use an attestation: producer the checker sha, method the mode and state bound, coverage partial or complete. That is why they state their own bounds. The sentence records (§8) use none.
+
+**R1. Every observation is attested, and its method names what it ranged over.** An observation is a record whose content was produced by running something (a checker, a render, a switch-off, a census). Its attestation's method states the procedure, its pins, and its denominator: the set it was run over and what was left out, with counts.
+- Instances: single-function switch-off at head on a97J08, 23 of 35 functions tested, 12 untested with reasons (§8); claude-7's census over the 1,381 records that had a tracked family; guard escape probed on one beta path.
+- Status: being applied to the live sentence records (packet 10, codex-13).
+- Check: a sentence application with no attestation, or with an attestation whose method lacks the denominator, is reported by a store-side audit (to build).
+
+**R2. `:coverage :complete` names what it is complete over.** Today `:complete` is a grade with nothing to grade against. Proposed: a new attestation revision in which a coverage other than `:none` requires an `:extent` (what was ranged over), refused on write when absent.
+- Instance: the conflict findings say `:complete` with the state bound in method, so a reader can recover the extent; a census row saying "30 records, complete" could not.
+- Open: whether to revise the attestation type or require the extent inside method for named procedures.
+
+**R3. A value says what kind of value it is.** Measured, lower bound, forecast, not measured. A number field holds none of these distinctions (claude-1: class 7 "at least 34" from a scanner known to miss names; "about 70 after the merges" is a forecast).
+- Proposed: a value-kind field on the attestation (or on the content of count-bearing types), with "not measured" distinct from absent.
+- Related: a reader cannot tell withheld records from no records (the 8 history records before packet 9). Recording the denominator (R1) is what separates "looked, found none" from "never looked".
+
+**R4. A judgement carries who, why, how far, and what reopens it.** Assessments have actor, policy and reason; `:residual/accepted` has scope, release and reason in content. Neither has a reopen condition, and the two split a judgement's parts between them.
+- Proposed: a residual acceptance is the residual record plus an assessment by Joe, and the reopen condition is required in one of them (decide which before the first residual is written).
+- Instance: no residual is proposed now (endgame list), so this can be settled before it is needed.
+
+**R5. Rulings on a record contract are reachable from the type.** "A rule record is a function, not the unit that introduced it" changes what a count of rule records means, and so do "an application keeps every intervention" and the role-scope of revision-1 manifestations. Today these are source comments and prose.
+- Proposed: one record per ruling, linked to the type revision it governs and citing the prose (here §8). The d6 decision stages may fit (a ruling decides between candidate contracts); unchecked.
+- Also covers classes set by ruling (endgame class 13, Joe's notation ruling) and shapes forced by a type (class 9 is a rule against a test pin, which a two-rule finding would misdescribe).
+
+**R6. Submissions are validated before they are final.** (Joe, 2026-11-18, after packet 9 swapped two live ids and expected 14 records where there are 10.)
+- Today: the write path checks record shape, endpoint kinds, attestation and assessment enum values. Enum values inside clusion content are checked only by builders (packet 9's `:scope`: a hand-made record with another value would pass). Endpoints are checked by type revision only where typed ports are declared. Nothing checks a claim about existing records: a label resolving to an id, or a count.
+- Proposed, in order of cost: (a) enumerated content values declared in the type and checked on write; (b) typed ports by default on new types (application `:rule` to `:rule/content`, `:sentence` to `:sentence/role`); (c) for packets and bells that cite live records, a resolver that maps a label (declaration, commit, role) to its id through the store, so the citation is checked when it is written. (c) is the one that would have caught packet 9.
+
+Order of work: R1 now (packet 10). R6(a) and (b) next, as one small registry change each. R2 to R5 wait for a second family of records to test them on (the endgame census is the natural one); R4 must be settled before the first residual is written.
