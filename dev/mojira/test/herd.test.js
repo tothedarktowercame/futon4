@@ -61,3 +61,12 @@ test('core gives herd one visibility-aware cursor poller', () => {
   assert.match(core, /if \(href\.startsWith\('herd:'\)\) pollHerd\(href\)/);
   assert.match(core, /herdUrl\(href, cached\.data\.cursor\)/);
 });
+
+test('a bell without a sender session attaches to that agent\'s session lane', () => {
+  // Live 2026-11-18: bells from claude-13 carry no session, so they drew a
+  // second "claude-13" agent lane beside its session lane.
+  const data = { ...fixture, bells: [{ at: '2026-11-18T06:01:00Z', from_agent: 'claude-13', to_agent: 'codex-15', turn_id: 'turn-x', kind: 'request' }] };
+  const l = H.layout(data);
+  assert.strictEqual(l.bells[0].from.key, 'session:session-a');
+  assert.ok(!l.rows.some((r) => r.key === 'agent:claude-13'), 'no duplicate agent lane');
+});

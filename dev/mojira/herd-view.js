@@ -30,10 +30,27 @@ function merge(current, delta) {
 function layout(data, highlighted = []) {
   const sessions = (data.lanes || []).map((l) => ({ key: `session:${l.session}`, kind: 'session', session: l.session, agent: l.agent, data: l }));
   const sessionKeys = new Set(sessions.map((l) => l.session));
+  // A bell names its sender's agent but usually not its session. Attach it
+  // to that agent's session lane when exactly one of its lanes spans the
+  // bell's time (or it has only one lane), not to a separate agent lane.
+  const sessionFor = (agent, at) => {
+    const own = sessions.filter((l) => l.agent === agent);
+    if (own.length === 1) return own[0].session;
+    const t = timeMs(at);
+    const spanning = own.filter((l) => {
+      const ts = (l.data.turns || []).map((x) => timeMs(x.created_at)).filter(Boolean);
+      return ts.length && Math.min(...ts) <= t && t <= Math.max(...ts);
+    });
+    return spanning.length === 1 ? spanning[0].session : null;
+  };
+  const sideSession = (b, side) => {
+    const s = b[`${side}_session`];
+    return s && sessionKeys.has(s) ? s : sessionFor(b[`${side}_agent`], b.at);
+  };
   const endpointAgents = [];
   for (const b of data.bells || []) {
-    if (!b.from_session || !sessionKeys.has(b.from_session)) endpointAgents.push(b.from_agent);
-    if (!b.to_session || !sessionKeys.has(b.to_session)) endpointAgents.push(b.to_agent);
+    if (!sideSession(b, 'from')) endpointAgents.push(b.from_agent);
+    if (!sideSession(b, 'to')) endpointAgents.push(b.to_agent);
   }
   const known = new Set();
   const agents = endpointAgents.filter((a) => a && !known.has(a) && known.add(a))
@@ -50,8 +67,8 @@ function layout(data, highlighted = []) {
   const x = (at) => X0 + (timeMs(at) - min) * (X1 - X0) / (max - min);
   const turns = sessions.flatMap((r) => (r.data.turns || []).map((turn) => ({ turn, row: r, x: x(turn.created_at), y: rowByKey.get(r.key).y })));
   const endpoint = (b, side) => {
-    const session = b[`${side}_session`], agent = b[`${side}_agent`];
-    return rowByKey.get(session && sessionKeys.has(session) ? `session:${session}` : `agent:${agent}`);
+    const session = sideSession(b, side);
+    return rowByKey.get(session ? `session:${session}` : `agent:${b[`${side}_agent`]}`);
   };
   const bells = (data.bells || []).map((bell) => ({ bell, from: endpoint(bell, 'from'), to: endpoint(bell, 'to'), x: x(bell.at) })).filter((b) => b.from && b.to);
   const hi = new Set(highlighted);
