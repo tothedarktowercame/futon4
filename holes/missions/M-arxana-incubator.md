@@ -1229,6 +1229,7 @@ So the batch adds to packet 19's work, before any restart:
 4. `edge-join-shapes` extended to Arxana's own two-or-more-role types, with a futon3c test that each entry's role set equals the registry's declaration, so the two cannot drift;
 5. futon3c client wrappers for the new queries, and `dependence/reverse-records` asking for the cap it can use and reporting truncation.
 Each query becomes a feature that Demo A must document (Joe's coverage rule), so each gets a `:design/choice` once the catalogue is written live.
+- **Batch part 1 (codex-13 packet 20, futon1b 90aef61, local master, not pushed, not running).** The field projection covers all six reserved record kinds (clusions, external references, attestations, assessments, attempts, mark occurrences); for the non-clusion kinds, top-level fields plus one map level as two-element paths, so "runs of check X" is `:field [:method :check/id]`. Numeric values carry `:field/number`; `:records-by-field-range` takes explicit inclusive/exclusive bounds; `:type-census` counts per type revision and record kind at a valid time. Checked by claude-5: the diff; new tests (26 assertions) and packet 19's (31) rerun and pass. Limit: span overlap is done by the client intersecting two bounded range queries, which is incomplete if either is truncated (packet 21 asks for the single-query form). Packet 21 (admitting Arxana's types to `:edge-join`, from a registry snapshot with a drift test) is with codex-13.
 
 ### What the PaperPrinter experiment showed, stated without PaperPrinter
 
