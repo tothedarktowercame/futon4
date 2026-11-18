@@ -31,6 +31,7 @@ delete require.cache[require.resolve('./variants')];
 const variants = require('./variants');
 delete require.cache[require.resolve('./shortcodes')];
 const shortcodes = require('./shortcodes');
+const sitemap = require('./sitemap');
 
 // Hot-reloaded by extension.js whenever this file is saved: keep no state
 // here that must outlive a reload. The loader owns the panel and `state`.
@@ -140,8 +141,43 @@ function render(href) {
     return kind === 'vd' ? variants.render(d, arg) : variants.renderSource(d, arg);
   }
   if (kind === 'loi' || kind === 'lf') return pageLoi(kind, arg);
+  if (kind === 'map') return pageMap(arg);
   if (kind === 'codes') return { title: 'shortcodes', html: shortcodes.helpHtml(shortcodes.readTable(), shortcodes.readRepos(), esc) };
   return pageHome();
+}
+
+// Mojira's map of itself (sitemap.js): crawled from home each time the map
+// is opened, never stored. map:<kind> lists one kind's pages from that crawl.
+let lastMap = null;
+// Loaded: the page's data is in memory, however old (the circus cache's 5 s
+// freshness is for reading a page, not for drawing the map).
+const mapLoaded = (h) => !(needsPatterns(h) || (CIRCUS_KINDS.has(h.split(':')[0]) && !circusCache.has(circusKey(h)))
+  || needsStrand(h) || ((h === 'triage' || h.startsWith('ti:')) && !brief && !briefErr));
+// Opening the map starts the loads it is missing, once each, and redraws
+// the map as each arrives (never waits; Agency's routes can take 19 s cold).
+function fetchForMap(map) {
+  const redraw = () => { if (history[history.length - 1] === 'map') go('map', false, true); };
+  const started = new Set();
+  for (const h of map.waiting) {
+    const k = h.split(':')[0];
+    const what = PATTERN_KINDS.has(k) ? 'patterns' : CIRCUS_KINDS.has(k) ? 'circus:' + circusKey(h) : k === 'strand' ? 'strand' : 'brief';
+    if (started.has(what) || (what.startsWith('circus:wn') && [...started].filter((x) => x.startsWith('circus:wn')).length >= 3)) continue;
+    started.add(what);
+    if (what === 'patterns') loadPatterns(redraw);
+    else if (what === 'strand') loadStrand(h, redraw);
+    else if (what === 'brief') loadBrief(redraw);
+    else loadCircus(h, redraw);
+  }
+}
+function crawlMap() {
+  const loaded = mapLoaded;
+  lastMap = { at: Date.now(), map: sitemap.crawl(render, { loaded }) };
+  return lastMap.map;
+}
+function pageMap(kind) {
+  if (!kind) return sitemap.view(crawlMap(), { esc, link });
+  const m = lastMap && Date.now() - lastMap.at < 60000 ? lastMap.map : crawlMap();
+  return sitemap.kindPage(m, kind, { esc, link });
 }
 
 function pageHome() {
@@ -691,6 +727,7 @@ function go(href, push = true, keep = false, selectHref = null) {
   if (needsPatterns(href)) { loadPatterns(() => go(href, push, keep, selectHref)); return; }
   if (needsCircus(href)) { note('asking Agency (the circus routes take a few seconds)…'); loadCircus(href, () => go(href, push, keep, selectHref)); return; }
   if (needsStrand(href)) { note('reading the Circus strand…'); loadStrand(href, () => go(href, push, keep, selectHref)); return; }
+  if (href === 'map' && !keep) setTimeout(() => lastMap && fetchForMap(lastMap.map), 0);
   if (push) history.push(href);
   let page;
   try { page = render(href); } catch (e) { page = { title: 'error', html: `<pre>${esc(e.stack)}</pre>` }; }
@@ -852,6 +889,7 @@ svg.cascade .role { fill: var(--vscode-descriptionForeground); font-size: 9px; l
 svg.cascade .elabel { fill: var(--vscode-descriptionForeground); }
 svg.cascade .gluetag, .gluetag { fill: var(--vscode-editorWarning-foreground, #c90); color: var(--vscode-editorWarning-foreground, #c90); font-size: 10px; font-weight: bold; }
 svg.cascade a.ln { cursor: pointer; }
+svg.cascade .occ.bad { fill: var(--vscode-errorForeground, #e44); }
 svg.cascade a.ln.sel circle, svg.cascade a.ln.sel rect { stroke: var(--vscode-focusBorder); stroke-width: 3; }
 svg.cascade a.ln.sel text { fill: var(--vscode-textLink-activeForeground, var(--vscode-textLink-foreground)); }
 h2.part { text-transform: none; }
