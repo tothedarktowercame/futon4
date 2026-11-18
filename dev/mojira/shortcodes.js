@@ -54,6 +54,7 @@ function resolve(code, table, repos, codeDir = '/home/joe/code') {
   const s = String(code || '').trim().replace(/\s+/g, ' ');
   if (s === '' || s === 'g') return { page: 'home' };
   if (s === '?') return { help: true };
+  if (s.startsWith(URI)) { const h = fromUri(s); return h ? { page: h } : { error: s + ': not a mojira:// identifier' }; }
   if (s === 'l') return { back: true };
   const fixed = table.codes.find((c) => c.code === s);
   if (fixed) {
@@ -102,34 +103,26 @@ function step(s, codes) {
   return { value: v, exit: false, ret: codes.includes(v.trim()), next };
 }
 
-// What y/Y put on the clipboard: the link's text and the thing behind it,
-// something that opens outside Mojira (a file, a turn id, an item file, a
-// URL, the Emacs URI the table names for the page). Mojira's own href
-// ("cascade") means nothing elsewhere, so it is the fallback, as mojira:<href>.
-// DIRS: where the pages read from {cascade, gcc, agency, loi, variants, patterns}.
-function sourceOf(href, table, dirs = {}) {
-  const [kind, ...rest] = String(href).split(':');
-  const arg = rest.join(':');
-  const code = (table.codes || []).find((x) => x.mojira && x.mojira.page === href && x.emacs && x.emacs.uri);
-  if (code) return code.emacs.uri;
-  if (kind === 'file') return arg;
-  if (kind === 'ext') return arg;
-  if (kind === 'pt' || kind === 'step') return arg;                 // a turn id
-  if (kind === 'cascade' || kind === 'cn' || kind === 'ce') return dirs.cascade || null;
-  if ((kind === 'gi' || kind === 'gi-raw') && arg && dirs.gcc) return path.join(dirs.gcc, 'items', arg + '.json');
-  if (kind === 'gcc' && dirs.gcc) return path.join(dirs.gcc, 'index.json');
-  if ((kind === 'gparty' || kind === 'gparty-raw') && dirs.gcc) return path.join(dirs.gcc, 'party.json');
-  if ((kind === 'top' || kind === 'top-raw') && dirs.agency) return dirs.agency + '/api/alpha/circus/top-items?run=latest';
-  if ((kind === 'wn' || kind === 'wn-raw') && dirs.agency) return dirs.agency + '/api/alpha/circus/why-not?run=latest&item=' + encodeURIComponent(arg);
-  if ((kind === 'loi' || kind === 'lf') && dirs.loi) return dirs.loi + (arg ? ' (field ' + arg + ')' : '');
-  if ((kind === 'vd' || kind === 'vds') && dirs.variants) return dirs.variants + (arg ? ' (variant ' + arg + ')' : '');
-  if ((kind === 'pat' || kind === 'pc') && arg && dirs.patterns) return path.join(dirs.patterns, arg + '.flexiarg');
-  return null;
+// mojira:// identifiers, what y and Y copy: one per Mojira page, and the
+// same page again wherever it is pasted (the : prompt, or Ctrl+V in the
+// panel). mojira://<kind>[/<arg>], the arg URI-encoded:
+//   cascade                  <-> mojira://cascade
+//   gi:M-formal-patterns     <-> mojira://gi/M-formal-patterns
+//   file:/home/joe/x.md      <-> mojira://file/%2Fhome%2Fjoe%2Fx.md
+const URI = 'mojira://';
+function toUri(href) {
+  const s = String(href || 'home');
+  const i = s.indexOf(':');
+  return i < 0 ? URI + s : URI + s.slice(0, i) + '/' + encodeURIComponent(s.slice(i + 1));
 }
-function copyText(href, label, table, dirs) {
-  const src = sourceOf(href, table, dirs) || 'mojira:' + href;
-  const l = String(label || '').replace(/\s+/g, ' ').trim();
-  return l && l !== src ? l + ' ' + src : src;
+function fromUri(uri) {
+  const s = String(uri || '').trim();
+  if (!s.startsWith(URI)) return null;
+  const body = s.slice(URI.length).replace(/\/+$/, '');
+  if (!body) return 'home';
+  const i = body.indexOf('/');
+  if (i < 0) return body;
+  try { return body.slice(0, i) + ':' + decodeURIComponent(body.slice(i + 1)); } catch (_) { return null; }
 }
 
 function helpHtml(table, repos, esc) {
@@ -141,7 +134,8 @@ function helpHtml(table, repos, esc) {
 <h2>Kinds</h2><ul>${table.kinds.map((k) => `<li><b>${esc(k.key)}</b> ${esc(k.label)}</li>`).join('')}</ul>
 <h2>Agents <span class="dim">(Emacs only, for now)</span></h2><ul>${table.agents.map((a) => `<li><b>${esc(a.key)} N</b> ${esc(a.kind)}-N</li>`).join('')}
 ${(table.agent_modals || []).map((m) => `<li><b>${table.agents.map((a) => a.key).join('/')} ${esc(m.key)}</b> ${esc(m.label)}</li>`).join('')}</ul>
-<h2>l, last</h2><ul><li><b>6 l</b>, <b>r &lt;name&gt; l</b> the last file you visited in that repo, by any route (opened in Emacs)</li><li><b>l</b> alone: the previous page</li></ul>`;
+<h2>l, last</h2><ul><li><b>6 l</b>, <b>r &lt;name&gt; l</b> the last file you visited in that repo, by any route (opened in Emacs)</li><li><b>l</b> alone: the previous page</li></ul>
+<h2>mojira:// identifiers</h2><p><b>y</b> copies the selected link, <b>Y</b> this page, as <b>mojira://…</b>; paste one at this prompt, or Ctrl+V in the panel, to open that page.</p>`;
 }
 
-module.exports = { TABLE, readTable, readRepos, allCodes, resolve, step, sourceOf, copyText, helpHtml };
+module.exports = { TABLE, readTable, readRepos, allCodes, resolve, step, toUri, fromUri, helpHtml };

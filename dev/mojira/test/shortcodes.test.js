@@ -63,15 +63,18 @@ test('Emacs and Mojira read the same codes from the one table', { skip: !haveAll
   assert.deepStrictEqual([...emacs].filter(notAgent).sort(), codes.filter(notAgent).sort());
 });
 
-test('y/Y copy the link text and what is behind it, never a bare Mojira page name', () => {
+test('y/Y copy a mojira:// identifier that opens the same page when pasted', () => {
   const t = S.readTable();
-  const dirs = { cascade: '/c/cascade-dir', gcc: '/g', agency: 'http://a:1' };
-  assert.strictEqual(S.copyText('cascade', 'the first turn cascade (2026-11-11)', t, dirs),
-    'the first turn cascade (2026-11-11) /c/cascade-dir');
-  assert.strictEqual(S.copyText('pg', 'Patterns', t, dirs), 'Patterns arxana://view/patterns');
-  assert.strictEqual(S.copyText('gi:M-x', 'M-x', t, dirs), 'M-x /g/items/M-x.json');
-  assert.strictEqual(S.copyText('pt:turn-1', 'turn-1', t, dirs), 'turn-1');
-  assert.strictEqual(S.copyText('wn:M-x', 'why', t, dirs), 'why http://a:1/api/alpha/circus/why-not?run=latest&item=M-x');
-  // nothing known behind it: say it is a Mojira page, not a bare word
-  assert.strictEqual(S.copyText('triage', 'triage', t, dirs), 'triage mojira:triage');
+  assert.strictEqual(S.toUri('cascade'), 'mojira://cascade');
+  assert.strictEqual(S.toUri('gi:M-formal-patterns-redux'), 'mojira://gi/M-formal-patterns-redux');
+  const hrefs = ['cascade', 'home', 'gi:M-formal-patterns-redux', 'pt:turn-2026-11-11T10:00:00Z-ab',
+    'file:/home/joe/code/a b/c.md', 'search:x/y & z', 'wn:M-x', 'ce:3:4'];
+  for (const h of hrefs) {
+    const u = S.toUri(h);
+    assert.match(u, /^mojira:\/\/[^\s]+$/, 'not one token: ' + u);
+    assert.strictEqual(S.fromUri(u), h);
+    assert.deepStrictEqual(S.resolve(u, t, []), { page: h });   // pasted at the : prompt
+  }
+  assert.strictEqual(S.fromUri('mojira://'), 'home');
+  assert.strictEqual(S.fromUri('cascade'), null);
 });
