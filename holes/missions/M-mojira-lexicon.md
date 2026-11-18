@@ -123,6 +123,19 @@ files and the GCC stays readable?
     (writes a JSON file), `futon4a/lisp/futon4a-nip-accept.el` (reads it).
     None reads or writes an Arxana record type, so "Nipper built on Arxana"
     is the design intention (M-arxana-incubator WP8), not present fact.
+  - Coverage (claude-13, live, 5,005 of 5,037 namespaces read): clj 3,578,
+    py 1,239, el 176, flexiarg 7, cljs 5. **Not indexed:** any JavaScript
+    (so Mojira), futon4a, minus40, `~/storage` scripts. All three Nipper
+    files are unindexed, so "Nipper built-on Arxana" must read **unknown**
+    today, not "not yet". The missing languages and repos are a gap in the
+    code ingest, separate from this mission's edge.
+  - Packet CL-76 (claude-13 → codex-13): `code/v05/writes-record-type` and
+    `reads-record-type` from literal record types in indexed Clojure
+    namespaces, and a `built-on?` query answering `:yes` / `:not-yet` /
+    `:unknown` (`:unknown` whenever a subject file is unindexed or not
+    Clojure). Acceptance: `futon3c.arxana.ma-strand` writes `[:ma/strand 1]`;
+    `nip_merge.py` → `:unknown`; a Clojure namespace with no record types →
+    `:not-yet`.
   - Framing (claude-13, from Joe's META/CTRL distinction,
     `holes/labs/M-arxana-incubator/NOTE-ctrl-items-and-scholium-programming.md`):
     a link is a CTRL claim, a deterministic query that answers yes / not
