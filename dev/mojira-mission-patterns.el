@@ -18,6 +18,34 @@
 (defvar-local mojira-mission-patterns--sessions nil)
 
 (declare-function arxana-browser-patterns--pattern-file "arxana-browser-patterns" (name))
+(declare-function mission-mode-minor-mode "mission-mode" (&optional arg))
+(defvar mission-mode-minor-mode)
+
+(defcustom mojira-mission-patterns-code-root "~/code/"
+  "Root whose repos hold holes/missions/ documents." :type 'directory)
+
+(defun mojira-mission-patterns--mission-file (mission)
+  "MISSION's document, found by one glob per layout (no recursive walk)."
+  (let ((root (file-name-as-directory (expand-file-name mojira-mission-patterns-code-root))))
+    (cl-some (lambda (pat) (car (file-expand-wildcards (concat root pat))))
+             (list (concat "*/holes/missions/" mission ".md")
+                   (concat "*/holes/" mission ".md")))))
+
+(defun mojira-mission-patterns--open-document (mission)
+  "Show MISSION's document in another window with mission-mode on.
+mission-mode badges its pattern scopes (violet) once its async fetch lands."
+  (let ((file (mojira-mission-patterns--mission-file mission)))
+    (if (not file)
+        (message "※ m p: no document for %s" mission)
+      (let ((buf (find-file-noselect file)))
+        (with-current-buffer buf
+          (when (and (not (bound-and-true-p mission-mode-minor-mode))
+                     (or (fboundp 'mission-mode-minor-mode)
+                         (require 'mission-mode nil t)))
+            (mission-mode-minor-mode 1)))
+        (display-buffer buf '((display-buffer-reuse-window
+                               display-buffer-use-some-window)
+                              (inhibit-same-window . t)))))))
 
 (defun mojira-mission-patterns--agent ()
   "Current REPL's local id, else the most recently used REPL's id."
@@ -121,8 +149,9 @@
          (if (and (not shared) (> (or (alist-get 'occurs p) 0) 0)) 'bold 'default))))
     (goto-char (point-min))))
 
-(defun mojira-mission-patterns-refresh ()
-  "Refresh the retained agent's clock and both sections asynchronously."
+(defun mojira-mission-patterns-refresh (&optional open-document)
+  "Refresh the retained agent's clock and both sections asynchronously.
+With OPEN-DOCUMENT, also show the mission document in mission-mode."
   (interactive)
   (let ((buffer (current-buffer)) (token (list t))
         (agent mojira-mission-patterns--agent))
@@ -142,6 +171,7 @@
                      (erase-buffer) (insert (if err (concat "Error: " err "\n") "Agent is not clocked into a mission.\n")))
                  (setq mojira-mission-patterns--mission mission
                        mojira-mission-patterns--scopes nil mojira-mission-patterns--sessions nil)
+                 (when open-document (mojira-mission-patterns--open-document mission))
                  (mojira-mission-patterns--render)
                  (dolist (spec '(("mission-pattern-scopes" . mojira-mission-patterns--scopes)
                                  ("mission-session-patterns" . mojira-mission-patterns--sessions)))
@@ -167,7 +197,8 @@
 
 ;;;###autoload
 (defun mojira-mission-patterns ()
-  "Open the clocked mission's patterns immediately in a right side window."
+  "Open the clocked mission's patterns: its document in mission-mode (pattern
+scopes badged) plus a right side window listing document and session patterns."
   (interactive)
   (let ((agent (mojira-mission-patterns--agent))
         (buffer (get-buffer-create "*※ m p*")))
@@ -175,7 +206,7 @@
       (mojira-mission-patterns-mode)
       (setq mojira-mission-patterns--agent agent))
     (display-buffer-in-side-window buffer '((side . right) (window-width . 0.35)))
-    (with-current-buffer buffer (mojira-mission-patterns-refresh))))
+    (with-current-buffer buffer (mojira-mission-patterns-refresh t))))
 
 (provide 'mojira-mission-patterns)
 ;;; mojira-mission-patterns.el ends here

@@ -100,3 +100,26 @@
             (cl-letf (((symbol-function 'buffer-list) (lambda (&rest _) (list other a))))
               (should (equal "codex-invented" (mojira-mission-patterns--agent))))))
       (kill-buffer a) (kill-buffer other))))
+
+(ert-deftest mojira-mission-patterns-finds-and-opens-the-mission-document ()
+  (let* ((root (make-temp-file "mmp-root" t))
+         (mojira-mission-patterns-code-root root)
+         (file (expand-file-name "repo-a/holes/missions/M-invented.md" root))
+         (enabled nil))
+    (make-directory (file-name-directory file) t)
+    (with-temp-file file (insert "# M-invented\n"))
+    (make-directory (expand-file-name "repo-b/holes" root) t)
+    (with-temp-file (expand-file-name "repo-b/holes/E-invented.md" root) (insert "# E\n"))
+    (unwind-protect
+        (progn
+          (should (equal file (mojira-mission-patterns--mission-file "M-invented")))
+          (should (string-suffix-p "repo-b/holes/E-invented.md"
+                                   (mojira-mission-patterns--mission-file "E-invented")))
+          (should-not (mojira-mission-patterns--mission-file "M-absent"))
+          (cl-letf (((symbol-function 'mission-mode-minor-mode)
+                     (lambda (&optional _) (setq enabled (current-buffer)))))
+            (mojira-mission-patterns--open-document "M-invented"))
+          (should (buffer-live-p enabled))
+          (should (equal file (buffer-file-name enabled))))
+      (when (get-file-buffer file) (kill-buffer (get-file-buffer file)))
+      (delete-directory root t))))
