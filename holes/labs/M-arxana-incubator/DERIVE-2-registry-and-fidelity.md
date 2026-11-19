@@ -578,3 +578,35 @@ Joe, on the incubator's call notes: "ids can hash the line, but we need to be ab
 **Scope.** These rules are for any file-backed source Arxana annotates that is not as immutable as the Evidence Landscape: call notes, drafts, `~/mozilla-incubator.txt`. Evidence-store spans keep their evidence id plus span plus digest and need no relocation.
 
 **Plan (one packet each, after Joe has read this).** (1) Ingest the notes file as artifact revisions and anchor the clips through `resolve.anchor`. A reload relocates, with the attestations kept in the session and the autosave (A1, A2). (2) Derivation edges and the per-kind reader, with tests for the typo case (attribution passes) and the paraphrase case (it stops) (A3–A5). (3) Placements pin a version, and the pane offers newer versions (A6).
+
+## 12. Claim frames: queries over any text (2026-11-19, claude-5 with claude-8)
+
+Joe, after a rule-per-symptom prototype (a comparative with no standard, an agentless passive, and so on) caught "Broader" but not the rest of what was wrong with one sentence: "We need a different approach." On reading a sentence as a claim with slots, he said: "it turns our XTQL idea into something we could apply to any text. (Not XTQL itself but by analogy.)" The INSTANTIATE premise was "If we can't produce the information in a query, then we can't conceptualise it". By analogy, a frame slot is a query over a text, and an empty result means the text does not hold that information.
+
+**Rules.**
+- **F1. A claim is a frame.** A sentence's predicate, verb or deverbal noun ("benefit"), has slots from a short fixed list: who, what, for whom, how, compared to what, from where, when, how much, and "which" for a noun phrase. Each slot carries the plain question it answers ("who foresees it?"). Only the predicate's core slots, and the slots a question part asks for, are required. The others are shown dimmed. BECAUSE one pass then surfaces all of a sentence's gaps at once. For "Broader collective benefit can be foreseen from various smaller collectives working together" that is: foreseen by whom, benefit for whom, broader than what, which collectives working on what.
+- **F2. A binding has three results.**
+  - `in-text`: the answer holds it, via the parse, a conjunct, a repeated head noun, or the question.
+  - `in-sources`: Joe has said it in a passage, clip or turn, but the answer does not. An unbound slot is run as a Nipper query, with the predicate and its filled slots as terms.
+  - `unbound`: Joe must supply it.
+
+  `not-needed {by, reason}` is a waiver. BECAUSE a reviewer reads only the answer, so "said elsewhere" is a cue for the rewrite, not a fill.
+- **F3. The question's frame comes first and is kept.** Each question's parts are its asked parts, each with a span into the question text, plus implied parts Joe adds. They are proposed from the question's main-verb objects and conjuncts, and confirmed once by an act. They are kept in a file beside the sub-slot schema, keyed by the question's text digest. If the call's wording changes, unchanged parts relocate and the others ask again. Parts are what the question asks; sub-slots are what job a sentence does; both are kept, and neither is forced onto the other. BECAUSE that is what makes the frames repeatable across drafts.
+- **F4. Claims fill parts.** A fill links a claim frame to a question part, by rule or by Joe. A part with no fill is a gap in the answer. A claim that fills no part is extra.
+- **F5. Where the parse is not trusted.**
+  - Attachment: a second, different parser runs, and slots where the two disagree are marked uncertain.
+  - Cross-sentence bindings by head noun are candidates only.
+  - "This" or "that" standing for a whole statement, and whether a filled slot is specific enough, need Joe, or a model as proposer only.
+  - The implicit "we" stays unbound: Joe marking it as the project is the rewrite cue.
+- **F6. Runs are pinned and judged.**
+  - A run is named by the digests of its inputs, the parser and model versions, and the code's blob sha.
+  - Joe's judgements go to a cases file, each case a sentence with its expected bound and unbound slots. "Fine here" is a waiver and creates no case; "the rule is wrong" creates a case.
+  - The futon2 warrant registry records that a code revision passed a cases digest.
+- **F7. The rewrite is the jointly voiced act.** Draft 2 sentences become sources for filling frames, not text to repair.
+
+**First slice (proposed, not built).** Read-only, for the public-benefit question (`~/mozilla-incubator.txt` line 48) and its answer. It covers verb frames plus the noun frame `benefit`, with source lookups over the existing clip candidates. It outputs records plus a HUD block: proposed parts, sentence frames, and a table of part → claims. Seed cases:
+- the thesis sentence, which must show the four unbound slots Joe named;
+- a fully filled control, which must show none;
+- a two-sentence case where "the collectives" is a candidate binding.
+
+Later slices: the second parser, more nominalisations, live turn queries, and confirm keys.
