@@ -122,6 +122,16 @@
                        (setq enabled (current-buffer)))))
             (mojira-mission-patterns--open-document "M-invented"))
           (should (buffer-live-p enabled))
-          (should (equal file (buffer-file-name enabled))))
+          (should (equal file (buffer-file-name enabled)))
+          ;; Already on with every scope: switched to patterns and refreshed.
+          (let ((refreshed nil))
+            (with-current-buffer enabled
+              (setq-local mission-mode-scope-types nil)
+              (setq-local mission-mode-minor-mode t))
+            (cl-letf (((symbol-function 'mission-mode-minor-mode) #'ignore)
+                      ((symbol-function 'mission-mode-refresh)
+                       (lambda () (setq refreshed mission-mode-scope-types))))
+              (mojira-mission-patterns--open-document "M-invented"))
+            (should (equal '("pattern" "psr" "pur") refreshed))))
       (when (get-file-buffer file) (kill-buffer (get-file-buffer file)))
       (delete-directory root t))))

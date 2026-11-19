@@ -19,6 +19,7 @@
 
 (declare-function arxana-browser-patterns--pattern-file "arxana-browser-patterns" (name))
 (declare-function mission-mode-minor-mode "mission-mode" (&optional arg))
+(declare-function mission-mode-refresh "mission-mode" ())
 (defvar mission-mode-minor-mode)
 (defvar mission-mode-scope-types)
 
@@ -40,12 +41,15 @@ mission-mode badges its pattern scopes (violet) once its async fetch lands."
         (message "※ m p: no document for %s" mission)
       (let ((buf (find-file-noselect file)))
         (with-current-buffer buf
-          (when (and (not (bound-and-true-p mission-mode-minor-mode))
-                     (or (fboundp 'mission-mode-minor-mode)
-                         (require 'mission-mode nil t)))
-            ;; Patterns only: one substrate read per binder, ~0.1 s, not every scope.
+          (when (or (fboundp 'mission-mode-minor-mode)
+                    (require 'mission-mode nil t))
+            ;; Patterns only: one substrate read per binder, ~0.1 s, not every
+            ;; scope. An already-open document is switched and refreshed too
+            ;; (Joe 2026-11-19 saw no change when it was left alone).
             (setq-local mission-mode-scope-types '("pattern" "psr" "pur"))
-            (mission-mode-minor-mode 1)))
+            (if (bound-and-true-p mission-mode-minor-mode)
+                (mission-mode-refresh)
+              (mission-mode-minor-mode 1))))
         (display-buffer buf '((display-buffer-reuse-window
                                display-buffer-use-some-window)
                               (inhibit-same-window . t)))))))
