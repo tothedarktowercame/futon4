@@ -187,6 +187,7 @@ which also runs one authority with thin clients.
 | 3d | Emacs live editing (`futon4a-together-open`, `-attach`) | futon4a bc50570 | done 2026-11-20; three-buffer test against a real hub passes |
 | 4b | browser binding logic | futon3c d7dd1fdac, 012f1e8cc | accepted 2026-11-20 |
 | 4c | browser page | futon3c 33ccd131b, ff06cccfb | accepted 2026-11-20; eight-check two-browser test passes |
+| 6 | Caddy block `/edit/` and page URLs relative to the page | futon3c (page.js), /etc/caddy/Caddyfile | done 2026-11-20; typed through Caddy in headless Chromium, text arrived at the hub as joe.web |
 | 5 | share one answer of the incubator form (`futon4a-incubator-together-share`); `C-c C-s` saves the converged answer as the usual act | futon4a 394baec, 3ab861f, a30a9f8 | accepted 2026-11-20 on a fixture session; not yet tried on the real form |
 
 ## Known weaknesses (2026-11-20)
@@ -196,8 +197,10 @@ which also runs one authority with thin clients.
 - Two people sharing the same untouched answer at the same moment both seed it, so
   the text appears twice.
 - The form's answers are hard-wrapped, so a browser editor sees the line breaks.
-- Identity is the `X-Together-Editor` header, safe only on loopback. No Caddy block
-  exists yet, so no one can open the browser page from outside the server.
+- Outside access is `https://zone.hyperreal.enterprises/edit/?doc=KEY` (Caddy realm
+  `arxana-together`, added 2026-11-20). Caddy sets `X-Together-Editor` from the
+  basic-auth user and replaces any value the client sent. Only `joe` has a login;
+  a second editor needs one more line in that block.
 - The engine and the Emacs model are lists scanned per character: fine for an answer,
   slow for a long document or a large paste.
 - Structure operations (regroup with cycle refusal, checklist item 5) are not started.
