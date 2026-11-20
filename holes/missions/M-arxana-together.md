@@ -450,3 +450,21 @@ or `end` comes before `start`.
 | 19 | Emacs: link two spans; with point in one end the other end is highlighted in its window (side-by-side windows), and a command jumps there | N10, N11, N13 (cursor-over), N9 |
 | 20 | Emacs: copying from one attached buffer and yanking into another records the source span and a `transclusion` link at the moment of the yank | N6, N7, N8 |
 | later | the same extent rule in the hub and the browser model, with shared fixture cases; Mojira's two-pane page as the web display | N13 drawn beams |
+
+**Done 2026-11-20** (all by codex-13, reviewed by fable-1; 60 Emacs tests, `test/together-span-e2e.sh`):
+
+| packet | futon4a | result |
+|---|---|---|
+| 17 | 41801ee | `futon4a-together-span-extent`, `-span-create`, `-span-list` |
+| 18 | ea2bd71 | `-span-show`, `-span-hide`, `-span-at`; overlays recomputed from ids after each batch of edits; a fully deleted span stays as a "⟦N deleted⟧" marker |
+| 19 | cf11506 | `-span-mark`, `-span-link-here`, `-span-follow`; other ends highlighted while point is in a linked span, without moving the other window |
+| 20 | e523824 | copy or kill inside a shared region tags the text with its source ids; an ordinary yank into a shared region records source span, destination span and a `transclusion` link (workspace `futon4a-together-span-workspace`, default "spans"; `futon4a-together-span-record-yank` turns it off) |
+
+Against Nelson's list: N9, N10, N11 and N13 (cursor-over) hold between two shared
+documents in Emacs; N6 to N8 hold for text copied inside Emacs. Not done: the
+copy does not follow later edits to its source (N7 is recorded, not enforced);
+nothing shows what has not yet been used (N15); the web page and the hub know
+nothing of spans; links cannot be removed.
+
+Known costs: each recompute walks the document once per shown span; a yank makes
+up to three blocking requests to the hub (10 s timeout each if the hub hangs).
