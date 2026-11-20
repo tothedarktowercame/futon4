@@ -221,8 +221,9 @@ which also runs one authority with thin clients.
 - The form's answers are hard-wrapped, so a browser editor sees the line breaks.
 - Outside access is `https://zone.hyperreal.enterprises/edit/?doc=KEY` (Caddy realm
   `arxana-together`, added 2026-11-20). Caddy sets `X-Together-Editor` from the
-  basic-auth user and replaces any value the client sent. Only `joe` has a login;
-  a second editor needs one more line in that block.
+  basic-auth user and replaces any value the client sent. Logins: `joe`, and from 2026-11-20 at
+  Joe's request `rob` and `murch` (each with their last name as password). These
+  logins open `/edit/` only.
 - The engine and the Emacs model are lists scanned per character: fine for an answer,
   slow for a long document or a large paste. Measured 2026-11-20: writing 18,000
   characters into a document that already held 18,000 took a minute, and after a
