@@ -228,7 +228,14 @@ incubator batch too". Demo A is the catalogue of design choices held as records
 mission is claude-5's draft; this section is fable-1's plan for two batches and does
 not edit that file.
 
-### Batch 1, real-time editing: built in memory, awaiting Joe's go to write
+### Batch 1, real-time editing: written to the store 2026-11-20
+
+Joe, 2026-11-20: "you can write back batch 1". Written by
+`~/storage/arxana/design-catalogue/write-together.clj` at 15:13Z: 13 choices, 12
+checks, 12 links, 12 runs, 49 records, all created; plan and response in
+`together-catalogue-2026-11-20.edn` beside it. Read back through
+`catalogue-view/read-catalogue`: status ok, 13 `:together/` choices, debt one
+`:no-check` (`:together/peer-version-stays-possible`), coverage still passing.
 
 `futon3c.arxana.together-catalogue` (aa377e644). Thirteen choices, keys
 `:together/<name>`: convergence, ids-not-positions, log-is-the-record,
@@ -276,9 +283,20 @@ Not to be recorded as accepted, because the code does not do what the sentence s
 
 - "The session is an append-only log": acts are appended in normal use, but
   attaching revision segments replaces an act, restoring a version replaces the
-  session, and twelve acts were once removed by hand. Either the statement becomes
-  "appended, with these three exceptions", or the exceptions are closed first.
-  Joe's call.
+  session, and twelve acts were once removed by hand.
+  Joe, 2026-11-20: "this reminds me of our Elephant 2000 work ... With Elephant I
+  should be able to "undo" a REPL turn. As to whether it is saved anywhere as a
+  parallel branch I'm not sure at all. Here I guess it's similar". What Elephant's
+  rewind does (futon3c `emacs/turn-stepper.el`, `turn-stepper--revert` and
+  `turn-stepper-rewind-apply`): it runs `git revert` on the session's commits, so
+  the undo is new commits and the undone ones stay in history, on no branch of
+  their own; it cuts the turn's text out of the REPL buffer; and it tells the
+  agent the turns are withdrawn. The incubator differs: its three rewrites change
+  or drop acts in place, and the earlier state survives only as a numbered version
+  if the idle autosave had run. Proposal (fable-1): add the row
+  `:incubator/undo-is-an-act`, lifecycle `:proposed`, no check: "An undo is a new
+  act that withdraws earlier acts; an act is never changed or removed." It will
+  show as debt until the three rewrites are changed to append.
 - "A version on every change": versions are taken on an idle tick, so several
   changes can become one version. The table's wording says what the code does.
 - futon4a README line 228 says "No decisions are saved automatically", but the idle
