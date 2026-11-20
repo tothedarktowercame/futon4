@@ -56,8 +56,9 @@ Q132d	2026-11-20	P-sufficiency-wall	rejected
 Q132e	2026-11-20	P-sufficiency-wall	later
 Q133	2026-11-20	P-alias-definition+P-definition-restatement	rejected
 Q133r	2026-11-20	P-alias-definition+P-definition-restatement	merged
-Q133k	2026-11-20	P-unfolded-local	running
+Q133k	2026-11-20	P-unfolded-local	merged
 Q134	2026-11-20	P-raw-application+P-hidden-arguments	merged
-Q135	2026-11-20	P-empty-claim	running
+Q135	2026-11-20	P-empty-claim	rejected
+Q135r	2026-11-20	P-empty-claim	running
 Q136	2026-11-20	N8	merged
 Q137	2026-11-20	N8	merged

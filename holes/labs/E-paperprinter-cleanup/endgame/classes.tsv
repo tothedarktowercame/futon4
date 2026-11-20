@@ -32,10 +32,10 @@ N13	2026-11-20	0	records	0	done	Lp composition shows its map; Q130, 4 records
 P-sufficiency-wall	2026-11-20	5	decls	3	open	126 occurrences; Q132, Q132c, Q132d rejected; Q132e 'later (design)'
 P-alias-definition	2026-11-20	0	decls	1	done	Q133 rejected; Q133r merged (codex-3 87db0890 + claude-7 review fixes), 95 records. Q129's sites not rechecked one by one
 P-definition-restatement	2026-11-20	0	decls	1	done	Q133 rejected; Q133r merged (codex-3 87db0890 + claude-7 review fixes), 95 records. Q129's sites not rechecked one by one
-P-unfolded-local	2026-11-20	3	decls	1	open	Q133 rejected for this part; Q133k running (codex-2, base ac0c4de1)
+P-unfolded-local	2026-11-20	0	decls	1	done	Q133 rejected for this part; Q133k merged at 4dbcba98 (163 records changed: a displayed let name replaces later copies of its value). A closing sentence that restates the theorem goal keeps the unfolded value, since it is outside the let
 P-raw-application	2026-11-20	0	decls	0	done	Q134 merged (codex-2 b542dbde + claude-7 fixes); 44 records
 P-hidden-arguments	2026-11-20	0	decls	0	done	Q134 merged (codex-2 b542dbde + claude-7 fixes); 44 records
-P-empty-claim	2026-11-20	7	decls	0	open	Q135 pending
+P-empty-claim	2026-11-20	7	decls	1	open	Q135 rejected (reasons copied from other steps; 206 claims given a reason while keeping a block). The class is much larger than the 7 Q129 declarations: Q135 showed about 1,270 empty claim lines in 884 records that have own premises. Q135r (own premises only) in review
 P-duplicate-closer	2026-11-20	3	decls	0	open	no packet
 P-nonprop-suffices	2026-11-20	2	decls	0	open	no packet
 P-empty-chain-reason	2026-11-20	3	decls	0	open	no packet
