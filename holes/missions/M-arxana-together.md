@@ -216,6 +216,9 @@ which also runs one authority with thin clients.
 | 11 | Demo A records for these features, in memory: 13 choices, 12 with a probe that runs the real code | futon3c aa377e644; manifest `~/storage/arxana/design-catalogue/together-manifest-2026-11-20.edn` | built 2026-11-20 (codex-9, finished by fable-1); not written to the store, which needs Joe's go |
 | 13 | sharing the form from Emacs also writes a form index to the hub: structure workspace `incubator.<layer>`, one `question` node per answer (question, document key, order) and one `form` node; existing nodes are left alone | futon4a ccd5ecb | accepted 2026-11-20 (codex-13) |
 | 14 | web: the editor as a component (`editor.js`); `form.html?ws=incubator.<layer>` shows each question with its answer's live editor, one legend and status; the list page links to each shared form | futon3c 491f82683 | accepted 2026-11-20. codex-15's job was lost when the JVM restarted at 16:16Z with the work complete but uncommitted; fable-1 ran the 14 browser checks, read the form page, tried it through Caddy on a scratch workspace `proof-form`, and committed |
+| 15 | Clojure engine: an insert is spliced as one run, and a log is replayed through an id index | futon3c 608dd5f9f | accepted 2026-11-20 (codex-12). Insert of 20,000 characters into 60,000: 65.9 s to 48 ms; rebuild of a 5,000-entry log: 79 s to 135 ms; load from disk: 202 s to 224 ms. Checked against the old per-character code kept in the tests. Reloaded into the live hub; a 20,000-character insert on a scratch document took 0.02 s |
+| 16 | Emacs model and binding: the same, with a cached view per binding | futon4a 477af2a | accepted 2026-11-20 (codex-13). 20,000-character insert: over 239 s to 183 ms; keystroke in a document of 20,000 live and 60,000 deleted characters: 106 ms to 40 ms |
+| - | `scripts/together-check.sh` (every suite, both repos) and `README-together.md` (operating manual) | futon3c 26e572071 | fable-1, 2026-11-20 |
 | 5 | share one answer of the incubator form (`futon4a-incubator-together-share`); `C-c C-s` saves the converged answer as the usual act | futon4a 394baec, 3ab861f, a30a9f8 | accepted 2026-11-20 on a fixture session; not yet tried on the real form |
 
 ## Known weaknesses (2026-11-20)
@@ -226,8 +229,10 @@ which also runs one authority with thin clients.
   basic-auth user and replaces any value the client sent. Logins: `joe`, and from 2026-11-20 at
   Joe's request `rob` and `murch` (each with their last name as password). These
   logins open `/edit/` only.
-- The engine and the Emacs model are lists scanned per character: fine for an answer,
-  slow for a long document or a large paste. Measured 2026-11-20: writing 18,000
+- (Closed by packets 15 and 16.) The engine and the Emacs model were lists scanned per character: fine for an answer,
+  slow for a long document or a large paste. What remains linear: the hub builds
+  a set of all ids for each submitted operation, and the Emacs binding copies its
+  id table per operation. Measured 2026-11-20: writing 18,000
   characters into a document that already held 18,000 took a minute, and after a
   JVM restart the first request for a 16,000-character document replays its log
   for about a minute while holding that document's lock.
