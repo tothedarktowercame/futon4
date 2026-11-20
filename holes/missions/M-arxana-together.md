@@ -224,7 +224,16 @@ which also runs one authority with thin clients.
   basic-auth user and replaces any value the client sent. Only `joe` has a login;
   a second editor needs one more line in that block.
 - The engine and the Emacs model are lists scanned per character: fine for an answer,
-  slow for a long document or a large paste.
+  slow for a long document or a large paste. Measured 2026-11-20: writing 18,000
+  characters into a document that already held 18,000 took a minute, and after a
+  JVM restart the first request for a 16,000-character document replays its log
+  for about a minute while holding that document's lock.
+- 2026-11-20, found from Joe's "It comes up as all white for me": the document
+  list (packet 8) replayed every log on every call under each document's lock,
+  two minutes by then; fable-1's own browser checks called it and Joe's page
+  waited 9 seconds and more for its document. Fixed in futon3c 1f8d4cd55 (the
+  list reads in-memory state). fable-1 had noted the re-read when reviewing
+  packet 8 and accepted it.
 - Structure operations are served by the hub but no client uses them yet, and
   nothing connects a workspace's nodes to the text documents.
 
