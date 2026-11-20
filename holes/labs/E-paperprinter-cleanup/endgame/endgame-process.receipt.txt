@@ -1,10 +1,11 @@
-paperprinter-endgame-process-v0: 17 variables, 24 arrows {"definition" 11, "measured" 9, "hypothesis" 4}; acyclic, all references known
+paperprinter-endgame-process-v1: 17 variables, 27 arrows {"definition" 12, "measured" 9, "hypothesis" 6}; acyclic, all references known
 K1  holds     discovery_packets _||_ end_reached                             graph says connected   via discovery_packets - visible_classes - admitted_classes - end_reached
 K2  holds     discovery_packets _||_ end_reached  under do(admitted_classes) graph says separated   
 K3  holds     corpus_scope _||_ queue  under do(admitted_classes)            graph says separated   
 K4  holds     scanner_families _||_ queue  under do(admitted_classes)        graph says separated   
 K5  holds     corpus_scope _||_ measured_open  under do(admitted_classes)    graph says connected   via corpus_scope - measured_open
-K6  holds     rule_overlap _||_ measured_open  under do(admitted_classes)    graph says connected   via rule_overlap - regressions - defects_after - measured_open
-K7  holds     regressions _||_ end_reached | queue  under do(admitted_classes) graph says separated   
+K6  holds     rule_overlap _||_ measured_open  under do(admitted_classes)    graph says connected   via rule_overlap - merges - defects_after - measured_open
+K7  holds     regressions _||_ end_reached  under do(admitted_classes)       graph says connected   via regressions - defects_after - measured_open - exits_taken - end_reached
 K8  holds     attempt_cap _||_ end_reached  under do(admitted_classes)       graph says connected   via attempt_cap - exits_taken - end_reached
+K9  holds     rule_overlap _||_ end_reached  under do(admitted_classes)      graph says connected   via rule_overlap - merges - defects_after - measured_open - exits_taken - end_reached
 MODEL CHECK OK

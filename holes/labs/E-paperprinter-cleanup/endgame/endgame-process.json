@@ -1,8 +1,8 @@
 {
  "meta": {
-  "model_id": "paperprinter-endgame-process-v0",
+  "model_id": "paperprinter-endgame-process-v1",
   "title": "PaperPrinter endgame: what makes the work list grow or shrink in one round",
-  "status": "v0, authored 2026-11-20 by claude-10 for Joe; not yet checked by claude-7 or claude-1",
+  "status": "v1, 2026-11-20, claude-10: claude-1's fidelity check applied (~/notes/claude-1/paperprinter-endgame-model-check-2026-11-20.md); claude-7's check of the ledger pending",
   "scope": "One round = one pass from a census to the next census on claude7/integrate (mfuton-share). The model is about the queue of packets, not about the printer's rules; rule conflicts are the subject of the 2026-11-17 DiagramProver work and enter here as one variable (rule_overlap).",
   "reading": "Authored qualitative causal graph. An arrow says: changing the source can change the target, holding the target's other parents fixed. No effect sizes. Arrow status: definition (true by how the process is run), measured (an entry in claude-7's queue logs shows it), hypothesis (proposed, not observed).",
   "sources": [
@@ -11,7 +11,8 @@
    "~/notes/claude-7/endgame-short-list-2026-11-17.md",
    "~/notes/claude-1/paperprinter-endgame-list-2026-11-17.md",
    "futon4 holes/excursions/E-paperprinter-cleanup.md",
-   "futon4 holes/missions/M-arxana-incubator.md (endgame analysis, stopping criterion)"
+   "futon4 holes/missions/M-arxana-incubator.md (endgame analysis, stopping criterion)",
+   "~/notes/claude-1/paperprinter-endgame-model-check-2026-11-20.md"
   ]
  },
  "assumptions": [
@@ -292,6 +293,27 @@
    "status": "definition",
    "mechanism": "The end is relative to the admitted list.",
    "evidence": "by construction"
+  },
+  {
+   "from": "measured_open",
+   "to": "exits_taken",
+   "status": "hypothesis",
+   "mechanism": "A class leaves as fixed only when its census count is zero. Not how it is done today: 'done' in classes.tsv is typed by hand from the queue log. Needs counts.tsv.",
+   "evidence": "claude-1, ~/notes/claude-1/paperprinter-endgame-model-check-2026-11-20.md section 2"
+  },
+  {
+   "from": "merges",
+   "to": "exits_taken",
+   "status": "definition",
+   "mechanism": "A merged fix, or a rejection that brings the class to the cap, is what makes a class leave.",
+   "evidence": "by construction"
+  },
+  {
+   "from": "rule_overlap",
+   "to": "merges",
+   "status": "hypothesis",
+   "mechanism": "Packets that edit a rule overlapping another are the ones rejected repeatedly, so overlap reaches the exits through the cap.",
+   "evidence": "claude-1, ~/notes/claude-1/paperprinter-endgame-model-check-2026-11-20.md section 2; Q116 x3 and Q132 x3 are the candidates, pair check not run"
   }
  ],
  "checks": [
@@ -369,15 +391,13 @@
    "id": "K7",
    "x": "regressions",
    "y": "end_reached",
-   "given": [
-    "queue"
-   ],
+   "given": [],
    "do": [
     "admitted_classes"
    ],
-   "expected": true,
+   "expected": false,
    "status": "claim",
-   "claim": "Gap: given the packets dispatched, regressions do not bear on whether the end is declared. A merge can add sites to a class already marked done, or sites of no frozen class, and the end is still reached as defined. endgame.py therefore needs the count per class recomputed at every merge, and a record of how many records changed outside the packet's target."
+   "claim": "With the count deciding exits (arrow measured_open -> exits_taken), a regression into a counted class moves the end. What stays open is O1: a regression of a kind no frozen pattern counts."
   },
   {
    "id": "K8",
@@ -390,12 +410,24 @@
    "expected": false,
    "status": "claim",
    "claim": "The cap and the size floor are the two settings that move the end once the list is frozen."
+  },
+  {
+   "id": "K9",
+   "x": "rule_overlap",
+   "y": "end_reached",
+   "given": [],
+   "do": [
+    "admitted_classes"
+   ],
+   "expected": false,
+   "status": "claim",
+   "claim": "Rule overlap can move the end under a freeze, through rejections and the cap. So a class at the cap gets the critical-pair check before it is put to Joe as an exception: a conflict wants a guard or an order, not a residual."
   }
  ],
  "open_questions": [
   {
    "id": "O1",
-   "text": "K7: sites of a kind no frozen pattern counts are invisible to the count. Is 'records changed outside the target = 0, or each one read' (claude-7's census-changed number) enough, or is a held-out byte-identity set needed?"
+   "text": "Regressions of a kind no frozen pattern counts. claude-1: 'records changed outside the target' is enough if (1) it is a byte comparison of rendered output, not of scanner hits, (2) it runs over the whole frozen corpus at every merge (or a fixed hashed sample taken at the freeze commit), (3) the number of changed records to be read has a bound above which the merge is rejected. Which of these claude-7's census-changed number meets is not known. A regression seen in review cannot become a new class under a freeze: reject the merge, or read and accept each change."
   },
   {
    "id": "O2",
@@ -408,6 +440,22 @@
   {
    "id": "O4",
    "text": "Speed work (Q125, Q131, Q136, Q137) changes which proofs finish and so changes corpus_scope. Under a freeze it belongs before the freeze commit or after the end, not during."
+  },
+  {
+   "id": "O5",
+   "text": "'The best available packet opens more than it closes' is not computed: queue.tsv would need, per merged packet, sites closed in its class and sites opened anywhere."
+  },
+  {
+   "id": "O6",
+   "text": "The held-out 1,886 records were rendered in Q109 and read by discovery packets (Q120, Q121). If rules were written from them they are no longer held out; the end-of-run comparison then needs a fresh set nobody reads until the end."
+  },
+  {
+   "id": "O7",
+   "text": "Classes seen after the freeze and not admitted need their own ledger with a count, so that 'every failing evaluation classed' holds beyond the frozen list."
+  },
+  {
+   "id": "O8",
+   "text": "The cap is a budget of rejections, not a finding that no rendering exists. Every 'exception' from endgame.py is a proposal to Joe; none is a residual until he accepts it."
   }
  ]
 }

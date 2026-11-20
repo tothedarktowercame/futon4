@@ -6,7 +6,8 @@
 
 A class found on or before the freeze date is frozen. Each frozen class ends in one of:
   left       state done or notdefect
-  exception  rejected >= cap, or size <= min-size with no packet running: Lean notation change or residual
+  exception  rejected >= cap, or size <= min-size with no packet running: proposed to Joe as a Lean
+             notation change or a residual (at the cap, run the critical-pair check first)
   fix        one more printer packet
   count      size not known: needs a census count before it can be sorted
 Reported as violations (exit 1 with --enforce):
