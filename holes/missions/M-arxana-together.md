@@ -202,7 +202,7 @@ which also runs one authority with thin clients.
 | 8 | list of documents: `GET docs`, and the page at `/edit/` with no `doc` lists them and opens a new key | futon3c 33043dada | accepted 2026-11-20 (codex-13) |
 | 9 | structure routes on the hub: `structure/WS/state`, `acts`, `log`; one log file per workspace under `structure/`; refused acts are written | futon3c c0dc64ab4 | accepted 2026-11-20 (codex-12; my acceptance case was wrong, corrected on codex-12's objection); live |
 | 10a | several bound regions in one Emacs buffer (`futon4a-together-attach` adds, `-detach` takes an optional connection, `-with-binding`) | futon4a b0117a2 | accepted 2026-11-20 (codex-13) |
-| 10b | share the whole form (`futon4a-incubator-together-share-all`) | | with codex-13 |
+| 10b | share the whole form: `futon4a-incubator-together-share-all` binds every answer to its own document; `-share` adds the answer at point; `C-c C-s` detaches all and saves as usual; an unanswered question's placeholder is never seeded | futon4a 6b6c715 | accepted 2026-11-20 (codex-13) on fixture forms and a throwaway hub; not yet tried on the real form |
 | 11 | Demo A records for these features, in memory: 13 choices, 12 with a probe that runs the real code | futon3c aa377e644; manifest `~/storage/arxana/design-catalogue/together-manifest-2026-11-20.edn` | built 2026-11-20 (codex-9, finished by fable-1); not written to the store, which needs Joe's go |
 | 5 | share one answer of the incubator form (`futon4a-incubator-together-share`); `C-c C-s` saves the converged answer as the usual act | futon4a 394baec, 3ab861f, a30a9f8 | accepted 2026-11-20 on a fixture session; not yet tried on the real form |
 
