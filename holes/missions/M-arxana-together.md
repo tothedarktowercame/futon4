@@ -157,13 +157,17 @@ which also runs one authority with thin clients.
 
 ## Acceptance checklist
 
-- [ ] The conformance fixture passes in Clojure, Emacs Lisp and JavaScript.
+- [x] The conformance fixture passes in Clojure, Emacs Lisp and JavaScript.
+      (2026-11-20: futon3c bff8826df, b228483a0; futon4a 7ab1037.)
 - [ ] Two editors, one in Emacs and one in a browser, type in the same answer at once
       and both see the same text, each run in its author's colour.
+      (2026-11-20: shown on a scratch document through the live hub, a batch Emacs as
+      joe and headless Chromium as murch; not yet on an answer of the form.)
 - [ ] A checkpoint writes the converged text into Arxana as an attributed act, and the
       incubator form shows it with the right provenance.
-- [ ] A test rebuilds the document from the log alone, and the hub refuses an entry
+- [x] A test rebuilds the document from the log alone, and the hub refuses an entry
       whose editor is not the connection's identity.
+      (2026-11-20: futon3c together_test.clj and together_http_test.clj.)
 - [ ] A regroup that would close a cycle is refused and the refusal is logged.
 
 ## Progress
@@ -178,5 +182,5 @@ which also runs one authority with thin clients.
 | 3c | Emacs network layer | futon4a 2199454 | accepted 2026-11-20 |
 | 3d | Emacs live editing (`futon4a-together-open`, `-attach`) | futon4a bc50570 | done 2026-11-20; three-buffer test against a real hub passes |
 | 4b | browser binding logic | futon3c d7dd1fdac, 012f1e8cc | accepted 2026-11-20 |
-| 4c | browser page | | dispatched |
-| 5 | share one answer of the incubator form; checkpoint as an attributed act | | dispatched |
+| 4c | browser page | futon3c 33ccd131b, ff06cccfb | accepted 2026-11-20; eight-check two-browser test passes |
+| 5 | share one answer of the incubator form; checkpoint as an attributed act | | dispatched; binding gained `futon4a-together-insert-pieces-function` (futon4a 394baec) after codex-12 found a mixed-source paste lost its second source |
