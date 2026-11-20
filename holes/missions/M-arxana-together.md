@@ -247,7 +247,20 @@ client probes run the Emacs and Node conformance tests as separate processes. Th
 last has no check and will show as debt. Records for review:
 `~/storage/arxana/design-catalogue/together-manifest-2026-11-20.edn`.
 
-### Batch 2, the incubator's editing features: plan
+### Batch 2, the incubator's editing features: built in memory, awaiting Joe's go to write
+
+`futon3c.arxana.incubator-catalogue` (codex-9 2f61012a5, 7a3958bc3; fable-1's
+review commit after them). 22 choices, 20 with a check, each check running the
+named ERT tests in a separate batch Emacs: 20 enforced, 2 debt
+(`proposer-is-never-joe` has no test; `undo-is-an-act` is proposed, not true yet).
+codex-9 left three rows out because their tests assert less than the planned
+sentence; they are in with shorter sentences: `actor-required` (was
+actor-on-every-act), `reason-and-slot-required` (the warrant half is untested),
+`clips-pinned-to-revisions` (the orphaning half is untested). codex-9 also added
+the harness test `incubator-test-harness-refuses-writes-and-store` to futon4a
+(e7f65c5, 97783ec, 274acce). Records for review:
+`~/storage/arxana/design-catalogue/incubator-manifest-2026-11-20.edn`.
+The plan as first written follows.
 
 From a read of futon4a on 2026-11-20 (the code is ahead of the incubator mission
 file: forks, numbered versions, the read-only layer view, copying with source and
