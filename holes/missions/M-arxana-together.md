@@ -231,6 +231,19 @@ which also runs one authority with thin clients.
   characters into a document that already held 18,000 took a minute, and after a
   JVM restart the first request for a 16,000-character document replays its log
   for about a minute while holding that document's lock.
+- 2026-11-20, Joe: "I highlighte everything and pressed UNDO and that made all the
+  colours mine". Select-all, a keystroke and the browser's undo deleted every
+  character and inserted the text again as joe (log revisions 5018 to 5021 of
+  `incubator-form`). Fixed in futon3c 7c2a0c0c7: an insert that puts back text
+  this client deleted, at the spot where the deleted originals lie, copies their
+  attributes. The document was repaired from its own deleted entries
+  (`~/storage/arxana-together-tools/restore-attrs.py`): 19,420 characters back
+  with their authors and faces. Still missing: an undo that restores the same
+  ids (the protocol has no "undelete"), and any undo at all in Emacs-side
+  attribution for text deleted by someone else.
+- 2026-11-20, a failed POST left "Posting failed; retrying in 0.5s" on the status
+  line after the retry had succeeded (fixed, futon3c 873ec2144). With classic
+  scrollbars the caret drifted from the coloured text (fixed, cfd1f4d39).
 - 2026-11-20, found from Joe's "It comes up as all white for me": the document
   list (packet 8) replayed every log on every call under each document's lock,
   two minutes by then; fable-1's own browser checks called it and Joe's page
