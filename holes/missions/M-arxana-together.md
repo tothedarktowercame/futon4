@@ -500,3 +500,26 @@ provenance spans, and the same pane in Emacs.
 
 Not switched on in Joe's session: claude-5's local `*Notes HUD*` prototype is still
 showing there, and claude-5 will clear it when Joe moves to `*Together Notes*`.
+
+### Per-run provenance of incubator-form (2026-11-20)
+
+claude-5, at Joe's request: the Together copy lost "the metadata of the *Arxana
+Incubator* form it evolved from". The colours had travelled; each run's origin had not.
+
+- Discovery (codex-12, packet 26): session version 0017-f0718e48 rendered in a batch
+  Emacs on a copy gives 397 runs with provenance (112 kept, 178 typed, 107 accepted)
+  and the owning act of each. Head segments hold only op, from and text: no quoted
+  sources (the editorial save dropped them; claude-5 fixed the save in futon4a c24c15d).
+- Anchoring (codex-12, packet 27, futon3c a56cde96e, `scripts/together_provenance_spans.py`):
+  by text with whitespace normalised against the copy's original characters; 313
+  placed and verified, 34 listed as unresolved (Technology, Team, Success had been
+  edited before the restore), 50 whitespace-only skipped. Inputs and outputs:
+  `~/storage/arxana-together-tools/provenance/`.
+- Published by fable-1 to workspace `incubator-form.provenance`: 313 span records with
+  op, from, slot, act, segment, session, layer, as_of, sites, derived_at, label, by.
+  `sites` lists the id sites a record speaks for, so text typed later inside a run is
+  not credited to the run's author.
+- Panes (packet 28b futon4a a58c7cd, 9de18b1; packet 28a futon3c 2d9f590bf, 46db597f4):
+  "This text: LABEL" and "as of version 17 (...) · act/N, segment K · derived by";
+  "typed later, inside: LABEL" for later text; "brought in by" for copied characters
+  without a record.
