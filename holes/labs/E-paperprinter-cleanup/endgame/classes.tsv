@@ -23,7 +23,7 @@ N4	2026-11-19	0	records	0	done	t98A03 cardinality goal; Q104, 4 records
 N5	2026-11-19	0	records	0	done	conjunct claim stated twice; Q105, 1 record
 N6	2026-11-19	0	records	0	done	congrArg rows cite their fact; Q106 54 records, Q106b 8
 N7	2026-11-19	0	records	0	done	13 proofs timing out at 120 s; Q121, Q123, Q125; 0 proof errors at the freeze head (4 budget-edge proofs, class N8, can time out when the machine is loaded)
-N8	2026-11-20	4	decls	0	open	speed hot spots (Q131); Q136 pending, Q137 later
+N8	2026-11-20	2	decls	0	open	speed hot spots (Q131), 4 declarations at first; Q136 merged at 677e9da1 (t00A04 and m00A04 records: 108 s -> 22 s and 78 s -> 48 s standalone, output identical); Q137 running on m99J04; m03J05 has no packet yet
 N9	2026-11-19	0	records	0	done	nested renders drop binder symbols; Q124, 4 records
 N10	2026-11-19	0	records	0	done	Ideal.comap ext goal; Q126, 1 record
 N11	2026-11-20	0	records	0	done	closed-graph definition; Q127, 1 record
