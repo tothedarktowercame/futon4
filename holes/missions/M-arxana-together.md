@@ -110,7 +110,9 @@ character by two editors.
 **Transport.** The hub is `futon3c.arxana.together-http`, in the futon3c JVM on
 loopback port 7096, with one log file per document under `~/storage/arxana-together/`.
 Routes under `/together/v1`: `GET doc/KEY/state` (snapshot as runs, deleted characters
-included), `POST doc/KEY/ops`, `GET doc/KEY/events?after=N` (server-sent events, one
+included), `POST doc/KEY/ops` (body `{parents, op}`; with `"alone": true` it is
+accepted only while nobody else has written to the document; an insert identical
+to one already logged from the same person is answered with that entry's revision), `GET doc/KEY/events?after=N` (server-sent events, one
 log entry each, replayed from N and then live), `GET web/<file>` (the browser client).
 The identity is the `X-Together-Editor` header, trusted because the server binds
 loopback only; for anyone reaching it through Caddy, Caddy must set that header from
@@ -188,14 +190,12 @@ which also runs one authority with thin clients.
 | 4b | browser binding logic | futon3c d7dd1fdac, 012f1e8cc | accepted 2026-11-20 |
 | 4c | browser page | futon3c 33ccd131b, ff06cccfb | accepted 2026-11-20; eight-check two-browser test passes |
 | 6 | Caddy block `/edit/` and page URLs relative to the page | futon3c (page.js), /etc/caddy/Caddyfile | done 2026-11-20; typed through Caddy in headless Chromium, text arrived at the hub as joe.web |
+| 6a | a repeated insert (retry after a timed-out POST) is acknowledged with its first revision | futon3c 1fc41547d | done 2026-11-20; was a known weakness |
+| 6b | seeding is conditional (`"alone": true` on the POST body): of two people sharing the same untouched answer at once, one is refused and reloads | futon3c c409a9da2, futon4a 1b90fc1 | done 2026-11-20; was a known weakness |
 | 5 | share one answer of the incubator form (`futon4a-incubator-together-share`); `C-c C-s` saves the converged answer as the usual act | futon4a 394baec, 3ab861f, a30a9f8 | accepted 2026-11-20 on a fixture session; not yet tried on the real form |
 
 ## Known weaknesses (2026-11-20)
 
-- A POST that times out after the hub accepted it is retried, refused as a duplicate
-  id, and the client reloads, dropping its unsent edits (Emacs and browser).
-- Two people sharing the same untouched answer at the same moment both seed it, so
-  the text appears twice.
 - The form's answers are hard-wrapped, so a browser editor sees the line breaks.
 - Outside access is `https://zone.hyperreal.enterprises/edit/?doc=KEY` (Caddy realm
   `arxana-together`, added 2026-11-20). Caddy sets `X-Together-Editor` from the
