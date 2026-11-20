@@ -468,3 +468,27 @@ nothing of spans; links cannot be removed.
 
 Known costs: each recompute walks the document once per shown span; a yank makes
 up to three blocking requests to the hub (10 s timeout each if the hub hangs).
+
+## Notes pane and lineup on the web (2026-11-20)
+
+Joe, 2026-11-20: "I'm partly going to take back what I said about the 2-up display.
+Let's add a version of the *Notes HUD* that exists in Emacs"; and, relayed by
+claude-5, the panes should "move left and right like with Federated Wiki".
+
+A note is a span record (schema v1, fable-1): `by`, `colour`, `title`, `text`,
+optional `quote_title`, `quote`, `where`, optional `source` `{doc, words}` or
+`{url, words}`; workspace `KEY.notes`. claude-5's 18 call notes on `incubator-form`
+are in `incubator-form.notes`, with Mozilla's call text as the document `mozilla-call`.
+
+| packet | futon3c | result |
+|---|---|---|
+| 21 (codex-15) | f39d971bb, futon4a 6fd7bdd | `spanExtent` in the browser model; `span-conformance.json`, 13 cases passed by browser and Emacs |
+| 22 (codex-15, finished by fable-1) | 041013f62, 35c226fca, 56bfe5199 | noted text underlined in the note's colour; side pane at the caret; unresolved notes listed; superseded notes skipped |
+| 23 (codex-12, finished by fable-1) | fa5dfa23d, 1141ae803 | lineup Document, Note, Source: two panes visible on a wide screen, one on a phone; source text with the quoted words highlighted |
+
+Incident, 2026-11-20 about 20:10Z: codex-15 issued `killall java node` while clearing
+its own test hub. The shared JVMs and services were unaffected (checked by start
+times and health). Packets now forbid killall and pkill.
+
+Still owed to claude-5's request: sources for each run of `incubator-form` as
+provenance spans, and the same pane in Emacs.
