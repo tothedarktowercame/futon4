@@ -4,7 +4,9 @@ Corpus: the freeze render at mfuton-share a6e043d3 (8,778 records). Scanner N1: 
 
 `classify.py` is codex-5's script (job invoke-1795169396947-25551-3fc51089, which ended before producing output);
 claude-10 ran it, output path changed only. It pairs each rendered empty-reason row with the typed
-`RewriteTransition` and reads the proof head the printer had before the paper-walk policy removed the reason.
+`RewriteTransition` and reads the proof head from a wrapper around `proof_rewrite_transition`, joined to the row by
+rendered (before, after) text. (Corrected after claude-7's check: `proof_steps` already returns policy-applied
+steps, so the head is not read "before the policy".)
 `classify_textmatch.py` is claude-10's second pass for the 279 records where the count of typed empty
 transitions differed from the count of rendered rows: it pairs by the text of the right-hand side.
 
@@ -24,6 +26,11 @@ Run from an mfuton-share worktree at a6e043d3:
 
 The congruence/library/project split is claude-10's regex over the head name, not the script's column 5
 (which is f for all of them). Records can appear in more than one line.
+
+Corrections from claude-7's check (section below, e72ceb0): the 20 `Iff.mpr` rows have a named library lemma as
+their reason, so library lemma is 1,478 rows and congruence 345; two rows of the text pass are paired with the
+wrong lemma (suffix match); the congruence rows are not non-defects as a group (rows under `*_congr` use a
+pointwise identity the reader does not see).
 
 ## What this does and does not show
 
