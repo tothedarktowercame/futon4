@@ -250,8 +250,10 @@ which also runs one authority with thin clients.
   waited 9 seconds and more for its document. Fixed in futon3c 1f8d4cd55 (the
   list reads in-memory state). fable-1 had noted the re-read when reviewing
   packet 8 and accepted it.
-- Structure operations are served by the hub but no client uses them yet, and
-  nothing connects a workspace's nodes to the text documents.
+- Structure has one use so far: the form index (packet 13 writes it from Emacs,
+  the form page of packet 14 reads it), whose nodes name documents by key. No
+  record yet names a span of characters, so there are no links or transclusions
+  between documents, and an edge's ends can only be nodes or edges.
 
 
 ## Demo A: documenting these features and the incubator's (2026-11-20)
@@ -402,6 +404,6 @@ browser wraps the text itself. Faces: futon3c 90d706959, futon4a 69206f0.
 
 It is a copy for reading and trying edits: nothing typed in it reaches the form's
 session, and it does not follow the form. The way to edit the form's answers with
-someone else is still `futon4a-incubator-together-share-all`, which makes one
-document per answer; a web page that shows those documents together as one form,
-with the questions between them, does not exist yet.
+someone else is `futon4a-incubator-together-share-all`, which makes one document
+per answer, shown together on the web by `form.html?ws=incubator.<layer>` (packets
+13 and 14, later the same day). That path has not yet been run on the real form.
