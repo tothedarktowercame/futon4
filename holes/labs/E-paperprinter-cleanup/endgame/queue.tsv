@@ -1,6 +1,8 @@
 item	date	class	outcome
 Q89	2026-11-18	C5	merged
 Q91	2026-11-18	C7	merged
+Q92	2026-11-18	C8	merged
+Q93	2026-11-18	C9	merged
 Q94	2026-11-18	C16	merged
 Q95	2026-11-18	C8	merged
 Q86b-r2	2026-11-18	C6	rejected
@@ -53,7 +55,7 @@ Q132c	2026-11-20	P-sufficiency-wall	rejected
 Q132d	2026-11-20	P-sufficiency-wall	rejected
 Q132e	2026-11-20	P-sufficiency-wall	later
 Q133	2026-11-20	P-alias-definition+P-definition-restatement	rejected
-Q133r	2026-11-20	P-alias-definition+P-definition-restatement	running
+Q133r	2026-11-20	P-alias-definition+P-definition-restatement	merged
 Q133k	2026-11-20	P-unfolded-local	later
 Q134	2026-11-20	P-raw-application+P-hidden-arguments	running
 Q135	2026-11-20	P-empty-claim	pending
