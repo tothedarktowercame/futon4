@@ -1,4 +1,4 @@
-paperprinter-endgame-process-v2: 17 variables, 27 arrows {"definition" 11, "measured" 10, "hypothesis" 6}; acyclic, all references known
+paperprinter-endgame-process-v3: 17 variables, 27 arrows {"definition" 11, "measured" 10, "hypothesis" 6}; acyclic, all references known
 K1  holds     discovery_packets _||_ end_reached                             graph says connected   via discovery_packets - visible_classes - admitted_classes - end_reached
 K2  holds     discovery_packets _||_ end_reached  under do(admitted_classes) graph says separated   
 K3  holds     corpus_scope _||_ queue  under do(admitted_classes)            graph says separated   
