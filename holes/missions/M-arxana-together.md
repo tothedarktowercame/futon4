@@ -165,6 +165,10 @@ which also runs one authority with thin clients.
       joe and headless Chromium as murch; not yet on an answer of the form.)
 - [ ] A checkpoint writes the converged text into Arxana as an attributed act, and the
       incubator form shows it with the right provenance.
+      (2026-11-20: passes on a fixture session, in ERT and against a throwaway hub:
+      a teammate's text saves as accepted from them, Joe's typing as typed, earlier
+      text as kept, a paste from two answers as moved from each. Not yet done on the
+      real form with a second person.)
 - [x] A test rebuilds the document from the log alone, and the hub refuses an entry
       whose editor is not the connection's identity.
       (2026-11-20: futon3c together_test.clj and together_http_test.clj.)
@@ -183,4 +187,18 @@ which also runs one authority with thin clients.
 | 3d | Emacs live editing (`futon4a-together-open`, `-attach`) | futon4a bc50570 | done 2026-11-20; three-buffer test against a real hub passes |
 | 4b | browser binding logic | futon3c d7dd1fdac, 012f1e8cc | accepted 2026-11-20 |
 | 4c | browser page | futon3c 33ccd131b, ff06cccfb | accepted 2026-11-20; eight-check two-browser test passes |
-| 5 | share one answer of the incubator form; checkpoint as an attributed act | | dispatched; binding gained `futon4a-together-insert-pieces-function` (futon4a 394baec) after codex-12 found a mixed-source paste lost its second source |
+| 5 | share one answer of the incubator form (`futon4a-incubator-together-share`); `C-c C-s` saves the converged answer as the usual act | futon4a 394baec, 3ab861f, a30a9f8 | accepted 2026-11-20 on a fixture session; not yet tried on the real form |
+
+## Known weaknesses (2026-11-20)
+
+- A POST that times out after the hub accepted it is retried, refused as a duplicate
+  id, and the client reloads, dropping its unsent edits (Emacs and browser).
+- Two people sharing the same untouched answer at the same moment both seed it, so
+  the text appears twice.
+- The form's answers are hard-wrapped, so a browser editor sees the line breaks.
+- Identity is the `X-Together-Editor` header, safe only on loopback. No Caddy block
+  exists yet, so no one can open the browser page from outside the server.
+- The engine and the Emacs model are lists scanned per character: fine for an answer,
+  slow for a long document or a large paste.
+- Structure operations (regroup with cycle refusal, checklist item 5) are not started.
+
