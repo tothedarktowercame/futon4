@@ -174,9 +174,9 @@ which also runs one authority with thin clients.
 | 2 | hub state and HTTP transport | futon3c 256c12ea2, a13d9a71b | accepted 2026-11-20; live on 7096 |
 | 3a | Emacs Lisp document model | futon4a 7ab1037 | accepted 2026-11-20 |
 | 4a | JavaScript document model | futon3c b228483a0 | accepted 2026-11-20 |
-| 3b | Emacs buffer binding | | dispatched |
-| 3c | Emacs network layer | | dispatched |
-| 4b | browser binding logic | | dispatched |
-| 4c | browser page | | not yet sent |
-| 5 | proof on one answer; checkpoint as an attributed act | | not yet sent |
-
+| 3b | Emacs buffer binding | futon4a d2eb909 | accepted 2026-11-20 (codex-12 draft; guard design fixed in review) |
+| 3c | Emacs network layer | futon4a 2199454 | accepted 2026-11-20 |
+| 3d | Emacs live editing (`futon4a-together-open`, `-attach`) | futon4a bc50570 | done 2026-11-20; three-buffer test against a real hub passes |
+| 4b | browser binding logic | futon3c d7dd1fdac, 012f1e8cc | accepted 2026-11-20 |
+| 4c | browser page | | dispatched |
+| 5 | share one answer of the incubator form; checkpoint as an attributed act | | dispatched |
