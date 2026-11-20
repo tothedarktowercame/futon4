@@ -15,6 +15,8 @@ Reported as violations (exit 1 with --enforce):
   a non-discovery queue item dated after the freeze for a class that is not frozen;
   a packet running, pending or later for a class already at the cap;
   with counts.tsv (commit<TAB>class<TAB>open, in merge order): a class whose count rises.
+  --from-commit SHA starts that comparison at SHA (the freeze commit): counts before it were taken
+  on a corpus that was still growing (Q125 made 13 proofs finish), so a rise there is not a regression.
 """
 import argparse, csv, os, sys
 
@@ -35,7 +37,7 @@ def exit_of(c, cap, min_size):
         return 'exception'
     return 'fix'
 
-def run(classes, queue, counts, freeze, cap, min_size):
+def run(classes, queue, counts, freeze, cap, min_size, from_commit=None):
     by_id = {c['id']: c for c in classes}
     frozen = {c['id'] for c in classes if c['found'] <= freeze}
     exits = {i: exit_of(by_id[i], cap, min_size) for i in sorted(frozen)}
@@ -53,6 +55,11 @@ def run(classes, queue, counts, freeze, cap, min_size):
                 if int(by_id[i]['rejected']) >= cap:
                     violations.append(f"{q['item']}: class {i} is at the cap ({by_id[i]['rejected']} rejected) and still queued")
     last = {}
+    if from_commit:
+        commits = [r['commit'] for r in counts]
+        if from_commit not in commits:
+            violations.append(f"counts.tsv has no rows for the freeze commit {from_commit}")
+        counts = counts[commits.index(from_commit):] if from_commit in commits else []
     for r in counts:
         k = r['class']
         if k in last and int(r['open']) > last[k][1]:
@@ -77,12 +84,17 @@ def selftest():
     assert outside == ['q2'], outside
     assert len(v) == 3 and 'q1' in v[0] and 'q3' in v[1] and 'c2' in v[2], v
     assert run(cl, qu[4:], co[:1], '2026-01-03', 3, 2)[3] == []
+    assert run(cl, qu[4:], co, '2026-01-03', 3, 2, 'c2')[3] == []                      # rise before the freeze commit
+    assert 'c9' in run(cl, qu[4:], co, '2026-01-03', 3, 2, 'c9')[3][0]                 # freeze commit never counted
+    co3 = co + [dict(commit='c3', **{'class': 'D'}, open='12')]
+    assert 'c3' in run(cl, qu[4:], co3, '2026-01-03', 3, 2, 'c2')[3][0]                # rise after it is reported
     print('selftest ok: over-cap packet, post-freeze class, unknown class and a rising count are each reported')
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--freeze'); ap.add_argument('--cap', type=int, default=3)
     ap.add_argument('--min-size', type=int, default=2)
+    ap.add_argument('--from-commit')
     ap.add_argument('--enforce', action='store_true'); ap.add_argument('--selftest', action='store_true')
     a = ap.parse_args()
     if a.selftest:
@@ -90,7 +102,7 @@ def main():
     classes, queue = read(os.path.join(HERE, 'classes.tsv')), read(os.path.join(HERE, 'queue.tsv'))
     cpath = os.path.join(HERE, 'counts.tsv')
     counts = read(cpath) if os.path.exists(cpath) else []
-    frozen, exits, outside, v = run(classes, queue, counts, a.freeze, a.cap, a.min_size)
+    frozen, exits, outside, v = run(classes, queue, counts, a.freeze, a.cap, a.min_size, a.from_commit)
     by_id = {c['id']: c for c in classes}
     after = [q for q in queue if q['date'] > a.freeze and q['outcome'] != 'discovery']
     print(f"freeze {a.freeze}, cap {a.cap}, min size {a.min_size}: {len(frozen)} of {len(classes)} classes frozen")

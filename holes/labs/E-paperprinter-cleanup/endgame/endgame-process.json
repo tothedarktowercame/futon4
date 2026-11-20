@@ -1,8 +1,8 @@
 {
  "meta": {
-  "model_id": "paperprinter-endgame-process-v1",
+  "model_id": "paperprinter-endgame-process-v2",
   "title": "PaperPrinter endgame: what makes the work list grow or shrink in one round",
-  "status": "v1, 2026-11-20, claude-10: claude-1's fidelity check applied (~/notes/claude-1/paperprinter-endgame-model-check-2026-11-20.md); claude-7's check of the ledger pending",
+  "status": "v2, 2026-11-20, claude-10: claude-1's fidelity check and claude-7's ledger check (futon4 fda3992) applied",
   "scope": "One round = one pass from a census to the next census on claude7/integrate (mfuton-share). The model is about the queue of packets, not about the printer's rules; rule conflicts are the subject of the 2026-11-17 DiagramProver work and enter here as one variable (rule_overlap).",
   "reading": "Authored qualitative causal graph. An arrow says: changing the source can change the target, holding the target's other parents fixed. No effect sizes. Arrow status: definition (true by how the process is run), measured (an entry in claude-7's queue logs shows it), hypothesis (proposed, not observed).",
   "sources": [
@@ -248,9 +248,9 @@
   {
    "from": "corpus_scope",
    "to": "measured_open",
-   "status": "definition",
+   "status": "measured",
    "mechanism": "The census counts only the records it renders.",
-   "evidence": "by construction"
+   "evidence": "claude-7, futon4 fda3992: until Q109 every count was taken on the 757 records still flagged at r10. Empty-reason rows read 76 there and 1,928 (1,035 records) on all 8,778; 'by transitivity' read 0 there and 52 records on all; repeated chain rows read '7 -> 2' there and 273 records on all."
   },
   {
    "from": "scanner_families",
@@ -442,7 +442,7 @@
   },
   {
    "id": "O4",
-   "text": "Speed work (Q125, Q131, Q136, Q137) changes which proofs finish and so changes corpus_scope. Under a freeze it belongs before the freeze commit or after the end, not during."
+   "text": "Speed work (Q125, Q131, Q136, Q137) changes which proofs finish and so changes corpus_scope. Under a freeze it belongs before the freeze commit or after the end, not during. Seen in counts.tsv: C4 rose 272 -> 273 and N1 1,032 -> 1,035 at d57cfd0e because Q125 made 13 proofs finish; no rule changed. endgame.py --from-commit starts the non-rising comparison at the freeze commit for this reason. Four budget-edge proofs (N8) can still time out under load, which would make a count fall for no reason."
   },
   {
    "id": "O5",
@@ -459,6 +459,10 @@
   {
    "id": "O8",
    "text": "The cap is a budget of rejections, not a finding that no rendering exists. Every 'exception' from endgame.py is a proposal to Joe; none is a residual until he accepts it."
+  },
+  {
+   "id": "O9",
+   "text": "C4 (273 records) and N1 (1,035 records) are scanner counts, not vetted row by row. Q108 classed 277 of 549 empty-reason rows as identity or definitional steps; whether such a row is a defect at all has not been decided, and it decides about half of the largest class."
   }
  ]
 }
