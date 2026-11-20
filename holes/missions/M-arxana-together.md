@@ -218,3 +218,78 @@ which also runs one authority with thin clients.
 - Structure operations are served by the hub but no client uses them yet, and
   nothing connects a workspace's nodes to the text documents.
 
+
+## Demo A: documenting these features and the incubator's (2026-11-20)
+
+Joe, 2026-11-20: "it would be good if you could develop the separate "Demo A" further
+with documentation of Arxana, including the real-time features", then "yes, plan the
+incubator batch too". Demo A is the catalogue of design choices held as records
+(`M-arxana-incubator.md` §6; viewed with `M-x futon4a-catalogue`). The incubator
+mission is claude-5's draft; this section is fable-1's plan for two batches and does
+not edit that file.
+
+### Batch 1, real-time editing: built in memory, awaiting Joe's go to write
+
+`futon3c.arxana.together-catalogue` (aa377e644). Thirteen choices, keys
+`:together/<name>`: convergence, ids-not-positions, log-is-the-record,
+authorship-checked, provenance-fixed-at-insert, repeated-insert-acknowledged,
+seeding-alone, loopback-identity, structure-is-serialised, regroup-cycle-refused,
+emacs-client-conforms, browser-client-conforms, peer-version-stays-possible. The
+first twelve each have a probe that runs the real code on a small case; the two
+client probes run the Emacs and Node conformance tests as separate processes. The
+last has no check and will show as debt. Records for review:
+`~/storage/arxana/design-catalogue/together-manifest-2026-11-20.edn`.
+
+### Batch 2, the incubator's editing features: plan
+
+From a read of futon4a on 2026-11-20 (the code is ahead of the incubator mission
+file: forks, numbered versions, the read-only layer view, copying with source and
+teammates are in the code and not in that file). Keys `:incubator/<name>`. Each
+check is an existing ERT test, run in a separate batch Emacs by one probe function,
+which must report at least one test run and none failed. T = `test/futon4a-incubator-test.el`.
+
+| key | kind | statement | source (futon4a/lisp) | check (existing test) |
+|---|---|---|---|---|
+| actor-on-every-act | constraint | An interactive command records its act as Joe's; a non-interactive call that names no actor is refused. | futon4a-incubator.el, act recording | T `incubator-navigation-source-and-identity-refusal` |
+| reason-and-slot-required | constraint | A challenge or warrant with no reason, and a move to an unknown slot, are refused. | futon4a-incubator.el | same test |
+| edit-is-one-act | ruling | Committing an edit adds one edit act with its text and provenance; an unchanged commit or a cancel adds none. | futon4a-incubator.el, edit and edit-commit | T `incubator-edit-flows-back-to-the-slot` |
+| layers-on-a-main-line | ruling | Versions are layers on a main line; a layer shows the acts of its lineage only. | futon4a-incubator-layers.el | T `…-revision-layer-above-the-call`, `…-proposals-sit-above-joes-pass` |
+| forks-invisible-from-head | ruling | A fork branches from a layer; its acts never show on the head of the main line. | futon4a-incubator-layers.el | T `…-murch-layer-is-a-teammates-not-an-agents` |
+| proposals-are-not-the-answer | constraint | An edit on a proposal layer or a fork is not counted as Joe's answer unless that layer is shown. | futon4a-incubator.el | the two tests above |
+| proposer-is-never-joe | constraint | Proposing a revision as Joe, or with no actor, is refused. | futon4a-incubator-layers.el, propose-revision | none found: debt |
+| editorial-save | decision | In an editorial pass, saving writes one edit act by Joe per changed answer; the placeholder of an unanswered question is not saved; leaving without saving writes nothing. | futon4a-incubator-editorial.el | T `…-editorial-pass-tracks-typing-acceptance-and-cut-and-paste` |
+| character-provenance | decision | On save each character is classed typed, accepted, agent, kept or moved; text pasted from outside counts as typed. | futon4a-incubator-editorial.el | same test |
+| sources-in-colour | ruling | Each source has its own face; agent text is bracketed, a teammate's is not. | futon4a-incubator-provenance.el | T `…-revision-provenance-colours-brackets-and-hud`, `…-expansion-segments-carry-their-own-source`, `…-ret-edit-colours-only-what-changed` |
+| layer-view-is-read-only | constraint | Viewing a layer or fork renders a copy; the form's session, act count and layer are unchanged. | futon4a-incubator-layers.el, snapshot | T `…-snapshot-shows-a-fork-without-touching-the-form` |
+| copy-keeps-source | decision | Text copied from a teammate's view and pasted in an editorial pass is saved as accepted from that teammate. | futon4a-incubator-editorial.el | T `…-copy-from-murchs-view-keeps-his-colour` |
+| numbered-versions | ruling | When the session's content changes, an idle timer writes it as a numbered version named by its hash; a state seen before keeps its old number. | futon4a-incubator-autosave.el | T `…-autosave-numbers-versions-and-sees-in-place-edits`, `…-autosave-round-trip` |
+| anchors-by-words | ruling | A mark is located by its words and their context: a unique exact match, else a unique best context match, else nowhere; never by file and line. | futon4a-incubator-holes.el | holes test `…-holes-anchors-survive-edits-and-moves`, `…-never-marks-the-wrong-word` |
+| clips-pinned-to-revisions | ruling | A clip is pinned to a revision of its source, stored by content hash; a clip that cannot be relocated is orphaned, never re-split. | call-notes.el | call-notes test `…-revision-is-content-addressed-and-not-rewritten` |
+| fuzzy-match-proposes | ruling | A fuzzy match proposes a derivation and never decides one; a speaker passes only through a confirmed derivation. | clip-derivation.el | `clip-derivation-paraphrase-merge-reject-and-cycle` |
+| first-cut-once | ruling | An over-limit answer is cut once automatically, and never again after anyone has cut or restored. | futon4a-incubator.el | T `…-first-cut-strikes-to-fit-and-x-restores` |
+| load-refused-whole | constraint | A turn-clip load with any text mismatch is refused whole and leaves the session unchanged. | futon4a-incubator-turns.el | turns test `turn-clips-mismatch-refuses-whole-load` |
+| export-is-explicit | constraint | Export goes only to a file the user chooses, and quitting with unsaved acts asks first. | futon4a-incubator.el | T `…-explicit-export-and-unsaved-warning` |
+| tests-do-not-persist | constraint | The test harness fails any store request or file write, and autosave never starts in batch. | T `with-incubator`; futon4a-incubator-autosave.el | every T test runs under it; a planted write must fail (new small test) |
+| shared-answer-saves-as-usual | decision | A shared answer, once detached, is saved by the ordinary editorial save with the same provenance classes. | futon4a-incubator-together.el | `incubator-together-seed-and-save-attribution` |
+
+Not to be recorded as accepted, because the code does not do what the sentence says:
+
+- "The session is an append-only log": acts are appended in normal use, but
+  attaching revision segments replaces an act, restoring a version replaces the
+  session, and twelve acts were once removed by hand. Either the statement becomes
+  "appended, with these three exceptions", or the exceptions are closed first.
+  Joe's call.
+- "A version on every change": versions are taken on an idle tick, so several
+  changes can become one version. The table's wording says what the code does.
+- futon4a README line 228 says "No decisions are saved automatically", but the idle
+  autosave writes to `~/storage`. The README is wrong; fix the README.
+- "dropped" is a class in passage-level provenance and in the Python segments, not
+  in the character-level classification on save.
+
+Planned in the incubator mission and not built, so not in the batch: a per-act
+journal replayed on open; a "From your turns" layer; word-level scopes in the
+display; the frame as an open hypergraph checked by DiagramProver.
+
+One hazard found on the way: four tests in T create and kill a buffer named
+`*Arxana Incubator*`; run inside Joe's Emacs instead of in batch they would replace
+his live form. The probe runs them only in a separate batch process.
