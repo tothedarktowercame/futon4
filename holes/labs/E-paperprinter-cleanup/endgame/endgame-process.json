@@ -1,0 +1,413 @@
+{
+ "meta": {
+  "model_id": "paperprinter-endgame-process-v0",
+  "title": "PaperPrinter endgame: what makes the work list grow or shrink in one round",
+  "status": "v0, authored 2026-11-20 by claude-10 for Joe; not yet checked by claude-7 or claude-1",
+  "scope": "One round = one pass from a census to the next census on claude7/integrate (mfuton-share). The model is about the queue of packets, not about the printer's rules; rule conflicts are the subject of the 2026-11-17 DiagramProver work and enter here as one variable (rule_overlap).",
+  "reading": "Authored qualitative causal graph. An arrow says: changing the source can change the target, holding the target's other parents fixed. No effect sizes. Arrow status: definition (true by how the process is run), measured (an entry in claude-7's queue logs shows it), hypothesis (proposed, not observed).",
+  "sources": [
+   "~/notes/claude-7/raw-names-480/proofs/r8/overnight/QUEUE.md",
+   "~/notes/claude-7/raw-names-480/proofs/r8/Q/QUEUE.md",
+   "~/notes/claude-7/endgame-short-list-2026-11-17.md",
+   "~/notes/claude-1/paperprinter-endgame-list-2026-11-17.md",
+   "futon4 holes/excursions/E-paperprinter-cleanup.md",
+   "futon4 holes/missions/M-arxana-incubator.md (endgame analysis, stopping criterion)"
+  ]
+ },
+ "assumptions": [
+  "The loop census -> packets -> merge -> census is cut at the round boundary: defects_before is the state entering the round, defects_after the state leaving it. The graph is acyclic for that reason and says nothing about how many rounds there are.",
+  "freeze_list is not a variable. Freezing is the intervention do(admitted_classes): the classes that may enter the queue are set from a list written at one commit, which removes the arrow visible_classes -> admitted_classes.",
+  "corpus_scope and scanner_families are treated as choices made each round. Under a freeze they are held at one value; the graph cannot express 'held fixed', so that requirement is stated in check K5 and enforced by endgame.py, not by the graph.",
+  "One node stands for all packets of a round. Retries of one item (Q132 to Q132e) are counted in the ledger, not drawn."
+ ],
+ "variables": [
+  {
+   "id": "corpus_scope",
+   "kind": "design",
+   "description": "Which records are rendered and scanned this round: flagged-only (r9 to r11), the full 8,778 (Q109), held-out 1,886, proofs that newly finish (Q125).",
+   "label": "records rendered\nand scanned"
+  },
+  {
+   "id": "scanner_families",
+   "kind": "design",
+   "description": "Which patterns the census counts (seqsplit, raw bottom, top, membership lambda, raw words, empty reasons, ...).",
+   "label": "patterns the\ncensus counts"
+  },
+  {
+   "id": "discovery_packets",
+   "kind": "design",
+   "description": "Discovery packets sent this round (Q108, Q111, Q114r, Q115, Q120, Q121, Q123, Q129, Q131, Q132b).",
+   "label": "discovery packets"
+  },
+  {
+   "id": "defects_before",
+   "kind": "unobserved",
+   "description": "Defect sites present in the rendered corpus at the start of the round, tracked or not.",
+   "label": "defect sites present\n(start of round)"
+  },
+  {
+   "id": "visible_classes",
+   "kind": "observed",
+   "description": "Defect classes someone has seen and written down by the end of the round's looking.",
+   "label": "defect classes seen"
+  },
+  {
+   "id": "admitted_classes",
+   "kind": "observed",
+   "description": "Classes for which packets may be written. Today: every visible class. Under a freeze: the frozen list.",
+   "label": "classes admitted\nto the queue"
+  },
+  {
+   "id": "attempt_cap",
+   "kind": "design",
+   "description": "How many rejected packets a class may have before it stops getting printer packets.",
+   "label": "attempt cap"
+  },
+  {
+   "id": "min_size",
+   "kind": "design",
+   "description": "Smallest class (in declarations) that gets a printer packet instead of a notation change or a residual.",
+   "label": "minimum class size"
+  },
+  {
+   "id": "queue",
+   "kind": "observed",
+   "description": "Packets dispatched this round.",
+   "label": "packets dispatched"
+  },
+  {
+   "id": "exits_taken",
+   "kind": "observed",
+   "description": "Classes that leave the list this round: fixed, changed in the Lean source, or accepted as a residual.",
+   "label": "classes leaving\nthe list"
+  },
+  {
+   "id": "review",
+   "kind": "design",
+   "description": "claude-7's review of each returned packet (census of changed records, unit gate, real-corpus tests).",
+   "label": "review of each packet"
+  },
+  {
+   "id": "merges",
+   "kind": "observed",
+   "description": "Packets merged into claude7/integrate.",
+   "label": "packets merged"
+  },
+  {
+   "id": "rule_overlap",
+   "kind": "unobserved",
+   "description": "How much the rule a packet edits shares terms with other rules (the critical pairs of the 2026-11-17 work).",
+   "label": "overlap between\nprinter rules"
+  },
+  {
+   "id": "regressions",
+   "kind": "unobserved",
+   "description": "Defect sites a merge introduces in records it was not aimed at.",
+   "label": "defects introduced\nby merges"
+  },
+  {
+   "id": "defects_after",
+   "kind": "unobserved",
+   "description": "Defect sites present at the end of the round.",
+   "label": "defect sites present\n(end of round)"
+  },
+  {
+   "id": "measured_open",
+   "kind": "observed",
+   "description": "The census number at the end of the round: open sites per class, as counted on corpus_scope with scanner_families.",
+   "label": "census count\n(end of round)"
+  },
+  {
+   "id": "end_reached",
+   "kind": "observed",
+   "description": "Every admitted class has left the list.",
+   "label": "end reached"
+  }
+ ],
+ "arrows": [
+  {
+   "from": "defects_before",
+   "to": "visible_classes",
+   "status": "definition",
+   "mechanism": "A class can be seen only if it has sites.",
+   "evidence": "by construction"
+  },
+  {
+   "from": "corpus_scope",
+   "to": "visible_classes",
+   "status": "measured",
+   "mechanism": "Rendering more records shows more classes.",
+   "evidence": "~/notes/claude-7/raw-names-480/proofs/r8/overnight/QUEUE.md: Q109 full rerender -> Q120 (157 raw-name hits) and Q121; Q125 made 13 timed-out proofs finish -> Q129 found 16 classes in them"
+  },
+  {
+   "from": "scanner_families",
+   "to": "visible_classes",
+   "status": "measured",
+   "mechanism": "A new pattern shows a new family.",
+   "evidence": "~/notes/claude-7/raw-names-480/proofs/r8/overnight/QUEUE.md: Q108 counted empty-reason rows for the first time (549)"
+  },
+  {
+   "from": "discovery_packets",
+   "to": "visible_classes",
+   "status": "measured",
+   "mechanism": "A discovery packet returns a ledger of classes.",
+   "evidence": "~/notes/claude-7/raw-names-480/proofs/r8/overnight/QUEUE.md: Q108, Q111, Q115, Q120, Q129 each end '-> Qnnn'"
+  },
+  {
+   "from": "visible_classes",
+   "to": "admitted_classes",
+   "status": "measured",
+   "mechanism": "Today every class seen becomes a queue item.",
+   "evidence": "~/notes/claude-7/raw-names-480/proofs/r8/overnight/QUEUE.md: Q129 -> Q132 to Q135; Q131 -> Q136, Q137; Q120 -> Q122"
+  },
+  {
+   "from": "admitted_classes",
+   "to": "queue",
+   "status": "definition",
+   "mechanism": "Packets are written for admitted classes.",
+   "evidence": "by construction"
+  },
+  {
+   "from": "attempt_cap",
+   "to": "queue",
+   "status": "hypothesis",
+   "mechanism": "A cap stops further packets on a class. Applied once by hand (Q116s: 'Third failure: STOPPED dispatching'); not applied to Q132 (five rounds).",
+   "evidence": "~/notes/claude-7/raw-names-480/proofs/r8/overnight/QUEUE.md"
+  },
+  {
+   "from": "min_size",
+   "to": "queue",
+   "status": "hypothesis",
+   "mechanism": "A size floor keeps one-record classes out of the printer queue. Not applied today: Q105, Q107, Q112, Q126, Q127 changed one record each.",
+   "evidence": "~/notes/claude-7/raw-names-480/proofs/r8/overnight/QUEUE.md"
+  },
+  {
+   "from": "queue",
+   "to": "merges",
+   "status": "definition",
+   "mechanism": "Only dispatched packets can be merged.",
+   "evidence": "by construction"
+  },
+  {
+   "from": "review",
+   "to": "merges",
+   "status": "measured",
+   "mechanism": "Review rejects packets.",
+   "evidence": "~/notes/claude-7/raw-names-480/proofs/r8/overnight/QUEUE.md: Q110, Q116, Q116r, Q116s, Q132, Q132c, Q132d, Q133 rejected"
+  },
+  {
+   "from": "merges",
+   "to": "defects_after",
+   "status": "measured",
+   "mechanism": "A merged packet removes sites of its class.",
+   "evidence": "~/notes/claude-7/raw-names-480/proofs/r8/overnight/QUEUE.md: e.g. Q118 empty rows 298 -> 116"
+  },
+  {
+   "from": "defects_before",
+   "to": "defects_after",
+   "status": "definition",
+   "mechanism": "Sites not touched stay.",
+   "evidence": "by construction"
+  },
+  {
+   "from": "merges",
+   "to": "regressions",
+   "status": "measured",
+   "mechanism": "A merge can change records it was not aimed at.",
+   "evidence": "Q/QUEUE.md: Q56 truncated a97J08; Q97 added 13 'x = x' rows (caught in review); Q86b r2 changed 72 records against a target of about 10"
+  },
+  {
+   "from": "rule_overlap",
+   "to": "regressions",
+   "status": "measured",
+   "mechanism": "Regressions come where the edited rule overlaps another.",
+   "evidence": "~/notes/claude-7/endgame-cycling-for-arxana-2026-11-17.md kind 2 (Q72b against Q59, Q84 renames)"
+  },
+  {
+   "from": "review",
+   "to": "regressions",
+   "status": "measured",
+   "mechanism": "Review catches regressions before merge.",
+   "evidence": "Q97 review fix; Q79c not merged (a97J06 regressed)"
+  },
+  {
+   "from": "regressions",
+   "to": "defects_after",
+   "status": "definition",
+   "mechanism": "Introduced sites are present afterwards.",
+   "evidence": "by construction"
+  },
+  {
+   "from": "defects_after",
+   "to": "measured_open",
+   "status": "definition",
+   "mechanism": "The census counts the sites that are there.",
+   "evidence": "by construction"
+  },
+  {
+   "from": "corpus_scope",
+   "to": "measured_open",
+   "status": "definition",
+   "mechanism": "The census counts only the records it renders.",
+   "evidence": "by construction"
+  },
+  {
+   "from": "scanner_families",
+   "to": "measured_open",
+   "status": "definition",
+   "mechanism": "The census counts only the patterns it knows.",
+   "evidence": "by construction"
+  },
+  {
+   "from": "queue",
+   "to": "exits_taken",
+   "status": "definition",
+   "mechanism": "A class leaves by a merged fix, or by the cap or the size floor sending it to a notation change or a residual.",
+   "evidence": "by construction"
+  },
+  {
+   "from": "attempt_cap",
+   "to": "exits_taken",
+   "status": "hypothesis",
+   "mechanism": "Reaching the cap is an exit.",
+   "evidence": "proposed 2026-11-20"
+  },
+  {
+   "from": "min_size",
+   "to": "exits_taken",
+   "status": "hypothesis",
+   "mechanism": "Being under the floor is an exit.",
+   "evidence": "proposed 2026-11-20"
+  },
+  {
+   "from": "exits_taken",
+   "to": "end_reached",
+   "status": "definition",
+   "mechanism": "The end is: every admitted class has left.",
+   "evidence": "by construction"
+  },
+  {
+   "from": "admitted_classes",
+   "to": "end_reached",
+   "status": "definition",
+   "mechanism": "The end is relative to the admitted list.",
+   "evidence": "by construction"
+  }
+ ],
+ "checks": [
+  {
+   "id": "K1",
+   "x": "discovery_packets",
+   "y": "end_reached",
+   "given": [],
+   "do": [],
+   "expected": false,
+   "status": "claim",
+   "claim": "As run today, a discovery packet can move the end: it adds classes, and every admitted class must leave before the end."
+  },
+  {
+   "id": "K2",
+   "x": "discovery_packets",
+   "y": "end_reached",
+   "given": [],
+   "do": [
+    "admitted_classes"
+   ],
+   "expected": true,
+   "status": "claim",
+   "claim": "With the admitted list frozen, discovery packets cannot move the end."
+  },
+  {
+   "id": "K3",
+   "x": "corpus_scope",
+   "y": "queue",
+   "given": [],
+   "do": [
+    "admitted_classes"
+   ],
+   "expected": true,
+   "status": "claim",
+   "claim": "With the admitted list frozen, rendering more records adds no packets."
+  },
+  {
+   "id": "K4",
+   "x": "scanner_families",
+   "y": "queue",
+   "given": [],
+   "do": [
+    "admitted_classes"
+   ],
+   "expected": true,
+   "status": "claim",
+   "claim": "With the admitted list frozen, a new census pattern adds no packets."
+  },
+  {
+   "id": "K5",
+   "x": "corpus_scope",
+   "y": "measured_open",
+   "given": [],
+   "do": [
+    "admitted_classes"
+   ],
+   "expected": false,
+   "status": "claim",
+   "claim": "Freezing the list is not enough for the count to be comparable between rounds: the count still depends on which records are rendered. The corpus and the scanner have to be held at the freeze commit's values as well."
+  },
+  {
+   "id": "K6",
+   "x": "rule_overlap",
+   "y": "measured_open",
+   "given": [],
+   "do": [
+    "admitted_classes"
+   ],
+   "expected": false,
+   "status": "claim",
+   "claim": "Rule overlap still reaches the count through regressions under a freeze, so the 2026-11-17 conflict checks stay in use."
+  },
+  {
+   "id": "K7",
+   "x": "regressions",
+   "y": "end_reached",
+   "given": [
+    "queue"
+   ],
+   "do": [
+    "admitted_classes"
+   ],
+   "expected": true,
+   "status": "claim",
+   "claim": "Gap: given the packets dispatched, regressions do not bear on whether the end is declared. A merge can add sites to a class already marked done, or sites of no frozen class, and the end is still reached as defined. endgame.py therefore needs the count per class recomputed at every merge, and a record of how many records changed outside the packet's target."
+  },
+  {
+   "id": "K8",
+   "x": "attempt_cap",
+   "y": "end_reached",
+   "given": [],
+   "do": [
+    "admitted_classes"
+   ],
+   "expected": false,
+   "status": "claim",
+   "claim": "The cap and the size floor are the two settings that move the end once the list is frozen."
+  }
+ ],
+ "open_questions": [
+  {
+   "id": "O1",
+   "text": "K7: sites of a kind no frozen pattern counts are invisible to the count. Is 'records changed outside the target = 0, or each one read' (claude-7's census-changed number) enough, or is a held-out byte-identity set needed?"
+  },
+  {
+   "id": "O2",
+   "text": "Values of attempt_cap and min_size. The dry run uses 3 and 2."
+  },
+  {
+   "id": "O3",
+   "text": "Does a class sent to 'Lean notation change' count as left when the change is planned or when the re-rendered record is clean?"
+  },
+  {
+   "id": "O4",
+   "text": "Speed work (Q125, Q131, Q136, Q137) changes which proofs finish and so changes corpus_scope. Under a freeze it belongs before the freeze commit or after the end, not during."
+  }
+ ]
+}
