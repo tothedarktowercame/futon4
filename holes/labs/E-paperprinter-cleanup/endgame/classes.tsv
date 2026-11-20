@@ -17,7 +17,7 @@ C15	2026-11-18	0	records	0	done	m93A01 lp.single renders as j: direct printer fi
 C16	2026-11-18	52	records	0	open	calc reads 'by transitivity': 52 records (scan.py at the freeze head, all 8,778 records). The log's 42 -> 31 -> 12 -> 0 (Q94, Q99) was on the 757-record subset; the 52 are all in records outside it and have had no packet
 C17	2026-11-17	2	records	0	open	seqsplit raw head: 2 records (m03J05 x2) after Q134 removed m99J04's 16; was 26 records at Q109
 N1	2026-11-19	1035	records	1	open	empty-reason rewrite rows: 1,928 rows in 1,035 records (scan.py at the freeze head, all 8,778 records). The log's 549 -> 298 -> 116 -> 76 counted the 757-record subset only (still 76 rows / 46 records there); 1,407 rows are in other records of the same modules, 445 in held-out modules. Q110 rejected; Q110r, Q112, Q113, Q118, Q119 merged
-N2	2026-11-19	16	decls	3	stopped	chain-order rows (42 rows in 16 declarations on the 757 subset); Q116, Q116r, Q116s rejected; claude-7 stopped dispatching and asked Joe. Same rule as P-chain-order; its rows are also counted in C4
+N2	2026-11-19	17	decls	3	stopped	chain-order rows (42 rows in 16 declarations on the 757 subset, plus 1 declaration found 2026-11-20 in a newly visible proof, formerly listed as P-chain-order); Q116, Q116r, Q116s rejected; claude-7 stopped dispatching and asked Joe. Its rows are also counted in C4
 N3	2026-11-19	0	records	0	done	reason restates its row; Q102
 N4	2026-11-19	0	records	0	done	t98A03 cardinality goal; Q104, 4 records
 N5	2026-11-19	0	records	0	done	conjunct claim stated twice; Q105, 1 record
@@ -40,7 +40,6 @@ P-duplicate-closer	2026-11-20	3	decls	0	open	no packet
 P-nonprop-suffices	2026-11-20	2	decls	0	open	no packet
 P-empty-chain-reason	2026-11-20	3	decls	0	open	no packet
 P-overexpanded-setup	2026-11-20	1	decls	0	open	no packet
-P-chain-order	2026-11-20	1	decls	0	open	same rule as N2 (found again in a newly visible proof); no packet
 P-missing-subproof	2026-11-20	2	decls	0	open	no packet
 P-premature-conclusion	2026-11-20	2	decls	0	open	no packet
 P-opaque-proof	2026-11-20	1	decls	0	open	no packet
