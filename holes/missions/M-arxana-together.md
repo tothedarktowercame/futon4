@@ -113,7 +113,9 @@ Routes under `/together/v1`: `GET doc/KEY/state` (snapshot as runs, deleted char
 included), `POST doc/KEY/ops` (body `{parents, op}`; with `"alone": true` it is
 accepted only while nobody else has written to the document; an insert identical
 to one already logged from the same person is answered with that entry's revision), `GET doc/KEY/events?after=N` (server-sent events, one
-log entry each, replayed from N and then live), `GET web/<file>` (the browser client).
+log entry each, replayed from N and then live), `GET web/<file>` (the browser client), `GET docs` (the list of documents), and for
+structure `GET structure/WS/state`, `POST structure/WS/acts` (200 accepted, 409
+refused; both are logged), `GET structure/WS/log?after=N`.
 The identity is the `X-Together-Editor` header, trusted because the server binds
 loopback only; for anyone reaching it through Caddy, Caddy must set that header from
 the basic-auth user and discard any value the client sent.
@@ -174,10 +176,11 @@ which also runs one authority with thin clients.
 - [x] A test rebuilds the document from the log alone, and the hub refuses an entry
       whose editor is not the connection's identity.
       (2026-11-20: futon3c together_test.clj and together_http_test.clj.)
-- [ ] A regroup that would close a cycle is refused and the refusal is logged.
-      (2026-11-20: true of the pure engine, futon3c 4f1eada00, with 300 random
-      sequences checked for cycles; the hub does not serve it yet, so nothing is
-      written to disk.)
+- [x] A regroup that would close a cycle is refused and the refusal is logged.
+      (2026-11-20: engine futon3c 4f1eada00, hub routes c0dc64ab4. On the live hub,
+      through Caddy, workspace `proof-ws-1120`: regroup b from a to c answered 409
+      "cycle", state unchanged, and the refused act is line 6 of
+      `~/storage/arxana-together/structure/proof-ws-1120.log.edn`.)
 
 ## Progress
 
@@ -196,6 +199,11 @@ which also runs one authority with thin clients.
 | 6a | a repeated insert (retry after a timed-out POST) is acknowledged with its first revision | futon3c 1fc41547d | done 2026-11-20; was a known weakness |
 | 6b | seeding is conditional (`"alone": true` on the POST body): of two people sharing the same untouched answer at once, one is refused and reloads | futon3c c409a9da2, futon4a 1b90fc1 | done 2026-11-20; was a known weakness |
 | 7 | pure structure engine (`futon3c.arxana.together-structure`): add-node, add-edge, supersede, group, ungroup, regroup; a group or regroup that would close a cycle is refused and the refused act is kept in the log | futon3c 4f1eada00 | accepted 2026-11-20 (codex-12; first sent with an impossible test case, withdrawn on codex-12's objection). Not yet reachable through the hub |
+| 8 | list of documents: `GET docs`, and the page at `/edit/` with no `doc` lists them and opens a new key | futon3c 33043dada | accepted 2026-11-20 (codex-13) |
+| 9 | structure routes on the hub: `structure/WS/state`, `acts`, `log`; one log file per workspace under `structure/`; refused acts are written | futon3c c0dc64ab4 | accepted 2026-11-20 (codex-12; my acceptance case was wrong, corrected on codex-12's objection); live |
+| 10a | several bound regions in one Emacs buffer (`futon4a-together-attach` adds, `-detach` takes an optional connection, `-with-binding`) | futon4a b0117a2 | accepted 2026-11-20 (codex-13) |
+| 10b | share the whole form (`futon4a-incubator-together-share-all`) | | with codex-13 |
+| 11 | Demo A records for these features, in memory: 13 choices, 12 with a probe that runs the real code | futon3c aa377e644; manifest `~/storage/arxana/design-catalogue/together-manifest-2026-11-20.edn` | built 2026-11-20 (codex-9, finished by fable-1); not written to the store, which needs Joe's go |
 | 5 | share one answer of the incubator form (`futon4a-incubator-together-share`); `C-c C-s` saves the converged answer as the usual act | futon4a 394baec, 3ab861f, a30a9f8 | accepted 2026-11-20 on a fixture session; not yet tried on the real form |
 
 ## Known weaknesses (2026-11-20)
@@ -207,5 +215,6 @@ which also runs one authority with thin clients.
   a second editor needs one more line in that block.
 - The engine and the Emacs model are lists scanned per character: fine for an answer,
   slow for a long document or a large paste.
-- Structure operations exist as a pure engine only; no hub route, no client.
+- Structure operations are served by the hub but no client uses them yet, and
+  nothing connects a workspace's nodes to the text documents.
 
