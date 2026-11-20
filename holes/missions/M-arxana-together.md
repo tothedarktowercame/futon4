@@ -492,3 +492,11 @@ times and health). Packets now forbid killall and pkill.
 
 Still owed to claude-5's request: sources for each run of `incubator-form` as
 provenance spans, and the same pane in Emacs.
+
+| packet | futon4a | result (Emacs side of the notes pane) |
+|---|---|---|
+| 24 (codex-13; review fixes fable-1) | 058a755, 6a4b4dd | `futon4a-together-notes-show` / `-hide`: notes underlined in their colour, `*Together Notes*` side window following point; one-pass `futon4a-together-span-extents` (18 notes on 20,000 characters: 240 ms to 17 ms); re-read every 15 s when idle, 2 s timeout |
+| 25 (codex-13) | 7e451ea | `>` / `<` (and `M-<right>` / `M-<left>`) slide Document, Note, Source; read-only source snapshot with the quoted words highlighted |
+
+Not switched on in Joe's session: claude-5's local `*Notes HUD*` prototype is still
+showing there, and claude-5 will clear it when Joe moves to `*Together Notes*`.
