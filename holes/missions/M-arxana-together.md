@@ -412,3 +412,41 @@ session, and it does not follow the form. The way to edit the form's answers wit
 someone else is `futon4a-incubator-together-share-all`, which makes one document
 per answer, shown together on the web by `form.html?ws=incubator.<layer>` (packets
 13 and 14, later the same day). That path has not yet been run on the real form.
+
+## Spans and links between documents (chartered 2026-11-20)
+
+Joe, 2026-11-20, after the live session with Rob and Murch: "go back to the mainline
+Arxana mission and think about which Ted Nelson requriements we haven't yet
+satisfied, e.g., this version had no 'beams' b/c it was a single document"; and, on
+the display: "let's hold the 2-up version b/c Mojira already has a nice framework
+for 2-up pages and I think we could just reuse that (Emacs is OK w/ vertically
+split frames). Otherwise we'd end up converting this demo into a full editor".
+
+So this slice is records and Emacs display only. No two-pane web view and no drawn
+beams here; the web page stays a single-document editor. Requirement numbers are
+from `holes/labs/E-arxana-variant-documents/DERIVE-1-nelson-requirements.md`.
+
+**Records (decided by fable-1; no engine change).** A span and a link are ordinary
+structure acts in a workspace, which the hub already logs with author and time:
+
+- Span: `add-node {id, kind "span", attrs {doc KEY, start [site n], end [site n]}}`.
+  `start` and `end` are character ids of document KEY, both inclusive.
+- Link: `add-edge {id, type T, ends [span-id ...]}`. Two or more ends, found from
+  any end (N10, N11). Types so far: `comment`, `transclusion`.
+- A workspace may hold spans over several documents, so a link can join two
+  documents.
+
+**Extent rule (every model must agree).** In document order, the extent of a span
+is the characters from `start` to `end` inclusive that are not deleted. Deleted
+characters stay in the document, so a span whose start or end was deleted still
+resolves to what survives between them, and reports how many of its characters
+are deleted (N12, N17). A span is invalid if either id is unknown in the document
+or `end` comes before `start`.
+
+| packet | what | Nelson |
+|---|---|---|
+| 17 | Emacs: extent of a span in the model; make a span from the region; read a workspace's spans | N5, N12 |
+| 18 | Emacs: a workspace's spans shown as overlays on attached buffers, following edits | N12, N17 |
+| 19 | Emacs: link two spans; with point in one end the other end is highlighted in its window (side-by-side windows), and a command jumps there | N10, N11, N13 (cursor-over), N9 |
+| 20 | Emacs: copying from one attached buffer and yanking into another records the source span and a `transclusion` link at the moment of the yank | N6, N7, N8 |
+| later | the same extent rule in the hub and the browser model, with shared fixture cases; Mojira's two-pane page as the web display | N13 drawn beams |
