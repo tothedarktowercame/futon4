@@ -247,7 +247,26 @@ client probes run the Emacs and Node conformance tests as separate processes. Th
 last has no check and will show as debt. Records for review:
 `~/storage/arxana/design-catalogue/together-manifest-2026-11-20.edn`.
 
-### Batch 2, the incubator's editing features: built in memory, awaiting Joe's go to write
+### Batch 2, the incubator's editing features: written to the store 2026-11-20
+
+Joe, 2026-11-20: "batch 2 live write is OK". Written by
+`~/storage/arxana/design-catalogue/write-incubator.clj`: 22 choices, 20 checks, 20
+links, 20 runs, 82 records, all created; log `incubator-catalogue-2026-11-20.edn`.
+The catalogue now reads back as 51 choices, 48 enforced, 3 with no check.
+
+### The catalogue as a document on /edit
+
+Joe, 2026-11-20: "if we can get the actual content into demo doc on the /edit surface
+that would be great". `futon3c.arxana.catalogue-document/render` (68e2ff1ef) turns
+the catalogue view into plain text, one paragraph per line, grouped as real-time
+editing, the incubator form, the store and its queries, the catalogue's own rules,
+then debt. `~/storage/arxana/design-catalogue/seed-demo-doc.clj` read the live
+store and seeded the hub document `demo-a` as author `fable-1`: 18,158 characters,
+177 entries. Open `https://zone.hyperreal.enterprises/edit/?doc=demo-a`, or
+`M-x futon4a-together-open RET demo-a`. The document is a copy: editing it does
+not change the records, and it is not regenerated when the records change.
+
+How this batch was built in memory:
 
 `futon3c.arxana.incubator-catalogue` (codex-9 2f61012a5, 7a3958bc3; fable-1's
 review commit after them). 22 choices, 20 with a check, each check running the
