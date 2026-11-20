@@ -67,6 +67,12 @@ Units are Unicode code points everywhere (not UTF-16 units, not bytes).
 Clients show marked text in green, amber or red instead of the author's colour.
 Other values are ignored. The hub does not interpret it.
 
+**Face.** An insert's `attrs` may carry `face`: `plain`, `heading`, `muted`, `typed`,
+`call`, `agent`, `teammate`, `peeragogy` or `struck`. Clients show the text in that
+face's colour (the incubator form's colours) instead of the author's. An answer
+shared from Emacs carries its Emacs face under `prov.face`, and the page maps those
+names to the same set. Other values are ignored.
+
 **Sites.** The editor part of an id is a site: `<identity>` or
 `<identity>.<surface>`, for example `joe.emacs` and `joe.web`. One person's surfaces
 are separate sites, so their ids cannot collide. An identity has no dot. The person
@@ -357,3 +363,20 @@ display; the frame as an open hypergraph checked by DiagramProver.
 One hazard found on the way: four tests in T create and kill a buffer named
 `*Arxana Incubator*`; run inside Joe's Emacs instead of in batch they would replace
 his live form. The probe runs them only in a separate batch process.
+
+### The incubator form as a document on /edit (2026-11-20)
+
+Joe: "Can you bring up the *Arxana Incubator* document with its color-coded contents
+in the web version". The hub document `incubator-form` is a copy of his open
+`*Arxana Incubator*` buffer (version 17, layer "Your third pass", track changes
+shown): 15,964 characters with the form's faces, read from the buffer without
+changing it (`~/storage/arxana-together-tools/extract-incubator-buffer.el`) and
+written as author `fable-1` (`seed-incubator-form.py` beside it). Inside answers,
+the hard line breaks the form puts at the Emacs window's width are joined, so the
+browser wraps the text itself. Faces: futon3c 90d706959, futon4a 69206f0.
+
+It is a copy for reading and trying edits: nothing typed in it reaches the form's
+session, and it does not follow the form. The way to edit the form's answers with
+someone else is still `futon4a-incubator-together-share-all`, which makes one
+document per answer; a web page that shows those documents together as one form,
+with the questions between them, does not exist yet.
