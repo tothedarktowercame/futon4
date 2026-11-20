@@ -63,6 +63,10 @@ want) make a peer sync version as a new research project."
 
 Units are Unicode code points everywhere (not UTF-16 units, not bytes).
 
+**Display mark.** An insert's `attrs` may carry `mark`: `ok`, `debt` or `bad`.
+Clients show marked text in green, amber or red instead of the author's colour.
+Other values are ignored. The hub does not interpret it.
+
 **Sites.** The editor part of an id is a site: `<identity>` or
 `<identity>.<surface>`, for example `joe.emacs` and `joe.web`. One person's surfaces
 are separate sites, so their ids cannot collide. An identity has no dot. The person
@@ -265,6 +269,16 @@ store and seeded the hub document `demo-a` as author `fable-1`: 18,158 character
 177 entries. Open `https://zone.hyperreal.enterprises/edit/?doc=demo-a`, or
 `M-x futon4a-together-open RET demo-a`. The document is a copy: editing it does
 not change the records, and it is not regenerated when the records change.
+
+Joe, the same day: "it shows only authorship colours not the green/amber status that
+we had in earlier Emacs Demo A". Added a display mark: an insert's attributes may
+include `mark`, one of `ok`, `debt`, `bad`, fixed at insert like the others; the
+browser page and the Emacs binding show marked text in green, amber or red in
+place of the author's colour, and the page's legend names the marks in use
+(futon3c 61ec2a79a, futon4a 574e4ad). `demo-a` was emptied and written again with
+each choice's lines marked by its enforcement status: 48 green, 3 amber, rev 356.
+A mark does not follow the records: if a check starts failing, the document keeps
+its old colour until it is written again.
 
 How this batch was built in memory:
 
