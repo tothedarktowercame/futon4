@@ -5,7 +5,7 @@ K3  holds     corpus_scope _||_ queue  under do(admitted_classes)            gra
 K4  holds     scanner_families _||_ queue  under do(admitted_classes)        graph says separated   
 K5  holds     corpus_scope _||_ measured_open  under do(admitted_classes)    graph says connected   via corpus_scope - measured_open
 K6  holds     rule_overlap _||_ measured_open  under do(admitted_classes)    graph says connected   via rule_overlap - merges - defects_after - measured_open
-K7  holds     regressions _||_ end_reached | merges  under do(admitted_classes) graph says connected   via regressions - defects_after - measured_open - exits_taken - end_reached
+K7  holds     regressions _||_ end_reached | merges, queue  under do(admitted_classes) graph says connected   via regressions - defects_after - measured_open - exits_taken - end_reached
 K8  holds     attempt_cap _||_ end_reached  under do(admitted_classes)       graph says connected   via attempt_cap - exits_taken - end_reached
 K9  holds     rule_overlap _||_ end_reached  under do(admitted_classes)      graph says connected   via rule_overlap - merges - defects_after - measured_open - exits_taken - end_reached
 MODEL CHECK OK

@@ -392,14 +392,15 @@
    "x": "regressions",
    "y": "end_reached",
    "given": [
-    "merges"
+    "merges",
+    "queue"
    ],
    "do": [
     "admitted_classes"
    ],
    "expected": false,
    "status": "claim",
-   "claim": "Given which packets were merged, a regression still moves the end, because the count decides exits (arrow measured_open -> exits_taken). Without that arrow this check fails. What stays open is O1: a regression of a kind no frozen pattern counts."
+   "claim": "Given which packets were dispatched and merged, a regression still moves the end, because the count decides exits (arrow measured_open -> exits_taken). Without that arrow this check fails. What stays open is O1: a regression of a kind no frozen pattern counts."
   },
   {
    "id": "K8",
