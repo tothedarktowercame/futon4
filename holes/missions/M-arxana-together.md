@@ -175,6 +175,9 @@ which also runs one authority with thin clients.
       whose editor is not the connection's identity.
       (2026-11-20: futon3c together_test.clj and together_http_test.clj.)
 - [ ] A regroup that would close a cycle is refused and the refusal is logged.
+      (2026-11-20: true of the pure engine, futon3c 4f1eada00, with 300 random
+      sequences checked for cycles; the hub does not serve it yet, so nothing is
+      written to disk.)
 
 ## Progress
 
@@ -192,6 +195,7 @@ which also runs one authority with thin clients.
 | 6 | Caddy block `/edit/` and page URLs relative to the page | futon3c (page.js), /etc/caddy/Caddyfile | done 2026-11-20; typed through Caddy in headless Chromium, text arrived at the hub as joe.web |
 | 6a | a repeated insert (retry after a timed-out POST) is acknowledged with its first revision | futon3c 1fc41547d | done 2026-11-20; was a known weakness |
 | 6b | seeding is conditional (`"alone": true` on the POST body): of two people sharing the same untouched answer at once, one is refused and reloads | futon3c c409a9da2, futon4a 1b90fc1 | done 2026-11-20; was a known weakness |
+| 7 | pure structure engine (`futon3c.arxana.together-structure`): add-node, add-edge, supersede, group, ungroup, regroup; a group or regroup that would close a cycle is refused and the refused act is kept in the log | futon3c 4f1eada00 | accepted 2026-11-20 (codex-12; first sent with an impossible test case, withdrawn on codex-12's objection). Not yet reachable through the hub |
 | 5 | share one answer of the incubator form (`futon4a-incubator-together-share`); `C-c C-s` saves the converged answer as the usual act | futon4a 394baec, 3ab861f, a30a9f8 | accepted 2026-11-20 on a fixture session; not yet tried on the real form |
 
 ## Known weaknesses (2026-11-20)
@@ -203,5 +207,5 @@ which also runs one authority with thin clients.
   a second editor needs one more line in that block.
 - The engine and the Emacs model are lists scanned per character: fine for an answer,
   slow for a long document or a large paste.
-- Structure operations (regroup with cycle refusal, checklist item 5) are not started.
+- Structure operations exist as a pure engine only; no hub route, no client.
 
