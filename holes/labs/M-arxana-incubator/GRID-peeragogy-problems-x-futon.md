@@ -477,3 +477,30 @@ exactly" is the frames method again, for contributors rather than beneficiaries:
 for each empty cell, the populations where such people are (e.g. institutional analysts
 around the Institutional Grammar tools found by the 2026-11-21 scan; co-op mediators;
 research-ethics people in the reproducibility networks).
+
+### Thyra faces two ways: self-healing inside, the niche outside (Joe, 2026-11-21)
+
+Joe: "in this war machine, we had the concept at least of self-healing ... in a human
+resources kind of department you would find the same kind of thing ... help people get
+back on track or make the people who are bad actors go away ... but ... harm reduction,
+not just in the context of the organism itself, but what does it do outside the world in
+its niche ... even pandas ... do go around harming bamboo plants, which they eat".
+
+So each Thyra cell has an inward face and an outward face:
+
+| | inward (the organisation) | outward (its niche) |
+|---|---|---|
+| monitor | is the organisation working as it should? (the War Machine's watchdog and debugger) | what do its acts cost others? (the harm column: compute, uncredited words, pollution where the data centres are) |
+| mediator | disputes and departures; getting people back on track, Ostrom's graduated sanctions before removal | the people outside who bear the harm: are they heard, do they get any of the benefit? |
+| ethics and consent | whose data, whose record (people records, consent) | the limit: harm kept within what the niche can bear and renew |
+
+The War Machine's rule for self-healing carries over (memory: medic-is-not-a-click,
+wm-run-loop-until-joe-stops): one self-heal attempt, then outside repair, never a loop
+that heals itself indefinitely. Ostrom's graduated sanctions say the same for people:
+small responses first, removal last.
+
+The panda: no organism has zero outward harm; it eats. The working test is the one
+fisheries and Ostrom's commons use: harm within what the niche regenerates (a harvest
+below the regrowth rate), and the niche getting something back. For the stack: does the
+compute harm per unit of benefit fall, and do the people bearing it see any benefit (the
+two questions already written above).
