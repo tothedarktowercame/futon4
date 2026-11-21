@@ -81,6 +81,7 @@ Q150	2026-11-21	C4	discovery
 Q151	2026-11-21	N1	merged
 Q152	2026-11-21	C4	merged
 Q153	2026-11-21	P-duplicate-closer	merged
-Q154	2026-11-21	P-empty-sentence	running
+Q154	2026-11-21	P-empty-sentence	merged
 Q155	2026-11-21	N2	discovery
-Q156	2026-11-21	N2	running
+Q156	2026-11-21	N2	merged
+Q158	2026-11-21	N1	discovery-running
