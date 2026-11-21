@@ -711,3 +711,23 @@ replaced acts) is data about how a group reasons about motives and alternatives.
 "Training" here means a practice and its transcripts, not retraining a model. Check:
 do in-role motives agree with the play's scholarship, and do Forum replays find acts the
 text did not take?
+
+**Genre as a pattern of benefits and harms (Joe, 2026-11-21).** "Iphigenia didn't have a
+great time of it, but neither did anyone else in her family so that's part of what makes
+it tragic whereas ... with these missions ... they're probably a little bit more
+optimistic ... romance-style stories where we say, well, here are all of these potential
+beneficiaries we built this thing ... it's very positive."
+
+Northrop Frye's four kinds of plot (*Anatomy of Criticism*, 1957; from memory) can be
+read as patterns in the benefit and harm ledger:
+- romance: a quest that succeeds; benefit to the hero and those served, harms offstage;
+- comedy: a group reconciled; benefit spread across the society of the play;
+- tragedy: harm to the protagonist and those near them, and to whoever has no position
+  (Iphigenia);
+- irony and satire: harm present but unacknowledged by those causing it.
+
+Our mission scripts are written as romances: hypothetical beneficiaries, features
+improved. The dis-beneficiary column is what would show whether one is really an irony:
+the compute harm to people near the data centres is borne by people with no position in
+the mission, which is the structure of tragedy, told offstage. Rubric: classify each
+mission script by where its ledger puts benefit and harm, not by its tone.
