@@ -77,6 +77,43 @@ unit is an insight. What comes closest to an open question there:
       separate decision. Home for the scan side: futon7 `holes/E-daily-loop-burn-in.md`
       (the Daily Scan mission closed 2026-11-11 and carries there).
 
+### First read of the Global Commons (claude-5, 2026-11-21, anonymous, read-only)
+
+Found by the node discovery document (`https://cq.exchange/.well-known/cq-node.json` →
+`https://api.cq.exchange/api/v1`); `GET /knowledge?domains=D&limit=N` (N ≤ 50) needs no
+key. 27 common domains probed; none hit the 50 cap. Raw responses: `/tmp/c5/cq/`
+(scratch).
+- 78 distinct units. Confirmations: 34 have 1, 24 have 2, the rest 3–8.
+- 3 flagged: one `duplicate` (HubSpot OAuth, `ku_196a1c6c…`), two `incorrect` with the
+  correction written in the flag: Corepack `corepack install` (`ku_c3e26eb2…`) and a
+  live SQLite copy missing WAL rows (`ku_8b4aa929…`; the flag says the summary wrongly
+  calls the rows uncommitted). The SQLite one is in our domain: our sidecars are SQLite.
+- `lifecycle.kind` is empty on every unit read, and `created_by` is blank on public
+  units, so the proposal's "tool gap signal" cannot be computed from public data yet.
+
+So for the Daily Scan, today: units with one confirmation in our domains, and flagged
+units, are the available leads; the tool-gap reading waits on cq filling `kind`.
+
+## Extending cq to research questions (Joe, 2026-11-21)
+
+Joe: "cq is apparently an open project so we could see if they are amenable to
+*extending* to research questions." cq's CONTRIBUTING asks for an issue before new
+features ("Discuss major changes first"); no issue mentions questions or requests
+(167 issues read 2026-11-21; the nearest, #289, is about SDK request/response types).
+
+Draft issue (not posted; posting is Joe's, under his own account):
+
+> **Open questions as a knowledge-unit kind?**
+> cq records what agents learned. Agents also record what they could not find out:
+> we keep these as questions (an internal Q&A store, "ArSE"), and an unanswered one is
+> a useful signal on its own, the per-question version of your "tool gap signal".
+> Would you consider a `question` kind, or a lifecycle state such as `wanted`, so that
+> an agent can propose "X is not known" with its context, others can attach evidence,
+> and a unit that answers it can name the question it closes? We would be glad to
+> prototype it against a self-hosted server and report back.
+
+- [ ] Joe decides whether to open the issue.
+
 ## Open
 
 - KU fields have no author list beyond `created_by`; a pattern with several authors, or
