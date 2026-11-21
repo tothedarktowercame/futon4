@@ -6,7 +6,7 @@
 (require 'subr-x)
 
 (defgroup mojira-related-missions nil "Missions related by shared patterns." :group 'applications)
-(defcustom mojira-related-missions-limit 50
+(defcustom mojira-related-missions-limit 10
   "Maximum number of related missions requested."
   :type 'integer)
 
@@ -14,6 +14,8 @@
 (defvar-local mojira-related-missions--generation nil)
 (defvar-local mojira-related-missions--mission nil)
 (defvar-local mojira-related-missions--data nil)
+(defvar-local mojira-related-missions--limit nil)
+(defvar-local mojira-related-missions--total nil)
 
 (defun mojira-related-missions--open-mission (mission)
   "Open MISSION without restricting mission-mode to particular scope types."
@@ -58,9 +60,13 @@
   "Render the current related-missions response."
   (let ((inhibit-read-only t))
     (erase-buffer)
-    (insert (format "※ m x p · %s (%d patterns)\n\n"
+    (insert (format "※ m x p · %s (%d patterns) · top %d%s\n\n"
                     (or mojira-related-missions--mission "Mission")
-                    (length (or (alist-get 'patterns mojira-related-missions--data) nil))))
+                    (length (or (alist-get 'patterns mojira-related-missions--data) nil))
+                    (or mojira-related-missions--limit mojira-related-missions-limit)
+                    (if mojira-related-missions--total
+                        (format " of %d" mojira-related-missions--total)
+                      "")))
     (insert "g refresh · q quit · RET open mission or pattern\n\n")
     (cond
      ((null mojira-related-missions--data) (insert "loading…\n"))
@@ -79,12 +85,15 @@
             (mojira-related-missions--pattern-button pattern))))))
     (goto-char (point-min))))
 
-(defun mojira-related-missions-refresh ()
+(defun mojira-related-missions-refresh (&optional limit)
   "Refresh the clocked mission and its related missions asynchronously."
   (interactive)
   (let ((buffer (current-buffer)) (token (list t))
-        (agent mojira-related-missions--agent))
+        (agent mojira-related-missions--agent)
+        (limit (or limit mojira-related-missions--limit mojira-related-missions-limit)))
     (setq mojira-related-missions--generation token)
+    (setq mojira-related-missions--limit limit
+          mojira-related-missions--total nil)
     (let ((inhibit-read-only t)) (erase-buffer) (insert "loading…\n"))
     (if (not agent)
         (let ((inhibit-read-only t)) (erase-buffer) (insert "No REPL agent found.\n"))
@@ -101,18 +110,29 @@
                      (insert (if err (concat "Error: " err "\n")
                                "Agent is not clocked into a mission.\n")))
                  (setq mojira-related-missions--mission mission
-                       mojira-related-missions--data nil)
+                       mojira-related-missions--data nil
+                       mojira-related-missions--total nil)
                  (mojira-related-missions--render)
                  (mojira-mission-patterns--fetch
                   (format "/api/alpha/circus/mission-related-missions?mission=%s&n=%d"
-                          (url-hexify-string mission) mojira-related-missions-limit)
+                          (url-hexify-string mission) (1+ limit))
                   (lambda (data failure)
                     (when (and (buffer-live-p buffer)
                                (eq token (buffer-local-value
                                           'mojira-related-missions--generation buffer)))
                       (with-current-buffer buffer
-                        (setq mojira-related-missions--data
-                              (if failure `((error . ,failure)) (or data '())))
+                        (if failure
+                            (progn
+                              (setq mojira-related-missions--data `((error . ,failure))
+                                    mojira-related-missions--total nil))
+                          (let* ((payload (copy-alist (or data '())))
+                                 (related (or (alist-get 'related payload) nil))
+                                 (more (> (length related) limit)))
+                            (setf (alist-get 'related payload)
+                                  (if more (seq-take related limit) related))
+                            (setq mojira-related-missions--data payload
+                                  mojira-related-missions--total
+                                  (and more (length related)))))
                         (mojira-related-missions--render))))))))))))))
 
 (defvar mojira-related-missions-mode-map
@@ -127,16 +147,18 @@
   "Read-only asynchronous view of missions sharing the clocked mission's patterns.")
 
 ;;;###autoload
-(defun mojira-related-missions ()
+(defun mojira-related-missions (&optional prefix)
   "Show missions that share patterns with the clocked mission."
-  (interactive)
+  (interactive "P")
   (let ((agent (mojira-mission-patterns--agent))
-        (buffer (get-buffer-create "*※ m x p*")))
+        (buffer (get-buffer-create "*※ m x p*"))
+        (limit (if prefix (prefix-numeric-value prefix) mojira-related-missions-limit)))
     (with-current-buffer buffer
       (mojira-related-missions-mode)
-      (setq mojira-related-missions--agent agent))
+      (setq mojira-related-missions--agent agent
+            mojira-related-missions--limit limit))
     (display-buffer-in-side-window buffer '((side . right) (window-width . 0.35)))
-    (with-current-buffer buffer (mojira-related-missions-refresh))))
+    (with-current-buffer buffer (mojira-related-missions-refresh limit))))
 
 (provide 'mojira-related-missions)
 ;;; mojira-related-missions.el ends here

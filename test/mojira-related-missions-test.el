@@ -102,3 +102,28 @@
           (should (null activated)))
       (when (get-file-buffer file) (kill-buffer (get-file-buffer file)))
       (delete-directory root t))))
+
+(ert-deftest mojira-related-missions-limit-requests-extra-and-trims-results ()
+  (should (= 10 mojira-related-missions-limit))
+  (with-temp-buffer
+    (mojira-related-missions-mode)
+    (setq mojira-related-missions--agent "agent-1")
+    (let (requests)
+      (cl-letf (((symbol-function 'mojira-mission-patterns--fetch)
+                 (lambda (path callback) (push (cons path callback) requests))))
+        (mojira-related-missions-refresh 3)
+        (let ((clock-callback (cdr (car requests))))
+          (funcall clock-callback '((mission-id . "M-limit")) nil))
+        (should (string-match-p "mission-related-missions\\?mission=M-limit&n=4"
+                                (car (car requests))))
+        (let ((related-callback (cdr (car requests))))
+          (funcall related-callback
+                   '((mission . "M-limit") (patterns "p")
+                     (related ((mission . "M-1") (shared "p") (score . 4.0))
+                              ((mission . "M-2") (shared "p") (score . 3.0))
+                              ((mission . "M-3") (shared "p") (score . 2.0))
+                              ((mission . "M-4") (shared "p") (score . 1.0))))
+                   nil))
+        (should (string-match-p "top 3 of 4" (buffer-string)))
+        (should (string-match-p "M-3" (buffer-string)))
+        (should-not (string-match-p "M-4" (buffer-string)))))))
