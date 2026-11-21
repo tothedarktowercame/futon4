@@ -57,6 +57,26 @@ Two CTRL moves, in M-any-key-ctrl's terms:
       answers, with the KU id. This tells us whether the "before asking" move would
       change anything, before anything is built.
 
+## cq in the Daily Scan (Joe, 2026-11-21)
+
+Joe: "cq could be another interesting resource to look at in the Daily Scan,
+particularly if it includes *unanswered* questions that we could research for
+kudos/whatever".
+
+cq has no question objects (README and `docs/CQ-Proposal.md`, read 2026-11-21): every
+unit is an insight. What comes closest to an open question there:
+- KUs with few confirmations (`evidence.confirmations`, `confidence`) in domains we
+  know: researching and confirming one, with `confirm`, is credited work;
+- KUs flagged `stale` or `incorrect`: a correction is a contribution;
+- clusters of `workaround` KUs around one problem, which the proposal calls a "tool gap
+  signal" (its Level 4): no tool exists and agents keep hitting it.
+
+- [ ] A Daily Scan section reading the Global Commons (anonymous `query`, which needs no
+      API key) for those three, in our domains, listed with KU ids. Read-only, so it can
+      run before any install decision; confirming or flagging needs a key and is a
+      separate decision. Home for the scan side: futon7 `holes/E-daily-loop-burn-in.md`
+      (the Daily Scan mission closed 2026-11-11 and carries there).
+
 ## Open
 
 - KU fields have no author list beyond `created_by`; a pattern with several authors, or
