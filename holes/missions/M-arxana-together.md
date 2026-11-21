@@ -3,6 +3,16 @@
 **Status:** OPEN — building the server-centred version (route chosen 2026-11-20). Chartered 2026-11-20 by Joe with claude-5. New research:
 the work below has not been done anywhere we know of in this combination.
 
+
+**Lifecycle (2026-11-21):** regrouped under the phases of `holes/mission-lifecycle.md` after Joe
+noted the mission did not follow them ("what exists" instead of MAP). IDENTIFY, MAP and
+DERIVE were written on 2026-11-20; the mission then went straight to INSTANTIATE, so ARGUE and
+VERIFY are not done; DOCUMENT is partly done by Demo A. Content is unchanged; only headings
+and the order of sections moved (the acceptance checklist is now IDENTIFY's completion
+criteria).
+
+## IDENTIFY
+
 Joe, 2026-11-20, after his third editorial pass on the Mozilla incubator form with
 Murch's revision side by side: "if we could port all of the features to code-server we
 would be very close to having a custom Google Docs replacement ... with multiple
@@ -13,7 +23,30 @@ probably easiest to build the central version first and then figure out how to
 decentralise it later"; and "we're building and rewriting (immutably!) a hypergraph",
 so "we presumably need a more general OT not just the bog standard CRDT".
 
-## What exists (2026-11-20)
+### Completion criteria (the acceptance checklist)
+
+- [x] The conformance fixture passes in Clojure, Emacs Lisp and JavaScript.
+      (2026-11-20: futon3c bff8826df, b228483a0; futon4a 7ab1037.)
+- [ ] Two editors, one in Emacs and one in a browser, type in the same answer at once
+      and both see the same text, each run in its author's colour.
+      (2026-11-20: shown on a scratch document through the live hub, a batch Emacs as
+      joe and headless Chromium as murch; not yet on an answer of the form.)
+- [ ] A checkpoint writes the converged text into Arxana as an attributed act, and the
+      incubator form shows it with the right provenance.
+      (2026-11-20: passes on a fixture session, in ERT and against a throwaway hub:
+      a teammate's text saves as accepted from them, Joe's typing as typed, earlier
+      text as kept, a paste from two answers as moved from each. Not yet done on the
+      real form with a second person.)
+- [x] A test rebuilds the document from the log alone, and the hub refuses an entry
+      whose editor is not the connection's identity.
+      (2026-11-20: futon3c together_test.clj and together_http_test.clj.)
+- [x] A regroup that would close a cycle is refused and the refusal is logged.
+      (2026-11-20: engine futon3c 4f1eada00, hub routes c0dc64ab4. On the live hub,
+      through Caddy, workspace `proof-ws-1120`: regroup b from a to c answered 409
+      "cycle", state unchanged, and the refused act is line 6 of
+      `~/storage/arxana-together/structure/proof-ws-1120.log.edn`.)
+
+## MAP — what exists (2026-11-20)
 
 From M-arxana-incubator (futon4a, Emacs only, one editor at a time):
 
@@ -33,7 +66,10 @@ From M-jvm-arxana (closed 2026-11-10): Arxana served from the futon3c JVM.
 The open problem: two or more people editing at once, from Emacs and from a browser,
 with the same provenance, layers and forks.
 
-## Design (revised 2026-11-20 after background research)
+Not yet done for MAP: the ready-vs-missing table and survey questions Q1-Qn that the
+lifecycle asks for. Background research is summarised at the head of DERIVE.
+
+## DERIVE — design (revised 2026-11-20 after background research)
 
 The first design of this date bound two CRDTs through the hub: `crdt.el` for Emacs and
 Yjs for the browser (commit c11ae42 has that text). The background research
@@ -153,7 +189,32 @@ project, not part of this mission: `M-arxana-together-apart.md`.
 Prior art Joe knows first-hand: Etherpad (Easysync changesets with an attribute pool),
 which also runs one authority with thin clients.
 
-## Plan (small packets, each reviewed before the next)
+## ARGUE
+
+Not written. Open, per the lifecycle:
+
+- [ ] Pattern cross-reference against `futon3/library/` (PSRs for the choices in DERIVE).
+- [ ] Theoretical coherence with IDENTIFY.
+- [ ] Rationale citation: `@why war-room/wr-N-...`, or a statement that none applies.
+- [ ] Trade-off summary (for example: one hub now, peer sync deferred; no undelete in the protocol).
+- [ ] Generalisation notes.
+- [ ] Plain-language argument (3-5 sentences).
+
+## VERIFY
+
+Not done as a phase. Open, per the lifecycle:
+
+- [ ] Specification bill of materials.
+- [ ] Wiring diagram, or the four-question skip reason.
+- [ ] Completion-criteria pre-check against DERIVE.
+- [ ] Decision log.
+
+Spikes that did happen during INSTANTIATE (the conformance fixture in three languages; two
+editors on a scratch document through the live hub) are recorded under Progress.
+
+## INSTANTIATE
+
+### Plan (small packets, each reviewed before the next)
 
 1. **Engine.** A pure Clojure namespace: state, integration rule, log, rebuild from
    log, hub checks; the conformance fixture and its Clojure runner.
@@ -169,30 +230,7 @@ which also runs one authority with thin clients.
    Murch and Rob behind its own Caddy basic-auth realm; then editing for them; a
    code-server extension.
 
-## Acceptance checklist
-
-- [x] The conformance fixture passes in Clojure, Emacs Lisp and JavaScript.
-      (2026-11-20: futon3c bff8826df, b228483a0; futon4a 7ab1037.)
-- [ ] Two editors, one in Emacs and one in a browser, type in the same answer at once
-      and both see the same text, each run in its author's colour.
-      (2026-11-20: shown on a scratch document through the live hub, a batch Emacs as
-      joe and headless Chromium as murch; not yet on an answer of the form.)
-- [ ] A checkpoint writes the converged text into Arxana as an attributed act, and the
-      incubator form shows it with the right provenance.
-      (2026-11-20: passes on a fixture session, in ERT and against a throwaway hub:
-      a teammate's text saves as accepted from them, Joe's typing as typed, earlier
-      text as kept, a paste from two answers as moved from each. Not yet done on the
-      real form with a second person.)
-- [x] A test rebuilds the document from the log alone, and the hub refuses an entry
-      whose editor is not the connection's identity.
-      (2026-11-20: futon3c together_test.clj and together_http_test.clj.)
-- [x] A regroup that would close a cycle is refused and the refusal is logged.
-      (2026-11-20: engine futon3c 4f1eada00, hub routes c0dc64ab4. On the live hub,
-      through Caddy, workspace `proof-ws-1120`: regroup b from a to c answered 409
-      "cycle", state unchanged, and the refused act is line 6 of
-      `~/storage/arxana-together/structure/proof-ws-1120.log.edn`.)
-
-## Progress
+### Progress
 
 | packet | what | commit | state |
 |---|---|---|---|
@@ -221,7 +259,7 @@ which also runs one authority with thin clients.
 | - | `scripts/together-check.sh` (every suite, both repos) and `README-together.md` (operating manual) | futon3c 26e572071 | fable-1, 2026-11-20 |
 | 5 | share one answer of the incubator form (`futon4a-incubator-together-share`); `C-c C-s` saves the converged answer as the usual act | futon4a 394baec, 3ab861f, a30a9f8 | accepted 2026-11-20 on a fixture session; not yet tried on the real form |
 
-## Known weaknesses (2026-11-20)
+### Known weaknesses (2026-11-20)
 
 - The form's answers are hard-wrapped, so a browser editor sees the line breaks.
 - Outside access is `https://zone.hyperreal.enterprises/edit/?doc=KEY` (Caddy realm
@@ -261,7 +299,7 @@ which also runs one authority with thin clients.
   between documents, and an edge's ends can only be nodes or edges.
 
 
-## Demo A: documenting these features and the incubator's (2026-11-20)
+### Demo A: documenting these features and the incubator's (2026-11-20)
 
 Joe, 2026-11-20: "it would be good if you could develop the separate "Demo A" further
 with documentation of Arxana, including the real-time features", then "yes, plan the
@@ -270,7 +308,7 @@ incubator batch too". Demo A is the catalogue of design choices held as records
 mission is claude-5's draft; this section is fable-1's plan for two batches and does
 not edit that file.
 
-### Batch 1, real-time editing: written to the store 2026-11-20
+#### Batch 1, real-time editing: written to the store 2026-11-20
 
 Joe, 2026-11-20: "you can write back batch 1". Written by
 `~/storage/arxana/design-catalogue/write-together.clj` at 15:13Z: 13 choices, 12
@@ -289,14 +327,14 @@ client probes run the Emacs and Node conformance tests as separate processes. Th
 last has no check and will show as debt. Records for review:
 `~/storage/arxana/design-catalogue/together-manifest-2026-11-20.edn`.
 
-### Batch 2, the incubator's editing features: written to the store 2026-11-20
+#### Batch 2, the incubator's editing features: written to the store 2026-11-20
 
 Joe, 2026-11-20: "batch 2 live write is OK". Written by
 `~/storage/arxana/design-catalogue/write-incubator.clj`: 22 choices, 20 checks, 20
 links, 20 runs, 82 records, all created; log `incubator-catalogue-2026-11-20.edn`.
 The catalogue now reads back as 51 choices, 48 enforced, 3 with no check.
 
-### The catalogue as a document on /edit
+#### The catalogue as a document on /edit
 
 Joe, 2026-11-20: "if we can get the actual content into demo doc on the /edit surface
 that would be great". `futon3c.arxana.catalogue-document/render` (68e2ff1ef) turns
@@ -396,7 +434,7 @@ One hazard found on the way: four tests in T create and kill a buffer named
 `*Arxana Incubator*`; run inside Joe's Emacs instead of in batch they would replace
 his live form. The probe runs them only in a separate batch process.
 
-### The incubator form as a document on /edit (2026-11-20)
+#### The incubator form as a document on /edit (2026-11-20)
 
 Joe: "Can you bring up the *Arxana Incubator* document with its color-coded contents
 in the web version". The hub document `incubator-form` is a copy of his open
@@ -413,7 +451,7 @@ someone else is `futon4a-incubator-together-share-all`, which makes one document
 per answer, shown together on the web by `form.html?ws=incubator.<layer>` (packets
 13 and 14, later the same day). That path has not yet been run on the real form.
 
-## Spans and links between documents (chartered 2026-11-20)
+### Spans and links between documents (chartered 2026-11-20)
 
 Joe, 2026-11-20, after the live session with Rob and Murch: "go back to the mainline
 Arxana mission and think about which Ted Nelson requriements we haven't yet
@@ -469,7 +507,7 @@ nothing of spans; links cannot be removed.
 Known costs: each recompute walks the document once per shown span; a yank makes
 up to three blocking requests to the hub (10 s timeout each if the hub hangs).
 
-## Notes pane and lineup on the web (2026-11-20)
+### Notes pane and lineup on the web (2026-11-20)
 
 Joe, 2026-11-20: "I'm partly going to take back what I said about the 2-up display.
 Let's add a version of the *Notes HUD* that exists in Emacs"; and, relayed by
@@ -501,7 +539,7 @@ provenance spans, and the same pane in Emacs.
 Not switched on in Joe's session: claude-5's local `*Notes HUD*` prototype is still
 showing there, and claude-5 will clear it when Joe moves to `*Together Notes*`.
 
-### Per-run provenance of incubator-form (2026-11-20)
+#### Per-run provenance of incubator-form (2026-11-20)
 
 claude-5, at Joe's request: the Together copy lost "the metadata of the *Arxana
 Incubator* form it evolved from". The colours had travelled; each run's origin had not.
@@ -523,3 +561,10 @@ Incubator* form it evolved from". The colours had travelled; each run's origin h
   "This text: LABEL" and "as of version 17 (...) · act/N, segment K · derived by";
   "typed later, inside: LABEL" for later text; "brought in by" for copied characters
   without a record.
+
+
+## DOCUMENT
+
+Partly done: Demo A (under INSTANTIATE) wrote the real-time and incubator editing features
+into the store as catalogue records (batches 1 and 2). Open: docbook entries,
+cross-references, reachability from `M-x arxana-browse`.
