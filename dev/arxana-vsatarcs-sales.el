@@ -1,7 +1,7 @@
 ;;; arxana-vsatarcs-sales.el --- Arxana Sales pipeline view -*- lexical-binding: t; -*-
 
 ;;; Commentary:
-;; The Arxana Sales pipeline: a navigable view over `~/code/sales/sales.edn',
+;; The Arxana Sales pipeline: a navigable view over `~/code/futon7/business/sales/sales.edn',
 ;; the DUAL of the Ledger (`arxana-vsatarcs-ledger.el').  Where the Ledger runs
 ;; work → billing, this runs INTERACTIONS → conversion: clients are inhabitants
 ;; moving through stages (Prospect → Engaged → Proposed → Agreed → Recurring,
@@ -24,7 +24,7 @@
   "Arxana Sales pipeline view over the sales/client journey record."
   :group 'arxana-vsatarcs)
 
-(defcustom arxana-sales-file (expand-file-name "~/code/sales/sales.edn")
+(defcustom arxana-sales-file (expand-file-name "~/code/futon7/business/sales/sales.edn")
   "Path to the canonical sales pipeline EDN.  Read live on every call."
   :type 'file
   :group 'arxana-vsatarcs-sales)

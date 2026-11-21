@@ -19,7 +19,7 @@
   "Base URL of the running WebArxana server."
   :type 'string :group 'arxana-fair)
 
-(defcustom arxana-fair-sales-file (expand-file-name "~/code/sales/sales.edn")
+(defcustom arxana-fair-sales-file (expand-file-name "~/code/futon7/business/sales/sales.edn")
   "The sales.edn file backing the Rolodex + demos."
   :type 'string :group 'arxana-fair)
 
