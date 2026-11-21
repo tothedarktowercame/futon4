@@ -504,3 +504,37 @@ fisheries and Ostrom's commons use: harm within what the niche regenerates (a ha
 below the regrowth rate), and the niche getting something back. For the stack: does the
 compute harm per unit of benefit fall, and do the people bearing it see any benefit (the
 two questions already written above).
+
+### Levels of benefit, and the stack as practice (Joe, 2026-11-21)
+
+Joe: "other biological organisms which are beneficial ... the wasp and the flower ...
+that fit together ... benefits have to be construed there relative to species-level
+survival ... understand at which level these benefits apply ... how benefits work
+across levels ... individuals benefit from their species-level survival as well".
+The fig and its wasp are the textbook case: an obligate mutualism, each species'
+reproduction depending on the other, with cospeciation along the lineages (the general
+term is coevolution).
+
+So each benefit (and harm) line needs a **level**: individual, group, population or
+lineage, ecosystem; and some benefits cross levels (an individual benefits from the
+group's survival; a group's rule constrains an individual for the group's sake). That is
+the two-level hypothesis above, with more levels. Rubric field for benefit lines: level,
+and whether it passes to another level.
+
+Thyra's real professions span both faces and several levels: psychotherapy and medicine
+(an individual, inward), mediation and HR (a group, inward), peacekeeping (between
+groups, outward). Thyra also heals herself.
+
+Joe: "if we believe in the framing of the futon stack relative to the meditation cushion
+framing, then at least it should be beneficial for internal harm reduction because the
+futon stack should help the people who use it understand themselves better ... even just
+using the futon stack, if that is true, is a form of internal harm reduction because
+it's a kind of form of meditative practice".
+
+Candidate harm line, as a hypothesis: **H8, the user's own understanding.** Using the
+stack as a reflective practice reduces the user's own harm (understanding one's own
+work, decisions and patterns). Evidence today: one user, Joe, and his own account.
+Refuted if users of the testbeds report no change in understanding themselves, or if the
+practice costs more than it returns (time, attention, dependence on the tools). This is
+an inward, individual-level benefit; the testbeds would also show whether it passes to
+the group level (a group that understands its own process better).
