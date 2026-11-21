@@ -560,3 +560,33 @@ specification runs take to close now against a year ago (the atomic/complex test
 how often his turns redirect or retract; how often credit goes to others or to the
 system rather than to himself. None measures clarity directly; each is something another
 reader can check against the record, which is what "come and see" asks.
+
+### The application itself as evidence: Arxana Together against Etherpad or Google Docs (Joe, 2026-11-21)
+
+Joe: "we had me, Rob, and [Murch] on one document, working together ... it wasn't all
+written by me ... considerably co-authored, and there's evidence ... the color coding of
+the contributions ... is that any benefit versus doing it with Etherpad? ... why would I
+care about [Arxana] together versus Etherpad or Google Docs? ... if it helps with things
+like understanding, then it's a philosophical instrument".
+
+Colour by author is not the difference: Etherpad has had it for years. What differs, as
+built and used on the application (2026-11-19 to 21):
+- **whose words, not only who typed** (R7): a sentence of Murch's pasted by Joe stays
+  Murch's (accepted, with its source); in Etherpad it becomes Joe's typing.
+- **forks kept apart** (R1): Murch's revision was a fork, never mixed into the head;
+  three picks were taken from it, each recorded.
+- **notes tied to their sources** (R2, R3): a note on the form resolves Mozilla's own
+  words in the call text (Document | Note | Source); a comment in Google Docs points
+  nowhere outside the document.
+- **the document becomes data** (R7): the checkpoint writes each answer as attributed
+  acts, so a question like "what share is Murch's?" is a count (22%, and at least that,
+  since the record lost some of his credit before a fix).
+- **one document across Emacs and the browser**: Joe's own reason.
+
+The instrument point has one piece of evidence already: the ledger walkthrough found
+something none of us knew (Murch's share, and that our own tool had been erasing part of
+it). An instrument is something that shows you what you could not see without it.
+
+Unproven: whether these differences matter to Rob and Murch. Come-and-see test: ask
+each whether they would use it again rather than Google Docs, and for which of the
+differences above (or none). Their answers are the benefit's evidence; Joe's is one.
