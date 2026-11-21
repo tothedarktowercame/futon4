@@ -665,3 +665,24 @@ can do better than a tacit social contract by writing its own at joining, at the
 constitutional level: when its members' acts may be examined without asking, and by
 what process. For a co-op such as Triangle Cubed that belongs in the membership
 agreement.
+
+**Playtesting inquiry patterns with agents (Joe, 2026-11-21; an idea, not a plan).**
+"building simulated peer inquiry dialogues ... now, with agency ... we could actually
+have real agents with different models or different system prompts actually conduct a
+conversation ... rank those dialogues ... was it beneficial? Did this conversational
+direction serve the group purpose? ... playtest some of those patterns before we release
+them to the world."
+
+What would make such a playtest informative rather than flattering:
+- use it to find where a pattern fails, not to show it works (R6: agreement among agents
+  is not validation; the 2026 Pyragogy paper's "consensus among isolated evaluators
+  should not be mistaken for validation");
+- mix models (Claude, Codex, Kimi, Zai seats) so the participants do not share one
+  model's habits;
+- score by the checkable acts above (new dimension, proposed function, evidence), not by
+  an overall impression;
+- compare with human dialogue we already hold: the Peeragogy authors' dialogue (flop 6)
+  and our own turns;
+- remember our own precedent: simulated buyers did not predict demand ("they didn't buy,
+  but neither were the simulated ones", participants.md, 2026-11-02), and four simulated
+  customers were misled by text hidden in a page's HTML comments.
