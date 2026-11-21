@@ -316,3 +316,18 @@ group could check (prose target / measurable indicator / formal), and does anyon
 keeping it faithful to the problem? Hypothesis: for many collective problems the first
 missing owner is the specification's, and an agent can hold the drafting while the
 people who have the problem hold the "is this still our problem?" check.
+
+**Correction (Joe, 2026-11-21): specifying is an act within belief, not a role before
+it.** "a specification is only really a statement of belief ... if I say, here's the
+specification of Fermat's Last Theorem in Lean, whether or not I have a proof of that, if
+I say sorry, and we all agree ... that that's a statement of Fermat's Last Theorem, then
+that's a statement of belief". So **specify** belongs inside **model** (the group's
+beliefs), not ahead of the roles. A specification carries two beliefs that are settled
+differently:
+- that the statement is true: settled by a proof (or refuted), as for any theorem;
+- that the statement *is* the problem: settled only by agreement among those who hold
+  it. The 2026-10-13 APM audit checked this second belief, and found it wrong for some
+  statements (vacuous or narrower).
+For collective problems the second is the one nobody owns: a shared belief about what
+the problem is, made explicit enough to check. Rubric: under model, record whether such a
+statement exists and who has agreed that it is the problem.
