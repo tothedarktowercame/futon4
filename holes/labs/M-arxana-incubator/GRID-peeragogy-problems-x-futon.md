@@ -639,3 +639,16 @@ Its theory-in-use is in the commits, jobs and turns. Example from 2026-11-21: pa
 were being sent in brief mode by the recommended script, against the rule that a packet
 is work (fixed in futon3c 6dd9b5abb). A self-audit of that gap would be the
 demonstration before offering it to anyone else.
+
+**Consent to the marks (Joe, 2026-11-21).** "our [proforma] ... already presuppose[s] a
+conversational setting in which that type of analysis has not only been agreed, but asked
+for and is valuable and meaningful so I would attest that it that is the case". The marks
+on agent replies and the reading of Joe's turns rest on that attestation; a testbed would
+need its own.
+
+**A contribution weighed before it is made (Joe, 2026-11-21).** "I'm still weighing
+whether or not to turn back on automation via the war machine ... because I want to
+understand exactly what it will achieve and what it won't achieve and whether it will
+achieve those things in a way, that I approve of". That is the grid applied in advance to
+one act: what it is for (rows), who benefits and who bears the cost (including compute),
+which roles have an owner, and a stated test for keeping it on.
