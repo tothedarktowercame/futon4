@@ -357,3 +357,33 @@ object across many turns (qualify, disagree, retract, propose) ending in an appr
 withdraw. 馬's turn data and the marks could find these runs, how long they take, and
 which never close. The War Machine's statement history is a second record of the same
 kind.
+
+## Where this leads (Joe, 2026-11-21)
+
+Joe: "effectively no one outside of mathematics really cares about [AI agents solving
+maths problems] whereas ... a lot of people care about things like their income or
+whether their kids are going to have a future ... one of my views with the HyperReal
+Enterprise is basically ... that we could do what [Murch] has been talking about with
+tracking contributions to beneficial products, but we could track contributions across
+all kinds of supply chains and as well as track contributions to harms and see if we
+could reduce them, not just produce more benefits ... if mathematicians can solve
+complex problems, ... maybe we can also solve complex economic problems it's just going
+to need a slightly different approach".
+
+Thesis, as it stands after this conversation: complex collective problems, economic ones
+included, can be worked the way the APM problems were (specify, then solve), provided
+that (1) the specification is held as a belief the people who have the problem agree to,
+(2) each part (sense, model, act) has a bounded owner and something keeps the owners
+connected, and (3) every act's contributions are traced to both its beneficiaries and
+its dis-beneficiaries, so that one can see whether harm per unit of benefit falls.
+
+The "slightly different approach" relative to maths: there is no proof that settles the
+second belief (that the statement is the problem); the people in the problem change as
+it is worked; and benefits and harms fall on different people.
+
+A first case we could do end to end, because we hold its whole record: the Mozilla
+application itself, as a product. Contributions: per-word provenance in the incubator
+form (Joe, Murch, Rob, the Peeragogy call, agents), commit trailers, the call text from
+Mozilla. Harms: compute per agent job (tokens, with a stated energy figure), and anyone
+whose words were used without being credited. If the ledger cannot be built honestly
+for a product this small and this well recorded, it will not work for a supply chain.
