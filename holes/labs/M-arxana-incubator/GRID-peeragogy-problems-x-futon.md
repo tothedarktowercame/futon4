@@ -219,3 +219,37 @@ Rubric, revised: for each process target, the roles (sense, model, act, connect)
 each role whether a bounded owner exists (none / named but unbounded / bounded). The
 count that matters: targets where every role but "connect" has a possible bounded owner.
 Those are the ones where orchestration is the missing piece, which is what FUTON offers.
+
+### The marks as actions in an action situation (Joe, 2026-11-21)
+
+Joe: "think about our [proforma] marks ... some 20 odd individual acts like explore or
+defer or withdraw ... actions that people may be able to take relative to some of these
+problem facets ... rather than just ... the way a dialogue works we could actually say,
+well let's articulate the way an action situation works ... in these ownerless
+situations, nevertheless, actions still take place for good or for bad and how do we
+sense make those? And then how do we change them? ... if you look at [馬], the agent
+horse, it is actually starting to ... make a model of how that conversation changes
+over time".
+
+`~/notes/institutions-patterns/CROSSWALK-IAD-AIF.md` (2026-10-29) already maps Ostrom's
+seven working parts of an action situation onto an active-inference model: participants,
+positions (which policies a role may consider), actions (the policy space), control (the
+transition model B), information (A, who observes what), outcomes, costs and benefits
+(C). The marks fit the **actions** slot: the repertoire of acts in a situation. Several
+are already acts that only some positions should make, which is what Ostrom's position
+and choice rules govern: 🈲 constrain, ㊯ delegate, 🈸 ask-action, ㊣ approve,
+🈡 withdraw, 🈝 defer. And 馬's model of how a conversation changes over time is a
+learned transition model, B.
+
+An ownerless situation, in these terms, is one where acts keep arriving (propose,
+report-problem, ask) but no participant holds a position whose acts close anything
+(approve, decide, withdraw, delegate to someone who accepts). That can be read from the
+marks, not argued: our own record has it. The minus40 session brief lists "open asks
+with no answer linked", twelve of them from 2026-11-03 to 2026-11-20 on 2026-11-21; each
+is an ask in a situation where nobody's position answered it.
+
+Candidate test, on our own data first: for each item or thread, the sequence of marked
+acts and the positions that made them; flag situations with asks and proposals but no
+closing act by anyone. Then, for the ones that matter, change the situation (give a
+position the closing act, or route the ask to someone who holds one, which is
+`※ q ? w`), and see whether the flag clears.
