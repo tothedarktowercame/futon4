@@ -284,3 +284,35 @@ form: over time, does the harm per unit of benefit fall (smaller models, fewer w
 runs, work moved to classical code), and do the people bearing the harm get any of the
 benefit? If the first rises or the second stays at nothing, the trajectory is not
 positive, whatever the benefit lines say.
+
+### Nobody owns the specification (Joe, 2026-11-21)
+
+Joe: "supposing we were able even just to well specify them ... we were able to well
+specify the APM problems ... Rob ... has been able to well-specify other mathematical
+problems ... AI agents are very good at solving problems, on paper, if they're
+sufficiently formalized so maybe that's one of the issues that no one is actually owning
+the specification of these problems".
+
+That adds a role before the others: **specify**. Sense, model, act and connect all
+presuppose a statement of the problem that can be checked. Evidence from our own work:
+- The APM problems became workable once each had a formal statement in a registry; the
+  War Machine and the lemma seats work from those statements.
+- Specifying is itself where things go wrong: the 2026-10-13 audit found statements that
+  were vacuous or narrower than the problem, and Joe's rule since is that a narrower
+  statement does not count (memory: no-narrower-stand-ins). An owned specification has
+  to answer to the people who have the problem, or it drifts into a problem that is
+  easier to solve.
+- Ostrom has a grammar for specifying collective action:
+  `institutions/rules-as-institutional-statements` ("ATTRIBUTES of participants who are
+  OBLIGED, FORBIDDEN, or PERMITTED to ACT ... under specified CONDITIONS, OR ELSE"). A
+  futonic mission's completion criteria are the same kind of thing for one group's
+  problem.
+- The SDGs have a partial specification already: each target has indicators (the global
+  indicator framework), owned by the statistical community. That specifies the sense
+  role (what to measure), not the problem (what would count as solved, by whom).
+
+Rubric, revised again: for each process target, add **specify**: is there a statement a
+group could check (prose target / measurable indicator / formal), and does anyone own
+keeping it faithful to the problem? Hypothesis: for many collective problems the first
+missing owner is the specification's, and an agent can hold the drafting while the
+people who have the problem hold the "is this still our problem?" check.
