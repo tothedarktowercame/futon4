@@ -440,3 +440,40 @@ Shape, to test:
 Instance already running: a bell and its park form a two-party act (asker, asked), with
 the job id as the hyperedge and the auto-bellback as the second party's act. An open
 ArSE question is the same act with the second role unfilled.
+
+## Twelve roles: the Gauntlet party at Ostrom's three levels (Joe, 2026-11-21)
+
+Joe: "if we could multiply the fictional characters out by ... a factor of three each ...
+we'd have 12 factors ... of governance or ... guidance ... rather than looking at
+abstractions of theories maybe we should think about what actual, real, implemented
+human architecture would make something like triangle Cubed or the [Peeragogy] Project
+work really well for its stated aims ... like 12 hires ... who exactly would we want
+working with us? ... to move past this brain-body barrier and take real action in the
+world".
+
+The four characters as already defined for Giraffe's orderings (M-giraffe, 2026-11-10):
+Thor unblocking, Merlin strategy, Questor quick reach, Thyra harm reduction. The factor
+of three used here is Ostrom's three levels: operational (doing the work), collective
+choice (making the rules the work follows), constitutional (deciding who makes the rules).
+
+| | operational | collective choice | constitutional |
+|---|---|---|---|
+| **Thor** (unblocking) | builder: keeps the tools working | integrator: stitches contributions into one product, decides what merges (K10) | steward of openness: licence, forkability, the right to take the record elsewhere |
+| **Merlin** (strategy) | scanner: finds what is known, who else works on it (Daily Scan, literature) | specification holder: keeps each problem statement faithful and agreed (the missing owner found above) | evaluator: tests whether the approach works (rq1–rq3; the apex questions) |
+| **Questor** (quick reach) | facilitator: Peeragogy's Wrapper and Heartbeat, weekly contact | newcomer guide and translator: onboarding, other languages (the Indonesian teacher educators) | connector: brokers between groups, funders, clients |
+| **Thyra** (harm reduction) | monitor: keeps the contribution and harm ledgers accurate (Ostrom: monitoring) | mediator: disputed contributions, members who leave (flop 6; Triangle Cubed's first test) | ethics and consent: privacy, people records, data control (Mozilla's "Intentional") |
+
+First reading, from who holds these roles now (people named in this conversation only):
+Joe holds most of Merlin and some of every column; Rob is Thor and Merlin on the formal
+side; Murch is Questor at the constitutional level (talks with CEOs) and the source of
+Triangle Cubed's aims; Charlie's card says "connector". Agents already hold parts of the
+operational column (builder, scanner, the ledger-keeping half of monitor). **The Thyra
+row has no human holder.** That matches the finding above that our harm accounting names
+nobody outside the stack: nobody's job is the harm side.
+
+Roles are not hires one-to-one: one person can hold several cells, and agents can hold
+operational cells under a person who answers for them. The open question for "who
+exactly" is the frames method again, for contributors rather than beneficiaries: find,
+for each empty cell, the populations where such people are (e.g. institutional analysts
+around the Institutional Grammar tools found by the 2026-11-21 scan; co-op mediators;
+research-ethics people in the reproducibility networks).
