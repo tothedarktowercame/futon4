@@ -124,6 +124,6 @@
                               ((mission . "M-3") (shared "p") (score . 2.0))
                               ((mission . "M-4") (shared "p") (score . 1.0))))
                    nil))
-        (should (string-match-p "top 3 of 4" (buffer-string)))
+        (should (string-match-p "top 3 (more exist" (buffer-string)))
         (should (string-match-p "M-3" (buffer-string)))
         (should-not (string-match-p "M-4" (buffer-string)))))))

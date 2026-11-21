@@ -65,7 +65,8 @@
                     (length (or (alist-get 'patterns mojira-related-missions--data) nil))
                     (or mojira-related-missions--limit mojira-related-missions-limit)
                     (if mojira-related-missions--total
-                        (format " of %d" mojira-related-missions--total)
+                        ;; only limit+1 rows are fetched: we know more exist, not how many
+                        " (more exist; C-u N ※ m x p for more)"
                       "")))
     (insert "g refresh · q quit · RET open mission or pattern\n\n")
     (cond
