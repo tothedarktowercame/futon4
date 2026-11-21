@@ -652,3 +652,16 @@ understand exactly what it will achieve and what it won't achieve and whether it
 achieve those things in a way, that I approve of". That is the grid applied in advance to
 one act: what it is for (rows), who benefits and who bears the cost (including compute),
 which roles have an owner, and a stated test for keeping it on.
+
+**When scrutiny comes without consent (Joe, 2026-11-21).** On a police drama: "when
+people get [outside] the social contract, that they have by being a citizen which they
+never really agreed to ... then they get subject to scrutiny, analysis, motive ... not by
+their consent, but because ... the law enforcement system works". Where consent is
+missing, legitimacy comes from due process instead: a stated rule broken by a visible
+act, an inquiry in proportion, a right to reply, a judge who is not the accuser, and a
+record. Ostrom's principles say the same for a commons: monitors accountable to the
+members (4), graduated sanctions (5), cheap and local conflict resolution (6). A group
+can do better than a tacit social contract by writing its own at joining, at the
+constitutional level: when its members' acts may be examined without asking, and by
+what process. For a co-op such as Triangle Cubed that belongs in the membership
+agreement.
