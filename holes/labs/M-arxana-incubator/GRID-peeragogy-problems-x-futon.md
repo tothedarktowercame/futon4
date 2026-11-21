@@ -253,3 +253,34 @@ acts and the positions that made them; flag situations with asks and proposals b
 closing act by anyone. Then, for the ones that matter, change the situation (give a
 position the closing act, or route the ask to someone who holds one, which is
 `※ q ? w`), and see whether the flag clears.
+
+### Every act has beneficiaries and dis-beneficiaries (Joe, 2026-11-21)
+
+Joe: "acts in general, probably have both beneficiaries and ... dis-beneficiaries ... if
+I buy some food at the store ... someone had to grow that food and there's this whole
+chain of benefit and harm ... data centers emit pollution which causes people health
+problems ... by using AI agents, I'm ... outsourcing some harm to people in that area
+... does it solve as a zero sum or does it solve as a positive trajectory?"
+
+Our own accounting so far has one side. The 2026-11-08 readings found benefit claims for
+84 items and "trouble avoided" for 128, and every harm named is a harm to the stack or
+to Joe (the H trunk: wrong records, unseen failures, Joe having to nudge, stale state,
+wasted compute, unreadable models). None names a harm to anyone outside: not the people
+near the data centres our agents run in, not anyone whose work the models were trained
+on. (Checked by search: no row mentions energy, emissions or pollution as a cost.)
+
+Mozilla's call names this too: it is "not looking for systems that replicate the ways
+that the largest AI companies and systems operate, in terms of scale, user agency,
+privacy and resource use".
+
+What is measurable now, for our own acts: compute per act. Agency job records and the
+subscription usage readers give tokens per job; an energy and emissions estimate per job
+would need a stated per-token figure with its source and its uncertainty, and the data
+centre locations are not ours to know (the provider's). That is a dis-benefit column we
+could fill honestly for every act, with the caveat written beside it.
+
+Zero-sum or a positive trajectory can only be judged with both columns. One testable
+form: over time, does the harm per unit of benefit fall (smaller models, fewer wasted
+runs, work moved to classical code), and do the people bearing the harm get any of the
+benefit? If the first rises or the second stays at nothing, the trajectory is not
+positive, whatever the benefit lines say.
