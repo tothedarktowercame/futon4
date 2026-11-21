@@ -6,8 +6,9 @@ the work below has not been done anywhere we know of in this combination.
 
 **Lifecycle (2026-11-21):** regrouped under the phases of `holes/mission-lifecycle.md` after Joe
 noted the mission did not follow them ("what exists" instead of MAP). IDENTIFY, MAP and
-DERIVE were written on 2026-11-20; the mission then went straight to INSTANTIATE, so ARGUE and
-VERIFY are not done; DOCUMENT is partly done by Demo A. Content is unchanged; only headings
+DERIVE were written on 2026-11-20; the mission then went straight to INSTANTIATE. ARGUE was
+written afterwards (2026-11-21); VERIFY is not done; DOCUMENT is partly done by Demo A. A
+working demo is not completion: two completion criteria are still open. Content is unchanged; only headings
 and the order of sections moved (the acceptance checklist is now IDENTIFY's completion
 criteria).
 
@@ -191,14 +192,76 @@ which also runs one authority with thin clients.
 
 ## ARGUE
 
-Not written. Open, per the lifecycle:
+Written 2026-11-21 by claude-5, after INSTANTIATE had begun: a catch-up, so where a
+pattern below disagrees with what was built, the disagreement is recorded rather than
+argued away. A working demo (the incubator form on /edit, its notes and provenance
+panes) is not completion: two of the five completion criteria under IDENTIFY are open.
 
-- [ ] Pattern cross-reference against `futon3/library/` (PSRs for the choices in DERIVE).
-- [ ] Theoretical coherence with IDENTIFY.
-- [ ] Rationale citation: `@why war-room/wr-N-...`, or a statement that none applies.
-- [ ] Trade-off summary (for example: one hub now, peer sync deferred; no undelete in the protocol).
-- [ ] Generalisation notes.
-- [ ] Plain-language argument (3-5 sentences).
+### Pattern cross-reference
+
+| pattern | where it applies in DERIVE | how |
+|---|---|---|
+| `sidecar/append-only-semantic-audit` | the text protocol and structure operations | every entry and structure act is appended to a per-document log with its editor; state is rebuilt from the log; superseded notes stay in the log (`derived`), they are not overwritten |
+| `agency/self-attribution` | editor identity | an entry is accepted only under the connection's own identity, which Caddy sets from the login (`X-Together-Editor`); nobody, agent or server, can type as someone else. Test: the hub refuses an entry whose editor is not the connection's identity |
+| `vsatlas/non-destructive-relational-layers` | notes, provenance records, forks | notes (`<doc>.notes`), per-run provenance (`<doc>.provenance`) and slot anchors (`<doc>.slots`) sit in their own workspaces beside the text and point at character ids; they never change the text, and can be replaced or retired on their own |
+| `futon-theory/single-source-of-truth` | the hub document versus the Arxana session | **tension.** While a shared document is open, the same answers exist twice: in the hub log and in the session. DERIVE resolves it by direction, not by merging: the hub is the source while people edit, and a checkpoint (`C-c C-s`) writes the result into the session as attributed acts that name the hub revision they came from. Two edits made on both sides at once still diverge, and nothing detects it (2026-11-21: Joe's unsaved E pass versus the shared document) |
+| `exotic/live-sync-source-truth` | checkpoints | each checkpoint act records `together` {doc, rev, slot_record}, the version id of what it synced, as this pattern asks of every sync |
+
+PSRs: none were written when these choices were made (2026-11-20). The table above is the
+catch-up the lifecycle allows at ARGUE; no PURs exist yet.
+
+### Rationale citation
+
+- `@why war-room/wr-4-inhabit-before-building`: new infrastructure is justified only when
+  it makes an existing surface more inhabitable. The surface here is the incubator form,
+  which Joe already used for three passes; the hub lets Murch and Rob into it, from a
+  browser, with their words kept as theirs. Building a separate editor would not meet
+  this ruling.
+- `war-room/wr-3-social-exotype-before-implementation` was **not followed**: this is a
+  social layer (who may write, whose words are whose, who decides a merge), and no
+  social exotype diagram was written before the code. It is owed under VERIFY.
+
+### Theoretical coherence
+
+IDENTIFY asks for several people editing one hypergraph "immutably", across surfaces.
+The design keeps that: characters, notes and structure nodes are never rewritten, only
+added, deleted with a tombstone, or superseded. It also fits the incubator's framing that
+a person's process is data: every keystroke is an attributed observation, which is what
+lets the pane say "written by Murch; kept by Joe" at the level of a word. What IDENTIFY
+calls "a more general OT" over a hypergraph is so far only partly there: text is
+real-time, structure is serialised at the hub, and links across documents are spans in
+workspaces, not live operations.
+
+### Trade-offs
+
+- One hub now, peer sync later (Joe: "build the central version first"). We gave up
+  offline editing and having no single point of failure; we kept the requirements a peer
+  version would need (DERIVE, "Requirements kept").
+- No undelete: the protocol has no operation that restores deleted characters with their
+  ids, so an undo re-inserts text with new ids. The 2026-11-20 select-all-undo incident
+  was repaired by copying attributes, not by restoring ids.
+- The whole incubator form is one hub document (fable-1's copy of the buffer), not one
+  document per answer. Simpler to edit and demo; it needs slot anchors to find answers,
+  and holds text that belongs to no answer (the call notes, being moved out).
+- Real-time for text, serialised for structure: cheaper and checkable (a regroup that
+  closes a cycle is refused), at the cost of structure edits waiting on the hub.
+
+### Generalisation
+
+Nothing in the hub is specific to the incubator: the catalogue is already a document on
+/edit, and any Arxana text could be. What would change: the checkpoint is specific to the
+incubator session (answers, layers); another document type needs its own checkpoint into
+its own store. The code-server surface (DERIVE, plan item 6) is not built.
+
+### Plain-language argument
+
+Several people can now write in one document at the same time, from Emacs or a web
+browser, and the document remembers who wrote each word. Nothing is overwritten: edits,
+comments and corrections are added on top, so any earlier state can be shown and every
+sentence can be traced back to its author and its source. When the group is done, the
+result is saved into the project's record as a new version, with the authors kept. This
+matters for the incubator because it lets collaborators shape a text together without
+anyone's contribution being silently absorbed into someone else's.
 
 ## VERIFY
 
