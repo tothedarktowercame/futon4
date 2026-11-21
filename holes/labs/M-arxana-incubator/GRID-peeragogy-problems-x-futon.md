@@ -538,3 +538,25 @@ Refuted if users of the testbeds report no change in understanding themselves, o
 practice costs more than it returns (time, attention, dependence on the tools). This is
 an inward, individual-level benefit; the testbeds would also show whether it passes to
 the group level (a group that understands its own process better).
+
+H8, as Joe states it (2026-11-21), under the principle "come and see" (a benefit claimed
+should be one others can inspect): "over the last year, my thinking around these issues
+has gotten clear ... it's not just a matter of a kind of gratification ... that I've been
+able to do things I always wanted to do that's more of a benefit of the underlying
+technology with LLMs ... Futon has provided a little bit of leverage in that regard ...
+these are like mundane benefits ... the more noble benefits have to do with my
+relationship to myself through a sense of clarity and also ... humility ... around my
+own ability".
+
+Two benefits, attributed separately:
+- mundane (doing long-wanted things): mostly the language models, some leverage from
+  FUTON;
+- noble (clarity; humility about one's own ability): claimed for FUTON's practice.
+The counterfactual that separates them: would plain chat with a language model, without
+the records, patterns and missions, have given the same clarity?
+
+Come-and-see checks on Joe's own year of record (to run, not yet run): how long his
+specification runs take to close now against a year ago (the atomic/complex test above);
+how often his turns redirect or retract; how often credit goes to others or to the
+system rather than to himself. None measures clarity directly; each is something another
+reader can check against the record, which is what "come and see" asks.
