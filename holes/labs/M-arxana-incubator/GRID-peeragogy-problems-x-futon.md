@@ -166,3 +166,29 @@ other words). Next: read all 169 against a rubric (material or process; if proce
 which grid row R1-R7 and which Max-Neef need; individual or collective level), then
 count. Refuted for FUTON if the process targets are few, or none maps to a row where
 FUTON has more than infrastructure.
+
+### Owned by everyone, or by nobody (Joe, 2026-11-21)
+
+Joe: "you might think, that a collective problem would be something that everybody owns
+but sometimes you could find that with collective problems, they turn out to be things
+that nobody owns ... Climate change there's a commission ... but do they own that
+problem? Do they own it enough that they could make a climate change futonic mission and
+actually solve that problem? I kind of doubt it".
+
+A futonic mission needs an owner (lifecycle IDENTIFY: "Owner and dependencies"), and
+Ostrom's first principle for a commons is a group with clear boundaries. Ostrom's answer
+for climate was polycentric: many bounded groups each owning a part, not one body owning
+the whole ("A polycentric approach for coping with climate change", 2009/2010, from
+memory; check). Benefit line C4 says the same at small scale: "route to the individual
+who owns the problem".
+
+Our own stack has the nobody-owns case: in `~/notes/commons-map/placements-who-acts-summary.md`
+(2026-11-02), two work items are close calls because "its ruling names no one"
+(E-R2-red-ring-fill) and "the stop-the-line names no one who lifts it"
+(M-G-over-cascades).
+
+Rubric field for the 169-target reading: **owner** — is there a bounded group that could
+own a mission on this target, or a part of it? (none named; named but not bounded, as
+"all countries"; a bounded group). A process target with no possible owner is one FUTON
+cannot help with as a mission, however well it fits a grid row; it may still help a
+bounded group own a part.
