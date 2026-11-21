@@ -54,3 +54,44 @@ not a gap to fill.
 - Ask the testbeds which rows are theirs (rq1, "on paper, before FUTON is shown").
 - Read the same way for Triangle Cubed's literature (employee ownership, co-op
   incubation) and add its rows; a row both share is a candidate for rq3.
+
+## Needs, and two levels of problem (Joe, 2026-11-21)
+
+Joe: "do you know that Max Neef table of human needs? ... if we were thinking about like
+collective problems, probably there's collective acts like understand ... that's what a
+process of shared inquiry is about so maybe we should hypothesize that there are
+individual level problems and then there are also collective level problems and
+potentially what we're talking about here can help with both or help bridge between
+them".
+
+Where Max-Neef was used before: futon3c `holes/missions/M-aif-over-the-operator.md`, a
+keyword tree from Beer's VSM × Max-Neef, elaborated by three agents (`rnode-tree/`), to
+detect which part of the operator loop a turn is about; held-out detection agreed with
+turn bids 39% against 22% by chance.
+
+Max-Neef's matrix has nine needs (subsistence, protection, affection, understanding,
+participation, leisure, creation, identity, freedom) across four modes (being, having,
+doing, interacting). Two of its ideas fit here:
+- The **interacting** column is already the collective level: the settings in which a
+  need is met together. For understanding, the doing column lists investigating,
+  studying, experimenting, educating, analysing; the interacting column lists schools,
+  groups, communities. Shared inquiry is understanding met in the interacting mode.
+- **Satisfiers** differ from needs, and some are synergic (meeting several needs at
+  once) while others are pseudo-satisfiers (giving the sense of a need met without
+  meeting it). Peer learning is a candidate synergic satisfier (understanding,
+  participation, identity, creation). Agreement among agents taken as validation (R6) is
+  a pseudo-satisfier of understanding.
+
+Rows read as needs (a reading to test): R1 freedom, participation; R2 understanding;
+R3 understanding, participation, creation; R4 participation; R5 understanding, identity;
+R6 understanding (guarding against a pseudo-satisfier); R7 identity (recognition),
+protection (credit), participation.
+
+**Hypothesis (to test, not assumed).** Each row has an individual form (a person's
+learning, credit, say over what is next) and a collective form (a group's shared
+understanding, its record, its rules). FUTON's acts are individual: a turn, an edit, a
+mark. Its records are collective: the evidence store, the document, the pattern. The
+bridge is the step where individual acts become a collective state that each member can
+still trace back to themselves (per-word provenance is one instance).
+Refuted if: in the testbeds, the problems people name are only individual (or only
+collective), or the records do not change what the group knows or decides.
