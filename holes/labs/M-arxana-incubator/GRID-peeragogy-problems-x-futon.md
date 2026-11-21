@@ -617,3 +617,25 @@ trust. Two uses are defensible: a person asking it of their own record (H8, refl
 and acts whose effect can be seen (credit taken for another's words is visible in the
 provenance, whatever the motive). Rubric: value contributions by the checkable acts; do
 not score motives.
+
+**Motives asked, not inferred (Joe, 2026-11-21).** "in a compassionate and trusted
+communication environment where people really were interested in shared inquiry, you
+could ask someone, well, why did you say that? ... make those things part of the
+dialogue ... people are very defensive ... the business relevant aspect of this is where
+you see a company and they profess some values and then they have behavior which doesn't
+seem to align with those values ... as a consultant, you kind of would want to tell them
+... which is it? You can't have it both ways."
+
+So a motive enters the record only as the person's own answer to an asked question (a
+two-party act: ask, answer), in a setting they have agreed to. The organisational
+version is Argyris and Schön's distinction between espoused theory and theory-in-use
+(*Theory in Practice*, 1974): what an organisation says guides it, against what its
+behaviour shows. With values written as institutional statements and acts in the record,
+the gap between them is a query, and a consulting question with evidence behind it.
+
+First case to hand: the stack itself. Its espoused theory is in the CLAUDE.md files
+(author ≠ reviewer; never post as Joe; park on every dispatch; send packets as work).
+Its theory-in-use is in the commits, jobs and turns. Example from 2026-11-21: packets
+were being sent in brief mode by the recommended script, against the rule that a packet
+is work (fixed in futon3c 6dd9b5abb). A self-audit of that gap would be the
+demonstration before offering it to anyone else.
