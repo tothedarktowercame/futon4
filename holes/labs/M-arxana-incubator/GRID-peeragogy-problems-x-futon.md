@@ -686,3 +686,28 @@ What would make such a playtest informative rather than flattering:
 - remember our own precedent: simulated buyers did not predict demand ("they didn't buy,
   but neither were the simulated ones", participants.md, 2026-11-02), and four simulated
   customers were misled by text hidden in a page's HTML comments.
+
+**A practice for collectives: reading plays in role (Joe, 2026-11-21).** "agents are
+trained on written literature ... to simulate either an individual or a human entity ...
+what we would maybe be developing here would be a training protocol for collectives ...
+rather than reading novels where we have to hold all the characters in mind we might read
+plays where each agent is given an actor and then they walk through step by step what is
+Iphigenia thinking here why did she say that?"
+
+A play solves the consent problem above: characters can be asked "why did you say that?"
+without harming anyone. Three existing practices to build on rather than reinvent:
+- **hot-seating** in drama education: a participant stays in role and is questioned
+  about the character's motives;
+- **Stanislavski's analysis**: each character's given circumstances and objective in each
+  unit of a scene;
+- **Boal's Forum Theatre** (Theatre of the Oppressed): a scene of a problem is played,
+  then replayed while the audience steps in to try other acts. That is a collective
+  rehearsal of changing an action situation, the "how do we change them" question above.
+
+As a protocol: one agent per character, a scene walked through turn by turn, each line
+followed by an asked "why" answered in role; then a Forum pass where another participant
+replaces one act and the scene is played on. The record (marks, asks and answers,
+replaced acts) is data about how a group reasons about motives and alternatives.
+"Training" here means a practice and its transcripts, not retraining a model. Check:
+do in-role motives agree with the play's scholarship, and do Forum replays find acts the
+text did not take?
