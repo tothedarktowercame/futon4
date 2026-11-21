@@ -272,7 +272,7 @@ loads the view into JOE's Emacs.
 
 **Scene 4. The director's note.** JOE: "Maybe top 10 by default." 04:39–04:43 CODEX-3
 adds the limit (df0f08e). CLAUDE-5 finds the header claims "of 11" when 11 is only what
-was fetched, and fixes it himself (71fbdfe).
+was fetched, and fixes it directly (71fbdfe).
 
 **Scene 5. The second number.** JOE asks for `※ s x p`. 04:44–04:47 CODEX-26 builds the
 sessions endpoint (9bd121061); 04:44–04:46 CODEX-3 the view (ef0a189).
@@ -288,6 +288,6 @@ nine jobs, two of them wasted by the missed cue.
 
 What the script shows that the commit log does not: the shape of the arena. One lead,
 two builders in fixed lanes (endpoint, view), the director's notes arriving mid-scene,
-and the lead fixing small things himself rather than recasting. Whether that shape
+and the lead fixing small things directly rather than recasting. Whether that shape
 repeats in other missions is the action-arena question: a script read across several
 performances is how the regularities (and the recurring missed cues) would show.
