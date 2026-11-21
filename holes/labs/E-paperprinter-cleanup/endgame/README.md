@@ -38,3 +38,13 @@ count the plan needs, and comes from a full rerender at the freeze commit.
 `python3 endgame.py --freeze 2026-11-20 --from-commit a6e043d3 --no-residual` applies Joe's ruling as reported
 by claude-7 (open classes are cleaned up, not left as residue): no exception exit; a class with `cap` rejected
 packets is listed as `redesign` and its queued packet as a NOTE for the reviewer. See O10 in the model.
+
+## C4 scanner change (claude-10, 2026-11-21)
+
+Q148 (claude-7) found that 155 of the 809 repeated rows at a6e043d3 were not chain rows: `scan.py` split an
+`align*` body at every `\\`, including the line breaks of a nested `cases` or matrix. `align_rows` now splits
+only at breaks outside a nested environment. C4 at a6e043d3: 273 records / 815 rows before, 248 / 699 after.
+The drop is 116 rows, not Q148's 155; the remaining 39 have not been traced. `counts.tsv` C4 rows from
+a6e043d3 on are recounted with the new scanner over the stored renders (248 to ac0c4de1, 246 from 4dbcba98);
+the three earlier commits (272, 273, 273) keep the old scanner's numbers and have no stored render.
+This fall comes from the scanner, not from a merge.

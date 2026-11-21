@@ -25,6 +25,20 @@ FAMILY = {
 # raw words that are local names with a subscript (c_A, q_K, f_n) or the English "self": not defects
 LOCAL = re.compile(r"^[A-Za-z]_[A-Za-z]'?$|^self$")
 
+NEST = re.compile(r'\\(begin|end)\{[^}]*\}|\\\\')
+
+def align_rows(block):
+    """Split an align* body at its own row breaks. A break inside a nested environment (cases, a matrix)
+    is a line of that environment, not a chain row (Q148: 155 of 809 repeats at a6e043d3 came from those)."""
+    rows, depth, start = [], 0, 0
+    for m in NEST.finditer(block):
+        if m.group(1) == 'begin': depth += 1
+        elif m.group(1) == 'end': depth -= 1
+        elif depth == 0:
+            rows.append(block[start:m.start()]); start = m.end()
+    rows.append(block[start:])
+    return rows
+
 def main(pattern, commit='-'):
     rec = collections.Counter(); occ = collections.Counter(); n = errors = 0
     for path in sorted(glob.glob(pattern)):
@@ -40,7 +54,7 @@ def main(pattern, commit='-'):
             # C4: a displayed chain that prints the same expression on two rows
             repeats = 0
             for block in re.findall(r'\\begin\{align\*\}(.*?)\\end\{align\*\}', visible(proof), re.S):
-                rows = [x.split('&&')[0].strip() for x in block.split('\\\\')]
+                rows = [x.split('&&')[0].strip() for x in align_rows(block)]
                 rows = [x for x in rows if x]
                 repeats += len(rows) - len(set(rows))
             if repeats: rec['C4'] += 1; occ['C4'] += repeats
