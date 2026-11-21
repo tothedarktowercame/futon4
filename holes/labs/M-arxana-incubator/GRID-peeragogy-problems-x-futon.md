@@ -133,3 +133,36 @@ level (my contribution) to the collective one (who owns, who decides), the bridg
 two-level hypothesis above. It also makes t2 ("recording costs members little") harder:
 recording that people feel as surveillance is a violator in Max-Neef's terms, not a
 satisfier.
+
+## A second apex question: how do groups solve collective problems? (Joe, 2026-11-21)
+
+Joe: "maybe there's another level of an apex thesis, which is more like how do humans
+solve collective problems ... through a process of active inference that's not only
+active inference, but is also effective ... we could just make a list of big problems
+... the UN has that big list ... which, if any, [how] many of those can futon help with,
+and if it can help with a lot of them, that's great, and if it can help with only a few,
+that's also really useful to know".
+
+The list: the UN Sustainable Development Goals, 17 goals and 169 targets (UN Statistics
+Division SDG API, fetched 2026-11-21; saved in
+`~/storage/arxana-incubator/research/un-sdg-goals-targets-2026-11-21.json`). The COP
+conferences cover climate only (goal 13).
+
+FUTON could only help with a target through the way a group pursues it (knowing,
+deciding, coordinating, accounting), not with the material outcome itself (water,
+yields, emissions). So the first cut is which targets name a collective process.
+
+Rough keyword pass (participation, accountability, transparency, access to information,
+knowledge, capacity, partnership, cooperation, education, data, monitoring,
+decision-making, institutions): **56 of 169 targets**. Densest in goal 17 (11 of 19),
+goal 4 (8 of 10), goal 16 (5 of 12), goal 13 (4 of 5). Examples: 16.7 "responsive,
+inclusive, participatory and representative decision-making at all levels"; 16.6
+"effective, accountable and transparent institutions"; 17.6 cooperation on and access to
+science, technology and innovation, and knowledge sharing; 4.7 learners acquire what
+they need to promote sustainable development.
+
+That pass over-counts (a keyword is not a process) and under-counts (process targets in
+other words). Next: read all 169 against a rubric (material or process; if process,
+which grid row R1-R7 and which Max-Neef need; individual or collective level), then
+count. Refuted for FUTON if the process targets are few, or none maps to a row where
+FUTON has more than infrastructure.
