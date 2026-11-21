@@ -19,7 +19,7 @@
     (mojira-related-sessions--render)
     (goto-char (point-min))
     (should (search-forward "※ s x p · session-current (2 patterns) · top 10" nil t))
-    (should (search-forward "2.50  session-related  codex-4  M-shared  2026-11-21T04:00:00Z" nil t))
+    (should (search-forward "2.50  1 shared pattern  session-related  codex-4  M-shared  2026-11-21T04:00:00Z" nil t))
     (should (search-forward "    p/one" nil t))
     (should (button-at (progn (goto-char (point-min))
                               (search-forward "session-related" nil t)

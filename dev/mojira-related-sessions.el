@@ -91,13 +91,14 @@
       (dolist (related (alist-get 'related mojira-related-sessions--data))
         (let ((session (alist-get 'session related))
               (shared (alist-get 'shared related)))
-          (insert (format "%.2f  " (or (alist-get 'score related) 0.0)))
+          ;; the count first: a narrow side window cuts the end of the line (Joe 2026-11-21)
+          (insert (format "%.2f  %d shared pattern%s  " (or (alist-get 'score related) 0.0)
+                          (length shared) (if (= 1 (length shared)) "" "s")))
           (mojira-related-sessions--session-button session)
-          (insert (format "  %s  %s  %s  (%d shared patterns)\n"
+          (insert (format "  %s  %s  %s\n"
                           (or (alist-get 'agent related) "—")
                           (or (alist-get 'mission related) "—")
-                          (or (alist-get 'latest_at related) "—")
-                          (length shared)))
+                          (or (alist-get 'latest_at related) "—")))
           (dolist (pattern shared)
             (mojira-related-sessions--pattern-button pattern))))))
     (goto-char (point-min))))

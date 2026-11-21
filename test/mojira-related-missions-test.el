@@ -17,9 +17,9 @@
     (mojira-related-missions--render)
     (goto-char (point-min))
     (should (search-forward "※ m x p · M-arxana-together (2 patterns)" nil t))
-    (should (search-forward "2.50  M-first  (1 shared patterns)" nil t))
+    (should (search-forward "2.50  1 shared pattern  M-first" nil t))
     (should (search-forward "    agency/self-attribution" nil t))
-    (should (search-forward "1.00  M-second  (2 shared patterns)" nil t))
+    (should (search-forward "1.00  2 shared patterns  M-second" nil t))
     (should (search-forward "    sidecar/append-only-semantic-audit" nil t))
     (let (buttons)
       (save-excursion
