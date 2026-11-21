@@ -244,3 +244,50 @@ guess. Scale is held down by starting from one question, not the company.
 Extension: [E-arse-cq](../excursions/E-arse-cq.md) (2026-11-21) bridges ArSE questions
 to Mozilla.ai's cq knowledge units: a cq `query` before asking anyone, and an optional
 `propose` ("release") after an answer. Gated on Joe for any install or remote.
+
+## DOCUMENT, as a script: the first performance of `※ x p` (2026-11-21, 04:35–04:55Z)
+
+Joe, 2026-11-21: "we could think of the document phase as a way to collect a kind of short
+script of what actually happened in the action arena ... the action arena just takes that
+theatrical thing and says, okay, well, it's repeatable in the real world". Written from
+the invoke ledger (job events) and commit trailers; times UTC; nothing here is
+reconstructed from memory except the order of Joe's turns.
+
+**Dramatis personae.** JOE, the director. CLAUDE-5, the lead: writes the scenario,
+casts, reviews. CODEX-26, builds endpoints (futon3c). CODEX-3, builds views (futon4).
+THE LEDGER, which records every cue.
+
+**Scene 1. The idea.** JOE: "※ m x p might work as a shortcode?" CLAUDE-5 checks the
+store answers "which missions cite pattern X" (15 ms), writes one response shape for
+both builders, and sends two packets.
+
+**Scene 2. A missed cue.** 04:35. Both packets go out in brief mode, in which a seat
+does nothing (the recommended script, `bell-file.sh`, never passed a mode). CLAUDE-5
+notices, cancels both (04:36), resends as work, and fixes the script (futon3c
+6dd9b5abb).
+
+**Scene 3. Two builds in parallel.** 04:36–04:38 CODEX-26 builds the endpoint
+(2d63eaa7e); 04:36–04:41 CODEX-3 builds the view (e158110). CLAUDE-5 reviews both and
+loads the view into JOE's Emacs.
+
+**Scene 4. The director's note.** JOE: "Maybe top 10 by default." 04:39–04:43 CODEX-3
+adds the limit (df0f08e). CLAUDE-5 finds the header claims "of 11" when 11 is only what
+was fetched, and fixes it himself (71fbdfe).
+
+**Scene 5. The second number.** JOE asks for `※ s x p`. 04:44–04:47 CODEX-26 builds the
+sessions endpoint (9bd121061); 04:44–04:46 CODEX-3 the view (ef0a189).
+
+**Scene 6. The third, and a slow line.** 04:47–04:51 both build `※ t x p` (96c2fa192,
+8d4775b). The endpoint answers correctly in 47 s. CLAUDE-5 sends it back; 04:51–04:55
+CODEX-26 profiles first, finds 47 s spent in a projection the endpoint never needed, and
+cuts it to 0.06 s (f7b41ef5e). JOE asks for "2 shared patterns" on each line; CLAUDE-5
+makes it so in all three views (b8b5550, c8875e5).
+
+**Curtain.** Three moves built, reviewed and loaded in twenty minutes of builders' time;
+nine jobs, two of them wasted by the missed cue.
+
+What the script shows that the commit log does not: the shape of the arena. One lead,
+two builders in fixed lanes (endpoint, view), the director's notes arriving mid-scene,
+and the lead fixing small things himself rather than recasting. Whether that shape
+repeats in other missions is the action-arena question: a script read across several
+performances is how the regularities (and the recurring missed cues) would show.
