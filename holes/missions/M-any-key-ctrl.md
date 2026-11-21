@@ -213,3 +213,30 @@ Candidate moves once person records exist:
 - [ ] who used: take-up of a term or pattern, by person.
 - [ ] who left: people with past acts and none since a date (flop 6's missing sample).
 - [ ] `※ who x p`: people whose own acts touch a pattern.
+
+## Candidate: `※ q ? w`, who is related to this question (Joe, 2026-11-21)
+
+Joe: "one example that I have talked about with both Rob and Murch is basically
+'inside this company, who should be talking to whom?' Run globally it would be a big
+query. But if we narrowed it to ※ q ? w — (w)ho is related in some way to this
+(q)uestion we could start to narrow it down. That could work well also in combination
+with ArSE and that gets at the point that agents could also use the CTRL to move
+around / do some stuff".
+
+The `?` is M-repl-circus's open query `[a ? c]`: a want until a witness answers it.
+As a CTRL sequence over what exists (futon3c `README-arse.md`):
+1. **read** `※ q ? w`: for an ArSE question (or the turn at point), the people and
+   agents whose own acts touch it: shared patterns (the same retrieval that tags turns,
+   run on the question text), the same mission, authorship of the passages it cites,
+   Rolodex interest territories. Ranked, top 10, strong links only unless `C-u`.
+2. **transition** ask: route the question to a chosen person or agent as a typed bell
+   (`--type query --ref <thread-id>`, which exists and does not duplicate the question);
+   receipt = the job id.
+3. **witness**: the answer (`--type answer --ref`) closes the open query.
+
+Agents can run the same sequence: an agent holding an unanswered question (24 open on
+2026-11-21, `GET /api/alpha/arse/unanswered`) picks whom to ask by query instead of by
+guess. Scale is held down by starting from one question, not the company.
+
+- [ ] `※ q ? w` returns ranked candidates for one live ArSE question, each with the
+      acts that link them, in under 2 s.
