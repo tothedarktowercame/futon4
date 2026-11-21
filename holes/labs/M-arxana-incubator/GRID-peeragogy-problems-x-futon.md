@@ -192,3 +192,30 @@ own a mission on this target, or a part of it? (none named; named but not bounde
 "all countries"; a bounded group). A process target with no possible owner is one FUTON
 cannot help with as a mission, however well it fits a grid row; it may still help a
 bounded group own a part.
+
+### Owning parts, and orchestrating the owners (Joe, 2026-11-21)
+
+Joe: "they can own parts of the problem ... they could own monitoring climate change,
+for example that's a much easier thing to own ... I'm a sensory organ that's able to
+ascertain that problem so maybe the issue with futon is how to develop orchestrations
+of people ... the owner could be Claude 5 ... and the orchestration of people that own
+the aspects of the problem is what actually has to work".
+
+In active-inference terms a collective problem has roles: sensing (monitoring),
+modelling (understanding what is going on), acting, and keeping these connected. Beer's
+VSM, already crossed with Max-Neef in M-aif-over-the-operator, names the same roles for
+an organisation (operations, coordination, control, intelligence about the environment,
+policy). Each role can have a bounded owner even when the whole problem has none. The
+owner of the whole then does not need authority over the parts; it keeps them connected
+(benefit line K10: "small contributions plus an integrating function that stitches them
+together").
+
+The stack already works this way on a small scale: on 2026-11-20/21 fable-1 owned the
+notes and provenance records, Codex seats built, claude-5 reviewed and orchestrated, and
+Joe decided. Whether that orchestration works for people who are not agents is the open
+question, and the one the testbeds can answer.
+
+Rubric, revised: for each process target, the roles (sense, model, act, connect), and for
+each role whether a bounded owner exists (none / named but unbounded / bounded). The
+count that matters: targets where every role but "connect" has a possible bounded owner.
+Those are the ones where orchestration is the missing piece, which is what FUTON offers.
