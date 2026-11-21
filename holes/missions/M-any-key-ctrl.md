@@ -240,3 +240,7 @@ guess. Scale is held down by starting from one question, not the company.
 
 - [ ] `※ q ? w` returns ranked candidates for one live ArSE question, each with the
       acts that link them, in under 2 s.
+
+Extension: [E-arse-cq](../excursions/E-arse-cq.md) (2026-11-21) bridges ArSE questions
+to Mozilla.ai's cq knowledge units: a cq `query` before asking anyone, and an optional
+`propose` ("release") after an answer. Gated on Joe for any install or remote.
