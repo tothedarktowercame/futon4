@@ -184,3 +184,32 @@ visible (who benefited, who left), not wanted.
   ranking by strong links only, weak links shown dimmed.
 - **`C-u ※` as a universal toggle** (Joe, 2026-11-21): plain `※` returns strong links,
   `C-u ※` adds weak ones, for every move that has both readings.
+
+## MAP note: "who" (claude-5, 2026-11-21)
+
+Joe, 2026-11-21: "we don't have the 'who wants it' yet but if we had a stronger rolodex
+we could start to make queries with 'who' involved". The demand and who-benefits
+defeaters of flops 2, 3 and 5 need people as records.
+
+What exists (field names only here; the records are private):
+- People inside the stack, attributed per act: agent ids, Joe, and the Together editor
+  logins (rob, murch).
+- The sales Rolodex, futon7 `business/sales/sales.edn` (private repo): cards with
+  `:card/name`, `:card/org`, `:card/role`, `:card/how-we-met`, `:card/first-contact`,
+  `:card/relationship`, `:card/interest-territories`, `:card/referred-by`,
+  `:card/referrals`, `:card/in-pipeline`; clients with `:client/stage`,
+  `:client/engagement`; demos with `:demo/for`, `:demo/outcome`. Read by
+  `dev/arxana-vsatarcs-sales.el` and `dev/arxana-fair.el` (paths fixed 2026-11-21,
+  futon4 573bc65).
+- Mail, indexed with notmuch; not linked to any mission, pattern or request.
+
+Rules before anything is built (Mozilla "Intentional" applies to us too):
+- Person records live only in private stores, never in a public repo.
+- Built only from acts the person made (a message they sent, an edit under their login,
+  a paper they co-wrote); every field records its source; no inferred traits.
+
+Candidate moves once person records exist:
+- [ ] who asked: requests for or about an item, by person and date (demand evidence).
+- [ ] who used: take-up of a term or pattern, by person.
+- [ ] who left: people with past acts and none since a date (flop 6's missing sample).
+- [ ] `※ who x p`: people whose own acts touch a pattern.
