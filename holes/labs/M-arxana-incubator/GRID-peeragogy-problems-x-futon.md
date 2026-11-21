@@ -95,3 +95,41 @@ bridge is the step where individual acts become a collective state that each mem
 still trace back to themselves (per-word provenance is one instance).
 Refuted if: in the testbeds, the problems people name are only individual (or only
 collective), or the records do not change what the group knows or decides.
+
+## Comparison case: Triangle Cubed against Peeragogy (Joe, 2026-11-21)
+
+Joe: "did that ever come up with [Peeragogy] or do we care about this? Or maybe there's a
+whole other set of problems from [Peeragogy] that if Murch isn't able to solve, his
+triangle cubed thing isn't going to work very well". Murch's stated aim (application;
+video intro): people control the data their AI agents use, understand it, and can trace
+which contributions go into which things.
+
+**Did it come up in Peeragogy?** Contribution tracing did, twice, and both times the
+idea outlived the attempt (`~/notes/peeragogy-flops/ARGUMENTS.md`):
+- Flop 3, Kickstarter 2012: "Contributions to a free/open project can be accounted for
+  in money and time together"; "for people who contribute time and effort, some
+  compensation may be needed". It failed on demand, not on the accounting, which now
+  exists as infrastructure.
+- Flop 5, Wikimedia 2013: the learning-patterns idea was taken up inside WMF while the
+  grant was not funded; "the value went into a commons without returning to the people
+  who contributed it" (the WMF part is from memory, to check).
+Control over data did not: in the 195 abstracts, one sentence (2024) names data privacy,
+as an AI-ethics challenge. That part of Murch's aim is new relative to Peeragogy.
+
+**Peeragogy problems Triangle Cubed inherits:**
+- Why people stay and why they leave (flop 6): unsolved; "the bonds of friendship" was
+  asserted, not tested, and the leavers were never asked. In a co-op, a leaver takes or
+  forfeits a share, so the question has a price.
+- The hard roles (flop 6: Wrapper, Heartbeat, Newcomer): coordination labour, and
+  whether a roundup written by an agent carries the social signal of being named ("our
+  names had been mentioned"). Tracked contribution is a version of that signal.
+- Demand (flop 3): accounting with nobody asking for it.
+- Carry-back (flop 5): value leaving a group without returning.
+
+**Reading.** In Peeragogy, credit was recognition with nothing at stake. Triangle Cubed
+attaches a stake: ownership follows recorded work (hypothesis t1). That makes the
+tracing worth more and its errors cost more, and it moves credit from the individual
+level (my contribution) to the collective one (who owns, who decides), the bridge in the
+two-level hypothesis above. It also makes t2 ("recording costs members little") harder:
+recording that people feel as surveillance is a violator in Max-Neef's terms, not a
+satisfier.
