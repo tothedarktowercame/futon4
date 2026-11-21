@@ -20,7 +20,7 @@
     (mojira-related-turns--render)
     (goto-char (point-min))
     (should (search-forward "※ t x p · turn-current (1 patterns) · top 10" nil t))
-    (should (search-forward "2.50  turn-related  codex-4  M-shared  2026-11-21T04:00:00Z  A related turn excerpt" nil t))
+    (should (search-forward "2.50  1 shared pattern  turn-related  codex-4  M-shared  2026-11-21T04:00:00Z  A related turn excerpt" nil t))
     (should (search-forward "    p/one" nil t))
     (should (button-at (progn (goto-char (point-min))
                               (search-forward "turn-related" nil t)

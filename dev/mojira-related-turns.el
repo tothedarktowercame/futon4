@@ -117,15 +117,16 @@
                         (replace-regexp-in-string
                          "[\n\r]+" " " (string-trim (or (alist-get 'excerpt related) "")))
                         120 nil nil "…")))
-          (insert (format "%.2f  " (or (alist-get 'score related) 0.0)))
+          ;; the count first: a narrow side window cuts the end of the line (Joe 2026-11-21)
+          (insert (format "%.2f  %d shared pattern%s  " (or (alist-get 'score related) 0.0)
+                          (length shared) (if (= 1 (length shared)) "" "s")))
           (mojira-related-turns--turn-button turn)
-          (insert (format "  %s  %s  %s  %s  (%d shared patterns)\n"
+          (insert (format "  %s  %s  %s  %s\n"
                           (or (alist-get 'agent related)
                               (alist-get 'speaker related) "—")
                           (or (alist-get 'mission related) "—")
                           (or (alist-get 'created_at related) "—")
-                          excerpt
-                          (length shared)))
+                          excerpt))
           (dolist (pattern shared)
             (mojira-related-turns--pattern-button pattern))))))
     (goto-char (point-min))))
