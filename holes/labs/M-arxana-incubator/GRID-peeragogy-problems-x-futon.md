@@ -590,3 +590,30 @@ it). An instrument is something that shows you what you could not see without it
 Unproven: whether these differences matter to Rob and Murch. Come-and-see test: ask
 each whether they would use it again rather than Google Docs, and for which of the
 differences above (or none). Their answers are the benefit's evidence; Joe's is one.
+
+### What a contribution solves: acts we can check, motives we should not guess (Joe, 2026-11-21)
+
+Joe: "if we had this grid, we could, in principle, do inference to say what does each
+contribution actually solve ... if it solves someone's self-aggrandizement ... or ...
+they wish to be better than someone else ... we would know that whereas ... if we say
+... you've articulated a dimension of this problem, which has not really been articulated
+before, or you've proposed a function whereby this particular problem could be addressed
+and you've provided evidence ... those are speech acts, which I think we would see as
+valuable".
+
+The valuable acts Joe names can each be checked against the record, without guessing
+anyone's motive:
+
+| act | mark | check |
+|---|---|---|
+| articulated a dimension not articulated before | 🈕 extend, ㊫ explore | first appearance: no earlier statement of it in the record (a query) |
+| proposed a function by which the problem could be addressed | ㊭ propose | the proposal names a mechanism (who does what, with what effect) |
+| provided evidence that it can be addressed that way | ㊬ verify, ㊢ report | a linked witness: a run, a count, a source that another reader can open |
+
+The other side (self-aggrandizement, wanting to be seen as better) is a claim about
+motive. Inferring it from text is unreliable, and doing it to people would be the kind
+of recording Max-Neef calls a violator: it claims to serve understanding and damages
+trust. Two uses are defensible: a person asking it of their own record (H8, reflection),
+and acts whose effect can be seen (credit taken for another's words is visible in the
+provenance, whatever the motive). Rubric: value contributions by the checkable acts; do
+not score motives.
