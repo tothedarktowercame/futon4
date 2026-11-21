@@ -3,6 +3,7 @@
   "codes": [
     {"code": "m p", "label": "Mission patterns", "emacs": {"command": "mojira-mission-patterns", "load": "~/code/futon4/dev/mojira-mission-patterns.el"}},
     {"code": "m x p", "label": "Missions sharing these patterns", "emacs": {"command": "mojira-related-missions", "load": "~/code/futon4/dev/mojira-related-missions.el"}},
+    {"code": "s x p", "label": "Current sessions sharing these patterns", "emacs": {"command": "mojira-related-sessions", "load": "~/code/futon4/dev/mojira-related-sessions.el"}},
     {"code": "p", "label": "Patterns", "emacs": {"uri": "arxana://view/patterns"}, "mojira": {"page": "pg"}},
     {"code": "i", "label": "GCC items", "mojira": {"page": "gcc"}},
     {"code": "y", "label": "Gauntlet party", "mojira": {"page": "gparty"}},
