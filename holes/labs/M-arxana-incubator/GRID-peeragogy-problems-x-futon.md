@@ -331,3 +331,29 @@ differently:
 For collective problems the second is the one nobody owns: a shared belief about what
 the problem is, made explicit enough to check. Rubric: under model, record whether such a
 statement exists and who has agreed that it is the problem.
+
+### Atomic acts and complex processes (Joe, 2026-11-21)
+
+Joe: "specification is actually ... a fairly complex, multi-sided act, it's not
+necessarily something you can just write down in the same row as, say, defer ... you just
+say, I'll do this later whereas specify, as we've seen with the war machine is a
+progressive process that takes place ... over many iterations ... processes which are
+complex are ones which need a specification in the first place".
+
+So the marks are atomic acts (one turn: defer, approve, withdraw), and specifying is a
+process made of many of them over time (propose, qualify, disagree, retract, propose
+again, approve). Ostrom's levels fit the difference: operational acts happen inside the
+rules; collective-choice acts make the rules the operational acts follow; constitutional
+acts decide who makes those rules (`~/notes/institutions-patterns/CROSSWALK-IAD-AIF.md`,
+"Levels and context"). Defer is operational. Specify is collective-choice: it fixes what
+later acts will count as progress.
+
+Working definition, to test: a process is complex when it cannot finish in one act and
+several participants must agree on what would count as finished. Those are the ones that
+need a specification first, and the ones nobody owns by default.
+
+Test on our own turns: a specification process should show as a run of marks on one
+object across many turns (qualify, disagree, retract, propose) ending in an approve or a
+withdraw. 馬's turn data and the marks could find these runs, how long they take, and
+which never close. The War Machine's statement history is a second record of the same
+kind.
