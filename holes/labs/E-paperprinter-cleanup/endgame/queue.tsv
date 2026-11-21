@@ -79,4 +79,7 @@ Q149	2026-11-21	C4	rejected
 Q143t	2026-11-21	C16	merged
 Q150	2026-11-21	C4	discovery
 Q151	2026-11-21	N1	merged
-Q152	2026-11-21	C4	running
+Q152	2026-11-21	C4	merged
+Q153	2026-11-21	P-duplicate-closer	running
+Q154	2026-11-21	P-empty-sentence	running
+Q155	2026-11-21	N2	discovery-running
