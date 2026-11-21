@@ -44,7 +44,9 @@ packets is listed as `redesign` and its queued packet as a NOTE for the reviewer
 Q148 (claude-7) found that 155 of the 809 repeated rows at a6e043d3 were not chain rows: `scan.py` split an
 `align*` body at every `\\`, including the line breaks of a nested `cases` or matrix. `align_rows` now splits
 only at breaks outside a nested environment. C4 at a6e043d3: 273 records / 815 rows before, 248 / 699 after.
-The drop is 116 rows, not Q148's 155; the remaining 39 have not been traced. `counts.tsv` C4 rows from
+The drop is 116 rows, not Q148's 155; claude-7 traced the other 39 (2026-11-21): 38 of the
+693 repeated rows at c57304d9 are whole chain rows that contain a nested `cases` and repeat as a row; the old
+splitter cut them into fragments, which Q148 classed as artifacts, and as whole rows they are real repeats. `counts.tsv` C4 rows from
 a6e043d3 on are recounted with the new scanner over the stored renders (248 to ac0c4de1, 246 from 4dbcba98);
 the three earlier commits (272, 273, 273) keep the old scanner's numbers and have no stored render.
 This fall comes from the scanner, not from a merge.
