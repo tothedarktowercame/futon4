@@ -32,3 +32,9 @@ count the plan needs, and comes from a full rerender at the freeze commit.
 - **Why earlier counts looked closed.** Until Q109 every count in the queue log was taken on the 757 records
   still flagged at r10. "by transitivity 12 -> 0" and "empty rows 116 -> 76" are true there; on all 8,778 records
   they are 52 records and 1,928 rows. The freeze corpus has to be the whole render.
+
+## No-residual mode (2026-11-21)
+
+`python3 endgame.py --freeze 2026-11-20 --from-commit a6e043d3 --no-residual` applies Joe's ruling as reported
+by claude-7 (open classes are cleaned up, not left as residue): no exception exit; a class with `cap` rejected
+packets is listed as `redesign` and its queued packet as a NOTE for the reviewer. See O10 in the model.

@@ -10,6 +10,10 @@ A class found on or before the freeze date is frozen. Each frozen class ends in 
              notation change or a residual (at the cap, run the critical-pair check first)
   fix        one more printer packet
   count      size not known: needs a census count before it can be sorted
+With --no-residual (Joe's ruling of 2026-11-21 as reported by claude-7: open classes are cleaned up,
+not left as residue) there is no exception exit: a small class is 'fix', and a class at the cap is
+  redesign   rejected >= cap: the next packet must not repeat a rejected approach. The script cannot
+             check that; it lists the queued packet as a NOTE for the reviewer instead of a violation.
 Reported as violations (exit 1 with --enforce):
   a queue item naming a class that is not in classes.tsv;
   a non-discovery queue item dated after the freeze for a class that is not frozen;
@@ -26,21 +30,21 @@ def read(path):
     with open(path, newline='') as f:
         return list(csv.DictReader(f, delimiter='\t'))
 
-def exit_of(c, cap, min_size):
+def exit_of(c, cap, min_size, no_residual=False):
     if c['state'] in ('done', 'notdefect'):
         return 'left'
     if int(c['rejected']) >= cap:
-        return 'exception'
+        return 'redesign' if no_residual else 'exception'
     if c['size'] == '?':
         return 'count'
-    if int(c['size']) <= min_size and c['state'] != 'running':
+    if int(c['size']) <= min_size and c['state'] != 'running' and not no_residual:
         return 'exception'
     return 'fix'
 
-def run(classes, queue, counts, freeze, cap, min_size, from_commit=None):
+def run(classes, queue, counts, freeze, cap, min_size, from_commit=None, no_residual=False, notes=None):
     by_id = {c['id']: c for c in classes}
     frozen = {c['id'] for c in classes if c['found'] <= freeze}
-    exits = {i: exit_of(by_id[i], cap, min_size) for i in sorted(frozen)}
+    exits = {i: exit_of(by_id[i], cap, min_size, no_residual) for i in sorted(frozen)}
     violations, outside = [], []
     for q in queue:
         ids = q['class'].split('+')
@@ -52,7 +56,10 @@ def run(classes, queue, counts, freeze, cap, min_size, from_commit=None):
             outside.append(q['item'])
         if q['outcome'] in ('running', 'pending', 'later'):
             for i in known:
-                if int(by_id[i]['rejected']) >= cap:
+                if int(by_id[i]['rejected']) >= cap and no_residual:
+                    if notes is not None:
+                        notes.append(f"{q['item']}: class {i} has {by_id[i]['rejected']} rejected packets; reviewer to confirm this one does not repeat a rejected approach")
+                elif int(by_id[i]['rejected']) >= cap:
                     violations.append(f"{q['item']}: class {i} is at the cap ({by_id[i]['rejected']} rejected) and still queued")
     last = {}
     if from_commit:
@@ -88,13 +95,17 @@ def selftest():
     assert 'c9' in run(cl, qu[4:], co, '2026-01-03', 3, 2, 'c9')[3][0]                 # freeze commit never counted
     co3 = co + [dict(commit='c3', **{'class': 'D'}, open='12')]
     assert 'c3' in run(cl, qu[4:], co3, '2026-01-03', 3, 2, 'c2')[3][0]                # rise after it is reported
+    notes = []
+    _, exits2, _, v2 = run(cl, qu, [], '2026-01-01', 3, 2, no_residual=True, notes=notes)
+    assert exits2['A'] == 'redesign' and 'exception' not in exits2.values(), exits2
+    assert not any('at the cap' in x for x in v2) and len(notes) == 1, (v2, notes)
     print('selftest ok: over-cap packet, post-freeze class, unknown class and a rising count are each reported')
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--freeze'); ap.add_argument('--cap', type=int, default=3)
     ap.add_argument('--min-size', type=int, default=2)
-    ap.add_argument('--from-commit')
+    ap.add_argument('--from-commit'); ap.add_argument('--no-residual', action='store_true')
     ap.add_argument('--enforce', action='store_true'); ap.add_argument('--selftest', action='store_true')
     a = ap.parse_args()
     if a.selftest:
@@ -102,19 +113,22 @@ def main():
     classes, queue = read(os.path.join(HERE, 'classes.tsv')), read(os.path.join(HERE, 'queue.tsv'))
     cpath = os.path.join(HERE, 'counts.tsv')
     counts = read(cpath) if os.path.exists(cpath) else []
-    frozen, exits, outside, v = run(classes, queue, counts, a.freeze, a.cap, a.min_size, a.from_commit)
+    notes = []
+    frozen, exits, outside, v = run(classes, queue, counts, a.freeze, a.cap, a.min_size, a.from_commit, a.no_residual, notes)
     by_id = {c['id']: c for c in classes}
     after = [q for q in queue if q['date'] > a.freeze and q['outcome'] != 'discovery']
     print(f"freeze {a.freeze}, cap {a.cap}, min size {a.min_size}: {len(frozen)} of {len(classes)} classes frozen")
-    for kind in ('left', 'fix', 'exception', 'count'):
+    for kind in ('left', 'fix', 'redesign', 'exception', 'count'):
         ids = [i for i, e in exits.items() if e == kind]
         print(f"  {kind:9} {len(ids):2}  {' '.join(ids)}")
     for i, e in exits.items():
-        if e in ('exception', 'count', 'fix'):
+        if e in ('exception', 'count', 'fix', 'redesign'):
             c = by_id[i]
             print(f"    {e:9} {i:26} size {c['size']} {c['unit']}, rejected {c['rejected']}, {c['state']}: {c['note']}")
     print(f"  packets after the freeze: {len(after)}; for classes outside the frozen list: {len(outside)}")
     print(f"  counts.tsv: {'%d rows' % len(counts) if counts else 'absent, so the per-merge count is not checked'}")
+    for line in notes:
+        print('  NOTE ' + line)
     for line in v:
         print('  VIOLATION ' + line)
     sys.exit(1 if (v and a.enforce) else 0)
