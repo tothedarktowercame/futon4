@@ -412,3 +412,31 @@ The two beliefs from "specifying is an act within belief" return here, one level
   (they react to it).
 So a proof about a policy is worth as much as the second belief, and the record of acts
 (marks, provenance, benefits and harms) is what tests it.
+
+### Multi-party acts as hyperedges (Joe, 2026-11-21)
+
+Joe: "using these hypergraphs to think about actions which are multi-party actions so,
+for example, coordinate ... might seem like you would have one party who does that, but
+of course they need other parties to do it with so you have a multi-party the action,
+which is not strictly non-hierarchical".
+
+A mark today has one party, the speaker. Many acts are only complete when others act:
+ask needs an answerer, delegate needs someone who accepts, approve answers a proposer,
+coordinate needs the parties coordinated. As a hyperedge, the act has typed ends (roles),
+and the roles can be asymmetric, which is Joe's "not strictly non-hierarchical": a
+coordinator and the coordinated are both needed, but not interchangeable. The GCC already
+stores hyperedges with typed ends (`:hx/ends` with `:role`, as in the mission-scope
+edges: entity, environment, target-pattern).
+
+Shape, to test:
+- an act-hyperedge: `{:act :coordinate, :ends [{:role :initiator ...} {:role :party ...}
+  ... {:role :object ...}], :requires #{:initiator :party}}`, plus optional beneficiary
+  and dis-beneficiary ends (the benefit/harm columns);
+- the act is complete when every required role has a filler who acted; until then it is
+  open, which is the ownerless case at the level of one act;
+- Ostrom's aggregation rules ("how individual actions compose into the joint B" in the
+  IAD-AIF crosswalk) say what the joint act does once complete.
+
+Instance already running: a bell and its park form a two-party act (asker, asked), with
+the job id as the hyperedge and the auto-bellback as the second party's act. An open
+ArSE question is the same act with the second role unfilled.
