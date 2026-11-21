@@ -387,3 +387,28 @@ form (Joe, Murch, Rob, the Peeragogy call, agents), commit trailers, the call te
 Mozilla. Harms: compute per agent job (tokens, with a stated energy figure), and anyone
 whose words were used without being credited. If the ledger cannot be built honestly
 for a product this small and this well recorded, it will not work for a supply chain.
+
+### Proofs about policies, with statistics in them (Joe, 2026-11-21)
+
+Joe: "somebody ... said he was working on specifying all the world's laws with lean ...
+laws are like ... a language layer over ethics ... but what about ... a broader language
+of actions and reactions? ... if we did enough of that, we could start to build something
+approaching formalizable models ... those proofs wouldn't just be proofs of facts about
+the world they'd be proofs about facts about policies about the world and ways of action
+... if people act this way, then on average that will happen ... proofs with some
+statistics built in".
+
+Such statements already have a formal home: probabilistic model checking proves claims
+of the form "under policy π, the probability of reaching outcome O is at least p" over
+Markov decision processes (tools such as PRISM and Storm; named from memory). Active
+inference scores policies the same way, by expected free energy. In our stack, the War
+Machine's Lean-led route (memory: wm-lean-led-approach) is already a proof about a policy:
+that the selection follows its stated model.
+
+The two beliefs from "specifying is an act within belief" return here, one level up:
+- that the statement holds of the model: settled by proof or model checking;
+- that the model is how people actually act: settled only by observation and by the
+  agreement of those modelled, and liable to change once people know the policy
+  (they react to it).
+So a proof about a policy is worth as much as the second belief, and the record of acts
+(marks, provenance, benefits and harms) is what tests it.
