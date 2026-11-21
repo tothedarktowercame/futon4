@@ -151,3 +151,36 @@ application (M-arxana-incubator).
 `futon3c/src/futon3c/xiang/turn_store.clj`; the CTRL note and the defproject
 (`~/notes/claude-5/incubator-defproject.clj`); the Mozilla call text (hub document
 `mozilla-call`).
+
+## MAP note: the Peeragogy flops as test cases (claude-5, 2026-11-21)
+
+Joe, 2026-11-21: "another good reference source in this regard could be the Peeragogy
+Flops archive, could any of those problems be solved with CTRL queries? Or at least
+helped with some?" Read against `~/notes/peeragogy-flops/ARGUMENTS.md` (claude-16,
+2026-10-29). Each candidate move should name a flop defeater it would have caught;
+that is a stricter test than "seems useful".
+
+| flop | defeater (from ARGUMENTS.md) | CTRL move | solved, helped, or not reached |
+|---|---|---|---|
+| 1 Paragogy, LAK 2011 | "No measures or tools"; "the coined term is not earned" | rule changes by who proposed them (read); `※ w x u` take-up of the coined term (read) | measured, not argued |
+| 2 Knight 2012 | "Test far weaker than the claim" | claims as open queries `[a ? c]` until a witness exists; a move listing claims with no witness | helped; "none central" is a judgement |
+| 3 Kickstarter 2012 | contributions "accounted for in money and time" | `※ i` per person over commit trailers, evidence, attributed words | the accounting, yes; the demand defeaters, not reached |
+| 4 PAR, e/merge 2012 | "the case undercuts the claim"; "internal inconsistency" | the PAR is a CTRL transition done by hand: what was supposed to happen = before-query, what happened = after-query | helped; self-consistency of a text is beyond current queries |
+| 5 Wikimedia 2013 | "Benefit runs the wrong way"; "endorsements are all from the team" | carry-back: `※ p x m` with "applied by"; endorsers' links to the team by authorship | checkable before submitting |
+| 6 MIT CLS 2018 | "Survivorship sample" | the set of people whose last contribution is older than a date | helped: the leavers can be found; asking them is social work |
+| 8 Futures 2020 | "No comparison"; "fiction presented as evidence" | predictions with `:refuted-if` and their status (defproject `predictions`) | helped; a comparison condition is research design |
+
+Not reached by any CTRL move: demand and who benefits (2, 3, 5) and why people stay
+(6), which ARGUMENTS.md already lists as unchanged by agentic systems. CTRL makes them
+visible (who benefited, who left), not wanted.
+
+## Design notes kept (not decided)
+
+- **Strong and weak links** (Joe, 2026-11-21: hexagram retrieval "might be OK if it was
+  actually useful for anything. Maybe it is precisely useful for 'weak links'. We could
+  create 2 layers of links accordingly"). `collaboration-coherence/weak-tie-conflation`:
+  both kinds are useful, the failure is mistaking one for the other. Proposal:
+  `iching/` and `iiching/` weak by namespace (test `eight-gates/` against the data),
+  ranking by strong links only, weak links shown dimmed.
+- **`C-u ※` as a universal toggle** (Joe, 2026-11-21): plain `※` returns strong links,
+  `C-u ※` adds weak ones, for every move that has both readings.
