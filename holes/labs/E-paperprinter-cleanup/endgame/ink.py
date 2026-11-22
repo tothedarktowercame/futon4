@@ -52,7 +52,7 @@ FAMILY = {
     "C22": re.compile(r"(?<![_\d.{])(?<!\\cdot )(?<![-+] )0 (?:\\, )?> (?:\\, )?0(?![\d.])"),
 }
 # classes measured by another class's extractor, and classes that are not about rendered text
-ALIAS = {"N2": "C4", "P-empty-chain-reason": "N1"}
+ALIAS = {"N2": "C4", "P-empty-chain-reason": "N1", "P-truncated-walk": "P-missing-subproof"}
 NO_INK = {"N15"}
 WALL = 4  # consecutive "It suffices" sentences that count as a wall
 UNIT = re.compile(r"\n+|(?<=\))\. (?=[A-Z])")

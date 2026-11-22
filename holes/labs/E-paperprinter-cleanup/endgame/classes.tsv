@@ -40,7 +40,7 @@ P-duplicate-closer	2026-11-20	92	occurrences	0	open	3 declarations in Q129; a co
 P-nonprop-suffices	2026-11-20	0	decls	0	unknown	Q214 (observe, 1eb58e25): the two Q129 sample sites no longer show it; all 97 sufficiency emitter records in 4 modules (63 declarations) have a typed Prop target (typed gate from Q154, before every stored head); corpus not walked, so the class stays unknown until a corpus-wide typed count
 P-empty-chain-reason	2026-11-20	3	decls	0	open	no packet
 P-overexpanded-setup	2026-11-20	1	decls	0	open	no packet
-P-missing-subproof	2026-11-20	2	decls	0	open	no packet
+P-missing-subproof	2026-11-20	2	decls	0	open	Q216 (observe): both sites still reproduce; mechanism B (a calc in the proof argument of a goal transport rejected against the stale goal; 5 visits in 4 m03J05 declarations) -> Q219; mechanism A is the class P-truncated-walk
 P-premature-conclusion	2026-11-20	2	decls	0	open	no packet
 P-opaque-proof	2026-11-20	1	decls	0	open	no packet
 P-duplicate-tag	2026-11-20	1	decls	0	open	no packet
@@ -54,3 +54,4 @@ C20	2026-11-22	0	records	0	done	m01J06 clipped pendulum field: after Q170 the ro
 C21	2026-11-22	163	citations	0	open	lemmas cited as "a library lemma" with no description: 163 citations at 841ed53c (one of them a ConstructionTargets lemma that has a written reading the path does not consult)
 C22	2026-11-22	111	places	0	open	a strict comparison of a numeral with itself ("0 > 0") printed as a row or goal instead of "a contradiction": 111 places at c9dfbb3a (metrics key zz, regex tightened after Q183; the earlier 158 included 47 false hits)
 C23	2026-11-22	10	records	0	open	a fact derived under a local assumption inside a proof passed as an argument is printed detached ("We have 1 = 0"): 11 places in 10 records by text at 0bf1d207 (lower bound); typed count in 3 modules (Q192): 10 lets whose value depends on a hypothesis that no Step introduces
+P-truncated-walk	2026-11-22	7	decls	0	open	the walk stops silently at its 200,000-visit budget and a closer is still printed, so a truncated derivation reads as complete (Q216: 7 declarations in m03J05; corpus unknown). Q217 records the exhaustion in the render record; the page fix (budget not spent on data/type/instance arguments; no closer over a truncated walk) is to be written once the corpus count is known

@@ -11,7 +11,7 @@ P-duplicate-closer	92 rough occurrences	partly-classified	typed evidence differs
 P-nonprop-suffices	0 known sites at 1eb58e25 (Q214: 97 emitter records in 4 modules all typed Prop)	stale-observation	not reproduced; Q154 typed gate	corpus-wide typed count of sufficiency targets that are not propositions (tracer over the census shards)	observe
 P-empty-chain-reason	3 declarations	unclassified	not established	capture typed producer and missing evidence	observe
 P-overexpanded-setup	1 declaration	unclassified	not established	compare source proof structure and render	observe
-P-missing-subproof	2 declarations	unclassified	not established	trace where recorded steps disappear	observe
+P-missing-subproof	2 declarations (5 argument-calc candidates in 4 m03J05 declarations)	classified (Q216)	a calc in the proof argument of Eq.mpr is compared with the stale pre-transport goal and rejected	Q219 packet written	isolated fix
 P-premature-conclusion	2 declarations	unclassified	not established	trace closer ownership	observe
 P-opaque-proof	1 declaration	unclassified	not established	inspect typed proof and render path	observe
 P-duplicate-tag	1 declaration	unclassified	not established	locate tag producer	observe
@@ -22,3 +22,4 @@ C19	64 render lines at 1eb58e25 ("a - - b")	classified	a subtraction whose right
 C21	163 citations of 87 names at 841ed53c	classified	fallback phrase of _justification_phrase when a step has no citation (Q177)	commit 86 written readings as data, then Q181 consults them	data readings then narrow fix
 C22	111 places at c9dfbb3a (158 by the old substring metric; 47 were subscript-0 variables or compound operands)	classified (Q183)	strict comparison of a numeral with itself; the two zeros differ only in instance path (isDefEq true): 77 final chain rows, 32 sufficiency goals, 2 in one case split	none needed	Q184 chain rows; Q185 sufficiency; Q186 case split
 C23	11 places in 10 records by text at 0bf1d207; typed: 10 dependent lets in 3 modules (Q192)	classified (Q190, Q192)	argument lambdas are walked without an intro Step while lets in the body are recorded; the inner False.elim makes no closer	after Q197: typed corpus count of depth-0 lets depending on an unintroduced hypothesis that Q197 does not cover	Q197 integrate (contradiction proofs); remainder to be sized from its report
+P-truncated-walk	7 declarations in m03J05; corpus unknown	classified (Q216)	visit budget of 200,000 exhausted (mostly on data/type/instance arguments of algebra proofs); _walk returns silently; closer synthesized regardless	Q217 flags it in the render record; then size on the census and write the page packet	measure, then structural fix
