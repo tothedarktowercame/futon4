@@ -26,7 +26,7 @@ from scan import align_rows
 PALETTE = {
     "C1": "#d73027", "C4": "#fc8d59", "C5": "#fee090", "C6": "#e0f3f8",
     "C7": "#91bfdb", "C8": "#4575b4", "C16": "#984ea3", "C17": "#4daf4a",
-    "N1": "#ff7f00", "C21": "#a65628", "C22": "#f781bf",
+    "N1": "#ff7f00", "C21": "#a65628", "C22": "#f781bf", "C23": "#999999",
 }
 FAMILY = {
     "C1": re.compile(r"distinguish cases on[^.]*\\lor"),
@@ -37,6 +37,7 @@ FAMILY = {
     "C17": re.compile(r"\\seqsplit"),
     "N1": re.compile(r"&& \\text\{\}"),
     "C21": re.compile(r"a library lemma"),
+    "C23": re.compile(r"We have \\\(1 = 0\\\)"),
     "C22": re.compile(r"(?<![_\d.{])(?<!\\cdot )(?<![-+] )0 (?:\\, )?> (?:\\, )?0(?![\d.])"),
 }
 LOCAL = re.compile(r"^[A-Za-z]_[A-Za-z]'?$|^self$")

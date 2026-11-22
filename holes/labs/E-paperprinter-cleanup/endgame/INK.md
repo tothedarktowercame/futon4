@@ -23,6 +23,7 @@ Union ink by head, all with the eleven extractors of 2026-11-22:
 | 51c23004 | 808 | 10.273690% | 3.449541% | 0.827907% | 1.249371% | 5.463274% |
 | f79926c0 | 359 | 3.917859% | 1.657788% | 0.226068% | 1.237274% | 0.882294% |
 | 0bf1d207 | 360 | 3.925537% | 1.658308% | 0.226139% | 1.244111% | 0.882571% |
+| 0bf1d207, with C23 added (twelve extractors) | 368 | 4.013280% | 1.658308% | 0.226139% | 1.244111% | 0.882571% |
 
 Reading the table: on the nine extractors codex-18 first shipped, the union fell
 from 4.18% at 51c23004 to 1.86% at 0bf1d207. C21 ("a library lemma") and C22
@@ -34,11 +35,13 @@ where Q175a dropped a no-op row and exposed a citation without a reading
 Known undercount: the C4 extractor colors blocks with a repeated left side
 (27 records). The row-level metric used in review finds 89 repeated rows; the
 difference is rows that return to an earlier expression on the right side.
+C23 ("We have 1 = 0" detached from its assumption; 0.087743%, 10 records) was added after Q192; `ink.tsv` holds
+the twelve-extractor figures for 0bf1d207, so its union is not comparable with the rows above it.
 
 ## Classes without an extractor yet
 
-C12, C18, C19, C23, N2, N14, N15 and the ten P-* classes. C18 and C19 have
-occurrence lists from their packets; C23 waits on Q192; the P-* classes have
+C12, C18, C19, N2, N14, N15 and the ten P-* classes. C18 and C19 have
+occurrence lists from their packets; the P-* classes have
 declaration inventories only. Each gets an interval extractor when its
 inventory is next touched, and a new history row is added for the head at
 which it first appears.

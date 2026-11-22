@@ -7,14 +7,13 @@
 - Proof errors: 0 at the accepted head. Performance class: closed.
 - N1 (rows with an empty reason): **161 records** at this head, down from 1,035 records at the full-corpus freeze.
 - C4 (blocks with a repeated left side, scanner count): **27 records**.
-- Residual ink (lower bound, 6/23 open-or-unknown classes): **3.926%** of reader-visible proof-source characters, in 360 records; see `INK.md`.
-- Ink change since `f79926c0`: union +0.008 points; C21 +1 records.
+- Residual ink (lower bound, 7/23 open-or-unknown classes): **4.013%** of reader-visible proof-source characters, in 368 records; see `INK.md`.
+- Ink change since `f79926c0`: union +0.095 points; C21 +1 records.
 - Largest colors: N1 1.66%, C21 1.24%, C22 0.88%, C4 0.23%.
 
 ## Work now
 
 - ACTIVE `Q175b` (integrate, C18): packet written (overnight/Q175b.md).
-- ACTIVE `Q192` (observe, C23): codex-12; packet overnight/Q192.md.
 - WAITING `N1-readings` (data, N1), after `-`: batch 3 accepted as d25599e9 (58 readings; 59 rows gain a reason, 0 errors). 19 readings withheld in total because a reason makes their row displayed (list: ~/notes/claude-7/Q158/readings-batch3-withheld.json + 5 earlier); they wait for Q165.
 - WAITING `same-print-typed` (integrate, N1), after `Q169`: input: ~/notes/codex-12/Q165/same-print-rows.tsv.
 - WAITING `typed-prune` (observe, N2+C4), after `-`: input: ~/notes/codex-12/Q165/guard-rows.tsv and the two rejected census renders in ~/storage/apm-endgame/.
@@ -25,11 +24,12 @@
 - WAITING `Q186` (integrate, C22), after `Q185`: packet written (overnight/Q186.md).
 - WAITING `Q188` (integrate, C4), after `Q186`: packet written (overnight/Q188.md).
 - WAITING `Q191` (integrate, C18), after `Q188`: packet written (overnight/Q191.md).
+- WAITING `Q197` (integrate, C23), after `Q191`: packet written (overnight/Q197.md).
 
 ## Backlog understanding
 
 - Observation coverage: **23/23** open or unknown classes.
-- Classification state: classified 5, classified (Q183) 1, classified by position (claude-7 from renders; Q182/Q187 typed traces) 1, partly classified (Q190 section 3) 1, partly-classified 5, stale-observation 2, unclassified 7, unknown 1.
+- Classification state: classified 5, classified (Q183) 1, classified (Q190, Q192) 1, classified by position (claude-7 from renders; Q182/Q187 typed traces) 1, partly-classified 5, stale-observation 2, unclassified 7, unknown 1.
 - Historical grammar observations: falsified 7, proposed 2, superseded 1, supported 4.
 
 ## Next branches to inspect
