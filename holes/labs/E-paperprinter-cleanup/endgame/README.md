@@ -18,6 +18,11 @@ their union as a percentage of reader-visible proof-source ink.  `INK.md`
 records the accepted-head census and its coverage limitation; the generated
 HTML, annotation JSONL and TSV live beside the accepted-head renders.
 
+`AUDIT.md` routes fine-grained findings among presentation residue,
+dependency/scope loss, source-proof cleanup opportunities and mathematical
+defects.  This prevents a striking printed sentence from being mistaken for a
+bad Lean proof before its typed context has been checked.
+
 Joe's go, 2026-11-20: freeze the list of defect classes, require a count that falls,
 give each class one of three exits (printer fix, Lean notation change, accepted residual),
 and stop when every frozen class has left. Status: draft, built from claude-7's queue logs
