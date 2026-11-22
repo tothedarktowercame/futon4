@@ -21,4 +21,4 @@ N15	5 tests	unknown	state after the LEAD fix was never measured	run full a97J08 
 C18	60 places in 17 records at a7b38edf (case condition compares two numeric literals, e.g. "if 0 = 1")	classified	a decidable literal comparison is kept as a case condition	Q175 packet	open
 C19	84 render lines at b13afd74 ("- - k")	classified	unary minus applied to a unary minus gets no parentheses	find the printer rule for Neg.neg operand	isolated fix
 C21	163 citations of 87 names at 841ed53c	classified	fallback phrase of _justification_phrase when a step has no citation (Q177)	commit 86 written readings as data, then Q181 consults them	data readings then narrow fix
-C22	158 places at c9dfbb3a	unclassified	the two sides differ in something the printer hides	observe Q183: typed cause classes	observe then narrow fixes
+C22	111 places at c9dfbb3a (158 by the old substring metric; 47 were subscript-0 variables or compound operands)	classified (Q183)	strict comparison of a numeral with itself; the two zeros differ only in instance path (isDefEq true): 77 final chain rows, 32 sufficiency goals, 2 in one case split	none needed	Q184 chain rows; Q185 sufficiency; Q186 case split
