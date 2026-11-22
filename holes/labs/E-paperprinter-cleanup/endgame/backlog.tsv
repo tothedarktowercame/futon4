@@ -1,5 +1,5 @@
 class	incoming_data	classification	mechanism	next_observation	disposition
-C4	27 records / 34 repeated rows at 1724a69d (was 31 / 42 at 929b6bcb, 69 / 95 before Q157s)	partly-classified	typed terms collapse to one rendering; raw transitions and cross-goal joins remain	recount after the N2 partition decision	structural train with N2
+C4	89 rows in 76 records at f79926c0	partly classified (Q182: 69 rows)	6 rows typed-identical; 63 differ in something the printer hides (instance arguments, casts, Fintype.card/Nat.card, binder bodies, ite vs its branch, unfolded definitions); why the coalescer keeps them is not yet pinned down	observe Q187: coalescer branch per row + the 20 untraced rows	one integrate packet per keeping branch after Q187
 C5	0 records at ae0713bc	classified	one proposition renders as raw bottom	recheck the one defective declaration at accepted head	small tail
 C7	4 scanner records at ae0713bc: HilbertBasis.repr x2, a .1 projection of a pair, one URL false hit	classified	missing data readings expose Lean heads or binder names	list exact remaining occurrences after accepted head	additive readings
 C12	1 site	stale-observation	Subgroup.map may drop its map argument	rerender and confirm at accepted head	small tail
