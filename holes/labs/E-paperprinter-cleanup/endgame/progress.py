@@ -5,6 +5,8 @@ import csv
 import os
 from datetime import date
 
+from branch_priority import score
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -19,6 +21,7 @@ def main():
     dispatch = read("dispatch.tsv")
     queue = read("queue.tsv")
     observations = read("observations.tsv")
+    branches = read("branches.tsv")
     states = collections.Counter(r["state"] for r in classes)
     outcomes = collections.Counter(r["outcome"] for r in queue)
     recent = [r for r in queue if r["date"] >= "2026-11-20"]
@@ -49,6 +52,14 @@ def main():
           (len(backlog), states['open'] + states['unknown']))
     print("- Classification state: " + ", ".join(f"{k} {v}" for k, v in sorted(classified.items())) + ".")
     print("- Historical grammar observations: " + ", ".join(f"{k} {v}" for k, v in sorted(history.items())) + ".")
+
+    print("\n## Next branches to inspect\n")
+    ranked = sorted(branches, key=lambda r: (-score(r), r["branch"]))
+    for rank, row in enumerate(ranked[:5], 1):
+        print(f"{rank}. **{row['branch']}** ({row['classes']}), score {score(row)}: {row['next_probe']}.")
+    print("\nThe score uses ordinal 1–5 inputs: `4×blocking + 3×uncertainty + 2×volume + "
+          "2×split-value − 2×observation-cost − 2×overlap-risk`. It ranks the next observation, "
+          "not the importance of the mathematical content.")
 
     print("\n## Throughput and uncertainty\n")
     print(f"- Packet ledger: {len(queue)} total; {outcomes['merged']} merged, {outcomes['rejected']} rejected, "

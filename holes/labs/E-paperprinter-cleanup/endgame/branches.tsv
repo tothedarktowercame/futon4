@@ -1,0 +1,10 @@
+branch	classes	volume	uncertainty	split_value	observation_cost	overlap_risk	blocking	next_probe
+N1-reason-mechanisms	N1	5	3	4	2	4	5	finish Q164 trace and refresh the head-frequency table
+chain-ownership	N2+C4	4	4	5	4	5	5	run Q157s adversarial fixtures, then census only after Q161r decision
+real-corpus-test-state	N15	1	5	5	1	1	2	run the full a97J08 real-corpus test file
+sufficiency-producers	P-sufficiency-wall	3	4	5	2	4	2	classify five declarations by producer path
+duplicate-closer-inventory	P-duplicate-closer	4	3	4	2	3	2	produce an exact corpus-wide inventory by typed-evidence shape
+empty-claim-tail	P-empty-claim	2	3	4	2	3	2	classify the remaining 27 lines by producer path
+unclassified-proof-quality	P-nonprop-suffices+P-empty-chain-reason+P-overexpanded-setup+P-missing-subproof+P-premature-conclusion+P-opaque-proof+P-duplicate-tag	2	5	5	3	2	1	capture typed producer and desired exposition for each declaration
+stale-small-tail	C12+N14	1	4	4	1	2	1	rerender the two stale observations at accepted head
+known-small-tail	C5+C6+C7+C8+C16+C17	2	1	2	2	2	1	refresh exact occurrences, then dispatch isolated fixes or readings

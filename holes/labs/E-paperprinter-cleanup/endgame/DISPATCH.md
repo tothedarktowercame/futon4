@@ -31,9 +31,16 @@ Do not erase a notation or vocabulary hypothesis when it fails.  Mark it
 evidence.  `supported` means supported on the stated corpus and commit, not a
 timeless printer law.  `proposed` is deliberately distinguishable from both.
 
+`branches.tsv` makes the choice of what to inspect next explicit.  Its ordinal
+scores estimate volume, uncertainty, expected class-splitting value,
+observation cost, overlap risk, and schedule blocking.  `branch_priority.py`
+ranks observations with a published formula; the ranking is revisable data,
+not an oracle or an implementation authorization.
+
 Run:
 
     python3 dispatch.py --check
+    python3 branch_priority.py
     python3 progress.py > PROGRESS.md
 
 The check requires every open/unknown class to be present in `backlog.tsv`, no

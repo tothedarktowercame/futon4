@@ -21,6 +21,16 @@
 - Classification state: classified 6, partly-classified 6, stale-observation 2, unclassified 7, unknown 1.
 - Historical grammar observations: falsified 5, proposed 2, superseded 1, supported 4.
 
+## Next branches to inspect
+
+1. **N1-reason-mechanisms** (N1), score 35: finish Q164 trace and refresh the head-frequency table.
+2. **chain-ownership** (N2+C4), score 32: run Q157s adversarial fixtures, then census only after Q161r decision.
+3. **real-corpus-test-state** (N15), score 31: run the full a97J08 real-corpus test file.
+4. **sufficiency-producers** (P-sufficiency-wall), score 24: classify five declarations by producer path.
+5. **duplicate-closer-inventory** (P-duplicate-closer), score 23: produce an exact corpus-wide inventory by typed-evidence shape.
+
+The score uses ordinal 1–5 inputs: `4×blocking + 3×uncertainty + 2×volume + 2×split-value − 2×observation-cost − 2×overlap-risk`. It ranks the next observation, not the importance of the mathematical content.
+
 ## Throughput and uncertainty
 
 - Packet ledger: 94 total; 56 merged, 16 rejected, 15 discovery.
