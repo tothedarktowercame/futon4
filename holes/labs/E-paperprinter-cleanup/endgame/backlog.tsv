@@ -1,0 +1,23 @@
+class	incoming_data	classification	mechanism	next_observation	disposition
+C4	69 records / 95 repeated rows at 9af6f8f6	partly-classified	typed terms collapse to one rendering; raw transitions and cross-goal joins remain	recount after the N2 partition decision	structural train with N2
+C5	2 scanner records; one genuine bottom and one NeBot rendering	classified	one proposition renders as raw bottom	recheck the one defective declaration at accepted head	small tail
+C6	1 defective record plus one genuine lattice top	classified	one cases arm renders if top	recheck t96A06 at accepted head	small tail
+C7	6 scanner records plus a few known locals	classified	missing data readings expose Lean heads or binder names	list exact remaining occurrences after accepted head	additive readings
+C8	2 records	classified	richer membership predicates escape the existing rule	trace the two hosts	isolated fix
+C12	1 site	stale-observation	Subgroup.map may drop its map argument	rerender and confirm at accepted head	small tail
+C16	2 records	classified	closer ownership misses a let-bound value and inner chains	trace the two owners	isolated fix
+C17	2 records	classified	seqsplit raw head remains in m03J05	trace exact typed heads	additive reading or narrow fix
+N1	627 rows / 359 records at 51c23004	partly-classified	mostly library heads without readings; wrapper and headless subfamilies remain	Q164 trace plus head-frequency table	readings lane; one structural candidate at a time
+N2	16 declarations / goal-partition list	partly-classified	chain annotator lacks stable goal ownership; naive partition exposes pruned rows	Q157s adversarial census after Q161r	structural train with C4
+P-sufficiency-wall	5 declarations / 126 occurrences	partly-classified	sufficiency presentation loses useful proof structure	classify the five declarations by producer path	observe before redesign
+P-empty-claim	22 records after broad cleanup	partly-classified	claims followed by non-itemize or value terms that display nothing	classify the remaining 27 lines by producer path	observe before code
+P-duplicate-closer	92 rough occurrences	partly-classified	typed evidence differs or one fact owns several closers	produce exact corpus-wide inventory	observe before code
+P-nonprop-suffices	2 declarations	unclassified	not established	capture typed producer and desired wording	observe
+P-empty-chain-reason	3 declarations	unclassified	not established	capture typed producer and missing evidence	observe
+P-overexpanded-setup	1 declaration	unclassified	not established	compare source proof structure and render	observe
+P-missing-subproof	2 declarations	unclassified	not established	trace where recorded steps disappear	observe
+P-premature-conclusion	2 declarations	unclassified	not established	trace closer ownership	observe
+P-opaque-proof	1 declaration	unclassified	not established	inspect typed proof and render path	observe
+P-duplicate-tag	1 declaration	unclassified	not established	locate tag producer	observe
+N14	1 declaration	stale-observation	calc under Subtype.ext has no goal-owning step	rerender t96J02 paste_cut at accepted head	observe then narrow fix
+N15	5 tests	unknown	state after the LEAD fix was never measured	run full a97J08 real-corpus test file	observation only

@@ -1,5 +1,13 @@
 # PaperPrinter endgame: process model and dry run (claude-10, 2026-11-20)
 
+## Dispatch and backlog observation (2026-11-22)
+
+Joe's intervention adds a second, symmetric lane: understand the incoming
+backlog while one structural candidate moves through integration.  See
+`DISPATCH.md`, `backlog.tsv`, and `dispatch.tsv`.  `python3 dispatch.py --check`
+enforces complete backlog coverage and at most one active structural
+integration candidate; observation work may remain parallel.
+
 Joe's go, 2026-11-20: freeze the list of defect classes, require a count that falls,
 give each class one of three exits (printer fix, Lean notation change, accepted residual),
 and stop when every frozen class has left. Status: draft, built from claude-7's queue logs

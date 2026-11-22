@@ -1,0 +1,5 @@
+item	lane	status	base	classes	mechanism	preflight	depends_on	output
+Q161r	integrate	active	51c23004	N1	add congruence reasons without replacing statements or existing reasons	fixed-regression-matrix+changed-record-diff+full-census	-	accept-or-reject against 51c23004
+Q157s	integrate	waiting	51c23004	N2+C4	partition transitions by goal occurrence without re-exposing pruned excursions	fixed-regression-matrix+changed-record-diff+full-census	Q161r	rebase on next accepted head, then census
+Q164	observe	active	51c23004	N1	trace the statement-to-chain switch when a row gains a reason	read-only trace; no merge gate	-	mechanism report and adversarial fixtures
+N1-readings	data	waiting	51c23004	N1	additive per-lemma readings only; every changed line inserts a reason	changed-line insertion-only audit	Q161r	next reviewed readings batch
