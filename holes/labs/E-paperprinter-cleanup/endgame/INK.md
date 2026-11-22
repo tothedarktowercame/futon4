@@ -2,60 +2,87 @@
 
 Generated with `ink.py` from the full 8,778-record census of each **accepted**
 integration head (renders under `~/storage/apm-endgame/head-<sha>/`). Candidate
-branches are never entered here.
+branches are never entered here (see `DISPATCH.md`).
 
 Ink means characters of reader-visible LaTeX source after hidden `leanref`
 targets are removed. A matched occurrence colors its containing proof
-paragraph, so this measures affected expository material, not glyph area and
-not the length of the defective token. The union removes overlaps.
+paragraph (a wall of sufficiency sentences colors the run itself; a known-site
+class colors the whole proof). The union removes overlaps. This measures
+affected expository material, not glyph area and not the length of the
+defective token.
 
-It is a **lower bound**: only classes with a corpus-wide scanner are colored.
-The `COVERAGE` row of each summary says how many open or unknown classes of
-`classes.tsv` have an extractor.
+## Complete palette, by accepted head
 
-## History (accepted heads only)
+From 2026-11-22 every open or unknown class of `classes.tsv` has an extractor,
+an alias or a stated reason for having no ink. The ledger is `ink.tsv`.
 
-The ledger is `ink.tsv` (one row per head and class, written by `accept_head.py`).
-Union ink by head, all with the eleven extractors of 2026-11-22:
+| Head | Records marked | Union ink |
+|---|---:|---:|
+| 51c23004 | 1272 | 15.158% |
+| f79926c0 | 687 | 7.703% |
+| 0bf1d207 | 679 | 7.536% |
 
-| Head | Records marked | Union ink | N1 | C4 | C21 | C22 |
-|---|---:|---:|---:|---:|---:|---:|
-| 51c23004 | 808 | 10.273690% | 3.449541% | 0.827907% | 1.249371% | 5.463274% |
-| f79926c0 | 359 | 3.917859% | 1.657788% | 0.226068% | 1.237274% | 0.882294% |
-| 0bf1d207 | 360 | 3.925537% | 1.658308% | 0.226139% | 1.244111% | 0.882571% |
-| 0bf1d207, with C23 added (twelve extractors) | 368 | 4.013280% | 1.658308% | 0.226139% | 1.244111% | 0.882571% |
+## Classes at 0bf1d207
 
-Reading the table: on the nine extractors codex-18 first shipped, the union fell
-from 4.18% at 51c23004 to 1.86% at 0bf1d207. C21 ("a library lemma") and C22
-(a numeral compared with itself) were added afterwards, which is why the
-figures above are higher. The +1 record from f79926c0 to 0bf1d207 is aunk03,
-where Q175a dropped a no-op row and exposed a citation without a reading
-(Q190; the reading is committed as data and prints once Q181 lands).
+| Class | Records | Ink | How it is found |
+|---|---:|---:|---|
+| N1 | 161 | 1.658% | text pattern |
+| P-sufficiency-wall | 136 | 1.470% | text pattern (4 or more consecutive "It suffices" sentences) |
+| C21 | 118 | 1.244% | text pattern |
+| C19 | 84 | 1.097% | text pattern |
+| C22 | 65 | 0.883% | text pattern |
+| C4 | 106 | 0.850% | text pattern (a chain shows the same visible expression on two rows) |
+| C18 | 4 | 0.316% | text pattern |
+| P-empty-claim | 49 | 0.269% | text pattern |
+| P-duplicate-closer | 19 | 0.126% | text pattern |
+| P-nonprop-suffices | 2 | 0.106% | known sites only |
+| N14 | 1 | 0.105% | known sites only |
+| C23 | 10 | 0.088% | text pattern |
+| P-overexpanded-setup | 1 | 0.085% | known sites only |
+| P-premature-conclusion | 2 | 0.029% | known sites only |
+| P-duplicate-tag | 1 | 0.026% | known sites only |
+| C12 | 1 | 0.021% | known sites only |
+| P-missing-subproof | 2 | 0.015% | known sites only |
+| C7 | 1 | 0.001% | text pattern |
+| P-opaque-proof | 1 | 0.000% | known sites only |
 
-Known undercount: the C4 extractor colors blocks with a repeated left side
-(27 records). The row-level metric used in review finds 89 repeated rows; the
-difference is rows that return to an earlier expression on the right side.
-C23 ("We have 1 = 0" detached from its assumption; 0.087743%, 10 records) was added after Q192; `ink.tsv` holds
-the twelve-extractor figures for 0bf1d207, so its union is not comparable with the rows above it.
+Classes with zero ink at this head (C1, C5, C6, C8, C16, C17) are omitted.
 
-## Classes without an extractor yet
+## What the figure does and does not cover
 
-C12, C18, C19, N2, N14, N15 and the ten P-* classes. C18 and C19 have
-occurrence lists from their packets; the P-* classes have
-declaration inventories only. Each gets an interval extractor when its
-inventory is next touched, and a new history row is added for the head at
-which it first appears.
+- **Aliases.** N2 (chain order) is measured by the C4 extractor: its rows are
+  the chains that return to an earlier expression. P-empty-chain-reason is
+  measured by the N1 extractor (a row with an empty reason).
+- **No ink.** N15 is the state of five real-corpus tests, not rendered text.
+- **Known sites only.** C12, N14, P-nonprop-suffices, P-missing-subproof,
+  P-premature-conclusion, P-opaque-proof, P-duplicate-tag and
+  P-overexpanded-setup have no text symptom. They are colored at the
+  declarations listed in `ink-sites.tsv` (whole proof). Six of them come from
+  one reading of 13 proofs (Q129), so their corpus-wide extent is not known;
+  for these the figure is a lower bound. A typed corpus count would need an
+  observe packet per class.
+- **Text patterns are estimates.** P-sufficiency-wall depends on the
+  threshold (4 or more consecutive sentences: 136 records; 3 or more: 285).
+  P-empty-claim and P-duplicate-closer match one layout each. C19 and C22
+  match printed shapes and may include or miss a few places.
+- **C4 on visible text.** 106 records show the same visible expression on two
+  rows of a chain; 78 do when hidden link targets are compared too. The
+  earlier scanner (27 records) only compared left sides.
+- **Paragraph granularity.** One defective row colors its whole paragraph, and
+  an itemize block is one paragraph, so the percentage overstates the defective
+  text itself and is best read as "share of proof text a reader meets a known
+  defect in".
 
 ## Rules of use (Joe via codex-18, 2026-11-22)
 
 1. Record every accepted head with `accept_head.py`; compare a candidate with
-   `ink_diff.py` from `/tmp`, never record it (see `DISPATCH.md`).
+   `ink_diff.py` from `/tmp`, never record it.
 2. Read the colored HTML for new, grown and moved colors, not only the total.
-3. A lower total does not authorize a merge that regresses any record: the
-   preflight and the read of every changed line still decide.
+3. A lower total does not authorize a merge that regresses any record.
 4. Priority weighs both what blocks the integrate lane and ink share.
 5. Keep each head's summary and annotations: they are evidence for the later
-   expository grammar.
+   expository grammar. When an extractor changes, re-record the stored heads so
+   the history stays comparable.
 
 Artifacts per head: `residual-ink-summary.tsv`,
 `residual-ink-annotations.jsonl.gz`, `residual-ink.html`.

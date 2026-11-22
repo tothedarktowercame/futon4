@@ -27,6 +27,10 @@ PALETTE = {
     "C1": "#d73027", "C4": "#fc8d59", "C5": "#fee090", "C6": "#e0f3f8",
     "C7": "#91bfdb", "C8": "#4575b4", "C16": "#984ea3", "C17": "#4daf4a",
     "N1": "#ff7f00", "C21": "#a65628", "C22": "#f781bf", "C23": "#999999",
+    "C18": "#66c2a5", "C19": "#8da0cb", "C12": "#e78ac3", "N14": "#a6d854",
+    "P-sufficiency-wall": "#ffd92f", "P-empty-claim": "#e5c494", "P-duplicate-closer": "#b3b3b3",
+    "P-nonprop-suffices": "#1b9e77", "P-missing-subproof": "#d95f02", "P-premature-conclusion": "#7570b3",
+    "P-opaque-proof": "#e7298a", "P-duplicate-tag": "#66a61e", "P-overexpanded-setup": "#e6ab02",
 }
 FAMILY = {
     "C1": re.compile(r"distinguish cases on[^.]*\\lor"),
@@ -37,9 +41,67 @@ FAMILY = {
     "C17": re.compile(r"\\seqsplit"),
     "N1": re.compile(r"&& \\text\{\}"),
     "C21": re.compile(r"a library lemma"),
+    "C18": re.compile(r"\\text\{if \} ?-?\d+ ?(?:=|\\neq) ?-?\d+"),
+    "C19": re.compile(r"-\s*-\s*[A-Za-z\\]"),
+    # a claim with nothing under it: the colon ends the line and the next line is not its proof
+    "P-empty-claim": re.compile(r"We claim \\\((?:(?!\\\)).)*\\\):(?: ⟦\d+⟧)?[ ]*(?=\n\\item|\n\\end|\n\n|$)"),
+    # an owner sentence whose only child is a closer giving the same reason
+    "P-duplicate-closer": re.compile(r"— ([^\n]*?)\.(?: ⟦\d+⟧)?\n\\begin\{itemize\}\n\\item Hence the claim — \1\.\n\\end\{itemize\}"),
     "C23": re.compile(r"We have \\\(1 = 0\\\)"),
     "C22": re.compile(r"(?<![_\d.{])(?<!\\cdot )(?<![-+] )0 (?:\\, )?> (?:\\, )?0(?![\d.])"),
 }
+# classes measured by another class's extractor, and classes that are not about rendered text
+ALIAS = {"N2": "C4", "P-empty-chain-reason": "N1"}
+NO_INK = {"N15"}
+WALL = 4  # consecutive "It suffices" sentences that count as a wall
+UNIT = re.compile(r"\n+|(?<=\))\. (?=[A-Z])")
+ROW_REASON = re.compile(r"\s*&& \\text\{(.*)\}( \\\\)?$")
+
+
+def load_sites():
+    sites = collections.defaultdict(set)
+    with open(os.path.join(HERE, "ink-sites.tsv"), newline="") as stream:
+        for row in csv.DictReader(stream, delimiter="\t"):
+            sites[row["declaration"]].add(row["class"])
+    return sites
+
+
+SITES = load_sites()
+
+
+def wall_spans(text):
+    """Runs of at least WALL consecutive sentences that each begin "It suffices"."""
+    spans, run, pos = [], [], 0
+    bounds = [(m.start(), m.end()) for m in UNIT.finditer(text)] + [(len(text), len(text))]
+    for start, end in bounds:
+        unit = text[pos:start].strip()
+        if unit.startswith("\\item "):
+            unit = unit[6:]
+        if unit.startswith("It suffices"):
+            run.append((pos, start))
+        elif unit not in ("", "\\begin{itemize}", "\\end{itemize}"):
+            if len(run) >= WALL:
+                spans.append((run[0][0], run[-1][1]))
+            run = []
+        pos = end
+    if len(run) >= WALL:
+        spans.append((run[0][0], run[-1][1]))
+    return spans
+
+
+def repeated_row(block):
+    """True when a displayed chain prints the same expression on two rows (row-level review metric)."""
+    seen = set()
+    for line in block.strip().split("\n"):
+        mm = ROW_REASON.search(line)
+        body = line[:mm.start()] if mm else line
+        body = re.sub(r"^&(=|\\\w+|[<>])?\s*", "", body.replace(" \\\\", "")).strip()
+        if body in seen:
+            return True
+        seen.add(body)
+    return False
+
+
 LOCAL = re.compile(r"^[A-Za-z]_[A-Za-z]'?$|^self$")
 ALIGN = re.compile(r"\\begin\{align\*\}(.*?)\\end\{align\*\}", re.S)
 
@@ -60,8 +122,13 @@ def merge(intervals):
     return out
 
 
-def class_intervals(text):
+def class_intervals(text, declaration=None):
     found = collections.defaultdict(list)
+    for cls in SITES.get(declaration, ()):
+        if text:
+            found[cls].append((0, len(text)))  # known site only: the whole proof is colored
+    for start, end in wall_spans(text):
+        found["P-sufficiency-wall"].append((start, end))
     for cls, rx in FAMILY.items():
         for hit in rx.finditer(text):
             found[cls].append(paragraph(text, hit.start(), hit.end()))
@@ -73,7 +140,7 @@ def class_intervals(text):
     for block in ALIGN.finditer(text):
         rows = [r.strip() for r in align_rows(block.group(1)) if r.strip()]
         lhs = [r.split("&&", 1)[0].strip() for r in rows]
-        if len(lhs) != len(set(lhs)):
+        if len(lhs) != len(set(lhs)) or repeated_row(block.group(1)):
             found["C4"].append(paragraph(text, block.start(), block.end()))
     return {cls: merge(spans) for cls, spans in found.items()}
 
@@ -132,7 +199,7 @@ def main():
                     proof = visible(row.get("proof") or "")
                     records += 1
                     total += len(proof)
-                    spans = class_intervals(proof)
+                    spans = class_intervals(proof, row.get("declaration"))
                     if not spans:
                         continue
                     marked_records += 1
@@ -162,9 +229,9 @@ def main():
     with open(os.path.join(HERE, "classes.tsv"), newline="") as stream:
         open_classes = [r["id"] for r in csv.DictReader(stream, delimiter="\t")
                         if r["state"] in ("open", "unknown")]
-    covered = sum(1 for cls in open_classes if cls in PALETTE)
+    covered = sum(1 for cls in open_classes if cls in PALETTE or cls in ALIAS or cls in NO_INK)
     lines = ["class\tcolor\trecords\tmarked_chars\tpercent_total"]
-    for cls in sorted(PALETTE, key=lambda x: (x[0], int(x[1:]))):
+    for cls in sorted(PALETTE, key=lambda x: (x[0], int(x[1:]) if x[1:].isdigit() else 99, x)):
         lines.append(f"{cls}\t{PALETTE[cls]}\t{class_records[cls]}\t{ink[cls]}\t{(100*ink[cls]/total if total else 0):.6f}")
     lines.extend([
         f"UNION\t#000000\t{marked_records}\t{union_ink}\t{(100*union_ink/total if total else 0):.6f}",

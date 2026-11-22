@@ -7,9 +7,9 @@
 - Proof errors: 0 at the accepted head. Performance class: closed.
 - N1 (rows with an empty reason): **161 records** at this head, down from 1,035 records at the full-corpus freeze.
 - C4 (blocks with a repeated left side, scanner count): **27 records**.
-- Residual ink (lower bound, 7/23 open-or-unknown classes): **4.013%** of reader-visible proof-source characters, in 368 records; see `INK.md`.
-- Ink change since `f79926c0`: union +0.095 points; C21 +1 records.
-- Largest colors: N1 1.66%, C21 1.24%, C22 0.88%, C4 0.23%.
+- Residual ink (lower bound, 23/23 open-or-unknown classes): **7.536%** of reader-visible proof-source characters, in 679 records; see `INK.md`.
+- Ink change since `f79926c0`: union -0.168 points; C18 -13 records, C21 +1 records, C23 +1 records.
+- Largest colors: N1 1.66%, P-sufficiency-wall 1.47%, C21 1.24%, C19 1.10%.
 
 ## Work now
 
