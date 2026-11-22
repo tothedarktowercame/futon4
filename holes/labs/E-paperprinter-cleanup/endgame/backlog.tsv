@@ -1,5 +1,5 @@
 class	incoming_data	classification	mechanism	next_observation	disposition
-C4	31 records / 42 repeated rows at 929b6bcb (was 69 / 95)	partly-classified	typed terms collapse to one rendering; raw transitions and cross-goal joins remain	recount after the N2 partition decision	structural train with N2
+C4	27 records / 34 repeated rows at 1724a69d (was 31 / 42 at 929b6bcb, 69 / 95 before Q157s)	partly-classified	typed terms collapse to one rendering; raw transitions and cross-goal joins remain	recount after the N2 partition decision	structural train with N2
 C5	0 records at ae0713bc	classified	one proposition renders as raw bottom	recheck the one defective declaration at accepted head	small tail
 C6	1 record at 929b6bcb (t96A06, case condition printed as top)	classified	one cases arm renders if top	recheck t96A06 at accepted head	small tail
 C7	4 scanner records at ae0713bc: HilbertBasis.repr x2, a .1 projection of a pair, one URL false hit	classified	missing data readings expose Lean heads or binder names	list exact remaining occurrences after accepted head	additive readings
@@ -7,7 +7,7 @@ C8	2 records at 929b6bcb	classified	richer membership predicates escape the exis
 C12	1 site	stale-observation	Subgroup.map may drop its map argument	rerender and confirm at accepted head	small tail
 C16	2 records at 929b6bcb	classified	closer ownership misses a let-bound value and inner chains	trace the two owners	isolated fix
 C17	2 records at 929b6bcb	classified	seqsplit raw head remains in m03J05	trace exact typed heads	additive reading or narrow fix
-N1	229 records / 377 rows at ae0713bc	partly-classified	mostly library heads without readings; wrapper and headless subfamilies remain	Q164 trace plus head-frequency table	readings lane; one structural candidate at a time
+N1	229 records / 377 rows at 1724a69d	partly-classified	mostly library heads without readings; wrapper and headless subfamilies remain	Q164 trace plus head-frequency table	readings lane; one structural candidate at a time
 N2	16 declarations / goal-partition list	partly-classified	chain annotator lacks stable goal ownership; naive partition exposes pruned rows	Q157s adversarial census after Q161r	structural train with C4
 P-sufficiency-wall	5 declarations / 126 occurrences	partly-classified	sufficiency presentation loses useful proof structure	classify the five declarations by producer path	observe before redesign
 P-empty-claim	22 records after broad cleanup	partly-classified	claims followed by non-itemize or value terms that display nothing	classify the remaining 27 lines by producer path	observe before code
