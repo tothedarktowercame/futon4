@@ -1,7 +1,6 @@
 class	incoming_data	classification	mechanism	next_observation	disposition
 C4	27 records / 34 repeated rows at 1724a69d (was 31 / 42 at 929b6bcb, 69 / 95 before Q157s)	partly-classified	typed terms collapse to one rendering; raw transitions and cross-goal joins remain	recount after the N2 partition decision	structural train with N2
 C5	0 records at ae0713bc	classified	one proposition renders as raw bottom	recheck the one defective declaration at accepted head	small tail
-C6	1 record at 929b6bcb (t96A06, case condition printed as top)	classified	one cases arm renders if top	recheck t96A06 at accepted head	small tail
 C7	4 scanner records at ae0713bc: HilbertBasis.repr x2, a .1 projection of a pair, one URL false hit	classified	missing data readings expose Lean heads or binder names	list exact remaining occurrences after accepted head	additive readings
 C8	2 records at 929b6bcb	classified	richer membership predicates escape the existing rule	trace the two hosts	isolated fix
 C12	1 site	stale-observation	Subgroup.map may drop its map argument	rerender and confirm at accepted head	small tail
@@ -21,3 +20,4 @@ P-opaque-proof	1 declaration	unclassified	not established	inspect typed proof an
 P-duplicate-tag	1 declaration	unclassified	not established	locate tag producer	observe
 N14	1 declaration	stale-observation	calc under Subtype.ext has no goal-owning step	rerender t96J02 paste_cut at accepted head	observe then narrow fix
 N15	5 tests	unknown	state after the LEAD fix was never measured	run full a97J08 real-corpus test file	observation only
+C18	60 places in 17 records at a7b38edf (case condition compares two numeric literals, e.g. "if 0 = 1")	classified	a decidable literal comparison is kept as a case condition	Q175 packet	open

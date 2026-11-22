@@ -52,7 +52,8 @@ def validate(classes, backlog, dispatch, observations=None):
             elif dep not in known_items:
                 errors.append(f"{row['item']}: unknown dependency {dep}")
         for cls in row["classes"].split("+"):
-            if cls not in open_classes:
+            # A finished item may name a class it closed; only pending work must target an open class.
+            if row["status"] in {"active", "waiting"} and cls not in open_classes:
                 errors.append(f"{row['item']}: class {cls} is not open/unknown")
     if len(accepted_bases) > 1:
         errors.append("active integration items do not share one accepted head")
