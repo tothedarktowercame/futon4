@@ -109,3 +109,39 @@ and that record.
       run over a sample record (ours, if Triangle Cubed has none yet).
 - [ ] One group found that uses IG or companion modelling with local participants and
       writes up failed iterations, with a contact route through a person, not an agent.
+
+## Concrete examples, both directions (Joe, 2026-11-22)
+
+Joe: "some I think would say that 'Kafka's machine' had a concrete instantiation as the
+Third Reich ... we should probably develop some concrete examples to illustrate why this
+way of working has any potential benefit at all." No counterfactuals ("had Kafka had
+FUTON"); cases where records, rules and the ability to contest them made a difference
+someone else measured. All from memory below; each is a MAP item to check.
+
+**Where records and rules did harm.**
+- The Netherlands' population register in the 1940s: unusually complete records are
+  often cited as one reason the share of Jews deported was far higher there than in
+  France. The machine Agar describes, used for persecution.
+- *Seeing Like a State*'s cases (Soviet collectivisation, villagisation in Tanzania):
+  plans legible to the state, illegible to the people in them.
+
+**Where records, rules and contest helped.**
+- Ostrom's Los Angeles groundwater basins: users negotiated adjudication, a watermaster
+  kept the records of pumping, and the overdraft was halted. Records, rules agreed by the
+  users, and a monitor accountable to them.
+- Brazil's condominial sewerage: designed block by block with residents; cheaper and
+  maintained because residents co-produced it.
+- Mondragon's cooperatives: each member's capital account records their stake, so
+  ownership follows contribution over a working life; the nearest established case to
+  Triangle Cubed's aim.
+- Wikipedia: every edit recorded, every change contestable on its talk page.
+- Our own, small: the ledger walkthrough (2026-11-21) found that our tool had erased part
+  of Murch's credit, and the record let it be found and repaired.
+
+**What separates the two lists, as a hypothesis.** In the harmful cases the records were
+held by an authority over people who could not read or contest them; in the helpful ones
+the people recorded could read the records, change the rules, and hold the monitor to
+account (Ostrom's principles 3, 4 and 6). An example only counts for this mission if it
+shows that difference with an outcome someone else measured.
+
+- [ ] Check each case above against a source, keep or drop it, and add the measure.
