@@ -23,3 +23,4 @@ N15	5 tests	unknown	state after the LEAD fix was never measured	run full a97J08 
 C18	60 places in 17 records at a7b38edf (case condition compares two numeric literals, e.g. "if 0 = 1")	classified	a decidable literal comparison is kept as a case condition	Q175 packet	open
 C19	84 render lines at b13afd74 ("- - k")	classified	unary minus applied to a unary minus gets no parentheses	find the printer rule for Neg.neg operand	isolated fix
 C20	2 records at b13afd74 (m01J06 *_zero_one)	classified	two chain rows print alike once pair projections reduce; the cited row is dropped	trace the typed rows of the chain	observe then narrow fix
+C21	163 citations at 841ed53c	classified	a citation path falls back to the fixed phrase "a library lemma"	find the path and list the cited names	observe then data readings

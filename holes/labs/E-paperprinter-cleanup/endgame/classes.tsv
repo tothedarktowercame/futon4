@@ -51,3 +51,4 @@ N16	2026-11-20	0	records	0	done	a citation prints a raw hypothesis name ('from h
 C18	2026-11-22	17	records	0	open	case condition compares two numeric literals ("if 0 = 1"): 60 places in 17 records at a7b38edf; seen while reading the Q169 census diff
 C19	2026-11-22	84	lines	0	open	negation of a negation printed without parentheses ("- - k_{1}"): 84 render lines at b13afd74 (79 before Q170)
 C20	2026-11-22	2	records	0	open	m01J06 clipped pendulum field: after Q170 the row justified by "the bump function equals one on the inner ball" prints the same as its neighbour and is merged, so that reason is no longer shown (2 records)
+C21	2026-11-22	163	citations	0	open	lemmas cited as "a library lemma" with no description: 163 citations at 841ed53c (one of them a ConstructionTargets lemma that has a written reading the path does not consult)
