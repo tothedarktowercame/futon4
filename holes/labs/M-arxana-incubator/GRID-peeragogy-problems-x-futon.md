@@ -760,3 +760,21 @@ The rest of the community is off GitHub: the Ostrom Workshop at Indiana Universi
 memory: still running), its social-ecological systems resources, and CIRAD's ComMod
 network. Next: read those sites for groups using IG or companion modelling with local
 participants, and who among them writes up iterations that failed.
+
+## The toolkit, as found (2026-11-22)
+
+Joe: "what we've found is likely the kind of modular toolkit that we'd need to build
+something that work[s] well." Each module, what it does, and its state:
+
+| module | does | status |
+|---|---|---|
+| ValueFlows / REA | chains as data: agents, resources, processes; commitments kept apart from events | from memory; read valueflo.ws |
+| Institutional Grammar 2.0 | rules: who must / must not / may do what, under what conditions, or else | found 2026-11-22 (InstitutionalGrammar org, IG JSON schema, ig-coder); read the book site |
+| a probabilistic mode | rates on conditions and outcomes; proofs about policies (PRISM, Storm; COOL-MC) | from memory and the 2026-11-21 scan |
+| Cormas / companion modelling | iterate the model with the people in it, often by role-play | found 2026-11-22; read the docs |
+| FUTON's records | per-word provenance, act marks, jobs and commit trailers, benefit and harm columns | built (2026-11-19 to 21) |
+| the flops record | failures kept as arguments | started, futon3c `holes/FLOPS-futonic.md` |
+| the sketch tying them together | chain map + IG rules for Triangle Cubed | `~/notes/claude-5/incubator-defproject.clj`, end |
+
+Next: one MAP pass over valueflo.ws, newinstitutionalgrammar.org and the Cormas docs, to
+replace "from memory" with what they actually say.
