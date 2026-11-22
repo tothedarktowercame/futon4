@@ -9,6 +9,7 @@ leanref targets are removed, not rasterized glyph area.
 """
 import argparse
 import collections
+import hashlib
 import csv
 import glob
 import gzip
@@ -211,12 +212,14 @@ def main():
                             ink[cls] += end - start
                             all_spans.append((start, end))
                             serial.append({"start": start, "end": end, "class": cls,
+                                           "anchor": proof[start:start + 60],
                                            "color": PALETTE[cls]})
                     union_ink += sum(end - start for start, end in merge(all_spans))
                     if annotations:
                         annotations.write(json.dumps({"module": row.get("module"),
                                                       "declaration": row.get("declaration"),
                                                       "visible_chars": len(proof),
+                                                      "visible_sha256": hashlib.sha256(proof.encode("utf-8")).hexdigest(),
                                                       "spans": serial}, sort_keys=True) + "\n")
                     if html_out:
                         title = html.escape(f"{row.get('module')} :: {row.get('declaration')}")

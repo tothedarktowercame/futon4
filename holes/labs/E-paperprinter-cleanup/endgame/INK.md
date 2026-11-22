@@ -93,3 +93,38 @@ Classes with zero ink at this head (C1, C5, C6, C8, C16, C17) are omitted.
 
 Artifacts per head: `residual-ink-summary.tsv`,
 `residual-ink-annotations.jsonl.gz`, `residual-ink.html`.
+
+## Interoperability with Mark7 / InkUp inks
+
+Residual ink and the Mark7 CMY inks are different axes and never share a
+colour namespace. Mark7 marks human source character spans by pipeline layer
+(C = S1 marks, M = S3 proof graph, Y = S4 expository scopes). Residual ink
+marks PaperPrinter's rendered text by cleanup class.
+
+**What the residual artifacts hold** (per accepted head, beside the renders):
+
+- `residual-ink-annotations.jsonl.gz`: one object per marked record:
+  `module`, `declaration`, `visible_chars`, `visible_sha256`, and `spans`, each
+  `{class, start, end, anchor, color}`. Offsets are Python string indices into
+  `visible(proof)`: the record's `proof` field with `\leanref` targets removed
+  (`leanism_scan_p1.visible`). `anchor` is the first 60 characters of the span.
+- `residual-ink-summary.tsv` and `ink.tsv`: per class records, characters, share.
+- Join key: `(head, module, declaration)`; `declaration` alone is unique in
+  the 8,778-record corpus today.
+
+**Offsets do not survive a re-render.** They are valid only for the text whose
+`visible_sha256` they were computed on. Across heads use the record key plus
+the anchor, or a typed node. The typed walk's Step identities are
+process-local, and the only typed anchor that reaches the render is the
+`\leanref{..}{local:<declaration>:<binder>}` target in the raw proof, which is
+a binder name and not unique (the same name recurs in sibling cases). A stable
+node key (declaration plus position in the proof term) does not exist yet.
+
+**Overlay record.** `ink-overlay.schema.json` defines one record per mark
+with independent axes (`analytic_layer` S1/S3/S4, `residual_class`,
+`presentation_role`, `plan_action`), a coordinate (text span with hash and
+anchor, or typed node with a declared stability), evidence, provenance (head,
+producer, how found) and review status. `ink_overlay.py HEAD` exports the
+residual annotations in that form; `ink_overlay.py --validate FILE` checks any
+producer's file. Review status has no "correct" value: the record can say a
+span was checked against its inventory, not that a proof is right.

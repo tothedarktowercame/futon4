@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Proof ink overlay record v0 (one JSON object per line)",
+  "description": "One marked span or node of one proof, with each axis carried independently. Residual class (PaperPrinter cleanup), analytic layer (Mark7 S1/S3/S4), presentation role (InkUp) and review state never share a namespace. Nothing here is a correctness or readiness claim.",
+  "type": "object",
+  "required": ["schema", "record", "coordinate", "axes", "provenance", "review"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "proof-ink.overlay/v0"},
+    "record": {
+      "type": "object",
+      "required": ["corpus", "module", "declaration"],
+      "additionalProperties": false,
+      "properties": {
+        "corpus": {"type": "string", "minLength": 1},
+        "module": {"type": "string", "minLength": 1},
+        "declaration": {"type": "string", "minLength": 1}
+      }
+    },
+    "coordinate": {
+      "type": "object",
+      "description": "Where the mark sits. Character offsets are valid only for the text whose sha256 is given; the anchor and node are what survive a re-render.",
+      "required": ["space"],
+      "additionalProperties": false,
+      "properties": {
+        "space": {"enum": ["render-visible", "render-raw", "lean-source", "human-source", "typed-node"]},
+        "start": {"type": "integer", "minimum": 0},
+        "end": {"type": "integer", "minimum": 0},
+        "text_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "anchor": {"type": "string", "maxLength": 200},
+        "node": {"type": "string", "minLength": 1},
+        "node_stability": {"enum": ["stable", "process-local", "binder-name"]}
+      },
+      "allOf": [
+        {"if": {"properties": {"space": {"enum": ["render-visible", "render-raw", "lean-source", "human-source"]}}},
+         "then": {"required": ["start", "end", "text_sha256"]}},
+        {"if": {"properties": {"space": {"const": "typed-node"}}},
+         "then": {"required": ["node", "node_stability"]}}
+      ]
+    },
+    "axes": {
+      "type": "object",
+      "description": "Independent axes; any subset may be present, at least one.",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "analytic_layer": {"type": "array", "items": {"enum": ["S1", "S3", "S4"]}, "uniqueItems": true, "minItems": 1},
+        "residual_class": {"type": "string", "minLength": 1},
+        "presentation_role": {"enum": ["overview", "assumption", "example", "reduction", "case-split", "bridge", "calculation", "citation", "closure", "administrative"]},
+        "plan_action": {"enum": ["show", "compress", "omit", "nest"]}
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "description": "What supports the mark: extractor name, report, typed trace, inventory row.",
+      "items": {"type": "string", "minLength": 1}
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["producer", "head"],
+      "additionalProperties": false,
+      "properties": {
+        "producer": {"type": "string", "minLength": 1},
+        "producer_commit": {"type": "string"},
+        "head": {"type": "string", "description": "accepted integration head (renders) or source revision the coordinate refers to"},
+        "how": {"enum": ["text-pattern", "known-site", "typed-trace", "model", "human"]}
+      }
+    },
+    "review": {
+      "type": "object",
+      "required": ["status"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {"enum": ["unreviewed", "span-checked", "rejected"]},
+        "by": {"type": "string"},
+        "note": {"type": "string"}
+      }
+    }
+  }
+}
