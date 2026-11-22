@@ -5,21 +5,21 @@
 ## Finish line
 
 - Frozen classes: **55**: 30 done, 2 not defects, 22 open, 1 unknown.
-- Corpus gate: 8,778 records; accepted head with a full census: `50c42151`.
+- Corpus gate: 8,778 records; accepted head with a full census: `1eb58e25`.
 - Proof errors: 0 at the accepted head. Performance class: closed.
 - N1 (rows with an empty reason): **161 records** at this head, down from 1,035 records at the full-corpus freeze.
 - C4 (blocks with a repeated left side, scanner count): **27 records**.
-- Residual ink (audit surface; 23/23 open-or-unknown classes have markup, extractor precision not yet reviewed): **7.474%** of reader-visible proof-source characters, in 679 records; see `INK.md`.
-- Ink change since `0bf1d207`: union -0.062 points; C18 -2 records.
-- Largest colors: N1 1.66%, P-sufficiency-wall 1.41%, C21 1.24%, C19 1.10%.
+- Residual ink (audit surface; 23/23 open-or-unknown classes have markup, extractor precision not yet reviewed): **7.327%** of reader-visible proof-source characters, in 666 records; see `INK.md`.
+- Ink change since `50c42151`: union -0.147 points; C19 -15 records.
+- Largest colors: N1 1.66%, P-sufficiency-wall 1.41%, C21 1.24%, C19 0.94%.
 
 ## Work now
 
-- ACTIVE `Q175b` (integrate, C18): packet written (overnight/Q175b.md).
+- ACTIVE `Q179` (integrate, C19): codex-2; packet overnight/Q179.md.
+- ACTIVE `Q207` (observe, P-sufficiency-wall): codex-12; no commit; Q207-REPORT.md.
 - WAITING `N1-readings` (data, N1), after `-`: batch 3 accepted as d25599e9 (58 readings; 59 rows gain a reason, 0 errors). 19 readings withheld in total because a reason makes their row displayed (list: ~/notes/claude-7/Q158/readings-batch3-withheld.json + 5 earlier); they wait for Q165.
 - WAITING `same-print-typed` (integrate, N1), after `Q169`: input: ~/notes/codex-12/Q165/same-print-rows.tsv.
 - WAITING `typed-prune` (observe, N2+C4), after `-`: input: ~/notes/codex-12/Q165/guard-rows.tsv and the two rejected census renders in ~/storage/apm-endgame/.
-- WAITING `Q179` (integrate, C19), after `Q175b`: packet written (overnight/Q179.md).
 - WAITING `Q181` (integrate, C21), after `Q179`: packet written (overnight/Q181.md); 86 readings drafted in r8/lib-readings/readings.tsv, to be committed as data with Q180.
 - WAITING `Q184` (integrate, C22), after `Q181`: packet written (overnight/Q184.md).
 - WAITING `Q185` (integrate, C22), after `Q184`: packet written (overnight/Q185.md).
@@ -27,6 +27,11 @@
 - WAITING `Q188` (integrate, C4), after `Q186`: packet written (overnight/Q188.md).
 - WAITING `Q191` (integrate, C18), after `Q188`: packet written (overnight/Q191.md).
 - WAITING `Q197` (integrate, C23), after `Q191`: packet written (overnight/Q197.md).
+- WAITING `Q200` (integrate, C19), after `Q197`: packet written (overnight/Q200.md).
+- WAITING `Q203` (integrate, P-sufficiency-wall), after `Q200`: packet written (overnight/Q203.md).
+- WAITING `Q201` (integrate, P-sufficiency-wall), after `Q203`: packet written (overnight/Q201.md).
+- WAITING `Q205` (integrate, P-sufficiency-wall), after `Q201`: packet written (overnight/Q205.md).
+- WAITING `Q206` (integrate, P-sufficiency-wall), after `Q205`: packet written (overnight/Q206.md).
 
 ## Backlog understanding
 

@@ -29,6 +29,7 @@ an alias or a stated reason for having no ink. The ledger is `ink.tsv`.
 | f79926c0 | 687 | 7.703% |
 | 0bf1d207 | 679 | 7.536% |
 | 50c42151 | 679 | 7.474% |
+| 1eb58e25 | 666 | 7.327% |
 
 ## Classes at 0bf1d207
 
