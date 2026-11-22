@@ -49,7 +49,15 @@ integration/data item, a named mechanism and preflight, and an explicit
 dependency for waiting integration work.  Update the ledgers before dispatch,
 not retrospectively at merge time.
 
-The operating order from 2026-11-22 is: decide Q161r; then rebase and census
-Q157s if it is still needed.  Q164 is observation work and may proceed in
-parallel.  New small-class implementation packets wait until this structural
-sequence is decided; their backlog observations may proceed.
+At each accepted head (after the merge commit and its full census are stored
+under `~/storage/apm-endgame/head-<sha>/`), also run:
+
+    python3 scan.py '<renders glob>' <sha> | cut -f1-3 >> counts.tsv
+    python3 ink.py '<renders glob>' --summary .../residual-ink-summary.tsv \
+        --annotations .../residual-ink-annotations.jsonl.gz --html .../residual-ink.html
+
+and add the head's row to `INK.md`. Ink is recorded for accepted heads only. A
+lower total never authorizes a merge that regresses a record; see `INK.md`.
+
+The integrate order is whatever `dispatch.tsv` says (one `active`, the rest
+`waiting` with `depends_on`). Observation and data items may run in parallel.

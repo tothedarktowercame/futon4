@@ -2,24 +2,32 @@
 
 ## Finish line
 
-- Frozen classes: **49**: 25 done, 2 not defects, 21 open, 1 unknown.
-- Corpus gate: 8,778 records; accepted head recorded by the dispatch ledger: `51c23004`.
+- Frozen classes: **55**: 30 done, 2 not defects, 22 open, 1 unknown.
+- Corpus gate: 8,778 records; accepted head with a full census: `0bf1d207`.
 - Proof errors: 0 at the accepted head. Performance class: closed.
-- Largest measured residual, N1: **627 rows in 359 records**, down from 1,928 rows in 1,035 records at the full-corpus freeze (67.5% of rows removed).
-- C4 repeated-chain residual: last recorded **69 records / 95 rows**; the next count waits on N2.
-- Scanner-backed residual ink: **4.184666%** of reader-visible proof-source characters, across 419 records. This is a lower bound covering 9 of 22 open or unknown classes; see `INK.md`.
+- N1 (rows with an empty reason): **161 records** at this head, down from 1,035 records at the full-corpus freeze.
+- C4 (blocks with a repeated left side, scanner count): **27 records**.
+- Residual ink (lower bound, 6/23 open-or-unknown classes): **3.926%** of reader-visible proof-source characters, in 360 records; see `INK.md`.
 
 ## Work now
 
-- ACTIVE `Q161r` (integrate, N1): accept-or-reject against 51c23004.
-- ACTIVE `Q164` (observe, N1): mechanism report and adversarial fixtures.
-- WAITING `Q157s` (integrate, N2+C4), after `Q161r`: rebase on next accepted head, then census.
-- WAITING `N1-readings` (data, N1), after `Q161r`: next reviewed readings batch.
+- ACTIVE `Q175b` (integrate, C18): packet written (overnight/Q175b.md).
+- ACTIVE `Q192` (observe, C23): codex-12; packet overnight/Q192.md.
+- WAITING `N1-readings` (data, N1), after `-`: batch 3 accepted as d25599e9 (58 readings; 59 rows gain a reason, 0 errors). 19 readings withheld in total because a reason makes their row displayed (list: ~/notes/claude-7/Q158/readings-batch3-withheld.json + 5 earlier); they wait for Q165.
+- WAITING `same-print-typed` (integrate, N1), after `Q169`: input: ~/notes/codex-12/Q165/same-print-rows.tsv.
+- WAITING `typed-prune` (observe, N2+C4), after `-`: input: ~/notes/codex-12/Q165/guard-rows.tsv and the two rejected census renders in ~/storage/apm-endgame/.
+- WAITING `Q179` (integrate, C19), after `Q175b`: packet written (overnight/Q179.md).
+- WAITING `Q181` (integrate, C21), after `Q179`: packet written (overnight/Q181.md); 86 readings drafted in r8/lib-readings/readings.tsv, to be committed as data with Q180.
+- WAITING `Q184` (integrate, C22), after `Q181`: packet written (overnight/Q184.md).
+- WAITING `Q185` (integrate, C22), after `Q184`: packet written (overnight/Q185.md).
+- WAITING `Q186` (integrate, C22), after `Q185`: packet written (overnight/Q186.md).
+- WAITING `Q188` (integrate, C4), after `Q186`: packet written (overnight/Q188.md).
+- WAITING `Q191` (integrate, C18), after `Q188`: packet written (overnight/Q191.md).
 
 ## Backlog understanding
 
-- Observation coverage: **22/22** open or unknown classes.
-- Classification state: classified 6, partly-classified 6, stale-observation 2, unclassified 7, unknown 1.
+- Observation coverage: **23/23** open or unknown classes.
+- Classification state: classified 5, classified (Q183) 1, classified by position (claude-7 from renders; Q182/Q187 typed traces) 1, partly classified (Q190 section 3) 1, partly-classified 5, stale-observation 2, unclassified 7, unknown 1.
 - Historical grammar observations: falsified 5, proposed 2, superseded 1, supported 4.
 
 ## Next branches to inspect
@@ -36,7 +44,7 @@ The score uses ordinal 1–5 inputs: `4×blocking + 3×uncertainty + 2×volume +
 
 - Packet ledger: 94 total; 56 merged, 16 rejected, 15 discovery.
 - Since 2026-11-20: 49 packets; 26 merged, 11 rejected, 8 discovery.
-- Planning band, not a promise: **3–7 focused working days** if Q161r/Q157s settle the two structural seams; **1–2 weeks** if either requires another mechanism cycle. The small tail is mostly hours per class, but the unclassified proof-quality group cannot be estimated responsibly until its observation pass.
+- Planning band, not a promise: **3–7 focused working days** if the queued integrate packets land without a new mechanism cycle; **1–2 weeks** if C4/N2 or C23 needs one. The small tail is mostly hours per class, but the unclassified proof-quality group cannot be estimated responsibly until its observation pass.
 
 ## Acceleration levers
 

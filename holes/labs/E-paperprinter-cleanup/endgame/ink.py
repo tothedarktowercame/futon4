@@ -9,6 +9,7 @@ leanref targets are removed, not rasterized glyph area.
 """
 import argparse
 import collections
+import csv
 import glob
 import gzip
 import html
@@ -25,7 +26,7 @@ from scan import align_rows
 PALETTE = {
     "C1": "#d73027", "C4": "#fc8d59", "C5": "#fee090", "C6": "#e0f3f8",
     "C7": "#91bfdb", "C8": "#4575b4", "C16": "#984ea3", "C17": "#4daf4a",
-    "N1": "#ff7f00",
+    "N1": "#ff7f00", "C21": "#a65628", "C22": "#f781bf",
 }
 FAMILY = {
     "C1": re.compile(r"distinguish cases on[^.]*\\lor"),
@@ -35,6 +36,8 @@ FAMILY = {
     "C16": re.compile(r"by transitivity"),
     "C17": re.compile(r"\\seqsplit"),
     "N1": re.compile(r"&& \\text\{\}"),
+    "C21": re.compile(r"a library lemma"),
+    "C22": re.compile(r"(?<![_\d.{])(?<!\\cdot )(?<![-+] )0 (?:\\, )?> (?:\\, )?0(?![\d.])"),
 }
 LOCAL = re.compile(r"^[A-Za-z]_[A-Za-z]'?$|^self$")
 ALIGN = re.compile(r"\\begin\{align\*\}(.*?)\\end\{align\*\}", re.S)
@@ -118,7 +121,7 @@ def main():
         html_out.write("<!doctype html><meta charset='utf-8'><title>PaperPrinter residual ink</title>"
                        "<style>body{font-family:sans-serif}pre{white-space:pre-wrap;border:1px solid #ccc;padding:1em}"
                        "mark{color:inherit}summary{font-family:monospace}</style><h1>PaperPrinter residual ink</h1>")
-        html_out.write("<p>Lower-bound markup for the nine scanner-backed open classes. "
+        html_out.write("<p>Lower-bound markup for the scanner-backed classes. "
                        "Hover colored spans for class identifiers.</p>")
     try:
         for path in sorted(glob.glob(args.pattern)):
@@ -155,13 +158,17 @@ def main():
             annotations.close()
         if html_out:
             html_out.close()
+    with open(os.path.join(HERE, "classes.tsv"), newline="") as stream:
+        open_classes = [r["id"] for r in csv.DictReader(stream, delimiter="\t")
+                        if r["state"] in ("open", "unknown")]
+    covered = sum(1 for cls in open_classes if cls in PALETTE)
     lines = ["class\tcolor\trecords\tmarked_chars\tpercent_total"]
     for cls in sorted(PALETTE, key=lambda x: (x[0], int(x[1:]))):
         lines.append(f"{cls}\t{PALETTE[cls]}\t{class_records[cls]}\t{ink[cls]}\t{(100*ink[cls]/total if total else 0):.6f}")
     lines.extend([
         f"UNION\t#000000\t{marked_records}\t{union_ink}\t{(100*union_ink/total if total else 0):.6f}",
         f"TOTAL\t-\t{records}\t{total}\t100.000000",
-        "COVERAGE\t-\t-\t9/22 open-or-unknown classes\tlower-bound",
+        f"COVERAGE\t-\t-\t{covered}/{len(open_classes)} open-or-unknown classes\tlower-bound",
     ])
     output = "\n".join(lines) + "\n"
     if args.summary:

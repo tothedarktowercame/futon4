@@ -35,11 +35,23 @@ def main():
     print("## Finish line\n")
     print(f"- Frozen classes: **{len(classes)}**: {states['done']} done, "
           f"{states['notdefect']} not defects, {states['open']} open, {states['unknown']} unknown.")
-    print("- Corpus gate: 8,778 records; accepted head recorded by the dispatch ledger: `51c23004`.")
+    counts = read("counts.tsv")
+    head = counts[-1]["commit"]
+    at_head = {r["class"]: r["open"] for r in counts if r["commit"] == head}
+    print(f"- Corpus gate: 8,778 records; accepted head with a full census: `{head}`.")
     print("- Proof errors: 0 at the accepted head. Performance class: closed.")
-    print("- Largest measured residual, N1: **627 rows in 359 records**, down from "
-          "1,928 rows in 1,035 records at the full-corpus freeze (67.5% of rows removed).")
-    print("- C4 repeated-chain residual: last recorded **69 records / 95 rows**; the next count waits on N2.")
+    print(f"- N1 (rows with an empty reason): **{at_head.get('N1', '?')} records** at this head, down from "
+          "1,035 records at the full-corpus freeze.")
+    print(f"- C4 (blocks with a repeated left side, scanner count): **{at_head.get('C4', '?')} records**.")
+    summary = os.path.expanduser(f"~/storage/apm-endgame/head-{head}/residual-ink-summary.tsv")
+    if os.path.exists(summary):
+        with open(summary, newline="") as f:
+            ink = {r["class"]: r for r in csv.DictReader(f, delimiter="\t")}
+        print(f"- Residual ink (lower bound, {ink['COVERAGE']['marked_chars']}): "
+              f"**{float(ink['UNION']['percent_total']):.3f}%** of reader-visible proof-source characters, "
+              f"in {ink['UNION']['records']} records; see `INK.md`.")
+    else:
+        print(f"- Residual ink: not yet generated for `{head}` (run `ink.py`; see `INK.md`).")
 
     print("\n## Work now\n")
     for r in active:
@@ -66,8 +78,8 @@ def main():
           f"{outcomes['discovery']} discovery.")
     print(f"- Since 2026-11-20: {len(recent)} packets; {recent_outcomes['merged']} merged, "
           f"{recent_outcomes['rejected']} rejected, {recent_outcomes['discovery']} discovery.")
-    print("- Planning band, not a promise: **3–7 focused working days** if Q161r/Q157s settle the two structural seams; "
-          "**1–2 weeks** if either requires another mechanism cycle. The small tail is mostly hours per class, "
+    print("- Planning band, not a promise: **3–7 focused working days** if the queued integrate packets land without a new mechanism cycle; "
+          "**1–2 weeks** if C4/N2 or C23 needs one. The small tail is mostly hours per class, "
           "but the unclassified proof-quality group cannot be estimated responsibly until its observation pass.")
 
     print("\n## Acceleration levers\n")
