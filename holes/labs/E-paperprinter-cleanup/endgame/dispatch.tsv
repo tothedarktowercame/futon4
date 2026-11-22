@@ -24,3 +24,6 @@ Q175	observe	done	a7b38edf	C18	where literal-comparison case conditions come fro
 Q175a	integrate	waiting	b13afd74	C18	ite on a comparison of two closed numerals selects its branch	fixed-regression-matrix+changed-record-diff+full-census	Q174	packet written (overnight/Q175a.md)
 Q175b	integrate	waiting	b13afd74	C18	generated Fin match on a closed index prints the selected arm	fixed-regression-matrix+changed-record-diff+full-census	Q175a	packet written (overnight/Q175b.md)
 Q176	observe	done	b13afd74	N1	source facts (docstring, statement, kind) for 229 name-derived project-lemma citations	-	-	facts.tsv: 229 names, 101 with docstrings, 27 not found in the source snapshot
+Q177	observe	active	841ed53c	C21	which lemmas are cited as "a library lemma" and through which path (163 citations)	read-only classification first	-	codex-3; packet overnight/Q177.md
+Q178	observe	active	841ed53c	C20	why the cited bump-function row is merged away in two m01J06 records	read-only classification first	-	codex-12; packet overnight/Q178.md
+Q179	integrate	waiting	841ed53c	C19	a negation whose typed operand is a negation prints with parentheses (84 lines)	fixed-regression-matrix+changed-record-diff+full-census	Q175b	packet written (overnight/Q179.md)
