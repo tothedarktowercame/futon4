@@ -19,12 +19,12 @@ head	class	records	marked_chars	percent_total
 51c23004	P-duplicate-tag	1	3847	0.028937
 51c23004	P-empty-claim	49	35060	0.263716
 51c23004	P-missing-subproof	2	1970	0.014818
-51c23004	P-nonprop-suffices	2	20640	0.155251
+51c23004	P-nonprop-suffices	0	0	0.000000
 51c23004	P-opaque-proof	1	39	0.000293
 51c23004	P-overexpanded-setup	1	11012	0.082831
 51c23004	P-premature-conclusion	2	4602	0.034616
 51c23004	P-sufficiency-wall	516	723481	5.441912
-51c23004	UNION	1272	2015208	15.158083
+51c23004	UNION	1272	2005596	15.085783
 51c23004	TOTAL	8778	13294610	100.000000
 51c23004	COVERAGE	-	23/23 open-or-unknown classes	lower-bound
 f79926c0	C1	0	0	0.000000
@@ -47,12 +47,12 @@ f79926c0	P-duplicate-closer	19	16224	0.125870
 f79926c0	P-duplicate-tag	1	3377	0.026200
 f79926c0	P-empty-claim	49	34672	0.268995
 f79926c0	P-missing-subproof	2	1970	0.015284
-f79926c0	P-nonprop-suffices	2	13598	0.105497
+f79926c0	P-nonprop-suffices	0	0	0.000000
 f79926c0	P-opaque-proof	1	39	0.000303
 f79926c0	P-overexpanded-setup	1	11012	0.085434
 f79926c0	P-premature-conclusion	2	3759	0.029163
 f79926c0	P-sufficiency-wall	136	191234	1.483646
-f79926c0	UNION	688	999796	7.756692
+f79926c0	UNION	688	990184	7.682119
 f79926c0	TOTAL	8778	12889464	100.000000
 f79926c0	COVERAGE	-	23/23 open-or-unknown classes	lower-bound
 0bf1d207	C1	0	0	0.000000
@@ -75,12 +75,12 @@ f79926c0	COVERAGE	-	23/23 open-or-unknown classes	lower-bound
 0bf1d207	P-duplicate-tag	1	3377	0.026208
 0bf1d207	P-empty-claim	49	34672	0.269079
 0bf1d207	P-missing-subproof	2	1970	0.015289
-0bf1d207	P-nonprop-suffices	2	13598	0.105530
+0bf1d207	P-nonprop-suffices	0	0	0.000000
 0bf1d207	P-opaque-proof	1	39	0.000303
 0bf1d207	P-overexpanded-setup	1	11012	0.085461
 0bf1d207	P-premature-conclusion	2	3759	0.029173
 0bf1d207	P-sufficiency-wall	136	189458	1.470328
-0bf1d207	UNION	680	977879	7.589034
+0bf1d207	UNION	680	968267	7.514438
 0bf1d207	TOTAL	8778	12885421	100.000000
 0bf1d207	COVERAGE	-	23/23 open-or-unknown classes	lower-bound
 50c42151	C1	0	0	0.000000
@@ -103,12 +103,12 @@ f79926c0	COVERAGE	-	23/23 open-or-unknown classes	lower-bound
 50c42151	P-duplicate-tag	1	3377	0.026223
 50c42151	P-empty-claim	49	34672	0.269234
 50c42151	P-missing-subproof	2	1970	0.015297
-50c42151	P-nonprop-suffices	2	13598	0.105591
+50c42151	P-nonprop-suffices	0	0	0.000000
 50c42151	P-opaque-proof	1	39	0.000303
 50c42151	P-overexpanded-setup	1	11012	0.085510
 50c42151	P-premature-conclusion	2	3759	0.029189
 50c42151	P-sufficiency-wall	136	182043	1.413596
-50c42151	UNION	680	969380	7.527408
+50c42151	UNION	680	959768	7.452769
 50c42151	TOTAL	8778	12878006	100.000000
 50c42151	COVERAGE	-	23/23 open-or-unknown classes	lower-bound
 1eb58e25	C1	0	0	0.000000
@@ -131,11 +131,11 @@ f79926c0	COVERAGE	-	23/23 open-or-unknown classes	lower-bound
 1eb58e25	P-duplicate-tag	1	3377	0.026223
 1eb58e25	P-empty-claim	49	34672	0.269231
 1eb58e25	P-missing-subproof	2	1970	0.015297
-1eb58e25	P-nonprop-suffices	2	13598	0.105590
+1eb58e25	P-nonprop-suffices	0	0	0.000000
 1eb58e25	P-opaque-proof	1	39	0.000303
 1eb58e25	P-overexpanded-setup	1	11012	0.085509
 1eb58e25	P-premature-conclusion	2	3759	0.029189
 1eb58e25	P-sufficiency-wall	136	182043	1.413578
-1eb58e25	UNION	667	950469	7.380467
+1eb58e25	UNION	667	940857	7.305830
 1eb58e25	TOTAL	8778	12878168	100.000000
 1eb58e25	COVERAGE	-	23/23 open-or-unknown classes	lower-bound

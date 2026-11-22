@@ -4,19 +4,18 @@
 
 ## Finish line
 
-- Frozen classes: **55**: 30 done, 2 not defects, 22 open, 1 unknown.
+- Frozen classes: **55**: 30 done, 2 not defects, 21 open, 2 unknown.
 - Corpus gate: 8,778 records; accepted head with a full census: `1eb58e25`.
 - Proof errors: 0 at the accepted head. Performance class: closed.
 - N1 (rows with an empty reason): **161 records** at this head, down from 1,035 records at the full-corpus freeze.
 - C4 (blocks with a repeated left side, scanner count): **27 records**.
-- Residual ink (audit surface; 23/23 open-or-unknown classes have markup, extractor precision not yet reviewed): **7.380%** of reader-visible proof-source characters, in 667 records; see `INK.md`.
+- Residual ink (audit surface; 23/23 open-or-unknown classes have markup, extractor precision not yet reviewed): **7.306%** of reader-visible proof-source characters, in 667 records; see `INK.md`.
 - Ink change since `50c42151`: union -0.147 points; C19 -15 records.
 - Largest colors: N1 1.66%, P-sufficiency-wall 1.41%, C21 1.24%, C19 0.94%.
 
 ## Work now
 
 - ACTIVE `Q181` (integrate, C21): codex-2; packet overnight/Q181.md.
-- ACTIVE `Q209` (observe, C18): codex-12; no commit; Q209-REPORT.md.
 - WAITING `N1-readings` (data, N1), after `-`: batch 3 accepted as d25599e9 (58 readings; 59 rows gain a reason, 0 errors). 19 readings withheld in total because a reason makes their row displayed (list: ~/notes/claude-7/Q158/readings-batch3-withheld.json + 5 earlier); they wait for Q165.
 - WAITING `same-print-typed` (integrate, N1), after `Q169`: input: ~/notes/codex-12/Q165/same-print-rows.tsv.
 - WAITING `typed-prune` (observe, N2+C4), after `-`: input: ~/notes/codex-12/Q165/guard-rows.tsv and the two rejected census renders in ~/storage/apm-endgame/.
@@ -32,11 +31,14 @@
 - WAITING `Q205` (integrate, P-sufficiency-wall), after `Q201`: packet written (overnight/Q205.md).
 - WAITING `Q206` (integrate, P-sufficiency-wall), after `Q205`: packet written (overnight/Q206.md).
 - WAITING `Q208` (integrate, P-sufficiency-wall), after `Q206`: packet written (overnight/Q208.md).
+- WAITING `Q210` (integrate, C18), after `Q208`: packet written (overnight/Q210.md).
+- WAITING `Q211` (integrate, C18), after `Q210`: packet written (overnight/Q211.md).
+- WAITING `Q213` (integrate, C18), after `Q211`: packet written (overnight/Q213.md).
 
 ## Backlog understanding
 
 - Observation coverage: **23/23** open or unknown classes.
-- Classification state: classified 5, classified (Q183) 1, classified (Q190, Q192) 1, classified by position (claude-7 from renders; Q182/Q187 typed traces) 1, partly-classified 5, stale-observation 2, unclassified 7, unknown 1.
+- Classification state: classified 5, classified (Q183) 1, classified (Q190, Q192) 1, classified by position (claude-7 from renders; Q182/Q187 typed traces) 1, partly-classified 5, stale-observation 3, unclassified 6, unknown 1.
 - Historical grammar observations: falsified 7, proposed 2, superseded 1, supported 4.
 
 ## Next branches to inspect

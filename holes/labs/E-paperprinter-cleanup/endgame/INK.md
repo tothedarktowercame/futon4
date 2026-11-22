@@ -25,15 +25,18 @@ an alias or a stated reason for having no ink. The ledger is `ink.tsv`.
 
 | Head | Records marked | Union ink |
 |---|---:|---:|
-| 51c23004 | 1272 | 15.158% |
-| f79926c0 | 688 | 7.757% |
-| 0bf1d207 | 680 | 7.589% |
-| 50c42151 | 680 | 7.527% |
-| 1eb58e25 | 667 | 7.380% |
+| 51c23004 | 1272 | 15.086% |
+| f79926c0 | 688 | 7.682% |
+| 0bf1d207 | 680 | 7.514% |
+| 50c42151 | 680 | 7.453% |
+| 1eb58e25 | 667 | 7.306% |
 
 Rows were re-recorded on 2026-11-22 after the C18 pattern was widened to negative numerals with spaces
 ("if - 1 = 1"), which Q209 found in one record the old pattern missed. Every head from f79926c0 on gained
-that record.
+that record. They were re-recorded again the same day after Q214 showed that the two known sites of
+P-nonprop-suffices no longer show that defect (typed check, four modules); the sites were removed from
+`ink-sites.tsv`, which had coloured both whole proofs at every head. The class stays unknown until a corpus-wide
+typed count.
 
 ## Classes at 0bf1d207
 

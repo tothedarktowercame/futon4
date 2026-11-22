@@ -8,7 +8,7 @@ N2	16 declarations / goal-partition list	partly-classified	chain annotator lacks
 P-sufficiency-wall	5 declarations / 126 occurrences	partly-classified	sufficiency presentation loses useful proof structure	classify the five declarations by producer path	observe before redesign
 P-empty-claim	22 records after broad cleanup	partly-classified	claims followed by non-itemize or value terms that display nothing	classify the remaining 27 lines by producer path	observe before code
 P-duplicate-closer	92 rough occurrences	partly-classified	typed evidence differs or one fact owns several closers	produce exact corpus-wide inventory	observe before code
-P-nonprop-suffices	2 declarations	unclassified	not established	capture typed producer and desired wording	observe
+P-nonprop-suffices	0 known sites at 1eb58e25 (Q214: 97 emitter records in 4 modules all typed Prop)	stale-observation	not reproduced; Q154 typed gate	corpus-wide typed count of sufficiency targets that are not propositions (tracer over the census shards)	observe
 P-empty-chain-reason	3 declarations	unclassified	not established	capture typed producer and missing evidence	observe
 P-overexpanded-setup	1 declaration	unclassified	not established	compare source proof structure and render	observe
 P-missing-subproof	2 declarations	unclassified	not established	trace where recorded steps disappear	observe
