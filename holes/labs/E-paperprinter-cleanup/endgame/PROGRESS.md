@@ -1,5 +1,7 @@
 # PaperPrinter residual — 2026-11-22
 
+**Status: rendering works; informalisation validation is in progress** (`READINESS.md`: six gates, one met). The ink figures below are an audit surface, not a share of correct proofs.
+
 ## Finish line
 
 - Frozen classes: **55**: 30 done, 2 not defects, 22 open, 1 unknown.
@@ -7,7 +9,7 @@
 - Proof errors: 0 at the accepted head. Performance class: closed.
 - N1 (rows with an empty reason): **161 records** at this head, down from 1,035 records at the full-corpus freeze.
 - C4 (blocks with a repeated left side, scanner count): **27 records**.
-- Residual ink (lower bound, 23/23 open-or-unknown classes): **7.536%** of reader-visible proof-source characters, in 679 records; see `INK.md`.
+- Residual ink (audit surface; 23/23 open-or-unknown classes have markup, extractor precision not yet reviewed): **7.536%** of reader-visible proof-source characters, in 679 records; see `INK.md`.
 - Ink change since `f79926c0`: union -0.168 points; C18 -13 records, C21 +1 records, C23 +1 records.
 - Largest colors: N1 1.66%, P-sufficiency-wall 1.47%, C21 1.24%, C19 1.10%.
 

@@ -12,7 +12,9 @@ not validation.  In particular:
 - C18 through C23 were found after the first ink census;
 - C23 shows that a kernel-correct local contradiction can be printed without
   the assumption that licenses it;
-- C4's paragraph extractor undercounts the independently reviewed row metric;
+- C4's extractor was changed on 2026-11-22 to the row metric on visible text
+  (106 records at 0bf1d207; the left-side scanner found 27); its spans have
+  not been checked against the Q182/Q187/Q189 row inventories;
 - several P-* colors come from inventories whose individual mechanisms have
   not been classified; and
 - the integration queue still contains active and waiting cleanup packets.

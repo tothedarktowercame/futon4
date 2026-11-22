@@ -32,6 +32,8 @@ def main():
     history = collections.Counter(r["status"] for r in observations)
 
     print(f"# PaperPrinter residual — {date.today().isoformat()}\n")
+    print("**Status: rendering works; informalisation validation is in progress** (`READINESS.md`: six gates, "
+          "one met). The ink figures below are an audit surface, not a share of correct proofs.\n")
     print("## Finish line\n")
     print(f"- Frozen classes: **{len(classes)}**: {states['done']} done, "
           f"{states['notdefect']} not defects, {states['open']} open, {states['unknown']} unknown.")
@@ -47,7 +49,7 @@ def main():
     heads = list(dict.fromkeys(r["head"] for r in ink))
     if head in heads:
         now = {r["class"]: r for r in ink if r["head"] == head}
-        print(f"- Residual ink (lower bound, {now['COVERAGE']['marked_chars']}): "
+        print(f"- Residual ink (audit surface; {now['COVERAGE']['marked_chars']} have markup, extractor precision not yet reviewed): "
               f"**{float(now['UNION']['percent_total']):.3f}%** of reader-visible proof-source characters, "
               f"in {now['UNION']['records']} records; see `INK.md`.")
         i = heads.index(head)

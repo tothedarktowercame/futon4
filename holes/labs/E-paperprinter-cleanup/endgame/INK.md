@@ -11,6 +11,13 @@ class colors the whole proof). The union removes overlaps. This measures
 affected expository material, not glyph area and not the length of the
 defective token.
 
+**Status (READINESS.md, Joe 2026-11-22): rendering works; informalisation
+validation is in progress.** Ink shows where known classes touch the text. It
+is not a percentage of correct or readable proofs, and full markup coverage is
+not validation: gate 2 needs each extractor's spans checked against its
+inventory, which has not been done, and the eight known-site classes do not
+satisfy it at all.
+
 ## Complete palette, by accepted head
 
 From 2026-11-22 every open or unknown class of `classes.tsv` has an extractor,
