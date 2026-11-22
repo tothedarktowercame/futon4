@@ -13,6 +13,11 @@ notation hypotheses as evidence for a future expository grammar.  Run
 `python3 progress.py > PROGRESS.md` for the operator-facing measurable
 residual, current train, planning band and acceleration levers.
 
+`ink.py` applies class-specific colors to affected proof paragraphs and reports
+their union as a percentage of reader-visible proof-source ink.  `INK.md`
+records the accepted-head census and its coverage limitation; the generated
+HTML, annotation JSONL and TSV live beside the accepted-head renders.
+
 Joe's go, 2026-11-20: freeze the list of defect classes, require a count that falls,
 give each class one of three exits (printer fix, Lean notation change, accepted residual),
 and stop when every frozen class has left. Status: draft, built from claude-7's queue logs

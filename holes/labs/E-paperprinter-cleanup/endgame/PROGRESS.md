@@ -7,6 +7,7 @@
 - Proof errors: 0 at the accepted head. Performance class: closed.
 - Largest measured residual, N1: **627 rows in 359 records**, down from 1,928 rows in 1,035 records at the full-corpus freeze (67.5% of rows removed).
 - C4 repeated-chain residual: last recorded **69 records / 95 rows**; the next count waits on N2.
+- Scanner-backed residual ink: **4.184666%** of reader-visible proof-source characters, across 419 records. This is a lower bound covering 9 of 22 open or unknown classes; see `INK.md`.
 
 ## Work now
 
