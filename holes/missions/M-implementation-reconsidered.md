@@ -145,3 +145,42 @@ account (Ostrom's principles 3, 4 and 6). An example only counts for this missio
 shows that difference with an outcome someone else measured.
 
 - [ ] Check each case above against a source, keep or drop it, and add the measure.
+
+## A working model of the co-op sector and peer production (Joe, 2026-11-22)
+
+Joe: "what we could try to do (and it would be relevant to Triangle Cubed) is to make a
+working model of the co-op 'sector' and open/peer production parts of the economy ...
+#1 these entities are typically 'more open' about their finances and governance, so we
+may be able to get our hands on data, and #2 they are probably less well studied than
+the Fortune 500 (or Fortune 4) companies that folks in business schools take as case
+studies".
+
+Candidate open data, by kind (all from memory; each a MAP item to confirm, with terms of
+use):
+- **Ledgers in the open.** Open Collective: each collective's income and expenses are
+  public, with an API; close to a ValueFlows event stream already.
+- **Co-op sector.** The International Co-operative Alliance's World Cooperative Monitor
+  (the largest co-ops by turnover, yearly); Co-operatives UK's annual co-op economy
+  figures; Mondragon's annual reports.
+- **Employee ownership (US).** Retirement-plan filings (Form 5500) cover employee stock
+  ownership plans and are public; the National Center for Employee Ownership publishes
+  summaries.
+- **Peer production.** Wikimedia: complete edit dumps plus public financial filings;
+  Apache Software Foundation: public board minutes; Debian: public votes under its
+  constitution; open-source contribution histories (GitHub archives).
+- **Nonprofit filings (US).** Form 990s, searchable through ProPublica's Nonprofit
+  Explorer, for foundations such as Wikimedia and Mozilla.
+
+For each entity the model has the same three parts as the Triangle Cubed sketch: the
+chain (ValueFlows), the rules as stated (bylaws, charters, constitutions, as IG
+statements), and the record of what happened (finances, votes, contributions). The gap
+between stated rules and record is the espoused / in-use comparison, now with outside
+data.
+
+First step, to keep it small: one of each kind, all with open records: an Open
+Collective (ledger), Apache (minutes and votes), Mondragon (annual reports). Then ask
+which questions the three can answer together that a Fortune 500 case study cannot,
+such as how ownership or credit follows contribution over time.
+
+- [ ] Confirm each source, its access route and terms; pick the three.
+- [ ] Encode one entity end to end: chain, rules, record, and the gap between them.
