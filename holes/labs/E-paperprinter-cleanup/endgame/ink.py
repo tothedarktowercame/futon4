@@ -42,7 +42,7 @@ FAMILY = {
     "C17": re.compile(r"\\seqsplit"),
     "N1": re.compile(r"&& \\text\{\}"),
     "C21": re.compile(r"a library lemma"),
-    "C18": re.compile(r"\\text\{if \} ?-?\d+ ?(?:=|\\neq) ?-?\d+"),
+    "C18": re.compile(r"\\text\{if \}\s*(?:-\s*)?\d+\s*(?:=|\\neq)\s*(?:-\s*)?\d+(?![\d.])"),
     "C19": re.compile(r"-\s*-\s*[A-Za-z\\]"),
     # a claim with nothing under it: the colon ends the line and the next line is not its proof
     "P-empty-claim": re.compile(r"We claim \\\((?:(?!\\\)).)*\\\):(?: ⟦\d+⟧)?[ ]*(?=\n\\item|\n\\end|\n\n|$)"),
