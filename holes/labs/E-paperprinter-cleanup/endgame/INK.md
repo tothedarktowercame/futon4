@@ -15,17 +15,19 @@ The `COVERAGE` row of each summary says how many open or unknown classes of
 
 ## History (accepted heads only)
 
-| Head | Extractors | Records marked | Union ink | N1 | C4 | C21 | C22 |
-|---|---|---:|---:|---:|---:|---:|---:|
-| 51c23004 | 9 (C1 C4–C8 C16 C17 N1) | 419 | 4.184666% | 3.449541% | 0.827907% | — | — |
-| f79926c0 | 11 (+C21 C22) | 359 | 3.917859% | 1.657788% | 0.226068% | 1.237274% | 0.882294% |
-| 0bf1d207 | same 9 | 184 | 1.855454% | 1.658308% | 0.226139% | — | — |
-| 0bf1d207 | 11 (+C21 C22) | 360 | 3.925537% | 1.658308% | 0.226139% | 1.244111% | 0.882571% |
+The ledger is `ink.tsv` (one row per head and class, written by `accept_head.py`).
+Union ink by head, all with the eleven extractors of 2026-11-22:
 
-Reading the table: between 51c23004 and 0bf1d207 the nine-extractor union fell
-from 4.18% to 1.86%. The rise to 3.93% in the eleven-extractor rows is two
-classes becoming visible (C21 "a library lemma", C22 a numeral compared with
-itself), not new defects. The +1 record from f79926c0 to 0bf1d207 is aunk03,
+| Head | Records marked | Union ink | N1 | C4 | C21 | C22 |
+|---|---:|---:|---:|---:|---:|---:|
+| 51c23004 | 808 | 10.273690% | 3.449541% | 0.827907% | 1.249371% | 5.463274% |
+| f79926c0 | 359 | 3.917859% | 1.657788% | 0.226068% | 1.237274% | 0.882294% |
+| 0bf1d207 | 360 | 3.925537% | 1.658308% | 0.226139% | 1.244111% | 0.882571% |
+
+Reading the table: on the nine extractors codex-18 first shipped, the union fell
+from 4.18% at 51c23004 to 1.86% at 0bf1d207. C21 ("a library lemma") and C22
+(a numeral compared with itself) were added afterwards, which is why the
+figures above are higher. The +1 record from f79926c0 to 0bf1d207 is aunk03,
 where Q175a dropped a no-op row and exposed a citation without a reading
 (Q190; the reading is committed as data and prints once Q181 lands).
 
@@ -43,8 +45,8 @@ which it first appears.
 
 ## Rules of use (Joe via codex-18, 2026-11-22)
 
-1. Regenerate at every accepted head and record the delta beside the class
-   counts; never from an unaccepted candidate.
+1. Record every accepted head with `accept_head.py`; compare a candidate with
+   `ink_diff.py` from `/tmp`, never record it (see `DISPATCH.md`).
 2. Read the colored HTML for new, grown and moved colors, not only the total.
 3. A lower total does not authorize a merge that regresses any record: the
    preflight and the read of every changed line still decide.

@@ -8,6 +8,8 @@
 - N1 (rows with an empty reason): **161 records** at this head, down from 1,035 records at the full-corpus freeze.
 - C4 (blocks with a repeated left side, scanner count): **27 records**.
 - Residual ink (lower bound, 6/23 open-or-unknown classes): **3.926%** of reader-visible proof-source characters, in 360 records; see `INK.md`.
+- Ink change since `f79926c0`: union +0.008 points; C21 +1 records.
+- Largest colors: N1 1.66%, C21 1.24%, C22 0.88%, C4 0.23%.
 
 ## Work now
 
@@ -28,7 +30,7 @@
 
 - Observation coverage: **23/23** open or unknown classes.
 - Classification state: classified 5, classified (Q183) 1, classified by position (claude-7 from renders; Q182/Q187 typed traces) 1, partly classified (Q190 section 3) 1, partly-classified 5, stale-observation 2, unclassified 7, unknown 1.
-- Historical grammar observations: falsified 5, proposed 2, superseded 1, supported 4.
+- Historical grammar observations: falsified 7, proposed 2, superseded 1, supported 4.
 
 ## Next branches to inspect
 

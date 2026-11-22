@@ -43,15 +43,32 @@ def main():
     print(f"- N1 (rows with an empty reason): **{at_head.get('N1', '?')} records** at this head, down from "
           "1,035 records at the full-corpus freeze.")
     print(f"- C4 (blocks with a repeated left side, scanner count): **{at_head.get('C4', '?')} records**.")
-    summary = os.path.expanduser(f"~/storage/apm-endgame/head-{head}/residual-ink-summary.tsv")
-    if os.path.exists(summary):
-        with open(summary, newline="") as f:
-            ink = {r["class"]: r for r in csv.DictReader(f, delimiter="\t")}
-        print(f"- Residual ink (lower bound, {ink['COVERAGE']['marked_chars']}): "
-              f"**{float(ink['UNION']['percent_total']):.3f}%** of reader-visible proof-source characters, "
-              f"in {ink['UNION']['records']} records; see `INK.md`.")
+    ink = [r for r in read("ink.tsv")] if os.path.exists(os.path.join(HERE, "ink.tsv")) else []
+    heads = list(dict.fromkeys(r["head"] for r in ink))
+    if head in heads:
+        now = {r["class"]: r for r in ink if r["head"] == head}
+        print(f"- Residual ink (lower bound, {now['COVERAGE']['marked_chars']}): "
+              f"**{float(now['UNION']['percent_total']):.3f}%** of reader-visible proof-source characters, "
+              f"in {now['UNION']['records']} records; see `INK.md`.")
+        i = heads.index(head)
+        if i:
+            was = {r["class"]: r for r in ink if r["head"] == heads[i - 1]}
+            moved = []
+            for cls, r in now.items():
+                if cls in ("TOTAL", "COVERAGE", "UNION") or cls not in was:
+                    continue
+                d = int(r["records"]) - int(was[cls]["records"])
+                if d:
+                    moved.append(f"{cls} {d:+d} records")
+            delta = float(now["UNION"]["percent_total"]) - float(was["UNION"]["percent_total"])
+            print(f"- Ink change since `{heads[i - 1]}`: union {delta:+.3f} points"
+                  + ("; " + ", ".join(moved) if moved else "; no class changed its record count") + ".")
+        largest = sorted((r for c, r in now.items() if c not in ("TOTAL", "COVERAGE", "UNION")),
+                         key=lambda r: -float(r["percent_total"]))[:4]
+        print("- Largest colors: " + ", ".join(f"{r['class']} {float(r['percent_total']):.2f}%" for r in largest
+                                               if float(r["percent_total"]) > 0) + ".")
     else:
-        print(f"- Residual ink: not yet generated for `{head}` (run `ink.py`; see `INK.md`).")
+        print(f"- Residual ink: NOT recorded for `{head}`: run `accept_head.py`.")
 
     print("\n## Work now\n")
     for r in active:

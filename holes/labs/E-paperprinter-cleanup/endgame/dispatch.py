@@ -13,8 +13,13 @@ def read(name):
         return list(csv.DictReader(f, delimiter="\t"))
 
 
-def validate(classes, backlog, dispatch, observations=None):
+def validate(classes, backlog, dispatch, observations=None, counts=None, ink=None):
     errors = []
+    if counts is not None and ink is not None and counts:
+        # the accepted head is the last one counted; its residual ink must be recorded too
+        head = counts[-1]["commit"]
+        if head not in {r["head"] for r in ink}:
+            errors.append(f"accepted head {head} has class counts but no residual ink: run accept_head.py")
     open_classes = {r["id"] for r in classes if r["state"] in {"open", "unknown"}}
     observed = [r["class"] for r in backlog]
     if len(observed) != len(set(observed)):
@@ -97,6 +102,9 @@ def selftest():
     waiting = dict(base, item="q2", status="waiting", classes="B", depends_on="-")
     errors = validate(classes, backlog, [dict(base, item="q1"), waiting])
     assert any("no dependency" in e for e in errors), errors
+    errors = validate(classes, backlog, [dict(base, item="q1")], counts=[{"commit": "h2"}], ink=[{"head": "h1"}])
+    assert any("no residual ink" in e for e in errors), errors
+    assert validate(classes, backlog, [dict(base, item="q1")], counts=[{"commit": "h2"}], ink=[{"head": "h2"}]) == []
     print("selftest ok: backlog coverage and a single structural integration train are enforced")
 
 
@@ -107,7 +115,8 @@ def main():
     args = ap.parse_args()
     if args.selftest:
         return selftest()
-    errors = validate(read("classes.tsv"), read("backlog.tsv"), read("dispatch.tsv"), read("observations.tsv"))
+    errors = validate(read("classes.tsv"), read("backlog.tsv"), read("dispatch.tsv"), read("observations.tsv"),
+                      counts=read("counts.tsv"), ink=read("ink.tsv"))
     if errors:
         for error in errors:
             print("VIOLATION " + error)

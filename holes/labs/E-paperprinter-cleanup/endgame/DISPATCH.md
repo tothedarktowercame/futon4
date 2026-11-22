@@ -49,15 +49,32 @@ integration/data item, a named mechanism and preflight, and an explicit
 dependency for waiting integration work.  Update the ledgers before dispatch,
 not retrospectively at merge time.
 
-At each accepted head (after the merge commit and its full census are stored
-under `~/storage/apm-endgame/head-<sha>/`), also run:
+## Residual ink is part of every merge decision (Joe, 2026-11-22)
 
-    python3 scan.py '<renders glob>' <sha> | cut -f1-3 >> counts.tsv
-    python3 ink.py '<renders glob>' --summary .../residual-ink-summary.tsv \
-        --annotations .../residual-ink-annotations.jsonl.gz --html .../residual-ink.html
+Before the merge decision, on the candidate's full census (renders still in `/tmp`):
 
-and add the head's row to `INK.md`. Ink is recorded for accepted heads only. A
-lower total never authorizes a merge that regresses a record; see `INK.md`.
+    python3 ink.py '/tmp/qNh-k-0?.jsonl' --annotations /tmp/qN-ink.jsonl.gz --html /tmp/qN-ink.html
+    python3 ink_diff.py <accepted head sha> /tmp/qN-ink.jsonl.gz
+
+`ink_diff.py` lists every record whose color is NEW, GROWN, MOVED, SHRUNK or GONE and exits 1
+on any NEW or GROWN. Each NEW or GROWN record is read in the colored HTML and either explained
+in the merge message and report (for example a class that became visible, with its packet) or
+the candidate is rejected or fixed. A lower total never excuses a regressed record. Candidate
+ink stays in `/tmp`; it is not progress.
+
+After the merge commit, with the census stored under `~/storage/apm-endgame/head-<sha>/`:
+
+    python3 accept_head.py <sha> '~/storage/apm-endgame/head-<sha>/qNh-k-0?.jsonl'
+
+This appends the class counts to `counts.tsv`, writes the ink summary, annotations and HTML
+beside the renders, appends the head to `ink.tsv`, and regenerates `PROGRESS.md`. It refuses a
+sha that is not on the integration branch, renders outside the head's storage directory, and
+a census of fewer than 8,778 records. `dispatch.py --check` fails while the last counted head
+has no ink row, so the next dispatch cannot go out before the head is recorded.
+
+A class gets an interval extractor in `ink.py` when its inventory is next touched (a packet
+written, an observe report read); the `COVERAGE` row says how many open classes have one.
+The report to Joe after each merge carries the ink line and the `ink_diff.py` tally.
 
 The integrate order is whatever `dispatch.tsv` says (one `active`, the rest
 `waiting` with `depends_on`). Observation and data items may run in parallel.
