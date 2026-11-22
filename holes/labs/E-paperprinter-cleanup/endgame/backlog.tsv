@@ -21,3 +21,5 @@ P-duplicate-tag	1 declaration	unclassified	not established	locate tag producer	o
 N14	1 declaration	stale-observation	calc under Subtype.ext has no goal-owning step	rerender t96J02 paste_cut at accepted head	observe then narrow fix
 N15	5 tests	unknown	state after the LEAD fix was never measured	run full a97J08 real-corpus test file	observation only
 C18	60 places in 17 records at a7b38edf (case condition compares two numeric literals, e.g. "if 0 = 1")	classified	a decidable literal comparison is kept as a case condition	Q175 packet	open
+C19	84 render lines at b13afd74 ("- - k")	classified	unary minus applied to a unary minus gets no parentheses	find the printer rule for Neg.neg operand	isolated fix
+C20	2 records at b13afd74 (m01J06 *_zero_one)	classified	two chain rows print alike once pair projections reduce; the cited row is dropped	trace the typed rows of the chain	observe then narrow fix
