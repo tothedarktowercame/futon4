@@ -731,3 +731,32 @@ improved. The dis-beneficiary column is what would show whether one is really an
 the compute harm to people near the data centres is borne by people with no position in
 the mission, which is the structure of tragedy, told offstage. Rubric: classify each
 mission script by where its ledger puts benefit and harm, not by its tone.
+
+## Policy, not economics (Joe, 2026-11-22)
+
+Joe's father suggested that what Joe has been calling "economics" is better called
+**policy**: how a chosen way of working changes outcomes, and how one way of working
+depends on another (supply chains, hence logistics too), not supply and demand curves.
+Touchpoint for Triangle Cubed, which is based in Oakland: Pressman and Wildavsky,
+*Implementation* (1973), the study of how plans made in Washington came apart in Oakland.
+
+Joe: "if we were looking at Github we'd be looking for policy representation languages
+... with a particular interest on those who use them in iterative local design." Scan
+2026-11-22 (futon7 `data/daily-loop/2026-11-2*/brief-q-who-builds-policy*.edn`) plus
+direct GitHub searches. GitHub is thin here, as Joe expected after the Snatch search:
+- "policy as code" means cloud-infrastructure policy (Kyverno, OPA, CloudFormation
+  Guard): the wrong sense; "ostrom" mostly hits a German energy company.
+- In the right sense: **cormas/cormas** (34 stars), "COmmon pool Ressources and
+  Multi-Agent Simulations", with a `cormas-gaming` extension for serious games: the
+  platform of companion modelling (ComMod, CIRAD; from memory), where stakeholders and
+  modellers iterate a model of their own resource together, often through role-playing
+  games. Closest match to "iterative local design", and to the plays idea above.
+- The **InstitutionalGrammar** organisation: IG 2.0 book site (newinstitutionalgrammar.org),
+  an Inception annotation layer set, and `pw-mini-ig/ig-json-schema` (a JSON Schema for
+  IG 2.0). With `bjohanne/ig-coder` from the 2026-11-21 scan, this is the policy
+  representation language in Ostrom's line.
+- **SongshGeoLab/ABSESpy** (54): agent-based social-ecological systems in Python.
+The rest of the community is off GitHub: the Ostrom Workshop at Indiana University (from
+memory: still running), its social-ecological systems resources, and CIRAD's ComMod
+network. Next: read those sites for groups using IG or companion modelling with local
+participants, and who among them writes up iterations that failed.
