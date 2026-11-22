@@ -25,9 +25,16 @@ preflight: repeated rows; empty reasons; raw names; statement-to-chain flips;
 `0 > 0`; printed self-equalities; lost algebra reasons; and the budget-edge
 modules.  The full 8,778-record census remains the merge gate.
 
+`observations.tsv` is append-only evidence for the later expository grammar.
+Do not erase a notation or vocabulary hypothesis when it fails.  Mark it
+`falsified` or `superseded`, link its successor, and retain the measured
+evidence.  `supported` means supported on the stated corpus and commit, not a
+timeless printer law.  `proposed` is deliberately distinguishable from both.
+
 Run:
 
     python3 dispatch.py --check
+    python3 progress.py > PROGRESS.md
 
 The check requires every open/unknown class to be present in `backlog.tsv`, no
 more than one active integration item, an accepted-head base for every active

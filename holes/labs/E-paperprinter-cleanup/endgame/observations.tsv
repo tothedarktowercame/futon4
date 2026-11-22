@@ -1,0 +1,13 @@
+id	at	class	commit	packet	kind	vocabulary_or_notation	claim	status	supersedes	evidence
+O001	2026-11-17	C4	40d06435	Q79b	mechanism	chain coalescing	repeated displayed expressions can be removed by coalescing adjacent rendered rows	falsified	-	Q79b did not cover typed endpoints
+O002	2026-11-18	C13	6f4499099d	class13-style	presentation	Lean calc notation	a source-level calc would remove the repeated t96J02 line	superseded	-	calc removed the repeat but PaperPrinter collapsed its steps to by transitivity
+O003	2026-11-18	C16	a415b01f	Q94	mechanism	aligned calc chain	Trans.trans should display its factors as an ordered mathematical chain	supported	O002	class 16 fell on the flagged subset; later full-corpus work generalized the route
+O004	2026-11-20	N1	a6e043d3	Q109	measurement	empty-reason rewrite row	the 757-record residual represents the whole corpus	falsified	-	full 8778-record freeze found 1928 rows in 1035 records
+O005	2026-11-20	N1	a6e043d3	n1-classify	classification	typed proof head	congruence rows form a non-defect class while named library heads form defects	falsified	-	nearly every row had a citable head; reader need is per lemma
+O006	2026-11-21	C4	62eb1c4a	Q152	mechanism	typed bridge endpoints	preserving typed endpoints lets the existing coalescer remove fallback-ordering loops	supported	O001	C4 fell from 246 to 66 records
+O007	2026-11-21	N1	de97f200	Q159	vocabulary	per-lemma rewrite readings	additive readings can expose mathematical reasons without changing proof structure	supported	O005	263 readings changed 533 records only by adding reasons; N1 1991 to 1139 rows
+O008	2026-11-22	N1	51c23004	Q163	vocabulary	per-lemma rewrite readings	a second additive batch continues to reduce the residual monotonically	supported	O007	363 readings changed 385 records only by adding reasons; N1 1139 to 627 rows
+O009	2026-11-21	N2	de97f200	Q157	mechanism	goal-occurrence partition	printing every goal-owned child partition will repair chain ordering	falsified	-	more sufficiency sentences, align blocks, and empty reasons
+O010	2026-11-22	N2	596576d6	Q157r	mechanism	preserve reasons across goal partitions	preserving reasons fixes Q157 without re-exposing excursions	falsified	O009	C4 69 to 122, N1 1139 to 1417, four raw-name regressions
+O011	2026-11-22	N2	7f2ff49a	Q157s	mechanism	partition plus excursion pruning	pruning partition excursions can preserve the gains without global regressions	proposed	O010	candidate awaits adversarial and full-corpus census against accepted head
+O012	2026-11-22	N1	3371b148	Q161r	mechanism	congruence reason attachment	attach a reason only when it does not replace a statement or existing reason	proposed	-	candidate census in progress against 51c23004

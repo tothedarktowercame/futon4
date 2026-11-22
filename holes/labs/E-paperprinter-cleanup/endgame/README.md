@@ -8,6 +8,11 @@ backlog while one structural candidate moves through integration.  See
 enforces complete backlog coverage and at most one active structural
 integration candidate; observation work may remain parallel.
 
+`observations.tsv` retains supported, falsified and superseded vocabulary or
+notation hypotheses as evidence for a future expository grammar.  Run
+`python3 progress.py > PROGRESS.md` for the operator-facing measurable
+residual, current train, planning band and acceleration levers.
+
 Joe's go, 2026-11-20: freeze the list of defect classes, require a count that falls,
 give each class one of three exits (printer fix, Lean notation change, accepted residual),
 and stop when every frozen class has left. Status: draft, built from claude-7's queue logs

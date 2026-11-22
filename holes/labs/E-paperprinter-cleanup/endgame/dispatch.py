@@ -13,7 +13,7 @@ def read(name):
         return list(csv.DictReader(f, delimiter="\t"))
 
 
-def validate(classes, backlog, dispatch):
+def validate(classes, backlog, dispatch, observations=None):
     errors = []
     open_classes = {r["id"] for r in classes if r["state"] in {"open", "unknown"}}
     observed = [r["class"] for r in backlog]
@@ -56,6 +56,24 @@ def validate(classes, backlog, dispatch):
                 errors.append(f"{row['item']}: class {cls} is not open/unknown")
     if len(accepted_bases) > 1:
         errors.append("active integration items do not share one accepted head")
+    if observations is not None:
+        ids = [r["id"] for r in observations]
+        if len(ids) != len(set(ids)):
+            errors.append("observations.tsv contains duplicate ids")
+        known_observations = set(ids)
+        known_classes = {r["id"] for r in classes}
+        allowed = {"proposed", "supported", "falsified", "superseded"}
+        for row in observations:
+            if row["class"] not in known_classes:
+                errors.append(f"observation {row['id']}: unknown class {row['class']}")
+            if row["status"] not in allowed:
+                errors.append(f"observation {row['id']}: unknown status {row['status']}")
+            parent = row["supersedes"]
+            if parent not in {"", "-"} and parent not in known_observations:
+                errors.append(f"observation {row['id']}: unknown superseded observation {parent}")
+            for key in ("at", "kind", "vocabulary_or_notation", "claim", "evidence"):
+                if not row[key].strip():
+                    errors.append(f"observation {row['id']}: empty {key}")
     return errors
 
 
@@ -88,7 +106,7 @@ def main():
     args = ap.parse_args()
     if args.selftest:
         return selftest()
-    errors = validate(read("classes.tsv"), read("backlog.tsv"), read("dispatch.tsv"))
+    errors = validate(read("classes.tsv"), read("backlog.tsv"), read("dispatch.tsv"), read("observations.tsv"))
     if errors:
         for error in errors:
             print("VIOLATION " + error)
