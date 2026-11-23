@@ -32,6 +32,7 @@ an alias or a stated reason for having no ink. The ledger is `ink.tsv`.
 | 1eb58e25 | 667 | 7.306% |
 | 89d58eb5 | 574 | 6.271% |
 | 2e3d5f5e | 574 | 6.271% |
+| 0398a663 | 538 | 5.941% |
 
 Rows were re-recorded on 2026-11-22 after the C18 pattern was widened to negative numerals with spaces
 ("if - 1 = 1"), which Q209 found in one record the old pattern missed. Every head from f79926c0 on gained

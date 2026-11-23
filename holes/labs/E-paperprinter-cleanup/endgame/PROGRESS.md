@@ -1,26 +1,27 @@
-# PaperPrinter residual — 2026-11-22
+# PaperPrinter residual — 2026-11-23
 
 **Status: rendering works; informalisation validation is in progress** (`READINESS.md`: six gates, one met). The ink figures below are an audit surface, not a share of correct proofs.
 
 ## Finish line
 
 - Frozen classes: **56**: 30 done, 2 not defects, 22 open, 2 unknown.
-- Corpus gate: 8,778 records; accepted head with a full census: `2e3d5f5e`.
+- Corpus gate: 8,778 records; accepted head with a full census: `0398a663`.
 - Proof errors: 0 at the accepted head. Performance class: closed.
 - N1 (rows with an empty reason): **161 records** at this head, down from 1,035 records at the full-corpus freeze.
 - C4 (blocks with a repeated left side, scanner count): **27 records**.
-- Residual ink (audit surface; 24/24 open-or-unknown classes have markup, extractor precision not yet reviewed): **6.271%** of reader-visible proof-source characters, in 574 records; see `INK.md`.
-- Ink change since `89d58eb5`: union +0.000 points; no class changed its record count.
-- Largest colors: N1 1.66%, P-sufficiency-wall 1.41%, C19 0.94%, C22 0.88%.
+- Residual ink (audit surface; 24/24 open-or-unknown classes have markup, extractor precision not yet reviewed): **5.941%** of reader-visible proof-source characters, in 538 records; see `INK.md`.
+- Ink change since `2e3d5f5e`: union -0.331 points; C22 -48 records.
+- Largest colors: N1 1.66%, P-sufficiency-wall 1.41%, C19 0.93%, C4 0.85%.
 
 ## Work now
 
-- ACTIVE `Q217` (integrate, P-truncated-walk): codex-2; packet overnight/Q217.md.
+- ACTIVE `Q184` (integrate, C22): codex-2; packet overnight/Q184.md.
 - WAITING `N1-readings` (data, N1), after `-`: batch 3 accepted as d25599e9 (58 readings; 59 rows gain a reason, 0 errors). 19 readings withheld in total because a reason makes their row displayed (list: ~/notes/claude-7/Q158/readings-batch3-withheld.json + 5 earlier); they wait for Q165.
 - WAITING `same-print-typed` (integrate, N1), after `Q169`: input: ~/notes/codex-12/Q165/same-print-rows.tsv.
 - WAITING `typed-prune` (observe, N2+C4), after `-`: input: ~/notes/codex-12/Q165/guard-rows.tsv and the two rejected census renders in ~/storage/apm-endgame/.
-- WAITING `Q184` (integrate, C22), after `Q217`: packet written (overnight/Q184.md).
-- WAITING `Q185` (integrate, C22), after `Q184`: packet written (overnight/Q185.md).
+- WAITING `Q224` (integrate, P-truncated-walk), after `Q184`: packet written (overnight/Q224.md).
+- WAITING `Q225` (integrate, P-truncated-walk), after `Q224`: packet written (overnight/Q225.md).
+- WAITING `Q185` (integrate, C22), after `Q225`: packet written (overnight/Q185.md).
 - WAITING `Q186` (integrate, C22), after `Q185`: packet written (overnight/Q186.md).
 - WAITING `Q188` (integrate, C4), after `Q186`: packet written (overnight/Q188.md).
 - WAITING `Q191` (integrate, C18), after `Q188`: packet written (overnight/Q191.md).
