@@ -36,6 +36,7 @@ an alias or a stated reason for having no ink. The ledger is `ink.tsv`.
 | 57d47d46 | 539 | 5.991% |
 | 905efba6 | 498 | 5.124% |
 | faeab149 | 427 | 4.314% |
+| 4168ba30 | 391 | 4.032% |
 
 Rows were re-recorded on 2026-11-22 after the C18 pattern was widened to negative numerals with spaces
 ("if - 1 = 1"), which Q209 found in one record the old pattern missed. Every head from f79926c0 on gained
@@ -159,3 +160,13 @@ C18 1, C19 1, P-empty-claim 1), SHRUNK 4, MOVED 36 and NEW 18, all N1: each is a
 transport argument, absent at 905efba6, one of whose rows has an empty reason cell. No record GROWN. The wall class
 falls from 1.402% in 136 records to 0.481% in 50; repeated-target sufficiency pairs fall from 300 to 27. Not measured
 by the extractor: 49 recovered calcs follow an unrelated sentence with no lead-in and 11 follow the closer they support.
+
+At 4168ba30 (batch 3: Q191, Q229, Q188, Q213; Q205 dropped) ink_diff against faeab149 gives GONE 39 (C4 27, C19 11,
+C18 1), MOVED 7 (parentheses added by Q229 shift the marked span by a few characters) and NEW 1:
+apm_t00a05_squarePerimeter_squareOfPerimeter, C4. Q213 decides the closed condition `-1 = 1`; a following display
+then loses its first row and its rows continue the previous chain, which at faeab149 already chained selections from
+different branches without being marked. Follow-up Q238 (observe). No record GROWN. Q205 (the fallback makes no
+bridge between a term and a proposition) was in the first trial merge and was removed: in the census it joined
+unrelated displays and produced "since P iff P" sentences (Q237 report; redo Q239). Not measured by the extractor:
+apm_a03J04_mul_ofReal_rpow_eq now has a proof with setup only, its single `X = X` display being removed; its statement
+prints two different typed terms identically.
