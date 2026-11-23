@@ -41,6 +41,7 @@ an alias or a stated reason for having no ink. The ledger is `ink.tsv`.
 | 91d38c1e | 380 | 3.881% |
 | b0a112b7 | 370 | 3.785% |
 | 94c86724 | 354 | 3.606% |
+| 2a2b4d08 | 354 | 3.603% |
 
 Rows were re-recorded on 2026-11-22 after the C18 pattern was widened to negative numerals with spaces
 ("if - 1 = 1"), which Q209 found in one record the old pattern missed. Every head from f79926c0 on gained
@@ -213,3 +214,9 @@ The 94c86724 row was re-recorded on 2026-11-23 after the C19 pattern was tighten
 the TeX double hyphen in "Picard--Lindelof", "Euler--Lagrange", "Gram--Schmidt"; the pattern now requires whitespace
 between the two signs). With the old pattern the row was 370 records, 3.785%; earlier rows keep the old pattern, so
 the step from b0a112b7 to 94c86724 (16 records, 0.180 points) is a change of measurement, not of rendering.
+
+At 2a2b4d08 (94c86724 + batch 8: Q253; census q244, 2,272 tests, 0 errors) ink_diff against 94c86724 gives NEW 0,
+GROWN 0, MOVED 1 (C4 in ApmCanaries.A94A06.upper_ne_pole, 829 to 408 characters in the same paragraph). Nine records
+changed; each loses one "Suppose" line whose binder receives a fact already on the page, and the facts under it move
+to the surrounding depth. The author measured eight; the ninth (apm_t94a07_reflectionMap_not_homotopic_id) is the same
+shape in a module outside the sample. The closer still precedes the argument it closes in these records (Q254).
