@@ -40,6 +40,7 @@ an alias or a stated reason for having no ink. The ledger is `ink.tsv`.
 | bac048b8 | 380 | 3.886% |
 | 91d38c1e | 380 | 3.881% |
 | b0a112b7 | 370 | 3.785% |
+| 94c86724 | 370 | 3.785% |
 
 Rows were re-recorded on 2026-11-22 after the C18 pattern was widened to negative numerals with spaces
 ("if - 1 = 1"), which Q209 found in one record the old pattern missed. Every head from f79926c0 on gained
@@ -199,3 +200,11 @@ GONE 10 (N1 7: rows gain a reason from the library; C16 3). 101 records change, 
 census q237 on bac048b8 less a01A04 (already changed by Q235): closers gain "Hence X, since A and B". No raw
 Metric.ediam. Open from this change: closer factors that print alike though typed differently (Q249) and elementary
 nonnegativity factors (Q250), neither marked by ink.
+
+At 94c86724 (b0a112b7 + batch 7: Q249, Q252; census q243, 2,267 tests, 0 errors) ink_diff against b0a112b7 gives
+NEW 0, GROWN 0, MOVED 6, GONE 0 (paragraphs lengthen by citation numbers). 105 records change: 3 by Q249 (Finset.card
+of Multiset.toFinset reads "the number of distinct elements of"; two statement bodies), 102 by Q252 (133 "This is
+absurd, by ..." lines now cite the facts the False proof uses, and hypotheses gain tags). 20 Q252 records read: the
+cited facts conflict (G(1) = 1 with G(1) = 0; ||u|| < 1 with ||u|| = 1). Not marked by ink and open: closers that
+cite a tag sitting on an "It suffices to show" line (a93J07, m93A01), a tagged reflexive fact "j + 1 = j + 1"
+(a01J06), and the three-citation cap on closers with more dependencies.
