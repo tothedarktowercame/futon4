@@ -39,6 +39,7 @@ an alias or a stated reason for having no ink. The ledger is `ink.tsv`.
 | 4168ba30 | 391 | 4.032% |
 | bac048b8 | 380 | 3.886% |
 | 91d38c1e | 380 | 3.881% |
+| b0a112b7 | 370 | 3.785% |
 
 Rows were re-recorded on 2026-11-22 after the C18 pattern was widened to negative numerals with spaces
 ("if - 1 = 1"), which Q209 found in one record the old pattern missed. Every head from f79926c0 on gained
@@ -191,3 +192,10 @@ The MOVED records were read: the block text falls inside paragraphs that were al
 list items holding only a nested list (census q239), removed by the review fix (16 remain where the block is the first
 of several items). Not measured by ink and still open: blocks whose Suppose line is a derived fact, and "This is
 absurd, by (n)" where (n) is not contradictory by itself (a94A06 upper_ne_pole; t96J07 inv_cont) -> observe Q251.
+
+At b0a112b7 (91d38c1e + Q246, and the census library changes from robformat-2 to robformat-3, so this row differs from
+the one above by library content as well as by one reading) ink_diff against 91d38c1e gives NEW 0, GROWN 0, MOVED 5,
+GONE 10 (N1 7: rows gain a reason from the library; C16 3). 101 records change, the same set as the library-only
+census q237 on bac048b8 less a01A04 (already changed by Q235): closers gain "Hence X, since A and B". No raw
+Metric.ediam. Open from this change: closer factors that print alike though typed differently (Q249) and elementary
+nonnegativity factors (Q250), neither marked by ink.
