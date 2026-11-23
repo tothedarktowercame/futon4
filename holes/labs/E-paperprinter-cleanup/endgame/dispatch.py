@@ -36,8 +36,12 @@ def validate(classes, backlog, dispatch, observations=None, counts=None, ink=Non
                 errors.append(f"backlog {row['class']}: empty {key}")
 
     active_integrations = [r for r in dispatch if r["lane"] == "integrate" and r["status"] == "active"]
-    if len(active_integrations) > 1:
-        errors.append("more than one active integration item: " + " ".join(r["item"] for r in active_integrations))
+    # Joe, 2026-11-23: integration items may be authored in parallel as one batch on the same accepted
+    # head, provided no member waits on an unfinished item (items touching the same code stay chained).
+    unfinished = {r["item"] for r in dispatch if r["status"] in {"active", "waiting"}}
+    for r in active_integrations:
+        if r["depends_on"] in unfinished:
+            errors.append(f"{r['item']}: active integration item depends on unfinished {r['depends_on']}")
     known_items = {r["item"] for r in dispatch}
     accepted_bases = {r["base"] for r in active_integrations}
     for row in dispatch:
@@ -97,15 +101,18 @@ def selftest():
     base = dict(lane="integrate", status="active", base="abc", classes="A",
                 mechanism="cause", preflight="matrix", depends_on="-", output="decision")
     assert validate(classes, backlog, [dict(base, item="q1")]) == []
-    errors = validate(classes, backlog, [dict(base, item="q1"), dict(base, item="q2")])
-    assert any("more than one" in e for e in errors), errors
+    assert validate(classes, backlog, [dict(base, item="q1"), dict(base, item="q2")]) == []
+    errors = validate(classes, backlog, [dict(base, item="q1"), dict(base, item="q2", depends_on="q1")])
+    assert any("depends on unfinished" in e for e in errors), errors
+    errors = validate(classes, backlog, [dict(base, item="q1"), dict(base, item="q2", base="other")])
+    assert any("share one accepted head" in e for e in errors), errors
     waiting = dict(base, item="q2", status="waiting", classes="B", depends_on="-")
     errors = validate(classes, backlog, [dict(base, item="q1"), waiting])
     assert any("no dependency" in e for e in errors), errors
     errors = validate(classes, backlog, [dict(base, item="q1")], counts=[{"commit": "h2"}], ink=[{"head": "h1"}])
     assert any("no residual ink" in e for e in errors), errors
     assert validate(classes, backlog, [dict(base, item="q1")], counts=[{"commit": "h2"}], ink=[{"head": "h2"}]) == []
-    print("selftest ok: backlog coverage and a single structural integration train are enforced")
+    print("selftest ok: backlog coverage and one accepted head per integration batch are enforced")
 
 
 def main():
@@ -121,7 +128,7 @@ def main():
         for error in errors:
             print("VIOLATION " + error)
         return 1
-    print("dispatch ok: backlog covers every open/unknown class; one active structural integration item")
+    print("dispatch ok: backlog covers every open/unknown class; active integration items share one accepted head")
     return 0
 
 

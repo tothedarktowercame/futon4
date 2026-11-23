@@ -33,6 +33,7 @@ an alias or a stated reason for having no ink. The ledger is `ink.tsv`.
 | 89d58eb5 | 574 | 6.271% |
 | 2e3d5f5e | 574 | 6.271% |
 | 0398a663 | 538 | 5.941% |
+| 57d47d46 | 539 | 5.991% |
 
 Rows were re-recorded on 2026-11-22 after the C18 pattern was widened to negative numerals with spaces
 ("if - 1 = 1"), which Q209 found in one record the old pattern missed. Every head from f79926c0 on gained
@@ -140,3 +141,7 @@ producer, how found) and review status. `ink_overlay.py HEAD` exports the
 residual annotations in that form; `ink_overlay.py --validate FILE` checks any
 producer's file. Review status has no "correct" value: the record can say a
 span was checked against its inventory, not that a proof is right.
+
+At 57d47d46 (Q224) the figure rises by 0.050 points because 29 proof walks that were silently truncated now
+finish: about 34,000 characters of proof text became visible, and with them one record newly marked C17 and C7
+and one newly marked N1. The marks are existing classes in text that was hidden before.

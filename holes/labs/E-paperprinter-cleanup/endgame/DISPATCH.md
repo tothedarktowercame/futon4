@@ -15,10 +15,17 @@ An observation may change this ledger; it does not authorize printer code.
 - `data`: additive readings whose changed-output contract is "only insert the
   intended reason/reading".  These may be prepared in parallel, but merge only
   against the accepted head.
-- `integrate`: control-flow or structural printer changes.  Exactly one may be
-  `active`.  Later structural candidates are `waiting` and name their
-  dependency; they are rebased and remeasured after the active candidate is
-  accepted or rejected.
+- `integrate`: control-flow or structural printer changes.  Several may be
+  `active` at once as one **batch** (Joe, 2026-11-23: the box is free and the
+  packets are parallelisable), on these conditions: every member is authored on
+  the same accepted head; no member depends on an unfinished item, so items
+  that touch the same function stay chained by `depends_on` and are `waiting`;
+  the members are merged together in one trial merge and gated by ONE full
+  census.  In that census every changed record is attributed to the member
+  whose change explains it; a record changed by two members, or by none, is
+  read in full.  A member whose changes fail review is dropped from the trial
+  merge and the census is rerun without it.  The ink comparison is run on the
+  batch census and each NEW/GROWN record is attributed the same way.
 
 Before a structural full census, the candidate must pass the fixed adversarial
 preflight: repeated rows; empty reasons; raw names; statement-to-chain flips;
@@ -44,7 +51,8 @@ Run:
     python3 progress.py > PROGRESS.md
 
 The check requires every open/unknown class to be present in `backlog.tsv`, no
-more than one active integration item, an accepted-head base for every active
+active integration item that depends on an unfinished one, one shared accepted
+head for the active batch, an accepted-head base for every active
 integration/data item, a named mechanism and preflight, and an explicit
 dependency for waiting integration work.  Update the ledgers before dispatch,
 not retrospectively at merge time.
@@ -76,5 +84,5 @@ A class gets an interval extractor in `ink.py` when its inventory is next touche
 written, an observe report read); the `COVERAGE` row says how many open classes have one.
 The report to Joe after each merge carries the ink line and the `ink_diff.py` tally.
 
-The integrate order is whatever `dispatch.tsv` says (one `active`, the rest
+The integrate order is whatever `dispatch.tsv` says (a batch of `active` items on one head, the rest
 `waiting` with `depends_on`). Observation and data items may run in parallel.

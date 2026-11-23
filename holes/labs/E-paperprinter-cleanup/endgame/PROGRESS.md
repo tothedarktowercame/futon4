@@ -5,21 +5,20 @@
 ## Finish line
 
 - Frozen classes: **56**: 30 done, 2 not defects, 22 open, 2 unknown.
-- Corpus gate: 8,778 records; accepted head with a full census: `0398a663`.
+- Corpus gate: 8,778 records; accepted head with a full census: `57d47d46`.
 - Proof errors: 0 at the accepted head. Performance class: closed.
-- N1 (rows with an empty reason): **161 records** at this head, down from 1,035 records at the full-corpus freeze.
+- N1 (rows with an empty reason): **162 records** at this head, down from 1,035 records at the full-corpus freeze.
 - C4 (blocks with a repeated left side, scanner count): **27 records**.
-- Residual ink (audit surface; 24/24 open-or-unknown classes have markup, extractor precision not yet reviewed): **5.941%** of reader-visible proof-source characters, in 538 records; see `INK.md`.
-- Ink change since `2e3d5f5e`: union -0.331 points; C22 -48 records.
+- Residual ink (audit surface; 24/24 open-or-unknown classes have markup, extractor precision not yet reviewed): **5.991%** of reader-visible proof-source characters, in 539 records; see `INK.md`.
+- Ink change since `0398a663`: union +0.050 points; C7 +1 records, C17 +1 records, N1 +1 records.
 - Largest colors: N1 1.66%, P-sufficiency-wall 1.41%, C19 0.93%, C4 0.85%.
 
 ## Work now
 
-- ACTIVE `Q184` (integrate, C22): codex-2; packet overnight/Q184.md.
+- ACTIVE `Q224` (integrate, P-truncated-walk): codex-2; packet overnight/Q224.md.
 - WAITING `N1-readings` (data, N1), after `-`: batch 3 accepted as d25599e9 (58 readings; 59 rows gain a reason, 0 errors). 19 readings withheld in total because a reason makes their row displayed (list: ~/notes/claude-7/Q158/readings-batch3-withheld.json + 5 earlier); they wait for Q165.
 - WAITING `same-print-typed` (integrate, N1), after `Q169`: input: ~/notes/codex-12/Q165/same-print-rows.tsv.
 - WAITING `typed-prune` (observe, N2+C4), after `-`: input: ~/notes/codex-12/Q165/guard-rows.tsv and the two rejected census renders in ~/storage/apm-endgame/.
-- WAITING `Q224` (integrate, P-truncated-walk), after `Q184`: packet written (overnight/Q224.md).
 - WAITING `Q225` (integrate, P-truncated-walk), after `Q224`: packet written (overnight/Q225.md).
 - WAITING `Q185` (integrate, C22), after `Q225`: packet written (overnight/Q185.md).
 - WAITING `Q186` (integrate, C22), after `Q185`: packet written (overnight/Q186.md).
