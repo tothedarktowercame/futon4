@@ -34,6 +34,7 @@ an alias or a stated reason for having no ink. The ledger is `ink.tsv`.
 | 2e3d5f5e | 574 | 6.271% |
 | 0398a663 | 538 | 5.941% |
 | 57d47d46 | 539 | 5.991% |
+| 905efba6 | 498 | 5.124% |
 
 Rows were re-recorded on 2026-11-22 after the C18 pattern was widened to negative numerals with spaces
 ("if - 1 = 1"), which Q209 found in one record the old pattern missed. Every head from f79926c0 on gained
@@ -145,3 +146,9 @@ span was checked against its inventory, not that a proof is right.
 At 57d47d46 (Q224) the figure rises by 0.050 points because 29 proof walks that were silently truncated now
 finish: about 34,000 characters of proof text became visible, and with them one record newly marked C17 and C7
 and one newly marked N1. The marks are existing classes in text that was hidden before.
+
+At 905efba6 (batch 1: Q210, Q200, Q203, Q185, Q225) ink_diff against 57d47d46 gives GONE 50 (C19 33, C22 16,
+C18 1), MOVED 66 (P-sufficiency-wall 62, N1 3, C18 1) and NEW 1: C4 in t99J05_lefschetz_euler_inter, which is the
+same span formerly counted as C18 (the selected case arm leaves "1 = 1 since 1 = 1", Q191). The extractor does not
+count a sufficiency sentence that repeats the target of the one before it; such pairs rose from 15 to 316 in 260
+records with Q203 and are Q201's scope, so this head's figure understates that class.
