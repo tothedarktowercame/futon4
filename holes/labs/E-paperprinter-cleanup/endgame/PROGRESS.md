@@ -5,36 +5,32 @@
 ## Finish line
 
 - Frozen classes: **56**: 30 done, 2 not defects, 22 open, 2 unknown.
-- Corpus gate: 8,778 records; accepted head with a full census: `905efba6`.
+- Corpus gate: 8,778 records; accepted head with a full census: `faeab149`.
 - Proof errors: 0 at the accepted head. Performance class: closed.
-- N1 (rows with an empty reason): **162 records** at this head, down from 1,035 records at the full-corpus freeze.
+- N1 (rows with an empty reason): **180 records** at this head, down from 1,035 records at the full-corpus freeze.
 - C4 (blocks with a repeated left side, scanner count): **27 records**.
-- Residual ink (audit surface; 24/24 open-or-unknown classes have markup, extractor precision not yet reviewed): **5.124%** of reader-visible proof-source characters, in 498 records; see `INK.md`.
-- Ink change since `57d47d46`: union -0.867 points; C4 +1 records, C18 -1 records, C19 -33 records, C22 -16 records.
-- Largest colors: N1 1.66%, P-sufficiency-wall 1.40%, C4 0.88%, C19 0.43%.
+- Residual ink (audit surface; 24/24 open-or-unknown classes have markup, extractor precision not yet reviewed): **4.314%** of reader-visible proof-source characters, in 427 records; see `INK.md`.
+- Ink change since `905efba6`: union -0.810 points; C18 -1 records, C19 -1 records, N1 +18 records, P-empty-claim -1 records, P-sufficiency-wall -86 records.
+- Largest colors: N1 1.84%, C4 0.89%, P-sufficiency-wall 0.48%, C19 0.35%.
 
 ## Work now
 
-- ACTIVE `Q225` (integrate, P-truncated-walk): codex-2; batch 1; packet overnight/Q225.md.
-- ACTIVE `Q185` (integrate, C22): codex-15; batch 1; packet overnight/Q185.md.
-- ACTIVE `Q200` (integrate, C19): codex-13; batch 1; packet overnight/Q200.md.
-- ACTIVE `Q203` (integrate, P-sufficiency-wall): codex-12; batch 1; packet overnight/Q203.md.
-- ACTIVE `Q210` (integrate, C18): codex-26; batch 1; packet overnight/Q210.md.
+- ACTIVE `Q186` (integrate, C22): codex-15; batch 2; packet overnight/Q186.md.
+- ACTIVE `Q201` (integrate, P-sufficiency-wall): codex-12; batch 2; packet overnight/Q201.md.
+- ACTIVE `Q211` (integrate, C18): codex-26; batch 2; packet overnight/Q211.md.
+- ACTIVE `Q219` (integrate, P-missing-subproof): codex-2; batch 2; packet overnight/Q219.md.
+- ACTIVE `Q220` (integrate, C16): codex-13; batch 2; packet overnight/Q220.md.
 - WAITING `N1-readings` (data, N1), after `-`: batch 3 accepted as d25599e9 (58 readings; 59 rows gain a reason, 0 errors). 19 readings withheld in total because a reason makes their row displayed (list: ~/notes/claude-7/Q158/readings-batch3-withheld.json + 5 earlier); they wait for Q165.
 - WAITING `same-print-typed` (integrate, N1), after `Q169`: input: ~/notes/codex-12/Q165/same-print-rows.tsv.
 - WAITING `typed-prune` (observe, N2+C4), after `-`: input: ~/notes/codex-12/Q165/guard-rows.tsv and the two rejected census renders in ~/storage/apm-endgame/.
-- WAITING `Q186` (integrate, C22), after `Q185`: packet written (overnight/Q186.md).
-- WAITING `Q188` (integrate, C4), after `Q186`: packet written (overnight/Q188.md).
+- WAITING `Q188` (integrate, C4), after `Q201`: packet written (overnight/Q188.md).
 - WAITING `Q191` (integrate, C18), after `Q188`: packet written (overnight/Q191.md).
 - WAITING `Q197` (integrate, C23), after `Q191`: packet written (overnight/Q197.md).
-- WAITING `Q201` (integrate, P-sufficiency-wall), after `Q203`: packet written (overnight/Q201.md).
+- WAITING `Q229` (integrate, C19), after `Q220`: packet written (overnight/Q229.md); goes to the first free seat of batch 3.
 - WAITING `Q205` (integrate, P-sufficiency-wall), after `Q201`: packet written (overnight/Q205.md).
 - WAITING `Q206` (integrate, P-sufficiency-wall), after `Q205`: packet written (overnight/Q206.md).
 - WAITING `Q208` (integrate, P-sufficiency-wall), after `Q206`: packet written (overnight/Q208.md).
-- WAITING `Q211` (integrate, C18), after `Q210`: packet written (overnight/Q211.md).
 - WAITING `Q213` (integrate, C18), after `Q211`: packet written (overnight/Q213.md).
-- WAITING `Q219` (integrate, P-missing-subproof), after `Q225`: packet written (overnight/Q219.md).
-- WAITING `Q220` (integrate, C16), after `Q185`: packet written (overnight/Q220.md).
 
 ## Backlog understanding
 

@@ -35,6 +35,7 @@ an alias or a stated reason for having no ink. The ledger is `ink.tsv`.
 | 0398a663 | 538 | 5.941% |
 | 57d47d46 | 539 | 5.991% |
 | 905efba6 | 498 | 5.124% |
+| faeab149 | 427 | 4.314% |
 
 Rows were re-recorded on 2026-11-22 after the C18 pattern was widened to negative numerals with spaces
 ("if - 1 = 1"), which Q209 found in one record the old pattern missed. Every head from f79926c0 on gained
@@ -152,3 +153,9 @@ C18 1), MOVED 66 (P-sufficiency-wall 62, N1 3, C18 1) and NEW 1: C4 in t99J05_le
 same span formerly counted as C18 (the selected case arm leaves "1 = 1 since 1 = 1", Q191). The extractor does not
 count a sufficiency sentence that repeats the target of the one before it; such pairs rose from 15 to 316 in 260
 records with Q203 and are Q201's scope, so this head's figure understates that class.
+
+At faeab149 (batch 2: Q211, Q186, Q201, Q220, Q219) ink_diff against 905efba6 gives GONE 89 (P-sufficiency-wall 86,
+C18 1, C19 1, P-empty-claim 1), SHRUNK 4, MOVED 36 and NEW 18, all N1: each is a calc block recovered by Q219 from a
+transport argument, absent at 905efba6, one of whose rows has an empty reason cell. No record GROWN. The wall class
+falls from 1.402% in 136 records to 0.481% in 50; repeated-target sufficiency pairs fall from 300 to 27. Not measured
+by the extractor: 49 recovered calcs follow an unrelated sentence with no lead-in and 11 follow the closer they support.

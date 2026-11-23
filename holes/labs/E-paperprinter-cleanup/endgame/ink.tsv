@@ -279,3 +279,31 @@ f79926c0	COVERAGE	-	23/23 open-or-unknown classes	lower-bound
 905efba6	UNION	498	661765	5.123741
 905efba6	TOTAL	8778	12915660	100.000000
 905efba6	COVERAGE	-	24/24 open-or-unknown classes	lower-bound
+faeab149	C1	0	0	0.000000
+faeab149	C4	107	114379	0.889797
+faeab149	C5	0	0	0.000000
+faeab149	C6	0	0	0.000000
+faeab149	C7	2	2668	0.020755
+faeab149	C8	0	0	0.000000
+faeab149	C12	1	2681	0.020857
+faeab149	C16	4	5365	0.041736
+faeab149	C17	1	2489	0.019363
+faeab149	C18	1	6887	0.053577
+faeab149	C19	35	44481	0.346034
+faeab149	C21	0	0	0.000000
+faeab149	C22	1	407	0.003166
+faeab149	C23	10	11255	0.087557
+faeab149	N1	180	235976	1.835746
+faeab149	N14	1	13620	0.105955
+faeab149	P-duplicate-closer	19	16283	0.126672
+faeab149	P-duplicate-tag	1	4514	0.035116
+faeab149	P-empty-claim	48	34168	0.265806
+faeab149	P-missing-subproof	2	3803	0.029585
+faeab149	P-nonprop-suffices	0	0	0.000000
+faeab149	P-opaque-proof	1	39	0.000303
+faeab149	P-overexpanded-setup	1	14886	0.115804
+faeab149	P-premature-conclusion	2	3759	0.029243
+faeab149	P-sufficiency-wall	50	61871	0.481318
+faeab149	UNION	427	554507	4.313719
+faeab149	TOTAL	8778	12854501	100.000000
+faeab149	COVERAGE	-	24/24 open-or-unknown classes	lower-bound
