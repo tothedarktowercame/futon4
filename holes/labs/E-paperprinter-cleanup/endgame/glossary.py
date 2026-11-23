@@ -13,8 +13,11 @@ import glob
 import html
 import json
 import os
+import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+from leanism_scan_p1 import visible
 
 
 def leanrefs(text):
@@ -54,21 +57,43 @@ def read_claims(path):
     with open(path, encoding="utf-8", newline="") as stream:
         for row in csv.DictReader(stream, delimiter="\t"):
             if row.get("formal_name"):
-                claims[row["formal_name"]].append(row)
+                claims[(row["formal_name"], row.get("role") or "unspecified")].append(row)
     return claims
+
+
+def read_curated(specs):
+    """Read ROLE=PATH JSON maps (plain PATH remains the citation role)."""
+    out = collections.defaultdict(list)
+    for spec in specs:
+        role, path = spec.split("=", 1) if "=" in spec else ("citation", spec)
+        data = json.load(open(path, encoding="utf-8"))
+        if isinstance(data, dict):
+            for name, reading in data.items():
+                if isinstance(reading, str):
+                    out[(name, role)].append((reading, os.path.basename(path)))
+                elif isinstance(reading, dict):
+                    for subrole, text in reading.items():
+                        if isinstance(text, str):
+                            out[(name, f"{role}:{subrole}")].append((text, os.path.basename(path)))
+        elif isinstance(data, list):
+            for rule in data:
+                if isinstance(rule, dict) and rule.get("const"):
+                    out[(rule["const"], role)].append((json.dumps(rule, sort_keys=True), os.path.basename(path)))
+    return out
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("pattern", help="glob for accepted-head JSONL renders")
-    ap.add_argument("--readings", required=True, help="citation-readings.json")
+    ap.add_argument("--readings", action="append", required=True,
+                    help="repeatable ROLE=PATH JSON reading source; plain PATH means citation")
     ap.add_argument("--claims", default=os.path.join(HERE, "glossary-claims.tsv"))
     ap.add_argument("--tsv", required=True)
     ap.add_argument("--html")
     ap.add_argument("--summary", required=True)
     args = ap.parse_args()
 
-    curated = json.load(open(args.readings, encoding="utf-8"))
+    curated = read_curated(args.readings)
     claims = read_claims(args.claims)
     forms = collections.defaultdict(collections.Counter)
     examples = collections.defaultdict(list)
@@ -82,30 +107,43 @@ def main():
                 proof = row.get("proof") or ""
                 records += 1
                 refs = list(leanrefs(proof))
-                total_visible_chars += len(proof) - sum((end - start) - len(visible)
-                                                        for visible, _, start, end in refs)
-                for visible, target, _, _ in refs:
+                total_visible_chars += len(visible(proof))
+                for shown, target, _, _ in refs:
                     if target.startswith("local:"):
                         continue
-                    forms[target][visible] += 1
-                    target_chars[target] += len(visible)
+                    forms[target][shown] += 1
+                    target_chars[target] += len(shown)
                     if len(examples[target]) < 2:
                         examples[target].append(f"{row.get('module','')}::{row.get('declaration','')}")
 
-    names = sorted(set(forms) | set(curated) | set(claims))
+    names = sorted(set(forms) | {name for name, _ in curated} | {name for name, _ in claims})
     rows, contested_names = [], set()
     for name in names:
-        live = [r for r in claims[name] if r.get("status") in ("accepted", "contested")]
-        readings = {r.get("reading", "") for r in live if r.get("reading")}
-        explicitly_contested = any(r.get("status") == "contested" for r in live)
-        conflicted = explicitly_contested or len(readings) > 1
+        roles = sorted({role for n, role in curated if n == name} | {role for n, role in claims if n == name})
+        role_conflicts = []
+        all_claims = []
+        has_live = False
+        for role in roles:
+            rs = claims[(name, role)]
+            live = [r for r in rs if r.get("status") in ("accepted", "contested")]
+            has_live = has_live or bool(live)
+            readings = {r.get("reading", "") for r in live if r.get("reading")}
+            if any(r.get("status") == "contested" for r in live) or len(readings) > 1:
+                role_conflicts.append(role)
+            all_claims.extend(f"{role}:{r.get('status')}:{r.get('reading')}" for r in rs)
+        conflicted = bool(role_conflicts)
         if conflicted:
             contested_names.add(name)
         rows.append({
             "formal_name": name,
-            "curated_reading": curated.get(name, ""),
-            "claim_state": "contested" if conflicted else ("accepted" if live or name in curated else "unreviewed"),
-            "claims": " | ".join(f"{r.get('status')}:{r.get('reading')}" for r in claims[name]),
+            "curated_reading": " | ".join(f"{role}:{text}" for (n, role), vals in curated.items()
+                                             if n == name for text, _ in vals),
+            "reading_sources": " | ".join(f"{role}:{source}" for (n, role), vals in curated.items()
+                                            if n == name for _, source in vals),
+            "claim_state": "contested" if conflicted else (
+                "accepted" if has_live or any(n == name for n, _ in curated) else "unreviewed"),
+            "contested_roles": " | ".join(role_conflicts),
+            "claims": " | ".join(all_claims),
             "surface_forms": len(forms[name]),
             "occurrences": sum(forms[name].values()),
             "visible_chars": target_chars[name],
@@ -119,7 +157,8 @@ def main():
 
     contested_chars = sum(target_chars[n] for n in contested_names)
     summary = {
-        "records": records, "formal_targets": len(names), "curated_readings": len(curated),
+        "records": records, "formal_targets": len(names),
+        "curated_readings": sum(len(v) for v in curated.values()),
         "targets_with_multiple_surface_forms": sum(len(v) > 1 for v in forms.values()),
         "contested_targets": len(contested_names), "contested_visible_chars": contested_chars,
         "total_visible_chars": total_visible_chars,
