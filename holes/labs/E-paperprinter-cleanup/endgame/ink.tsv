@@ -475,3 +475,31 @@ b0a112b7	COVERAGE	-	24/24 open-or-unknown classes	lower-bound
 2a2b4d08	UNION	354	464772	3.602644
 2a2b4d08	TOTAL	8778	12900859	100.000000
 2a2b4d08	COVERAGE	-	24/24 open-or-unknown classes	lower-bound
+7db1eb81	C1	0	0	0.000000
+7db1eb81	C4	84	105143	0.836528
+7db1eb81	C5	0	0	0.000000
+7db1eb81	C6	0	0	0.000000
+7db1eb81	C7	1	179	0.001424
+7db1eb81	C8	0	0	0.000000
+7db1eb81	C12	1	2826	0.022484
+7db1eb81	C16	0	0	0.000000
+7db1eb81	C17	0	0	0.000000
+7db1eb81	C18	0	0	0.000000
+7db1eb81	C19	0	0	0.000000
+7db1eb81	C21	0	0	0.000000
+7db1eb81	C22	1	407	0.003238
+7db1eb81	C23	13	22687	0.180500
+7db1eb81	N1	166	208709	1.660510
+7db1eb81	N14	1	13941	0.110916
+7db1eb81	P-duplicate-closer	0	0	0.000000
+7db1eb81	P-duplicate-tag	1	4348	0.034593
+7db1eb81	P-empty-claim	3	296	0.002355
+7db1eb81	P-missing-subproof	2	3394	0.027003
+7db1eb81	P-nonprop-suffices	0	0	0.000000
+7db1eb81	P-opaque-proof	1	59	0.000469
+7db1eb81	P-overexpanded-setup	1	12866	0.102363
+7db1eb81	P-premature-conclusion	2	4019	0.031976
+7db1eb81	P-sufficiency-wall	34	48780	0.388099
+7db1eb81	UNION	289	412961	3.285559
+7db1eb81	TOTAL	8778	12568971	100.000000
+7db1eb81	COVERAGE	-	24/24 open-or-unknown classes	lower-bound

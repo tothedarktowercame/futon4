@@ -42,6 +42,7 @@ an alias or a stated reason for having no ink. The ledger is `ink.tsv`.
 | b0a112b7 | 370 | 3.785% |
 | 94c86724 | 354 | 3.606% |
 | 2a2b4d08 | 354 | 3.603% |
+| 7db1eb81 | 289 | 3.286% |
 
 Rows were re-recorded on 2026-11-22 after the C18 pattern was widened to negative numerals with spaces
 ("if - 1 = 1"), which Q209 found in one record the old pattern missed. Every head from f79926c0 on gained
@@ -220,3 +221,24 @@ GROWN 0, MOVED 1 (C4 in ApmCanaries.A94A06.upper_ne_pole, 829 to 408 characters 
 changed; each loses one "Suppose" line whose binder receives a fact already on the page, and the facts under it move
 to the surrounding depth. The author measured eight; the ninth (apm_t94a07_reflectionMap_not_homotopic_id) is the same
 shape in a module outside the sample. The closer still precedes the argument it closes in these records (Q254).
+
+At 7db1eb81 (2a2b4d08 + batches 9-12; census q248 of fdd596e4, 2,398 tests) ink_diff against
+2a2b4d08 gives NEW 46, GROWN 1, MOVED 129, SHRUNK 1, GONE 122. Twenty records in the stored renders are substitutes:
+four that timed out at 120 s in the census (m03J05_nonresonant_weakSolution_unique, m99A03Shift_cube,
+apm_m99j04_eigen_hilbert_basis, apm_m03J01_weakSolution_exists), rendered again on the same snapshot with a 300 s
+budget, and sixteen rendered again after five readings were added (5de89819: Module.rank, IsLocallyConstant,
+openSegment, AccPt, RingHom.Flat). Those sixteen were NEW C7 and C17 in the first measurement: statements that the
+head printed as empty claims now print, and their heads had no reading. Rerendering the twelve modules that
+contain them (722 records) changed those sixteen records and no other. The stored set has 0 proof errors.
+NEW N1 (39) and GROWN N1 (1): a fact that the head printed as "It suffices to show" or as an empty "We have" is
+now stated with its calculation, and one row of that calculation has no reason (39 of the 44 new blocks sit under a
+newly stated fact; the other 5 were read and are the same shape or a tag move). NEW C4 (3): a00J06 singular_at_one
+and a01A12 mobius_im show a definitional unfolding whose two sides print alike; m94a01 shows a chain that passes
+through one expression twice. All three chains were not printed at the head. NEW C23 (3): "We have 1 = 0" that the
+head printed as an empty claim (t00A04, t01A04), and in b93a03 a "We have 1 = 0" directly after "Suppose 1 = 0",
+which the head did not print. NEW P-sufficiency-wall (1):
+polygonNF_handle_eqvGen_iff_aux_get prints one derivation four times, as at the head; Q289 gives the copies
+distinct tags, so four sufficiency lines that were textually equal now differ in their citation numbers. Not read
+line by line: the 3,400 records that changed without new ink were classified by hunk shape (renumbering, a closer
+moved after its derivation, an uncited tag removed, a sufficiency sentence turned into a named fact, an empty
+claim filled) and sampled.
