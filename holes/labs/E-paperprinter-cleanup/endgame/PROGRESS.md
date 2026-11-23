@@ -5,29 +5,29 @@
 ## Finish line
 
 - Frozen classes: **56**: 30 done, 2 not defects, 22 open, 2 unknown.
-- Corpus gate: 8,778 records; accepted head with a full census: `bac048b8`.
+- Corpus gate: 8,778 records; accepted head with a full census: `91d38c1e`.
 - Proof errors: 0 at the accepted head. Performance class: closed.
 - N1 (rows with an empty reason): **166 records** at this head, down from 1,035 records at the full-corpus freeze.
 - C4 (blocks with a repeated left side, scanner count): **28 records**.
-- Residual ink (audit surface; 24/24 open-or-unknown classes have markup, extractor precision not yet reviewed): **3.886%** of reader-visible proof-source characters, in 380 records; see `INK.md`.
-- Ink change since `4168ba30`: union -0.146 points; N1 -14 records.
-- Largest colors: N1 1.69%, C4 0.73%, P-sufficiency-wall 0.48%, C19 0.28%.
+- Residual ink (audit surface; 24/24 open-or-unknown classes have markup, extractor precision not yet reviewed): **3.881%** of reader-visible proof-source characters, in 380 records; see `INK.md`.
+- Ink change since `bac048b8`: union -0.005 points; C16 -1 records.
+- Largest colors: N1 1.69%, C4 0.74%, P-sufficiency-wall 0.48%, C19 0.28%.
 
 ## Work now
 
-- ACTIVE `Q233` (integrate, P-missing-subproof): codex-13 fb2deaad reviewed OK (1 of 11 recovered pieces marked; m98A03 witness moves before its closer); HELD for batch 4.
-- ACTIVE `Q234` (integrate, C16): codex-26 a4e6c8c1 reviewed OK; HELD for batch 4; inert in the census until the library artifact holds the listed lemmas (Q242).
-- ACTIVE `Q236` (data, N1): claude-7 branch claude7/Q236 cccbe404; HELD for batch 4.
+- ACTIVE `Q243` (integrate, C23): codex-12 84195a7f report read (opaque citation identity carried by Step copies; literal assumption aliases not printed; block is its own nested list via lexical-owner tokens; 9 modules: 27 changed proofs, 37 blocks, 0 errors; 2256 tests); open for the census read: 25 single-fact blocks whose fact is a cast of the assumption may still print the same formula twice; HELD for batch 5.
+- ACTIVE `Q240` (integrate, C4): codex-2 868794de diff read (ConditionalSelectionProvenance on captured rows for if_pos/if_neg/dif_pos/dif_neg/ite_congr; survives reversal, relabelling, reason transfer; 252 records byte-identical; 2250 tests); HELD for batch 5.
+- ACTIVE `Q246` (data, C7): claude-7 branch claude7/Q246 469dc608; a95A02 rendered with robformat-3: raw name gone; goes in with the library switch after batch 5.
+- ACTIVE `Q235` (integrate, C16): codex-26 af66dd6c reviewed OK (two-factor transitivity closer drops the tactic tag and the bare transitivity citation; other citations and premises kept; a01A04 Steps 27 and 37; 2249 tests); HELD for batch 5.
 - WAITING `N1-readings` (data, N1), after `-`: batch 3 accepted as d25599e9 (58 readings; 59 rows gain a reason, 0 errors). 19 readings withheld in total because a reason makes their row displayed (list: ~/notes/claude-7/Q158/readings-batch3-withheld.json + 5 earlier); they wait for Q165.
 - WAITING `same-print-typed` (integrate, N1), after `Q169`: input: ~/notes/codex-12/Q165/same-print-rows.tsv.
 - WAITING `typed-prune` (observe, N2+C4), after `-`: input: ~/notes/codex-12/Q165/guard-rows.tsv and the two rejected census renders in ~/storage/apm-endgame/.
-- WAITING `Q243` (integrate, C23), after `Q233`: packet written (overnight/Q243.md); next batch.
 - WAITING `Q245` (integrate, P-sufficiency-wall), after `Q235`: packet written (overnight/Q245.md); same function as Q235.
-- WAITING `Q240` (integrate, C4), after `Q233`: packet written (overnight/Q240.md); same file as Q233/Q197, so next batch.
 - WAITING `Q241` (integrate, C4), after `Q240`: packet written (overnight/Q241.md).
-- WAITING `Q206` (integrate, P-sufficiency-wall), after `Q233`: packet written (overnight/Q206.md); Q239 rejected, so waits only for the batch 4 head.
-- WAITING `Q208` (integrate, P-sufficiency-wall), after `Q233`: packet written (overnight/Q208.md); Q239 rejected, so waits only for the batch 4 head.
-- WAITING `Q235` (integrate, C16), after `Q233`: packet written (overnight/Q235.md); batch 4 (render.py _sentence_core_parent).
+- WAITING `Q206` (integrate, P-sufficiency-wall), after `Q245`: codex-13 stopped without a commit (draft in worktree codex-13-Q206, report Q206-REPORT.md): the loop guard keeps the captured rows (2250 tests) but in 4 modules 19 records change and at least 6 newly printed rows are source-less bridges; redo after Q245 decides how source-less and mixed bridges are emitted.
+- WAITING `Q248` (integrate, P-sufficiency-wall), after `Q245`: to write after Q245 (row classes decide display vs sentence).
+- WAITING `Q249` (integrate, C16), after `Q246`: packet written (overnight/Q249.md); needs the robformat-3 library head.
+- WAITING `Q250` (integrate, C16), after `Q245`: packet written (overnight/Q250.md); same function as Q235/Q245.
 
 ## Backlog understanding
 

@@ -38,6 +38,7 @@ an alias or a stated reason for having no ink. The ledger is `ink.tsv`.
 | faeab149 | 427 | 4.314% |
 | 4168ba30 | 391 | 4.032% |
 | bac048b8 | 380 | 3.886% |
+| 91d38c1e | 380 | 3.881% |
 
 Rows were re-recorded on 2026-11-22 after the C18 pattern was widened to negative numerals with spaces
 ("if - 1 = 1"), which Q209 found in one record the old pattern missed. Every head from f79926c0 on gained
@@ -182,3 +183,11 @@ was removed: 2 proofs crashed and 141 records changed, 90 of 219 blocks restatin
 apm_a99J08_rectBoundary_split_real, became a display in which equations are chained to terms (Q244 report; redo Q245).
 Not measured by the extractor: that head record's two "It suffices to show P, since P iff Q" sentences are counted as
 sufficiency wall, but the failed candidate's term-to-equation rows would not have been marked by any class.
+
+At 91d38c1e (batch 5: Q235, Q240, Q243 and a review fix; Q208 dropped at census q238) ink_diff against bac048b8 gives
+NEW 0, GROWN 0, MOVED 7 (C4 3, P-empty-claim 2, C23 1, N14 1), GONE 1 (C16: the a01A04 closer no longer repeats its
+lemma tag). 144 records changed; 143 of them gain 225 contradiction blocks ("Suppose P. ... This is absurd, by (n).").
+The MOVED records were read: the block text falls inside paragraphs that were already painted. Reading them found 183
+list items holding only a nested list (census q239), removed by the review fix (16 remain where the block is the first
+of several items). Not measured by ink and still open: blocks whose Suppose line is a derived fact, and "This is
+absurd, by (n)" where (n) is not contradictory by itself (a94A06 upper_ne_pole; t96J07 inv_cont) -> observe Q251.
