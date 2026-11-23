@@ -37,6 +37,7 @@ an alias or a stated reason for having no ink. The ledger is `ink.tsv`.
 | 905efba6 | 498 | 5.124% |
 | faeab149 | 427 | 4.314% |
 | 4168ba30 | 391 | 4.032% |
+| bac048b8 | 380 | 3.886% |
 
 Rows were re-recorded on 2026-11-22 after the C18 pattern was widened to negative numerals with spaces
 ("if - 1 = 1"), which Q209 found in one record the old pattern missed. Every head from f79926c0 on gained
@@ -170,3 +171,14 @@ bridge between a term and a proposition) was in the first trial merge and was re
 unrelated displays and produced "since P iff P" sentences (Q237 report; redo Q239). Not measured by the extractor:
 apm_a03J04_mul_ofReal_rpow_eq now has a proof with setup only, its single `X = X` display being removed; its statement
 prints two different typed terms identically.
+
+At bac048b8 (batch 4: Q233, Q234, Q236; Q197 and Q239 dropped) ink_diff against 4168ba30 gives GONE 14 (all N1: rows
+that had an empty reason now carry a reading from rewrite-readings.json), MOVED 1 (apm_m98a04_translation_pairing_
+fderiv_of_stage_dq_aux_hasFDerivAt: one of its empty reasons is filled, another remains), NEW 0, GROWN 0. Q233 changes
+three records (the recovered calc is printed before the "Hence" sentence it supports); none was marked. Q234 changes
+nothing with the robformat-2 library. Q197 (argument-position contradiction blocks) was in the first trial merge and
+was removed: 2 proofs crashed and 141 records changed, 90 of 219 blocks restating the assumption (redo Q243). Q239
+(mixed bridge kept as an unprinted boundary) was in the second trial merge and was removed: its one changed record,
+apm_a99J08_rectBoundary_split_real, became a display in which equations are chained to terms (Q244 report; redo Q245).
+Not measured by the extractor: that head record's two "It suffices to show P, since P iff Q" sentences are counted as
+sufficiency wall, but the failed candidate's term-to-equation rows would not have been marked by any class.
