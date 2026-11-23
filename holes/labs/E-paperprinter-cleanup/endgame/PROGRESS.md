@@ -9,23 +9,24 @@
 - Proof errors: 0 at the accepted head. Performance class: closed.
 - N1 (rows with an empty reason): **159 records** at this head, down from 1,035 records at the full-corpus freeze.
 - C4 (blocks with a repeated left side, scanner count): **28 records**.
-- Residual ink (audit surface; 24/24 open-or-unknown classes have markup, extractor precision not yet reviewed): **3.785%** of reader-visible proof-source characters, in 370 records; see `INK.md`.
-- Ink change since `b0a112b7`: union -0.000 points; no class changed its record count.
-- Largest colors: N1 1.62%, C4 0.74%, P-sufficiency-wall 0.48%, C19 0.28%.
+- Residual ink (audit surface; 24/24 open-or-unknown classes have markup, extractor precision not yet reviewed): **3.606%** of reader-visible proof-source characters, in 354 records; see `INK.md`.
+- Ink change since `b0a112b7`: union -0.180 points; C19 -17 records.
+- Largest colors: N1 1.62%, C4 0.74%, P-sufficiency-wall 0.48%, P-empty-claim 0.27%.
 
 ## Work now
 
-- ACTIVE `Q256` (integrate, P-sufficiency-wall): packet written (overnight/Q256.md); dispatched to codex-15 on b0a112b7 while batch 7 is censused (different function from Q249/Q252).
-- ACTIVE `Q241` (integrate, C4): codex-2 c3bc1e97 (2264 tests; 3 t00A05 records change), reviewed and HELD, not for batch 6 as it stands: the partition by typed branch path is right, but the result is ten context-free displays printed after the case prose (both "= 1+3 since the condition holds" and "= 5-(5-s) since the condition fails" for one table), no easier to read than the one mixed chain; it is merged only together with Q248, which places each branch chain inside its case; authored on 91d38c1e (b0a112b7 = 91d38c1e + one notation rule).
-- ACTIVE `Q249` (integrate, C16): codex-13 e2970c3f (2262 tests): ApmPaperPrinter._app_Finset_u002e_card reads Finset.card of Multiset.toFinset as "the number of distinct elements of s"; 3 of 266 records change in 7 modules (statement and closer of card_roots_le_degree in a00J04, a01A08; one chain row); diff read, held for the next batch; in trial batch 7 (063f655e), census q243.
-- ACTIVE `Q252` (integrate, P-missing-subproof): codex-12 7995a68a (2266 tests): closer premises = proposition-valued local facts the False proof refers to; 90 block closers change in 2125 compared records; the page citation rule (at most three, sorted) is kept by my ruling, so 33 closers in 27 declarations print three of four or more dependencies (listed in Q252-REPORT.md); diff read, held for the next batch; authored on 91d38c1e; in trial batch 7 (063f655e), census q243.
+- ACTIVE `Q256` (integrate, P-sufficiency-wall): packet written (overnight/Q256.md); dispatched to codex-15 on b0a112b7 while batch 7 is censused (different function from Q249/Q252); authored on b0a112b7 (94c86724 adds only Q249 and Q252, which touch the Finset.card reading and the contradiction closer, not rewrite rows); to be merged onto 94c86724.
+- ACTIVE `Q241` (integrate, C4): codex-2 c3bc1e97 (2264 tests; 3 t00A05 records change), reviewed and HELD, not for batch 6 as it stands: the partition by typed branch path is right, but the result is ten context-free displays printed after the case prose (both "= 1+3 since the condition holds" and "= 5-(5-s) since the condition fails" for one table), no easier to read than the one mixed chain; it is merged only together with Q248, which places each branch chain inside its case; authored on 91d38c1e (b0a112b7 = 91d38c1e + one notation rule); base column is the head it would be merged onto (94c86724).
+- ACTIVE `Q253` (integrate, P-missing-subproof): packet overnight/Q253.md; dispatched to codex-12 on 94c86724.
+- ACTIVE `Q257` (observe, P-empty-claim): packet overnight/Q257.md; dispatched to codex-13 on 94c86724.
+- ACTIVE `Q258` (observe, P-duplicate-closer): packet overnight/Q258.md; dispatched to codex-2 on 94c86724.
+- ACTIVE `Q259` (observe, C19): packet overnight/Q259.md; dispatched to codex-26 on 94c86724.
 - WAITING `N1-readings` (data, N1), after `-`: batch 3 accepted as d25599e9 (58 readings; 59 rows gain a reason, 0 errors). 19 readings withheld in total because a reason makes their row displayed (list: ~/notes/claude-7/Q158/readings-batch3-withheld.json + 5 earlier); they wait for Q165.
 - WAITING `same-print-typed` (integrate, N1), after `Q169`: input: ~/notes/codex-12/Q165/same-print-rows.tsv.
 - WAITING `typed-prune` (observe, N2+C4), after `-`: input: ~/notes/codex-12/Q165/guard-rows.tsv and the two rejected census renders in ~/storage/apm-endgame/.
 - WAITING `Q206` (integrate, P-sufficiency-wall), after `Q256`: codex-13 stopped without a commit (draft in worktree codex-13-Q206, report Q206-REPORT.md): the loop guard keeps the captured rows (2250 tests) but in 4 modules 19 records change and at least 6 newly printed rows are source-less bridges; redo after Q245 decides how source-less and mixed bridges are emitted.
 - WAITING `Q248` (integrate, P-sufficiency-wall), after `Q256`: to write after Q245 (row classes decide display vs sentence); authored on top of Q241 c3bc1e97 so that each branch-local chain is placed in its case; evidence ~/notes/claude-7/raw-names-480/proofs/Q208-census/.
 - WAITING `Q250` (integrate, C16), after `Q256`: packet written (overnight/Q250.md); same function as Q235/Q245.
-- WAITING `Q253` (integrate, P-missing-subproof), after `Q252`: packet written (overnight/Q253.md); same function as Q252.
 - WAITING `Q254` (integrate, C23), after `Q253`: to write.
 - WAITING `Q255` (integrate, P-missing-subproof), after `Q254`: to write.
 

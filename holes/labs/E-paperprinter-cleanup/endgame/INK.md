@@ -40,7 +40,7 @@ an alias or a stated reason for having no ink. The ledger is `ink.tsv`.
 | bac048b8 | 380 | 3.886% |
 | 91d38c1e | 380 | 3.881% |
 | b0a112b7 | 370 | 3.785% |
-| 94c86724 | 370 | 3.785% |
+| 94c86724 | 354 | 3.606% |
 
 Rows were re-recorded on 2026-11-22 after the C18 pattern was widened to negative numerals with spaces
 ("if - 1 = 1"), which Q209 found in one record the old pattern missed. Every head from f79926c0 on gained
@@ -208,3 +208,8 @@ absurd, by ..." lines now cite the facts the False proof uses, and hypotheses ga
 cited facts conflict (G(1) = 1 with G(1) = 0; ||u|| < 1 with ||u|| = 1). Not marked by ink and open: closers that
 cite a tag sitting on an "It suffices to show" line (a93J07, m93A01), a tagged reflexive fact "j + 1 = j + 1"
 (a01J06), and the three-citation cap on closers with more dependencies.
+
+The 94c86724 row was re-recorded on 2026-11-23 after the C19 pattern was tightened (Q259: 17 of its 24 records matched
+the TeX double hyphen in "Picard--Lindelof", "Euler--Lagrange", "Gram--Schmidt"; the pattern now requires whitespace
+between the two signs). With the old pattern the row was 370 records, 3.785%; earlier rows keep the old pattern, so
+the step from b0a112b7 to 94c86724 (16 records, 0.180 points) is a change of measurement, not of rendering.
