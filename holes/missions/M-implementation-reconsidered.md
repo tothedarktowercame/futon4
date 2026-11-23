@@ -184,3 +184,26 @@ such as how ownership or credit follows contribution over time.
 
 - [ ] Confirm each source, its access route and terms; pick the three.
 - [ ] Encode one entity end to end: chain, rules, record, and the gap between them.
+
+## Reference: axioms, claims and constraints (2026-11-23)
+
+A draft paper sent to Joe privately by a friend (October 2026; unpublished, so not named
+or linked here) proposes a successor to OWL for biomedical ontologies, hosted in Lean.
+Its central separation is the one this mission's toolkit needs:
+- **axioms**: the open-world theory, testable against claims ("every T cell is a
+  lymphocyte");
+- **claims**: statements about individuals, each with its evidence, marked observation or
+  inference ("this assay recorded cell 417 as CD3-positive");
+- **constraints**: closed-world checks on records as they stand ("every annotation cites
+  a source"); never used to conclude anything about the world;
+- and **completeness as a named hypothesis**, never a default: "not observed" does not
+  become "does not exist" without a stated premise and its evidence.
+
+For ways of working: a policy hypothesis (ownership following work keeps members) is an
+axiom-like statement of the theory; a ValueFlows event (member A worked 32 hours) is a
+claim with evidence; an Institutional Grammar rule applied to records (must not claim a
+share without a recorded work event) is a constraint. The Triangle Cubed sketch in the
+defproject file mixes the three, and puts a probability inside a rule; the paper's rule is
+that probabilities live on claims, never in the structure of the theory.
+- [ ] Rewrite the Triangle Cubed sketch with the three kinds kept apart, and completeness
+      named where a conclusion needs it.
