@@ -18,7 +18,8 @@ FAMILY = {
     'C6': re.compile(r'\\top'),
     # a predicate lambda `x ↦ x ∈ S`; not `(x ↦ f x) ∈ L^1`, which is a function in a space
     'C8': re.compile(r'\\mapsto\s*[A-Za-z0-9_\'{}]+\s*\\in\b'),
-    'C16': re.compile(r'by transitivity'),
+    'C16': re.compile(r'by transitivity(?! through)(?!, using)'),
+    'C26': re.compile(r'by transitivity, using'),
     'C17': re.compile(r'\\seqsplit'),
     'N1': re.compile(r'&& \\text\{\}'),
 }

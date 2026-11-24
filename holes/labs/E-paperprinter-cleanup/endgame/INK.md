@@ -45,6 +45,7 @@ an alias or a stated reason for having no ink. The ledger is `ink.tsv`.
 | 7db1eb81 | 289 | 3.286% |
 | b38755b7 | 212 | 2.333% |
 | 8dd66325 | 168 | 1.831% |
+| ee47b461 | 145 | 1.579% |
 
 Rows were re-recorded on 2026-11-22 after the C18 pattern was widened to negative numerals with spaces
 ("if - 1 = 1"), which Q209 found in one record the old pattern missed. Every head from f79926c0 on gained
@@ -281,3 +282,37 @@ suffices to show" line each, a step of the bound that the old head skipped, the 
 comparison (lost-rows.txt beside the renders; exact-text version kept as lost-rows-exact-text.txt) finds 265 rows in
 152 records by exact text, all but 3 of them the regrouping; the 3 are the slope rows above. The 14 P-lost-row
 records of b38755b7 are unchanged at this head (Q377 and its successors are not in batch 15).
+
+At ee47b461 (8dd66325 + batch 17, 26 merges; census q258 of a31673ee, whose tree is the head's tree; unit gate 2,789
+passed; proof timeout 300 s, no statement or proof errors) ink_diff 8dd66325 gives NEW 15, MOVED 30, GONE 41. N1 falls
+from 45 to 22 records, C4 from 81 to 75, P-sufficiency-wall from 27 to 25; the union falls from 168 to 145 records.
+
+Scanner change at this head (announced to Joe and claude-10 on 2026-11-24; the same pattern is in ink.py and scan.py).
+Until now C16 flagged any "by transitivity". From this head C16 is the bare form only (no "through", no ", using"), a
+sentence that names its middle term ("by transitivity through \(m\), using (3)") is not flagged, and the form that
+cites facts with no middle term is its own class, C26. Counts under both scanners: at 8dd66325, C16 0 records old and
+new, C26 0, union 168 / 1.831% either way. At ee47b461, old scanner C16 146 records and union 284 / 3.267%; new scanner
+C16 0, C26 1 (apm_m93J02_nontrivial), union 145 / 1.579%. So 139 records and 1.69 points of the fall from the old-scanner
+figure come from the scanner, not from a merge, and the fall recorded in the table above (168 to 145) is measured with
+the new scanner on both heads. What the batch did to these sentences: after Q392b, part and closer sentences that had
+no reason print "by transitivity, using (n)" (146 records in census q257); Q413b and Q422 then compute the middle term,
+and in q258 236 sentences read "through \(m\)" and 1 does not. Between q257 and q258, 135 proofs change and in every
+one the only change is the insertion of "through \(m\)".
+
+This head was accepted with records that are worse than at 8dd66325; each was read and each has an open item. This is
+a change of practice (told to Joe 2026-11-24): a head is no longer held until no record is worse. NEW, each read:
+C4 m94J01 globalFunction_iteratedDeriv (a calculation leaves its first term by Lemma 6 and steps back to it by
+"algebra": Q421 observed, Q424 implements); C4 heatKernelN_lintegral_eq_one, m03J05 resonant_operator_kernel, m03J05
+resonant_weakSolution_of_affine, t99J02 G_rel_aux_lower_pair (after the Q357 owner filter the calculation shows
+unsourced "algebra" rows that loop; Q403's bridge-count rule was rejected because it reverts better pages elsewhere:
+with it m93J06 no_holder_flow_of_branch loses a seven-row cited calculation and a95A04 symmetric_split regains
+"m - h_w = m + h_w"; these four follow Q424 as Q425); C4 and N1 t02A07 ..._aux_bad, N1 m03J04 bridge_1, N1 apm_t95j04,
+P-sufficiency-wall a94A06 cubic_partial_fractions (Q404, with Q399 for the propext rows); C17 and C7 apm_a00j06 (the
+composition fix Q415 shows the outer function, which here is the raw name ENNReal.toNNReal: Q423); C17 and C7 m97A05
+slice_eq (raw main rows exposed by the owner filter: Q404); C26 apm_m93J02_nontrivial (the one remaining sentence
+with no middle term). Not visible to ink: the exact-text row comparison (lost-rows-exact-text.txt beside the renders)
+finds 112 rows in 60 records whose text is not in the new proof; in 11 of those records the count of some numbered
+lemma citation is lower than at 8dd66325 (m02A05 trial_J, m03J05 potential_hasFDerivAt, m93J04, m93J05 trunc_coeffs,
+m97A04 mulVec_eq_stencil, m98J05 bridge_3, t01J06 curl_flux_zero, t93J03 cyclicCover_aux_pQ_fiber, t96A06
+..._aux_disp_eq, t96J02 paste_cut, t96J08 bridge_radialDiskIntegral). These were NOT read before acceptance; whether
+each is a renumbering, an intended removal or a lost citation is Q426 (class P-lost-row).

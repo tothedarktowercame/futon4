@@ -26,7 +26,7 @@ from scan import align_rows
 
 PALETTE = {
     "C1": "#d73027", "C4": "#fc8d59", "C5": "#fee090", "C6": "#e0f3f8",
-    "C7": "#91bfdb", "C8": "#4575b4", "C16": "#984ea3", "C17": "#4daf4a",
+    "C7": "#91bfdb", "C8": "#4575b4", "C16": "#984ea3", "C26": "#bc80bd", "C17": "#4daf4a",
     "N1": "#ff7f00", "C21": "#a65628", "C22": "#f781bf", "C23": "#999999",
     "C18": "#66c2a5", "C19": "#8da0cb", "C12": "#e78ac3", "N14": "#a6d854",
     "P-sufficiency-wall": "#ffd92f", "P-empty-claim": "#e5c494", "P-duplicate-closer": "#b3b3b3",
@@ -38,7 +38,10 @@ FAMILY = {
     "C5": re.compile(r"\\bot"),
     "C6": re.compile(r"\\top"),
     "C8": re.compile(r"\\mapsto\s*[A-Za-z0-9_'{}]+\s*\\in\b"),
-    "C16": re.compile(r"by transitivity"),
+    # C16 is the bare closer; a sentence that names the middle term ("through \(m\)") is not a defect;
+    # the form that cites facts without the middle term is its own class (scanner change 2026-11-24, INK.md)
+    "C16": re.compile(r"by transitivity(?! through)(?!, using)"),
+    "C26": re.compile(r"by transitivity, using"),
     "C17": re.compile(r"\\seqsplit"),
     "N1": re.compile(r"&& \\text\{\}"),
     "C21": re.compile(r"a library lemma"),
