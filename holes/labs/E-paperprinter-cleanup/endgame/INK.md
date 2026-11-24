@@ -316,3 +316,10 @@ lemma citation is lower than at 8dd66325 (m02A05 trial_J, m03J05 potential_hasFD
 m97A04 mulVec_eq_stencil, m98J05 bridge_3, t01J06 curl_flux_zero, t93J03 cyclicCover_aux_pQ_fiber, t96A06
 ..._aux_disp_eq, t96J02 paste_cut, t96J08 bridge_radialDiskIntegral). These were NOT read before acceptance; whether
 each is a renumbering, an intended removal or a lost citation is Q426 (class P-lost-row).
+
+**Lost rows at ee47b461, read after acceptance (Q426, 2026-11-24).** The 60 records with a calculation row
+printed at 8dd66325 and absent at ee47b461 were classified by reading old and new passages: 36 reworded or
+renumbered, 5 intended removals, **4 lost** (m02A05 `trial_J`, t01J06 `curl_flux_zero`, t96A06 `disp_eq`,
+m98J05 `bridge_3`) and **15 worse** (the calculation that backed a "We have" line is gone and the claim is left
+with no reason or with "by extensionality"). These 19 records are not measured by the scanner, so the ink
+figure for ee47b461 does not include them. Q428 bisects for the commit that removed the calculations.
