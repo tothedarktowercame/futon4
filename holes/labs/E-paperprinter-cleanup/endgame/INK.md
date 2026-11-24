@@ -43,6 +43,7 @@ an alias or a stated reason for having no ink. The ledger is `ink.tsv`.
 | 94c86724 | 354 | 3.606% |
 | 2a2b4d08 | 354 | 3.603% |
 | 7db1eb81 | 289 | 3.286% |
+| b38755b7 | 212 | 2.333% |
 
 Rows were re-recorded on 2026-11-22 after the C18 pattern was widened to negative numerals with spaces
 ("if - 1 = 1"), which Q209 found in one record the old pattern missed. Every head from f79926c0 on gained
@@ -242,3 +243,20 @@ distinct tags, so four sufficiency lines that were textually equal now differ in
 line by line: the 3,400 records that changed without new ink were classified by hunk shape (renumbering, a closer
 moved after its derivation, an uncited tag removed, a sufficiency sentence turned into a named fact, an empty
 claim filled) and sampled.
+
+At b38755b7 (7db1eb81 + batch 14; census q251 of 3b91a743, whose tree is the head's tree; 2,548 tests) ink_diff
+against 7db1eb81 gives NEW 7, GROWN 0, MOVED 58, GONE 97. Five records in the stored renders are substitutes: they
+timed out at 120 s in the census (in m03J05, m99A03, t00A04, m99J04, m03J01) and were rendered again on the same
+snapshot with a 300 s budget. The stored set has 0 proof errors. 849 of 8,778 records changed. N1 falls from 166 to
+93 records, P-sufficiency-wall from 34 to 25, C4 from 84 to 79, P-empty-claim from 3 to 0. The seven NEW records,
+each read: five are C4 (apm_m95J02_regularized_rpow_euler, apm_t01J06_curl_flux_zero, eLpNorm_translation_sub_sq,
+m02A02_probe_coeff, t96J02_paste_cut): calculations that the old head printed as separate displays, or as an "is
+unchanged" sentence, are now joined into one display, and the joined chain returns to an earlier expression, which
+the detector marks; the rows were on the page before, in the Q340 classes H and R (Q357, Q349). Two are N1
+(apm_t01A04_cbp_preimage, three "<" rows whose reason is cleared; symmetric_split, one row with an untagged local),
+both already on the fix list. Not visible to ink: a row comparison (overnight/Q369/q251-lost.py; list stored beside
+the renders as lost-rows.txt) finds 14 changed records in which a calculation row of the old head has no
+counterpart. Three lose a step a reader needs (apm_a97A01_integral_one_cell_eq_inv: the display citing Lemmas 4 and
+5; apm_a95J03_clearedPoly_circleIntegral_eq_roots: the row citing Lemma 5; f_radial_integral: the last row). The
+head was accepted with these open as class P-lost-row (Q369 bisects them); they are regressions of this head against
+7db1eb81 and are not offset by the lower ink.
