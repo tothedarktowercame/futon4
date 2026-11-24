@@ -44,6 +44,7 @@ an alias or a stated reason for having no ink. The ledger is `ink.tsv`.
 | 2a2b4d08 | 354 | 3.603% |
 | 7db1eb81 | 289 | 3.286% |
 | b38755b7 | 212 | 2.333% |
+| 8dd66325 | 168 | 1.831% |
 
 Rows were re-recorded on 2026-11-22 after the C18 pattern was widened to negative numerals with spaces
 ("if - 1 = 1"), which Q209 found in one record the old pattern missed. Every head from f79926c0 on gained
@@ -260,3 +261,24 @@ counterpart. Three lose a step a reader needs (apm_a97A01_integral_one_cell_eq_i
 5; apm_a95J03_clearedPoly_circleIntegral_eq_roots: the row citing Lemma 5; f_radial_integral: the last row). The
 head was accepted with these open as class P-lost-row (Q369 bisects them); they are regressions of this head against
 7db1eb81 and are not offset by the lower ink.
+
+At 8dd66325 (b38755b7 + batch 15; census q252 of 3109e81c, whose tree is the head's tree; 2,562 tests; four proofs
+timed out at 120 s and were rerendered at 300 s) ink_diff b38755b7 gives NEW 9, MOVED 17, GONE 53. N1 falls from
+93 to 45 records; C4 rises from 79 to 81 and P-sufficiency-wall from 25 to 27. 1,023 records change; in 797 the
+only change is parenthesisation (a product under a sum or a scalar multiple of a sum is now grouped as Lean has it:
+the old head printed 2^{-1} M + M^* for 2^{-1}(M + M^*)) or the extended slope printing with an overline. The NEW
+records, each read. Three are N1 (apm_a96J10_q_of_ne, apm_m00a06_kernel_mul_eq_sign_mul_dslope,
+apm_aunk03_modifiedKernel_sub_nonzero_residue): the extended slope and the slope now print differently, so the row
+between them, which the old head printed with both sides identical in the first two and did not print in the third,
+is visible with an empty reason; the reading for that rewrite was added after the census (d44bebe7, batch 16). Two
+are C4 where the corrected grouping makes both sides of an existing row print identically
+(threePresentationComplex_piOne_aux_fun: a reassociation row; apm_m94a02: a field-simplification row, now a display
+of its own): the rows were on the page before with a wrong grouping, and are no-op rows to be removed by typed
+comparison (Q382). One is C4 and N1 (apm_m96j03_sum_coordinate_fderiv): the chain gains a last row that returns to
+its first expression, with no reason; the chain was already printed in the reverse of the proof's direction at the
+old head and the detector did not mark it; this one is a regression in what the page shows and goes with Q382. Two
+are P-sufficiency-wall (laplace_transform_analytic, laplace_transform_entire_of_compact_support): one more "It
+suffices to show" line each, a step of the bound that the old head skipped, the second with its reason. The row
+comparison (lost-rows.txt beside the renders; exact-text version kept as lost-rows-exact-text.txt) finds 265 rows in
+152 records by exact text, all but 3 of them the regrouping; the 3 are the slope rows above. The 14 P-lost-row
+records of b38755b7 are unchanged at this head (Q377 and its successors are not in batch 15).
