@@ -269,8 +269,7 @@ only change is parenthesisation (a product under a sum or a scalar multiple of a
 the old head printed 2^{-1} M + M^* for 2^{-1}(M + M^*)) or the extended slope printing with an overline. The NEW
 records, each read. Three are N1 (apm_a96J10_q_of_ne, apm_m00a06_kernel_mul_eq_sign_mul_dslope,
 apm_aunk03_modifiedKernel_sub_nonzero_residue): the extended slope and the slope now print differently, so the row
-between them, which the old head printed with both sides identical in the first two and did not print in the third,
-is visible with an empty reason; the reading for that rewrite was added after the census (d44bebe7, batch 16). Two
+between them, which the old head did not print (both sides printed alike), is visible with an empty reason; the reading for that rewrite was added after the census (d44bebe7, batch 16). Two
 are C4 where the corrected grouping makes both sides of an existing row print identically
 (threePresentationComplex_piOne_aux_fun: a reassociation row; apm_m94a02: a field-simplification row, now a display
 of its own): the rows were on the page before with a wrong grouping, and are no-op rows to be removed by typed
