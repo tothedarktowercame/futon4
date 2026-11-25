@@ -51,7 +51,10 @@ FAMILY = {
     "P-empty-claim": re.compile(r"We claim \\\((?:(?!\\\)).)*\\\):(?: ⟦\d+⟧)?[ ]*(?=\n\\item|\n\\end|\n\n|$)"),
     # an owner sentence whose only child is a closer giving the same reason
     "P-duplicate-closer": re.compile(r"— ([^\n]*?)\.(?: ⟦\d+⟧)?\n\\begin\{itemize\}\n\\item Hence the claim — \1\.\n\\end\{itemize\}"),
-    "C23": re.compile(r"We have \\\(1 = 0\\\)"),
+    # a "1 = 0" given with its reason ("— by ...") that the next item of the same list turns into the
+    # contradiction is in place, not detached (scanner change 2026-11-25, Q468: m02A01, a93A02, m99A05,
+    # b98J04).  "— this is (n)" (a restated assumption, Q467) and a bare "We have 1 = 0." stay marked.
+    "C23": re.compile(r"We have \\\(1 = 0\\\)(?! — by [^\n]*\n\\item (?:This is absurd, by|This contradicts|[^\n]*the hypotheses being contradictory))"),
     "C22": re.compile(r"(?<![_\d.{])(?<!\\cdot )(?<![-+] )0 (?:\\, )?> (?:\\, )?0(?![\d.])"),
 }
 # classes measured by another class's extractor, and classes that are not about rendered text

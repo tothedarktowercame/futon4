@@ -323,3 +323,15 @@ renumbered, 5 intended removals, **4 lost** (m02A05 `trial_J`, t01J06 `curl_flux
 m98J05 `bridge_3`) and **15 worse** (the calculation that backed a "We have" line is gone and the claim is left
 with no reason or with "by extensionality"). These 19 records are not measured by the scanner, so the ink
 figure for ee47b461 does not include them. Q428 bisects for the commit that removed the calculations.
+
+## Scanner change 2026-11-25: C23 excludes a "1 = 0" in place (claude-16, from claude-15's Q468)
+
+C23 matched every `We have \(1 = 0\)`. A "1 = 0" given with its reason ("— by …") and followed, in the
+same list, by the contradiction closer ("This is absurd, by", "This contradicts", "… the hypotheses
+being contradictory") is not detached: it is the last step of the Suppose block (T005 put it there).
+The pattern now excludes that case only. Measured on the census renders of the accepted head
+fb09614c (q261): C23 12 records / 12,663 chars -> 8 / 2,831; UNION 0.803% -> 0.725%. Dropped records,
+each read: apm_m02a01, apm_a93a02, apm_m99a05, b98J04 divisionRing_top_is_minimal_faithful. Still
+marked on purpose (bad cases checked): t96J07 inv_cont x2 ("We have 1 = 0 — this is (1)", Q467) and
+t01A04 canonical_parity_characters ("We have 1 = 0." with no reason). The accepted figure for
+fb09614c stays 0.803% (old scanner); the next accepted head is measured with this one.
