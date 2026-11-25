@@ -5,23 +5,21 @@
 ## Finish line
 
 - Frozen classes: **67**: 30 done, 2 not defects, 30 open, 5 unknown.
-- Corpus gate: 8,778 records; accepted head with a full census: `fb09614c`.
+- Corpus gate: 8,778 records; accepted head with a full census: `737a8236`.
 - Proof errors: 0 at the accepted head. Performance class: closed.
-- N1 (rows with an empty reason): **18 records** at this head, down from 1,035 records at the full-corpus freeze.
-- C4 (blocks with a repeated left side, scanner count): **12 records**.
-- Residual ink (audit surface; 25/35 open-or-unknown classes have markup, extractor precision not yet reviewed): **0.803%** of reader-visible proof-source characters, in 82 records; see `INK.md`.
-- Ink change since `ee47b461`: union -0.776 points; C4 -47 records, C7 -2 records, C12 -1 records, C16 +2 records, C17 -2 records, C23 -1 records, C26 -1 records, N1 -4 records, N14 -1 records, P-duplicate-tag -1 records, P-opaque-proof -1 records, P-overexpanded-setup -1 records, P-premature-conclusion -2 records, P-sufficiency-wall -6 records.
-- Largest colors: C4 0.38%, P-sufficiency-wall 0.15%, N1 0.14%, C23 0.10%.
+- N1 (rows with an empty reason): **12 records** at this head, down from 1,035 records at the full-corpus freeze.
+- C4 (blocks with a repeated left side, scanner count): **11 records**.
+- Residual ink (audit surface; 25/35 open-or-unknown classes have markup, extractor precision not yet reviewed): **0.433%** of reader-visible proof-source characters, in 56 records; see `INK.md`.
+- Ink change since `fb09614c`: union -0.370 points; C4 -8 records, C23 -6 records, N1 -6 records, P-sufficiency-wall -6 records.
+- Largest colors: C4 0.19%, N1 0.12%, P-sufficiency-wall 0.08%, P-missing-subproof 0.03%.
 
 ## Work now
 
 - ACTIVE `Q428` (observe, P-lost-row): Q428-REPORT.md: all 19 lost/worse records first absent at bc8e9b6d; remover proof_rewrite_owner_filter (captured row whose local_fact_owner differs from the chain owner); Q428b measuring which typed predicate separates wrong from right drops | Q428b failed wall-clock at 64 min with no report; Q428c (kimi-7): write-up from the surviving traces | Q428c write-up done (Q428-REPORT.md ## Q428b, Q428b-TABLE.md): no predicate separates 17 WRONG from 7 RIGHT; typed endpoint predicate P2 has 0 RIGHT hits and reaches 7/17 -> Q460 (kimi-7) implements P2 as a partial fix; 10 records owed; Q404a rule A disjoint | Kimi 5-hour quota hit 17:39 UTC 2026-11-24; re-sent to zai-19 (Q460).
-- ACTIVE `TB002` (integrate, P-unnamed-library-result): claude-16 branch claude-16/T002 bec6f0ce+9606a152 on a31673ee; 7 records in 14 Q410 modules gain one closing sentence vs q258; walk gate 696 passed; report ~/notes/claude-16/tail/REPORT.md.
 - ACTIVE `TB003` (data, N15): claude-16 97d9b4ac on a31673ee; the five pass (166 s).
-- ACTIVE `TB004` (integrate, P-implementation-vocabulary): claude-16 13e5b66b on a31673ee; 11 changed fields in 5 modules vs q258, all Nonempty readings; walk gate 695 passed.
-- ACTIVE `TB006` (integrate, C18): claude-16 d03bfee5 on a31673ee (no rewrite-unit or wrapper-hook code): proof_decided_case_condition hook; Step 0: only t00A05 squarePerimeter_squareOfPerimeter in q258 (2 splits); 4-module render vs ee47b461: 1 record changes, only the two vacuous splits and dead arms; walk gate 695 passed. Not an erratum: the vacuous case was argued correctly.
-- ACTIVE `TB009` (integrate, N1): claude-16 7402670c on 0f8ddc9b: Step 0 all 30 joins of 3+ parts come from ApmPaperPrinter.proof_rewrite_wrapper_label (one site); _apm_join_reason_parts lists them, algebra last; 14 declarations: 30 changed lines, all 3+ part rows; 6 two-part "algebra and X" rows flip (a97A08, b94J02, t96J02); Q388b pins updated; walk gate 720 passed.
-- ACTIVE `TB011` (integrate, N1): claude-16 a0f41496+c44ed903 on d4219fd3; 4 Q399 modules (214 records) base vs new: 1 line changes (m93J06 hd); walk gate 727 passed; mutation caught.
+- ACTIVE `Q465b` (integrate, C4): zai-19; packet ~/notes/claude-16/coord/Q465b.md; invoke-1795574693142-28738-d3f11679; zai-19 timed out uncommitted; finished by claude-16 as bedbf907 (claude16/q465b): guard double-counted and keyed on per-row sources, now local facts only; awaiting census; fix 1a09d06e: skip chains Q452 rereads; candidate 4a5953cd, census q264; census q264 (cand 4a5953cd): a96A04/b97J03 lost their only "by Lemma 9/3" rows (break in chain read as return) -> claude-16 fix 4c72f3d1, pins db5d7271 on claude16/cand; census q266.
+- ACTIVE `Q471A` (integrate, C4): zai-19; packet ~/notes/claude-16/coord/Q471A.md; invoke-1795577819330-28825-a014504d; base bedbf907; returned 217554b4 (1 decl, t95A01); in candidate claude16/cand 4a5953cd with Q465b + fix 1a09d06e (Q465b cut m02A02 probe_coeff conclusion); census q264.
+- ACTIVE `Q478C` (implement, P-sufficiency-wall): claude-15; packet ~/notes/claude-16/coord/Q478C.md; invoke-1795618200388-29059-b06e400e.
 - WAITING `Q241` (integrate, C4), after `Q349`: HELD, not in flight (status corrected 2026-11-24). codex-2 c3bc1e97 (2264 tests; 3 t00A05 records change), reviewed and HELD, not for batch 6 as it stands: the partition by typed branch path is right, but the result is ten context-free displays printed after the case prose (both "= 1+3 since the condition holds" and "= 5-(5-s) since the condition fails" for one table), no easier to read than the one mixed chain; it is merged only together with Q248, which places each branch chain inside its case; authored on 91d38c1e (b0a112b7 = 91d38c1e + one notation rule); base column is the head it would be merged onto (94c86724).
 - WAITING `Q206` (integrate, P-sufficiency-wall), after `Q256`: codex-13 stopped without a commit (draft in worktree codex-13-Q206, report Q206-REPORT.md): the loop guard keeps the captured rows (2250 tests) but in 4 modules 19 records change and at least 6 newly printed rows are source-less bridges; redo after Q245 decides how source-less and mixed bridges are emitted.
 - WAITING `Q248` (integrate, P-sufficiency-wall), after `Q256`: to write after Q245 (row classes decide display vs sentence); authored on top of Q241 c3bc1e97 so that each branch-local chain is placed in its case; evidence ~/notes/claude-7/raw-names-480/proofs/Q208-census/.
