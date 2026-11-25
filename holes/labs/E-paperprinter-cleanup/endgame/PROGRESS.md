@@ -5,13 +5,13 @@
 ## Finish line
 
 - Frozen classes: **67**: 30 done, 2 not defects, 30 open, 5 unknown.
-- Corpus gate: 8,778 records; accepted head with a full census: `5555b123`.
+- Corpus gate: 8,778 records; accepted head with a full census: `eb590951`.
 - Proof errors: 0 at the accepted head. Performance class: closed.
-- N1 (rows with an empty reason): **12 records** at this head, down from 1,035 records at the full-corpus freeze.
-- C4 (blocks with a repeated left side, scanner count): **11 records**.
-- Residual ink (audit surface; 25/35 open-or-unknown classes have markup, extractor precision not yet reviewed): **0.433%** of reader-visible proof-source characters, in 56 records; see `INK.md`.
-- Ink change since `737a8236`: union -0.000 points; no class changed its record count.
-- Largest colors: C4 0.19%, N1 0.12%, P-sufficiency-wall 0.08%, P-missing-subproof 0.03%.
+- N1 (rows with an empty reason): **11 records** at this head, down from 1,035 records at the full-corpus freeze.
+- C4 (blocks with a repeated left side, scanner count): **10 records**.
+- Residual ink (audit surface; 25/35 open-or-unknown classes have markup, extractor precision not yet reviewed): **0.388%** of reader-visible proof-source characters, in 54 records; see `INK.md`.
+- Ink change since `5555b123`: union -0.045 points; C4 -1 records, N1 -1 records.
+- Largest colors: C4 0.18%, P-sufficiency-wall 0.08%, N1 0.08%, P-missing-subproof 0.03%.
 
 ## Work now
 
@@ -19,10 +19,13 @@
 - ACTIVE `TB003` (data, N15): claude-16 97d9b4ac on a31673ee; the five pass (166 s).
 - ACTIVE `Q465b` (integrate, C4): zai-19; packet ~/notes/claude-16/coord/Q465b.md; invoke-1795574693142-28738-d3f11679; zai-19 timed out uncommitted; finished by claude-16 as bedbf907 (claude16/q465b): guard double-counted and keyed on per-row sources, now local facts only; awaiting census; fix 1a09d06e: skip chains Q452 rereads; candidate 4a5953cd, census q264; census q264 (cand 4a5953cd): a96A04/b97J03 lost their only "by Lemma 9/3" rows (break in chain read as return) -> claude-16 fix 4c72f3d1, pins db5d7271 on claude16/cand; census q266.
 - ACTIVE `Q471A` (integrate, C4): zai-19; packet ~/notes/claude-16/coord/Q471A.md; invoke-1795577819330-28825-a014504d; base bedbf907; returned 217554b4 (1 decl, t95A01); in candidate claude16/cand 4a5953cd with Q465b + fix 1a09d06e (Q465b cut m02A02 probe_coeff conclusion); census q264.
-- ACTIVE `Q478C` (implement, P-sufficiency-wall): claude-15; packet ~/notes/claude-16/coord/Q478C.md; invoke-1795618200388-29059-b06e400e.
 - ACTIVE `Q470C` (implement, N1): claude-15; packet ~/notes/claude-16/coord/Q470C.md; invoke-1795620221348-29072-56ca13b9; returned 16c634f3+14b2444b reviewed: 1 decl (m95A03), merged into claude16/cand6 824e9618 on b83f523b.
-- ACTIVE `Q481` (implement, C4): zai-17; packet ~/notes/claude-16/coord/Q481.md; invoke-1795620221830-29073-647050b8.
-- ACTIVE `Q484` (implement, C4): zai-16; packet ~/notes/claude-16/coord/Q484.md; invoke-1795621559361-29082-fc4c5c45.
+- ACTIVE `Q481` (implement, C4): zai-17; packet ~/notes/claude-16/coord/Q481.md; invoke-1795620221830-29073-647050b8; returned 80a86752 reviewed (premise stale: routing existed, real fix = prune pre-coalesce + goal-side guard; 1 decl a02J07); merged with Q484 conflict resolved into cand7 b4a40360; census q278 queued after q277.
+- ACTIVE `Q484` (implement, C4): zai-16; packet ~/notes/claude-16/coord/Q484.md; invoke-1795621559361-29082-fc4c5c45; returned edfeedc9 reviewed: a95J03 closes (1 decl); a98A07 still open (MeasurableSpace arg is implicit not instImplicit, Mathlib instance not resolvable); in cand6 8e73dc71, census q277.
+- ACTIVE `Q487` (implement, C4): zai-19; packet ~/notes/claude-16/coord/Q487.md; invoke-1795624375110-29105-7e3901a0.
+- ACTIVE `Q490B` (observe, C4): zai-16; packet ~/notes/claude-16/coord/Q490B.md; invoke-1795626471869-29153-4fae0764.
+- ACTIVE `Q488C` (implement, C4): zai-17; packet ~/notes/claude-16/coord/Q488C.md; invoke-1795627059302-29160-19ccda71.
+- ACTIVE `Q491` (observe, C4): claude-15; packet ~/notes/claude-16/coord/Q491.md; invoke-1795627324632-29162-d2e388eb.
 - WAITING `Q241` (integrate, C4), after `Q349`: HELD, not in flight (status corrected 2026-11-24). codex-2 c3bc1e97 (2264 tests; 3 t00A05 records change), reviewed and HELD, not for batch 6 as it stands: the partition by typed branch path is right, but the result is ten context-free displays printed after the case prose (both "= 1+3 since the condition holds" and "= 5-(5-s) since the condition fails" for one table), no easier to read than the one mixed chain; it is merged only together with Q248, which places each branch chain inside its case; authored on 91d38c1e (b0a112b7 = 91d38c1e + one notation rule); base column is the head it would be merged onto (94c86724).
 - WAITING `Q206` (integrate, P-sufficiency-wall), after `Q256`: codex-13 stopped without a commit (draft in worktree codex-13-Q206, report Q206-REPORT.md): the loop guard keeps the captured rows (2250 tests) but in 4 modules 19 records change and at least 6 newly printed rows are source-less bridges; redo after Q245 decides how source-less and mixed bridges are emitted.
 - WAITING `Q248` (integrate, P-sufficiency-wall), after `Q256`: to write after Q245 (row classes decide display vs sentence); authored on top of Q241 c3bc1e97 so that each branch-local chain is placed in its case; evidence ~/notes/claude-7/raw-names-480/proofs/Q208-census/.
@@ -35,6 +38,7 @@
 - WAITING `TB016` (observe, P-empty-chain-reason), after `TB014`: kimi-6 job failed on the Kimi 5-hour quota (HTTP 429) after rendering 20 decls/17 modules (~/notes/kimi-6/TB016/rendered.jsonl; 8.2 GB steps trace deleted), no report. Producers partly known from Q459 (a94J06 x3, m99A02: pending goal chains never claimed) and Q457 (G1 congrFun heads, in flight); re-measure N1 at the next census before re-sending. | kimi-6 invoke-1795541454707-28445-28ac53b7 (park-be6650e0); packet ~/notes/claude-16/tail/TB016.md, 20 rows / 16 modules via --declarations (m03J05 left out).
 - WAITING `TB015` (observe, P-sufficiency-end), after `-`: claude-16 observe at 4fe695ba + census q258 ee47b461: STOP rule hit (>10): 468 records whose proof ends 'Hence P.' / 'It suffices to show Q.' (308 with P==Q verbatim, 160 differ; 104+138 modules); belled claude-7 (overlaps open class P-sufficiency-end, 849 records; Q385 sample); notes ~/notes/claude-16/tail/TB015-observe.md.
 - WAITING `Q456` (integrate, C4), after `Q447`: STOPPED at Step 0 (zai-15): a98A07 #31 row 3 carries a content-free rewrite_source+named_citation; redirect (a) discount or (b) a95J03 only pending. Q456-REPORT.md.
+- WAITING `Q484B` (implement, C4), after `Q484`: zai-16; packet ~/notes/claude-16/coord/Q484B.md; invoke-1795623401812-29087-32d3a28b; returned 3df1415b+912d9af0: on the census library Q484 already resolves the instance, so Q484B is only a fallback; held until q278 (cand7 = Q481+Q484) shows whether a98A07 is cut without it.
 
 ## Backlog understanding
 
