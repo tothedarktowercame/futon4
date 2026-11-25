@@ -704,3 +704,32 @@ eb590951	P-sufficiency-wall	13	10688	0.084789
 eb590951	UNION	54	48947	0.388301
 eb590951	TOTAL	8778	12605418	100.000000
 eb590951	COVERAGE	-	25/35 open-or-unknown classes	lower-bound
+2adadb38	C1	0	0	0.000000
+2adadb38	C4	13	12735	0.101059
+2adadb38	C5	0	0	0.000000
+2adadb38	C6	0	0	0.000000
+2adadb38	C7	1	179	0.001420
+2adadb38	C8	0	0	0.000000
+2adadb38	C12	0	0	0.000000
+2adadb38	C16	2	424	0.003365
+2adadb38	C17	0	0	0.000000
+2adadb38	C18	0	0	0.000000
+2adadb38	C19	0	0	0.000000
+2adadb38	C21	0	0	0.000000
+2adadb38	C22	1	407	0.003230
+2adadb38	C23	6	1755	0.013927
+2adadb38	C26	0	0	0.000000
+2adadb38	N1	8	8835	0.070110
+2adadb38	N14	0	0	0.000000
+2adadb38	P-duplicate-closer	0	0	0.000000
+2adadb38	P-duplicate-tag	0	0	0.000000
+2adadb38	P-empty-claim	0	0	0.000000
+2adadb38	P-missing-subproof	2	3889	0.030861
+2adadb38	P-nonprop-suffices	0	0	0.000000
+2adadb38	P-opaque-proof	0	0	0.000000
+2adadb38	P-overexpanded-setup	0	0	0.000000
+2adadb38	P-premature-conclusion	0	0	0.000000
+2adadb38	P-sufficiency-wall	13	10688	0.084815
+2adadb38	UNION	45	37903	0.300780
+2adadb38	TOTAL	8778	12601570	100.000000
+2adadb38	COVERAGE	-	25/35 open-or-unknown classes	lower-bound
