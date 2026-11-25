@@ -5,13 +5,13 @@
 ## Finish line
 
 - Frozen classes: **67**: 30 done, 2 not defects, 30 open, 5 unknown.
-- Corpus gate: 8,778 records; accepted head with a full census: `2adadb38`.
+- Corpus gate: 8,778 records; accepted head with a full census: `1f5b2b02`.
 - Proof errors: 0 at the accepted head. Performance class: closed.
 - N1 (rows with an empty reason): **8 records** at this head, down from 1,035 records at the full-corpus freeze.
-- C4 (blocks with a repeated left side, scanner count): **9 records**.
-- Residual ink (audit surface; 25/35 open-or-unknown classes have markup, extractor precision not yet reviewed): **0.301%** of reader-visible proof-source characters, in 45 records; see `INK.md`.
-- Ink change since `eb590951`: union -0.088 points; C4 -6 records, N1 -3 records.
-- Largest colors: C4 0.10%, P-sufficiency-wall 0.08%, N1 0.07%, P-missing-subproof 0.03%.
+- C4 (blocks with a repeated left side, scanner count): **6 records**.
+- Residual ink (audit surface; 25/35 open-or-unknown classes have markup, extractor precision not yet reviewed): **0.283%** of reader-visible proof-source characters, in 41 records; see `INK.md`.
+- Ink change since `2adadb38`: union -0.017 points; C4 -5 records.
+- Largest colors: P-sufficiency-wall 0.08%, C4 0.08%, N1 0.07%, P-missing-subproof 0.03%.
 
 ## Work now
 
@@ -19,9 +19,6 @@
 - ACTIVE `TB003` (data, N15): claude-16 97d9b4ac on a31673ee; the five pass (166 s).
 - ACTIVE `Q465b` (integrate, C4): zai-19; packet ~/notes/claude-16/coord/Q465b.md; invoke-1795574693142-28738-d3f11679; zai-19 timed out uncommitted; finished by claude-16 as bedbf907 (claude16/q465b): guard double-counted and keyed on per-row sources, now local facts only; awaiting census; fix 1a09d06e: skip chains Q452 rereads; candidate 4a5953cd, census q264; census q264 (cand 4a5953cd): a96A04/b97J03 lost their only "by Lemma 9/3" rows (break in chain read as return) -> claude-16 fix 4c72f3d1, pins db5d7271 on claude16/cand; census q266.
 - ACTIVE `Q471A` (integrate, C4): zai-19; packet ~/notes/claude-16/coord/Q471A.md; invoke-1795577819330-28825-a014504d; base bedbf907; returned 217554b4 (1 decl, t95A01); in candidate claude16/cand 4a5953cd with Q465b + fix 1a09d06e (Q465b cut m02A02 probe_coeff conclusion); census q264.
-- ACTIVE `Q497` (implement, C4): zai-16; packet ~/notes/claude-16/coord/Q497.md; invoke-1795637996094-29265-811b7e83; park-b7164246.
-- ACTIVE `Q498` (implement, C4): zai-17; packet ~/notes/claude-16/coord/Q498.md; invoke-1795638016932-29267-fe32d20a; park-7bea41fc.
-- ACTIVE `Q499` (implement, C4): zai-19; packet ~/notes/claude-16/coord/Q499.md; invoke-1795638037756-29269-f5ce0ddf; park-9e5936a5.
 - WAITING `Q241` (integrate, C4), after `Q349`: HELD, not in flight (status corrected 2026-11-24). codex-2 c3bc1e97 (2264 tests; 3 t00A05 records change), reviewed and HELD, not for batch 6 as it stands: the partition by typed branch path is right, but the result is ten context-free displays printed after the case prose (both "= 1+3 since the condition holds" and "= 5-(5-s) since the condition fails" for one table), no easier to read than the one mixed chain; it is merged only together with Q248, which places each branch chain inside its case; authored on 91d38c1e (b0a112b7 = 91d38c1e + one notation rule); base column is the head it would be merged onto (94c86724).
 - WAITING `Q206` (integrate, P-sufficiency-wall), after `Q256`: codex-13 stopped without a commit (draft in worktree codex-13-Q206, report Q206-REPORT.md): the loop guard keeps the captured rows (2250 tests) but in 4 modules 19 records change and at least 6 newly printed rows are source-less bridges; redo after Q245 decides how source-less and mixed bridges are emitted.
 - WAITING `Q248` (integrate, P-sufficiency-wall), after `Q256`: to write after Q245 (row classes decide display vs sentence); authored on top of Q241 c3bc1e97 so that each branch-local chain is placed in its case; evidence ~/notes/claude-7/raw-names-480/proofs/Q208-census/.
