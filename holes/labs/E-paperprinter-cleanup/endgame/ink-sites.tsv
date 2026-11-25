@@ -1,10 +1,3 @@
 class	declaration	source
-C12	apm_t91a02	classes.tsv (Subgroup.map drops its map argument; one site)
-N14	t96J02_paste_cut	classes.tsv (calc under Subtype.ext, hxedge)
 P-missing-subproof	m03J05_linearWeakSolution_existsUnique_of_abs_lt_one	Q129 defects.tsv
 P-missing-subproof	m03J05_zeroTrace_operator_sub_norm_le	Q129 defects.tsv
-P-premature-conclusion	m03J05_nonresonant_operator_unique	Q129 defects.tsv
-P-premature-conclusion	m03J05_nonresonant_weakSolution_unique	Q129 defects.tsv
-P-opaque-proof	m99A03Shift_cube	Q129 defects.tsv
-P-duplicate-tag	apm_m99j04_eigen_hilbert_basis	Q129 defects.tsv
-P-overexpanded-setup	t00A04_relativeMV_middle_aux_small_quotient_exact_literal	Q129 defects.tsv
