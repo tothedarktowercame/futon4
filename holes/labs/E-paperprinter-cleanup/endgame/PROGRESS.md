@@ -1,42 +1,39 @@
-# PaperPrinter residual — 2026-11-24
+# PaperPrinter residual — 2026-11-25
 
 **Status: rendering works; informalisation validation is in progress** (`READINESS.md`: six gates, one met). The ink figures below are an audit surface, not a share of correct proofs.
 
 ## Finish line
 
 - Frozen classes: **67**: 30 done, 2 not defects, 30 open, 5 unknown.
-- Corpus gate: 8,778 records; accepted head with a full census: `ee47b461`.
+- Corpus gate: 8,778 records; accepted head with a full census: `fb09614c`.
 - Proof errors: 0 at the accepted head. Performance class: closed.
-- N1 (rows with an empty reason): **22 records** at this head, down from 1,035 records at the full-corpus freeze.
-- C4 (blocks with a repeated left side, scanner count): **21 records**.
-- Residual ink (audit surface; 25/35 open-or-unknown classes have markup, extractor precision not yet reviewed): **1.579%** of reader-visible proof-source characters, in 145 records; see `INK.md`.
-- Ink change since `8dd66325`: union -0.252 points; C4 -6 records, C7 +2 records, C17 +2 records, N1 -23 records, P-sufficiency-wall -2 records.
-- Largest colors: C4 0.79%, C23 0.18%, P-sufficiency-wall 0.18%, N1 0.17%.
+- N1 (rows with an empty reason): **18 records** at this head, down from 1,035 records at the full-corpus freeze.
+- C4 (blocks with a repeated left side, scanner count): **12 records**.
+- Residual ink (audit surface; 25/35 open-or-unknown classes have markup, extractor precision not yet reviewed): **0.803%** of reader-visible proof-source characters, in 82 records; see `INK.md`.
+- Ink change since `ee47b461`: union -0.776 points; C4 -47 records, C7 -2 records, C12 -1 records, C16 +2 records, C17 -2 records, C23 -1 records, C26 -1 records, N1 -4 records, N14 -1 records, P-duplicate-tag -1 records, P-opaque-proof -1 records, P-overexpanded-setup -1 records, P-premature-conclusion -2 records, P-sufficiency-wall -6 records.
+- Largest colors: C4 0.38%, P-sufficiency-wall 0.15%, N1 0.14%, C23 0.10%.
 
 ## Work now
 
-- ACTIVE `Q399` (integrate, N1): zai-6 on a31673ee (scan limited to 22 modules).
-- ACTIVE `Q420` (observe, N1): kimi-4 (new seat) on a31673ee; codex-26 failed on quota with no report.
-- ACTIVE `Q423` (integrate, C25): kimi-3 (new seat) on batch tip a31673ee; census q257 shows raw ENNReal.toNNReal as a composition factor in a00J06.
-- ACTIVE `Q412` (integrate, N1): Q412c to kimi-1 on batch tip 8b0abc35 (codex-2 stopped on quota; its diff saved as patches).
-- ACTIVE `Q424` (integrate, C4): zai-15 on batch tip a31673ee.
-- ACTIVE `T001` (observe, P-misattributed-reason): kimi-6 for claude-16 on a31673ee: invoke-1795530432617-28017-ced6c102; packet ~/notes/claude-16/tail/T001.md.
-- ACTIVE `T001` (observe, C23+P-premature-conclusion+P-missing-subproof+P-overexpanded-setup+P-opaque-proof+P-duplicate-tag+N14+C7+C22+C12): claude-15 (reading; report ~/notes/claude-15/tail-A/T001-REPORT.md).
-- ACTIVE `T002` (observe, C23): kimi-5 on a31673ee snapshot; packet ~/notes/claude-15/tail-A/T002.md.
-- ACTIVE `T002` (integrate, P-unnamed-library-result): claude-16 branch claude-16/T002 on a31673ee; evidence 14 Q410 modules vs q258; report ~/notes/claude-16/tail/REPORT.md.
-- ACTIVE `T003` (data, N15): claude-16 97d9b4ac on a31673ee; the five pass (166 s).
-- ACTIVE `T004` (integrate, P-implementation-vocabulary): claude-16 13e5b66b on a31673ee; 5 changed fields in 4 modules vs q258.
+- ACTIVE `Q428` (observe, P-lost-row): Q428-REPORT.md: all 19 lost/worse records first absent at bc8e9b6d; remover proof_rewrite_owner_filter (captured row whose local_fact_owner differs from the chain owner); Q428b measuring which typed predicate separates wrong from right drops | Q428b failed wall-clock at 64 min with no report; Q428c (kimi-7): write-up from the surviving traces | Q428c write-up done (Q428-REPORT.md ## Q428b, Q428b-TABLE.md): no predicate separates 17 WRONG from 7 RIGHT; typed endpoint predicate P2 has 0 RIGHT hits and reaches 7/17 -> Q460 (kimi-7) implements P2 as a partial fix; 10 records owed; Q404a rule A disjoint | Kimi 5-hour quota hit 17:39 UTC 2026-11-24; re-sent to zai-19 (Q460).
+- ACTIVE `TB002` (integrate, P-unnamed-library-result): claude-16 branch claude-16/T002 bec6f0ce+9606a152 on a31673ee; 7 records in 14 Q410 modules gain one closing sentence vs q258; walk gate 696 passed; report ~/notes/claude-16/tail/REPORT.md.
+- ACTIVE `TB003` (data, N15): claude-16 97d9b4ac on a31673ee; the five pass (166 s).
+- ACTIVE `TB004` (integrate, P-implementation-vocabulary): claude-16 13e5b66b on a31673ee; 11 changed fields in 5 modules vs q258, all Nonempty readings; walk gate 695 passed.
+- ACTIVE `TB006` (integrate, C18): claude-16 d03bfee5 on a31673ee (no rewrite-unit or wrapper-hook code): proof_decided_case_condition hook; Step 0: only t00A05 squarePerimeter_squareOfPerimeter in q258 (2 splits); 4-module render vs ee47b461: 1 record changes, only the two vacuous splits and dead arms; walk gate 695 passed. Not an erratum: the vacuous case was argued correctly.
+- ACTIVE `TB009` (integrate, N1): claude-16 7402670c on 0f8ddc9b: Step 0 all 30 joins of 3+ parts come from ApmPaperPrinter.proof_rewrite_wrapper_label (one site); _apm_join_reason_parts lists them, algebra last; 14 declarations: 30 changed lines, all 3+ part rows; 6 two-part "algebra and X" rows flip (a97A08, b94J02, t96J02); Q388b pins updated; walk gate 720 passed.
+- ACTIVE `TB011` (integrate, N1): claude-16 a0f41496+c44ed903 on d4219fd3; 4 Q399 modules (214 records) base vs new: 1 line changes (m93J06 hd); walk gate 727 passed; mutation caught.
 - WAITING `Q241` (integrate, C4), after `Q349`: HELD, not in flight (status corrected 2026-11-24). codex-2 c3bc1e97 (2264 tests; 3 t00A05 records change), reviewed and HELD, not for batch 6 as it stands: the partition by typed branch path is right, but the result is ten context-free displays printed after the case prose (both "= 1+3 since the condition holds" and "= 5-(5-s) since the condition fails" for one table), no easier to read than the one mixed chain; it is merged only together with Q248, which places each branch chain inside its case; authored on 91d38c1e (b0a112b7 = 91d38c1e + one notation rule); base column is the head it would be merged onto (94c86724).
 - WAITING `Q206` (integrate, P-sufficiency-wall), after `Q256`: codex-13 stopped without a commit (draft in worktree codex-13-Q206, report Q206-REPORT.md): the loop guard keeps the captured rows (2250 tests) but in 4 modules 19 records change and at least 6 newly printed rows are source-less bridges; redo after Q245 decides how source-less and mixed bridges are emitted.
 - WAITING `Q248` (integrate, P-sufficiency-wall), after `Q256`: to write after Q245 (row classes decide display vs sentence); authored on top of Q241 c3bc1e97 so that each branch-local chain is placed in its case; evidence ~/notes/claude-7/raw-names-480/proofs/Q208-census/.
-- WAITING `Q404` (integrate, C4), after `Q424`: packet to write.
 - WAITING `Q405` (integrate, N1), after `Q424`: packet to write.
 - WAITING `Q411` (integrate, N1), after `Q424`: packet to write after Q403 lands; re-measure first.
 - WAITING `Q366` (integrate, P-sufficiency-wall), after `Q350`: packet to write; after the N1 queue.
 - WAITING `Q343` (observe, P-misattributed-reason), after `-`: intake INTAKE-inkup-2026-11-24.md; waits for a free seat.
 - WAITING `Q344` (observe, P-implementation-vocabulary), after `-`: intake INTAKE-inkup-2026-11-24.md; waits for a free seat.
 - WAITING `Q347` (observe, P-missing-subproof), after `-`: intake INTAKE-inkup-2026-11-24.md; waits for a free seat.
-- WAITING `T005` (observe, P-implementation-vocabulary), after `T001`: packet ~/notes/claude-16/tail/T005.md for kimi-6 after T001.
+- WAITING `TB016` (observe, P-empty-chain-reason), after `TB014`: kimi-6 job failed on the Kimi 5-hour quota (HTTP 429) after rendering 20 decls/17 modules (~/notes/kimi-6/TB016/rendered.jsonl; 8.2 GB steps trace deleted), no report. Producers partly known from Q459 (a94J06 x3, m99A02: pending goal chains never claimed) and Q457 (G1 congrFun heads, in flight); re-measure N1 at the next census before re-sending. | kimi-6 invoke-1795541454707-28445-28ac53b7 (park-be6650e0); packet ~/notes/claude-16/tail/TB016.md, 20 rows / 16 modules via --declarations (m03J05 left out).
+- WAITING `TB015` (observe, P-sufficiency-end), after `-`: claude-16 observe at 4fe695ba + census q258 ee47b461: STOP rule hit (>10): 468 records whose proof ends 'Hence P.' / 'It suffices to show Q.' (308 with P==Q verbatim, 160 differ; 104+138 modules); belled claude-7 (overlaps open class P-sufficiency-end, 849 records; Q385 sample); notes ~/notes/claude-16/tail/TB015-observe.md.
+- WAITING `Q456` (integrate, C4), after `Q447`: STOPPED at Step 0 (zai-15): a98A07 #31 row 3 carries a content-free rewrite_source+named_citation; redirect (a) discount or (b) a95J03 only pending. Q456-REPORT.md.
 
 ## Backlog understanding
 
