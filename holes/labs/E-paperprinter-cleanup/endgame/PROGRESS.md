@@ -4,7 +4,7 @@
 
 ## Finish line
 
-- Frozen classes: **69**: 30 done, 2 not defects, 32 open, 5 unknown.
+- Frozen classes: **70**: 30 done, 2 not defects, 33 open, 5 unknown.
 - Corpus gate: 8,778 records; accepted head with a full census: `13f559121536e3d8cbbfa1c237d82033155c3f1b`.
 - Proof errors: 0 at the accepted head. Performance class: closed.
 - N1 (rows with an empty reason): **0 records** at this head, down from 1,035 records at the full-corpus freeze.
@@ -36,7 +36,7 @@
 
 ## Backlog understanding
 
-- Observation coverage: **36/37** open or unknown classes.
+- Observation coverage: **36/38** open or unknown classes.
 - Classification state: classified 4, classified (Q183) 1, classified (Q190, Q192) 1, classified (Q216) 2, classified (Q369) 1, classified (Q371) 1, classified (Q385) 1, classified (Q413b, Q422) 1, classified by position (claude-7 from renders; Q182/Q187 typed traces) 1, not yet classified 1, partly-classified 6, reader-reported; not typed 3, reader-reported; one site 2, stale-observation 3, unclassified 6, unknown 2.
 - Historical grammar observations: falsified 7, proposed 2, superseded 1, supported 4.
 
