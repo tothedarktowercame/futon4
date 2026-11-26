@@ -4,14 +4,14 @@
 
 ## Finish line
 
-- Frozen classes: **67**: 30 done, 2 not defects, 30 open, 5 unknown.
+- Frozen classes: **68**: 30 done, 2 not defects, 31 open, 5 unknown.
 - Corpus gate: 8,778 records; accepted head with a full census: `13f559121536e3d8cbbfa1c237d82033155c3f1b`.
 - Proof errors: 0 at the accepted head. Performance class: closed.
 - N1 (rows with an empty reason): **0 records** at this head, down from 1,035 records at the full-corpus freeze.
 - C4 (blocks with a repeated left side, scanner count): **2 records**.
-- Residual ink (audit surface; 25/35 open-or-unknown classes have markup, extractor precision not yet reviewed): **0.063%** of reader-visible proof-source characters, in 5 records; see `INK.md`.
-- Ink change since `7c3a98939b654dc560a91357e25189a08a5ec1f8`: union -0.003 points; P-sufficiency-wall -1 records.
-- Largest colors: P-missing-subproof 0.03%, C4 0.03%, C23 0.00%.
+- Residual ink (audit surface; 26/36 open-or-unknown classes have markup, extractor precision not yet reviewed): **1.348%** of reader-visible proof-source characters, in 112 records; see `INK.md`.
+- Ink change since `7c3a98939b654dc560a91357e25189a08a5ec1f8`: union +1.281 points; P-sufficiency-wall -1 records.
+- Largest colors: P-claim-binders-unintroduced 1.28%, P-missing-subproof 0.03%, C4 0.03%, C23 0.00%.
 
 ## Work now
 
@@ -35,7 +35,7 @@
 
 ## Backlog understanding
 
-- Observation coverage: **36/35** open or unknown classes.
+- Observation coverage: **36/36** open or unknown classes.
 - Classification state: classified 4, classified (Q183) 1, classified (Q190, Q192) 1, classified (Q216) 2, classified (Q369) 1, classified (Q371) 1, classified (Q385) 1, classified (Q413b, Q422) 1, classified by position (claude-7 from renders; Q182/Q187 typed traces) 1, not yet classified 1, partly-classified 6, reader-reported; not typed 3, reader-reported; one site 2, stale-observation 3, unclassified 6, unknown 2.
 - Historical grammar observations: falsified 7, proposed 2, superseded 1, supported 4.
 

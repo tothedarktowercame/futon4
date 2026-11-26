@@ -32,6 +32,7 @@ PALETTE = {
     "P-sufficiency-wall": "#ffd92f", "P-empty-claim": "#e5c494", "P-duplicate-closer": "#b3b3b3",
     "P-nonprop-suffices": "#1b9e77", "P-missing-subproof": "#d95f02", "P-premature-conclusion": "#7570b3",
     "P-opaque-proof": "#e7298a", "P-duplicate-tag": "#66a61e", "P-overexpanded-setup": "#e6ab02",
+    "P-claim-binders-unintroduced": "#a6761d",
 }
 FAMILY = {
     "C1": re.compile(r"distinguish cases on[^.]*\\lor"),
@@ -55,6 +56,11 @@ FAMILY = {
     # contradiction is in place, not detached (scanner change 2026-11-25, Q468: m02A01, a93A02, m99A05,
     # b98J04).  "— this is (n)" (a restated assumption, Q467) and a bare "We have 1 = 0." stay marked.
     "C23": re.compile(r"We have \\\(1 = 0\\\)(?! — by [^\n]*\n\\item (?:This is absurd, by|This contradicts|[^\n]*the hypotheses being contradictory))"),
+    # a claim over \forall whose sub-proof starts without introducing the quantified variables and
+    # hypotheses (have value `fun`/`intro` walked as argument plumbing, letE under app_depth > 0); R1,
+    # claude-19 2026-11-26: 138 lines / 107 records at q298, 12/12 sampled defects.  A "Let" that
+    # introduces only some binders is not caught (lower bound).
+    "P-claim-binders-unintroduced": re.compile(r"We claim (?:\\leanref\{\}\{local:[^}]*\})?\\\(\\forall[^\n]*\n\\begin\{itemize\}\n\\item (?!(?:Let|Suppose|Fix|Assume)\b)"),
     "C22": re.compile(r"(?<![_\d.{])(?<!\\cdot )(?<![-+] )0 (?:\\, )?> (?:\\, )?0(?![\d.])"),
 }
 # classes measured by another class's extractor, and classes that are not about rendered text
