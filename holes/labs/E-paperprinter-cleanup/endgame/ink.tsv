@@ -791,3 +791,32 @@ eb590951	COVERAGE	-	25/35 open-or-unknown classes	lower-bound
 002410f7	UNION	35	28425	0.225408
 002410f7	TOTAL	8778	12610454	100.000000
 002410f7	COVERAGE	-	25/35 open-or-unknown classes	lower-bound
+88e74bde	C1	0	0	0.000000
+88e74bde	C4	5	4976	0.039459
+88e74bde	C5	0	0	0.000000
+88e74bde	C6	0	0	0.000000
+88e74bde	C7	1	179	0.001419
+88e74bde	C8	0	0	0.000000
+88e74bde	C12	0	0	0.000000
+88e74bde	C16	2	424	0.003362
+88e74bde	C17	0	0	0.000000
+88e74bde	C18	0	0	0.000000
+88e74bde	C19	0	0	0.000000
+88e74bde	C21	0	0	0.000000
+88e74bde	C22	1	407	0.003227
+88e74bde	C23	6	1755	0.013917
+88e74bde	C26	0	0	0.000000
+88e74bde	N1	2	1953	0.015487
+88e74bde	N14	0	0	0.000000
+88e74bde	P-duplicate-closer	0	0	0.000000
+88e74bde	P-duplicate-tag	0	0	0.000000
+88e74bde	P-empty-claim	0	0	0.000000
+88e74bde	P-missing-subproof	2	3889	0.030839
+88e74bde	P-nonprop-suffices	0	0	0.000000
+88e74bde	P-opaque-proof	0	0	0.000000
+88e74bde	P-overexpanded-setup	0	0	0.000000
+88e74bde	P-premature-conclusion	0	0	0.000000
+88e74bde	P-sufficiency-wall	13	10688	0.084755
+88e74bde	UNION	32	24271	0.192466
+88e74bde	TOTAL	8778	12610513	100.000000
+88e74bde	COVERAGE	-	25/35 open-or-unknown classes	lower-bound
