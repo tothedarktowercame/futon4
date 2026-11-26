@@ -151,6 +151,25 @@ def c22_in_impossible_case(text, pos):
     return False
 
 
+C23_PROVED_BY_DISPLAY = re.compile(
+    r"We have \\\(1 = 0\\\)\.\n\\begin\{align\*\}\n(?P<rows>.*?)\n\\end\{align\*\} ⟦(?P<tag>\d+)⟧\n+"
+    r"(?:\\item )?This is absurd, by \((?P=tag)\)\.", re.S)
+
+
+def c23_proved_by_display(text, pos):
+    """A "1 = 0" whose proof is the computation displayed directly under it is not C23
+    (scanner change 2026-11-26, Q525B: t00A04 aux_point_nonzero prints "We have 1 = 0."
+    then 1 = e(e^{-1}(1)) = e(0) = 0 with a reason on every step, tagged (6), then
+    "This is absurd, by (6).").  Exempt only when every row after the first carries a
+    reason and the absurdity cites the display's own tag.  A bare or partly justified
+    "1 = 0" stays marked."""
+    m = C23_PROVED_BY_DISPLAY.match(text, pos)
+    if not m:
+        return False
+    rows = [r.strip() for r in align_rows(m.group("rows")) if r.strip()]
+    return len(rows) >= 2 and all("&& \\text{" in r for r in rows[1:])
+
+
 def class_intervals(text, declaration=None):
     found = collections.defaultdict(list)
     for cls in SITES.get(declaration, ()):
@@ -161,6 +180,8 @@ def class_intervals(text, declaration=None):
     for cls, rx in FAMILY.items():
         for hit in rx.finditer(text):
             if cls == "C22" and c22_in_impossible_case(text, hit.start()):
+                continue
+            if cls == "C23" and c23_proved_by_display(text, hit.start()):
                 continue
             found[cls].append(paragraph(text, hit.start(), hit.end()))
     for word in hits(text):
