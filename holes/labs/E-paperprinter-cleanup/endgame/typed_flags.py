@@ -25,6 +25,7 @@ import paper_walk_test as T  # noqa: E402  (corpus root and entity provider)
 from mfuton.lean.blueprint_render.paper_proof_walk import term_walk as W  # noqa: E402
 
 CLOSER = "the hypotheses being contradictory"
+FACT_REASON = "— by contradiction."
 CONTRADICTION_HEADS = {"Decidable.byContradiction", "Classical.byContradiction"}
 
 
@@ -50,13 +51,51 @@ def r3_shape(value):
     return "R3" if 0 in W._collect_outer_bvars(W._expr.binder_body(lam)) else False
 
 
+def refutation_binders(value):
+    """Binder kinds of every byContradiction term in ``value`` ("author" / "tactic").
+
+    A tactic's own refutation (omega, linarith, ...) binds a hygienic name; an author's
+    `by_contra h` binds h.  Does not descend into a byContradiction's argument."""
+    kinds, stack, seen = [], [value], set()
+    while stack:
+        e = stack.pop()
+        if e is None or id(e) in seen:
+            continue
+        seen.add(id(e))
+        head, args = W._spine(W._helpers._strip_mdata(e))
+        if W._expr.ctor_of(head) == "const" and W._expr.const_name(head) in CONTRADICTION_HEADS:
+            lam = W._helpers._strip_mdata(args[-1][0]) if args else None
+            internal = (lam is not None and W._expr.ctor_of(lam) == "lam"
+                        and W._helpers._is_internal(W._expr.binder_name(lam) or ""))
+            kinds.append("tactic" if internal else "author")
+            continue
+        stack.extend(e.arguments)
+        if e.function is not None:
+            stack.append(e.function)
+    return kinds
+
+
 def main(pattern, out_path):
     flagged = checked = errors = 0
     with open(out_path, "w", encoding="utf-8") as out:
         for path in sorted(glob.glob(pattern)):
             for line in open(path, encoding="utf-8"):
                 row = json.loads(line)
-                if CLOSER not in (row.get("proof") or ""):
+                proof = row.get("proof") or ""
+                if FACT_REASON in proof:
+                    # R2 (claude-20, 2026-11-26): "— by contradiction." on an ordinary fact
+                    # that a decision procedure proved.  Flag a record only when every
+                    # refutation in it is a tactic's own (lower bound: mixed records skipped).
+                    try:
+                        kinds = refutation_binders(constants(row["module"])[row["declaration"]].value_expression)
+                    except Exception as ex:
+                        errors += 1
+                        print(f"ERROR {row['module']} {row['declaration']}: {str(ex)[:120]}", file=sys.stderr)
+                        kinds = []
+                    if kinds and set(kinds) == {"tactic"}:
+                        out.write(json.dumps({"module": row["module"], "declaration": row["declaration"],
+                                              "class": "R2"}, sort_keys=True) + "\n")
+                if CLOSER not in proof:
                     continue
                 checked += 1
                 try:

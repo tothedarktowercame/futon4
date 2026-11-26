@@ -32,7 +32,7 @@ PALETTE = {
     "P-sufficiency-wall": "#ffd92f", "P-empty-claim": "#e5c494", "P-duplicate-closer": "#b3b3b3",
     "P-nonprop-suffices": "#1b9e77", "P-missing-subproof": "#d95f02", "P-premature-conclusion": "#7570b3",
     "P-opaque-proof": "#e7298a", "P-duplicate-tag": "#66a61e", "P-overexpanded-setup": "#e6ab02",
-    "P-claim-binders-unintroduced": "#a6761d", "R3": "#666666",
+    "P-claim-binders-unintroduced": "#a6761d", "R3": "#666666", "R2": "#8c564b",
 }
 FAMILY = {
     "C1": re.compile(r"distinguish cases on[^.]*\\lor"),
@@ -88,6 +88,9 @@ SITES = load_sites()
 # reported as not measured, never as zero.
 TYPED = {}
 R3_CLOSER = re.compile(r"the hypotheses being contradictory")
+# R2 (claude-20, 2026-11-26): a decision procedure's own refutation (omega, linarith) printed as
+# "— by contradiction." on a fact, or (flag R3-hygienic) as the theorem's contradictory closer.
+R2_LINE = re.compile(r"[^\n]*— by contradiction\.[^\n]*")
 R3_STATED = re.compile(r"for contradiction|Suppose \\\(\\mathop\{\\neg\}|Suppose[^\n]*\\(notin|neq)")
 
 
@@ -205,6 +208,13 @@ def class_intervals(text, declaration=None):
     if TYPED and "R3" in TYPED.get(declaration, ()) and not R3_STATED.search(text):
         for hit in R3_CLOSER.finditer(text):
             found["R3"].append(paragraph(text, hit.start(), hit.end()))
+    if TYPED and "R2" in TYPED.get(declaration, ()):
+        for hit in R2_LINE.finditer(text):
+            if "This is absurd" not in hit.group(0):
+                found["R2"].append(paragraph(text, hit.start(), hit.end()))
+    if TYPED and "R3-hygienic" in TYPED.get(declaration, ()):
+        for hit in R3_CLOSER.finditer(text):
+            found["R2"].append(paragraph(text, hit.start(), hit.end()))
     for start, end in wall_spans(text):
         found["P-sufficiency-wall"].append((start, end))
     for cls, rx in FAMILY.items():
@@ -318,7 +328,7 @@ def main():
     covered = sum(1 for cls in open_classes if cls in PALETTE or cls in ALIAS or cls in NO_INK)
     lines = ["class\tcolor\trecords\tmarked_chars\tpercent_total"]
     for cls in sorted(PALETTE, key=lambda x: (x[0], int(x[1:]) if x[1:].isdigit() else 99, x)):
-        if cls == "R3" and TYPED is None:
+        if cls in ("R2", "R3") and TYPED is None:
             continue  # typed class not measured: no typed-flags.jsonl beside the shards
         lines.append(f"{cls}\t{PALETTE[cls]}\t{class_records[cls]}\t{ink[cls]}\t{(100*ink[cls]/total if total else 0):.6f}")
     lines.extend([

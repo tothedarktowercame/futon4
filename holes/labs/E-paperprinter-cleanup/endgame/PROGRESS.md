@@ -9,9 +9,9 @@
 - Proof errors: 0 at the accepted head. Performance class: closed.
 - N1 (rows with an empty reason): **0 records** at this head, down from 1,035 records at the full-corpus freeze.
 - C4 (blocks with a repeated left side, scanner count): **2 records**.
-- Residual ink (audit surface; 27/37 open-or-unknown classes have markup, extractor precision not yet reviewed): **1.404%** of reader-visible proof-source characters, in 167 records; see `INK.md`.
-- Ink change since `7c3a98939b654dc560a91357e25189a08a5ec1f8`: union +1.337 points; P-sufficiency-wall -1 records.
-- Largest colors: P-claim-binders-unintroduced 1.28%, R3 0.06%, P-missing-subproof 0.03%, C4 0.03%.
+- Residual ink (audit surface; 27/37 open-or-unknown classes have markup, extractor precision not yet reviewed): **2.592%** of reader-visible proof-source characters, in 280 records; see `INK.md`.
+- Ink change since `7c3a98939b654dc560a91357e25189a08a5ec1f8`: union +2.526 points; P-sufficiency-wall -1 records.
+- Largest colors: P-claim-binders-unintroduced 1.28%, R2 1.21%, R3 0.06%, P-missing-subproof 0.03%.
 
 ## Work now
 
