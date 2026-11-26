@@ -5,13 +5,13 @@
 ## Finish line
 
 - Frozen classes: **67**: 30 done, 2 not defects, 30 open, 5 unknown.
-- Corpus gate: 8,778 records; accepted head with a full census: `1f5b2b02`.
+- Corpus gate: 8,778 records; accepted head with a full census: `002410f7`.
 - Proof errors: 0 at the accepted head. Performance class: closed.
-- N1 (rows with an empty reason): **8 records** at this head, down from 1,035 records at the full-corpus freeze.
-- C4 (blocks with a repeated left side, scanner count): **6 records**.
-- Residual ink (audit surface; 25/35 open-or-unknown classes have markup, extractor precision not yet reviewed): **0.283%** of reader-visible proof-source characters, in 41 records; see `INK.md`.
-- Ink change since `2adadb38`: union -0.017 points; C4 -5 records.
-- Largest colors: P-sufficiency-wall 0.08%, C4 0.08%, N1 0.07%, P-missing-subproof 0.03%.
+- N1 (rows with an empty reason): **5 records** at this head, down from 1,035 records at the full-corpus freeze.
+- C4 (blocks with a repeated left side, scanner count): **3 records**.
+- Residual ink (audit surface; 25/35 open-or-unknown classes have markup, extractor precision not yet reviewed): **0.225%** of reader-visible proof-source characters, in 35 records; see `INK.md`.
+- Ink change since `1f5b2b02`: union -0.058 points; C4 -3 records, N1 -3 records.
+- Largest colors: P-sufficiency-wall 0.08%, N1 0.05%, C4 0.04%, P-missing-subproof 0.03%.
 
 ## Work now
 
