@@ -33,6 +33,7 @@
 - WAITING `Q456` (integrate, C4), after `Q447`: STOPPED at Step 0 (zai-15): a98A07 #31 row 3 carries a content-free rewrite_source+named_citation; redirect (a) discount or (b) a95J03 only pending. Q456-REPORT.md.
 - WAITING `Q484B` (implement, C4), after `Q484`: zai-16; packet ~/notes/claude-16/coord/Q484B.md; invoke-1795623401812-29087-32d3a28b; returned 3df1415b+912d9af0: on the census library Q484 already resolves the instance, so Q484B is only a fallback; held until q278 (cand7 = Q481+Q484) shows whether a98A07 is cut without it.
 - WAITING `Q526B` (implement, C23), after `Q526`: claude-21 when Q528B lands.
+- WAITING `Q522P` (integrate, test-only), after `q299`: claude-16.
 
 ## Backlog understanding
 
