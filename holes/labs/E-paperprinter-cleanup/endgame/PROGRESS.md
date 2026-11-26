@@ -22,7 +22,6 @@
 - ACTIVE `Q512D` (implement, P-sufficiency-wall): claude-15; packet ~/notes/claude-16/coord/Q512D.md; invoke-1795699532852-29447-ab4140a5.
 - ACTIVE `Q514` (discover+fix, P-sufficiency-wall): claude-18 (new helper seat, Joe 2026-11-26); packet ~/notes/claude-16/coord/Q514.md + common12.md; invoke-1795699724533-29458-b6cf8016.
 - ACTIVE `Q515` (discover+fix, P-sufficiency-wall): claude-19 (new helper seat, Joe 2026-11-26); packet ~/notes/claude-16/coord/Q515.md + common12.md; invoke-1795699730337-29459-01501108.
-- ACTIVE `Q516` (discover+fix, C22): claude-20 (new helper seat, Joe 2026-11-26); packet ~/notes/claude-16/coord/Q516.md + common12.md; invoke-1795699736063-29460-3d0d6f5d.
 - ACTIVE `Q517` (discover+fix, C23): claude-21 (new helper seat, Joe 2026-11-26); packet ~/notes/claude-16/coord/Q517.md + common12.md; invoke-1795699741754-29461-338e26ee.
 - ACTIVE `Q518` (discover+fix, P-sufficiency-wall): claude-22 (new helper seat, Joe 2026-11-26); packet ~/notes/claude-16/coord/Q518.md + common12.md; invoke-1795699747553-29462-026e7623.
 - ACTIVE `Q519` (discover+fix, P-sufficiency-wall): claude-23 (new helper seat, Joe 2026-11-26); packet ~/notes/claude-16/coord/Q519.md + common12.md; invoke-1795699753473-29463-96abdabf.

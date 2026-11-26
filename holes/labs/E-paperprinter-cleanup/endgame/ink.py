@@ -129,6 +129,28 @@ def merge(intervals):
     return out
 
 
+IMPOSSIBLE_CASE = re.compile(r"^\\item Case \d+: .*, which is impossible\.$")
+
+
+def c22_in_impossible_case(text, pos):
+    """A "0 > 0" that is the hypothesis of a case the page itself rules out is not C22
+    (scanner change 2026-11-26, Q516: t99A02 treeContraction_resp unfolds a disjunction
+    whose second case carries 0 < t at t = 0; "Case 2: ... and 0 > 0, which is impossible.").
+    Exempt: the hit's own line is such a case line, or it is the "We distinguish" line
+    that lists the cases and a later line of the same paragraph is such a case line
+    carrying a C22 match.  A "0 > 0" stated as a row, goal or fact stays marked."""
+    left = text.rfind("\n", 0, pos) + 1
+    right = text.find("\n", pos)
+    line = text[left:right if right >= 0 else len(text)]
+    if IMPOSSIBLE_CASE.match(line):
+        return True
+    if line.startswith("\\item We distinguish "):
+        _start, end = paragraph(text, pos, pos)
+        rest = text[(right if right >= 0 else len(text)):end].split("\n")
+        return any(IMPOSSIBLE_CASE.match(l) and FAMILY["C22"].search(l) for l in rest)
+    return False
+
+
 def class_intervals(text, declaration=None):
     found = collections.defaultdict(list)
     for cls in SITES.get(declaration, ()):
@@ -138,6 +160,8 @@ def class_intervals(text, declaration=None):
         found["P-sufficiency-wall"].append((start, end))
     for cls, rx in FAMILY.items():
         for hit in rx.finditer(text):
+            if cls == "C22" and c22_in_impossible_case(text, hit.start()):
+                continue
             found[cls].append(paragraph(text, hit.start(), hit.end()))
     for word in hits(text):
         if LOCAL.match(word):
