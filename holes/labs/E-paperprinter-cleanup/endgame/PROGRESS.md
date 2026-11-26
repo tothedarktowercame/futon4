@@ -32,6 +32,7 @@
 - WAITING `TB015` (observe, P-sufficiency-end), after `-`: claude-16 observe at 4fe695ba + census q258 ee47b461: STOP rule hit (>10): 468 records whose proof ends 'Hence P.' / 'It suffices to show Q.' (308 with P==Q verbatim, 160 differ; 104+138 modules); belled claude-7 (overlaps open class P-sufficiency-end, 849 records; Q385 sample); notes ~/notes/claude-16/tail/TB015-observe.md.
 - WAITING `Q456` (integrate, C4), after `Q447`: STOPPED at Step 0 (zai-15): a98A07 #31 row 3 carries a content-free rewrite_source+named_citation; redirect (a) discount or (b) a95J03 only pending. Q456-REPORT.md.
 - WAITING `Q484B` (implement, C4), after `Q484`: zai-16; packet ~/notes/claude-16/coord/Q484B.md; invoke-1795623401812-29087-32d3a28b; returned 3df1415b+912d9af0: on the census library Q484 already resolves the instance, so Q484B is only a fallback; held until q278 (cand7 = Q481+Q484) shows whether a98A07 is cut without it.
+- WAITING `Q526B` (implement, C23), after `Q526`: claude-21 when Q528B lands.
 
 ## Backlog understanding
 
