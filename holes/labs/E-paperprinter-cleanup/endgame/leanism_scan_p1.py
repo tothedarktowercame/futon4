@@ -6,7 +6,24 @@ import json
 import re
 import sys
 
+def _drop_href_targets(b):
+    """\\href{target}{text} shows only its text; the URL target is not on the page
+    (scanner change 2026-11-26, Q521: a95A07's "by Lean's convention x/0 = 0" gloss
+    links to a URL whose host read as a dotted Lean word)."""
+    out, i = [], 0
+    while True:
+        j = b.find("\\href{", i)
+        if j < 0:
+            out.append(b[i:])
+            return "".join(out)
+        out.append(b[i:j]); k = j + 6; d = 1
+        while d:
+            d += {"{": 1, "}": -1}.get(b[k], 0); k += 1
+        i = k  # resume at the {text} group, which stays visible
+
+
 def visible(b):
+    b = _drop_href_targets(b)
     out, i = [], 0
     while True:
         j = b.find("\\leanref{", i)
