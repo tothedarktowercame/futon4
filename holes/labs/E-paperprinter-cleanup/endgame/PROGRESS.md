@@ -5,13 +5,13 @@
 ## Finish line
 
 - Frozen classes: **67**: 30 done, 2 not defects, 30 open, 5 unknown.
-- Corpus gate: 8,778 records; accepted head with a full census: `7df1bdcfdeeae0912cf463985749f1bffbe8a64e`.
+- Corpus gate: 8,778 records; accepted head with a full census: `7c3a98939b654dc560a91357e25189a08a5ec1f8`.
 - Proof errors: 0 at the accepted head. Performance class: closed.
 - N1 (rows with an empty reason): **0 records** at this head, down from 1,035 records at the full-corpus freeze.
 - C4 (blocks with a repeated left side, scanner count): **2 records**.
-- Residual ink (audit surface; 25/35 open-or-unknown classes have markup, extractor precision not yet reviewed): **0.165%** of reader-visible proof-source characters, in 27 records; see `INK.md`.
-- Ink change since `a7bebf09f3ae1029246ec875c929b401f59edace`: union -0.009 points; C4 -2 records.
-- Largest colors: P-sufficiency-wall 0.08%, P-missing-subproof 0.03%, C4 0.03%, C23 0.01%.
+- Residual ink (audit surface; 25/35 open-or-unknown classes have markup, extractor precision not yet reviewed): **0.066%** of reader-visible proof-source characters, in 6 records; see `INK.md`.
+- Ink change since `7df1bdcfdeeae0912cf463985749f1bffbe8a64e`: union -0.099 points; C7 -1 records, C16 -2 records, C22 -1 records, C23 -5 records, P-sufficiency-wall -12 records.
+- Largest colors: P-missing-subproof 0.03%, C4 0.03%, C23 0.00%, P-sufficiency-wall 0.00%.
 
 ## Work now
 
@@ -19,20 +19,6 @@
 - ACTIVE `TB003` (data, N15): claude-16 97d9b4ac on a31673ee; the five pass (166 s).
 - ACTIVE `Q465b` (integrate, C4): zai-19; packet ~/notes/claude-16/coord/Q465b.md; invoke-1795574693142-28738-d3f11679; zai-19 timed out uncommitted; finished by claude-16 as bedbf907 (claude16/q465b): guard double-counted and keyed on per-row sources, now local facts only; awaiting census; fix 1a09d06e: skip chains Q452 rereads; candidate 4a5953cd, census q264; census q264 (cand 4a5953cd): a96A04/b97J03 lost their only "by Lemma 9/3" rows (break in chain read as return) -> claude-16 fix 4c72f3d1, pins db5d7271 on claude16/cand; census q266.
 - ACTIVE `Q471A` (integrate, C4): zai-19; packet ~/notes/claude-16/coord/Q471A.md; invoke-1795577819330-28825-a014504d; base bedbf907; returned 217554b4 (1 decl, t95A01); in candidate claude16/cand 4a5953cd with Q465b + fix 1a09d06e (Q465b cut m02A02 probe_coeff conclusion); census q264.
-- q295 unit stage on cand30: 2 failed (q475a/q475b quote b00J04 tags Q522 renumbered; src fine) -> cand30b 2eb957c6 = cand30 + pin update (src identical), 12 passed; accept cand30b on q295 shards if clean.
-- q295 done (8778; unit 2 stale pins): citations statement-resolved: none lost; ink UNION 12 records; vs 7df1bdcf GONE walls 9, C23 5, C22 1, C7 1; NEW C7+C17 b00J04 (raw nonZeroDivisorsLeft from Q522) -> not accepted; display rule on cand30b 8cd421b2.
-- CENSUS q296 on cand31 20658e10 (= 3334deb5 + cand30b 8cd421b2) launched 16:10, bg-1795709436149-246.
-- q296 done (8778; unit 1 failed: q478c m94A03 last line, from Q519): ink UNION 5, no NEW (GONE vs 7df1bdcf: walls 13, C23 5, C16 2, C22 1, C7 1; a96A07 C23 moved). NOT ACCEPTED: citations lost. Q517B (bisect d49f2ae7) drops 'This is absurd, by (n)' closers in m01j06 (x2), a97A05 psi_analytic (now 'Hence ... by linear arithmetic'), t01A01 RP1 continuous; Q519 (bisect 00ce74b2) drops 'The expression is unchanged, by (6), since ...' in a01J06 summable_of_linear_count. Other citres flags false (multi-ref lists, tag renumbering, a01A04 tag moved to a uIcc supposition). -> Q517C (claude-21, invoke-1795714313560-29489-cab3c459, park-f2774d85), Q519B (claude-23, invoke-1795714314059-29490-e8bec30b, park-bf97ebf9).
-- BUILT `cand32` 7c3a9893 = cf21b821 (cand30 + Q520 + Q514) + Q523 040c535b + Q518B 55bceae9 + cand30b 8cd421b2 (test-append conflicts only). CENSUS q297 launched 17:31, bg-1795714284119-247, park-12876d37.
-- BUILT `cand33` 13f55912 = cand32 7c3a9893 + Q519B 9cb14e7d (Q514/Q519 conflict resolution carried over from 00ce74b2) + Q517C 75b2bc0f; targeted (q517/q519/q478/q419/q452/q465b/q514/q520/q523/q518/q475/q522) 56 passed. Census q298 after q297 (park-03c496d3).
-- BUILT `cand31` 20658e10 (bc6a181a + Q517B 0a776c21 + Q518B 55bceae9; bc6a181a targeted 36 passed, d49f2ae7 35 passed) = cand30 b8d383a0 + Q520 67ec8058 + Q514 b5c37dda + Q519 48ee0f75 + Q523 040c535b (conflicts: token refresh in _annotate_rewrites keeps value-walk(fact)/conjunct-arm/hypothesis-transport; term_walk tokens merged); targeted tests bg-1795704344262-239 -> /tmp/cand31-targeted.log; park-b7a94d17; census after q295.
-- QUEUED `Q514` b5c37dda (reviewed clean, for cand31; t99A02 lineSphereTree wall expected to leave) (discover+fix, P-sufficiency-wall): claude-18 (new helper seat, Joe 2026-11-26); packet ~/notes/claude-16/coord/Q514.md + common12.md; invoke-1795699724533-29458-b6cf8016.
-- ACTIVE `Q517B` (implement, C23): claude-21; packet ~/notes/claude-16/coord/Q517B.md; invoke-1795703932446-29485-6ac1cebb; park-753d6334.
-- ACTIVE `Q518` (discover+fix, P-sufficiency-wall): claude-22 (new helper seat, Joe 2026-11-26); packet ~/notes/claude-16/coord/Q518.md + common12.md; invoke-1795699747553-29462-026e7623.
-- QUEUED `Q519` 48ee0f75 (reviewed clean, for cand31; t01A03 wall expected to leave) (discover+fix, P-sufficiency-wall): claude-23 (new helper seat, Joe 2026-11-26); packet ~/notes/claude-16/coord/Q519.md + common12.md; invoke-1795699753473-29463-96abdabf.
-- QUEUED `Q520` 67ec8058 (reviewed clean, for cand31; C16 ×2 expected to leave) (discover+fix, C16): claude-24 (new helper seat, Joe 2026-11-26); packet ~/notes/claude-16/coord/Q520.md + common12.md; invoke-1795699759462-29464-432c21f6.
-- QUEUED `Q523` 040c535b (reviewed clean, for cand31; t02A06 wall expected to leave) (discover+fix, P-sufficiency-wall): claude-20; packet ~/notes/claude-16/coord/Q523.md + common12.md; invoke-1795699900856-29468-88a147b8.
-- ACTIVE `Q525` (discover+fix, C23, P-sufficiency-wall): zai-16 (Zai month at 93%); packet ~/notes/claude-16/coord/Q525.md + common12.md; invoke-1795700346191-29477-ab3b1e79; park-4e4432fd.
 - WAITING `Q241` (integrate, C4), after `Q349`: HELD, not in flight (status corrected 2026-11-24). codex-2 c3bc1e97 (2264 tests; 3 t00A05 records change), reviewed and HELD, not for batch 6 as it stands: the partition by typed branch path is right, but the result is ten context-free displays printed after the case prose (both "= 1+3 since the condition holds" and "= 5-(5-s) since the condition fails" for one table), no easier to read than the one mixed chain; it is merged only together with Q248, which places each branch chain inside its case; authored on 91d38c1e (b0a112b7 = 91d38c1e + one notation rule); base column is the head it would be merged onto (94c86724).
 - WAITING `Q206` (integrate, P-sufficiency-wall), after `Q256`: codex-13 stopped without a commit (draft in worktree codex-13-Q206, report Q206-REPORT.md): the loop guard keeps the captured rows (2250 tests) but in 4 modules 19 records change and at least 6 newly printed rows are source-less bridges; redo after Q245 decides how source-less and mixed bridges are emitted.
 - WAITING `Q248` (integrate, P-sufficiency-wall), after `Q256`: to write after Q245 (row classes decide display vs sentence); authored on top of Q241 c3bc1e97 so that each branch-local chain is placed in its case; evidence ~/notes/claude-7/raw-names-480/proofs/Q208-census/.
