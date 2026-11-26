@@ -32,7 +32,7 @@ PALETTE = {
     "P-sufficiency-wall": "#ffd92f", "P-empty-claim": "#e5c494", "P-duplicate-closer": "#b3b3b3",
     "P-nonprop-suffices": "#1b9e77", "P-missing-subproof": "#d95f02", "P-premature-conclusion": "#7570b3",
     "P-opaque-proof": "#e7298a", "P-duplicate-tag": "#66a61e", "P-overexpanded-setup": "#e6ab02",
-    "P-claim-binders-unintroduced": "#a6761d",
+    "P-claim-binders-unintroduced": "#a6761d", "R3": "#666666",
 }
 FAMILY = {
     "C1": re.compile(r"distinguish cases on[^.]*\\lor"),
@@ -80,6 +80,27 @@ def load_sites():
 
 
 SITES = load_sites()
+
+# Typed classes: the census text cannot decide them, so typed_flags.py writes
+# typed-flags.jsonl beside the shards (one row per flagged declaration) and ink.py adds the
+# text half.  R3 (claude-22, 2026-11-26): `by_contra h` proof whose page closes "the hypotheses
+# being contradictory" with no supposition sentence.  Without a flags file the class is
+# reported as not measured, never as zero.
+TYPED = {}
+R3_CLOSER = re.compile(r"the hypotheses being contradictory")
+R3_STATED = re.compile(r"for contradiction|Suppose \\\(\\mathop\{\\neg\}|Suppose[^\n]*\\(notin|neq)")
+
+
+def load_typed(pattern):
+    dirs = {os.path.dirname(os.path.realpath(p)) for p in glob.glob(pattern)}
+    flags = {}
+    for d in dirs:
+        path = os.path.join(d, "typed-flags.jsonl")
+        if os.path.exists(path):
+            for line in open(path, encoding="utf-8"):
+                r = json.loads(line)
+                flags.setdefault(r["declaration"], set()).add(r["class"])
+    return flags if flags or any(os.path.exists(os.path.join(d, "typed-flags.jsonl")) for d in dirs) else None
 
 
 def wall_spans(text):
@@ -181,6 +202,9 @@ def class_intervals(text, declaration=None):
     for cls in SITES.get(declaration, ()):
         if text:
             found[cls].append((0, len(text)))  # known site only: the whole proof is colored
+    if TYPED and "R3" in TYPED.get(declaration, ()) and not R3_STATED.search(text):
+        for hit in R3_CLOSER.finditer(text):
+            found["R3"].append(paragraph(text, hit.start(), hit.end()))
     for start, end in wall_spans(text):
         found["P-sufficiency-wall"].append((start, end))
     for cls, rx in FAMILY.items():
@@ -237,6 +261,8 @@ def main():
     ap.add_argument("--summary")
     ap.add_argument("--html")
     args = ap.parse_args()
+    global TYPED
+    TYPED = load_typed(args.pattern)
     total = records = marked_records = 0
     ink = collections.Counter()
     class_records = collections.Counter()
@@ -292,6 +318,8 @@ def main():
     covered = sum(1 for cls in open_classes if cls in PALETTE or cls in ALIAS or cls in NO_INK)
     lines = ["class\tcolor\trecords\tmarked_chars\tpercent_total"]
     for cls in sorted(PALETTE, key=lambda x: (x[0], int(x[1:]) if x[1:].isdigit() else 99, x)):
+        if cls == "R3" and TYPED is None:
+            continue  # typed class not measured: no typed-flags.jsonl beside the shards
         lines.append(f"{cls}\t{PALETTE[cls]}\t{class_records[cls]}\t{ink[cls]}\t{(100*ink[cls]/total if total else 0):.6f}")
     lines.extend([
         f"UNION\t#000000\t{marked_records}\t{union_ink}\t{(100*union_ink/total if total else 0):.6f}",
