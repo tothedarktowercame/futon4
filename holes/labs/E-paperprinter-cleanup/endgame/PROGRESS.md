@@ -28,6 +28,7 @@
 - ACTIVE `Q520` (discover+fix, C16): claude-24 (new helper seat, Joe 2026-11-26); packet ~/notes/claude-16/coord/Q520.md + common12.md; invoke-1795699759462-29464-432c21f6.
 - ACTIVE `Q522` (discover+fix, C23): claude-26 (new helper seat, Joe 2026-11-26); packet ~/notes/claude-16/coord/Q522.md + common12.md; invoke-1795699771943-29466-178ab826.
 - ACTIVE `Q523` (discover+fix, P-sufficiency-wall): claude-20; packet ~/notes/claude-16/coord/Q523.md + common12.md; invoke-1795699900856-29468-88a147b8.
+- ACTIVE `Q524` (discover+fix, C4, P-missing-subproof): claude-25; packet ~/notes/claude-16/coord/Q524.md + common12.md; invoke-1795700202339-29474-167ef07e; park-e403c89b.
 - WAITING `Q241` (integrate, C4), after `Q349`: HELD, not in flight (status corrected 2026-11-24). codex-2 c3bc1e97 (2264 tests; 3 t00A05 records change), reviewed and HELD, not for batch 6 as it stands: the partition by typed branch path is right, but the result is ten context-free displays printed after the case prose (both "= 1+3 since the condition holds" and "= 5-(5-s) since the condition fails" for one table), no easier to read than the one mixed chain; it is merged only together with Q248, which places each branch chain inside its case; authored on 91d38c1e (b0a112b7 = 91d38c1e + one notation rule); base column is the head it would be merged onto (94c86724).
 - WAITING `Q206` (integrate, P-sufficiency-wall), after `Q256`: codex-13 stopped without a commit (draft in worktree codex-13-Q206, report Q206-REPORT.md): the loop guard keeps the captured rows (2250 tests) but in 4 modules 19 records change and at least 6 newly printed rows are source-less bridges; redo after Q245 decides how source-less and mixed bridges are emitted.
 - WAITING `Q248` (integrate, P-sufficiency-wall), after `Q256`: to write after Q245 (row classes decide display vs sentence); authored on top of Q241 c3bc1e97 so that each branch-local chain is placed in its case; evidence ~/notes/claude-7/raw-names-480/proofs/Q208-census/.
@@ -44,8 +45,8 @@
 
 ## Backlog understanding
 
-- Observation coverage: **35/35** open or unknown classes.
-- Classification state: classified 4, classified (Q183) 1, classified (Q190, Q192) 1, classified (Q216) 2, classified (Q369) 1, classified (Q371) 1, classified (Q385) 1, classified (Q413b, Q422) 1, classified by position (claude-7 from renders; Q182/Q187 typed traces) 1, partly-classified 6, reader-reported; not typed 3, reader-reported; one site 2, stale-observation 3, unclassified 6, unknown 2.
+- Observation coverage: **36/35** open or unknown classes.
+- Classification state: classified 4, classified (Q183) 1, classified (Q190, Q192) 1, classified (Q216) 2, classified (Q369) 1, classified (Q371) 1, classified (Q385) 1, classified (Q413b, Q422) 1, classified by position (claude-7 from renders; Q182/Q187 typed traces) 1, not yet classified 1, partly-classified 6, reader-reported; not typed 3, reader-reported; one site 2, stale-observation 3, unclassified 6, unknown 2.
 - Historical grammar observations: falsified 7, proposed 2, superseded 1, supported 4.
 
 ## Next branches to inspect
