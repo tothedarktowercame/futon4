@@ -22,7 +22,7 @@
 - QUEUED `Q514` b5c37dda (reviewed clean, for cand31; t99A02 lineSphereTree wall expected to leave) (discover+fix, P-sufficiency-wall): claude-18 (new helper seat, Joe 2026-11-26); packet ~/notes/claude-16/coord/Q514.md + common12.md; invoke-1795699724533-29458-b6cf8016.
 - ACTIVE `Q517B` (implement, C23): claude-21; packet ~/notes/claude-16/coord/Q517B.md; invoke-1795703932446-29485-6ac1cebb; park-753d6334.
 - ACTIVE `Q518` (discover+fix, P-sufficiency-wall): claude-22 (new helper seat, Joe 2026-11-26); packet ~/notes/claude-16/coord/Q518.md + common12.md; invoke-1795699747553-29462-026e7623.
-- ACTIVE `Q519` (discover+fix, P-sufficiency-wall): claude-23 (new helper seat, Joe 2026-11-26); packet ~/notes/claude-16/coord/Q519.md + common12.md; invoke-1795699753473-29463-96abdabf.
+- QUEUED `Q519` 48ee0f75 (reviewed clean, for cand31; t01A03 wall expected to leave) (discover+fix, P-sufficiency-wall): claude-23 (new helper seat, Joe 2026-11-26); packet ~/notes/claude-16/coord/Q519.md + common12.md; invoke-1795699753473-29463-96abdabf.
 - QUEUED `Q520` 67ec8058 (reviewed clean, for cand31; C16 ×2 expected to leave) (discover+fix, C16): claude-24 (new helper seat, Joe 2026-11-26); packet ~/notes/claude-16/coord/Q520.md + common12.md; invoke-1795699759462-29464-432c21f6.
 - ACTIVE `Q523` (discover+fix, P-sufficiency-wall): claude-20; packet ~/notes/claude-16/coord/Q523.md + common12.md; invoke-1795699900856-29468-88a147b8.
 - ACTIVE `Q525` (discover+fix, C23, P-sufficiency-wall): zai-16 (Zai month at 93%); packet ~/notes/claude-16/coord/Q525.md + common12.md; invoke-1795700346191-29477-ab3b1e79; park-4e4432fd.
