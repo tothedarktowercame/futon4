@@ -26,7 +26,6 @@
 - ACTIVE `Q518` (discover+fix, P-sufficiency-wall): claude-22 (new helper seat, Joe 2026-11-26); packet ~/notes/claude-16/coord/Q518.md + common12.md; invoke-1795699747553-29462-026e7623.
 - ACTIVE `Q519` (discover+fix, P-sufficiency-wall): claude-23 (new helper seat, Joe 2026-11-26); packet ~/notes/claude-16/coord/Q519.md + common12.md; invoke-1795699753473-29463-96abdabf.
 - ACTIVE `Q520` (discover+fix, C16): claude-24 (new helper seat, Joe 2026-11-26); packet ~/notes/claude-16/coord/Q520.md + common12.md; invoke-1795699759462-29464-432c21f6.
-- ACTIVE `Q522` (discover+fix, C23): claude-26 (new helper seat, Joe 2026-11-26); packet ~/notes/claude-16/coord/Q522.md + common12.md; invoke-1795699771943-29466-178ab826.
 - ACTIVE `Q523` (discover+fix, P-sufficiency-wall): claude-20; packet ~/notes/claude-16/coord/Q523.md + common12.md; invoke-1795699900856-29468-88a147b8.
 - ACTIVE `Q524` (discover+fix, C4, P-missing-subproof): claude-25; packet ~/notes/claude-16/coord/Q524.md + common12.md; invoke-1795700202339-29474-167ef07e; park-e403c89b.
 - ACTIVE `Q525` (discover+fix, C23, P-sufficiency-wall): zai-16 (Zai month at 93%); packet ~/notes/claude-16/coord/Q525.md + common12.md; invoke-1795700346191-29477-ab3b1e79; park-4e4432fd.
