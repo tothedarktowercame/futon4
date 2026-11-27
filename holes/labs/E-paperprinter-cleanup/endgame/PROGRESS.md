@@ -4,14 +4,14 @@
 
 ## Finish line
 
-- Frozen classes: **70**: 30 done, 2 not defects, 33 open, 5 unknown.
+- Frozen classes: **71**: 30 done, 2 not defects, 34 open, 5 unknown.
 - Corpus gate: 8,778 records; accepted head with a full census: `f5aa001f`.
 - Proof errors: 0 at the accepted head. Performance class: closed.
 - N1 (rows with an empty reason): **0 records** at this head, down from 1,035 records at the full-corpus freeze.
 - C4 (blocks with a repeated left side, scanner count): **0 records**.
-- Residual ink (audit surface; 28/38 open-or-unknown classes have markup, extractor precision not yet reviewed): **1.299%** of reader-visible proof-source characters, in 108 records; see `INK.md`.
-- Ink change since `13f559121536e3d8cbbfa1c237d82033155c3f1b`: union -1.294 points; C4 -2 records, P-claim-binders-unintroduced -3 records, R2 -115 records, R3 -63 records.
-- Largest colors: P-claim-binders-unintroduced 1.26%, P-missing-subproof 0.03%, C23 0.01%.
+- Residual ink (audit surface; 29/39 open-or-unknown classes have markup, extractor precision not yet reviewed): **1.604%** of reader-visible proof-source characters, in 178 records; see `INK.md`.
+- Ink change since `13f559121536e3d8cbbfa1c237d82033155c3f1b`: union -0.988 points; C4 -2 records, P-claim-binders-unintroduced -3 records, R2 -115 records, R3 -63 records.
+- Largest colors: P-claim-binders-unintroduced 1.26%, P-second-without-first 0.31%, P-missing-subproof 0.03%, C23 0.01%.
 
 ## Work now
 
@@ -36,7 +36,7 @@
 
 ## Backlog understanding
 
-- Observation coverage: **36/38** open or unknown classes.
+- Observation coverage: **36/39** open or unknown classes.
 - Classification state: classified 4, classified (Q183) 1, classified (Q190, Q192) 1, classified (Q216) 2, classified (Q369) 1, classified (Q371) 1, classified (Q385) 1, classified (Q413b, Q422) 1, classified by position (claude-7 from renders; Q182/Q187 typed traces) 1, not yet classified 1, partly-classified 6, reader-reported; not typed 3, reader-reported; one site 2, stale-observation 3, unclassified 6, unknown 2.
 - Historical grammar observations: falsified 7, proposed 2, superseded 1, supported 4.
 

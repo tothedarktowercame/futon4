@@ -33,6 +33,7 @@ PALETTE = {
     "P-nonprop-suffices": "#1b9e77", "P-missing-subproof": "#d95f02", "P-premature-conclusion": "#7570b3",
     "P-opaque-proof": "#e7298a", "P-duplicate-tag": "#66a61e", "P-overexpanded-setup": "#e6ab02",
     "P-claim-binders-unintroduced": "#a6761d", "R3": "#666666", "R2": "#8c564b",
+    "P-second-without-first": "#b15928",
 }
 FAMILY = {
     "C1": re.compile(r"distinguish cases on[^.]*\\lor"),
@@ -200,6 +201,35 @@ def c23_proved_by_display(text, pos):
     return len(rows) >= 2 and all("&& \\text{" in r for r in rows[1:])
 
 
+def second_without_first(text):
+    """Spans of an item that a later "Second," continues although it is not "First," (R1S, claude-20
+    2026-11-27: a conjunct proved by rewriting prints only "It suffices to show ..." and never names
+    itself as the first part; 89 lines / 74 records at q301).  Lists separated only by blank lines are
+    one list, because each part opens its own itemize."""
+    out, depth, prev, closed, last, pos = [], 0, {}, {}, "", 0
+    for ln in text.split("\n"):
+        start, pos = pos, pos + len(ln) + 1
+        s = ln.strip()
+        if not s:
+            continue
+        if s.startswith("\\begin{itemize}"):
+            depth += 1
+            prev[depth] = closed.get(depth) if last.startswith("\\end{itemize}") else None
+        elif s.startswith("\\end{itemize}"):
+            closed[depth] = prev.pop(depth, None)
+            depth -= 1
+        elif s.startswith("\\item "):
+            body = s[6:]
+            p = prev.get(depth)
+            if body.startswith("Second,") and p is not None and not p[0].startswith(("First,", "Second,")):
+                out.append((p[1], start + len(ln)))
+            prev[depth] = (body, start)
+        else:
+            closed.clear()
+        last = s
+    return out
+
+
 def class_intervals(text, declaration=None):
     found = collections.defaultdict(list)
     for cls in SITES.get(declaration, ()):
@@ -215,6 +245,8 @@ def class_intervals(text, declaration=None):
     if TYPED and "R3-hygienic" in TYPED.get(declaration, ()):
         for hit in R3_CLOSER.finditer(text):
             found["R2"].append(paragraph(text, hit.start(), hit.end()))
+    for start, end in second_without_first(text):
+        found["P-second-without-first"].append((start, end))
     for start, end in wall_spans(text):
         found["P-sufficiency-wall"].append((start, end))
     for cls, rx in FAMILY.items():

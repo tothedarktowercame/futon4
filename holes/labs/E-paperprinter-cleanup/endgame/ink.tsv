@@ -994,9 +994,10 @@ f5aa001f	P-nonprop-suffices	0	0	0.000000
 f5aa001f	P-opaque-proof	0	0	0.000000
 f5aa001f	P-overexpanded-setup	0	0	0.000000
 f5aa001f	P-premature-conclusion	0	0	0.000000
+f5aa001f	P-second-without-first	74	38990	0.307151
 f5aa001f	P-sufficiency-wall	0	0	0.000000
 f5aa001f	R2	0	0	0.000000
 f5aa001f	R3	0	0	0.000000
-f5aa001f	UNION	108	164855	1.298676
+f5aa001f	UNION	178	203599	1.603889
 f5aa001f	TOTAL	8778	12694080	100.000000
-f5aa001f	COVERAGE	-	28/38 open-or-unknown classes	lower-bound
+f5aa001f	COVERAGE	-	29/39 open-or-unknown classes	lower-bound
