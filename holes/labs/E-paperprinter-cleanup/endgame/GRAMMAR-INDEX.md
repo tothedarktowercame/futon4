@@ -9,7 +9,7 @@ Every name a line uses is introduced on the page before that use (Let, Suppose, 
 - census check: ink P-claim-binders-unintroduced (text; 10/16 false marks at q303, typed check wanted)
 - classes (4): C2 [done], N9 [done], P-lost-instance-hypotheses [open], P-claim-binders-unintroduced [open]
 - packets (10): Q124 (merged), Q395 (done), Q401 (done), Q409 (done), R1 (done), R1F (accepted), R1G (done), R1GA (reviewing), R1GC (reviewing), RC-B1 (dispatched)
-- pinned tests (0): not yet mapped (tests-rules.tsv)
+- pinned tests (27)
 
 ## B2 (binding)
 
@@ -18,7 +18,7 @@ Nothing is introduced or stated that the proof does not use.
 - census check: none at census (P-overexpanded-setup by text)
 - classes (3): P-alias-definition [done], P-definition-restatement [done], P-overexpanded-setup [open]
 - packets (5): Q133 (rejected), Q133r (merged), Q279 (done), Q287 (done), T001 (done)
-- pinned tests (0): not yet mapped (tests-rules.tsv)
+- pinned tests (16)
 
 ## B3 (binding)
 
@@ -27,7 +27,7 @@ A defined name stands for its value from then on; one name names one object.
 - census check: ink P-duplicate-tag
 - classes (3): C10 [done], P-unfolded-local [done], P-duplicate-tag [open]
 - packets (4): Q133k (merged), Q279 (done), Q289 (done), T001 (done)
-- pinned tests (0): not yet mapped (tests-rules.tsv)
+- pinned tests (31)
 
 ## R1 (reference)
 
@@ -36,7 +36,7 @@ Every fact a step uses is cited: by its tag, by a named lemma, or by a named def
 - census check: citcount (count), citres (resolution); ink N1, C21
 - classes (6): C20 [done], C21 [done], N1 [open], N6 [done], P-empty-chain-reason [open], P-unnamed-library-result [unknown]
 - packets (128): CT-readings (done), N1-readings (done), Q106 (merged), Q106b (merged), Q108 (discovery), Q110 (rejected), Q110r (merged), Q111 (discovery), Q112 (merged), Q113 (merged), Q114 (closed), Q114r (discovery), Q115 (discovery), Q117 (closed), Q118 (merged), Q119 (merged), Q151 (merged), Q158 (discovery), Q159 (merged), Q160 (discovery), Q161 (rejected), Q161r (done), Q161r (running), Q162 (discovery), Q164 (done), Q165 (rejected), Q165m (done), Q166 (done), Q166b (done), Q166c (done), Q176 (done), Q177 (done), Q178 (done), Q180 (done), Q181 (done), Q231 (done), Q236 (done), Q270 (done), Q275 (done), Q276 (done), Q277 (done), Q278 (done), Q308 (done), Q309 (done), Q312 (done), Q317 (done), Q318 (done), Q320 (done), Q322 (done), Q323 (done), Q324 (done), Q331 (done), Q334 (rejected), Q335 (done), Q337 (rejected), Q338 (done), Q339 (rejected), Q342 (done), Q353 (done), Q354 (rejected), Q355 (done), Q356 (done), Q358 (rejected), Q360 (done), Q362 (done), Q363 (done), Q364 (done), Q365 (done), Q367 (done), Q368 (done), Q370 (done), Q372 (done), Q373 (done), Q374 (rejected), Q375 (done), Q376 (rejected), Q380 (done), Q381 (done), Q388 (done), Q390 (done), Q392 (done), Q394 (done), Q397 (done), Q399 (done), Q402 (rejected), Q405 (waiting), Q406 (rejected), Q407 (done), Q408 (done), Q411 (waiting), Q412 (done), Q418 (done), Q420 (done), Q427 (done), Q448 (done), Q457 (rejected), Q470 (done), Q470A (done), Q470B (done), Q470C (done), Q474 (done), Q480 (done), Q492 (merged), Q501 (done), Q502 (done), Q503 (stopped), Q503B (stopped), Q504 (done), Q505 (done), Q506 (stopped), Q507 (done), Q508 (done), Q508B (done), Q509 (done), Q509B (done), Q519B (accepted), R1FC (accepted), R6 (done), R6F (regressed), R6F2 (regressed), R6F3 (accepted), R6F4 (accepted), TB002 (done), TB009 (done), TB011 (done), TB014 (done), TB016 (waiting), same-print-typed (rejected)
-- pinned tests (0): not yet mapped (tests-rules.tsv)
+- pinned tests (161)
 
 ## R2 (reference)
 
@@ -45,7 +45,7 @@ The reason given for a step is what justifies it, and points to a fact on the pa
 - census check: citres (resolution); ink C16, C26
 - classes (6): C16 [open], C26 [open], N3 [done], N12 [done], N16 [done], P-misattributed-reason [unknown]
 - packets (30): Q102 (merged), Q128 (merged), Q143 (rejected), Q143r (merged), Q143s (merged), Q143t (merged), Q144 (merged), Q168 (done), Q173 (done), Q220 (done), Q232 (done), Q234 (done), Q235 (done), Q242 (done), Q247 (done), Q249 (done), Q250 (done), Q343 (waiting), Q396 (done), Q413 (done), Q422 (done), Q464 (done), Q520 (accepted), Q94 (merged), Q99 (merged), R7 (accepted-queued), RC-R2 (dispatched), TB001 (done), TB008 (done), TB013 (done)
-- pinned tests (0): not yet mapped (tests-rules.tsv)
+- pinned tests (175)
 
 ## D1 (discourse)
 
@@ -54,7 +54,7 @@ A goal is stated before it is reduced or proved: a part says what it shows, and 
 - census check: ink P-second-without-first, N14, P-nonprop-suffices
 - classes (4): N4 [done], N14 [open], P-nonprop-suffices [unknown], P-second-without-first [open]
 - packets (10): Q104 (merged), Q214 (done), Q280 (done), Q284 (done), Q527B (accepted), R1S (done), R1SF (accepted), R1T (done), R1TP (reviewing), T001 (done)
-- pinned tests (0): not yet mapped (tests-rules.tsv)
+- pinned tests (10)
 
 ## D2 (discourse)
 
@@ -63,7 +63,7 @@ Every announced goal is proved under it and closed exactly once.
 - census check: ink P-empty-claim, P-missing-subproof, P-premature-conclusion, P-opaque-proof, P-duplicate-closer
 - classes (11): C3 [done], N5 [done], P-empty-claim [open], P-duplicate-closer [open], P-missing-subproof [open], P-premature-conclusion [open], P-opaque-proof [open], P-empty-sentence [done], P-truncated-walk [open], P-missing-closer [open], P-sufficiency-end [open]
 - packets (62): Q105 (merged), Q135 (rejected), Q135r (merged), Q138 (lost), Q138b (merged), Q139 (merged), Q140 (merged), Q141 (rejected), Q142 (merged), Q153 (merged), Q154 (merged), Q216 (done), Q217 (done), Q219 (done), Q222 (done), Q224 (done), Q225 (done), Q230 (done), Q233 (done), Q251 (done), Q252 (done), Q253 (done), Q255 (done), Q257 (done), Q258 (done), Q262 (done), Q263 (done), Q264 (done), Q264b (done), Q265a (done), Q265b (done), Q265c (done), Q266 (done), Q267 (done), Q268 (done), Q269 (done), Q271 (done), Q272 (done), Q274 (done), Q279 (done), Q285 (done), Q286 (done), Q288 (done), Q297 (done), Q347 (waiting), Q384 (done), Q385 (done), Q389 (rejected), Q393 (done), Q410 (done), Q414 (done), Q524 (discovered), Q524C (continued), Q524C2 (stopped), Q527 (regressed), Q528 (regressed), Q528B (regressed), T001 (done), T003 (done), TB010 (done), TB015 (waiting), TB017 (done)
-- pinned tests (0): not yet mapped (tests-rules.tsv)
+- pinned tests (71)
 
 ## D3 (discourse)
 
@@ -72,7 +72,7 @@ A proof form reads as what it is: a case split names its alternatives; a proof b
 - census check: ink C1, R3, R2, C22
 - classes (5): C1 [done], C9 [done], C22 [open], R3 [open], R2 [open]
 - packets (12): Q100 (merged), Q183 (done), Q184 (done), Q185 (done), Q186 (done), Q280 (done), Q516 (done), Q93 (merged), R2 (done), R2F (accepted), R3 (done), T001 (done)
-- pinned tests (0): not yet mapped (tests-rules.tsv)
+- pinned tests (39)
 
 ## D4 (discourse)
 
@@ -81,7 +81,7 @@ A calculation shows each step once, in order, with its reason.
 - census check: ink C4 (review metric), P-sufficiency-wall
 - classes (4): C4 [open], N2 [open], P-sufficiency-wall [open], P-lost-row [open]
 - packets (208): Q116 (rejected), Q116r (rejected), Q116s (rejected), Q129 (discovery), Q132 (rejected), Q132b (discovery), Q132c (rejected), Q132d (rejected), Q132e (later), Q148 (merged), Q149 (rejected), Q150 (discovery), Q152 (merged), Q155 (discovery), Q156 (merged), Q157 (rejected), Q157r (rejected), Q157s (done), Q157s (running), Q157t (done), Q182 (done), Q187 (done), Q188 (done), Q189 (done), Q199 (done), Q201 (done), Q202 (done), Q203 (done), Q204 (done), Q205 (rejected), Q206 (waiting), Q207 (done), Q208 (rejected), Q237 (done), Q238 (done), Q239 (rejected), Q240 (done), Q241 (waiting), Q244 (done), Q245 (rejected), Q248 (waiting), Q256 (done), Q273 (done), Q281 (done), Q282 (done), Q290 (done), Q290a (done), Q291 (done), Q292 (rejected), Q293 (done), Q294 (done), Q295 (done), Q296 (done), Q298 (done), Q300 (rejected), Q301 (done), Q302 (done), Q303 (done), Q304 (done), Q305 (rejected), Q306 (done), Q307 (done), Q310 (done), Q311 (done), Q313 (done), Q316 (done), Q319 (done), Q321 (done), Q325 (done), Q326 (rejected), Q327 (done), Q328 (done), Q329 (done), Q330 (done), Q332 (done), Q333 (done), Q336 (done), Q340 (done), Q348 (done), Q349 (rejected), Q350 (done), Q351 (rejected), Q357 (done), Q361 (done), Q366 (waiting), Q369 (done), Q377 (done), Q378 (done), Q379 (done), Q382 (done), Q386 (done), Q398 (rejected), Q400 (rejected), Q403 (rejected), Q404 (done), Q417 (done), Q419 (done), Q421 (done), Q424 (done), Q425 (done), Q426 (done), Q428 (active), Q429 (done), Q430 (done), Q431 (done), Q432 (done), Q433 (done), Q434 (done), Q435 (done), Q437 (done), Q438 (done), Q439 (done), Q440 (done), Q441 (done), Q442 (done), Q443 (done), Q444 (rejected), Q445 (done), Q446 (done), Q447 (done), Q449 (rejected), Q450 (done), Q451 (done), Q452 (done), Q453 (done), Q454 (done), Q455 (done), Q456 (waiting), Q458 (done), Q459 (done), Q461 (done), Q463 (done), Q465 (done), Q465b (active), Q466 (done), Q466b (done), Q469 (done), Q469L (done), Q469L4 (done), Q469L5 (done), Q469N (done), Q469N2 (done), Q469R (done), Q469R2 (done), Q469S (done), Q471 (done), Q471A (active), Q472 (done), Q472A (done), Q472B (done), Q473 (done), Q473A (done), Q473B (done), Q475A (done), Q475B (done), Q476 (done), Q476A (done), Q478 (done), Q478B (done), Q478C (done), Q479 (done), Q481 (removed), Q483 (done), Q484 (done), Q484B (waiting), Q485 (done), Q486 (done), Q487 (merged-cand9), Q488 (stopped), Q488B (stopped), Q488C (merged), Q489 (merged-cand8), Q490 (done), Q490B (done), Q490C (rejected), Q490D (merged), Q491 (done), Q493 (merged), Q494 (stopped), Q494B (merged), Q495 (merged), Q496 (merged), Q497 (done), Q498 (done), Q499 (done), Q499B (done), Q510 (done), Q510B (done), Q510C (done), Q511 (done), Q511B (failed), Q511C (done), Q512 (done), Q512B (stopped), Q512C (not-accepted), Q512D (review-ok), Q514 (accepted), Q515 (accepted), Q518 (not-ready), Q518B (accepted), Q519 (accepted), Q523 (accepted), Q524 (discovered), Q524B (accepted), Q525 (split), Q525C (done), Q97 (merged), typed-prune (rejected)
-- pinned tests (0): not yet mapped (tests-rules.tsv)
+- pinned tests (259)
 
 ## L1 (locality)
 
@@ -90,7 +90,7 @@ A sentence appears with the step it describes, under the assumptions it depends 
 - census check: ink C23 (text); none for the general case
 - classes (1): C23 [open]
 - packets (25): Q192 (done), Q197 (rejected), Q243 (done), Q254 (done), Q462 (done), Q467 (done), Q468 (done), Q475 (done), Q475C (done), Q477 (done), Q513 (done), Q513B (review-ok), Q517 (not-ready), Q517B (accepted), Q522 (accepted), Q525 (split), Q525B (declined), Q526 (accepted), Q526B (waiting), R1TS (reviewing), RC-L1T1 (dispatched), T001 (done), T002 (done), T005 (done), T006 (done)
-- pinned tests (0): not yet mapped (tests-rules.tsv)
+- pinned tests (47)
 
 ## V1 (vocabulary)
 
@@ -99,7 +99,7 @@ Mathematical notation and words only: no Lean names, raw heads, or implementatio
 - census check: ink C5, C6, C7, C8, C12, C17
 - classes (14): C5 [open], C6 [done], C7 [open], C8 [done], C12 [open], C13 [done], C15 [done], C17 [done], N10 [done], N11 [done], N13 [done], P-raw-application [done], P-hidden-arguments [done], P-implementation-vocabulary [unknown]
 - packets (40): Q101 (merged), Q101b (merged), Q103 (merged), Q120 (discovery), Q122 (merged), Q126 (merged), Q127 (merged), Q130 (merged), Q134 (merged), Q146 (merged), Q147 (merged), Q168 (done), Q169 (done), Q170 (done), Q171 (done), Q172 (done), Q174 (done), Q246 (done), Q280 (done), Q283 (done), Q344 (waiting), Q416 (done), Q436 (done), Q500 (done), Q521 (done), Q86b-r2 (rejected), Q86b-r3 (merged), Q89 (merged), Q91 (merged), Q92 (merged), Q95 (merged), Q96 (merged), Q98 (merged), R1SFZ (accepted), R7d (accepted), T001 (done), TB004 (done), TB005 (done), TB012 (done), small-data (done)
-- pinned tests (0): not yet mapped (tests-rules.tsv)
+- pinned tests (26)
 
 ## T1 (truth)
 
@@ -108,7 +108,7 @@ A printed formula denotes what the Lean term denotes (grouping, argument order, 
 - census check: ink C19; none for C24, C25, P-swapped-power
 - classes (4): C19 [open], C24 [open], C25 [open], P-swapped-power [open]
 - packets (13): Q179 (done), Q200 (done), Q229 (done), Q259 (done), Q260 (done), Q261 (done), Q345 (done), Q346 (done), Q383 (done), Q387 (done), Q391 (done), Q415 (done), Q423 (done)
-- pinned tests (0): not yet mapped (tests-rules.tsv)
+- pinned tests (46)
 
 ## T2 (truth)
 
@@ -117,7 +117,7 @@ Every fact on the page, the statement included, is true as ordinary mathematics.
 - census check: ink C18 only; no convention check (R1T text and typed scan missed a95A07 hrange)
 - classes (1): C18 [open]
 - packets (12): Q175 (done), Q175a (done), Q175b (done), Q190 (done), Q191 (done), Q209 (done), Q210 (done), Q211 (done), Q212 (done), Q213 (done), RC-T2 (dispatched), TB006 (done)
-- pinned tests (0): not yet mapped (tests-rules.tsv)
+- pinned tests (11)
 
 ## - (none)
 
@@ -126,5 +126,5 @@ not a defect, process, or candidate
 - census check: -
 - classes (5): C11 [notdefect], C14 [notdefect], N7 [done], N8 [done], N15 [unknown]
 - packets (23): Q103b (closed), Q107 (merged), Q121 (discovery), Q123 (discovery), Q125 (merged), Q131 (discovery), Q136 (merged), Q137 (merged), Q299 (done), Q314 (done), Q315 (done), Q371 (done), Q522P (superseded), Q528C (accepted), R7c (accepted), RC-TESTS (dispatched), TB003 (active), TB007 (done), cand35 (not-acceptable), cand36 (accepted), cand37 (superseded), cand38 (accepted), cand39 (census-running)
-- pinned tests (0): not yet mapped (tests-rules.tsv)
+- pinned tests (138)
 

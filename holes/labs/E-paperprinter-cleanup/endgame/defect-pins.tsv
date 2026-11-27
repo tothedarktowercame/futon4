@@ -1,0 +1,76 @@
+test	group	rule	note
+test_r1sf_rewrite_conjunct_names_itself_first	A-checked	B1	a99J03: "It suffices to show … iterated transform(f, 0) ∈ C^{m}" — m is never introduced (the ∀ binder is n)
+test_r1f_b93j01_claimed_forall_introduces_its_binders	A-checked	D2	b93J01: the claim "∀ j ∈ s, j ≠ i ⟹ (e(v(j)))(i) = 0" has a block that ends on "Obtain y …" and \end{itemize}; the claim is never closed
+test_r7_plumbing_chain_cites_every_fact_and_bare_restate_is_kept	A-checked	B2	a96A07: "Suppose z ∈ C. ⟦n⟧" then "We have z ∈ C — this is (n)." restates the line before
+test_q469r2_closer_with_own_reason_is_not_clobbered	A-checked	D2	m94J05: "This holds by Lemma 7." then "Hence … ≤ 1/32 — by Lemma 7.": the same goal closed twice
+test_q519b_a01j06_local_hypothesis_rows_keep_their_citation_in_the_closer	A-checked	V1	a01J06: "since finite cardinality agrees with the Fintype cardinality" names a Lean class
+test_q362_real_wrapper_leaf_cells_print_label_only_readings	A-checked	V1	same reading "…the Fintype cardinality" (≥3 times)
+test_q510c_m98a06_tautological_fact_shows_the_cast	A-checked	T2	m98A06: "2^{+} = 2, which is immediate." — a comparison of literals presented as a fact
+test_q409_preconnectedness_keeps_the_function_space_carrier	A-checked	V1	"Suppose N is a \text{Type}" — Lean universe word
+test_q507_real_a95a03_drops_the_restatement_and_keeps_typed_orientation	B-plausible	T1	a95A03: "{a | \mathop{\neg} a \neq 0}" reads as (¬a) ≠ 0; the term is ¬(a ≠ 0)
+test_r2f_author_by_contra_keeps_by_contradiction	B-plausible	D3	"We have φ(x) = 0 — by contradiction." — whether the supposition φ(x) ≠ 0 is stated below was not checked
+test_r1ga_t99a02_claim_unfolding_to_forall_introduces_its_binders	B-plausible	T1	t99a02: claim i ≠ j where the term is i.1 ≠ j.1; reads as identical to supposition (7)
+test_q272_two_direct_and_three_nested_keep_three_citations	B-plausible	R1	three-citation cap: five premises, three cited (fixture; the same cap lost x ∈ disk on a96A07 in R6F4)
+test_q272_non_absurd_step_keeps_three_citation_cap	B-plausible	R1	three-citation cap: five premises used, three cited (fixture)
+test_q381_claim_reason_with_no_citable_premise_prints_the_reason_alone	B-plausible	R1	premises ["(7)","h"] print "— by Lagrange's theorem." without (7) (fixture)
+test_q384_distinct_typed_reasons_do_not_choose_by_identical_text	B-plausible	R1	"Hence P." with no reason although its rows had reasons (fixture)
+test_q143r_numbered_factor_is_cited_and_missing_factor_keeps_the_old_sentence	B-plausible	R2	fallback "Hence R — by transitivity." with no middle term (C16, fixture)
+test_q396_unavailable_middle_keeps_the_bare_reason	B-plausible	R2	"— by transitivity." with no middle term (C16, fixture)
+test_q235_two_trans_factors_are_the_complete_reason_under_apm_policy	B-plausible	R2	"since P and Q — by a comparison lemma, applied to (8)": two reasons, one undescribed (fixture)
+test_q390_named_but_untagged_premise_keeps_todays_behaviour	B-plausible	R2	"by hw" cites a raw hypothesis name (N16, fixture)
+test_q181_written_library_citation_reading_replaces_only_the_apm_fallback	B-plausible	R2	"a library lemma" with no description for an unread head (C21, fixture)
+test_q201_structurally_equal_targets_merge_reasons_once	B-plausible	D4	"It suffices to show B, by A. It suffices to show B, by B." same goal twice (fixture)
+test_q201_unsourced_bridge_ends_parent_run	B-plausible	D4	three consecutive "It suffices" (fixture)
+test_q432_two_different_reasons_stay_two	B-plausible	D4	same goal x ≤ y announced twice in a row (fixture)
+test_q432_non_consecutive_equal_rows_stay_two	B-plausible	D4	sufficiency chain loops x ≤ y → x < y → x ≤ y (fixture)
+test_q437_display_of_one_identity_row_only_is_left_alone	B-plausible	D4	single no-op row B = B, "algebra" (fixture)
+test_q294_one_row_typed_reflexivity_is_not_an_excursion	B-plausible	D4	no-op row a = a "algebra" kept (fixture)
+test_q157s_initial_endpoint_and_reflexive_citations_never_repeat_in_align	B-plausible	D4	"The expression is unchanged, by N." no-op step as a sentence (fixture)
+test_q157t_reflexive_notation_keeps_reason_without_an_align_row	B-plausible	D4	"The expression is unchanged, by the cast identity." (fixture)
+test_q262_another_displayed_child_keeps_the_existing_block	B-plausible	D2	"Hence P." before the claim's remaining step (fixture)
+test_q268_two_closers_still_count_as_two_children	B-plausible	D2	claim closed twice (fixture)
+test_q350_copies_differing_in_expr_both_print	B-plausible	D2	two closers printing the same "P" both kept (fixture)
+test_q184_only_final_strict_typed_numeral_self_comparison_becomes_absurd	B-plausible	D2	"We have" with an empty display (fixture)
+test_q185_whole_irreflexive_numeral_sufficiency_goal_is_a_contradiction	B-plausible	D3	"It suffices to show (0 < 0) and P" keeps an impossible conjunct as a goal (fixture)
+test_q492_real_m96a05_single_selection_row_keeps_its_species_reason	B-plausible	R2	m96a05: "since the condition holds" does not say which condition
+test_q436_piFinTwo_applied_to_a_point_prints_the_pair	B-plausible	V1	fixture constant printed as \seqsplit{x} (fixture artefact)
+test_q260_negation_does_not_reduce_other_or_partial_pair_projections	B-plausible	V1	"\seqsplit{p}_1", "\mathrm{pr}_1" (fixture)
+test_q418_unlisted_head_keeps_the_bare_sentence	B-plausible	R1	"Hence x ≤ y." cites nothing for le_of_not_gt (fixture)
+test_q510c_difference_beyond_the_casts_does_not_fire	B-plausible	T1	"p = p — by (6)" stands for q.toReal = p; reads as a tautology
+test_q154_typed_proposition_rows_render_as_sufficiency_sentences	C-empty-reason	R1	pins an empty reason slot
+test_q276_bypassed_display_row_without_reading_stays_empty	C-empty-reason	R1	pins an empty reason slot
+test_q278_congrfun_over_named_constant_without_reading_stays_empty	C-empty-reason	R1	pins an empty reason slot
+test_q265c_recovered_rows_without_reading_keep_empty_reason	C-empty-reason	R1	pins an empty reason slot
+test_q312_unreadable_terminal_premise_stays_empty	C-empty-reason	R1	pins an empty reason slot
+test_q312_eq_of_heq_without_applied_lambda_stays_empty	C-empty-reason	R1	pins an empty reason slot
+test_q317_funext_body_without_reading_stays_empty	C-empty-reason	R1	pins an empty reason slot
+test_q317_funext_nonlambda_is_unchanged	C-empty-reason	R1	pins an empty reason slot
+test_q322_under_applied_lambda_keeps_unread_leaf	C-empty-reason	R1	pins an empty reason slot
+test_q322_beta_body_without_reading_stays_empty	C-empty-reason	R1	pins an empty reason slot
+test_q324_uncertified_composition_stays_empty	C-empty-reason	R1	pins an empty reason slot
+test_q324_unlisted_namespace_stays_empty	C-empty-reason	R1	pins an empty reason slot
+test_q380_unnumbered_fact_step_leaves_row_unchanged	C-empty-reason	R1	pins an empty reason slot
+test_q380_citation_inside_a_fact_step_is_left_alone	C-empty-reason	R1	pins an empty reason slot
+test_q399_propext_over_unread_leaf_stays_unadmitted	C-empty-reason	R1	pins an empty reason slot
+test_q262_default_policy_is_byte_identical_to_base_fixture	D-default-printer	D2	Rob default output; out of scope
+test_q268_default_policy_keeps_duplicate_closer_with_silent_sibling	D-default-printer	D2	Rob default output; out of scope
+test_q250_default_policy_keeps_elementary_trans_factor	D-default-printer	R2	Rob default output; out of scope
+test_q272_default_policy_keeps_three_citation_cap	D-default-printer	R1	Rob default output; out of scope
+test_q276_default_printer_has_no_reading_fallback	D-default-printer	R1	Rob default output; out of scope
+test_q286_default_printer_keeps_preorder_application_closer	D-default-printer	D2	Rob default output; out of scope
+test_q289_default_policy_still_merges_shadowed_binder_spellings	D-default-printer	B3	Rob default output; out of scope
+test_q345_default_scalar_multiplication_is_unchanged	D-default-printer	T1	Rob default output; out of scope
+test_q384_surviving_row_and_default_policy_are_unchanged	D-default-printer	D2	Rob default output; out of scope
+test_q381_closer_and_default_policy_are_unchanged	D-default-printer	R1	Rob default output; out of scope
+test_q387_default_printer_keeps_existing_overapplied_output	D-default-printer	T1	Rob default output; out of scope
+test_q415_default_continuous_at_is_unchanged_from_base	D-default-printer	T1	Rob default output; out of scope
+test_q432_default_printer_is_unchanged	D-default-printer	D4	Rob default output; out of scope
+test_q487_default_printer_states_the_fact_without_the_cut	D-default-printer	R1	Rob default output; out of scope
+test_q475a_default_printer_unchanged	D-default-printer	R1	Rob default output; out of scope
+test_q477_default_printer_unchanged	D-default-printer	T2	Rob default output; out of scope
+test_q151_named_claim_reason_only_fills_an_apm_bare_claim	D-default-printer	V1	Rob default output; out of scope
+test_q173_redundant_terminal_trans_after_typed_chain_is_silent	D-default-printer	R2	Rob default output; out of scope
+test_q200_subtraction_groups_only_a_typed_negative_right_operand	D-default-printer	T1	Rob default output; out of scope
+test_q201_forward_parent_run_keeps_three_reasons_at_last_target	D-default-printer	D4	Rob default output; out of scope
+test_q249_distinct_multiset_cardinality_keeps_multiplicity_distinct	D-default-printer	T1	Rob default output; out of scope
+test_q379_synthetic_non_apm_never_applies_retention_policy	D-default-printer	D2	Rob default output; out of scope

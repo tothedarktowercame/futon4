@@ -1,0 +1,1058 @@
+test	rule	evidence
+test_q97_typed_rewrite_motive_side	-	classifies congruence motive side LHS/RHS; no page text asserted
+test_q97_eq_mp_is_goal_first_and_transition_tuple_is_unchanged	D4	asserts Eq.mp goal sides in order
+test_q97_terminal_keeps_tactic_internal_provenance	R1	terminal row keeps tactic provenance (field_simp) that the reason is built from
+test_q133k_displayed_data_let_alias_is_structural_and_scoped	B3	asserts let alias K stands for its value, only within its scope
+test_q133k_atomic_let_value_is_not_folded	B3	asserts an atomic value is not replaced by its let name
+test_q147_capital_led_local_names_get_shape_readings	V1	asserts binder names read as H_{f}, B_{Q}, \widetilde{A}, not raw identifiers
+test_q154_typed_term_sufficiency_rows_render_as_one_chain	D4	asserts term rows render as one align chain, not sufficiency sentences
+test_q154_typed_proposition_rows_render_as_sufficiency_sentences	D1	asserts "It suffices to show" only for a typed proposition row; also D4
+test_q154_untyped_sufficiency_row_keeps_the_existing_filter	D1	asserts an untyped row prints no "It suffices to show" sentence
+test_q151_named_claim_reason_only_fills_an_apm_bare_claim	R1	asserts "— by Lagrange's theorem" fills a bare claim, existing "by Lemma 2" kept; also R2
+test_q143r_apm_transitivity_states_unumbered_typed_factors	R2	asserts transitivity reason names its factors "since P and Q"
+test_q143r_numbered_factor_is_cited_and_missing_factor_keeps_the_old_sentence	R2	asserts transitivity factors cited "(8) and (9)" instead of "by transitivity"; also R1
+test_q152_fallback_bridge_keeps_typed_endpoints_for_existing_coalescer	D4	asserts bridge rows coalesce loop X=A=B=A=C to X=A=C
+test_q152_equal_rendering_with_distinct_typed_endpoints_is_not_a_loop	D4	asserts rows with equal rendering but distinct terms are kept, not pruned as a loop
+test_q153_sole_identical_closer_is_removed_only_with_typed_matching_evidence	D2	asserts identical claim closer removed, different kept
+test_q156_proof_entries_have_identity_parent_and_unknown_argument_goal	-	goal-occurrence tree plumbing; no page text asserted
+test_q156_rebuilds_and_coalescer_preserve_goal_tokens	D4	asserts no cross-goal bridge row and coalesced row keeps its reason
+test_q161_congruence_proof_arguments_are_typed_and_unique	R1	asserts congruence rows find the fact proofs they cite (N6)
+test_q157_interleaved_occurrences_are_units_without_cross_goal_bridge	D4	asserts two align blocks per goal, no cross-goal bridge row; also L1
+test_q157_unknown_occurrences_keep_legacy_chain_and_never_join_known_piece	D4	asserts unowned rows keep legacy chain and never join an owned piece
+test_q157_child_proposition_and_empty_piece_do_not_make_align_rows_or_items	D2	asserts empty piece leaves no item; proposition row is a sufficiency sentence "by (3)"; also D4
+test_q157_calc_ordered_chain_is_not_partitioned	D4	asserts calc rows kept in order, not split
+test_q157_argument_goal_inference_is_lazy_and_cached_per_occurrence	-	laziness/caching of goal inference
+test_q157_child_reason_keeps_fact_citation_and_owner_tag	R1	asserts child row keeps "by (n)" citation and owner tag
+test_q157_empty_internal_child_keeps_the_existing_slot_tactic_reason	R1	asserts "\text{by field simplification}" reason kept, no "internal" names; also V1
+test_q157_proposition_piece_keeps_the_data_owned_rewrite_reason	R2	asserts reason reading "since the conjunction is false" instead of and_false; also R1
+test_q157_piece_coalescing_cannot_remove_a_cited_loop_or_duplicate_reason	D4	asserts cited loop rows survive coalescing under preserve_reasons; also R1
+test_q157r_uncited_children_compose_and_empty_children_vanish	D4	asserts uncited child rows compose to A=D and empty children leave no item; also D2
+test_q157r_propositions_keep_last_target_and_distinct_reasons_in_order	R2	asserts "by A and by B": reason parts listed once, in order; also D4
+test_q157r_premise_only_row_is_kept_and_parent_uses_normal_dispatch	R1	asserts a row whose only content is its premise citation is kept; also D2
+test_q157r_unchanged_parent_sentence_keeps_its_normal_form	D4	asserts parent chain sentence unchanged with child sufficiency appended
+test_q157s_loop_pruning_keeps_citation_in_independent_unit	D4	asserts loop pruned from chain but cited row "by L" kept as its own unit; also R1
+test_q157s_changed_parent_does_not_reexpose_uncited_rows	D4	asserts uncited rows not re-exposed: one row A=C by L
+test_q157s_initial_endpoint_and_reflexive_citations_never_repeat_in_align	D4	asserts endpoint return splits blocks; reflexive row is not an align row
+test_q157s_reflexive_proposition_keeps_the_existing_contradiction_reading	D3	asserts reflexive False row reads "It suffices to derive a contradiction, by L."; also R1
+test_q157s_filtering_cannot_expose_adjacent_visible_repeat	D4	asserts filtering does not leave a visible repeated endpoint in one chain
+test_q157t_legacy_sources_do_not_resurrect_pruned_cited_transitions	D4	asserts pruned rows are not resurrected from legacy sources; also R1
+test_q157t_notation_key_erases_cast_distribution_but_retains_binder_identity	D4	notation key deciding no-op rows (plumbing)
+test_q157t_reflexive_notation_keeps_reason_without_an_align_row	D4	asserts notation-identical row is not an align row, reason kept; also R1
+test_q157t_empty_partition_before_duplicate_closer_leaves_no_item	D2	asserts no empty item before a removed duplicate closer
+test_q157t_independently_named_citation_survives_legacy_pruning	R1	asserts named citation "by Lemma 3"/"by (2)" survives pruning
+test_q157t_reason_donor_identity_survives_coalescing	R1	asserts the row's reason source survives coalescing
+test_q157t_definition_notation_uses_display_unfold_but_not_a_named_rule	D4	notation equality for definitional unfold decides no-op row (plumbing)
+test_q157t_review_displayed_chain_keeps_equation_rows_and_drops_sufficiency_rows	D4	asserts displayed chain keeps term rows, drops proposition (sufficiency) rows
+test_q166_source_owned_heads_get_typed_citations_only_at_empty_fallthrough	R1	asserts project-owned lemma gets "by \leanref{" citation at empty fallthrough
+test_q166_review_bare_name_with_construction_owner_is_not_cited	R2	asserts core leaf name iff_true not cited as a project theorem
+test_q165m_label_only_noop_does_not_change_statement_form	D4	asserts label-only no-op row makes no align row
+test_q165m_named_citation_filter_ignores_label_only	D4	asserts label-only reading does not keep a no-op row as cited; also R1
+test_q165m_emission_preserves_baseline_unit_deduplication	D4	asserts one align block, duplicate unit's label "another lemma" not shown; also R1
+test_q166c_owned_lemma_row_with_empty_reason_gets_a_label_only_citation	R1	asserts empty-reason owned lemma row gets "by \leanref{" citation
+test_q169_eliminator_branch_reduces_nested_ite_true	V1	asserts selected branch shown, no \top, no dropped branch
+test_q170_explicit_pair_projections_render_the_selected_component	V1	asserts projections show the component, no ".1"/".2"
+test_q171_eventually_opens_dependent_membership_predicate	V1	asserts "for all j eventually along", no \mapsto predicate lambda
+test_q172_subtype_perm_uses_membership_carrier_not_predicate_lambda	V1	asserts "the restriction of ... to the subtype defined by" s, no \mapsto
+test_q173_redundant_terminal_trans_after_typed_chain_is_silent	D2	asserts transitivity closer after the chain that established it prints nothing (not closed twice)
+test_q174_partial_hilbert_basis_repr_is_the_coordinate_map	V1	asserts [x]_{b} coordinate map, no \seqsplit{HilbertBasis.repr}
+test_q175a_closed_numeric_ite_selects_typed_branch	T2	asserts literal-condition ite reduced to its branch, no literal comparison printed
+test_q175a_nonliteral_and_unhandled_compound_conditions_are_not_reduced	T2	asserts variable and compound conditions are not reduced (must-not-change)
+test_q175a_review_fin_numeral_compares_by_residue	T2	asserts Fin numerals compared by residue so the selected branch is true
+test_q175b_generated_fin_match_selects_closed_scrutinee	T2	asserts closed Fin match prints the selected arm, no cases on a literal
+test_q175b_generated_fin_match_keeps_variable_scrutinee	D3	asserts variable match keeps its cases with both arms
+test_q179_double_negation_groups_only_the_typed_negative_operand	T1	asserts -(-x) printed with parentheses "( - "
+test_q181_written_library_citation_reading_replaces_only_the_apm_fallback	R2	asserts lemma reading replaces "a library lemma"
+test_q217_walk_budget_exhaustion_records_first_refused_expression_only	-	diagnostic record of walk budget exhaustion
+test_q217_walk_with_budget_remaining_is_not_exhausted	D2	walk budget accounting (P-truncated-walk); no page text
+test_q184_only_final_strict_typed_numeral_self_comparison_becomes_absurd	D3	asserts final 0 < 0 reads "This is absurd, by ..." not an align row; also R1
+test_q224_nonproof_repeat_visits_are_not_charged_again	D2	walk budget accounting (P-truncated-walk); no page text
+test_q224_proof_repeat_visits_still_exhaust_the_budget	D2	walk budget accounting (P-truncated-walk); no page text
+test_q224_visit_after_exhaustion_is_refused_without_replacing_first_location	D2	walk budget exhaustion location recorded once (P-truncated-walk); no page text
+test_q219_transport_proof_argument_calc_uses_its_matching_expected_proposition	D2	asserts the proof argument's calc a=b=c is attached under it
+test_q219_transport_proof_argument_calc_with_mismatched_endpoints_is_rejected	L1	asserts a calc is not attached to a goal it does not prove
+test_q210_numeric_disjunction_uses_three_valued_typed_decision	T2	asserts literal disjunction conditions decided, open ones left
+test_q210_t99j05_true_numeric_disjunct_selects_the_then_arm	T2	asserts "0 = 0 \vee 0 = 2 \cdot n + 1" not printed on t99J05
+test_q200_subtraction_groups_only_a_typed_negative_right_operand	T1	asserts "x - ( - y)" parenthesised
+test_q203_mpr_proposition_fallback_states_reduced_goal_with_own_reason	R2	asserts "It suffices to show beta, by transport fact." with its own reason; also D1
+test_q203_mp_normalises_to_beta_then_alpha	D4	asserts the transport row reads before→after in order
+test_q203_equation_term_row_and_synthetic_bridge_are_unchanged	D4	asserts term rows and bridge rows are not rewritten (must-not-change)
+test_q203_composed_reason_is_not_a_single_capture	R2	asserts a composed reason is not reattached as one capture's reason
+test_q203_unvalidated_capture_does_not_reach_emission_hook	-	capture validation plumbing; row object unchanged
+test_q185_whole_irreflexive_numeral_sufficiency_goal_is_a_contradiction	D3	asserts goal 0 < 0 reads "It suffices to derive a contradiction, by (15) and (14)."
+test_q203_emission_hook_leaves_aligned_chain_units_alone	D4	asserts aligned chain last row not swapped (repeated row avoided)
+test_q211_same_fin_literal_at_one_open_bound_ignores_only_proof_witnesses	T2	asserts same Fin literal decided equal across proof witnesses, others not reduced
+test_q211_a01a01_open_fin_zero_comparison_prints_the_selected_reason	T2	asserts no "\text{if } 0 = 0" on a01A01; also R1 (row reason "since the factors agree")
+test_q186_impossible_conjunct_collapses_the_whole_case_body	D3	asserts "Case 2: ... which is impossible." and closer silent
+test_q201_forward_parent_run_keeps_three_reasons_at_last_target	D4	asserts sufficiency run is one sentence "by A and by B and by C"; also R1
+test_q201_reverse_pair_is_not_a_forward_run	D4	asserts reverse pair is not merged into one sufficiency sentence
+test_q201_owner_boundary_splits_parent_run	D4	asserts sufficiency run splits at goal owner boundary; also L1
+test_q201_unsourced_bridge_ends_parent_run	D4	asserts an unsourced bridge ends the merged run
+test_q201_structurally_equal_targets_merge_reasons_once	R2	asserts reasons listed once "by A and by B"
+test_q220_named_transitivity_closer_states_typed_factors_and_retains_reason	R2	asserts transitivity closer reads "since x \leq y and y \leq z"
+test_q220_unlisted_and_unavailable_proof_types_leave_closer_unchanged	R2	asserts no factors guessed for unlisted/unavailable proofs (must-not-change)
+test_q220_local_fact_applied_to_arguments_is_typed_in_the_closer_scope	T1	asserts local fact's type printed with the closer's scope names "y \leq z"; also R2
+test_q220_existing_trans_trans_factor_reading_is_unchanged	R2	asserts Trans.trans closer reads "since x \leq y and y \leq z"
+test_q191_instantiated_reason_omits_only_reflexivity_created_by_numeral_selection	R2	asserts reason omitted only when it became a reflexivity by numeral selection
+test_q229_binary_right_negative_operands_are_grouped_only_on_the_apm_path	T1	asserts "x + ( - y)", "x - ( - y \cdot y)" parenthesised
+test_q188_uncited_initial_noop_leaves_no_display	D4	asserts an uncited no-op row leaves no display
+test_q188_cited_initial_noop_carries_reason_and_premises_to_next	D4	asserts cited no-op row X=X dropped, its reason "by Lemma 1; since H" carried to next row; also R1
+test_q188_changing_first_row_and_default_policy_unchanged	D4	asserts changing rows kept by coalescing
+test_q188_child_rebase_and_term_flush_use_final_first_row	D4	asserts child no-op first row not shown "&= X", reason carried; proposition row as sufficiency
+test_q213_closed_real_negation_selects_only_typed_real_numeric_branches	T2	asserts real literal conditions 1 = -1 decided, other types left
+test_q213_t00a05_closed_real_negation_prints_selected_arms	T2	asserts no "\text{if } 1 = -1" on t00A05
+test_q188_emptied_display_makes_no_list_item	D2	asserts no empty "\item"
+test_q233_calc_emission_moves_only_marked_apm_closer_piece	D2	asserts the calc is printed before its own closer sentence (no premature Hence)
+test_q233_capture_marks_own_closer_and_restores_argument_scope	D2	asserts transport piece attached before its own closer
+test_q233_capture_outside_closer_or_with_different_owner_is_unmarked	L1	asserts a captured calc stays with the fact that owns it, not the closer
+test_q234_named_trans_fallback_instantiates_declared_telescope_in_spine_order	R2	asserts transitivity factors x \leq y, y \leq z from the declared type
+test_q234_named_trans_keeps_inference_first_and_declines_missing_or_bad_telescope	R2	asserts no factors guessed from a missing or bad declared type
+test_q235_two_trans_factors_are_the_complete_reason_under_apm_policy	R2	asserts "since P and Q" replaces "linarith"/"transitivity" reason
+test_q235_tactic_closers_without_two_trans_factors_and_non_apm_are_unchanged	R2	asserts "Hence R by linear arithmetic." kept without two factors (must-not-change)
+test_q240_nested_conditional_provenance_distinguishes_sibling_arms	R2	conditional-selection provenance feeding the selection reason (plumbing)
+test_q240_conditional_provenance_survives_reversal_and_reason_transfer	R2	asserts provenance follows the reason donor (plumbing)
+test_q240_nonselection_has_no_provenance_and_default_printer_has_no_capture_hook	-	default printer has no capture hook; plumbing
+test_q197_argument_contradiction_has_assumption_fact_and_cited_absurdity	D3	asserts "Suppose ..." then "This is absurd, by (1)." at the assumption's depth; also L1
+test_q197_data_and_noncontradiction_and_independent_lambdas_unchanged	D3	asserts non-contradiction lambdas get no Suppose/absurd block (must-not-change)
+test_q197_argument_block_restores_outer_goal_and_scope	L1	asserts outer goal and scope restored after the argument block
+test_q197_repeated_local_binder_names_have_distinct_citations	B3	asserts repeated local names get distinct tags (1)-(4); also R1
+test_q197_false_body_type_and_shifted_prefix_dependency	D3	detection of argument contradictions by type and dependency (plumbing)
+test_q243_copied_argument_fact_resolves_to_displayed_tag	R1	asserts "This is absurd, by (1)." cites the displayed tag
+test_q243_direct_assumption_alias_prints_two_sentences_in_closed_list	L1	asserts Suppose/absurd block in its own closed itemize, R after it; also D3
+test_q243_noncontradiction_and_default_policy_do_not_open_blocks	D3	asserts no argument block for non-contradiction or default policy (must-not-change)
+test_q243_argument_boundary_reserves_list_depth_at_existing_cap	L1	asserts the absurd block closes before the following sentence R
+test_q249_distinct_multiset_cardinality_keeps_multiplicity_distinct	T1	asserts card(toFinset s) reads "the number of distinct elements of s", not |s|
+test_q252_false_dependencies_keep_first_occurrence_order_and_deduplicate	R2	asserts closer cites the assumption and fact it uses, in order, once; also R1
+test_q252_false_dependency_on_assumption_only	R2	asserts closer cites only the assumption it uses
+test_q252_no_resolvable_dependency_keeps_last_fact_fallback	R2	asserts fallback cites the last fact
+test_q252_default_policy_does_not_collect_argument_dependencies	-	default policy unchanged
+test_q252_applied_false_elim_uses_proof_argument_not_result_argument	R2	asserts False.elim closer cites its proof argument, not the result type
+test_q253_supplied_local_proof_has_no_supposition_and_redirects_citations	D3	asserts no "Suppose" for a supplied proof, fact cites (1); also R1
+test_q253_compound_proof_keeps_the_existing_supposition	D3	asserts compound proof keeps its one supposition (must-not-change)
+test_q253_unapplied_lambda_keeps_the_existing_block	D3	asserts unapplied lambda keeps its supposition block (must-not-change)
+test_q253_default_policy_does_not_bind_the_supplied_fact	-	default policy unchanged
+test_q253_supplied_bvar_without_a_step_keeps_the_existing_block	D3	asserts supposition block kept when no step supplies the fact (must-not-change)
+test_q260_negation_groups_negative_fields_selected_from_explicit_pairs	T1	asserts -(fst (-x, y)) printed "( - "
+test_q260_negation_does_not_reduce_other_or_partial_pair_projections	T1	asserts no grouping for non-negative or partial projections (must-not-change)
+test_q261_groups_fully_applied_leading_negative_local_templates	T1	asserts "x - (-N(x, y))" parenthesised
+test_q261_leading_negative_template_other_positions_and_controls_stay_unchanged	T1	asserts no parentheses in other positions or partial templates (must-not-change)
+test_q262_removed_duplicate_completes_fact_with_existing_citations	D2	asserts duplicate closer removed: one "We have P — by (1)."; also R1
+test_q262_another_displayed_child_keeps_the_existing_block	D2	asserts claim block kept when another child is displayed
+test_q262_default_policy_is_byte_identical_to_base_fixture	-	default policy byte-identical
+test_q267_part_owner_suppresses_sole_duplicate_closer_and_keeps_reason	D2	asserts sole duplicate closer suppressed, "(3)" kept, no dangling ":"; also R1
+test_q267_part_owner_keeps_closer_with_different_justification	D2	asserts closer with a different justification kept
+test_q267_part_owner_keeps_closer_when_it_has_two_children	D2	asserts closer kept when the claim has two children
+test_q267_default_policy_keeps_part_owner_duplicate_closer	-	Rob's default policy unchanged
+test_q268_silent_sibling_does_not_count_as_visible_child	D2	asserts duplicate claim closer dropped, citation (3) kept
+test_q268_non_silent_sibling_still_counts_as_second_child	D2	asserts a visible sibling keeps the claim block and closer
+test_q268_two_closers_still_count_as_two_children	D2	asserts two closers keep the block
+test_q268_default_policy_keeps_duplicate_closer_with_silent_sibling	-	default policy unchanged
+test_q245_mixed_bridge_emits_nothing	D4	asserts a term-to-proposition boundary row prints nothing
+test_q245_boundary_keeps_two_term_runs_as_two_displays	D4	asserts two align displays split at the boundary, P not shown, in order
+test_q245_self_restatement_is_one_plain_sufficiency_sentence	R2	asserts no reason restating the row ("since P <=> Q"); also D4
+test_q245_cited_whole_goal_transport_keeps_reason	R1	asserts "It suffices to show Q, by (3)."
+test_q256_mixed_closer_omits_unreasoned_side_normalisation	D4	asserts no empty-reason align row "&& \text{}"; "by definition" kept; also R1
+test_q256_side_rows_after_sufficiency_are_not_emitted	D4	asserts term rows after the sufficiency sentence are not displayed
+test_q256_closer_without_boundary_keeps_legacy_emission_path	D4	asserts legacy path: sufficiency sentence, no "&= y" row
+test_q250_one_elementary_trans_factor_is_dropped_for_apm	R2	asserts "Hence 0 \leq R, since \lVert v \rVert \leq R." drops the elementary factor
+test_q250_two_elementary_trans_factors_are_unchanged	R2	asserts both factors stated when both are elementary
+test_q250_cited_elementary_trans_factor_is_kept	R1	asserts cited factor "(7)" kept
+test_q250_default_policy_keeps_elementary_trans_factor	-	default policy unchanged
+test_q250_elementary_factor_table_is_typed_head_policy	R2	asserts which heads count as elementary transitivity factors (reason wording policy)
+test_q263_type_carrier_is_a_fact_with_data_owned_subsingleton_reason	R2	asserts reason "since the type has at most one element", not "We claim"; also D2
+test_q263_proposition_carrier_uses_proof_irrelevance_reading	R2	asserts reason "since any two proofs of the same statement are equal"
+test_q263_id_wrapper_preserves_the_subsingleton_fact_reading	R2	asserts subsingleton reading survives an id wrapper
+test_q263_partial_subsingleton_application_keeps_default_classification	R2	must-not-change: partial application gets no subsingleton reason
+test_q263_other_eliminator_keeps_default_classification	D3	must-not-change: Or.elim stays a two-branch case split
+test_q263_default_printer_keeps_subsingleton_cases_classification	-	default printer unchanged
+test_q263_subsingleton_reason_keeps_existing_premise_citations	R1	asserts citation "using (7)" kept after the reading
+test_q263_beta_bound_fact_uses_subsingleton_justification	R2	asserts beta-bound fact gets Subsingleton.elim reason
+test_q256_review_display_stops_before_a_sourced_row_without_a_reason	R1	asserts no empty-reason row ("&& \text{}", "by rewriting") displayed; also D4
+test_q271_direct_false_argument_precedes_three_nested_dependencies	R1	asserts direct false premise is among the cited first three
+test_q271_no_direct_false_arguments_preserves_recursive_order	R1	asserts premise citation order unchanged
+test_q271_five_direct_false_arguments_keep_spine_order	R1	asserts all five direct premises cited in spine order
+test_q271_three_dependencies_keep_the_same_cited_set	R1	asserts the same set of facts is cited
+test_q254_continuation_precedes_consumer_and_keeps_one_false_closer	L1	asserts argument block placed before its consumer; also D2 (one absurd closer)
+test_q254_supposition_precedes_consumer_and_keeps_both_conclusions	L1	asserts supposition/argument sit nested under their owner, before it
+test_q254_argument_block_precedes_its_fact_consumer	L1	asserts owned argument block placed before and under its fact
+test_q254_argument_stays_inside_its_case_branch	L1	asserts argument stays inside its case branch
+test_q254_default_policy_records_no_owner_and_keeps_order	-	default policy unchanged
+test_q254_real_or_branch_keeps_its_argument_obligation_in_that_branch	L1	asserts argument obligation stays between its branch boundaries
+test_q254_owned_block_is_not_hung_under_the_preceding_fact	L1	asserts Suppose/absurd/Hence block in its own item, not under preceding fact
+test_q254_relocation_uses_final_depths_after_case_normalization	L1	asserts relocated block depth is owner depth + 1
+test_q254_outer_consumer_does_not_claim_another_lexical_case	L1	asserts an argument is not attached to an owner in another case
+test_q272_four_direct_false_arguments_get_four_citations	R1	asserts four citations (1)-(4) present
+test_q272_five_direct_false_arguments_get_five_citations	R1	asserts five citations (1)-(5) present
+test_q272_two_direct_and_three_nested_keep_three_citations	R1	asserts citations capped at (1)-(3) for five premises
+test_q272_non_absurd_step_keeps_three_citation_cap	R1	must-not-change: have step capped at three citations
+test_q272_default_policy_keeps_three_citation_cap	-	default printer unchanged (three-citation cap)
+test_q267_review_part_owner_keeps_bare_premise_citation_of_removed_closer	R1	asserts "using (5)" kept when duplicate closer removed; also D2
+test_q255_subtype_projection_alias_closer_cites_supposition	B3	asserts projection alias adds no fact; closer "This is absurd, by (1)."; also R1
+test_q255_fin_projection_alias_has_no_second_fact	B3	asserts Fin.val alias adds no second fact
+test_q255_lambda_subtype_projection_alias	B3	asserts lambda projection alias adds no second fact
+test_q255_congrfun_is_not_an_alias	B3	must-not-change: congrFun fact kept
+test_q255_unlisted_congrarg_function_is_not_an_alias	B3	must-not-change: unlisted projection fact kept
+test_q255_projection_outside_argument_contradiction_is_kept	B3	must-not-change: projection outside contradiction kept
+test_q255_non_apm_projection_fact_is_kept	-	default printer unchanged
+test_q255_extra_application_and_wrong_typed_side_are_kept	B3	must-not-change: non-alias shapes kept as facts
+test_q255_projection_of_supplied_fact_reuses_its_citation_identity	B3	asserts projection cites the supplied fact's identity; also R1
+test_q269_transport_edge_suppresses_unequal_duplicate_closer_and_keeps_owner_reason	D2	asserts duplicate closer ("Hence") removed, "(3)" kept; also R1
+test_q269_transport_edge_to_different_owner_keeps_closer	D2	must-not-change: closer for a different owner kept
+test_q269_transport_edge_with_different_justification_keeps_closer	D2	must-not-change: closer with different reason kept
+test_q269_unequal_propositions_without_transport_edge_keep_closer	D2	must-not-change: unequal closer without edge kept
+test_q269_default_policy_keeps_transport_edge_closer	-	default policy unchanged
+test_q276_bypassed_display_row_prints_its_rewrite_reading	R1	asserts display row reason "by the rewrite rule" printed, not empty; also R2
+test_q276_bypassed_display_row_with_since_reading_keeps_its_wording	R2	asserts reading wording "since the condition fails" kept
+test_q276_bypassed_display_row_with_algebra_reading	R2	asserts reading "algebra" printed as the reason
+test_q276_bypassed_display_row_without_reading_stays_empty	R1	asserts a row with no reading prints "\text{}"
+test_q276_reading_is_invisible_outside_display_emission	-	plumbing: reading slot not read by retention/numbering
+test_q276_row_with_a_premise_citation_keeps_it	R1	asserts "\text{by (7)}" kept, no reading fallback
+test_q276_self_restatement_row_stays_without_a_reading	R2	asserts self-restating row gets no reading as reason
+test_q276_default_printer_has_no_reading_fallback	-	default printer unchanged
+test_q276_real_bypassed_rows_print_their_readings	R1	asserts no empty reason slot "\text{}"; also R2
+test_q264b_finite_membership_is_one_sentence_with_finite_check_reason	R2	asserts reason "by checking each of the finitely many cases", not "We claim"; also D3
+test_q264b_recognized_fact_value_minors_are_not_walked	D3	asserts finite-check minors not printed as case branches
+test_q264b_finite_membership_reason_keeps_existing_premise_citations	R1	asserts "using (7)" kept after the reading
+test_q264b_missing_trailing_refls_keeps_default_classification	R2	must-not-change: wrong arity gets no finite-check reason
+test_q264b_non_finrange_list_keeps_default_classification	R2	must-not-change: List.range gets no finite-check reason
+test_q264b_bool_caseson_keeps_default_classification	R2	must-not-change: Bool.casesOn gets no finite-check reason
+test_q264b_default_printer_keeps_finite_membership_cases_classification	-	default printer unchanged
+test_q273_have_fact_with_proposition_rewrite_states_the_fact	D4	asserts one-row rewrite on a fact prints "We have \(Q\), by (2)." not "It suffices"; also R1
+test_q273_have_fact_with_term_rewrite_keeps_the_display	D4	asserts align display rows kept with "by definition" and "by (3)"
+test_q273_goal_position_rewrite_keeps_sufficiency_prose	D4	must-not-change: goal rewrite "It suffices to show \( Q \), by (2)."
+test_q273_data_let_keeps_its_existing_sentence	B1	must-not-change: data let keeps "Define \(q\)."
+test_q273_default_policy_keeps_fact_rewrite_sufficiency_prose	-	default policy unchanged
+test_q287_dead_fact_and_anonymous_restatement_are_silent	B2	asserts unused fact and its anonymous restatement are silenced
+test_q287_fact_cited_by_later_step_keeps_pair	B2	asserts a restatement cited later is not silenced (must-not-change)
+test_q287_restatement_cited_by_later_step_keeps_pair	B2	must-not-change: cited restatement kept (protects R1)
+test_q287_named_restatement_keeps_pair	B2	must-not-change: named restatement kept
+test_q287_used_named_fact_goal_keeps_live_closer	D2	must-not-change: live closer kept
+test_q287_theorem_goal_closer_is_not_an_unused_binder_value	D2	must-not-change: theorem goal closer kept
+test_q287_default_printer_does_not_run_dead_restatement_pass	-	default printer unchanged
+test_q256_review_proposition_rewrite_keeps_independent_reason	R1	asserts sufficiency lines keep reasons ("by Lemma 15 and by (3).", ", since "); also D3 (no "0 - m + m" certificate row)
+test_q284_subtype_ext_calc_has_projected_subordinate_goal	D1	asserts "by extensionality" goal stated before its align calc
+test_q284_subtype_ext_bare_hypothesis_is_unchanged	D1	must-not-change: bare ext fact gets no calc
+test_q284_mismatched_typed_calc_endpoints_are_not_attached	D4	must-not-change: calc with mismatched endpoints not attached
+test_q284_other_extensionality_head_is_unchanged	D1	must-not-change: funext head gets no calc
+test_q284_default_printer_keeps_extensionality_fact_without_calc	-	default printer unchanged
+test_q286_application_closer_follows_derived_argument_and_merges_duplicate	D2	asserts closer after its derivation, duplicate closers merged; also R1 (both reasons kept)
+test_q286_eliminator_closer_follows_its_argument_derivation	D2	asserts eliminator closer after its derivation
+test_q286_atomic_application_closer_keeps_its_position	D2	must-not-change: atomic closer not deferred
+test_q286_nested_argument_scopes_keep_inner_derivation_inside_outer	D2	asserts nested closers follow their derivations in order
+test_q286_default_printer_keeps_preorder_application_closer	-	default printer unchanged
+test_q289_shadowed_assumptions_get_distinct_apm_tags_and_citations	B3	asserts shadowed assumptions get distinct tags (1),(2)
+test_q289_step_restate_keeps_one_apm_citation_identity	B3	asserts a restated step keeps one tag/identity
+test_q289_only_inner_shadow_is_cited_without_numbering_gap	B3	asserts only the cited shadow tagged, numbering without gap; also R1
+test_q289_default_policy_still_merges_shadowed_binder_spellings	-	default policy unchanged
+test_q265a_bool_cases_fact_is_one_sentence_with_case_reason	R2	asserts reason ", by cases on \(" and no "We claim"/branches; also D3
+test_q265a_bool_cases_sentence_shows_the_typed_scrutinee	D3	asserts the case reason names the scrutinee
+test_q265a_recognized_fact_value_minors_are_not_walked	D3	asserts case minors not walked into branches under the one-sentence fact
+test_q265a_bool_cases_minor_with_a_have_keeps_default_classification	R2	must-not-change: cluttered minor gets no case reason
+test_q265a_decidable_caseson_keeps_default_classification	R2	must-not-change: Decidable.casesOn gets no case reason
+test_q265a_default_printer_keeps_bool_cases_classification	-	Rob's default printer unchanged
+test_q288_admitted_closer_is_one_extensionality_sentence	D2	asserts admitted pointwise closer is one "by extensionality" sentence, no "Let"/"suffices"
+test_q288_two_pointwise_arguments_still_one_sentence	D2	asserts two pointwise arguments give one "by extensionality" closer
+test_q288_extensionality_with_premises_is_unchanged	D2	must-not-change: ext closer with premises kept as a fact
+test_q288_non_extensionality_closer_is_unchanged	D2	must-not-change: non-ext closer unchanged
+test_q288_default_printer_is_unchanged	-	default printer unchanged
+test_q247_review_fact_sentence_reads_by_algebra	R2	asserts reason reads "by algebra", not bare ", algebra."
+test_q247_review_fact_keeps_the_calculation_of_a_term_piece	D4	asserts the fact keeps its calculation with "by (4)"
+test_q247_review_fact_owner_states_itself_before_its_block	D1	asserts fact stated before its nested block; closer after; no item opening with a list
+test_q290a_hypothesis_and_goal_rewrites_carry_typed_origins	R1	asserts hypothesis rewrite origin carries the hypothesis's citation identity
+test_q290a_equal_hypothesis_propositions_keep_distinct_origins	B3	asserts two equal hypotheses keep distinct identities
+test_q290a_proof_argument_rewrite_has_argument_identity	-	plumbing: origin role/identity for a proof argument
+test_q290a_origin_metadata_does_not_change_rewrite_text	-	must-not-change: metadata leaves text identical (no page rule)
+test_q265b_decidable_cases_fact_is_one_sentence_naming_the_condition	R2	asserts reason ", by cases on \(cond\)." and no "We claim"/branches; also D3
+test_q265b_recognized_fact_value_minors_are_not_walked	D3	asserts case minors not walked into branches under the one-sentence fact
+test_q265b_decidable_cases_minor_with_a_have_keeps_default_classification	R2	must-not-change: cluttered minor gets no case reason
+test_q265b_default_printer_keeps_decidable_cases_classification	-	Rob's default printer unchanged
+test_q274_hcast_shape_is_typed_cast_placement_equality	D4	helper: cast-placement equality recognised as a display no-op
+test_q274_predicate_refuses_non_members	B2	must-not-change: only pure cast-placement equalities are silenced
+test_q274_hcast_fact_is_silent_uncited_and_the_citer_keeps_its_statement	B2	asserts cast-placement fact silenced and uncited, citer statement kept
+test_q274_closer_cites_the_next_dependency_instead	R1	asserts closer cites (1)-(4), the silenced fact untagged
+test_q274_nat_product_fact_is_silent_but_other_shapes_stay	B2	asserts Nat product cast fact silenced, reflexive fact kept
+test_q274_silent_fact_is_absent_from_the_layout	B2	asserts "j + 1 = j + 1" not printed
+test_q274_default_policy_leaves_the_fact_printed	-	Rob's default output unchanged
+test_q290_goal_and_two_hypothesis_pieces_get_one_goal_and_two_facts	D4	asserts one "It suffices to show" and two "We have" with (1),(2); also R1
+test_q290_continuous_goal_pieces_form_one_final_sufficiency_sentence	D4	asserts continuous goal pieces merge into one sufficiency sentence, both reasons kept
+test_q290_discontinuous_goal_pieces_stay_separate	D4	must-not-change: discontinuous pieces stay two sentences
+test_q290_unknown_occurrence_keeps_existing_sentence	D4	must-not-change: unknown occurrence keeps two sentences
+test_q290_default_policy_keeps_multi_piece_sufficiency_reading	-	default policy unchanged
+test_q278_congrfun_over_named_constant_with_reading_prints_it	R1	asserts congrFun row slot reads "by the fixture law", not empty; also R2
+test_q278_congrfun_over_constant_with_algebra_reading	R2	asserts reading "algebra" printed; also V1 (no "__apm")
+test_q278_congrfun_over_named_constant_without_reading_stays_empty	R1	asserts row without reading has empty slot, no "congruence"
+test_q278_wrappers_nested_through_each_other_are_peeled	R1	asserts nested wrapper row reason "since the condition fails" present; also R2
+test_q278_local_fact_inside_congrfun_is_cited_by_its_tag	R1	asserts row cites local fact "by (1)"
+test_q278_congr_with_local_fact_and_named_constant_prints_both	R1	asserts reason "by (1) and the fixture law" (both cited once); also R2
+test_q278_congr_with_one_unreadable_constant_keeps_the_other	R1	asserts readable constant still cited "by the fixture law"
+test_q278_eq_of_heq_is_not_unwrapped	R2	must-not-change: eq_of_heq gets no borrowed reading
+test_q278_default_printer_has_no_wrapper_hooks	-	default printer unchanged
+test_q278_real_congrfun_rows_over_named_conditions_print_their_readings	R1	asserts real rows print "since the condition holds/fails", not "\text{}" or "congruence"; also R2
+test_q278_real_congr_arg_row_over_a_local_fact_is_cited	R1	asserts the congr_arg row cites the tag of z = z^2 + 1
+test_q278_wrapper_premise_alone_does_not_keep_a_pruned_row	D4	asserts a wrapper premise alone does not keep a pruned row
+test_q278_wrapper_rows_outside_align_chains_add_no_blocks_and_no_sentences	D4	asserts no added align blocks or sufficiency sentences; also R1 (row "by (n)")
+test_q278_reversed_wrapper_row_joins_the_kept_row_and_prints_no_block	D4	asserts reversed loop row dropped, its fact joins the kept row; also R1
+test_q278_wrapper_row_with_no_target_stays_separate	D4	must-not-change: untargeted cited row stays separate
+test_q278_row_without_the_mark_and_a_reversed_pair_is_untouched	D4	must-not-change: unmarked row kept, uncited reversed row dropped
+test_q293_case_arms_have_one_expression_identity_and_distinct_positions	L1	asserts rows record which case arm they sit under
+test_q293_nested_case_path_is_outermost_first	L1	asserts nested case path recorded outermost first
+test_q293_outside_case_path_is_empty	L1	asserts rows outside a case have empty path
+test_q293_path_survives_replace_and_does_not_affect_equality	-	plumbing: dataclass replace/equality
+test_q293_unresolved_descent_is_unknown_not_an_arm	L1	asserts unresolved descent recorded as unknown arm
+test_q293_apm_fixture_text_is_unchanged_with_capture_disabled	-	must-not-change: metadata leaves text identical
+test_q293_default_printer_records_no_branch_path	-	default printer unchanged
+test_q298_different_units_with_shared_typed_endpoint_stay_two_chains	D4	asserts rows from different units are not merged into one chain
+test_q298_one_unit_with_continuous_pieces_stays_one_chain	D4	asserts continuous pieces form one chain, Q shown once
+test_q298_same_print_but_different_typed_endpoint_stays_split	D4	asserts chains with different typed endpoints not merged; also T1
+test_q298_default_policy_ignores_unit_identity	-	default policy unchanged
+test_q294_synthetic_closed_excursion_keeps_following_reason	D4	asserts closed excursion rows a->b->a dropped, "by the final fact" kept
+test_q294_cited_interior_row_keeps_the_whole_excursion	D4	must-not-change: excursion with a cited row kept (protects R1)
+test_q294_equal_tex_with_different_typed_endpoints_is_unchanged	D4	must-not-change: different typed endpoints not pruned
+test_q294_one_row_typed_reflexivity_is_not_an_excursion	D4	must-not-change: one-row a = a kept
+test_q294_equal_endpoints_in_different_units_are_unchanged	D4	must-not-change: rows in different units not pruned
+test_q294_default_printer_does_not_enable_excursion_pruning	-	policy flag: APM on, Rob's default off
+test_q302_nat_card_to_fintype_card_is_a_typed_self_restatement	D4	asserts Nat.card -> Fintype.card row is a no-op and renders ""
+test_q302_instance_only_difference_is_a_typed_self_restatement	D4	asserts instance-only self-restatement row renders empty (dropped no-op)
+test_q302_explicit_argument_difference_is_not_normalized	D4	asserts row differing in explicit argument is kept
+test_q302_numeric_cast_difference_is_not_normalized	D4	asserts row differing by numeric cast is kept
+test_q302_default_printer_keeps_finite_cardinality_row	-	default printer unchanged
+test_q304_body_displayed_definition_row_is_not_displayed	D4	asserts body-display unfold row dropped as no-op
+test_q304_definition_with_own_notation_keeps_row_and_reason	D4	asserts a definition row with its own notation is kept
+test_q304_two_constants_unfolded_at_once_is_unchanged	D4	asserts two-constant unfold row not treated as no-op (kept)
+test_q304_default_printer_does_not_prune_body_display_unfolds	-	default printer policy unchanged
+test_q311_or_arms_and_capture_share_the_exact_edge	L1	asserts rows carry the exact case arm they sit under
+test_q311_nested_splits_keep_their_own_case_identity	L1	asserts rows under nested splits keep their own case arm
+test_q311_dite_arm_positions_match_capture	L1	asserts dite rows carry the arm they sit under
+test_q311_layout_rebuild_preserves_arm_edge	-	data-structure field preserved on rebuild
+test_q311_default_printer_has_no_arm_edges	-	default printer unchanged
+test_q311_apm_output_is_identical_without_arm_edges	-	asserts arm-edge plumbing leaves output text identical
+test_q311_finite_membership_heading_records_minor_edge	L1	asserts finite-membership case step records its arm edge
+test_q309_wrapper_label_stored_at_capture_never_holds_the_data_marker	V1	asserts raw marker __apm_data_algebra__ never in the printed label
+test_q316_same_object_in_one_scope_is_stated_once_and_citations_follow	B2	asserts repeated fact in one scope dropped; also R1 (citations redirect to first)
+test_q316_same_object_in_sibling_cases_is_kept_in_both	L1	asserts fact kept under each sibling case
+test_q316_different_scope_bindings_or_distinct_objects_are_kept	L1	asserts facts in different scopes / distinct objects not dropped
+test_q316_t98a01_handle_fact_block_is_stated_once	B2	asserts repeated "immediate from its type" facts drop from 5 to 2
+test_q316_default_printer_never_runs_the_pass	-	default printer never runs the pass
+test_q316_block_under_a_repeated_fact_goes_with_its_head	L1	asserts a repeat's block is not left behind without its head
+test_q316_unresolved_scope_binding_is_never_the_same_scope	L1	asserts facts with unresolved scope are not merged as same scope
+test_q310_goal_with_suppressed_side_calculation_keeps_legacy_visibility	D4	asserts one align block, hidden child row not shown; also R2 reason kept
+test_q310_term_pieces_keep_legacy_blocks_and_deferred_algebra	D4	asserts both align blocks kept; also R1 ("by Lemma 1" kept)
+test_q310_one_sentence_shares_by_across_step_citations	R2	asserts "by (4) and (3)." with "by" once
+test_q265c_sum_cases_fact_stated_once_then_two_cases_with_hypotheses	D3	asserts two named cases with constructor equations
+test_q265c_sum_cases_calc_chain_attaches_under_each_case	D2	asserts each case closer carries its calc chain
+test_q265c_sum_cases_transport_bridged_calc_recovers_onto_the_case_closer	D2	asserts transported calc chain recovered onto each case closer
+test_q265c_sum_cases_closing_only_minors_keep_default_classification	D3	asserts no case split printed for bare minors
+test_q265c_sum_cases_sentence_invents_no_reason_phrase	R2	asserts no "library lemma" reason; also V1 (no Sum.casesOn)
+test_q265c_sum_cases_arity_mismatch_keeps_default_classification	-	asserts arity mismatch falls back to default classification (plumbing)
+test_q265c_default_printer_keeps_sum_cases_classification	-	default printer unchanged
+test_q265c_sum_cases_claim_line_keeps_premise_citation	R1	asserts " — by (2) and (3):" on claim line
+test_q265c_recovered_rows_without_reading_keep_empty_reason	R2	asserts no "algebra" fallback invented; recovered rows keep empty reason
+test_q312_eq_cases_on_lambda_uses_constant_reading	R1	asserts reason "by the fixture law" recovered through Eq.casesOn
+test_q312_eq_cases_on_lambda_cites_local_fact	R1	asserts row cites local fact "by (1)"
+test_q312_eq_ndrec_skips_refl_and_unwraps_heq_of_eq	R1	asserts local fact found as the row's premise
+test_q312_unreadable_terminal_premise_stays_empty	R2	asserts no reason invented for unreadable premise
+test_q312_eq_of_heq_without_applied_lambda_stays_empty	R2	asserts no reason invented without applied lambda
+test_q312_default_printer_keeps_eq_of_heq_row_empty	-	default printer unchanged
+test_q317_funext_body_reading_reaches_row	R1	asserts "by the fixture law" recovered through funext
+test_q317_funext_body_local_fact_uses_outer_step_identity	R1	asserts row cites outer local fact "by (1)"
+test_q317_funext_body_without_reading_stays_empty	R2	asserts no reason invented for unread funext body
+test_q317_funext_nonlambda_is_unchanged	R2	asserts non-lambda funext gets no recovered reason
+test_q317_default_printer_does_not_recover_funext_reason	-	default printer unchanged
+test_q317_review_wrapper_label_finds_a_reading_keyed_by_the_full_library_name	R1	asserts reading found by full library name ("since the fixture law holds")
+test_q321_mixed_goal_and_term_owner_uses_pre_q290_renderer	R1	asserts reason "since the absolute value is multiplicative" kept
+test_q321_term_owner_keeps_pre_q290_unit_boundaries	D4	asserts two align blocks kept; also R1 ("by Lemma 11" kept)
+test_q313_int_cast_against_nat_cast_is_dropped	D4	asserts cast-only no-op row dropped
+test_q313_ennreal_of_real_is_not_a_numeric_cast	T1	asserts ENNReal.ofReal is not erased as a cast
+test_q313_erasing_app_rule_against_operand_is_dropped	D4	asserts erased-carrier no-op row dropped
+test_q313_cast_pair_with_different_values_is_kept	D4	asserts cast pair with different values not certified for dropping
+test_q313_citation_on_dropped_row_moves_to_following_row	R1	asserts citation of dropped row moves to following row
+test_q313_default_printer_does_not_record_erasure_certificate	-	Rob's default printer unchanged
+test_q322_applied_lambda_constant_reading	R1	asserts "by the beta fixture law" recovered through beta
+test_q322_beta_under_funext_preserves_outer_fact_scope	R1	asserts row cites outer fact "by (1)"
+test_q322_under_applied_lambda_keeps_unread_leaf	R2	asserts under-applied leaf gets no reading
+test_q322_beta_body_without_reading_stays_empty	R2	asserts no reason invented for unread beta body
+test_q322_default_printer_does_not_recover_beta_reason	-	default printer unchanged
+test_q324_closed_composition_joins_certified_readings	R1	asserts "by first law and by second law"
+test_q324_uncertified_composition_stays_empty	R2	asserts no partial reason for uncertified composition
+test_q324_tactic_namespace_is_algebra	R2	asserts Ring tactic leaf reads "algebra"
+test_q324_unlisted_namespace_stays_empty	R2	asserts unlisted tactic namespace gets no reason
+test_q324_default_printer_has_no_composition_hook	-	default printer unchanged
+test_q329_cited_child_follows_uninterrupted_parent	D4	asserts parent rows B,C,D in order, no repeated C row; also R1 each (n) once
+test_q329_child_without_later_parent_rows_is_unchanged	D4	asserts row order parent then child kept
+test_q329_two_children_keep_their_order	D4	asserts two child blocks keep their order
+test_q329_typed_discontinuity_is_not_joined	D4	asserts discontinuous blocks not joined
+test_q329_default_policy_does_not_reorder	-	default policy unchanged
+test_q330_capture_after_an_arm_fact_anchors_that_fact	L1	asserts captured row anchored to the arm fact it follows
+test_q330_capture_directly_after_arm_heading_marks_heading	L1	asserts captured row anchored to its arm heading
+test_q330_capture_before_any_step_has_no_anchor	L1	asserts no anchor before any step
+test_q330_anchor_survives_rebuild_and_is_not_comparison_or_repr_data	-	data-structure plumbing (anchor not in eq/repr)
+test_q330_default_printer_leaves_anchor_unset	-	default printer unchanged
+test_q330_apm_output_is_identical_with_anchor_capture_disabled	-	asserts anchor plumbing leaves output text identical
+test_q332_same_binder_node_with_fresh_binding_objects_is_stated_once	B2	asserts repeated fact under same binder node dropped; also R1 (citation redirects to first)
+test_q332_different_binder_nodes_are_both_stated	L1	asserts facts under different binder nodes both kept
+test_q332_same_binder_node_in_another_case_is_both_stated	L1	asserts fact kept under each case
+test_q332_binding_without_a_binder_node_never_matches	L1	asserts facts with unknown binder node not merged
+test_q332_flag_off_keeps_every_copy	B2	asserts suppression removes repeated fact lines on t97J05
+test_q332_default_printer_never_runs_the_pass	-	default printer never runs the pass
+test_q336_outer_and_two_heading_anchored_arm_parts_move_once	L1	asserts each law's reason sits under its own case, once
+test_q336_arm_part_anchored_at_fact_prints_after_fact	L1	asserts arm's rewrite part prints after the fact it is anchored to
+test_q336_closer_anchor_keeps_whole_unit_at_owner	L1	asserts unit stays at its owner, reason printed once
+test_q336_unknown_path_keeps_whole_unit_at_owner	L1	asserts unit stays at its owner when path unknown
+test_q336_removed_anchor_keeps_whole_unit_at_owner	L1	asserts unit stays at its owner when anchor removed
+test_q336_discontinuous_arm_part_keeps_whole_unit_at_owner	L1	asserts discontinuous unit stays at its owner
+test_q336_default_policy_does_not_run_relocation	-	default policy unchanged
+test_q348_capture_inside_local_fact_records_that_step	L1	asserts captured row records its local-fact owner
+test_q348_capture_in_goal_proof_records_none	L1	asserts goal-proof capture has no local owner
+test_q348_nested_local_facts_record_innermost	L1	asserts innermost local fact recorded as owner
+test_q348_owner_survives_replace_and_explicit_rebuild	-	data-structure plumbing (owner not in eq/repr)
+test_q348_apm_output_is_identical_with_owner_hook_disabled	-	asserts owner plumbing leaves output text identical
+test_q348_default_printer_has_no_owner_hook	-	default printer unchanged
+test_q345_scalar_multiplication_groups_additive_operands	T1	asserts "(a - b) \cdot v" grouping
+test_q345_ordinary_multiplication_is_unchanged	T1	asserts (a - b)·v grouping
+test_q345_default_scalar_multiplication_is_unchanged	-	default printer unchanged (pins "(a - b \cdot v)")
+test_q345_dslope_and_slope_have_distinct_readings	T1	asserts slope and dslope print differently
+test_q362_single_label_only_wrapper_leaf_labels_changing_row	R1	asserts row slot "since the fixture maps agree"
+test_q362_label_only_wrapper_leaf_keeps_noop_row_unlabelled	R2	asserts no-op row gets no reason
+test_q362_real_wrapper_leaf_cells_print_label_only_readings	R1	asserts readings printed in b98A01 and t03J04 row reason cells
+test_q350_adjacent_identical_witnesses_print_once	D4	asserts an identical witness printed once
+test_q350_closers_differing_only_outside_print_fields_print_once	D2	asserts equal consecutive closers print one "Hence"
+test_q350_stride2_part_pairs_print_once_ordinals_intact	D1	asserts repeated part pairs print one First and one Second; also D2
+test_q350_cited_later_copy_citation_resolves_to_survivor	R1	asserts citation of dropped copy resolves to survivor
+test_q350_copies_differing_in_expr_both_print	D2	asserts closers with same text but different expr both kept
+test_q350_deeper_step_between_keeps_both_copies	L1	asserts copies separated by a deeper step both kept
+test_q350_default_printer_keeps_repeated_witnesses	-	default printer unchanged
+test_q365_numbered_project_leaf_survives_congruence_wrapper	R1	asserts "by Lemma 7" through congruence wrapper
+test_q365_numbered_project_leaf_does_not_cite_whole_row_restatement	R2	asserts lemma restating the whole row is not given as reason
+test_q365_real_numbered_wrapper_citations	R1	asserts "&& \text{by Lemma n}" in real rows
+test_q357_mixed_owner_unit_leaves_local_rows_out_and_keeps_main_rows	L1	asserts local-fact rows left out of main chain, main rows kept; also D4
+test_q357_single_owner_unit_is_unchanged	L1	asserts single-owner rows all kept
+test_q357_unit_inside_local_fact_keeps_same_owner_rows	L1	asserts unit inside a local fact keeps only that fact's rows
+test_q357_default_printer_has_no_owner_filter	-	default printer unchanged
+test_q375_numbered_fact_projection_uses_local_fact_citation	R1	asserts projection row cites numbered local fact (1)
+test_q375_elementary_recovered_closure_keeps_algebra	R1	asserts recovered closure keeps reason "algebra" (not erased)
+test_q375_unsupported_recovered_fallback_stays_blank	R2	asserts no reason given by an unsupported fallback
+test_q375_t01a04_recovered_closers_have_typed_reasons	R2	asserts row cites "by (19)" instead of algebra; also R1 ("algebra" row kept)
+test_q368_all_read_leaves_join_distinct_reasons	R2	asserts repeated leaf reason listed once ("by first", "by second")
+test_q368_numbered_local_and_reflexivity_return_the_fact	R1	asserts local fact returned as the row's premise
+test_q368_congruence_bound_lambda_variable_is_admitted	R1	asserts congruence leaf reading admitted as reason
+test_q368_lambda_variable_outside_congruence_stays_empty	R2	asserts no reason admitted for lambda variable outside congruence
+test_q368_one_unread_leaf_rejects_read_siblings	R2	asserts no partial reason when one leaf is unread
+test_q368_reflexive_and_congruence_variables_need_a_reason_anchor	R2	asserts no reason admitted without an anchor
+test_q368_existing_reason_does_not_use_deferred_candidate	R2	asserts existing reason not supplemented by deferred "algebra"
+test_q380_hook_resolves_composition_leaf_bvar_to_fact_step	R1	asserts composition leaf resolves to the cited fact step
+test_q380_hook_leaves_unresolved_binder_alone	R2	asserts unresolved binder gets no fact citation
+test_q380_hook_ignores_non_fact_steps_and_ambiguous_leaves	R2	asserts non-fact or ambiguous leaves get no citation
+test_q380_numbered_fact_step_is_cited	R1	asserts restating row reason "by (1)"
+test_q380_unnumbered_fact_step_leaves_row_unchanged	R2	asserts no citation to an untagged fact
+test_q380_restate_premise_never_enters_the_cited_set	B2	asserts no tag on a fact nothing cites
+test_q380_citation_inside_a_fact_step_is_left_alone	R1	asserts pass does not touch rows owned by a fact step (reason stays empty)
+test_q380_walk_attach_skips_rows_with_reason_or_term_endpoint	R2	asserts existing reason "by earlier" not replaced; also R1 (empty row gets fact)
+test_q380_default_printer_has_no_restate_hook	-	default printer unchanged
+test_q380_real_m01j02_restated_goal_cites_numbered_commutativity	R1	asserts "by (9)" and "by (11)" in m01J02
+test_q380_real_b01a02_restated_goal_cites_numbered_cardinality	R1	asserts "by (3) and (4)." in b01A02
+test_q384_finalized_closer_states_goal_and_single_typed_reason	D2	asserts "Hence \(P\), by Lemma 2." for an emptied closure; also R1
+test_q384_finalized_part_states_goal_and_reason	D1	asserts part states its goal "First, \(P\), by Lemma 2."; also R1
+test_q384_surviving_row_and_default_policy_are_unchanged	-	asserts flag-off and surviving-row output unchanged
+test_q384_removed_wrapper_keeps_numbered_fact_citation	R1	asserts "Hence P, by (1)."
+test_q384_distinct_typed_reasons_do_not_choose_by_identical_text	R2	asserts no reason chosen when typed reasons differ ("Hence \(P\).")
+test_q384_t02a01_conjugacy_conclusion_is_printed	D2	asserts closer "Hence \(\gamma_{0} \simeq ...\)" printed
+test_q384_t92j05_cast_conclusion_is_printed	D2	asserts closer "Hence \(\operatorname{transport}...(a) = a\)" printed
+test_q381_claim_reason_with_a_cited_premise_prints_reason_and_using	R1	asserts "— by Lagrange's theorem, using (7)."
+test_q381_claim_reason_with_no_citable_premise_prints_the_reason_alone	R2	asserts raw name h not printed as citation; reason alone; also V1
+test_q381_closer_and_default_policy_are_unchanged	R1	asserts closer "Hence \(X\) — by Lagrange's theorem, using (7)."
+test_q381_real_claim_reason_names_the_cited_premises	R1	asserts real claim sentence names its cited premises
+test_q386_apm_omits_association_only_and_same_carrier_scalar_action_rows	D4	asserts association-only and same-scalar rows dropped
+test_q386_single_omitted_row_uses_existing_sentence_reason_path	D4	asserts lone omitted row leaves chain empty with phrase "association"; also R2
+test_q386_default_printer_keeps_all_four_rows	-	default printer unchanged
+test_q386_t95_association_collision_is_not_printed	D4	asserts no row repeats "3 \cdot (2 \cdot \pi) \cdot t" (association no-op)
+test_q386_m94_same_carrier_scalar_collision_is_not_printed	D4	asserts no same-carrier scalar no-op row in m94A02
+test_q377_source_normalization_retains_wrapper_child_only_under_apm	D4	asserts cited wrapper child row retained under APM; also R1 ("by field simplification")
+test_q377_real_source_normalization_wrapper_row_is_retained	D4	asserts real wrapper row "formula && \text{reason}" kept; also R1
+test_q391_pointwise_inverse_applies_base	T1	asserts pointwise inverse prints as applied to its base
+test_q391_ordinary_inverse_unchanged	T1	asserts ordinary inverse still prints f^{-1}
+test_q391_default_printer_unchanged	-	default printer output pinned
+test_q391_nonfunction_carrier_delegated	-	non-function carrier delegated to default printer unchanged
+test_q391_m95j02_identity_inverse_regression	T1	asserts identity base still prints x^{-1}; also V1 (no \operatorname{id})
+test_q391_a95j02_nonidentity_inverse_real_marker	T1	asserts (f(z))^{-1} printed, not z^{-1}
+test_q390_all_nameless_trivial_definition_premises_print_by_definition	R1	asserts empty row reason becomes "by definition"
+test_q390_one_numbered_premise_keeps_the_numbered_citation	R1	asserts row cites "by (1)"
+test_q390_named_but_untagged_premise_keeps_todays_behaviour	R1	asserts row reason "by hw" kept
+test_q390_existing_reason_is_kept	R2	asserts existing reason "algebra" not overwritten
+test_q390_default_policy_is_unchanged	-	default policy leaves reason empty
+test_q390_no_step_gains_a_number	B2	asserts no unused tag numbers introduced
+test_q390_real_m94a02_definition_cell_prints_by_definition	R1	asserts cell has "by definition", not empty \text{}
+test_q387_function_power_applied_to_one_argument	T1	asserts f^n x prints f(x)^{n}
+test_q387_identity_power_applied_simplifies_to_argument	T1	asserts id^2 x prints x^{2}
+test_q387_compound_base_is_bracketed_before_superscript	T1	asserts ((f + g)(x))^n grouping
+test_q387_compound_exponent_is_preserved	T1	asserts compound exponent kept: f(x)^{n + one}
+test_q387_two_residual_arguments_apply_before_power	T1	asserts f(x, y)^{n}
+test_q387_ordinary_power_is_delegated_unchanged	T1	must-not-change: a^{n} keeps its meaning
+test_q387_default_printer_keeps_existing_overapplied_output	-	default printer output "n^{x}" pinned
+test_q387_m02j04_parameter_closed_left_has_squared_parameter	T1	asserts c^2, not 2^c
+test_q387_t99j06_sine_cube_is_powered_after_application	T1	asserts (\sin x)^{3}, not 3^{x}
+test_q396_bare_transitivity_reason_names_the_middle_term	R2	asserts "by transitivity through b"
+test_q396_numbered_premises_keep_the_q381_form	R2	asserts through-wording then "using (1) and (7)"; also R1
+test_q396_unavailable_middle_keeps_the_bare_reason	R2	asserts bare "by transitivity." when no middle
+test_q396_default_policy_is_unchanged	-	default policy sentence unchanged
+test_q396_le_trans_middle_reads_the_typed_spine	R2	helper finds the transitivity middle term b
+test_q396_real_a97j02_bare_transitivity_names_the_middle_term	R2	asserts "by transitivity through \lceil q\rceil"
+test_q396_real_m93j06_bare_transitivity_names_the_middle_term	R2	asserts "by transitivity through min(...)"
+test_q396_real_m93j02_numbered_premise_form_is_unchanged	R2	asserts "by transitivity through |f(p0)|, using (n)"; also R1
+test_q388_read_leaf_and_instance_leaf_use_the_read_reason	R1	asserts row gains the lemma reading "by the fixture law"
+test_q388_instance_leaf_alone_has_no_reason_anchor	R2	asserts no reason made from an instance leaf alone
+test_q388_unread_proposition_leaf_still_blocks	R2	asserts no partial reason when a proposition leaf is unread
+test_q388_default_printer_has_no_instance_leaf_classifier	-	default printer lacks hook
+test_q401_leading_prop_instance_uses_its_scoped_arguments	B1	asserts statement hypothesis "P is normal" shown
+test_q401_consumed_normality_is_not_attached_to_ambient_type	B1	asserts normality hypothesis not misattached to ambient group; also T1
+test_q401_raw_head_keeps_the_existing_classifier_output	V1	must-not-change: raw CharZero head not admitted as hypothesis reading
+test_q401_structure_and_relation_instances_keep_existing_output	B1	asserts statement intros unchanged (must-not-change)
+test_q401_default_paper_printer_retains_the_old_normality_phrase	-	default printer phrase pinned
+test_q401_internal_instance_name_does_not_control_admission	B1	asserts hypothesis display independent of internal instance name
+test_q401_fact_emits_its_typed_proposition	B1	asserts statement hypothesis "p is prime" shown
+test_q401_raw_argument_declines_even_when_the_predicate_has_a_rule	V1	asserts raw carrier argument not printed (declines)
+test_q401_a_registered_but_inapplicable_rule_does_not_admit_a_raw_head	V1	asserts raw FiniteDimensional head not admitted
+test_q401_declined_probe_does_not_mutate_the_statement_printer	-	printer state plumbing, no page rule
+test_q401_real_leading_hypothesis_precedes_the_conclusion	B1	asserts hypothesis shown before "we have"; also V1 (no \seqsplit{CharZero})
+test_q393_arithmetic_terminal_head_is_retained_with_reduced_goal	D2	retains terminal head so the final sufficiency can be closed
+test_q393_terminal_head_for_a_different_proposition_is_not_retained	D2	no terminal head retained for a different goal
+test_q393_non_apm_printer_has_no_terminal_retention_hook	-	default printer lacks hook
+test_q393_ordinary_closer_head_fields_are_unchanged	-	data-structure fields unchanged
+test_q393_real_terminal_sufficiency_head	D2	real terminal sufficiency carries its closing head
+test_q378_side_and_synthetic_boundary_keep_calculation	D4	asserts calculation alone, no trailing sufficiency sentence
+test_q378_non_synthetic_boundary_keeps_sentence_after_calculation	D4	asserts calculation then "It suffices to show P." kept
+test_q378_all_three_classes_keep_existing_reading	D4	asserts calculation then "It suffices to show Q, by (2)."; also R1
+test_q378_proposition_only_keeps_existing_reading	D4	asserts single-row reading "It suffices to show Q, by (2)."
+test_q378_non_apm_keeps_existing_reading	-	default policy output empty
+test_q378_real_a97a01_restores_both_lemma_transitions	D4	asserts both Lemma 4 and Lemma 5 rows, in order
+test_q407_normalization_and_read_leaves_join_once_each	R2	asserts reason parts listed once: "algebra", "by the fixture law"
+test_q407_normalization_leaves_only_use_algebra_once	R2	asserts "algebra" listed once
+test_q407_normalization_and_unread_proposition_still_refuse	R2	asserts no reason when a proposition leaf is unread
+test_q407_explicit_reading_under_prefix_wins	R2	asserts explicit reading beats "algebra"
+test_q418_claim_reading_real_corpus_pins	R1	asserts real claim sentence carries its reason
+test_q418_unlisted_head_keeps_the_bare_sentence	R1	asserts bare "Hence x ≤ y." for unlisted head
+test_q407_prefix_removed_from_temp_data_refuses	R2	no "algebra" reason without configured prefix
+test_q407_default_printer_has_no_normalization_leaf_classifier	-	default printer lacks hook
+test_q379_unique_transition_keeps_fact_sentence_and_calculation	D4	asserts unique transition row kept; also R1 ("by Lemma 4")
+test_q379_no_rows_still_silenced	D4	asserts a repeated fact step is silenced
+test_q379_all_transitions_owned_by_survivor_still_silenced	D4	asserts fully duplicated step dropped
+test_q379_silenced_owner_does_not_certify_coverage	D4	asserts rows not dropped against a silenced owner
+test_q379_matching_spelling_does_not_certify_typed_coverage	D4	asserts rows not dropped on spelling match alone
+test_q379_default_printer_keeps_existing_output	-	default printer output unchanged
+test_q379_real_b96a02_restores_conjugation_transition	D4	asserts conjugation row present in align
+test_q379_synthetic_non_apm_never_applies_retention_policy	-	default printer never runs suppression
+test_q414_numbered_lemma_keeps_the_ordinary_applied_clause	R1	asserts "by Lemma 7, applied to (3)"; also D2
+test_q414_arithmetic_keeps_the_ordinary_reason	R2	asserts wording "by direct computation"
+test_q414_reflexive_head_is_immediate	R2	asserts wording "This is immediate."
+test_q414_recorded_fact_projection_keeps_the_ordinary_clause	R2	asserts "the second part of (8)"; also R1
+test_q414_unsupported_head_has_no_new_sentence	R2	asserts no made-up reason for And.intro closer
+test_q414_default_printer_ignores_the_apm_closure	-	Rob's default printer unchanged
+test_q414_real_numbered_lemma_closes_terminal_sufficiency	D2	asserts terminal sufficiency closed "by Lemma 37"; also R1
+test_q414_real_arithmetic_closes_terminal_sufficiency	D2	asserts proof ends with closing reason "by ring normalisation"
+test_q414_same_numbered_head_is_not_repeated	D2	asserts no second closing "This holds by" after sufficiency
+test_q419_display_equivalent_closing_witness_survives_until_loop_pruning	D4	asserts closed loop pruned to two rows
+test_q419_display_equivalent_row_without_loop_is_still_omitted	D4	asserts display-equivalent row omitted
+test_q419_default_printer_keeps_the_existing_typed_chain	-	default printer chain unchanged
+test_q419_real_calculation_prunes_display_equivalent_closed_detour	D4	asserts row count after detour pruning; also R1 (no empty \text{})
+test_q409_full_spine_predicate_reading	B1	asserts instance hypothesis shown with right carriers
+test_q409_a_head_without_a_reading_is_still_held	V1	asserts unruled class head not printed raw
+test_q409_real_leading_predicate_reading	B1	asserts hypothesis reading before "we have"
+test_q409_preconnectedness_keeps_the_function_space_carrier	T1	asserts "N → [0,1] is preconnected" keeps carrier; also B1
+test_q415_apm_continuous_at_reads_continuous_at_a_point	T1	asserts "is continuous at", not "at on"
+test_q415_default_continuous_at_is_unchanged_from_base	-	default printer output pinned
+test_q415_real_a00j01_continuous_at_reads_at_a_point	T1	asserts "is continuous at 0", not "at on"
+test_q415_apm_overapplied_comp_keeps_the_outer_function	T1	asserts f(g(n)) keeps outer f, no \circ at a point
+test_q423_apm_overapplied_comp_two_points_apply_after	T1	asserts over-applied composition argument order
+test_q423_apm_lambda_comp_lambda_at_a_point_beta_reduces_both	T1	asserts (f∘g) n reads P(Q(n)), order kept
+test_q423_apm_constant_silent_cast_comp_lambda_at_a_point_shows_no_raw_name	V1	asserts no raw "toNNReal" name; also T1
+test_q415_apm_two_argument_comp_is_unchanged	T1	must-not-change: unapplied f∘g printed as before
+test_q415_default_overapplied_comp_is_unchanged_from_base	-	Rob's default printer unchanged
+test_q415_real_a00j01_composition_keeps_the_outer_function	T1	asserts nested application "t^{1 / n} = t^{0}", no circ
+test_q415_real_a94a09_the_norm_survives_the_composition	T1	asserts outer norm kept in ‖·‖ ∘ f
+test_q423_real_a00j06_silent_cast_composition_shows_no_raw_name	V1	asserts no "toNNReal" and sum a(n)(c+t)^n; also T1
+test_q423_real_a94a09_the_phi_limit_is_a_nested_application	T1	asserts x_{φ(n)} nested application, ∘ kept when unapplied
+test_q415_apm_comp_with_unknown_binder_kinds_matches_base	-	falls back to default printer behaviour
+test_q422_part_and_closer_steps_name_the_middle_with_numbered_premises	R2	asserts "by transitivity through b, using (1) and (7)"; also R1
+test_q422_default_policy_is_unchanged_and_no_middle_leaks_to_other_steps	R2	asserts no transitivity middle attached to a non-transitivity step
+test_q422_real_a01j01_conj_part_names_the_middle_term	R2	asserts "by transitivity through …, using (4)"
+test_q422_real_a01j01_closer_names_the_middle_term	R2	asserts "by transitivity through ‖f(n)‖, using (2)"
+test_q422_real_m97a02_b98a01_a02j03_name_the_middle_term	R2	asserts transitivity middle named in three proofs
+test_q427_motive_equality_binder_is_silent	R1	asserts row gains reason "by the fixture law"
+test_q427_non_proposition_binder_stays_blocked	R2	asserts no reason through a non-proposition binder
+test_q427_outer_bound_variable_stays_as_before	R2	asserts no reason when a leaf is an outer bound variable
+test_q427_unlisted_head_on_the_path_stays_blocked	R2	asserts no reason through unlisted Iff.mp head
+test_q427_only_eq_self_surviving_is_not_admitted	R2	asserts "algebra" from eq_self alone not given as reason
+test_q427_eq_self_still_contributes_beside_another_reason	R2	asserts reason parts "algebra", "by the fixture law"
+test_q427_a94j06_wrapper_row_prints_algebra	R1	asserts row has "\text{algebra}"
+test_q427_t91j06_ramp_rows_stay_reasonless	R2	asserts no admitted reason on four ramp rows
+test_q424_unsourced_return_row_is_dropped_exact_key	D4	asserts unsourced return row dropped
+test_q424_unsourced_return_row_is_dropped_under_a_de_bruijn_shift	D4	asserts return row dropped under binder shift
+test_q424_return_row_with_a_premise_is_kept	D4	asserts row with premise kept
+test_q424_return_row_that_is_the_last_row_drops_under_q431	D4	asserts unsourced last return row dropped
+test_q424_excursion_with_no_cited_row_is_kept	D4	asserts excursion kept when no row is cited
+test_q424_default_printer_is_unchanged	-	default path leaves chain unchanged
+test_q424_real_m94j01_back_transport_row_is_dropped	D4	asserts first term not repeated; also R1 (Lemma row stays)
+test_q424_real_b96j02_back_transport_row_is_dropped	D4	asserts \ker 0 not repeated; also R1
+test_q399_propext_over_leaf_with_reading_is_admitted	R1	asserts row reason "by the fixture law"
+test_q399_propext_over_unread_leaf_stays_unadmitted	R2	asserts no reason made for an unread leaf
+test_q399_propext_leaf_set_is_the_payload_and_plain_wrapper_unchanged	R1	leaf extraction feeding row reasons; plain wrapper unchanged
+test_q399_real_propext_rows_carry_reasons	R1	asserts real propext rows carry their reason phrase
+test_q404_owner_filter_keeps_all_rows_when_ordering_branch_flips	D4	asserts every row kept when order branch flips
+test_q404_owner_filter_filters_as_before_when_branch_does_not_flip	D4	asserts the foreign row removed as before
+test_q404_default_printer_has_no_owner_filter_or_branch_guard	-	default printer lacks hooks
+test_q404_t95j04_hn_keeps_all_rows_instead_of_flipping_branch	D4	asserts hn chain unfiltered; also R1 (else empty-reason row)
+test_q431_last_row_return_is_dropped_when_the_previous_row_is_cited	D4	asserts last return row dropped after cited row
+test_q431_last_row_return_is_kept_when_the_previous_row_is_unsourced	D4	asserts row kept when previous row unsourced
+test_q431_sourced_last_row_is_kept	D4	asserts sourced last row kept
+test_q431_last_row_with_a_premise_is_kept	D4	asserts last row with premise kept
+test_q431_default_printer_is_unchanged	-	default path unchanged
+test_q431_real_a01j01_last_row_back_transport_is_dropped	D4	asserts one row, algebra return row gone
+test_q431_real_b97a03_last_row_back_transport_is_dropped	D4	asserts first term not repeated, return row gone
+test_q437_identity_row_in_the_middle_is_dropped	D4	asserts no-op row in middle dropped
+test_q437_identity_row_in_the_last_position_is_dropped	D4	asserts no-op last row dropped
+test_q437_sourced_identity_row_is_kept	D4	asserts sourced identity row kept
+test_q437_identity_row_with_a_premise_is_kept	D4	asserts identity row with premise kept
+test_q437_identity_row_with_a_cited_reason_is_kept	D4	asserts identity row citing Lemma 1 kept
+test_q437_display_of_one_identity_row_only_is_left_alone	D4	asserts a sole identity row is not dropped
+test_q437_default_printer_is_unchanged	-	default path never runs identity drop
+test_q437_real_a01j03_identity_row_is_dropped	D4	asserts trailing no-op algebra row gone
+test_q437_real_a01j05_identity_row_is_dropped	D4	asserts trailing no-op row gone; cited row stays
+test_q436_piFinTwo_applied_to_a_point_prints_the_pair	V1	asserts piFinTwo prints as a pair, no raw head
+test_q436_piFinTwo_unapplied_prints_the_identification_phrase	V1	asserts piFinTwo read as "the identification ... ≅ X × X"
+test_q436_default_printer_has_no_piFinTwo_reading	-	default printer lacks reading
+test_q436_m97A05_slice_eq_has_no_raw_piFinTwo_name	V1	asserts no "MeasurableEquiv.piFinTwo", prints (x(0), x(1))
+test_q432_identical_consecutive_goal_prints_once	D4	asserts repeated "It suffices to show" goal printed once
+test_q432_instance_implicit_difference_prints_once	D4	asserts goals differing only in instance printed once
+test_q432_proof_argument_difference_prints_once	D4	asserts goals differing only in proof argument printed once
+test_q432_explicit_argument_difference_stays_two	D4	asserts different goals both kept
+test_q432_flipped_relation_stays_two	D4	asserts x > y and y < x rows both kept
+test_q432_run_of_three_collapses_to_one	D4	asserts one sufficiency sentence for three identical rows
+test_q432_single_reason_on_the_later_row_is_kept	R1	asserts "by Lemma 6" kept; also D4 (one sufficiency)
+test_q432_single_reason_on_the_earlier_row_is_kept	D4	asserts merged row keeps "by Lemma 6"; also R1
+test_q432_two_different_reasons_stay_two	D4	asserts rows with different reasons both kept
+test_q432_non_consecutive_equal_rows_stay_two	D4	asserts non-consecutive equal goals all kept (3)
+test_q432_default_printer_is_unchanged	-	default path keeps two sufficiency sentences
+test_q432_real_m02j06_sqrt_modulus_goal_prints_once	D4	asserts the sufficiency goal row printed once, not duplicated
+test_q432_real_m99j06_epsilon_positive_prints_once_per_orientation	B1	asserts the epsilon goal is not stated in the parent sentence before epsilon is introduced; also D4
+test_q432_real_m00a03_half_norm_goal_prints_once	D4	asserts no repeated sufficiency sentence for the y-goal
+test_q432_real_t01a03_arg_goals_print_once_each	D4	asserts each chain's goal row printed once (consecutive duplicate merged)
+test_q439_access_form_only_row_is_dropped_both_directions	D4	asserts an access-form-only no-op row is dropped
+test_q439_calculation_left_empty_is_not_printed	D4	asserts an emptied calculation prints nothing; also D2
+test_q439_row_with_another_typed_difference_is_kept	D4	asserts a row with a real typed difference is kept
+test_q439_default_printer_is_unchanged	-	default printer unchanged
+test_q439_t98a01_crosscap_access_rows_vanish	D4	asserts the no-op access rows and their align block are gone
+test_q446_cited_return_folds_its_reason_onto_the_row_before	R1	asserts the return's reason kept on the row before
+test_q446_cited_row_before_is_untouched	D4	asserts a chain with a cited middle row is kept as is
+test_q446_unsourced_last_row_is_untouched_here	D4	asserts the fold does not fire without an assertion; rows kept
+test_q446_premises_of_the_moved_reason_are_kept	D4	asserts the returning row folds and its reason moves with premises; also R1
+test_q446_label_only_citation_moves_and_prints	R1	asserts label citation "since one factor is zero" carried to the kept row
+test_q446_default_printer_is_unchanged	-	default printer unchanged
+test_q446_real_b97j03_return_row_folds	D4	asserts the returning row is gone and the reason survives; also R1
+test_q446_real_m02a02_return_row_folds	D4	asserts the returned lhs row gone; also R1 ("by Lemma n" survives)
+test_q466b_nat_card_and_fintype_card_share_one_display_key	D4	asserts Nat.card/Fintype.card compare equal so the returning row folds
+test_q466b_different_carrier_keeps_distinct_card_keys	D4	asserts different carriers keep distinct keys (no wrong fold of a real row)
+test_q466b_nat_card_head_swap_return_folds_like_q446	D4	asserts the head-swapped returning row folds; also R1 (by (1) moved)
+test_q466b_b96a02_factorization_chain_keeps_citation_and_stops	D4	asserts the chain no longer returns to its start; also R1 ("by (1)" kept)
+test_q466b_default_printer_keeps_the_round_trip	-	default printer output pinned unchanged
+test_q452_backward_case_run_replaces_the_row_it_justifies	D4	asserts the backward case run replaces the algebra row, forward order
+test_q452_run_not_reaching_row_before_term_is_unchanged	D4	asserts the chain is left alone when the run does not reach
+test_q452_sourced_row_j_is_unchanged	D4	asserts sourced rows and reasons unchanged by coalescing
+test_q452_trailing_row_without_conditional_selection_is_unchanged	D4	asserts rows unchanged without conditional selection
+test_q452_default_printer_is_unchanged	-	default printer unchanged
+test_q465b_backward_case_run_is_not_cut_as_an_excursion	D4	asserts the case run is not cut as a loop (conclusion row kept)
+test_q452_probe_coeff_prints_selections_forward	D4	asserts 3 rows, no algebra row, both since rows in forward order
+test_q412_proposition_endpoint_admission_reasons_sufficiency_sentence	R1	asserts "by Lemma 5." present on the sufficiency sentence
+test_q412_existing_reason_is_unchanged	R2	asserts an existing reason is not replaced
+test_q412_refusing_leaf_is_unchanged	R2	asserts no "Lemma 5" reason given when the leaf refuses
+test_q412_term_endpoint_stays_on_q278_path	R2	asserts no admission reason attached on a term endpoint
+test_q412_default_printer_is_unchanged	-	default printer unchanged
+test_q412_real_m03j05_sufficiency_uses_wrapper_admission	R1	asserts "by Lemma 16." present
+test_q412_real_m03j05_second_sufficiency_uses_wrapper_admission	R1	asserts "by Lemma 2." present
+test_q412_dropped_t03j04_transition_stays_unemitted	D4	asserts the dropped sufficiency row and its reason stay unprinted
+test_q450_descendant_bound_row_is_dropped	B1	asserts the row whose variable is bound later ("Q y") is not stated; also D4
+test_q450_enclosing_bound_loose_row_is_kept	D4	asserts the enclosing-bound row is kept (two "It suffices")
+test_q450_row_with_cited_reason_is_kept	D4	asserts a cited sufficiency row is kept; also R1 ("by Lemma 6")
+test_q450_first_row_is_never_dropped	D4	asserts the anchor sufficiency row is kept
+test_q450_default_printer_is_unchanged	-	default printer unchanged
+test_q450_real_m00a03_later_bound_goal_is_not_stated	B1	asserts goals in y are not stated before the itemize introduces y; also D2 ("Hence" present)
+test_q450_real_m99j06_epsilon_goal_is_not_stated_before_let	B1	asserts the epsilon goal is not stated before epsilon is introduced; also D2
+test_q461_capture_records_goal_side_lowercase	-	data plumbing: captured side field values
+test_q461_rebuilt_rows_keep_captured_side_and_bridges_stay_none	-	data plumbing: rebuilt rows carry side fields
+test_q461_t99J02_G_rel_aux_lower_pair_rows_carry_captured_sides	D4	asserts the 5-row closer chain keeps each track's rows in order
+test_q464_synthetic_pair_drops_the_second_closer	D2	asserts the redundant transitivity recap closer is silenced (closed once)
+test_q464_closer_with_extra_premise_still_prints	D2	asserts a closer with an extra premise is not dropped; also R1
+test_q464_non_trans_second_closer_still_prints	D2	asserts a non-transitivity second closer is not dropped
+test_q464_default_printer_is_unchanged	-	default printer unchanged
+test_q464_real_m93j02_case2_closes_once_by_transitivity	D2	asserts "Hence the claim — by transitivity" once; also R2 ("by transitivity through")
+test_q462_assumption_cast_restatement_is_aliased_not_printed	B3	asserts the cast assumption is aliased to the assumption, no fresh fact; also L1
+test_q462_restatement_with_second_local_proof_still_prints	B2	asserts a derived fact is not dropped as a restatement (must-not-change)
+test_q462_default_printer_records_the_restatement_as_its_own_fact	-	default printer unchanged
+test_q462_b93a03_suppose_restatement_not_printed_and_citations_renumbered	B3	asserts no restated "We have 1 = 0" and "by (10)" cites the renumbered fact; also R1
+test_q472b_bare_local_restate_is_aliased_not_printed	B3	asserts a bare restating have records no second fact
+test_q472b_restate_whose_type_differs_still_prints	B3	asserts a have with a different type stays its own fact
+test_q472b_default_printer_records_the_restate_as_its_own_fact	-	default printer unchanged
+test_q472b_real_b01j04_unit_fact_prints_once	B3	asserts the restating have mints no row; unit fact printed once
+test_q469l_linarith_certificate_application_is_tracked	D3	asserts linarith certificate depth tracked so its rows can be withheld
+test_q469l_certificate_rows_are_left_out_of_sufficiency_sentences	D3	asserts certificate rows print no sufficiency sentence; author rows kept
+test_q469l_default_policy_does_not_track_certificates	-	default policy unchanged
+test_q469l_real_a96a02_has_no_certificate_rows	D3	asserts linarith certificate rows and their contradiction sentence are gone
+test_q469l_only_normaliser_proofs_count_as_certificate_rows	D3	asserts only normaliser proofs are flagged as certificate rows
+test_q469l_real_m93j06_hint_calculation_kept	R1	asserts the hint calculation row keeps "by (tag)"; also D4
+test_q469l_flagging_leaves_neighbouring_displays_alone	D4	asserts neighbouring displays unchanged by the flagging
+test_q469n_a94a06_normal_form_rows_are_not_emitted	D3	asserts ring_nf/field_simp normal-form rows not printed as goals
+test_q469n_t98a01_euler_sum_row_stays_and_dim_replacement_row_goes	D3	asserts normaliser restatement rows dropped, Euler sum goals kept; also D4
+test_q465b_synthetic_closed_excursion_is_cut_to_first_return	D4	asserts excursion cut to the first return
+test_q465b_mid_chain_excursion_keeps_the_continuation	D4	asserts a closed mid-chain loop is cut and the continuation kept
+test_q465b_excursion_with_only_use_of_a_local_fact_is_kept	D4	asserts a loop that is a local fact's only use is kept; also R1
+test_q465b_excursion_whose_local_fact_is_used_elsewhere_is_cut	D4	asserts the loop is cut when its fact is used elsewhere
+test_q465b_excursion_citing_only_a_lemma_is_cut	D4	asserts a lemma-only loop is cut
+test_q465b_break_in_the_chain_is_not_a_return	D4	asserts a broken chain is not cut as a loop
+test_q465b_one_row_reflexive_interval_has_no_interior	D4	asserts a one-row reflexive interval is not cut
+test_q465b_default_printer_does_not_opt_in	-	default printer does not opt in
+test_q465b_real_t96j02_paste_cut_excursions_are_cut	D4	asserts the returning loops are gone (lemma citations of the detours gone)
+test_q484_instance_argument_difference_closes_the_excursion	D4	asserts endpoints equal up to instance args close the loop and are cut
+test_q484_literal_difference_stays_distinct	D4	asserts a literal difference keeps the rows
+test_q484_explicit_coercion_difference_stays_distinct	D4	asserts an explicit coercion difference keeps the rows
+test_q484_instance_erasure_failure_falls_back_to_case_keys	D4	asserts unknown erased keys never close a loop; rows kept
+test_q484_printer_context_is_reset_after_a_proof_walk	-	cache/context plumbing reset
+test_q484_real_a95j03_loop_closes_on_direct_call	D4	asserts the tautological loop rows are cut; also R1 ("by Lemma 14" stays)
+test_q471a_false_round_trip_is_cut_to_first_return	D4	asserts a K -> False -> K round trip is cut
+test_q471a_propositional_excursion_without_false_is_not_cut	D4	asserts a loop without False keeps its rows
+test_q471a_false_round_trip_needs_the_relaxed_call	D4	asserts the strict call keeps the round-trip rows
+test_q471a_real_t95a01_false_round_trip_rows_are_cut	D4	asserts the K -> False -> K rows are gone and the first and conclusion rows kept once
+test_q481_real_a02j07_cited_visible_detour_is_kept	R1	asserts "by Lemma 24", "by (1)", "by (7)" present; also D4
+test_q481_real_m95j02_lemma_step_before_the_euler_identity_is_kept	R1	asserts "by Lemma 11" present
+test_q481_removed_t00a05_case_two_keeps_its_lemma_step	R1	asserts "by Lemma 7" present
+test_q481_removed_t95a01_case_two_keeps_lemma_8	R1	asserts "by Lemma 8" kept
+test_q481_default_printer_keeps_the_excursion	-	default printer unchanged
+test_q487_real_t02a05_whole_chain_excursion_trims_the_uncited_return	D4	asserts the uncited return row trimmed, one row left; also R1 (Lemma 17 kept)
+test_q487_synthetic_whole_chain_excursion_trims_the_uncited_return	D4	asserts the uncited return row is trimmed
+test_q487_synthetic_cited_return_row_keeps_the_whole_chain	D4	asserts a cited return row keeps the chain; also R1
+test_q487_merge_trim_keeps_a_protected_side_that_would_vanish	D4	asserts trim stops before hiding a needed side
+test_q487_default_printer_states_the_fact_without_the_cut	-	default printer unchanged
+test_q481_real_a96a04_goal_side_row_survives_the_closer_cut	D4	asserts the goal-side row "= 1 by Lemma 9" is kept; also R1
+test_q473a_synthetic_closed_loop_runs_from_goal_left_to_goal_right	D4	asserts the closed loop is rotated to run from goal left to goal right
+test_q473a_goal_side_on_a_seam_term_still_rotates	D4	asserts rotation starts at the seam row
+test_q473a_goal_side_absent_leaves_the_chain	D4	asserts the chain is unchanged without a goal side
+test_q473a_two_row_loop_is_left_alone	D4	asserts a two-row loop is not rotated
+test_q473a_uniquely_cited_dropped_row_keeps_the_chain	D4	asserts a row holding a fact's only citation is not dropped; also R1
+test_q473a_default_printer_does_not_rotate	-	default printer does not rotate
+test_q473a_real_m96j03_loop_runs_from_the_goal_left_side	D4	asserts chain from goal LHS, no circular algebra row
+test_q473a_real_t02a05_two_row_loop_is_unchanged	D4	asserts the loop's algebra return row is gone and the first term printed the expected times
+test_q476a_duplicated_sufficiency_pair_prints_once	D2	asserts the bare closer is silenced so the goal is closed once
+test_q476a_pair_with_different_premises_is_kept	D2	asserts closers with different premises both stay; also R1
+test_q476a_closer_citing_another_lemma_is_kept	R1	asserts a closer citing a different lemma is not silenced (citation kept); also D2
+test_q476a_real_a96j01_keeps_lemma_3	R1	asserts the a_monotone lemma cited once and no duplicate "Hence"; also D2
+test_q476a_lone_sufficiency_sentence_is_unchanged	D2	asserts a lone sufficiency closer is kept
+test_q476a_non_reading_closure_keeps_the_closer	D2	asserts the closer is kept when the sufficiency sentence is silenced
+test_q476a_real_a97a08_states_the_goal_once	D2	asserts the goal printed once (no "Hence" + "It suffices" pair)
+test_q475b_ne_head_closer_is_voiced_as_absurd	R2	asserts a ne-head closer is marked as a self-contradiction (absurd reading)
+test_q475b_simp_equation_false_form_qualifies	R2	asserts the simp "= False" form is marked as absurd
+test_q475b_non_false_head_closer_is_not_flagged	R2	asserts a non-False closer is not marked "absurd"
+test_q475b_two_local_arguments_is_unchanged	R2	asserts a closer with two local arguments is not read as absurd
+test_q475b_negation_applied_only_to_its_binders_proves_the_claim	R2	asserts a negation proving the claim is not read as absurd
+test_q475b_sentence_voices_the_absurdity	R2	asserts "This is absurd, by (1)."; also R1
+test_q475b_real_b00j04_closer_reads_absurd	R2	asserts "This is absurd, by (2)." instead of "Hence the claim."; also R1
+test_q475b_default_printer_does_not_opt_in	-	default printer does not opt in
+test_q470b_real_t95j02_arithmetic_wrapper_row_reads_algebra	R1	asserts the wrapper row reads "algebra" and no empty "\text{}" reason
+test_q470b_real_m95j02_two_position_wrapper_row_reads_algebra	R1	asserts the row reads "algebra" and no empty reason
+test_q470b_real_m99a02_set_identity_wrapper_row_stays_empty	D4	asserts the reasonless same-set restatement row is dropped
+test_q470b_arithmetic_wrapper_reason_guards	R2	asserts no "algebra" reason outside the guarded cases
+test_q470b_real_b93j04_named_lemma_reason_kept	R2	asserts the named lemma's reading kept instead of "algebra"
+test_q470b_real_t95j02_glide_wrapper_label_kept	R2	asserts the inner label reading kept
+test_q470b_wrapper_row_between_two_different_variables_gets_no_algebra	R2	asserts f x = f y gets no "algebra" reason; reordering still does
+test_q469l4_real_m01j06_author_rewrite_with_linarith_side_goal_kept	D4	asserts the author's rewrite row is kept with its reason; also R2
+test_q469l4_certificate_decided_by_the_proof_head	D3	asserts only normaliser heads count as certificate steps
+test_q469l4_default_printer_never_consults_certificates	-	default printer unchanged
+test_q469n2_m01j06_case1_keeps_the_hypothesis_rewrite_row	D4	asserts the hypothesis rewrite row is kept; also D2 (Case 1 not empty)
+test_q469n2_certificate_cites_local_fact_is_scope_aware	D3	asserts certificate classification is scope-aware about local facts
+test_q469r_t93a04_reduction_chain_precedes_the_conclusion	D2	asserts the conclusion is stated once, after the reduction (no premature Hence)
+test_q469r_m02a06_cited_reduction_row_moves_but_keeps_its_citation	R1	asserts the concluding Hence keeps "by Lemma 40."; also D2
+test_q469r2_m94J05_merged_reason_stays_on_the_page	R1	asserts the merged row's reading "since the absolute value is multiplicative" stays; also D2
+test_q469r_default_printer_is_unchanged_for_t93a04	-	default printer unchanged
+test_q475a_simpa_using_row_keeps_its_premise	R1	asserts "We have \(1 = 0\) — by (" cites its premise
+test_q475a_non_local_payload_stays_bare	R1	asserts the row cites "by (1), since ..."; also V1 (no "nonZeroDivisorsLeft")
+test_q475a_default_printer_unchanged	-	default printer unchanged
+test_q475c_a97j08_no_duplicate_restatement_row	B3	asserts the cast restatement mints no second row
+test_q475c_t01j04_claim_keeps_its_bodys_citation	R1	asserts "— by (2)." and (2) keeps its tag
+test_q475c_t01a04_premise_is_kept	R1	asserts "We have \(1 = 0\) — by (" kept
+test_q475c_default_printer_unchanged	-	default printer unchanged
+test_q469r2_closer_with_own_reason_is_not_clobbered	R1	asserts the closer's "— by Lemma 7" kept
+test_q477_b94a01_single_cast_row_keeps_citation	B3	asserts the coercion image prints no second row; also R1 ("this is (12)")
+test_q477_default_printer_unchanged	-	default printer unchanged
+test_q477_coercion_congr_guards	B3	asserts only coercion heads are aliased
+test_q469r2_closer_claim_reason_is_not_clobbered	R2	asserts the closer keeps "since it comes from a real number"; also R1 ("by Lemma 4.")
+test_q469r2_piece_bearing_chain_closer_keeps_its_rows	R1	asserts "by (10) and (5)." kept; also D2 (one Hence)
+test_q469r2_chain_closer_with_closure_reading_stays	R2	asserts the closer keeps its "This holds by ..." reading
+test_q478b_real_t94a07_hypothesis_rewrite_inside_forward_direction	L1	asserts the hypothesis rewrite sentence sits inside the forward direction
+test_q478b_default_printer_never_relocates_hypothesis_rewrites	-	default printer unchanged
+test_q478c_real_m94a03_hypothesis_rewrite_after_fact_inside_case	L1	asserts the rewrite sentence sits inside Case 1 after its fact; also D2
+test_q470c_real_m95a03_ring_identity_row_reads_algebra	R1	asserts the row reads "algebra" and no empty "\text{}"
+test_q470c_ring_identity_rejects_f_x_eq_x_mul_f_x	R2	asserts non-identities (f x = x f x, x/x = 1, truncated subtraction) get no "algebra"
+test_q470c_default_printer_never_reads_ring_identities	-	asserts default printer output unchanged when ring-identity pairing is forced
+test_q489_endpoints_at_different_depths_close_after_the_lift	D4	asserts loop rows X0->C->X0' pruned as a closed excursion
+test_q489_endpoints_unequal_after_the_lift_stay_distinct	D4	asserts distinct-endpoint rows are kept (must-not-change)
+test_q489_rows_record_their_capture_depth	-	row data-structure field binder_depth plumbing
+test_q489_default_printer_never_cuts_fact_calculations	-	asserts default printer unchanged
+test_q489_real_m94a01_hrewrite_loop_is_cut	D4	asserts loop align block gone and fact sentence kept
+test_q488c_a01a12_mobius_im_drops_display_invisible_unfold_row	D4	asserts no-op unfold row (identical both sides) dropped
+test_q488c_a01a12_conformalmap_re_pos_keeps_its_cited_closure	R1	asserts citation "applied to (1)" kept
+test_q488c_b97j03_zeta6_pow_three_keeps_its_unfold_row	D4	asserts unfold row "since \zeta_6" kept
+test_q488c_a01a12_row_behind_hidden_dsimp_is_kept	D4	asserts row "since w..." kept behind hidden dsimp
+test_q488c_default_printer_keeps_the_unfold_row	-	asserts default printer surface unchanged
+test_q493_explicit_spine_drops_implicits_and_silent_coercions	D4	unit: spine key equates rows differing only by implicits/coercions, so no-op rows can be dropped
+test_q493_explicit_spine_keeps_binder_domains_and_lossy_casts	D4	unit: spine key keeps real rows distinct (must-not-drop)
+test_q493_real_b01j04_algebra_map_round_trip_is_dropped	D4	asserts x = x' = x round-trip row dropped, neighbouring calc kept; also R2
+test_q493_real_m99j06_lp_class_round_trip_is_dropped	D4	asserts the L^2 round-trip row dropped; also R1 (using (7))
+test_q493_real_t96j08_pi_round_trip_stays	D4	asserts the real π cast row stays
+test_q493_real_a93a04_sums_over_different_index_types_stay	D4	asserts three reindexing rows kept (must-not-change)
+test_q493_default_printer_has_no_explicit_spine_rows	-	asserts default printer unchanged
+test_q492_real_m96a05_double_selection_row_names_the_failed_conditions	R1	asserts empty \text{} reason replaced by "since i+2 != 0 and i+2 != n+1"
+test_q492_real_m96a05_single_selection_row_keeps_its_species_reason	R2	asserts single-selection row keeps wording "since the condition holds"
+test_q492_default_printer_has_no_chain_reason	-	asserts default printer unchanged
+test_q492_synthetic_chain_peel_and_single_selection_refusal	R1	unit: selection chain peeled into a reason naming both failed conditions
+test_q492_positive_arm_names_the_condition_itself	R2	unit: positive arm's reason names the condition itself, not its negation
+test_q496_real_a01j05_marks_the_three_orders_apart	B3	asserts meromorphic order marked ord^mer so two orders are not one name
+test_q496_real_a01j05_analytic_only_declaration_is_unchanged	B3	asserts analytic-only declaration keeps unmarked reading (must-not-change)
+test_q496_default_printer_has_no_marks	-	asserts default printer unchanged
+test_q496_marked_order_wraps_the_shared_reading	B3	unit: order mark inserted into the shared reading, fails open
+test_q495_instance_argument_difference_closes_goal_continuity	D4	unit: instance-only difference keeps the chain tracked (rows kept)
+test_q495_explicit_argument_difference_stays_refused	D4	unit: explicit-argument difference still refused
+test_q495_binder_domain_difference_stays_refused	D4	unit: binder-domain difference still refused
+test_q495_real_a94a06_round_trip_display_is_the_two_track_chain	D4	asserts the two-track chain rows; also R1 (by (5))
+test_q495_real_a94a06_planted_fault_restores_the_refusal	D4	planted fault: row "x^3 = x^3*1" lost when refusal restored
+test_q495_real_a98a07_hformula_stays_refused_at_the_terminal	R1	asserts "by Lemma" present; also D4 (integral form not repeated)
+test_q495_default_printer_unchanged	-	asserts default printer unchanged
+test_q499_real_a98a07_hformula_prints_the_simpa_meeting_once	R1	asserts "by Lemma 11, applied to (1) and (6)" once; also D2 (restating Hence gone)
+test_q499b_planted_fault_without_premise_transfer_drops_the_applied_to	R1	planted fault: "applied to (1) and (6)" lost without premise transfer
+test_q499_real_a94a06_round_trip_without_the_meeting_shape_is_unchanged	D4	asserts the two-track chain unchanged; also R1 (by (5))
+test_q499_planted_fault_fail_closed_restores_the_round_trip	D4	planted fault: round-trip rows and restating "Hence" return; also D2
+test_q499_default_printer_unchanged	-	asserts default printer unchanged
+test_q490c_continuity_across_recorded_depth_builds_the_tracks	D4	unit: depth-lifted run is continuous, rows tracked forward
+test_q490c_terminal_depth_difference_is_lifted_too	D4	unit: terminal depth difference lifted, chain tracked
+test_q490c_equal_depths_with_different_keys_still_refuse	D4	asserts non-chaining rows are refused
+test_q490c_depth_difference_with_non_matching_lift_still_refuses	D4	unit: non-matching lift still refused
+test_q490c_default_printer_never_builds_typed_tracks	-	asserts default printer unchanged
+test_q490c_real_m95J04_reflection_is_forward_with_kept_reasons	R1	asserts "by (1)", "by (2)" cited instead of bare "algebra"; also R2
+test_q490c_real_m99J03_bridge_dipole_is_forward_without_the_repeat	D4	asserts each goal state once in align, chain ends on goal's right side; also R1 (by (5))
+test_q490c_planted_zero_lift_restores_the_exact_comparison	D4	planted fault: zero lift refuses the continuous chain
+test_q490d_last_transport_local_fact_citation_refuses	R1	unit: refuse track path that would drop the claim's citation number
+test_q490d_asserted_terminal_refuses	R2	unit: refuse when readings would sit on rows they do not prove
+test_q490d_cited_first_transport_with_identity_terminal_refuses	R2	unit: refuse so each reading stays on the row it proves
+test_q490d_real_a95J03_keeps_claim_number_and_conclusion_row	R1	asserts claim tag (6) and "by (6)" kept; also D4 (conclusion row kept)
+test_q490d_real_heatkernelN_ae_reason_stays_on_its_own_row	R2	asserts a.e. reason on its own row after the ENorm row; also D4
+test_q490d_planted_guard_bypass_admits_the_a95J03_shape	R1	planted fault: guard bypass admits the run that drops the claim citation
+test_q494b_term_row_at_the_left_side_starts_a_forward_run	D4	unit: row at equation's left side starts a forward run
+test_q494b_term_row_at_neither_side_still_bridges	D4	unit: right side refused so the equation is not read backwards
+test_q494b_left_side_compared_after_the_recorded_depth_lift	D4	unit: left-side comparison after depth lift
+test_q494b_real_t02a07_hzx_inner_product_runs_forward	D4	asserts three rows forward, cited once; also R1
+test_q494b_default_printer_ignores_the_left_side_rule	-	asserts default printer unchanged
+test_q498_claims_in_scope_skips_closed_blocks	R2	unit: only in-scope claims may be cited as a row's reason
+test_q498_claim_states_direct_and_one_congruence	D4	helper: a row restating the claim is recognised
+test_q498_meeting_row_needs_apm_policy_and_a_claim	R1	unit: synthesised meeting row cites the claim stating it
+test_q497_lifted_one_sided_chain_is_capture_order	D4	asserts lifted rows chain in capture order
+test_q497_exact_continuous_chain_keeps_legacy_order	D4	unit: exact chain keeps legacy row order
+test_q497_mixed_sides_and_broken_chains_refuse	D4	unit: mixed-side or broken chains refused
+test_q497_real_a02j07_ring_chain_runs_forward_once	D4	asserts six rows in order, each term once, no empty reason; also R1 (Lemma 24, (2), (7))
+test_q497_real_t95j05_tosphere_keeps_the_pruned_detour	D4	asserts detour pruned to two rows
+test_q497_default_printer_keeps_the_terminal_first_move	-	asserts default printer unchanged and helper not consulted
+test_q497_planted_skip_bypass_regresses_the_page	D4	planted fault: a02J07 chain no longer six rows (repeat returns)
+test_q497_first_transport_bare_local_fact_citation_refuses	R2	unit: refuse capture order that would move a citation onto a row it does not prove
+test_q500_real_m02j05_young_unfold_keeps_its_reason	R1	asserts the unfold reason "since young(...) = ..." kept, no reason-less sentence; also D4 (one sufficiency sentence)
+test_q500_descent_recheck_needs_the_row_scope	R1	unit: descent re-check scope guard that keeps the unfold row and its reason
+test_q502_real_m03j04_congrfun_row_reads_to_dual_symm_apply	R2	asserts lemma's reading "value of the functional is the inner product..." instead of empty; also R1
+test_q502_real_b96j02_eq_trans_row_reads_card_subtype_true	R2	asserts the lemma's reading as the row's reason
+test_q502_t91j06_def_unfold_row_is_not_filled_with_a_generic_word	R2	asserts no invented/wrong reason on the unfold row
+test_q502_planted_no_reading_reverts_to_the_empty_label	R2	planted fault: readings removed, labels revert to empty
+test_q501_double_negated_membership_set_is_the_same_set	D4	unit: {a | not not a in S} recognised as S so the restating row can drop
+test_q501_negated_ne_set_is_the_singleton	D4	helper: {a | ¬a≠0} and {0} read the same, so the row is a no-op
+test_q501_genuinely_different_sets_are_not_the_same	D4	unit: a row whose set really changes is kept
+test_q501_row_needs_empty_label_and_coe_endpoints	D4	unit: only reasonless reader-identical non-terminal rows drop
+test_q501_real_m99a02_drops_the_weird_set_row	D4	asserts restating row dropped, measure claim and a.e. sentence kept
+test_q501_real_a95a03_keeps_its_singleton_claim	D4	asserts singleton row kept with "since a singleton has measure zero"; also R2
+test_q501_default_printer_never_drops	-	asserts default printer never consults the drop
+test_q501_planted_bypass_restores_the_weird_row	D4	plant: helper off restores the no-op double-negation row
+test_q505_a95a02_union_inter_row_keeps_a_typed_reason	R1	asserts empty reason replaced by "distributivity of the intersection over the union"
+test_q505_shape_check_is_a_surface_union_inter_swap	R2	unit: distributivity reason given only for a real union/intersection swap
+test_q505_planted_bypass_restores_the_empty_reason	R1	planted fault: empty reason returns
+test_q511c_a93a04_local_type_univ_prints_its_type	B3	asserts subtype-indexed sum shows A, not univ, so univ does not name two sets; also D4
+test_q511c_condition_fires_only_for_opaque_local_types	B3	unit: index-type mark only for opaque local types
+test_q511c_planted_fault_condition_accepts_const_types	B3	planted fault: condition accepts every type
+test_q502_descent_needs_funext_scaffold_real_m01j06	R2	asserts composed lemma's reading not attached to the cited fact
+test_q504_real_t02a07_inner_product_row_reads_the_family_definition	R1	asserts "by definition of family" cited, no empty reason
+test_q504_imported_or_library_definitions_do_not_get_the_reason	R2	unit: definition reason only for module-local definitions
+test_q504_t91j06_local_let_unfold_stays_reason_free	R2	asserts no wrong reason "by definition of I"
+test_q507_real_a95a03_drops_the_restatement_and_keeps_typed_orientation	D4	asserts restatement row gone, singleton row oriented, no empty reason; also R1
+test_q507_restatement_without_terminal_feed_is_not_dropped	D4	negative/planted: helper disabled, reasonless restatement row returns
+test_q507_planted_seam_bypass_reverses_the_lone_row	D4	planted fault: lone row reversed ("& 0")
+test_q508b_real_t91j06_align_row_reads_the_define_value_definition	R1	asserts definition reason on G(1) row, no empty reason
+test_q508b_real_t91j06_sufficiency_sentence_reads_the_define_value_definition	R1	asserts sufficiency sentence carries the definition reason; also R2 (not "by definition of I")
+test_q508b_define_with_a_lambda_value_is_not_a_candidate	R1	asserts a lambda/app define value gives no scope head (empty-reason source)
+test_q508b_define_of_another_modules_constant_gets_no_reason	R2	unit: no definition reason for another module's constant
+test_q508b_planted_fault_without_scope_record_restores_the_empty_reasons	R1	plant: scope record off restores empty reasons
+test_q509b_aunk03_transport_repetition_is_not_displayed	D4	asserts restating reasonless transport row gone, tag (6) and "this is (6)" kept; also R1
+test_q509b_transport_row_not_restatement_keeps_its_block	D4	negative/planted: seam off, reasonless row returns
+test_q509b_planted_overbroad_suppression_would_be_caught	D4	planted fault: overbroad guard removes neighbouring rows
+test_q508b_module_definition_reason_does_not_fill_a_fact_sentence	R2	asserts no misattributed "by definition of conformal map" on a fact sentence
+test_q510b_a96a04_lintegral_statement_prints_the_lower_integral_sign	T1	asserts lower Lebesgue integral printed apart from Bochner integral
+test_q510b_bochner_integral_keeps_the_plain_sign	T1	asserts Bochner integral keeps plain sign (must-not-change)
+test_q510b_a02j02_lower_integral_row_reads_integral_to_real	R2	asserts integral_toReal's reading as the row's reason; also R1 (no empty reason)
+test_q510c_t96j08_chain_endpoints_show_the_ennreal_casts	T1	asserts toReal(ofReal pi) shown as pi^+ at the colliding endpoint; also V1 (no toReal)
+test_q510c_a03j04_statement_marks_the_real_value	T1	asserts V.toReal printed V_R so the sides differ
+test_q510c_m98a06_tautological_fact_shows_the_cast	T1	asserts ofReal 2 = 2 printed 2^+ = 2, not 2 = 2
+test_q510c_statement_that_already_prints_apart_keeps_its_text	T1	asserts no cast mark where sides already differ (must-not-change)
+test_q510c_difference_beyond_the_casts_does_not_fire	T1	must-not-change: cast rule does not fire on hqreal
+test_q512c_m02a03_closer_leaves_out_value_walk_rows	D4	asserts sufficiency run <= 2 (no wall); also R1 (hn/hd keep their citations)
+test_q512c_poisson_keeps_its_local_fact_citation	R1	asserts "by (36)" present
+test_q512c_laplace_analytic_keeps_its_lemma_citation	R1	asserts "Lemma 2" present
+test_q513b_congrfun_fact_reads_evaluation	R2	asserts "Evaluating (1) at 0 gives" instead of "this is (1)"
+test_q513b_congrarg_fact_reads_application	R2	asserts "Applying the same function to both sides of (1)" instead of "this is (1)"; also V1 (no \seqsplit{Multiplicative)
+test_q513b_eq_domain_gate_is_load_bearing	R2	unit: evaluation/application reading only for Eq hypotheses and named functions
+test_q512d_b97a03_closer_keeps_cited_hypothesis_pieces	R1	asserts "by (7)" and "by (9)" present
+test_q512d_m96j05_closer_keeps_cited_hypothesis_piece	R1	asserts "by (12)" present
+test_q522_applied_projection_cites_component_and_instantiating_fact	R1	asserts "We have 1 = 0 — by (1), since ..." cited; also R2 ("This is absurd, by (2)")
+test_q515_conjunct_arm_goals_stay_out_of_the_split_sufficiency_run	D4	asserts one "It suffices" in the head (no sufficiency wall); also D1 (First names its goal)
+test_q520_sufficiency_transitivity_closer_names_its_middle_term	R2	asserts "by transitivity through …, applied to (2) and (3)"
+test_q514_t99a02_hypothesis_transport_is_one_reduction	D4	asserts sufficiency run <= 3, backward rows gone; also R1 ("by (3)")
+test_q523_simpa_using_congrarg_part_cites_its_fact	R1	asserts closures cite (2) and (3); also D4 (≤3 sufficiency run)
+test_q518_by_contra_have_cites_its_lemma_and_closes_its_parts	R1	asserts "by Lemma 1" cited in the hcell block; also D4 (no four-item "It suffices" wall)
+test_q518b_by_contra_have_with_library_head_mints_no_reasonless_closer	D2	asserts no reasonless closer "Hence the claim." minted
+test_q519_t01a03_cited_value_walk_rows_close_their_fact_not_the_theorem	L1	asserts hnorm rows sit in the hnorm block as its "Hence" closers, not as theorem goals; also R1
+test_q519b_a01j06_local_hypothesis_rows_keep_their_citation_in_the_closer	R1	asserts "by (6), since ..." and "by (15) and (14)" kept once; also D2 (nothing nests under the closer)
+test_q517_argument_proof_introduces_its_binders	B1	asserts "Let z be given. Suppose z in C." before z is used
+test_q517_argument_lambda_trigger_is_typed	B1	unit: only proof lambdas whose let uses own binders get introductions
+test_q517_induction_step_is_not_an_argument_proof	B3	asserts no "Let k, k" (one name, one object)
+test_q517b_data_only_argument_lambda_keeps_its_walk	D2	asserts no empty claim block ending after "Let n be given."; also B1
+test_q517b_introduced_hypotheses_do_not_displace_citations	R1	asserts six citations including delta's injectivity tag
+test_q524b_map_smul_smul_smul_chain_reads_forward_once	D4	asserts each goal once, in capture order
+test_q527_a96a07_glue_claim_intros_pasting_part_and_substituted_cases	B1	asserts glue claim's u, v, hu, hv, hp, hq introduced; also D1 (First/Second), D3 (cases z = p, z = q by (3)), R1
+test_r2f_omega_fact_reads_as_integer_arithmetic	D3	asserts omega fact reads "by integer arithmetic", not "by contradiction"
+test_r2f_theorem_closed_by_omega_names_the_procedure	D3	asserts closer "by integer arithmetic", not "the hypotheses being contradictory"
+test_r2f_author_by_contra_keeps_by_contradiction	D3	must-not-change: author's by_contra keeps "— by contradiction"
+test_q528_rw_of_applied_local_fact_cites_it	R1	asserts rows cite heu1/hew1 tags instead of "algebra"
+test_q528b_applied_local_claim_states_and_cites_its_side_conditions	R1	asserts "From (glue), (up), and (uq), obtain"
+test_r7_plumbing_chain_cites_every_fact_and_bare_restate_is_kept	R1	asserts "by (up1) and (up2)" cites both chained facts; also R2 ("this is (n)" for bare restate)
+test_r7_eq_trans_have_in_a96j10_cites_both_facts	R1	asserts "— by (m) and (n)" citing both claims
+test_q526_by_contra_frame_and_lemma_application	D3	asserts supposition printed and tagged, closer refutes it; also D2 (hba subproof), R1 (Lemma applied to four facts)
+test_r6f_simp_closure_cites_obtained_facts	R1	asserts "which is immediate from (4) and (7)"
+test_r6f_case_arm_cites_its_case_hypothesis	R1	asserts "immediate from (1)" / "(2)" in each case
+test_r6f_supposition_is_cited	R1	asserts "which is immediate from (5)" citing the supposition
+test_r6f_closure_without_local_facts_unchanged	R2	must-not-change: bare "which is immediate" gets no spurious citation
+test_r6f_have_closed_by_simp_stays_one_sentence	R1	asserts "which is immediate from (1)"; also L1 (no nested block)
+test_r6f3_simp_closure_under_rewrites_keeps_the_chain	D2	asserts no premature closer hiding the six-row chain; also D4
+test_r6f3_refuting_the_supposition_keeps_the_facts_used	R1	asserts "This contradicts (1), (3), and (4)"
+test_r6f3_supposition_under_plumbing_lambda_keeps_the_have	R1	asserts "— by (1)." on the have
+test_r6f4_matcher_alternative_is_no_claim_and_keeps_the_contradiction	R1	asserts "This contradicts (2)" and "by (3) and (5)"; also D2 (no "We claim ... implies bot")
+test_r6f4_uncited_argument_fact_stays_on_the_application	R1	asserts "applied to (2)" kept on the lemma application
+test_r6f4_supposition_adds_to_the_citation_cap	R1	asserts "applied to (3), (4), (5), and (6)"
+test_r7d_matcher_minor_is_not_announced_as_a_claim	D2	asserts no "We claim ... implies" block for a matcher case; also V1
+test_r1f_b93j01_claimed_forall_introduces_its_binders	B1	asserts Let j, Suppose j in s, Suppose j != i under the claim
+test_r1f_a95a01_claimed_forall_over_interval_introduces_its_binders	B1	asserts Let x, Suppose x in [t(i), t(i+1)] introduced and then cited
+test_r1ga_t99a02_claim_unfolding_to_forall_introduces_its_binders	B1	asserts Let i, Let j, Suppose i != j introduced under the Pairwise claim
+test_r1sf_rewrite_conjunct_names_itself_first	D1	asserts "First, we show ..." states its goal before "It suffices"
+test_r1tp_empty_conjunct_part_names_itself_not_a_deeper_piece	D1	asserts part opens "First, we show D is compact", not a deeper (false) sufficiency
+test_r1fc_t97j07_introduced_hypotheses_do_not_displace_the_universal_fact	R1	asserts "by (1), (2), (3), and (4)" keeps the obtained fact (1)
+test_r1sfz_unapplied_template_relation_is_eta_expanded	V1	asserts template reading under fresh binders, not raw CategoryTheory.Zag
+test_r1ts_let_inside_unfolded_data_prints_no_define	B3	asserts no "Define n = ..." shadowing the theorem's n; also T2 (floor(1/0))
+test_r1gc_rintro_anonymous_binders_are_introduced	B1	asserts rintro binders introduced: Let e, Suppose e in im(l), From (k) obtain z
+test_bad_generic_citation_is_replaced_by_informative_apm_citation	R2	asserts generic "a library lemma" reason replaced
+test_a97j06_trichotomy_order_glue_and_rewrites_read_as_mathematics	V1	asserts case conditions in math mode, no OT1 garbling; also D4 (align reasons)
+test_b01j04_equation_transport_states_successive_sufficiency_goals	D4	asserts align chain, no sufficiency wall
+test_b95j03_construction_let_has_no_raw_constructor_or_empty_call	V1	asserts no raw constructor name or "()"
+test_constructed_rewrite_chain_has_one_instantiated_equality_per_line	D4	asserts one align row per equality with reason
+test_rewrite_chain_without_tactic_internals_keeps_every_row	D4	asserts both rows kept with reasons
+test_all_tactic_internal_rewrite_chain_shows_goal_and_tactic	V1	asserts no NF.eval/zpow' internals; also R2 (by field simplification)
+test_constructed_equation_of_equations_is_not_an_align_chain	T1	asserts equation-of-equations not chained with &=
+test_b95j03_instantiated_identity_with_raw_instances_is_not_shown	V1	asserts no raw instance args / seqsplit
+test_unpresentable_instantiated_identity_is_rejected	V1	asserts raw-instance identities rejected
+test_align_row_without_identity_does_not_restate_itself	R2	asserts no self-restating reason for an align row
+test_constructed_sufficiency_row_without_reason_has_no_dangling_clause	R1	asserts no empty reason clause (P-empty-chain-reason)
+test_substantive_library_facts_use_their_short_names	V1	asserts lemma named in words, not Lean name
+test_rewrite_of_a_non_equation_goal_is_not_an_align_chain	T1	asserts "analytic = differentiable" not printed as equation
+test_q24_nested_cases_keep_only_the_outer_equal_goal_closer	D2	asserts inner duplicate cases closers dropped
+test_q24_review_annotated_inner_cases_closer_is_kept	R1	asserts inner closer with citation/premise/tag kept
+test_q31_four_way_typed_or_labels_each_arm_and_counts_four	D3	asserts four arms each named
+test_q31_three_way_list_keeps_its_existing_transformation	D3	asserts three-way split arms unchanged
+test_q76_typed_rewrite_loop_is_cut_but_textual_collision_is_kept	D4	asserts typed loop rows cut, distinct terms kept
+test_q76_review_identically_printed_rows_still_coalesce	D4	asserts identically printed row dropped
+test_q77_auxiliary_case_collapse_rejects_one_preserved_leaf	D3	asserts case split kept when a leaf is a real proof
+test_q83_typed_right_chain_preserves_bodies_and_rejects_extra_or_other_split	D3	asserts merged P,Q,R alternatives named, bodies kept
+test_q83_unrelated_tail_closer_blocks_merge_before_closer_cleanup	D3	asserts no merge across unrelated closer
+test_q83_deciding_a_disjunction_is_not_eliminating_its_right_disjunct	D3	asserts dite on disjunction not merged as Or split
+test_q88_typed_alternatives_not_latex_tokens_and_dite_unchanged	D3	asserts typed alternatives named; also R1 (citation kept)
+test_q88_merged_or_intro_keeps_its_justifying_citation	R1	asserts "— by Lemma 7" kept after merge
+test_q86b_dite_branch_using_true_proof_keeps_ordinary_rendering	T1	asserts a proof-dependent dite on True is not reduced
+test_q136_case_expression_key_memoizes_repeated_identity	-	memoization (speed)
+test_q136_division_by_zero_scan_memoizes_repeated_identity	-	memoization (speed)
+test_q137_expression_references_memoizes_repeated_identity	-	memoization (speed)
+test_q137_choice_key_memoizes_repeated_identity_and_scope	-	memoization (speed)
+test_citation_readings_replace_name_derived_words	V1	asserts written reading replaces name-derived phrase
+test_q388b_read_leaf_and_data_silent_leaf_use_the_read_reason	R2	asserts reason is the read leaf "by the fixture law"
+test_q388b_data_silent_leaf_alone_has_no_reason_anchor	R2	asserts silent leaf alone gives no reason
+test_q388b_real_silent_measurability_side_condition_exposes_all_read_reasons	R2	asserts all three parts of the reason listed
+test_q388b_real_simplifier_bookkeeping_exposes_trigonometric_reasons	R2	asserts the five trigonometric reasons listed
+test_q401b_correct_implicit_type_noun_phrase_is_retained	B2	asserts no duplicate hypothesis beside the noun phrase
+test_q401b_explicit_type_still_gets_the_hypothesis	B1	asserts "X is complete" hypothesis shown
+test_q401b_compound_carrier_keeps_the_hypothesis_on_the_compound	B1	asserts hypothesis on X×X shown
+test_q401b_data_owned_unstated_class_retains_the_old_path	B1	asserts old statement path unchanged (must-not-change)
+test_q401b_default_printer_keeps_its_existing_noun_phrase	-	Rob's default printer unchanged
+test_q401b_missing_class_phrase_does_not_decline_a_readable_predicate	B1	asserts readable predicate hypothesis kept
+test_q401b_entry_skipped_by_the_old_classifier_does_not_decline	B1	asserts Nonempty hypothesis kept
+test_q401b_multiple_object_arguments_keep_the_full_predicate	B1	asserts "dim_F K < ∞" hypothesis shown
+test_q401b_t00j06_keeps_unary_nouns_but_not_the_model_dropping_manifold_noun	B1	asserts statement hypotheses shown, manifold model kept
+test_q392b_closer_and_part_print_the_claim_reason_and_cited_premises	R1	asserts "using (7) and (9)"; also R2 (claim reason)
+test_q392b_requires_premises_head_without_numbered_premises_is_unchanged	R2	asserts no reason printed without numbered premises
+test_q392b_closer_with_its_own_reason_or_block_is_unchanged	R2	asserts own citation kept over claim reason
+test_q392b_default_policy_is_unchanged	-	Rob's default policy unchanged
+test_q392b_real_closer_sentences_print_the_claim_reason	R2	asserts real claim-reason sentences
+test_q413b_premises_and_middle_print_through_wording_with_the_list	R2	asserts "by transitivity through b, using (1) and (7)"; also R1
+test_q413b_premises_without_middle_are_unchanged	R1	asserts "using (1) and (7)" kept
+test_q413b_middle_without_premises_is_unchanged	R2	asserts through-wording without premises unchanged
+test_q413b_default_policy_is_unchanged	-	Rob's default policy unchanged
+test_q413b_real_sentences_pin_the_through_wording	R2	asserts real through-wording sentences
+test_t002_library_citations_owed_after_q410_are_read	R2	asserts library heads cited by reading, not "a library lemma"
+test_t002_library_reading_closes_terminal_sufficiency	R1	asserts "applied to (1)" after "This holds by"; also D2
+test_t004_nonempty_type_reads_as_a_property_not_an_invented_witness	T1	asserts Nonempty X reads "X is nonempty", no invented ∃
+test_t006_decided_numeric_case_split_prints_only_its_live_arm	T2	asserts no split on "1 = -1" (literal comparison)
+test_t003_fact_keeps_the_calc_of_its_goal_transport	D4	asserts the transport calc kept with "by (3)"
+test_t003_term_piece_not_from_a_transport_calc_stays_hidden	D4	asserts subterm restatement not shown
+test_t003_default_policy_unchanged_by_transport_calc_flag	-	Rob's default policy unchanged
+test_t003_real_m93j03_fact_shows_its_transport_calc	D4	asserts the fact's calc align shown under it
+test_tb009_wrapper_reason_parts_join_as_a_list_with_algebra_last	R2	asserts reason parts listed once each
+test_tb009_real_t99j06_trig_row_is_a_list	R2	asserts trig reasons listed once, no "and … and since"
+test_tb011_sentence_reasons_state_a_wrapper_label_once	R2	asserts a wrapper reason stated once
+test_tb011_real_m93j06_hd_states_clearing_once	R2	asserts "clearing the positive denominator" once and "by (4)"
+test_t005_unclosed_not_intro_gains_the_absurd_sentence	D2	asserts an unclosed ¬-intro is closed "This is absurd, by (7)."
+test_t005_unclosed_ne_intro_gains_the_absurd_sentence	D2	asserts one absurd closer for ≠-intro
+test_t005_closed_body_and_premiseless_terminal_gain_nothing	D2	asserts no second closer on a closed body
+test_t005_non_negation_goal_and_default_policy_are_unchanged	D2	asserts no absurd closer on a plain goal (must-not-change)
+test_t005_real_a93a02_absurd_follows_the_one_eq_zero_fact	D2	asserts "This is absurd, by (9)." after 1 = 0; also R1
+test_t005_real_left_piece_substitution_carries_no_extra_premises	R2	asserts absurd closer cites (2) alone, the fact used
+test_tb012_eval2_through_the_identity_hom_reads_as_evaluation	V1	asserts no "through id" for identity-hom evaluation
+test_tb012_real_a99j07_reflect_boundary_evaluates_without_the_identity_hom	V1	asserts no RingHom.id / "through"
+test_q412g_real_t02a01_freehomotopy_conj_ends_with_hence	D2	asserts proof ends with a Hence closer
+test_q412g_real_t03j04_euler_les_gains_admission_reason	R2	asserts admission reason "since a linear map has trivial kernel…"
+test_q412g_final_row_of_closer_step_gets_no_admission	R2	asserts no admission reason on a closer's final row
+test_q412g_final_row_of_closer_piece_gets_no_admission	R2	asserts no admission reason on a closer piece's final row
+test_q412g_non_final_row_of_closer_keeps_admission	R2	asserts "by Lemma 5" kept on non-final row
+test_q412g_final_row_of_part_gets_no_admission	R2	asserts no admission reason on a part's final row
+test_q412g_let_final_row_keeps_admission	R2	asserts "by Lemma 5" kept on a let's final row
+test_tb017_claim_with_its_argument_block_keeps_the_claim_form	D2	asserts claim heading with its proof block under it
+test_q460_shared_typed_endpoint_row_is_kept	D4	asserts a row sharing endpoints is not dropped
+test_q460_unshared_typed_endpoint_row_is_still_dropped	D4	asserts a foreign row is dropped
+test_q460_default_printer_is_unchanged	-	Rob's default printer unchanged
+test_q460_real_a03j04_zero_rpow_row_is_kept	D4	asserts the 0^p = 0 row kept with its gloss
+test_t006_closer_citing_only_the_fact_just_stated_reads_absurd	R2	asserts "This is absurd, by (8)." not "contradicts"
+test_t006_other_closers_keep_this_contradicts	R2	asserts "This contradicts (8)." kept otherwise
+test_t006_real_b98j04_one_eq_zero_is_absurd_not_self_contradicting	R2	asserts 1 = 0 then "This is absurd, by (8)."
+test_t006_default_policy_unchanged	-	Rob's default policy unchanged
+test_level_free_key_erases_universe_levels_only	R2	helper: universe-insensitive match behind reason readings
+test_cited_statement_with_universe_parameter_reads_as_its_rewrite_reading	R2	asserts lemma reading, not "since <row restated>"
+test_universe_level_restatement_of_norm_smul_reads_as_its_reading	R2	asserts "by multiplicativity of the norm"; also R1 (no empty reason)
+test_universe_level_restatement_without_reading_keeps_its_statement	R1	asserts row not left without a reason
+test_q465c_real_a96a04_cited_value_row_stays	D4	asserts cited row "= 1 by Lemma 9" kept
+test_q465c_real_b97j03_cited_value_row_stays	D4	asserts cited row "by Lemma 3" kept
+test_q517c_t01a01_argument_contradiction_keeps_its_closer	D2	asserts "This is absurd, by (n)." closer kept
+test_q517c_m01j06_nested_contradictions_keep_their_closers	D2	asserts each nested contradiction closed
+test_q517c_a97a05_contradiction_cites_the_positive_real_part	R1	asserts absurd closer cites both facts
+test_q528c_rw_of_applied_hypothesis_is_cited_on_m98a06_and_t02a07	R1	asserts rw hypothesis cited "by (1)"
+test_r7c_applied_fact_citation_labels_displayed_rows_only	R1	asserts D9 citations on shown rows; also D4 (rows not displaced)
+test_cand35_contradiction_supposition_without_goal_keeps_the_page	R1	asserts page survives with "— by (1)" (was a crash)
