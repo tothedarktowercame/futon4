@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Per-rule gate between two censuses: does a candidate break a rule a record kept before?
 
-  rule_gate.py PREV_ANNOTATIONS CAND_ANNOTATIONS
+  rule_gate.py PREV_ANNOTATIONS CAND_ANNOTATIONS [PREV_RULE_FLAGS CAND_RULE_FLAGS]
 
 Annotations are ink.py --annotations output (.jsonl or .jsonl.gz).  Each ink class is mapped to
 its rule by class-rules.tsv; rules are defined in grammar.tsv (GRAMMAR.md).  For every rule prints
@@ -33,15 +33,28 @@ def violations(path, rule_of):
     return out
 
 
+def rule_flags(path, out):
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            r = json.loads(line)
+            if not r.get("unmeasured"):
+                out[r["rule"]].add(r["declaration"])
+    return out
+
+
 def main():
-    if len(sys.argv) != 3:
+    if len(sys.argv) not in (3, 5):
         sys.exit(__doc__)
     grammar = table("grammar.tsv", "rule")
     rule_of = {c: r["rule"] for c, r in table("class-rules.tsv", "class").items()}
     sys.path.insert(0, HERE)
     from ink import PALETTE
     measured = {rule_of.get(c) for c in PALETTE}
-    before, after = (violations(p, rule_of) for p in sys.argv[1:])
+    before, after = (violations(p, rule_of) for p in sys.argv[1:3])
+    if len(sys.argv) == 5:  # typed rule checks (rule_checks.py) join the ink classes
+        rule_flags(sys.argv[3], before)
+        rule_flags(sys.argv[4], after)
+        measured |= {os.path.basename(p)[6:-3] for p in __import__("glob").glob(os.path.join(HERE, "rules", "check_*.py"))}
     new = 0
     print("rule\tfamily\tbefore\tafter\tnew")
     for rule, g in grammar.items():
