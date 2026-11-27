@@ -23,11 +23,31 @@ being protected.
 
 ## Scope
 
-In scope: the 8,778 APM records, printed faithfully to the Lean proof as written, judged against
-these rules. Out of scope: explaining more than the Lean proof does (a fuller argument than the
-author wrote), stylistic choices that break no rule, Rob's `latex_pp/printer_core*.py`, and the
-Lean proofs themselves. A finding that breaks no rule goes to `backlog.tsv`; it does not reopen
-the work.
+The grammar defines acceptance (Joe, 2026-11-27): a page the grammar rejects still needs cleaning
+up, and a page it accepts is done. In scope: the 8,778 APM records judged against these rules. The
+fix goes where the violation comes from: the printer when the page misreads the proof, and the Lean
+proof itself when the proof relies on something the grammar rejects and no faithful printing can
+avoid it (for example a95A07 sums 1/n² over all n ∈ ℕ and drops n = 0 by 1/0² = 0; the page cannot
+state that fact truthfully, so the proof is revised to sum over n ≥ 1). A change to a registered
+problem STATEMENT is Joe's decision, never a packet's. Out of scope: explaining more than the
+proof does, stylistic choices that break no rule, Rob's `latex_pp/printer_core*.py`. A finding that
+breaks no rule goes to `backlog.tsv`; it does not reopen the work.
+
+## Decisions the grammar makes
+
+Each line is a choice the grammar settles explicitly, accept or reject, so that no page is accepted
+by default. A new choice found later is added here before any fix.
+
+| choice | decision | rule | date |
+|---|---|---|---|
+| a fact true only by a Lean junk value (x/0 = 0, 0⁻¹ = 0, log 0 = 0, √(neg) = 0, truncated ℕ subtraction where it truncates) | reject, glossed or not | T2 | 2026-11-27 |
+| other totalised operations used at a point outside their domain: `deriv` of a non-differentiable function = 0, `∫` of a non-integrable function = 0, `∑'` of a non-summable family = 0, `limUnder` without a limit, `Real.arcsin`/`arccos` outside [−1, 1], ℕ/ℤ division read as exact division | reject (proposed; to be counted by RC-T2 before confirming) | T2 | 2026-11-27 |
+| a sum, product or index set starting at 0 where the mathematics starts at 1 and the 0 term vanishes only by convention | reject | T2 | 2026-11-27 |
+| "which is immediate" / "by simplification" as the reason for a step that uses local facts | reject: cite them (R6F) | R1 | 2026-11-26 |
+| a decision procedure (omega, linarith, norm_num) as the reason for an arithmetic fact | accept, named as a computation, not as a proof by contradiction | D3 | 2026-11-26 |
+| a value chosen by `Classical.choose` that the proof never uses | reject (t99A02 G_cayleyTree_aux_adjacency) | B2 | 2026-11-27 |
+| coercions (ℕ → ℝ, subtype → type) left implicit in a formula | accept when the meaning is unchanged; reject when a step reads as circular without them (m97A04 congrArg Fin.val) | T1 | 2026-11-27 |
+
 
 ## Admitting a new class
 
