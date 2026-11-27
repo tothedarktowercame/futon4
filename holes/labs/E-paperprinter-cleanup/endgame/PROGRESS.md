@@ -1,17 +1,17 @@
-# PaperPrinter residual — 2026-11-26
+# PaperPrinter residual — 2026-11-27
 
 **Status: rendering works; informalisation validation is in progress** (`READINESS.md`: six gates, one met). The ink figures below are an audit surface, not a share of correct proofs.
 
 ## Finish line
 
 - Frozen classes: **70**: 30 done, 2 not defects, 33 open, 5 unknown.
-- Corpus gate: 8,778 records; accepted head with a full census: `13f559121536e3d8cbbfa1c237d82033155c3f1b`.
+- Corpus gate: 8,778 records; accepted head with a full census: `f5aa001f`.
 - Proof errors: 0 at the accepted head. Performance class: closed.
 - N1 (rows with an empty reason): **0 records** at this head, down from 1,035 records at the full-corpus freeze.
-- C4 (blocks with a repeated left side, scanner count): **2 records**.
-- Residual ink (audit surface; 27/37 open-or-unknown classes have markup, extractor precision not yet reviewed): **2.592%** of reader-visible proof-source characters, in 280 records; see `INK.md`.
-- Ink change since `7c3a98939b654dc560a91357e25189a08a5ec1f8`: union +2.526 points; P-sufficiency-wall -1 records.
-- Largest colors: P-claim-binders-unintroduced 1.28%, R2 1.21%, R3 0.06%, P-missing-subproof 0.03%.
+- C4 (blocks with a repeated left side, scanner count): **0 records**.
+- Residual ink (audit surface; 28/38 open-or-unknown classes have markup, extractor precision not yet reviewed): **1.299%** of reader-visible proof-source characters, in 108 records; see `INK.md`.
+- Ink change since `13f559121536e3d8cbbfa1c237d82033155c3f1b`: union -1.294 points; C4 -2 records, P-claim-binders-unintroduced -3 records, R2 -115 records, R3 -63 records.
+- Largest colors: P-claim-binders-unintroduced 1.26%, P-missing-subproof 0.03%, C23 0.01%.
 
 ## Work now
 
@@ -33,7 +33,6 @@
 - WAITING `Q456` (integrate, C4), after `Q447`: STOPPED at Step 0 (zai-15): a98A07 #31 row 3 carries a content-free rewrite_source+named_citation; redirect (a) discount or (b) a95J03 only pending. Q456-REPORT.md.
 - WAITING `Q484B` (implement, C4), after `Q484`: zai-16; packet ~/notes/claude-16/coord/Q484B.md; invoke-1795623401812-29087-32d3a28b; returned 3df1415b+912d9af0: on the census library Q484 already resolves the instance, so Q484B is only a fallback; held until q278 (cand7 = Q481+Q484) shows whether a98A07 is cut without it.
 - WAITING `Q526B` (implement, C23), after `Q526`: claude-21 when Q528B lands.
-- WAITING `Q522P` (integrate, test-only), after `q299`: claude-16.
 
 ## Backlog understanding
 

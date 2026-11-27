@@ -968,3 +968,35 @@ a7bebf09f3ae1029246ec875c929b401f59edace	COVERAGE	-	25/35 open-or-unknown classe
 13f559121536e3d8cbbfa1c237d82033155c3f1b	UNION	280	327585	2.592199
 13f559121536e3d8cbbfa1c237d82033155c3f1b	TOTAL	8778	12637341	100.000000
 13f559121536e3d8cbbfa1c237d82033155c3f1b	COVERAGE	-	27/37 open-or-unknown classes	lower-bound
+f5aa001f	C1	0	0	0.000000
+f5aa001f	C4	0	0	0.000000
+f5aa001f	C5	0	0	0.000000
+f5aa001f	C6	0	0	0.000000
+f5aa001f	C7	0	0	0.000000
+f5aa001f	C8	0	0	0.000000
+f5aa001f	C12	0	0	0.000000
+f5aa001f	C16	0	0	0.000000
+f5aa001f	C17	0	0	0.000000
+f5aa001f	C18	0	0	0.000000
+f5aa001f	C19	0	0	0.000000
+f5aa001f	C21	0	0	0.000000
+f5aa001f	C22	0	0	0.000000
+f5aa001f	C23	1	767	0.006042
+f5aa001f	C26	0	0	0.000000
+f5aa001f	N1	0	0	0.000000
+f5aa001f	N14	0	0	0.000000
+f5aa001f	P-claim-binders-unintroduced	105	160199	1.261998
+f5aa001f	P-duplicate-closer	0	0	0.000000
+f5aa001f	P-duplicate-tag	0	0	0.000000
+f5aa001f	P-empty-claim	0	0	0.000000
+f5aa001f	P-missing-subproof	2	3889	0.030636
+f5aa001f	P-nonprop-suffices	0	0	0.000000
+f5aa001f	P-opaque-proof	0	0	0.000000
+f5aa001f	P-overexpanded-setup	0	0	0.000000
+f5aa001f	P-premature-conclusion	0	0	0.000000
+f5aa001f	P-sufficiency-wall	0	0	0.000000
+f5aa001f	R2	0	0	0.000000
+f5aa001f	R3	0	0	0.000000
+f5aa001f	UNION	108	164855	1.298676
+f5aa001f	TOTAL	8778	12694080	100.000000
+f5aa001f	COVERAGE	-	28/38 open-or-unknown classes	lower-bound
