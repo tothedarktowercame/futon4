@@ -8,7 +8,7 @@ Every name a line uses is introduced on the page before that use (Let, Suppose, 
 
 - census check: ink P-claim-binders-unintroduced (text; 10/16 false marks at q303, typed check wanted)
 - classes (4): C2 [done], N9 [done], P-lost-instance-hypotheses [open], P-claim-binders-unintroduced [open]
-- packets (10): Q124 (merged), Q395 (done), Q401 (done), Q409 (done), R1 (done), R1F (accepted), R1G (done), R1GA (reviewing), R1GC (reviewing), RC-B1 (dispatched)
+- packets (11): Q124 (merged), Q395 (done), Q401 (done), Q409 (done), R1 (done), R1F (accepted), R1G (done), R1GA (reviewing), R1GC (rework), R1GCB (dispatched), RC-B1 (dispatched)
 - pinned tests (27)
 
 ## B2 (binding)
@@ -125,6 +125,6 @@ not a defect, process, or candidate
 
 - census check: -
 - classes (5): C11 [notdefect], C14 [notdefect], N7 [done], N8 [done], N15 [unknown]
-- packets (23): Q103b (closed), Q107 (merged), Q121 (discovery), Q123 (discovery), Q125 (merged), Q131 (discovery), Q136 (merged), Q137 (merged), Q299 (done), Q314 (done), Q315 (done), Q371 (done), Q522P (superseded), Q528C (accepted), R7c (accepted), RC-TESTS (dispatched), TB003 (active), TB007 (done), cand35 (not-acceptable), cand36 (accepted), cand37 (superseded), cand38 (accepted), cand39 (census-running)
+- packets (24): Q103b (closed), Q107 (merged), Q121 (discovery), Q123 (discovery), Q125 (merged), Q131 (discovery), Q136 (merged), Q137 (merged), Q299 (done), Q314 (done), Q315 (done), Q371 (done), Q522P (superseded), Q528C (accepted), R7c (accepted), RC-TESTS (dispatched), TB003 (active), TB007 (done), cand35 (not-acceptable), cand36 (accepted), cand37 (superseded), cand38 (accepted), cand39 (held), cand40 (queued)
 - pinned tests (138)
 

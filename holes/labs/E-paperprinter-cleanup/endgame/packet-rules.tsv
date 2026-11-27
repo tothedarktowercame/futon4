@@ -28,3 +28,5 @@ RC-B1	B1	typed check: names introduced before use (replaces P-claim text regex)
 RC-L1T1	L1	typed checks L1 (sentence with its step) and T1 (formula means the term)
 RC-R2	R2	typed check: reason is what justifies the step
 RC-TESTS	-	map all 1057 pinned tests to rules; list pins whose expected text breaks a rule
+R1GCB	B1	a02J03 rintro set unintroduced
+cand40	-	candidate
