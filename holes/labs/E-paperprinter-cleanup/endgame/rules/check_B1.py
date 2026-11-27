@@ -221,7 +221,8 @@ def _math_segments(line, state):
 
 
 _NOT_A_USE = (r"(?![A-Za-z])"
-              r"(?!_\{?\\(?:bullet|ast|star|circ)\b)(?!_\{?\*)")   # x_\bullet, x_*: another name
+              r"(?!_\{?\\(?:bullet|ast|star|circ)\b)(?!_\{?\*)"   # x_\bullet, x_*: another name
+              r"(?!_\{?[+-])")   # f_{+}, f_{-} (fplus, fminus): another name
 
 
 def _display_rx(alts):
