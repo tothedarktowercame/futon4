@@ -1001,3 +1001,36 @@ f5aa001f	R3	0	0	0.000000
 f5aa001f	UNION	178	203599	1.603889
 f5aa001f	TOTAL	8778	12694080	100.000000
 f5aa001f	COVERAGE	-	29/39 open-or-unknown classes	lower-bound
+657a6fed	C1	0	0	0.000000
+657a6fed	C4	0	0	0.000000
+657a6fed	C5	0	0	0.000000
+657a6fed	C6	0	0	0.000000
+657a6fed	C7	0	0	0.000000
+657a6fed	C8	0	0	0.000000
+657a6fed	C12	0	0	0.000000
+657a6fed	C16	0	0	0.000000
+657a6fed	C17	0	0	0.000000
+657a6fed	C18	0	0	0.000000
+657a6fed	C19	0	0	0.000000
+657a6fed	C21	0	0	0.000000
+657a6fed	C22	0	0	0.000000
+657a6fed	C23	1	767	0.006025
+657a6fed	C26	0	0	0.000000
+657a6fed	N1	0	0	0.000000
+657a6fed	N14	0	0	0.000000
+657a6fed	P-claim-binders-unintroduced	16	34719	0.272748
+657a6fed	P-duplicate-closer	0	0	0.000000
+657a6fed	P-duplicate-tag	0	0	0.000000
+657a6fed	P-empty-claim	0	0	0.000000
+657a6fed	P-missing-subproof	2	3889	0.030551
+657a6fed	P-nonprop-suffices	0	0	0.000000
+657a6fed	P-opaque-proof	0	0	0.000000
+657a6fed	P-overexpanded-setup	0	0	0.000000
+657a6fed	P-premature-conclusion	0	0	0.000000
+657a6fed	P-second-without-first	3	1930	0.015162
+657a6fed	P-sufficiency-wall	0	0	0.000000
+657a6fed	R2	0	0	0.000000
+657a6fed	R3	0	0	0.000000
+657a6fed	UNION	22	41305	0.324487
+657a6fed	TOTAL	8778	12729343	100.000000
+657a6fed	COVERAGE	-	29/39 open-or-unknown classes	lower-bound
