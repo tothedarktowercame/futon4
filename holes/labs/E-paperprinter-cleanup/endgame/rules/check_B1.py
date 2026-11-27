@@ -70,15 +70,15 @@ def _local_displays(const):
         e = getattr(const, f, None)
         if e is not None:
             _binder_names(e, names, seen)
-    disp = {}
-    for n in names:
+    pairs = []
+    for n in sorted(names):  # sorted: a set's order follows PYTHONHASHSEED, and the result must not
         if _is_internal(n):
             continue
         d = _n2l(n)
         if not d or d.startswith("\\mathrm{h") or len(d) > 40:
             continue  # hypothesis names never print in math
-        disp.setdefault(d, n)
-    return disp
+        pairs.append((d, n))
+    return pairs
 
 
 def _statement_displays(const):
@@ -350,19 +350,20 @@ def check(row, const, constants):
         return [{"reason": "unmeasured: no elaborated constant/value for the declaration", "anchor": ""}]
     decl = row["declaration"]
     disp = {}
-    for d, n in _local_displays(const).items():
-        disp.setdefault(_sub_norm(d), n)
+    name_disp = {}  # every display a name produces: two locals (x0, x₀) may share one, and an
+    for d, n in _local_displays(const):  # introduction of either introduces it
+        ds = [_sub_norm(d)]
         m = re.match(r"^([A-Za-z]|\\[A-Za-z]+)(\d+)$", d)
         if m:  # name_to_latex("L0") is "L0", the page prints L_{0}
-            disp.setdefault(_sub_norm(m.group(1) + "_{" + m.group(2) + "}"), n)
+            ds.append(_sub_norm(m.group(1) + "_{" + m.group(2) + "}"))
+        for x in ds:
+            disp.setdefault(x, n)
+            name_disp.setdefault(n, set()).add(x)
     if not disp:
         return []
     alts = sorted(disp, key=len, reverse=True)
     rx = _display_rx(alts)
     bare = _bare_constant_displays(const)
-    name_disp = {}
-    for d, n in disp.items():
-        name_disp.setdefault(n, set()).add(d)
     scopes = [{_sub_norm(d) for d in _statement_displays(const)}]
     hidden = [set()]   # per scope: names a claim heading's leading forall rebinds (shadowing)
     pending = set()
