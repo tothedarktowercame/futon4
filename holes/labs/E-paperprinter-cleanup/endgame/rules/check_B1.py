@@ -126,6 +126,7 @@ def _group(s, i):
 
 
 _ATOM = re.compile(r"^(\\?[A-Za-z]+|\\math\w+\{[^{}]*\}|[A-Za-z]_\{?\w+\}?|\\[A-Za-z]+_\{?\w+\}?)$")
+_NOTATION_HEAD = re.compile(r"^(\\?[A-Za-z]+)_")
 _TEXT_BINDER = re.compile(r"\b(for all|for every|for each|for some|for a\.e\.|for almost|frequently|eventually|there (?:is|exists))")
 _WRAPS = ("\\text", "\\operatorname", "\\mathrm", "\\mathbb", "\\mathcal", "\\mathfrak",
           "\\mathit", "\\mathsf", "\\mathbf", "\\seqsplit", "\\textit", "\\textbf")
@@ -155,6 +156,14 @@ def _clean(s, displays, anchors, decl):
                 out.append("\x00" + name + "\x00")
             elif _ATOM.match(a.strip()) and a.strip() not in displays:
                 out.append(" § ")
+            elif (b and not b.startswith("local:")
+                  and (h := _NOTATION_HEAD.match(a.strip())) and h.group(1) in displays
+                  and not any(len(d) > len(h.group(1)) and _sub_norm(a.strip()).startswith(d)
+                              for d in displays)):
+                # a constant's subscripted notation, P_{V} (starProjection), H_{0}(X)
+                # (singular homology): its head letter is notation, not the local P or H;
+                # the subscript and arguments are still read
+                out.append(" § " + _clean(a.strip()[h.end(1):], displays, anchors, decl))
             else:
                 out.append(_clean(a, displays, anchors, decl))
             i = k
