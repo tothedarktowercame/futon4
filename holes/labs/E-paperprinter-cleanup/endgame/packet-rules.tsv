@@ -1,0 +1,30 @@
+item	rule	note
+Q500	V1	a young unfold printed by name (raw head)
+Q519B	R1	citation loss
+R1	B1	discovery: claim binders unintroduced
+R2	D3	discovery: decision procedure printed as contradiction
+R3	D3	discovery: unstated contradiction supposition
+R6	R1	discovery: "which is immediate" where local facts are used
+R6F	R1	immediate steps cite the facts they use
+R6F2	R1	regression repair (cand34 pins)
+R6F3	R1	citation losses at R6F tip
+R6F4	R1	argument-proof claim block drops facts
+R7	R2	"this is (n)" restates a different fact
+R7c	-	regression repair across classes (C4, C5, citations)
+R7d	V1	ink C5
+Q522P	-	test-only
+Q527B	D1	regression: sufficiency lead
+Q528C	-	regression repair (cand34 pins)
+R1S	D1	discovery: Second without First
+R1FC	R1	citation cap displaced cited facts
+R1TS	L1	a let from unfolded data printed as a step of this proof
+cand35	-	candidate
+cand36	-	candidate
+cand37	-	candidate
+cand38	-	candidate
+cand39	-	candidate
+RC-T2	T2	typed check: no convention-only fact (a95A07 hf0/hrange/statement)
+RC-B1	B1	typed check: names introduced before use (replaces P-claim text regex)
+RC-L1T1	L1	typed checks L1 (sentence with its step) and T1 (formula means the term)
+RC-R2	R2	typed check: reason is what justifies the step
+RC-TESTS	-	map all 1057 pinned tests to rules; list pins whose expected text breaks a rule
