@@ -1,0 +1,72 @@
+class	rule	note
+C1	D3	binary Or split: the alternatives must be named
+C2	B1	data lambda applied to its own binder
+C3	D2	conclusion stated twice
+C4	D4	repeated row in a chain
+C5	V1	raw bottom
+C6	V1	raw top
+C7	V1	raw Lean words
+C8	V1	predicate lambda x ↦ x ∈ S
+C9	D3	closer misnames the alternative
+C10	B3	x_x name
+C11	-	not a defect
+C12	V1	Subgroup.map argument (not a defect at Q280; still counted)
+C13	V1	Lean notation in a chart name
+C14	-	not a defect (Path readings by design)
+C15	V1	lp.single rendered as j
+C16	R2	"by transitivity" with no middle term shown
+C17	V1	\seqsplit raw head
+C18	T2	case condition comparing two literals ("if 0 = 1")
+C19	T1	minus before a negation without parentheses
+C20	R1	a reason no longer shown after a merge of rows
+C21	R1	"a library lemma" with no description
+C22	D3	"0 > 0" printed as a row instead of as the contradiction
+C23	L1	a fact derived under a local assumption printed detached ("We have 1 = 0")
+C24	T1	missing parentheses change the expression
+C25	T1	outer function of a composition lost
+C26	R2	"by transitivity, using (n)" with no middle term
+N1	R1	empty-reason rewrite rows
+N2	D4	chain rows out of order
+N3	R2	reason restates its row
+N4	D1	cardinality goal not stated
+N5	D2	conjunct claim stated twice
+N6	R1	congrArg rows cite their fact
+N7	-	process: proofs timing out
+N8	-	process: speed
+N9	B1	nested renders drop binder symbols
+N10	V1	Ideal.comap ext goal
+N11	V1	closed-graph definition
+N12	R2	definition reasons name the definition
+N13	V1	Lp composition shows its map
+N14	D1	calc with no step stating its goal
+N15	-	process: real-corpus tests not in the gate
+N16	R2	citation prints a raw hypothesis name
+P-sufficiency-wall	D4	runs of "It suffices" sentences
+P-alias-definition	B2	alias definitions
+P-definition-restatement	B2	definition restated
+P-unfolded-local	B3	a let's name replaces later copies of its value
+P-raw-application	V1	raw application
+P-hidden-arguments	V1	hidden arguments
+P-empty-claim	D2	"We claim X:" with nothing under it
+P-duplicate-closer	D2	same-reason nested closer
+P-nonprop-suffices	D1	"It suffices to show" a non-proposition
+P-empty-chain-reason	R1	chain row with an empty reason
+P-overexpanded-setup	B2	dead setup facts
+P-missing-subproof	D2	claim with its subproof missing
+P-premature-conclusion	D2	closer before its proof
+P-opaque-proof	D2	extensionality closer with no pointwise step
+P-duplicate-tag	B3	two hypotheses keyed by one name
+P-empty-sentence	D2	empty item or paragraph
+P-truncated-walk	D2	walk budget exhausted, closer still printed
+P-unnamed-library-result	R1	library theorem printed as step numbers or "by simplification"
+P-misattributed-reason	R2	printed reason is not what justifies the step
+P-implementation-vocabulary	V1	Lean implementation shows through
+P-lost-row	D4	a calculation row lost by a change
+P-swapped-power	T1	base and exponent swapped
+P-missing-closer	D2	proof ends without stating its goal
+P-sufficiency-end	D2	proof ends on "It suffices" with no reason
+P-lost-instance-hypotheses	B1	statement omits instance hypotheses
+P-claim-binders-unintroduced	B1	claim's binders used without introduction
+R3	D3	contradiction whose supposition is never stated
+R2	D3	decision procedure's refutation printed as a contradiction
+P-second-without-first	D1	"Second," without a "First"

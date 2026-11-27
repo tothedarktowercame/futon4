@@ -1,0 +1,14 @@
+rule	family	statement	check
+B1	binding	Every name a line uses is introduced on the page before that use (Let, Suppose, Define, Obtain, Take), and the statement shows every hypothesis the proof uses.	ink P-claim-binders-unintroduced (text; 10/16 false marks at q303, typed check wanted)
+B2	binding	Nothing is introduced or stated that the proof does not use.	none at census (P-overexpanded-setup by text)
+B3	binding	A defined name stands for its value from then on; one name names one object.	ink P-duplicate-tag
+R1	reference	Every fact a step uses is cited: by its tag, by a named lemma, or by a named definition.	citcount (count), citres (resolution); ink N1, C21
+R2	reference	The reason given for a step is what justifies it, and points to a fact on the page.	citres (resolution); ink C16, C26
+D1	discourse	A goal is stated before it is reduced or proved: a part says what it shows, and an enumeration is complete (a Second has a First).	ink P-second-without-first, N14, P-nonprop-suffices
+D2	discourse	Every announced goal is proved under it and closed exactly once.	ink P-empty-claim, P-missing-subproof, P-premature-conclusion, P-opaque-proof, P-duplicate-closer
+D3	discourse	A proof form reads as what it is: a case split names its alternatives; a proof by contradiction states its supposition; a decision procedure's computation is not presented as an argument.	ink C1, R3, R2, C22
+D4	discourse	A calculation shows each step once, in order, with its reason.	ink C4 (review metric), P-sufficiency-wall
+L1	locality	A sentence appears with the step it describes, under the assumptions it depends on.	ink C23 (text); none for the general case
+V1	vocabulary	Mathematical notation and words only: no Lean names, raw heads, or implementation vocabulary.	ink C5, C6, C7, C8, C12, C17
+T1	truth	A printed formula denotes what the Lean term denotes (grouping, argument order, operator scope).	ink C19; none for C24, C25, P-swapped-power
+T2	truth	A stated fact is true as ordinary mathematics: no fact that holds only by a Lean convention (x/0 = 0, log 0 = 0, truncated subtraction) stated without saying so, no literal comparison presented as a fact.	ink C18; R1T typed probe (1 glossed case at q303)
