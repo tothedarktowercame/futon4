@@ -89,3 +89,16 @@
 {"expect": "clean", "head": "c8076d84", "id": "d1-n4-good", "ok": true, "rule": "D1", "why": "clean"}
 {"expect": "flag", "head": "c8076d84", "id": "d1-n14-head", "ok": true, "rule": "D1", "why": "calculation with no statement of its goal (part)"}
 {"expect": "flag", "head": "c8076d84", "id": "d1-mine-first-dropped", "ok": true, "rule": "D1", "why": "second without first: part 2 prints its ordinal, part 1 does not"}
+{"expect": "flag", "head": "c8076d84", "id": "d3-c1-split-or-as-cases-on", "ok": true, "rule": "D3", "why": "split: an Or split (Or.casesOn/elim) is presented as 'distinguish cases on' its disjunction, not by its alternatives"}
+{"expect": "clean", "head": "c8076d84", "id": "d3-c1-good", "ok": true, "rule": "D3", "why": "clean"}
+{"expect": "flag", "head": "c8076d84", "id": "d3-c9-wrong-alternative", "ok": true, "rule": "D3", "why": "alternative: the page says alternative 3 holds 1 time(s); the term selects alternative 3 0 time(s) (typed selections: {1: 1, 2: 1})"}
+{"expect": "clean", "head": "c8076d84", "id": "d3-c9-good", "ok": true, "rule": "D3", "why": "clean"}
+{"expect": "flag", "head": "c8076d84", "id": "d3-r3-supposition-removed", "ok": true, "rule": "D3", "why": "supposition: proof by contradiction on 'h' is never stated (its binder is not introduced on the page; its argument is printed: h1, hz)"}
+{"expect": "clean", "head": "c8076d84", "id": "d3-r3-good", "ok": true, "rule": "D3", "why": "clean"}
+{"expect": "flag", "head": "c8076d84", "id": "d3-r2-omega-as-contradiction", "ok": true, "rule": "D3", "why": "procedure: fact hn is a decision procedure's own refutation (hygienic byContradiction) printed as '— by contradiction'"}
+{"expect": "clean", "head": "c8076d84", "id": "d3-r2-good-omega", "ok": true, "rule": "D3", "why": "clean"}
+{"expect": "clean", "head": "c8076d84", "id": "d3-r2-good-author-by-contra", "ok": true, "rule": "D3", "why": "clean"}
+{"expect": "flag", "head": "c8076d84", "id": "d3-c22-self-comparison-goal", "ok": true, "rule": "D3", "why": "self-comparison: a numeral compared strictly with itself is printed as a row/goal instead of as the contradiction"}
+{"expect": "clean", "head": "c8076d84", "id": "d3-c22-good", "ok": true, "rule": "D3", "why": "clean"}
+{"expect": "flag", "head": "c8076d84", "id": "d3-mine-alt-swapped", "ok": true, "rule": "D3", "why": "alternative: the page says alternative 1 holds 1 time(s); the term selects alternative 1 0 time(s) (typed selections: {2: 1})"}
+{"expect": "clean", "head": "c8076d84", "id": "d3-good-b99a01-shared", "ok": true, "rule": "D3", "why": "clean"}
