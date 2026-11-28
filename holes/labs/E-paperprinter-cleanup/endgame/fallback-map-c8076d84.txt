@@ -1,0 +1,81 @@
+records 8778
+6136 2413 dash: this is (n)
+3922 2073 dash: by (n)
+2457 1288 calc: algebra
+1744 1065 dash: by (n) and (n)
+1203 719 dash: by Lemma n
+1114 617 calc: by (n)
+1098 674 form: Hence the claim
+1031 777 dash: by extensionality
+920 607 dash: by Lemma n, applied to (n), (n), and (n)
+876 578 calc: by Lemma n
+852 644 dash: by Lemma n, applied to (n)
+844 619 form: Hence the claim — this is (n)
+664 478 dash: by (n), (n), and (n)
+641 500 dash: by Lemma n, applied to (n) and (n)
+598 592 dash: by simplification
+594 407 form: In either case, the claim holds
+425 291 dash: by direct computation
+302 203 calc: since X
+243 155 dash: the first alternative holds
+242 214 dash: exhibited by an explicit element
+241 133 form: Hence the claim, the hypotheses being contradictory
+238 132 dash: by integer arithmetic
+227 120 dash: by \leanref{Lemma n}{_private
+225 153 dash: the second alternative holds
+210 135 form: Hence the claim — the first alternative holds
+208 117 calc: by linearity of the integral
+198 130 form: Hence the claim, by simplification
+195 131 form: Hence the claim — the second alternative holds
+182 116 form: Hence the claim, which is immediate from (n)
+182 112 dash: by \leanref{Lemma n}{ApmCanaries
+180 104 dash: immediate from its type
+153 92 form: Applying the same function to both sides of (n) gives \(\leanref
+151 46 form: Hence the claim by linear arithmetic
+140 109 form: by contradiction
+134 105 dash: by contradiction
+124 104 dash: by extensionality, using (n)
+118 96 dash: as a composition of continuous functions
+116 110 form: Both parts are shown; hence X
+104 87 dash: by direct computation, from (n)
+98 91 dash: by induction, using (n)
+95 90 form: Both parts are shown; hence X and X
+93 64 calc: by multiplying by a nonnegative factor
+91 80 calc: by definition of X
+89 54 calc: since the condition fails
+86 62 form: Applying the same function to both sides of (n) gives X
+86 78 calc: since the integrands agree almost everywhere
+81 53 dash: by transitivity through X, using (n)
+79 40 form: Hence the claim, which is immediate from (n) and (n)
+79 50 calc: since the condition holds
+79 50 form: Hence the claim, by definition
+79 49 dash: by transitivity through X, using (n) and (n)
+76 55 dash: as a composition of limits, using (n)
+76 52 dash: this is (n) and (n)
+76 36 dash: since a continuous function is integrable on a bounded interval,
+73 66 dash: by typeclass inference
+72 44 form: Hence the claim, since X
+72 54 dash: as a composition of continuous functions, using (n)
+69 51 dash: by Lagrange's theorem
+67 56 dash: by direct computation, from (n), (n), and (n)
+65 45 dash: since a continuously differentiable function is differentiable, 
+61 35 form: Hence the claim — by Lemma n, applied to (n), (n), and (n)
+60 45 calc: since the summands agree
+60 56 calc: by the triangle inequality
+60 49 calc: by definition of the interval integral
+56 48 dash: by direct computation, from (n) and (n)
+56 30 dash: by \leanref{Lemma n}{APMT99A02
+53 53 dash: by linear arithmetic
+53 43 dash: since the two functions eventually agree, using (n) and (n)
+52 52 dash: by ring normalisation
+52 40 dash: by extensionality, using (n), (n), and (n)
+52 29 form: Hence the claim, witnessed by X
+49 6 form: Hence the claim by contradiction
+48 44 dash: since the integrands agree almost everywhere
+48 35 dash: as a composition of limits, using (n) and (n)
+48 29 dash: since a continuous function with compact support is integrable, 
+47 44 dash: by extensionality, using (n) and (n)
+45 45 dash: by function-property automation
+45 45 form: In either case, X
+45 42 dash: using (n)
+43 28 form: Hence the claim by ring normalisation

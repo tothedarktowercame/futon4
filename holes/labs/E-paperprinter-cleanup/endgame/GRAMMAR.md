@@ -108,6 +108,44 @@ The first ledger (head 657a6fed): 5 rules at level 1 (B1, L1, R2, T1, T2), 8 at 
 validated. The first B1 cases found a real miss on the first run: a name the printer invents for an
 anonymous component (t96J04 "obtain f(w) = y") is not a binder of the term, so B1 never sees it.
 
+## Generation: the grammar produces the page (from 2026-11-28)
+
+Joe, 2026-11-28: "ultimately if it is a grammar it should work for generation, so it should stop
+before emitting nonsense, because nonsense is not covered by the grammar." And: "generate as far as
+we can without producing nonsense and then add validated rules that push generation forward."
+
+Why the checks alone did not converge: they read only the census record (a theorem's statement and
+proof, not the definition cards, lemma cards or page frame), and they were measured for precision
+(are the flags real), never for recall (what share of the defects a reader finds they flag). Every
+check is written against the shapes already found, so a new shape (a definition card printed as
+A = A, 12 of 169 cards on the lineup) passes until someone reads the page.
+
+The approach from here:
+
+- **Forms.** The page is built from typed sentence forms: "Definition: f(x) = body", "Define a = v",
+  "Suppose P ... contradiction", "We claim X: ... closed", a calculation row, a cited step. Each form
+  is a constructor with typed preconditions taken from the 13 rules (the typed tests the checks
+  already make). A form that cannot be built is not printed.
+- **Gaps, not fallbacks.** Where the walk now prints something with no form behind it ("algebra",
+  "by simplification", "Hence the claim", "Applying the same function to both sides", a raw name in
+  `\seqsplit`, a head-glued-to-body definition card), it prints a marked gap naming the rule
+  instead. The page is generated as far as it can be and shows where it stops.
+  `fallback-map-c8076d84.txt` is the first map: the reason and closer phrases on the head's pages,
+  by count (occurrences, records). Most are emitted in `paper_proof_walk/render.py`, which is ours;
+  the raw-name fallback is in Rob's `printer_core` and is treated as a gap on our side.
+- **Admitting a form.** A form is admitted when its bad and good cases pass (level 2 above, applied
+  to the form). Work goes from the gaps, by count: choose a gap, write the form that covers it,
+  admit it, and that stretch of every page fills in. Progress is one-way.
+- **Known defects are the acceptance suite.** Every bad case in `rule-validation.tsv`, every flag
+  read real, the old ink classes and every defect Joe reports is a test with three states:
+  failing (the defect is still printed), gapped (the step is now a gap) and passing (an admitted
+  form prints it correctly). Done means every test passing.
+- **The checks stay** as the detectors that decide each test's state, and as the oracle for a new
+  form; they are no longer the gate.
+
+The end result, if it works: a semantic grammar for written mathematics at the level of these
+proofs, whose forms are justified by the Lean terms they are built from.
+
 ## Done
 
 Every rule at ledger level 4, and a random sample of 30 pages read against the rules finds no
