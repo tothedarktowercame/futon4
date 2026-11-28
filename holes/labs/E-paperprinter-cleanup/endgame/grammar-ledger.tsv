@@ -2,6 +2,7 @@ rule	family	level	check	cases	precision	decided	violating	exceptions	text_marks	
 B1	binding	1 checked	rules/check_B1.py	4/5 pass	not read	8778/8778 (100.0%)	1748 (19.9%)	0	13	c8415d75
 B2	binding	3 covered	rules/check_B2.py	11/11 pass	15/15 real	8777/8778 (100.0%)	583 (6.6%)	0	0	c8415d75
 B3	binding	3 covered	rules/check_B3.py	11/11 pass	13/15 real	8776/8778 (100.0%)	645 (7.3%)	0	0	c8415d75
+B4	binding	0 unchecked	"none (a97J06 ""Define γ = 2"" is the first case; GEN-EXT prints it a)"	none	not read	-	unknown	0	0	c8415d75
 R1	reference	3 covered	rules/check_R1.py	19/19 pass	15/15 real	8713/8778 (99.3%)	5125 (58.4%)	0	0	c8415d75
 R2	reference	1 checked	rules/check_R2.py	none	not read	8608/8778 (98.1%)	68 (0.8%)	0	0	c8415d75
 D1	discourse	3 covered	rules/check_D1.py	9/9 pass	13/15 real	8449/8778 (96.3%)	92 (1.0%)	0	1	c8415d75

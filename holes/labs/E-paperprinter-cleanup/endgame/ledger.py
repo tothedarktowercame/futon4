@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The grammar ledger: where each of the 13 rules stands at one accepted head.
+"""The grammar ledger: where each of the grammar's rules (grammar.tsv; 14 from 2026-11-28) stands at one accepted head.
 
   ledger.py HEAD_DIR [OUT.tsv]
 
@@ -21,7 +21,7 @@ Rigor is tracked per rule, as a level on a fixed ladder (GRAMMAR.md, "The ledger
                 for the rule is undecided, never counted as clean.
   4 conformant  no record violates the rule, except those listed by name in rule-exceptions.tsv.
 
-A level needs every level below it.  The push gate is level 4 on all 13 rules.
+A level needs every level below it.  The push gate is level 4 on every rule in grammar.tsv.
 """
 import collections, csv, glob, gzip, json, os, sys
 

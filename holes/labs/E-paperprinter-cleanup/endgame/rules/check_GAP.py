@@ -28,7 +28,12 @@ Misses:
 RULE = "GAP"
 
 _MACRO = "\\grammargap"
-_RULES = frozenset({"B1", "B2", "B3", "R1", "R2", "D1", "D2", "D3", "D4", "L1", "V1", "T1", "T2"})
+import os as _os
+
+# The grammar's rule ids, read from grammar.tsv so a rule Joe adds (B4, 2026-11-28) is a valid gap.
+with open(_os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))), "grammar.tsv"),
+          encoding="utf-8") as _f:
+    _RULES = frozenset(line.split("\t", 1)[0] for line in _f if line.strip() and not line.startswith("rule\t"))
 
 
 def _braced(text, start):

@@ -6,11 +6,11 @@ The work may stay open-ended; what must not happen is losing track of what each 
 
 ## The rules
 
-`grammar.tsv` holds thirteen rules in six families. A printed proof page must satisfy every rule.
+`grammar.tsv` holds fourteen rules in six families (B4 added by Joe, 2026-11-28). A printed proof page must satisfy every rule.
 
 | family | rules | what they protect |
 |---|---|---|
-| binding | B1–B3 | names: every name is introduced before use, nothing is introduced that is unused, and a name keeps one meaning |
+| binding | B1–B4 | names: every name is introduced before use, nothing is introduced that is unused, a name keeps one meaning, and a definition introduces a new object |
 | reference | R1–R2 | citations: every fact a step uses is cited, and the citation is the real justification |
 | discourse | D1–D4 | the shape of the argument: goals before their proofs, each goal closed once, proof forms named as they are, calculations in order |
 | locality | L1 | a sentence sits with its own step and under its own assumptions |
@@ -46,6 +46,7 @@ by default. A new choice found later is added here before any fix.
 | "which is immediate" / "by simplification" as the reason for a step that uses local facts | reject: cite them (R6F) | R1 | 2026-11-26 |
 | a decision procedure (omega, linarith, norm_num) as the reason for an arithmetic fact | accept, named as a computation, not as a proof by contradiction | D3 | 2026-11-26 |
 | a value chosen by `Classical.choose` that the proof never uses | reject (t99A02 G_cayleyTree_aux_adjacency) | B2 | 2026-11-27 |
+| a definition whose value is a literal or an object already named (a97J06 "Define γ = 2") | reject: a definition introduces a new object (Joe: "a definition introduces a new object seems like a good rule"); substitute the value, or gap B4 where the typed data cannot decide | B4 | 2026-11-28 |
 | coercions (ℕ → ℝ, subtype → type) left implicit in a formula | accept when the meaning is unchanged; reject when a step reads as circular without them (m97A04 congrArg Fin.val) | T1 | 2026-11-27 |
 
 
@@ -102,7 +103,7 @@ Each rule stands at one level of a ladder; a level needs every level below it.
   statement. Old ink classes become bad cases under their rules (`class-rules.tsv`).
 - A candidate is accepted only if no rule's violations rise, no rule's coverage falls, and every
   case that passed at the previous head still passes.
-- **Push gate (mfuton-share): all 13 rules at level 4.**
+- **Push gate (mfuton-share): all 14 rules at level 4.**
 
 The first ledger (head 657a6fed): 5 rules at level 1 (B1, L1, R2, T1, T2), 8 at level 0, none
 validated. The first B1 cases found a real miss on the first run: a name the printer invents for an
@@ -124,7 +125,7 @@ The approach from here:
 
 - **Forms.** The page is built from typed sentence forms: "Definition: f(x) = body", "Define a = v",
   "Suppose P ... contradiction", "We claim X: ... closed", a calculation row, a cited step. Each form
-  is a constructor with typed preconditions taken from the 13 rules (the typed tests the checks
+  is a constructor with typed preconditions taken from the 14 rules (the typed tests the checks
   already make). A form that cannot be built is not printed.
 - **Gaps, not fallbacks.** Where the walk now prints something with no form behind it ("algebra",
   "by simplification", "Hence the claim", "Applying the same function to both sides", a raw name in

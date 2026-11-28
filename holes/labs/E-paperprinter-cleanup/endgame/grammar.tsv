@@ -2,6 +2,7 @@ rule	family	statement	check
 B1	binding	Every name a line uses is introduced on the page before that use (Let, Suppose, Define, Obtain, Take), and the statement shows every hypothesis the proof uses.	ink P-claim-binders-unintroduced (text; 10/16 false marks at q303, typed check wanted)
 B2	binding	Nothing is introduced or stated that the proof does not use.	none at census (P-overexpanded-setup by text)
 B3	binding	A defined name stands for its value from then on; one name names one object.	ink P-duplicate-tag
+B4	binding	A definition introduces a new object: what Define (let, set) names is not a literal or an object the page already names.	a97J06 "Define γ = 2" is the first case; GEN-EXT prints it as a gap
 R1	reference	Every fact a step uses is cited: by its tag, by a named lemma, or by a named definition.	citcount (count), citres (resolution); ink N1, C21
 R2	reference	The reason given for a step is what justifies it, and points to a fact on the page.	citres (resolution); ink C16, C26
 D1	discourse	A goal is stated before it is reduced or proved: a part says what it shows, and an enumeration is complete (a Second has a First).	ink P-second-without-first, N14, P-nonprop-suffices
