@@ -1,8 +1,8 @@
 rule	family	level	check	cases	precision	decided	violating	exceptions	text_marks	head
 B1	binding	1 checked	rules/check_B1.py	4/5 pass	not read	8778/8778 (100.0%)	1748 (19.9%)	0	13	c8076d84
-B2	binding	2 validated	rules/check_B2.py	11/11 pass	15/15 real	not run at this head	unknown	0	0	c8076d84
-B3	binding	2 validated	rules/check_B3.py	11/11 pass	13/15 real	not run at this head	unknown	0	0	c8076d84
-R1	reference	2 validated	rules/check_R1.py	19/19 pass	15/15 real	not run at this head	unknown	0	0	c8076d84
+B2	binding	3 covered	rules/check_B2.py	11/11 pass	15/15 real	8777/8778 (100.0%)	583 (6.6%)	0	0	c8076d84
+B3	binding	3 covered	rules/check_B3.py	11/11 pass	13/15 real	8776/8778 (100.0%)	644 (7.3%)	0	0	c8076d84
+R1	reference	3 covered	rules/check_R1.py	19/19 pass	15/15 real	8713/8778 (99.3%)	5125 (58.4%)	0	0	c8076d84
 R2	reference	1 checked	rules/check_R2.py	none	not read	8608/8778 (98.1%)	68 (0.8%)	0	0	c8076d84
 D1	discourse	1 checked	rules/check_D1.py	8/8 pass	11/11 real	not run at this head	unknown	0	1	c8076d84
 D2	discourse	2 validated	rules/check_D2.py	21/21 pass	15/15 real	not run at this head	unknown	0	2	c8076d84
