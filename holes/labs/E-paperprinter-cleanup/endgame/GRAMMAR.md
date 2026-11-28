@@ -140,6 +140,16 @@ The approach from here:
   read real, the old ink classes and every defect Joe reports is a test with three states:
   failing (the defect is still printed), gapped (the step is now a gap) and passing (an admitted
   form prints it correctly). Done means every test passing.
+- **Credence and completeness, per node of the proof tree** (Joe, 2026-11-28: "a high level
+  outline of the proof should be possible to generate now with high credence, but completeness is
+  still low in many cases. as we fill in details, both credence and completeness get pushed down
+  the tree until we are done"). The walk's Step tree is the tree. A node's *completeness* is the
+  share of its subtree printed by admitted forms rather than gaps (computed). A node's *credence*
+  is its form's measured record: cases passed, the share of its outputs read real, lowered by every
+  reader-reported defect in that form's output; never a model's self-rating. An outline (statement,
+  case split, induction, the claims and what each shows) comes from the term's structure and can be
+  high-credence now; details fill in below it. The page always shows the outline, with each node's
+  two numbers, and gaps beneath. Done: completeness 1 at every root, credence at the bar everywhere.
 - **The checks stay** as the detectors that decide each test's state, and as the oracle for a new
   form; they are no longer the gate.
 
