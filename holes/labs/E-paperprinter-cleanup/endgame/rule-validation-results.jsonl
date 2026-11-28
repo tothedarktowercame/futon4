@@ -49,3 +49,14 @@
 {"expect": "clean", "head": "c8076d84", "id": "r1-good-modified", "ok": true, "rule": "R1", "why": "clean"}
 {"expect": "clean", "head": "c8076d84", "id": "r1-good-a99j04", "ok": true, "rule": "R1", "why": "clean"}
 {"expect": "flag", "head": "c8076d84", "id": "r1-mine-wrong-tag", "ok": true, "rule": "R1", "why": "step hs: uses (2)=hy0, not cited"}
+{"expect": "flag", "head": "c8076d84", "id": "b2-unused-define-q308", "ok": true, "rule": "B2", "why": "B2-unused-define: Define leftMap (\\iota_{*}) is not used on the page after it"}
+{"expect": "flag", "head": "c8076d84", "id": "b2-unused-define-built", "ok": true, "rule": "B2", "why": "B2-unused-define: Define R (\\tilde{R}) is not used on the page after it"}
+{"expect": "flag", "head": "c8076d84", "id": "b2-restated-built", "ok": true, "rule": "B2", "why": "B2-restated: Define R restated (same definition still in scope)"}
+{"expect": "flag", "head": "c8076d84", "id": "b2-restated-v-657", "ok": true, "rule": "B2", "why": "B2-restated: Define V restated (same definition still in scope)"}
+{"expect": "flag", "head": "c8076d84", "id": "b2-alias-head", "ok": true, "rule": "B2", "why": "B2-alias: Define cg names a local already named (its let value is a variable)"}
+{"expect": "flag", "head": "c8076d84", "id": "b2-dead-let-head", "ok": true, "rule": "B2", "why": "B2-dead-let: Define T is never used (no let body refers to it)"}
+{"expect": "flag", "head": "c8076d84", "id": "b2-dead-fact-head", "ok": true, "rule": "B2", "why": "B2-dead-fact: fact hr is never used (no binder body refers to it)"}
+{"expect": "clean", "head": "c8076d84", "id": "b2-good-define-used", "ok": true, "rule": "B2", "why": "clean"}
+{"expect": "clean", "head": "c8076d84", "id": "b2-good-sibling-defines", "ok": true, "rule": "B2", "why": "clean"}
+{"expect": "clean", "head": "c8076d84", "id": "b2-good-same-line-use", "ok": true, "rule": "B2", "why": "clean"}
+{"expect": "flag", "head": "c8076d84", "id": "b2-mine-restated-z", "ok": true, "rule": "B2", "why": "B2-restated: Define z restated (same definition still in scope)"}
