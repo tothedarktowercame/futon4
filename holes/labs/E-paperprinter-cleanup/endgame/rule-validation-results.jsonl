@@ -1,0 +1,5 @@
+{"expect": "clean", "head": "657a6fed", "id": "b1-statement-binder", "ok": true, "rule": "B1", "why": "clean"}
+{"expect": "flag", "head": "657a6fed", "id": "b1-define-removed", "ok": true, "rule": "B1", "why": "uses R (local R) with no introduction in scope"}
+{"expect": "clean", "head": "657a6fed", "id": "b1-good", "ok": true, "rule": "B1", "why": "clean"}
+{"expect": "flag", "head": "657a6fed", "id": "b1-obtain-witness-removed", "ok": true, "rule": "B1", "why": "uses z (local z) with no introduction in scope"}
+{"expect": "flag", "head": "657a6fed", "id": "b1-t96j04-unnamed-w", "ok": false, "rule": "B1", "why": "not flagged"}

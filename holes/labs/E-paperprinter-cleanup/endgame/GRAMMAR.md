@@ -74,7 +74,41 @@ Limits, stated so the gate is not read as more than it is: the census detectors 
 false at q303). A rule's count of zero means no detected violation, not none. A fixed random
 reading sample, read against these rules, covers what the detectors cannot.
 
+## The ledger: rigor per rule (from 2026-11-28)
+
+Joe, 2026-11-28: "I don't think it is worth pushing until the grammar is solid, with all the checks
+and all of the conformance sorted out. That way any bug reports would open a new aspect of the
+grammar. We cleared the original \"ink\" but it didn't have the rigor of a grammar behind it."
+
+Each rule stands at one level of a ladder; a level needs every level below it.
+
+| level | name | what it takes |
+|---|---|---|
+| 0 | unchecked | the rule is stated in `grammar.tsv`; no typed check |
+| 1 | checked | `rules/check_<RULE>.py` decides on typed data and runs at the census |
+| 2 | validated | the check catches every constructed bad case in `rule-validation.tsv`, for its own reason (`match`), passes every good case, and a read sample of its flags is at least 13/15 real (`rule-precision.tsv`) |
+| 3 | covered | the check decides at least 95% of records (provisional bar); a record with an "unmeasured" row is undecided, never clean |
+| 4 | conformant | no violation, apart from records listed by name, with the reason, in `rule-exceptions.tsv` |
+
+- `ledger.py HEAD_DIR` writes `HEAD_DIR/grammar-ledger.tsv` at every accepted head: per rule the
+  level, the check, bad cases caught, precision read, records decided, records violating, named
+  exceptions, and the old ink marks (text, informational; they never raise a level).
+- `validate_rules.py HEAD_DIR` runs every case (from a snapshot of the head, with
+  typed-flags-env.sh sourced) and writes `rule-validation-results.jsonl`. A bad case is a real
+  record with the defect put back by one edit (`find` -> `replace`), or a record the head still gets
+  wrong. A case whose `find` no longer occurs is STALE and fails until rewritten.
+- Every defect found by reading, by Joe or anyone, becomes a bad case under its rule. If its rule's
+  check misses it, the check is wrong; if no rule covers it, the grammar gains a rule or a sharper
+  statement. Old ink classes become bad cases under their rules (`class-rules.tsv`).
+- A candidate is accepted only if no rule's violations rise, no rule's coverage falls, and every
+  case that passed at the previous head still passes.
+- **Push gate (mfuton-share): all 13 rules at level 4.**
+
+The first ledger (head 657a6fed): 5 rules at level 1 (B1, L1, R2, T1, T2), 8 at level 0, none
+validated. The first B1 cases found a real miss on the first run: a name the printer invents for an
+anonymous component (t96J04 "obtain f(w) = y") is not a binder of the term, so B1 never sees it.
+
 ## Done
 
-Every rule's census check reads zero, the citation checks are clean, and a random sample of 30 pages
-read against the rules finds no violation. Anything else found then is backlog.
+Every rule at ledger level 4, and a random sample of 30 pages read against the rules finds no
+violation. Anything else found then is a new bad case, and so a new aspect of the grammar.
