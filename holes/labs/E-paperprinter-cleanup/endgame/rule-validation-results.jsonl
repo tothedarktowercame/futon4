@@ -102,3 +102,15 @@
 {"expect": "clean", "head": "c8076d84", "id": "d3-c22-good", "ok": true, "rule": "D3", "why": "clean"}
 {"expect": "flag", "head": "c8076d84", "id": "d3-mine-alt-swapped", "ok": true, "rule": "D3", "why": "alternative: the page says alternative 1 holds 1 time(s); the term selects alternative 1 0 time(s) (typed selections: {2: 1})"}
 {"expect": "clean", "head": "c8076d84", "id": "d3-good-b99a01-shared", "ok": true, "rule": "D3", "why": "clean"}
+{"expect": "flag", "head": "c8076d84", "id": "d4-c4-row-repeated", "ok": true, "rule": "D4", "why": "repeated row: align row 5 repeats row 4 (the term has this row once): ( - 1)^{3} \\cdot ( - 1)"}
+{"expect": "flag", "head": "c8076d84", "id": "d4-n2-rows-swapped", "ok": true, "rule": "D4", "why": "row out of order: align row 3 is reached in the term only through a row printed after it: ( - 1)^{3} \\cdot ( - 1)"}
+{"expect": "flag", "head": "c8076d84", "id": "d4-lost-row-deleted", "ok": true, "rule": "D4", "why": "lost row: between align rows 1 and 2 the term has a step 'since \\(\\omega =  - p_{C}\\)' the page does not print"}
+{"expect": "flag", "head": "c8076d84", "id": "d4-reason-removed", "ok": true, "rule": "D4", "why": "row without a reason: align row 4 prints no reason; its typed row has 'since \\(p_{C}^{3} =  - 1\\)'"}
+{"expect": "clean", "head": "c8076d84", "id": "d4-calc-good", "ok": true, "rule": "D4", "why": "clean"}
+{"expect": "flag", "head": "c8076d84", "id": "d4-suffices-target-twice", "ok": true, "rule": "D4", "why": "repeated row: It suffices to show row 2 repeats row 1 (the term has this row once): \\mu_{1}|_{(0, 1)^{c}} \\perp \\mu_{1}|_{(0, 1)}"}
+{"expect": "clean", "head": "c8076d84", "id": "d4-suffices-good", "ok": true, "rule": "D4", "why": "clean"}
+{"expect": "flag", "head": "c8076d84", "id": "d4-parallel-head", "ok": true, "rule": "D4", "why": "parallel steps: 4 consecutive facts each restate (1) alone; one step printed as 4"}
+{"expect": "flag", "head": "c8076d84", "id": "d4-n2-row-from-another-chain", "ok": true, "rule": "D4", "why": "row does not follow: no typed row joins align row 2 to row 3: \\varepsilon \\cdot w(t)"}
+{"expect": "flag", "head": "c8076d84", "id": "d4-restate-head-m98a05", "ok": true, "rule": "D4", "why": "restate: shape B: one fact printed twice, as stated and as its transport re-reads it: (t : \\mathbb{R}) \\mapsto (w'(t))^{2} + (w(t))^{2} \\cdot (1 + \\varepsilon \\cdot w"}
+{"expect": "flag", "head": "c8076d84", "id": "d4-restate-put-back", "ok": true, "rule": "D4", "why": "restate: a printed fact the walk has no step for, directly after the fact it re-reads: \\operatorname{kernel} \\text{ is integrable on the boundary of the rectangle with"}
+{"expect": "flag", "head": "c8076d84", "id": "d4-mine-cited-row-deleted", "ok": true, "rule": "D4", "why": "lost row: between align rows 2 and 3 the term has a step 'by (1)' the page does not print"}
