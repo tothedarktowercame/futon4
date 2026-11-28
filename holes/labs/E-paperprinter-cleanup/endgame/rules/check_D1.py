@@ -252,7 +252,9 @@ def _calculations(steps, sentences, page):
         at = page.find(block)
         if at < 0:
             continue
-        line_start = max(page.rfind("\\item ", 0, at), page.rfind("\n\n", 0, at))
+        # max(.., 0): with no earlier item or blank line the slice page[-1:at] was empty, so a
+        # calculation in the first paragraph always flagged (b97J03 read, 2026-11-28).
+        line_start = max(page.rfind("\\item ", 0, at), page.rfind("\n\n", 0, at), 0)
         before = page[line_start:at]
         if "\\(" not in before and "\\[" not in before:
             hits.append({"reason": f"calculation with no statement of its goal ({s.kind})",

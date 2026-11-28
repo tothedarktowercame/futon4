@@ -114,3 +114,4 @@
 {"expect": "flag", "head": "c8076d84", "id": "d4-restate-head-m98a05", "ok": true, "rule": "D4", "why": "restate: shape B: one fact printed twice, as stated and as its transport re-reads it: (t : \\mathbb{R}) \\mapsto (w'(t))^{2} + (w(t))^{2} \\cdot (1 + \\varepsilon \\cdot w"}
 {"expect": "flag", "head": "c8076d84", "id": "d4-restate-put-back", "ok": true, "rule": "D4", "why": "restate: a printed fact the walk has no step for, directly after the fact it re-reads: \\operatorname{kernel} \\text{ is integrable on the boundary of the rectangle with"}
 {"expect": "flag", "head": "c8076d84", "id": "d4-mine-cited-row-deleted", "ok": true, "rule": "D4", "why": "lost row: between align rows 2 and 3 the term has a step 'by (1)' the page does not print"}
+{"expect": "clean", "head": "c8076d84", "id": "d1-first-paragraph-good", "ok": true, "rule": "D1", "why": "clean"}
