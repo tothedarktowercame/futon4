@@ -5,7 +5,7 @@ B3	binding	2 validated	rules/check_B3.py	11/11 pass	13/15 real	not run at this h
 R1	reference	2 validated	rules/check_R1.py	19/19 pass	15/15 real	not run at this head	unknown	0	0	c8076d84
 R2	reference	1 checked	rules/check_R2.py	none	not read	not run at this head	unknown	0	0	c8076d84
 D1	discourse	0 unchecked	none (ink P-second-without-first, N14, P-nonprop-suffices)	none	not read	-	unknown	0	1	c8076d84
-D2	discourse	0 unchecked	none (ink P-empty-claim, P-missing-subproof, P-premature-conclusio)	none	not read	-	unknown	0	2	c8076d84
+D2	discourse	2 validated	rules/check_D2.py	21/21 pass	15/15 real	not run at this head	unknown	0	2	c8076d84
 D3	discourse	0 unchecked	none (ink C1, R3, R2, C22)	none	not read	-	unknown	0	0	c8076d84
 D4	discourse	0 unchecked	none (ink C4 (review metric), P-sufficiency-wall)	none	not read	-	unknown	0	0	c8076d84
 L1	locality	1 checked	rules/check_L1.py	none	not read	not run at this head	unknown	0	1	c8076d84

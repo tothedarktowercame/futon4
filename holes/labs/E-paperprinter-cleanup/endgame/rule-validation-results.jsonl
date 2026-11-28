@@ -60,3 +60,24 @@
 {"expect": "clean", "head": "c8076d84", "id": "b2-good-sibling-defines", "ok": true, "rule": "B2", "why": "clean"}
 {"expect": "clean", "head": "c8076d84", "id": "b2-good-same-line-use", "ok": true, "rule": "B2", "why": "clean"}
 {"expect": "flag", "head": "c8076d84", "id": "b2-mine-restated-z", "ok": true, "rule": "B2", "why": "B2-restated: Define z restated (same definition still in scope)"}
+{"expect": "flag", "head": "c8076d84", "id": "d2-empty-claim", "ok": true, "rule": "D2", "why": "empty claim: the page announces let hfirst with nothing under it"}
+{"expect": "flag", "head": "c8076d84", "id": "d2-missing-subproof", "ok": true, "rule": "D2", "why": "empty claim: the page announces let hsecond with nothing under it"}
+{"expect": "flag", "head": "c8076d84", "id": "d2-opaque-proof", "ok": true, "rule": "D2", "why": "empty claim: the page announces let hf_inj with nothing under it"}
+{"expect": "flag", "head": "c8076d84", "id": "d2-missing-closer", "ok": true, "rule": "D2", "why": "closer missing from the page: let hfirst is closed by the walk but its page block ends without a closing sentence"}
+{"expect": "flag", "head": "c8076d84", "id": "d2-duplicate-closer", "ok": true, "rule": "D2", "why": "closed twice on the page: the block of let hsecond repeats its closing sentence"}
+{"expect": "flag", "head": "c8076d84", "id": "d2-C3-conclusion-twice", "ok": true, "rule": "D2", "why": "closed twice on the page: the block of let hf_inj repeats its closing sentence"}
+{"expect": "flag", "head": "c8076d84", "id": "d2-N5-claim-twice", "ok": true, "rule": "D2", "why": "closed twice on the page: the block of let hf_inj repeats its closing sentence"}
+{"expect": "flag", "head": "c8076d84", "id": "d2-premature-conclusion", "ok": true, "rule": "D2", "why": "closer before its proof on the page: the block of let hsecond states its conclusion before a later step"}
+{"expect": "flag", "head": "c8076d84", "id": "d2-empty-sentence", "ok": true, "rule": "D2", "why": "empty sentence: an item with no text"}
+{"expect": "flag", "head": "c8076d84", "id": "d2-closer-then-suffices", "ok": true, "rule": "D2", "why": "closed twice: 2 closers in the block of branch hz"}
+{"expect": "flag", "head": "c8076d84", "id": "d2-q308-stale-goal", "ok": true, "rule": "D2", "why": "stale goal: the block of let hf_inj opens with intro Steps and its closer restates the claim, not the goal left by them"}
+{"expect": "flag", "head": "c8076d84", "id": "d2-missing-closer-witness", "ok": true, "rule": "D2", "why": "missing closer: the block of part (unnamed) ends on a witness Step (-), its goal is never stated"}
+{"expect": "clean", "head": "c8076d84", "id": "d2-good-1", "ok": true, "rule": "D2", "why": "clean"}
+{"expect": "clean", "head": "c8076d84", "id": "d2-good-2", "ok": true, "rule": "D2", "why": "clean"}
+{"expect": "clean", "head": "c8076d84", "id": "d2-good-3", "ok": true, "rule": "D2", "why": "clean"}
+{"expect": "clean", "head": "c8076d84", "id": "d2-good-4", "ok": true, "rule": "D2", "why": "clean"}
+{"expect": "flag", "head": "c8076d84", "id": "d2-sufficiency-end-root", "ok": true, "rule": "D2", "why": "sufficiency end: the proof ends on a reduction of its goal (It suffices to show …) that nothing closes"}
+{"expect": "flag", "head": "c8076d84", "id": "d2-sufficiency-end-page", "ok": true, "rule": "D2", "why": "sufficiency end on the page: the proof's last reduction has a reason in the walk but the page ends on It suffices to show … without it"}
+{"expect": "clean", "head": "c8076d84", "id": "d2-good-sufficiency", "ok": true, "rule": "D2", "why": "clean"}
+{"expect": "clean", "head": "c8076d84", "id": "d2-good-5", "ok": true, "rule": "D2", "why": "clean"}
+{"expect": "flag", "head": "c8076d84", "id": "d2-mine-hdvd-closer-dropped", "ok": true, "rule": "D2", "why": "empty claim: the page announces let hdvd with nothing under it"}
