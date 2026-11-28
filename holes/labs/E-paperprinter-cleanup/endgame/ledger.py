@@ -14,7 +14,8 @@ Rigor is tracked per rule, as a level on a fixed ladder (GRAMMAR.md, "The ledger
   1 checked     a typed check exists and runs at the census.
   2 validated   the check catches every constructed bad case in rule-validation.tsv and passes every
                 good one (validate_rules.py -> rule-validation-results.jsonl), and a read sample of
-                its flags is >= 13/15 real (rule-precision.tsv).  A check with no bad case is not
+                its flags is >= 13/15 real (rule-precision.tsv), or, for a rule with
+                fewer flags, every flag at the head was read and >= 13/15 of them are real.  A check with no bad case is not
                 validated: a check nothing can fail proves nothing.
   3 covered     the check decides >= COVERAGE of the records: a record with any "unmeasured" row
                 for the rule is undecided, never counted as clean.
@@ -80,9 +81,11 @@ def main(head_dir, out_path=None):
     results = {(r["rule"], r["id"]): r for r in jsonl(os.path.join(HERE, "rule-validation-results.jsonl"))
                if r.get("head") == head}
     reads = collections.defaultdict(lambda: [0, 0])
+    read_keys = collections.defaultdict(set)
     for r in tsv("rule-precision.tsv"):
         reads[r["rule"]][1] += 1
         reads[r["rule"]][0] += r["verdict"] == "real"
+        read_keys[r["rule"]].add((r["module"], r["declaration"]))
 
     # Text marks (ink classes mapped by class-rules.tsv): what is known of a rule with no typed
     # check.  Informational only: a text mark never raises a level.
@@ -103,9 +106,14 @@ def main(head_dir, out_path=None):
         ids = cases[rule]
         passed = sum(1 for i in ids if results.get((rule, i), {}).get("ok"))
         real, read = reads[rule]
-        precise = read >= PRECISION[1] and real * PRECISION[1] >= PRECISION[0] * read
-        validated = checked and ids and passed == len(ids) and precise
         measured = checked and rule in ran
+        # claude-16, 2026-11-28: a rule that fires fewer than 15 times at this head can never reach
+        # 15 reads.  When every violating record at this head has been read, the read is the whole
+        # population, not a sample: the ratio bar alone applies.
+        census_read = measured and violating[rule] and violating[rule] <= read_keys[rule]
+        precise = ((read >= PRECISION[1] or census_read)
+                   and real * PRECISION[1] >= PRECISION[0] * read)
+        validated = checked and ids and passed == len(ids) and precise
         undec = undecided[rule] - violating[rule] if measured else records
         decided = total - len(undec)
         viol = violating[rule] - exceptions[rule]
@@ -122,7 +130,7 @@ def main(head_dir, out_path=None):
             "rule": rule, "family": g["family"], "level": f"{level} {LEVELS[level]}",
             "check": f"rules/check_{rule}.py" if checked else "none (" + g["check"][:60] + ")",
             "cases": f"{passed}/{len(ids)} pass" if ids else "none",
-            "precision": f"{real}/{read} real" if read else "not read",
+            "precision": (f"{real}/{read} real" + (" (every flag)" if census_read else "")) if read else "not read",
             "decided": f"{decided}/{total} ({100 * decided / total:.1f}%)" if measured else
                        ("not run at this head" if checked else "-"),
             "violating": f"{len(viol)} ({100 * len(viol) / total:.1f}%)" if measured else "unknown",
