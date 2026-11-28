@@ -149,6 +149,26 @@ The approach from here:
   Passing is only as good as the rule's check, and most of the ink rows reading passing are unread.
   `gap-rows.tsv` (156 R2 gaps traced to "immediate from its type" at c8076d84) is a bad-case set,
   not yet a source.
+- **Every printed piece says which form printed it** (Joe, 2026-11-28: "the ambiguity of those
+  six rows could be settled with metadata if nothing else"; "presumably we want something similar
+  for the formula printer, just, in that case, aligned with latexml metadata"). Sentences: the walk
+  records, per sentence and calc-row reason, the site/form id or gap rule in a "forms" list beside
+  the page (census record, not page text), so gap and form counts are exact rather than regex
+  counts. Formulas (FORMULA-META, claude-25, discovery): a PaperPrinter subclass emits a node key K
+  as an entity link per printed node (constructor, head constant, display rule, Lean Expr path,
+  parent, kept in a sidecar per declaration); scoped_proof_html turns it into a CSS class
+  `ppn-K` via `\href{pp:K}{\lxAddClass{ppn-K}...}`, merged into an existing `\leanref` link when
+  one covers the node (two links on one element lose one), and strips the `pp:` hrefs after. Off by
+  default: with marking off the census text is byte-identical; with it on, stripping the markers
+  must give the plain text (6 of 20 batch records failed that, all from binder_phrase.py:256
+  comparing rendered type strings; text comparisons must use marker-stripped text). Measured:
+  612 of 619 node classes reach the HTML (a fenced group `( .. )` loses its class, checked by
+  claude-16), LaTeXML 0.60 s vs 0.44 s per record. A core change, if one is needed, goes behind
+  an off-by-default flag (Joe: "we could put it behind a flag, rather than bother Rob"). Use: T1
+  compares each marked node's symbol run with LaTeXML's parse of the unmarked formula; on 20
+  records its 5 flags were all false (prose inside math, unparsed formulas, integral scope), so
+  that check needs those exclusions and a precision read before it counts. Side defect found:
+  every formula with a link has a broken alttext (`\href{u}{X}` -> `\hrefu`).
 - **Credence and completeness, per node of the proof tree** (Joe, 2026-11-28: "a high level
   outline of the proof should be possible to generate now with high credence, but completeness is
   still low in many cases. as we fill in details, both credence and completeness get pushed down
