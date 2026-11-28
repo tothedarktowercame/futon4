@@ -141,6 +141,14 @@ The approach from here:
   read real, the old ink classes and every defect Joe reports is a test with three states:
   failing (the defect is still printed), gapped (the step is now a gap) and passing (an admitted
   form prints it correctly). Done means every test passing.
+  Built (GEN-SUITE, claude-24, 2026-11-28): `suite.py build` writes `suite-rows.tsv` (2,647 rows:
+  22 validation cases, 115 real reads, 75 pins, 2,435 ink marks); `suite.py state HEADDIR --out
+  HEADDIR` writes `suite-<head>.tsv`. A fourth state, stale, counts rows it cannot decide. At
+  c8415d75: 394 failing, 1 gapped, 1,835 passing, 417 stale. A row read as real whose sentence is
+  still printed word for word is failing even when its check is silent (a recall miss, not a fix).
+  Passing is only as good as the rule's check, and most of the ink rows reading passing are unread.
+  `gap-rows.tsv` (156 R2 gaps traced to "immediate from its type" at c8076d84) is a bad-case set,
+  not yet a source.
 - **Credence and completeness, per node of the proof tree** (Joe, 2026-11-28: "a high level
   outline of the proof should be possible to generate now with high credence, but completeness is
   still low in many cases. as we fill in details, both credence and completeness get pushed down
