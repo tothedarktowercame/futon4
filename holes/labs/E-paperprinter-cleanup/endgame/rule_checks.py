@@ -82,6 +82,10 @@ def main(pattern, out_path, rules_dir):
             os.remove(part)
     for rule, (v, u, s) in total.items():
         print(f"{rule}\tviolations {v}\tunmeasured {u}\tcheck time {s:.0f}s", file=sys.stderr)
+    # Which checks ran (ledger.py): a rule with no rows is clean only if its check ran here.
+    with open(out_path + ".rules", "w", encoding="utf-8") as f:
+        for rule, (v, u, s) in sorted(total.items()):
+            f.write(f"{rule}\t{v}\t{u}\t{s:.0f}\n")
 
 
 if __name__ == "__main__":

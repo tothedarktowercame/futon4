@@ -8,3 +8,14 @@
 {"expect": "clean", "head": "c8076d84", "id": "b1-good", "ok": true, "rule": "B1", "why": "clean"}
 {"expect": "flag", "head": "c8076d84", "id": "b1-obtain-witness-removed", "ok": true, "rule": "B1", "why": "uses z (local z) with no introduction in scope"}
 {"expect": "flag", "head": "c8076d84", "id": "b1-t96j04-unnamed-w", "ok": false, "rule": "B1", "why": "not flagged"}
+{"expect": "flag", "head": "c8076d84", "id": "v1-c17-seqsplit", "ok": true, "rule": "V1", "why": "raw name: \\seqsplit marker (the printer's unruled-name fallback) on the page"}
+{"expect": "flag", "head": "c8076d84", "id": "v1-q308-toLin", "ok": true, "rule": "V1", "why": "raw name: Matrix.toLin has no reading in the printer and prints as its Lean name"}
+{"expect": "clean", "head": "c8076d84", "id": "v1-b94-good", "ok": true, "rule": "V1", "why": "clean"}
+{"expect": "flag", "head": "c8076d84", "id": "v1-c13-name", "ok": true, "rule": "V1", "why": "raw name: T96J02PresentedGroup has no reading in the printer and prints as its Lean name"}
+{"expect": "clean", "head": "c8076d84", "id": "v1-t96-good", "ok": true, "rule": "V1", "why": "clean"}
+{"expect": "flag", "head": "c8076d84", "id": "v1-c7-dotted", "ok": true, "rule": "V1", "why": "raw name: HilbertBasis.repr (a constant of the term or tagged on the page) printed verbatim as its dotted Lean name"}
+{"expect": "clean", "head": "c8076d84", "id": "v1-m05-good", "ok": true, "rule": "V1", "why": "clean"}
+{"expect": "flag", "head": "c8076d84", "id": "v1-rawapp-head", "ok": true, "rule": "V1", "why": "name words: IsM03J02Solution has no reading in the printer and prints as its identifier cut into words"}
+{"expect": "flag", "head": "c8076d84", "id": "v1-c7-head", "ok": true, "rule": "V1", "why": "raw name: APMM02A03Plane has no reading in the printer and prints as its Lean name"}
+{"expect": "flag", "head": "c8076d84", "id": "v1-isc2-head", "ok": true, "rule": "V1", "why": "name words: apm_t00a05_IsC2 has no reading in the printer and prints as its identifier cut into words"}
+{"expect": "flag", "head": "c8076d84", "id": "v1-mine-nat-raw", "ok": true, "rule": "V1", "why": "raw name: Nat has the reading \\mathbb{N} but prints as its Lean name"}

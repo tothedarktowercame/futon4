@@ -9,6 +9,6 @@ D2	discourse	0 unchecked	none (ink P-empty-claim, P-missing-subproof, P-prematur
 D3	discourse	0 unchecked	none (ink C1, R3, R2, C22)	none	not read	-	unknown	0	0	c8076d84
 D4	discourse	0 unchecked	none (ink C4 (review metric), P-sufficiency-wall)	none	not read	-	unknown	0	0	c8076d84
 L1	locality	1 checked	rules/check_L1.py	none	not read	8646/8778 (98.5%)	46 (0.5%)	0	1	c8076d84
-V1	vocabulary	0 unchecked	none (ink C5, C6, C7, C8, C12, C17)	none	not read	-	unknown	0	0	c8076d84
+V1	vocabulary	4 conformant	rules/check_V1.py	11/11 pass	14/15 real	8778/8778 (100.0%)	0 (0.0%)	0	0	c8076d84
 T1	truth	1 checked	rules/check_T1.py	none	not read	6900/8778 (78.6%)	13 (0.1%)	0	0	c8076d84
 T2	truth	1 checked	rules/check_T2.py	none	not read	7844/8778 (89.4%)	43 (0.5%)	0	0	c8076d84

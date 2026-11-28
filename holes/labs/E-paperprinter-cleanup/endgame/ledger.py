@@ -61,6 +61,16 @@ def main(head_dir, out_path=None):
         key = (f["module"], f["declaration"])
         (undecided if f.get("unmeasured") else violating)[f["rule"]].add(key)
 
+    # The checks that ran at this head: rule-flags.jsonl.rules (rule_checks.py, from 2026-11-28);
+    # for older heads, a rule with at least one row.  A check written after the census has not
+    # measured this head: it is "checked" but decides nothing here.
+    ran_path = os.path.join(head_dir, "rule-flags.jsonl.rules")
+    if os.path.exists(ran_path):
+        with open(ran_path, encoding="utf-8") as f:
+            ran = {line.split("\t")[0] for line in f if line.strip()}
+    else:
+        ran = set(violating) | set(undecided)
+
     exceptions = collections.defaultdict(set)
     for r in tsv("rule-exceptions.tsv"):
         exceptions[r["rule"]].add((r["module"], r["declaration"]))
@@ -95,7 +105,8 @@ def main(head_dir, out_path=None):
         real, read = reads[rule]
         precise = read >= PRECISION[1] and real * PRECISION[1] >= PRECISION[0] * read
         validated = checked and ids and passed == len(ids) and precise
-        undec = undecided[rule] - violating[rule] if checked else records
+        measured = checked and rule in ran
+        undec = undecided[rule] - violating[rule] if measured else records
         decided = total - len(undec)
         viol = violating[rule] - exceptions[rule]
         level = 0
@@ -103,7 +114,7 @@ def main(head_dir, out_path=None):
             level = 1
             if validated:
                 level = 2
-                if decided >= COVERAGE * total:
+                if measured and decided >= COVERAGE * total:
                     level = 3
                     if not viol:
                         level = 4
@@ -112,8 +123,9 @@ def main(head_dir, out_path=None):
             "check": f"rules/check_{rule}.py" if checked else "none (" + g["check"][:60] + ")",
             "cases": f"{passed}/{len(ids)} pass" if ids else "none",
             "precision": f"{real}/{read} real" if read else "not read",
-            "decided": f"{decided}/{total} ({100 * decided / total:.1f}%)" if checked else "-",
-            "violating": f"{len(viol)} ({100 * len(viol) / total:.1f}%)" if checked else "unknown",
+            "decided": f"{decided}/{total} ({100 * decided / total:.1f}%)" if measured else
+                       ("not run at this head" if checked else "-"),
+            "violating": f"{len(viol)} ({100 * len(viol) / total:.1f}%)" if measured else "unknown",
             "exceptions": str(len(exceptions[rule] & violating[rule])),
             "text_marks": str(len(marked[rule])),
             "head": head,
