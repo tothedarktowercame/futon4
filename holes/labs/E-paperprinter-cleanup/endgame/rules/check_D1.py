@@ -64,34 +64,9 @@ def _module_env(module, constants):
 
 
 def _walk(row, constants):
-    """(step lists, sentence-by-step-id): every Step list `_layout` laid out for the record
-    (the proof and any sub-layouts), or None."""
-    from mfuton.lean.blueprint_render.paper_proof_walk import render as R
-    from mfuton.lean.blueprint_render.paper_proof_walk import proof_body
-    table, layer, source = _module_env(row["module"], constants)
-    ci = table.get(row["declaration"])
-    if ci is None:
-        return None
-    cap, sentences = [], {}
-    orig_gp, orig_s = R._gather_prelude, R._sentence
-
-    def gp(steps):
-        cap.append(list(steps))
-        return orig_gp(steps)
-
-    def sentence(step, has_block=False, *, apm_policy=False):
-        out = orig_s(step, has_block, apm_policy=apm_policy)
-        sentences[id(step)] = out
-        return out
-
-    R._gather_prelude, R._sentence = gp, sentence
-    try:
-        proof_body(ci, layer, source, const_table=table, dep_table=_cache["lib"])
-    finally:
-        R._gather_prelude, R._sentence = orig_gp, orig_s
-    if not cap:
-        return None
-    return cap, sentences
+    """(step lists, sentence-by-step-id), or None: the record's one shared walk (walk_once)."""
+    import walk_once
+    return walk_once.walk(row, constants)
 
 
 def _parent(steps, i):

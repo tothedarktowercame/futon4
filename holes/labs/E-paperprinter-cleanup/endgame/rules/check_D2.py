@@ -84,21 +84,9 @@ def _module(module, constants):
 
 
 def _steps(row, const, constants):
-    from mfuton.lean.blueprint_render.paper_proof_walk import render as R
-    from mfuton.lean.blueprint_render.paper_proof_walk import proof_body
-    table, layer, lib, src = _module(row["module"], constants)
-    cap = []
-    orig = R._gather_prelude
-
-    def gp(steps):
-        cap.append(list(steps))
-        return orig(steps)
-    R._gather_prelude = gp
-    try:
-        proof_body(const, layer, src, const_table=table, dep_table=lib)
-    finally:
-        R._gather_prelude = orig
-    return cap[-1] if cap else None
+    import walk_once
+    walked = walk_once.walk(row, constants)
+    return walked[0][-1] if walked else None
 
 
 def _key(e):

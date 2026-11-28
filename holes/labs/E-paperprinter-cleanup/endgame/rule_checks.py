@@ -42,8 +42,14 @@ ALARM_MIN = float(os.environ.get("RULE_CHECK_ALARM_MIN", "120"))
 ALARM_MULT = float(os.environ.get("RULE_CHECK_ALARM_MULT", "5"))
 
 
+class CheckTimeout(BaseException):
+    """claude-23 (GEN-STALL): not an Exception.  The walk turns any Exception from a render call into
+    a fallback (52 `except Exception` sites in paper_proof_walk/, paper_walk.py, latex_pp/paper/), so
+    a TimeoutError raised there is swallowed and the walk carries on with no alarm left armed."""
+
+
 def _over_alarm(*_a):
-    raise TimeoutError("check over its per-record alarm")
+    raise CheckTimeout("check over its per-record alarm")
 
 
 def run_shard(args):
@@ -51,7 +57,7 @@ def run_shard(args):
     path, part, rules_dir = args
     checks = load_checks(rules_dir)
     counts = {c.RULE: [0, 0, 0.0] for c in checks}  # violations, unmeasured, seconds
-    with open(part, "w", encoding="utf-8") as out:
+    with open(part, "w", encoding="utf-8", buffering=1) as out:  # line-buffered: progress is visible
         for line in open(path, encoding="utf-8"):
             row = json.loads(line)
             try:
@@ -62,13 +68,16 @@ def run_shard(args):
             for c in checks:
                 t0 = time.time()
                 signal.signal(signal.SIGALRM, _over_alarm)
-                signal.alarm(int(max(ALARM_MIN, ALARM_MULT * (row.get("proof_seconds") or 0))))
+                # re-fires every 5 s until cleared: one swallowed alarm does not disarm the deadline
+                signal.setitimer(signal.ITIMER_REAL, max(ALARM_MIN, ALARM_MULT * (row.get("proof_seconds") or 0)), 5)
                 try:
                     hits = c.check(row, const, typed_flags.constants) or []
+                except CheckTimeout:
+                    hits = [{"reason": "unmeasured: check over its per-record alarm", "anchor": ""}]
                 except Exception as ex:  # report, never guess
                     hits = [{"reason": f"unmeasured: check raised {type(ex).__name__}: {str(ex)[:100]}", "anchor": ""}]
                 finally:
-                    signal.alarm(0)
+                    signal.setitimer(signal.ITIMER_REAL, 0)
                 counts[c.RULE][2] += time.time() - t0
                 for h in hits:
                     um = h["reason"].startswith("unmeasured")

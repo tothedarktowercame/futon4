@@ -478,19 +478,30 @@ def check(row, const, constants):
     if (row.get("proof_seconds") or 0) > CAP:
         return [{"reason": f"unmeasured: census render took {row.get('proof_seconds')} s > {CAP} s re-walk cap",
                  "anchor": ""}]
-    import signal
+    import signal, time
+
+    class _ReWalkTimeout(BaseException):  # not an Exception: the walk's fallbacks must not swallow it
+        pass
 
     def _alarm(*_a):  # the walk's own deadline is not checked in every phase (a01A05 ran past it)
-        raise TimeoutError(f"re-walk over {ALARM:.0f} s")
+        raise _ReWalkTimeout(f"re-walk over {ALARM:.0f} s")
+    # The runner (rule_checks.py) has its own repeating timer armed; keep it, and put it back after
+    # (claude-23, GEN-STALL: signal.alarm(0) here cancelled it for the rest of D4's check).
+    runner_left, runner_every = signal.getitimer(signal.ITIMER_REAL)
+    t0 = time.time()
     old = signal.signal(signal.SIGALRM, _alarm)
-    signal.alarm(int(ALARM))
+    signal.setitimer(signal.ITIMER_REAL, min(ALARM, runner_left) if runner_left else ALARM, 5)
     try:
         steps = walk_steps(row, const, constants)
+    except _ReWalkTimeout as ex:
+        return [{"reason": f"unmeasured: re-render failed (TimeoutError: {str(ex)[:60]})", "anchor": ""}]
     except Exception as ex:
         return [{"reason": f"unmeasured: re-render failed ({type(ex).__name__}: {str(ex)[:60]})", "anchor": ""}]
     finally:
-        signal.alarm(0)
+        signal.setitimer(signal.ITIMER_REAL, 0)
         signal.signal(signal.SIGALRM, old)
+        if runner_left:
+            signal.setitimer(signal.ITIMER_REAL, max(0.01, runner_left - (time.time() - t0)), runner_every)
     has_calc = "\\begin{align" in page or "It suffices to show" in page
     if steps is None:
         return [{"reason": "unmeasured: the walk laid out no Steps", "anchor": ""}] if has_calc else []
