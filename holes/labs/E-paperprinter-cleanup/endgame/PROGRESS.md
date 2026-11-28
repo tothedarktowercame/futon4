@@ -5,12 +5,12 @@
 ## Finish line
 
 - Frozen classes: **71**: 30 done, 2 not defects, 34 open, 5 unknown.
-- Corpus gate: 8,778 records; accepted head with a full census: `c8076d84`.
+- Corpus gate: 8,778 records; accepted head with a full census: `c8415d75`.
 - Proof errors: 0 at the accepted head. Performance class: closed.
 - N1 (rows with an empty reason): **0 records** at this head, down from 1,035 records at the full-corpus freeze.
 - C4 (blocks with a repeated left side, scanner count): **0 records**.
 - Residual ink (audit surface; 29/39 open-or-unknown classes have markup, extractor precision not yet reviewed): **0.260%** of reader-visible proof-source characters, in 17 records; see `INK.md`.
-- Ink change since `657a6fed`: union -0.065 points; P-claim-binders-unintroduced -3 records, P-second-without-first -2 records.
+- Ink change since `c8076d84`: union +0.000 points; no class changed its record count.
 - Largest colors: P-claim-binders-unintroduced 0.22%, P-missing-subproof 0.03%, C23 0.01%, P-second-without-first 0.00%.
 
 ## Work now

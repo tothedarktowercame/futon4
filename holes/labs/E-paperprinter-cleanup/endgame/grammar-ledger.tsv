@@ -1,14 +1,14 @@
 rule	family	level	check	cases	precision	decided	violating	exceptions	text_marks	head
-B1	binding	1 checked	rules/check_B1.py	4/5 pass	not read	8778/8778 (100.0%)	1748 (19.9%)	0	13	c8076d84
-B2	binding	3 covered	rules/check_B2.py	11/11 pass	15/15 real	8777/8778 (100.0%)	583 (6.6%)	0	0	c8076d84
-B3	binding	3 covered	rules/check_B3.py	11/11 pass	13/15 real	8776/8778 (100.0%)	644 (7.3%)	0	0	c8076d84
-R1	reference	3 covered	rules/check_R1.py	19/19 pass	15/15 real	8713/8778 (99.3%)	5125 (58.4%)	0	0	c8076d84
-R2	reference	1 checked	rules/check_R2.py	none	not read	8608/8778 (98.1%)	68 (0.8%)	0	0	c8076d84
-D1	discourse	3 covered	rules/check_D1.py	9/9 pass	13/15 real	8458/8778 (96.4%)	92 (1.0%)	0	1	c8076d84
-D2	discourse	3 covered	rules/check_D2.py	21/21 pass	18/18 real	8767/8778 (99.9%)	1682 (19.2%)	0	2	c8076d84
-D3	discourse	3 covered	rules/check_D3.py	13/13 pass	11/11 real (every flag)	8776/8778 (100.0%)	11 (0.1%)	0	0	c8076d84
-D4	discourse	3 covered	rules/check_D4.py	12/12 pass	16/17 real	8476/8778 (96.6%)	789 (9.0%)	0	0	c8076d84
-L1	locality	1 checked	rules/check_L1.py	none	not read	8646/8778 (98.5%)	46 (0.5%)	0	1	c8076d84
-V1	vocabulary	3 covered	rules/check_V1.py	11/11 pass	14/15 real	8778/8778 (100.0%)	265 (3.0%)	0	0	c8076d84
-T1	truth	1 checked	rules/check_T1.py	none	not read	6900/8778 (78.6%)	13 (0.1%)	0	0	c8076d84
-T2	truth	1 checked	rules/check_T2.py	none	not read	7844/8778 (89.4%)	43 (0.5%)	0	0	c8076d84
+B1	binding	1 checked	rules/check_B1.py	4/5 pass	not read	8778/8778 (100.0%)	1748 (19.9%)	0	13	c8415d75
+B2	binding	3 covered	rules/check_B2.py	11/11 pass	15/15 real	8777/8778 (100.0%)	583 (6.6%)	0	0	c8415d75
+B3	binding	3 covered	rules/check_B3.py	11/11 pass	13/15 real	8776/8778 (100.0%)	645 (7.3%)	0	0	c8415d75
+R1	reference	3 covered	rules/check_R1.py	19/19 pass	15/15 real	8713/8778 (99.3%)	5125 (58.4%)	0	0	c8415d75
+R2	reference	1 checked	rules/check_R2.py	none	not read	8608/8778 (98.1%)	68 (0.8%)	0	0	c8415d75
+D1	discourse	3 covered	rules/check_D1.py	9/9 pass	13/15 real	8449/8778 (96.3%)	92 (1.0%)	0	1	c8415d75
+D2	discourse	3 covered	rules/check_D2.py	21/21 pass	18/18 real	8757/8778 (99.8%)	1678 (19.1%)	0	2	c8415d75
+D3	discourse	3 covered	rules/check_D3.py	13/13 pass	11/11 real (every flag)	8776/8778 (100.0%)	11 (0.1%)	0	0	c8415d75
+D4	discourse	3 covered	rules/check_D4.py	12/12 pass	16/17 real	8501/8778 (96.8%)	793 (9.0%)	0	0	c8415d75
+L1	locality	1 checked	rules/check_L1.py	none	not read	8651/8778 (98.6%)	46 (0.5%)	0	1	c8415d75
+V1	vocabulary	3 covered	rules/check_V1.py	11/11 pass	14/15 real	8778/8778 (100.0%)	271 (3.1%)	0	0	c8415d75
+T1	truth	1 checked	rules/check_T1.py	none	not read	6900/8778 (78.6%)	13 (0.1%)	0	0	c8415d75
+T2	truth	1 checked	rules/check_T2.py	none	not read	7844/8778 (89.4%)	43 (0.5%)	0	0	c8415d75

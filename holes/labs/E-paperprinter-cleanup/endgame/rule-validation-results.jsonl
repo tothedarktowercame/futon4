@@ -115,3 +115,115 @@
 {"expect": "flag", "head": "c8076d84", "id": "d4-restate-put-back", "ok": true, "rule": "D4", "why": "restate: a printed fact the walk has no step for, directly after the fact it re-reads: \\operatorname{kernel} \\text{ is integrable on the boundary of the rectangle with"}
 {"expect": "flag", "head": "c8076d84", "id": "d4-mine-cited-row-deleted", "ok": true, "rule": "D4", "why": "lost row: between align rows 2 and 3 the term has a step 'by (1)' the page does not print"}
 {"expect": "clean", "head": "c8076d84", "id": "d1-first-paragraph-good", "ok": true, "rule": "D1", "why": "clean"}
+{"expect": "clean", "head": "c8415d75", "id": "b1-statement-binder", "ok": true, "rule": "B1", "why": "clean"}
+{"expect": "flag", "head": "c8415d75", "id": "b1-define-removed", "ok": true, "rule": "B1", "why": "uses R (local R) with no introduction in scope"}
+{"expect": "clean", "head": "c8415d75", "id": "b1-good", "ok": true, "rule": "B1", "why": "clean"}
+{"expect": "flag", "head": "c8415d75", "id": "b1-obtain-witness-removed", "ok": true, "rule": "B1", "why": "uses z (local z) with no introduction in scope"}
+{"expect": "flag", "head": "c8415d75", "id": "b1-t96j04-unnamed-w", "ok": false, "rule": "B1", "why": "not flagged"}
+{"expect": "flag", "head": "c8415d75", "id": "v1-c17-seqsplit", "ok": true, "rule": "V1", "why": "raw name: \\seqsplit marker (the printer's unruled-name fallback) on the page"}
+{"expect": "flag", "head": "c8415d75", "id": "v1-q308-toLin", "ok": true, "rule": "V1", "why": "raw name: Matrix.toLin has no reading in the printer and prints as its Lean name"}
+{"expect": "clean", "head": "c8415d75", "id": "v1-b94-good", "ok": true, "rule": "V1", "why": "clean"}
+{"expect": "flag", "head": "c8415d75", "id": "v1-c13-name", "ok": true, "rule": "V1", "why": "raw name: T96J02PresentedGroup has no reading in the printer and prints as its Lean name"}
+{"expect": "clean", "head": "c8415d75", "id": "v1-t96-good", "ok": true, "rule": "V1", "why": "clean"}
+{"expect": "flag", "head": "c8415d75", "id": "v1-c7-dotted", "ok": true, "rule": "V1", "why": "raw name: HilbertBasis.repr (a constant of the term or tagged on the page) printed verbatim as its dotted Lean name"}
+{"expect": "clean", "head": "c8415d75", "id": "v1-m05-good", "ok": true, "rule": "V1", "why": "clean"}
+{"expect": "flag", "head": "c8415d75", "id": "v1-rawapp-head", "ok": true, "rule": "V1", "why": "name words: IsM03J02Solution has no reading in the printer and prints as its identifier cut into words"}
+{"expect": "flag", "head": "c8415d75", "id": "v1-c7-head", "ok": true, "rule": "V1", "why": "raw name: APMM02A03Plane has no reading in the printer and prints as its Lean name"}
+{"expect": "flag", "head": "c8415d75", "id": "v1-isc2-head", "ok": true, "rule": "V1", "why": "name words: apm_t00a05_IsC2 has no reading in the printer and prints as its identifier cut into words"}
+{"expect": "flag", "head": "c8415d75", "id": "v1-mine-nat-raw", "ok": true, "rule": "V1", "why": "raw name: Nat has the reading \\mathbb{N} but prints as its Lean name"}
+{"expect": "flag", "head": "c8415d75", "id": "b3-c10-xx", "ok": true, "rule": "B3", "why": "formula binds x and also shows another object (Classical.choose) as x"}
+{"expect": "clean", "head": "c8415d75", "id": "b3-c10-good", "ok": true, "rule": "B3", "why": "clean"}
+{"expect": "flag", "head": "c8415d75", "id": "b3-duptag", "ok": true, "rule": "B3", "why": "tag (8) names two facts"}
+{"expect": "flag", "head": "c8415d75", "id": "b3-shadow-y-head", "ok": true, "rule": "B3", "why": "two binders printed as y in overlapping scopes (y, y)"}
+{"expect": "flag", "head": "c8415d75", "id": "b3-unfold-f-head", "ok": true, "rule": "B3", "why": "value of f printed where f stands ((D))"}
+{"expect": "flag", "head": "c8415d75", "id": "b3-unfold-j-head", "ok": true, "rule": "B3", "why": "value of j printed where j stands ((\\operatorname{ord}(\\sum_{n \\geq 0} a(n)X^n) \\text{ as a nat)"}
+{"expect": "flag", "head": "c8415d75", "id": "b3-unfold-R", "ok": true, "rule": "B3", "why": "value of R printed where R stands (n + \\frac{1}{2})"}
+{"expect": "flag", "head": "c8415d75", "id": "b3-two-obtain-c-head", "ok": true, "rule": "B3", "why": "two binders printed as c in overlapping scopes (c, c)"}
+{"expect": "flag", "head": "c8415d75", "id": "b3-redefined-K-head", "ok": true, "rule": "B3", "why": "two binders printed as K in overlapping scopes (K, K)"}
+{"expect": "clean", "head": "c8415d75", "id": "b3-precedence-good", "ok": true, "rule": "B3", "why": "clean"}
+{"expect": "flag", "head": "c8415d75", "id": "b3-mine-tag-reused", "ok": true, "rule": "B3", "why": "tag (3) names two facts"}
+{"expect": "flag", "head": "c8415d75", "id": "r1-n1-empty-row", "ok": true, "rule": "R1", "why": "step hr: row with an empty reason"}
+{"expect": "flag", "head": "c8415d75", "id": "r1-q308-t98j06-empty-row", "ok": true, "rule": "R1", "why": "step j06_det_core: row with an empty reason"}
+{"expect": "flag", "head": "c8415d75", "id": "r1-empty-chain-reason", "ok": true, "rule": "R1", "why": "step tensorMulRepresentation_finrank_ker_of_finrank_eq: uses (1)=hfin, not cited"}
+{"expect": "flag", "head": "c8415d75", "id": "r1-c20-merged-rows", "ok": true, "rule": "R1", "why": "step apm_m02J04_sqrt_div_parameter: uses (3)=heq, not cited"}
+{"expect": "flag", "head": "c8415d75", "id": "r1-n6-congrarg-row-edit", "ok": true, "rule": "R1", "why": "step apm_m02J04_sqrt_div_parameter: uses (3)=heq, not cited"}
+{"expect": "flag", "head": "c8415d75", "id": "r1-n6-congrarg-row-head", "ok": true, "rule": "R1", "why": "step hr: uses (4)=hc, not cited"}
+{"expect": "flag", "head": "c8415d75", "id": "r1-c21-library-lemma", "ok": true, "rule": "R1", "why": "step hparts: 'a library lemma' names no lemma"}
+{"expect": "flag", "head": "c8415d75", "id": "r1-c21-module-lemma-unnamed", "ok": true, "rule": "R1", "why": "step hparts: uses module lemma ApmCanaries.A01A10.damped_fresnel_integration_by_parts, not named"}
+{"expect": "flag", "head": "c8415d75", "id": "r1-plain-lemma-dropped", "ok": true, "rule": "R1", "why": "step tensorMulRepresentation_finrank_ker_of_finrank_eq: uses module lemma tensorMulRepresentation_finrank_ker, not named"}
+{"expect": "flag", "head": "c8415d75", "id": "r1-unnamed-library-edit", "ok": true, "rule": "R1", "why": "step hper: no reason; its proof is ConstructionTargets.CotangentLocal.cot_pi_add_int"}
+{"expect": "flag", "head": "c8415d75", "id": "r1-unnamed-library-head", "ok": true, "rule": "R1", "why": "step hs: no reason; its proof is Real.sqrt_pos_of_pos"}
+{"expect": "clean", "head": "c8415d75", "id": "r1-good-tensormul", "ok": true, "rule": "R1", "why": "clean"}
+{"expect": "flag", "head": "c8415d75", "id": "r1-head-side-condition", "ok": true, "rule": "R1", "why": "step apm_m02J04_sqrt_div_parameter: uses (1)=hc, not cited"}
+{"expect": "flag", "head": "c8415d75", "id": "r1-head-fieldsimp-side-condition", "ok": true, "rule": "R1", "why": "step apm_aunk03_modifiedKernel_sub_nonzero_residue: uses (1)=hw, not cited"}
+{"expect": "clean", "head": "c8415d75", "id": "r1-good-outer-calibration", "ok": true, "rule": "R1", "why": "clean"}
+{"expect": "clean", "head": "c8415d75", "id": "r1-good-a97j06", "ok": true, "rule": "R1", "why": "clean"}
+{"expect": "clean", "head": "c8415d75", "id": "r1-good-modified", "ok": true, "rule": "R1", "why": "clean"}
+{"expect": "clean", "head": "c8415d75", "id": "r1-good-a99j04", "ok": true, "rule": "R1", "why": "clean"}
+{"expect": "flag", "head": "c8415d75", "id": "r1-mine-wrong-tag", "ok": true, "rule": "R1", "why": "step hs: uses (2)=hy0, not cited"}
+{"expect": "flag", "head": "c8415d75", "id": "b2-unused-define-q308", "ok": true, "rule": "B2", "why": "B2-unused-define: Define leftMap (\\iota_{*}) is not used on the page after it"}
+{"expect": "flag", "head": "c8415d75", "id": "b2-unused-define-built", "ok": true, "rule": "B2", "why": "B2-unused-define: Define R (\\tilde{R}) is not used on the page after it"}
+{"expect": "flag", "head": "c8415d75", "id": "b2-restated-built", "ok": true, "rule": "B2", "why": "B2-restated: Define R restated (same definition still in scope)"}
+{"expect": "flag", "head": "c8415d75", "id": "b2-restated-v-657", "ok": true, "rule": "B2", "why": "B2-restated: Define V restated (same definition still in scope)"}
+{"expect": "flag", "head": "c8415d75", "id": "b2-alias-head", "ok": true, "rule": "B2", "why": "B2-alias: Define cg names a local already named (its let value is a variable)"}
+{"expect": "flag", "head": "c8415d75", "id": "b2-dead-let-head", "ok": true, "rule": "B2", "why": "B2-dead-let: Define T is never used (no let body refers to it)"}
+{"expect": "flag", "head": "c8415d75", "id": "b2-dead-fact-head", "ok": true, "rule": "B2", "why": "B2-dead-fact: fact hr is never used (no binder body refers to it)"}
+{"expect": "clean", "head": "c8415d75", "id": "b2-good-define-used", "ok": true, "rule": "B2", "why": "clean"}
+{"expect": "clean", "head": "c8415d75", "id": "b2-good-sibling-defines", "ok": true, "rule": "B2", "why": "clean"}
+{"expect": "clean", "head": "c8415d75", "id": "b2-good-same-line-use", "ok": true, "rule": "B2", "why": "clean"}
+{"expect": "flag", "head": "c8415d75", "id": "b2-mine-restated-z", "ok": true, "rule": "B2", "why": "B2-restated: Define z restated (same definition still in scope)"}
+{"expect": "flag", "head": "c8415d75", "id": "d2-empty-claim", "ok": true, "rule": "D2", "why": "empty claim: the page announces let hfirst with nothing under it"}
+{"expect": "flag", "head": "c8415d75", "id": "d2-missing-subproof", "ok": true, "rule": "D2", "why": "empty claim: the page announces let hsecond with nothing under it"}
+{"expect": "flag", "head": "c8415d75", "id": "d2-opaque-proof", "ok": true, "rule": "D2", "why": "empty claim: the page announces let hf_inj with nothing under it"}
+{"expect": "flag", "head": "c8415d75", "id": "d2-missing-closer", "ok": true, "rule": "D2", "why": "closer missing from the page: let hfirst is closed by the walk but its page block ends without a closing sentence"}
+{"expect": "flag", "head": "c8415d75", "id": "d2-duplicate-closer", "ok": true, "rule": "D2", "why": "closed twice on the page: the block of let hsecond repeats its closing sentence"}
+{"expect": "flag", "head": "c8415d75", "id": "d2-C3-conclusion-twice", "ok": true, "rule": "D2", "why": "closed twice on the page: the block of let hf_inj repeats its closing sentence"}
+{"expect": "flag", "head": "c8415d75", "id": "d2-N5-claim-twice", "ok": true, "rule": "D2", "why": "closed twice on the page: the block of let hf_inj repeats its closing sentence"}
+{"expect": "flag", "head": "c8415d75", "id": "d2-premature-conclusion", "ok": true, "rule": "D2", "why": "closer before its proof on the page: the block of let hsecond states its conclusion before a later step"}
+{"expect": "flag", "head": "c8415d75", "id": "d2-empty-sentence", "ok": true, "rule": "D2", "why": "empty sentence: an item with no text"}
+{"expect": "flag", "head": "c8415d75", "id": "d2-closer-then-suffices", "ok": true, "rule": "D2", "why": "closed twice: 2 closers in the block of branch hz"}
+{"expect": "flag", "head": "c8415d75", "id": "d2-q308-stale-goal", "ok": true, "rule": "D2", "why": "stale goal: the block of let hf_inj opens with intro Steps and its closer restates the claim, not the goal left by them"}
+{"expect": "flag", "head": "c8415d75", "id": "d2-missing-closer-witness", "ok": true, "rule": "D2", "why": "missing closer: the block of part (unnamed) ends on a witness Step (-), its goal is never stated"}
+{"expect": "clean", "head": "c8415d75", "id": "d2-good-1", "ok": true, "rule": "D2", "why": "clean"}
+{"expect": "clean", "head": "c8415d75", "id": "d2-good-2", "ok": true, "rule": "D2", "why": "clean"}
+{"expect": "clean", "head": "c8415d75", "id": "d2-good-3", "ok": true, "rule": "D2", "why": "clean"}
+{"expect": "clean", "head": "c8415d75", "id": "d2-good-4", "ok": true, "rule": "D2", "why": "clean"}
+{"expect": "flag", "head": "c8415d75", "id": "d2-sufficiency-end-root", "ok": true, "rule": "D2", "why": "sufficiency end: the proof ends on a reduction of its goal (It suffices to show …) that nothing closes"}
+{"expect": "flag", "head": "c8415d75", "id": "d2-sufficiency-end-page", "ok": true, "rule": "D2", "why": "sufficiency end on the page: the proof's last reduction has a reason in the walk but the page ends on It suffices to show … without it"}
+{"expect": "clean", "head": "c8415d75", "id": "d2-good-sufficiency", "ok": true, "rule": "D2", "why": "clean"}
+{"expect": "clean", "head": "c8415d75", "id": "d2-good-5", "ok": true, "rule": "D2", "why": "clean"}
+{"expect": "flag", "head": "c8415d75", "id": "d2-mine-hdvd-closer-dropped", "ok": true, "rule": "D2", "why": "empty claim: the page announces let hdvd with nothing under it"}
+{"expect": "flag", "head": "c8415d75", "id": "d1-swf-putback", "ok": true, "rule": "D1", "why": "second without first: part 2 prints its ordinal, part 1 does not"}
+{"expect": "clean", "head": "c8415d75", "id": "d1-swf-good", "ok": true, "rule": "D1", "why": "clean"}
+{"expect": "flag", "head": "c8415d75", "id": "d1-nonprop-putback", "ok": true, "rule": "D1", "why": "sufficiency target is not a proposition: \\leanref{\\operatorname{dist}(u, 0)}{Dist.dist}"}
+{"expect": "clean", "head": "c8415d75", "id": "d1-nonprop-good", "ok": true, "rule": "D1", "why": "clean"}
+{"expect": "flag", "head": "c8415d75", "id": "d1-n4-putback", "ok": true, "rule": "D1", "why": "calculation with no statement of its goal (let)"}
+{"expect": "clean", "head": "c8415d75", "id": "d1-n4-good", "ok": true, "rule": "D1", "why": "clean"}
+{"expect": "flag", "head": "c8415d75", "id": "d1-n14-head", "ok": true, "rule": "D1", "why": "calculation with no statement of its goal (part)"}
+{"expect": "flag", "head": "c8415d75", "id": "d1-mine-first-dropped", "ok": true, "rule": "D1", "why": "second without first: part 2 prints its ordinal, part 1 does not"}
+{"expect": "flag", "head": "c8415d75", "id": "d3-c1-split-or-as-cases-on", "ok": true, "rule": "D3", "why": "split: an Or split (Or.casesOn/elim) is presented as 'distinguish cases on' its disjunction, not by its alternatives"}
+{"expect": "clean", "head": "c8415d75", "id": "d3-c1-good", "ok": true, "rule": "D3", "why": "clean"}
+{"expect": "flag", "head": "c8415d75", "id": "d3-c9-wrong-alternative", "ok": true, "rule": "D3", "why": "alternative: the page says alternative 3 holds 1 time(s); the term selects alternative 3 0 time(s) (typed selections: {1: 1, 2: 1})"}
+{"expect": "clean", "head": "c8415d75", "id": "d3-c9-good", "ok": true, "rule": "D3", "why": "clean"}
+{"expect": "flag", "head": "c8415d75", "id": "d3-r3-supposition-removed", "ok": true, "rule": "D3", "why": "supposition: proof by contradiction on 'h' is never stated (its binder is not introduced on the page; its argument is printed: h1, hz)"}
+{"expect": "clean", "head": "c8415d75", "id": "d3-r3-good", "ok": true, "rule": "D3", "why": "clean"}
+{"expect": "flag", "head": "c8415d75", "id": "d3-r2-omega-as-contradiction", "ok": true, "rule": "D3", "why": "procedure: fact hn is a decision procedure's own refutation (hygienic byContradiction) printed as '— by contradiction'"}
+{"expect": "clean", "head": "c8415d75", "id": "d3-r2-good-omega", "ok": true, "rule": "D3", "why": "clean"}
+{"expect": "clean", "head": "c8415d75", "id": "d3-r2-good-author-by-contra", "ok": true, "rule": "D3", "why": "clean"}
+{"expect": "flag", "head": "c8415d75", "id": "d3-c22-self-comparison-goal", "ok": true, "rule": "D3", "why": "self-comparison: a numeral compared strictly with itself is printed as a row/goal instead of as the contradiction"}
+{"expect": "clean", "head": "c8415d75", "id": "d3-c22-good", "ok": true, "rule": "D3", "why": "clean"}
+{"expect": "flag", "head": "c8415d75", "id": "d3-mine-alt-swapped", "ok": true, "rule": "D3", "why": "alternative: the page says alternative 1 holds 1 time(s); the term selects alternative 1 0 time(s) (typed selections: {2: 1})"}
+{"expect": "clean", "head": "c8415d75", "id": "d3-good-b99a01-shared", "ok": true, "rule": "D3", "why": "clean"}
+{"expect": "flag", "head": "c8415d75", "id": "d4-c4-row-repeated", "ok": true, "rule": "D4", "why": "repeated row: align row 5 repeats row 4 (the term has this row once): ( - 1)^{3} \\cdot ( - 1)"}
+{"expect": "flag", "head": "c8415d75", "id": "d4-n2-rows-swapped", "ok": true, "rule": "D4", "why": "row out of order: align row 3 is reached in the term only through a row printed after it: ( - 1)^{3} \\cdot ( - 1)"}
+{"expect": "flag", "head": "c8415d75", "id": "d4-lost-row-deleted", "ok": true, "rule": "D4", "why": "lost row: between align rows 1 and 2 the term has a step 'since \\(\\omega =  - p_{C}\\)' the page does not print"}
+{"expect": "flag", "head": "c8415d75", "id": "d4-reason-removed", "ok": true, "rule": "D4", "why": "row without a reason: align row 4 prints no reason; its typed row has 'since \\(p_{C}^{3} =  - 1\\)'"}
+{"expect": "clean", "head": "c8415d75", "id": "d4-calc-good", "ok": true, "rule": "D4", "why": "clean"}
+{"expect": "flag", "head": "c8415d75", "id": "d4-suffices-target-twice", "ok": true, "rule": "D4", "why": "repeated row: It suffices to show row 2 repeats row 1 (the term has this row once): \\mu_{1}|_{(0, 1)^{c}} \\perp \\mu_{1}|_{(0, 1)}"}
+{"expect": "clean", "head": "c8415d75", "id": "d4-suffices-good", "ok": true, "rule": "D4", "why": "clean"}
+{"expect": "flag", "head": "c8415d75", "id": "d4-parallel-head", "ok": true, "rule": "D4", "why": "parallel steps: 4 consecutive facts each restate (1) alone; one step printed as 4"}
+{"expect": "flag", "head": "c8415d75", "id": "d4-n2-row-from-another-chain", "ok": true, "rule": "D4", "why": "row does not follow: no typed row joins align row 2 to row 3: \\varepsilon \\cdot w(t)"}
+{"expect": "flag", "head": "c8415d75", "id": "d4-restate-head-m98a05", "ok": true, "rule": "D4", "why": "restate: shape B: one fact printed twice, as stated and as its transport re-reads it: (t : \\mathbb{R}) \\mapsto (w'(t))^{2} + (w(t))^{2} \\cdot (1 + \\varepsilon \\cdot w"}
+{"expect": "flag", "head": "c8415d75", "id": "d4-restate-put-back", "ok": true, "rule": "D4", "why": "restate: a printed fact the walk has no step for, directly after the fact it re-reads: \\operatorname{kernel} \\text{ is integrable on the boundary of the rectangle with"}
+{"expect": "flag", "head": "c8415d75", "id": "d4-mine-cited-row-deleted", "ok": true, "rule": "D4", "why": "lost row: between align rows 2 and 3 the term has a step 'by (1)' the page does not print"}
+{"expect": "clean", "head": "c8415d75", "id": "d1-first-paragraph-good", "ok": true, "rule": "D1", "why": "clean"}
