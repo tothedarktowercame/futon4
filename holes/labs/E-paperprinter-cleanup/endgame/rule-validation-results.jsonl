@@ -81,3 +81,11 @@
 {"expect": "clean", "head": "c8076d84", "id": "d2-good-sufficiency", "ok": true, "rule": "D2", "why": "clean"}
 {"expect": "clean", "head": "c8076d84", "id": "d2-good-5", "ok": true, "rule": "D2", "why": "clean"}
 {"expect": "flag", "head": "c8076d84", "id": "d2-mine-hdvd-closer-dropped", "ok": true, "rule": "D2", "why": "empty claim: the page announces let hdvd with nothing under it"}
+{"expect": "flag", "head": "c8076d84", "id": "d1-swf-putback", "ok": true, "rule": "D1", "why": "second without first: part 2 prints its ordinal, part 1 does not"}
+{"expect": "clean", "head": "c8076d84", "id": "d1-swf-good", "ok": true, "rule": "D1", "why": "clean"}
+{"expect": "flag", "head": "c8076d84", "id": "d1-nonprop-putback", "ok": true, "rule": "D1", "why": "sufficiency target is not a proposition: \\leanref{\\operatorname{dist}(u, 0)}{Dist.dist}"}
+{"expect": "clean", "head": "c8076d84", "id": "d1-nonprop-good", "ok": true, "rule": "D1", "why": "clean"}
+{"expect": "flag", "head": "c8076d84", "id": "d1-n4-putback", "ok": true, "rule": "D1", "why": "calculation with no statement of its goal (let)"}
+{"expect": "clean", "head": "c8076d84", "id": "d1-n4-good", "ok": true, "rule": "D1", "why": "clean"}
+{"expect": "flag", "head": "c8076d84", "id": "d1-n14-head", "ok": true, "rule": "D1", "why": "calculation with no statement of its goal (part)"}
+{"expect": "flag", "head": "c8076d84", "id": "d1-mine-first-dropped", "ok": true, "rule": "D1", "why": "second without first: part 2 prints its ordinal, part 1 does not"}
