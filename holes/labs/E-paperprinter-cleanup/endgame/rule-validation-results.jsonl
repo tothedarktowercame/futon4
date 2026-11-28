@@ -30,3 +30,22 @@
 {"expect": "flag", "head": "c8076d84", "id": "b3-redefined-K-head", "ok": true, "rule": "B3", "why": "two binders printed as K in overlapping scopes (K, K)"}
 {"expect": "clean", "head": "c8076d84", "id": "b3-precedence-good", "ok": true, "rule": "B3", "why": "clean"}
 {"expect": "flag", "head": "c8076d84", "id": "b3-mine-tag-reused", "ok": true, "rule": "B3", "why": "tag (3) names two facts"}
+{"expect": "flag", "head": "c8076d84", "id": "r1-n1-empty-row", "ok": true, "rule": "R1", "why": "step hr: row with an empty reason"}
+{"expect": "flag", "head": "c8076d84", "id": "r1-q308-t98j06-empty-row", "ok": true, "rule": "R1", "why": "step j06_det_core: row with an empty reason"}
+{"expect": "flag", "head": "c8076d84", "id": "r1-empty-chain-reason", "ok": true, "rule": "R1", "why": "step tensorMulRepresentation_finrank_ker_of_finrank_eq: uses (1)=hfin, not cited"}
+{"expect": "flag", "head": "c8076d84", "id": "r1-c20-merged-rows", "ok": true, "rule": "R1", "why": "step apm_m02J04_sqrt_div_parameter: uses (3)=heq, not cited"}
+{"expect": "flag", "head": "c8076d84", "id": "r1-n6-congrarg-row-edit", "ok": true, "rule": "R1", "why": "step apm_m02J04_sqrt_div_parameter: uses (3)=heq, not cited"}
+{"expect": "flag", "head": "c8076d84", "id": "r1-n6-congrarg-row-head", "ok": true, "rule": "R1", "why": "step hr: uses (4)=hc, not cited"}
+{"expect": "flag", "head": "c8076d84", "id": "r1-c21-library-lemma", "ok": true, "rule": "R1", "why": "step hparts: 'a library lemma' names no lemma"}
+{"expect": "flag", "head": "c8076d84", "id": "r1-c21-module-lemma-unnamed", "ok": true, "rule": "R1", "why": "step hparts: uses module lemma ApmCanaries.A01A10.damped_fresnel_integration_by_parts, not named"}
+{"expect": "flag", "head": "c8076d84", "id": "r1-plain-lemma-dropped", "ok": true, "rule": "R1", "why": "step tensorMulRepresentation_finrank_ker_of_finrank_eq: uses module lemma tensorMulRepresentation_finrank_ker, not named"}
+{"expect": "flag", "head": "c8076d84", "id": "r1-unnamed-library-edit", "ok": true, "rule": "R1", "why": "step hper: no reason; its proof is ConstructionTargets.CotangentLocal.cot_pi_add_int"}
+{"expect": "flag", "head": "c8076d84", "id": "r1-unnamed-library-head", "ok": true, "rule": "R1", "why": "step hs: no reason; its proof is Real.sqrt_pos_of_pos"}
+{"expect": "clean", "head": "c8076d84", "id": "r1-good-tensormul", "ok": true, "rule": "R1", "why": "clean"}
+{"expect": "flag", "head": "c8076d84", "id": "r1-head-side-condition", "ok": true, "rule": "R1", "why": "step apm_m02J04_sqrt_div_parameter: uses (1)=hc, not cited"}
+{"expect": "flag", "head": "c8076d84", "id": "r1-head-fieldsimp-side-condition", "ok": true, "rule": "R1", "why": "step apm_aunk03_modifiedKernel_sub_nonzero_residue: uses (1)=hw, not cited"}
+{"expect": "clean", "head": "c8076d84", "id": "r1-good-outer-calibration", "ok": true, "rule": "R1", "why": "clean"}
+{"expect": "clean", "head": "c8076d84", "id": "r1-good-a97j06", "ok": true, "rule": "R1", "why": "clean"}
+{"expect": "clean", "head": "c8076d84", "id": "r1-good-modified", "ok": true, "rule": "R1", "why": "clean"}
+{"expect": "clean", "head": "c8076d84", "id": "r1-good-a99j04", "ok": true, "rule": "R1", "why": "clean"}
+{"expect": "flag", "head": "c8076d84", "id": "r1-mine-wrong-tag", "ok": true, "rule": "R1", "why": "step hs: uses (2)=hy0, not cited"}

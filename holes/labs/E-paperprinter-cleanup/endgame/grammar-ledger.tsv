@@ -2,7 +2,7 @@ rule	family	level	check	cases	precision	decided	violating	exceptions	text_marks	
 B1	binding	1 checked	rules/check_B1.py	4/5 pass	not read	8778/8778 (100.0%)	1748 (19.9%)	0	13	c8076d84
 B2	binding	0 unchecked	none (none at census (P-overexpanded-setup by text))	none	not read	-	unknown	0	0	c8076d84
 B3	binding	2 validated	rules/check_B3.py	11/11 pass	13/15 real	not run at this head	unknown	0	0	c8076d84
-R1	reference	0 unchecked	none (citcount (count), citres (resolution); ink N1, C21)	none	not read	-	unknown	0	0	c8076d84
+R1	reference	2 validated	rules/check_R1.py	19/19 pass	15/15 real	not run at this head	unknown	0	0	c8076d84
 R2	reference	1 checked	rules/check_R2.py	none	not read	8608/8778 (98.1%)	68 (0.8%)	0	0	c8076d84
 D1	discourse	0 unchecked	none (ink P-second-without-first, N14, P-nonprop-suffices)	none	not read	-	unknown	0	1	c8076d84
 D2	discourse	0 unchecked	none (ink P-empty-claim, P-missing-subproof, P-premature-conclusio)	none	not read	-	unknown	0	2	c8076d84
